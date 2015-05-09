@@ -30,7 +30,7 @@ for c in ${pre_components[@]};do
 done
 
 
-graph_components=("agent" "transfer" "graph" "query" "falcon-dashboard")
+graph_components=("agent" "transfer" "graph" "query" "dashboard")
 judge_components=("portal" "hbs" "judge" "sender" "alarm" "links")
 other_components=("task")
 
@@ -60,13 +60,8 @@ done
 
 for c in `echo -n $all_components | tr ' ' '\n'`;do
     echo "======== packing" $c "..."
-    if [ "$c" == "falcon-dashboard" ];then
-        apptar=${c}-*.tar.gz
-        cd $WORKSPACE/$c && rm -rf *.tar.gz ; bash control pack &>/dev/null; mv $apptar $output_dir
-    else
-        apptar=falcon-${c}-*.tar.gz
-        cd $WORKSPACE/$c && rm -rf *.tar.gz ; go get &> /dev/null; bash control pack &>/dev/null; mv $apptar $output_dir
-    fi
+    apptar=falcon-${c}-*.tar.gz
+    cd $WORKSPACE/$c && rm -rf *.tar.gz ; go get &> /dev/null; bash control pack &>/dev/null; mv $apptar $output_dir
 
 done
 
