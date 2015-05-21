@@ -1,8 +1,4 @@
---create database graph;
---grant all privileges on graph.* to work@'localhost' identified by 'work';
---grant all privileges on graph.* to work@'%' identified by 'work';
---flush privileges;
-
+create database graph;
 use graph;
 set names utf8;
 
