@@ -15,6 +15,7 @@ gitorg="https://github.com/open-falcon"
 
 pre_components=(
 https://github.com/open-falcon/common,$GOPATH/src/github.com/open-falcon/common
+https://github.com/open-falcon/rrdlite,$GOPATH/src/github.com/open-falcon/rrdlite
 )
 for c in ${pre_components[@]};do
     repo=`echo -n $c | awk -F ',' '{print $1}'`
