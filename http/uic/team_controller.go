@@ -21,7 +21,7 @@ func (this *TeamController) Teams() {
 	per := this.MustGetInt("per", 10)
 	me := this.Ctx.Input.GetData("CurrentUser").(*User)
 
-	teams, err := QueryTeams(query, me.Id)
+	teams, err := QueryMineTeams(query, me.Id)
 	if err != nil {
 		this.ServeErrJson("occur error " + err.Error())
 		return
@@ -152,4 +152,19 @@ func (this *TeamController) EditPost() {
 	}
 
 	this.AutoServeError(targetTeam.UpdateUsers(userIdstr))
+}
+
+// for portal api: query team
+func (this *TeamController) Query() {
+	query := this.MustGetString("query", "")
+	limit := this.MustGetInt("limit", 10)
+
+	qs := QueryAllTeams(query)
+	var ts []Team
+	qs.Limit(limit).All(&ts)
+	this.Data["json"] = map[string]interface{}{
+		"msg":   "",
+		"teams": ts,
+	}
+	this.ServeJson()
 }

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func QueryTeams(query string, uid int64) (orm.QuerySeter, error) {
+func QueryMineTeams(query string, uid int64) (orm.QuerySeter, error) {
 	qs := orm.NewOrm().QueryTable(new(Team))
 
 	condMine := orm.NewCondition()
@@ -35,6 +35,14 @@ func QueryTeams(query string, uid int64) (orm.QuerySeter, error) {
 
 	qs = qs.SetCond(condResult)
 	return qs, nil
+}
+
+func QueryAllTeams(query string) orm.QuerySeter {
+	qs := orm.NewOrm().QueryTable(new(Team))
+	if query != "" {
+		qs = qs.Filter("Name__icontains", query)
+	}
+	return qs
 }
 
 func Tids(uid int64) ([]int64, error) {

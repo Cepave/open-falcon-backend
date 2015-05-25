@@ -18,8 +18,10 @@ func ConfigRoutes() {
 	beego.Router("/sso/logout/:sig:string", &SsoController{}, "get:Logout")
 
 	beego.Router("/user/query", &UserController{}, "get:Query")
+	beego.Router("/user/in", &UserController{}, "get:In")
 
 	beego.Router("/team/users", &TeamController{}, "get:Users")
+	beego.Router("/team/query", &TeamController{}, "get:Query")
 
 	loginRequired :=
 		beego.NewNamespace("/me",

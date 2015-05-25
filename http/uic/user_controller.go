@@ -307,3 +307,32 @@ func (this *UserController) Query() {
 	this.Data["json"] = map[string]interface{}{"users": users}
 	this.ServeJson()
 }
+
+func (this *UserController) In() {
+	name := this.MustGetString("name", "")
+	teamNames := this.MustGetString("teams", "")
+
+	if name == "" || teamNames == "" {
+		this.Ctx.Output.Body([]byte("0"))
+		return
+	}
+
+	teamNames = strings.Replace(teamNames, ";", ",", -1)
+	teamArr := strings.Split(teamNames, ",")
+	for _, teamName := range teamArr {
+		t := ReadTeamByName(teamName)
+		if t == nil {
+			continue
+		}
+
+		members := MembersByTeamName(teamName)
+		for _, u := range members {
+			if u.Name == name {
+				this.Ctx.Output.Body([]byte("1"))
+				return
+			}
+		}
+	}
+
+	this.Ctx.Output.Body([]byte("0"))
+}
