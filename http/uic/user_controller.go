@@ -336,3 +336,15 @@ func (this *UserController) In() {
 
 	this.Ctx.Output.Body([]byte("0"))
 }
+
+func (this *UserController) About() {
+	name := this.Ctx.Input.Param(":name")
+	u := ReadUserByName(name)
+	if u == nil {
+		this.NotFound("no such user")
+		return
+	}
+
+	this.Data["User"] = u
+	this.TplNames = "user/about.html"
+}

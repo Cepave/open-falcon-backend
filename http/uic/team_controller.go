@@ -168,3 +168,7 @@ func (this *TeamController) Query() {
 	}
 	this.ServeJson()
 }
+
+func (this *TeamController) All() {
+	this.Redirect("/me/teams", 301)
+}

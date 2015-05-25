@@ -1,0 +1,30 @@
+{{template "layout/head.html" .}}
+
+<div class="container" style="margin-top: 40px;">
+	<div class="row">
+		<div class="col-md-12">
+
+			<div style="margin: 0 auto; max-width: 400px;">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">{{.User.Name}}</h3>
+					</div>
+					<div class="panel-body">
+
+						<div style="line-height:24px;">
+							姓名：{{.User.Cnname}}<br>
+							手机：{{.User.Phone}}<br>
+							邮箱：{{.User.Email}}<br>
+							QQ：{{.User.QQ}}<br>
+							IM：{{.User.IM}}<br>
+						</div>
+
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
+</div>
+
+{{template "layout/foot.html" .}}
