@@ -40,7 +40,7 @@ go get ./...
 
 ```
 wget http://7xiumq.com1.z0.glb.clouddn.com/open-falcon-fe-0.0.1.tar.gz
-tar zxvf open-falcon-fe-0.0.0.tar.gz
+tar zxvf open-falcon-fe-0.0.1.tar.gz
 # modify configuration
 ./control start
 ```
