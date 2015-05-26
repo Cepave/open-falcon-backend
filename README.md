@@ -75,7 +75,7 @@ tar zxvf open-falcon-fe-0.0.1.tar.gz
     "shortcut": {
         "falconPortal": "http://11.11.11.11:5050/", 浏览器可访问的portal地址
         "falconDashboard": "http://11.11.11.11:7070/", 浏览器可访问的dashboard地址
-        "falconAlarm": "http://11.11.11.11:6060/" 浏览器可访问的alarm dash地址
+        "falconAlarm": "http://11.11.11.11:6060/" 浏览器可访问的alarm的http地址
     }
 }
 ```
