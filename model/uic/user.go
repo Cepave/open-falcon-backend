@@ -3,8 +3,8 @@ package uic
 import (
 	"fmt"
 	"github.com/astaxie/beego/orm"
-	"github.com/open-falcon/logger"
 	"github.com/toolkits/cache"
+	"github.com/toolkits/logger"
 	"github.com/toolkits/slice"
 	"time"
 )

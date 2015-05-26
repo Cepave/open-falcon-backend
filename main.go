@@ -7,7 +7,7 @@ import (
 	"github.com/open-falcon/fe/g"
 	"github.com/open-falcon/fe/http"
 	"github.com/open-falcon/fe/model"
-	"github.com/open-falcon/logger"
+	"github.com/toolkits/logger"
 	"log"
 	"os"
 )
@@ -27,7 +27,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	logger.InitLogger(g.Config().Log, "info")
+	logger.SetLevelWithDefault(g.Config().Log, "info")
 
 	model.InitDatabase()
 	cache.InitCache()
