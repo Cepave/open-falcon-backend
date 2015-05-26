@@ -79,3 +79,7 @@ tar zxvf open-falcon-fe-0.0.1.tar.gz
     }
 }
 ```
+
+# 设置root账号的密码
+
+该项目中的注册用户是有不同角色的，目前分三种角色：普通用户、管理员、root账号。系统启动之后第一件事情应该是设置root的密码，浏览器访问：http://fe.example.com/root?password=abc （此处假设你的项目访问地址是fe.example.com，也可以使用ip）,这样就设置了root账号的密码为abc。普通用户可以支持注册。
