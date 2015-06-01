@@ -2,6 +2,10 @@
 
 - http://open-falcon.com
 
+# Get Started
+
+    git clone https://github.com/Cepave/open-falcon
+    git submodule update —-init
 
 # License
 

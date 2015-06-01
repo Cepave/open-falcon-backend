@@ -1,48 +1,48 @@
 [submodule "agent"]
 	path = agent
-	url = https://github.com/open-falcon/agent.git
+	url = https://github.com/Cepave/agent.git
 [submodule "graph"]
 	path = graph
-	url = https://github.com/open-falcon/graph.git
+	url = https://github.com/Cepave/graph.git
 [submodule "dashboard"]
 	path = dashboard
-	url = https://github.com/open-falcon/dashboard.git
+	url = https://github.com/Cepave/dashboard.git
 [submodule "links"]
 	path = links
-	url = https://github.com/open-falcon/links.git
+	url = https://github.com/Cepave/links.git
 [submodule "alarm"]
 	path = alarm
-	url = https://github.com/open-falcon/alarm.git
+	url = https://github.com/Cepave/alarm.git
 [submodule "sender"]
 	path = sender
-	url = https://github.com/open-falcon/sender.git
+	url = https://github.com/Cepave/sender.git
 [submodule "judge"]
 	path = judge
-	url = https://github.com/open-falcon/judge.git
+	url = https://github.com/Cepave/judge.git
 [submodule "hbs"]
 	path = hbs
-	url = https://github.com/open-falcon/hbs.git
+	url = https://github.com/Cepave/hbs.git
 [submodule "portal"]
 	path = portal
-	url = https://github.com/open-falcon/portal.git
+	url = https://github.com/Cepave/portal.git
 [submodule "query"]
 	path = query
-	url = https://github.com/open-falcon/query.git
+	url = https://github.com/Cepave/query.git
 [submodule "transfer"]
 	path = transfer
-	url = https://github.com/open-falcon/transfer.git
+	url = https://github.com/Cepave/transfer.git
 [submodule "scripts"]
 	path = scripts
-	url = https://github.com/open-falcon/scripts.git
+	url = https://github.com/Cepave/scripts.git
 [submodule "doc"]
 	path = doc
-	url = https://github.com/open-falcon/doc.git
+	url = https://github.com/Cepave/doc.git
 [submodule "common"]
 	path = common
-	url = https://github.com/open-falcon/common.git
+	url = https://github.com/Cepave/common.git
 [submodule "open-falcon.github.io"]
 	path = open-falcon.github.io
-	url = https://github.com/open-falcon/open-falcon.github.io.git
+	url = https://github.com/Cepave/open-falcon.github.io.git
 [submodule "task"]
 	path = task
-	url = https://github.com/open-falcon/task.git
+	url = https://github.com/Cepave/task.git
