@@ -41,6 +41,7 @@ type ShortcutConfig struct {
 
 type GlobalConfig struct {
 	Log         string          `json:"log"`
+	Company     string          `json:"company"`
 	Cache       *CacheConfig    `json:"cache"`
 	Http        *HttpConfig     `json:"http"`
 	Salt        string          `json:"salt"`

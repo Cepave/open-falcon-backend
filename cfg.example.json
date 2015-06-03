@@ -1,5 +1,6 @@
 {
     "log": "debug",
+    "company": "MI",
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:1234"

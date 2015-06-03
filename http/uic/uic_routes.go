@@ -19,6 +19,7 @@ func ConfigRoutes() {
 
 	beego.Router("/user/query", &UserController{}, "get:Query")
 	beego.Router("/user/in", &UserController{}, "get:In")
+	beego.Router("/user/qrcode/:id:int", &UserController{}, "get:QrCode")
 	beego.Router("/about/:name:string", &UserController{}, "get:About")
 
 	beego.Router("/team/users", &TeamController{}, "get:Users")

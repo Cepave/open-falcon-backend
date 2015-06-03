@@ -1,11 +1,13 @@
 package uic
 
 import (
+	"code.google.com/p/rsc/qr"
 	"github.com/open-falcon/fe/g"
 	"github.com/open-falcon/fe/http/base"
 	. "github.com/open-falcon/fe/model/uic"
 	"github.com/open-falcon/fe/utils"
 	"github.com/toolkits/str"
+	"strconv"
 	"strings"
 )
 
@@ -347,4 +349,28 @@ func (this *UserController) About() {
 
 	this.Data["User"] = u
 	this.TplNames = "user/about.html"
+}
+
+func (this *UserController) QrCode() {
+	idStr := this.Ctx.Input.Param(":id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		this.NotFound("no such user")
+		return
+	}
+
+	u := ReadUserById(id)
+	if u == nil {
+		this.NotFound("no such user")
+		return
+	}
+
+	c, err := qr.Encode("BEGIN:VCARD\nVERSION:3.0\nFN:"+u.Cnname+"\nTEL;WORK;VOICE:"+u.Phone+"\nEMAIL;PREF;INTERNET:"+u.Email+"\nORG:"+g.Config().Company+"\nEND:VCARD", qr.L)
+	if err != nil {
+		this.NotFound("no such user")
+		return
+	}
+
+	this.Ctx.Output.ContentType("image")
+	this.Ctx.Output.Body(c.PNG())
 }

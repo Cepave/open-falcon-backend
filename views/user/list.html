@@ -46,10 +46,15 @@ $(function() {
 							管理员
 						</div>
 						{{end}}
-						登录账号：{{.Name}}， 中文名：{{.Cnname}}<br>
+						登录账号：{{.Name}}， 中文名：{{.Cnname}}
+						<a href="/user/qrcode/{{.Id}}" target="_blank" style="text-decoration:none;">
+							<span class="glyphicon glyphicon-qrcode"></span>
+						</a>
+						<br>
 						邮箱: {{.Email}}<br>
 						手机: {{.Phone}}<br>
 						IM：{{.IM}}， QQ：{{.QQ}}
+
 						{{if gt $.Me.Role 0}}
 						<div class="pull-right">
 							<a href="/target-user/edit?id={{.Id}}" class="orange" style="text-decoration:none;">

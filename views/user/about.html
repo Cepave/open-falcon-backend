@@ -5,20 +5,16 @@
 		<div class="col-md-12">
 
 			<div style="margin: 0 auto; max-width: 400px;">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<h3 class="panel-title">{{.User.Name}}</h3>
+				<div class="thin-border" style="line-height:24px;">
+					<div class="pull-right">
+						<img src="/user/qrcode/{{.User.Id}}" width="120" height="120">
 					</div>
-					<div class="panel-body">
-
-						<div style="line-height:24px;">
-							姓名：{{.User.Cnname}}<br>
-							手机：{{.User.Phone}}<br>
-							邮箱：{{.User.Email}}<br>
-							QQ：{{.User.QQ}}<br>
-							IM：{{.User.IM}}<br>
-						</div>
-
+					<div>
+						姓名：{{.User.Cnname}}<br>
+						手机：{{.User.Phone}}<br>
+						邮箱：{{.User.Email}}<br>
+						QQ：{{.User.QQ}}<br>
+						IM：{{.User.IM}}<br>
 					</div>
 				</div>
 			</div>
