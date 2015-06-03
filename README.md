@@ -36,27 +36,19 @@ go get ./...
 ./control start
 ```
 
-# 二进制安装
-
-```
-wget http://7xiumq.com1.z0.glb.clouddn.com/open-falcon-fe-0.0.1.tar.gz
-tar zxvf open-falcon-fe-0.0.1.tar.gz
-# modify configuration
-./control start
-```
-
 # 配置介绍
 
 ```
 {
     "log": "debug",
+    "company": "MI", # 填写自己公司的名称，用于生成联系人二维码
     "http": {
         "enabled": true,
-        "listen": "0.0.0.0:1234" 自己随便搞个端口，别跟现有的重复了，可以使用8080，与老版本保持一致
+        "listen": "0.0.0.0:1234" # 自己随便搞个端口，别跟现有的重复了，可以使用8080，与老版本保持一致
     },
     "cache": {
         "enabled": true,
-        "redis": "127.0.0.1:6379", 这个redis跟judge、alarm用的redis不同，这个只是作为缓存来用
+        "redis": "127.0.0.1:6379", # 这个redis跟judge、alarm用的redis不同，这个只是作为缓存来用
         "idle": 10,
         "max": 1000,
         "timeout": {
@@ -65,7 +57,7 @@ tar zxvf open-falcon-fe-0.0.1.tar.gz
             "write": 5000
         }
     },
-    "salt": "0i923fejfd3", 搞一个随机字符串
+    "salt": "0i923fejfd3", # 搞一个随机字符串
     "canRegister": true,
     "uic": {
         "addr": "root:password@tcp(127.0.0.1:3306)/fe?charset=utf8&loc=Asia%2FChongqing",
