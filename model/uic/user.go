@@ -83,7 +83,11 @@ func ReadUserByName(name string) *User {
 }
 
 func (this *User) Save() (int64, error) {
-	return orm.NewOrm().Insert(this)
+	id, err := orm.NewOrm().Insert(this)
+	if err != nil {
+		this.Id = id
+	}
+	return id, err
 }
 
 func InsertRegisterUser(name, password string) (int64, error) {

@@ -54,15 +54,57 @@ func (this *AuthController) LoginPost() {
 		return
 	}
 
-	u := ReadUserByName(name)
-	if u == nil {
-		this.ServeErrJson("no such user")
-		return
-	}
+	var u *User
 
-	if u.Passwd != str.Md5Encode(g.Config().Salt+password) {
-		this.ServeErrJson("password error")
-		return
+	// 如果启用了ldap登录验证，就不存储用户密码了，并且查看该用户是否存在于我们的DB中，没有？插入
+	ldapEnabled := g.Config().Ldap.Enabled
+	if ldapEnabled {
+		sucess, err := utils.LdapBind(g.Config().Ldap.Addr, name, password)
+		if err != nil {
+			this.ServeErrJson(err.Error())
+			return
+		}
+
+		if !sucess {
+			this.ServeErrJson("name or password error")
+			return
+		}
+
+		arr := strings.Split(name, "@")
+		var userName, userEmail string
+		if len(arr) == 2 {
+			userName = arr[0]
+			userEmail = name
+		} else {
+			userName = name
+			userEmail = ""
+		}
+
+		u = ReadUserByName(userName)
+		if u == nil {
+			// 说明用户不存在
+			u = &User{
+				Name:   userName,
+				Passwd: "",
+				Email:  userEmail,
+			}
+			_, err = u.Save()
+			if err != nil {
+				this.ServeErrJson("insert user fail " + err.Error())
+				return
+			}
+		}
+	} else {
+		u = ReadUserByName(name)
+		if u == nil {
+			this.ServeErrJson("no such user")
+			return
+		}
+
+		if u.Passwd != str.Md5Encode(g.Config().Salt+password) {
+			this.ServeErrJson("password error")
+			return
+		}
 	}
 
 	expired := this.CreateSession(u.Id, 3600*24*30)
@@ -77,19 +119,20 @@ func (this *AuthController) LoginPost() {
 }
 
 func (this *AuthController) renderLoginPage(sig, callback string) {
-	this.Data["CanRegister"] = g.Config().CanRegister
+	this.Data["CanRegister"] = g.Config().CanRegister && !g.Config().Ldap.Enabled
+	this.Data["LdapEnabled"] = g.Config().Ldap.Enabled
 	this.Data["Sig"] = sig
 	this.Data["Callback"] = callback
 	this.TplNames = "auth/login.html"
 }
 
 func (this *AuthController) RegisterGet() {
-	this.Data["CanRegister"] = g.Config().CanRegister
+	this.Data["CanRegister"] = g.Config().CanRegister && !g.Config().Ldap.Enabled
 	this.TplNames = "auth/register.html"
 }
 
 func (this *AuthController) RegisterPost() {
-	if !g.Config().CanRegister {
+	if !g.Config().CanRegister || g.Config().Ldap.Enabled {
 		this.ServeErrJson("registration system is not open")
 		return
 	}

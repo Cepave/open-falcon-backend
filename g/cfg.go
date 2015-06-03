@@ -39,6 +39,11 @@ type ShortcutConfig struct {
 	FalconAlarm     string `json:"falconAlarm"`
 }
 
+type LdapConfig struct {
+	Enabled bool   `json:"enabled"`
+	Addr    string `json:"addr"`
+}
+
 type GlobalConfig struct {
 	Log         string          `json:"log"`
 	Company     string          `json:"company"`
@@ -46,6 +51,7 @@ type GlobalConfig struct {
 	Http        *HttpConfig     `json:"http"`
 	Salt        string          `json:"salt"`
 	CanRegister bool            `json:"canRegister"`
+	Ldap        *LdapConfig     `json:"ldap"`
 	Uic         *UicConfig      `json:"uic"`
 	Shortcut    *ShortcutConfig `json:"shortcut"`
 }

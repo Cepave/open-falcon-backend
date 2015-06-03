@@ -18,7 +18,12 @@
 			<div style="margin: 0 auto; max-width: 400px;">
 				<div class="panel panel-default">
 					<div class="panel-heading">
-						<h3 class="panel-title">Sign in</h3>
+						<h3 class="panel-title">
+							Sign in
+							{{if .LdapEnabled}}
+							(use LDAP account)
+							{{end}}
+						</h3>
 					</div>
 					<div class="panel-body">
 						<div class="form-sign" role="form">
