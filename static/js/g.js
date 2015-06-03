@@ -87,9 +87,16 @@ function register() {
 }
 
 function login() {
+	var raw = $('#ldap').prop('checked');
+	if (raw) {
+		useLdap = '1'
+	} else {
+		useLdap = '0'
+	}
 	$.post('/auth/login', {
 		'name' : $('#name').val(),
 		'password' : $("#password").val(),
+		'ldap' : useLdap,
 		'sig': $("#sig").val(),
 		'callback': $("#callback").val()
 	}, function(json) {

@@ -72,3 +72,14 @@ func (this *BaseController) MustGetInt64(key string, def int64) int64 {
 func (this *BaseController) MustGetString(key string, def string) string {
 	return strings.TrimSpace(this.GetString(key, def))
 }
+
+func (this *BaseController) MustGetBool(key string, def bool) bool {
+	raw := strings.TrimSpace(this.GetString(key, "0"))
+	if raw == "true" || raw == "1" || raw == "on" || raw == "checked" || raw == "yes" {
+		return true
+	} else if raw == "false" || raw == "0" || raw == "off" || raw == "" || raw == "no" {
+		return false
+	} else {
+		return def
+	}
+}

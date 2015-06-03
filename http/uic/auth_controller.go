@@ -56,8 +56,8 @@ func (this *AuthController) LoginPost() {
 
 	var u *User
 
-	// 如果启用了ldap登录验证，就不存储用户密码了，并且查看该用户是否存在于我们的DB中，没有？插入
-	ldapEnabled := g.Config().Ldap.Enabled
+	ldapEnabled := this.MustGetBool("ldap", false)
+
 	if ldapEnabled {
 		sucess, err := utils.LdapBind(g.Config().Ldap.Addr, name, password)
 		if err != nil {
@@ -119,7 +119,7 @@ func (this *AuthController) LoginPost() {
 }
 
 func (this *AuthController) renderLoginPage(sig, callback string) {
-	this.Data["CanRegister"] = g.Config().CanRegister && !g.Config().Ldap.Enabled
+	this.Data["CanRegister"] = g.Config().CanRegister
 	this.Data["LdapEnabled"] = g.Config().Ldap.Enabled
 	this.Data["Sig"] = sig
 	this.Data["Callback"] = callback
@@ -127,12 +127,12 @@ func (this *AuthController) renderLoginPage(sig, callback string) {
 }
 
 func (this *AuthController) RegisterGet() {
-	this.Data["CanRegister"] = g.Config().CanRegister && !g.Config().Ldap.Enabled
+	this.Data["CanRegister"] = g.Config().CanRegister
 	this.TplNames = "auth/register.html"
 }
 
 func (this *AuthController) RegisterPost() {
-	if !g.Config().CanRegister || g.Config().Ldap.Enabled {
+	if !g.Config().CanRegister {
 		this.ServeErrJson("registration system is not open")
 		return
 	}

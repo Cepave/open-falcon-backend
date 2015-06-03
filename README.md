@@ -55,7 +55,7 @@ go get ./...
     "salt": "0i923fejfd3", # 搞一个随机字符串
     "canRegister": true,
     "ldap": {
-        "enabled": false, # 如果启用了LDAP，canRegister无论配置如何，都不允许注册
+        "enabled": false,
         "addr": "ldap.example.com:389"
     },
     "uic": {
