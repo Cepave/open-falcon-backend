@@ -1,5 +1,5 @@
-CREATE DATABASE falcon_portal;
-USE falcon_portal;
+CREATE DATABASE falcon_portal_b;
+USE falcon_portal_b;
 SET NAMES 'utf8';
 
 /**
@@ -16,7 +16,7 @@ CREATE TABLE host
   plugin_version VARCHAR(128) NOT NULL DEFAULT '',
   maintain_begin INT UNSIGNED NOT NULL DEFAULT 0,
   maintain_end   INT UNSIGNED NOT NULL DEFAULT 0,
-  create_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  update_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY idx_host_hostname (hostname)
 )
