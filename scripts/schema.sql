@@ -1,5 +1,5 @@
-create database fe;
-use fe;
+create database uic;
+use uic;
 set names utf8;
 
 drop table if exists team;

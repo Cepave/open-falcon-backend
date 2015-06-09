@@ -16,14 +16,14 @@
             "write": 5000
         }
     },
-    "salt": "0i923fejfd3",
+    "salt": "",
     "canRegister": true,
     "ldap": {
         "enabled": false,
         "addr": "ldap.example.com:389"
     },
     "uic": {
-        "addr": "root:@tcp(127.0.0.1:3306)/fe?charset=utf8&loc=Asia%2FChongqing",
+        "addr": "root:@tcp(127.0.0.1:3306)/uic?charset=utf8&loc=Asia%2FChongqing",
         "idle": 10,
         "max": 100
     },
