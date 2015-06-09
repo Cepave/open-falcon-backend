@@ -1,11 +1,11 @@
 package uic
 
 import (
-	"code.google.com/p/rsc/qr"
 	"github.com/open-falcon/fe/g"
 	"github.com/open-falcon/fe/http/base"
 	. "github.com/open-falcon/fe/model/uic"
 	"github.com/open-falcon/fe/utils"
+	"github.com/toolkits/rsc/qr"
 	"github.com/toolkits/str"
 	"strconv"
 	"strings"
