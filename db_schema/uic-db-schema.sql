@@ -55,4 +55,5 @@ CREATE TABLE `session` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 /*900150983cd24fb0d6963f7d28e17f72*/
-insert into `user`(`name`, `passwd`, `role`, `created`) values('root', md5('abc'), 2, now());
+/*insert into `user`(`name`, `passwd`, `role`, `created`) values('root', md5('abc'), 2, now());*/
+
