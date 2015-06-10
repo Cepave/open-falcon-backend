@@ -46,3 +46,6 @@
 [submodule "task"]
 	path = task
 	url = https://github.com/Cepave/task.git
+[submodule "fe"]
+	path = fe
+	url = https://github.com/Cepave/fe.git
