@@ -32,7 +32,7 @@ done
 
 
 graph_components=("agent" "transfer" "graph" "query" "dashboard")
-judge_components=("portal" "hbs" "judge" "sender" "alarm" "links")
+judge_components=("portal" "fe" "hbs" "judge" "sender" "alarm" "links")
 other_components=("task")
 
 all_components=""
