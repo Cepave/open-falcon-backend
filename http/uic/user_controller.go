@@ -190,6 +190,38 @@ func (this *UserController) Users() {
 	this.TplNames = "user/list.html"
 }
 
+func (this *UserController) CreateUserGet() {
+	this.TplNames = "user/create.html"
+}
+
+func (this *UserController) CreateUserPost() {
+	name := strings.TrimSpace(this.GetString("name", ""))
+	password := strings.TrimSpace(this.GetString("password", ""))
+
+	if !utils.IsUsernameValid(name) {
+		this.ServeErrJson("name pattern is invalid")
+		return
+	}
+
+	if ReadUserIdByName(name) > 0 {
+		this.ServeErrJson("name is already existent")
+		return
+	}
+
+	if password == "" {
+		this.ServeErrJson("password is blank")
+		return
+	}
+
+	_, err := InsertRegisterUser(name, str.Md5Encode(g.Config().Salt+password))
+	if err != nil {
+		this.ServeErrJson("insert user fail " + err.Error())
+		return
+	} else {
+		this.ServeOKJson()
+	}
+}
+
 func (this *UserController) DeleteUser() {
 	me := this.Ctx.Input.GetData("CurrentUser").(*User)
 	if me.Role <= 0 {

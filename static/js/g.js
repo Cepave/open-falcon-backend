@@ -125,22 +125,19 @@ function query_team() {
 }
 
 function create_user() {
-	$.post('/user/create', {
+	$.post('/me/user/c', {
 		'name' : $("#name").val(),
 		'cnname' : $("#cnname").val(),
 		'email' : $("#email").val(),
 		'phone' : $("#phone").val(),
-		'password' : CryptoJS.MD5("abc").toString()
+		'im' : $("#im").val(),
+		'qq' : $("#qq").val(),
+		'password' : $("#password").val()
 	}, function(json) {
 		if (json.msg.length > 0) {
 			err_message_quietly(json.msg);
 		} else {
-			ok_message_quietly('create user successfully', function() {
-				$("#name").val("");
-				$("#cnname").val("");
-				$("#email").val("");
-				$("#phone").val("");
-			});
+			ok_message_quietly("create user successfully");
 		}
 	});
 }
