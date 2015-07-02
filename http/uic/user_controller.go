@@ -247,7 +247,7 @@ func (this *UserController) CreateUserPost() {
 	if err != nil {
 		this.ServeErrJson("insert user fail " + err.Error())
 		return
-	} 
+	}
 
 	targetUser := ReadUserById(lastId)
 	targetUser.Cnname = cnname
