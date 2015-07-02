@@ -190,6 +190,80 @@ func (this *UserController) Users() {
 	this.TplNames = "user/list.html"
 }
 
+func (this *UserController) CreateUserGet() {
+	this.TplNames = "user/create.html"
+}
+
+func (this *UserController) CreateUserPost() {
+	name := strings.TrimSpace(this.GetString("name", ""))
+	password := strings.TrimSpace(this.GetString("password", ""))
+	cnname := strings.TrimSpace(this.GetString("cnname", ""))
+	email := strings.TrimSpace(this.GetString("email", ""))
+	phone := strings.TrimSpace(this.GetString("phone", ""))
+	im := strings.TrimSpace(this.GetString("im", ""))
+	qq := strings.TrimSpace(this.GetString("qq", ""))
+
+	if !utils.IsUsernameValid(name) {
+		this.ServeErrJson("name pattern is invalid")
+		return
+	}
+
+	if ReadUserIdByName(name) > 0 {
+		this.ServeErrJson("name is already existent")
+		return
+	}
+
+	if password == "" {
+		this.ServeErrJson("password is blank")
+		return
+	}
+
+	if utils.HasDangerousCharacters(cnname) {
+		this.ServeErrJson("cnname is invalid")
+		return
+	}
+
+	if utils.HasDangerousCharacters(email) {
+		this.ServeErrJson("email is invalid")
+		return
+	}
+
+	if utils.HasDangerousCharacters(phone) {
+		this.ServeErrJson("phone is invalid")
+		return
+	}
+
+	if utils.HasDangerousCharacters(im) {
+		this.ServeErrJson("im is invalid")
+		return
+	}
+
+	if utils.HasDangerousCharacters(qq) {
+		this.ServeErrJson("qq is invalid")
+		return
+	}
+
+	lastId, err := InsertRegisterUser(name, str.Md5Encode(g.Config().Salt+password))
+	if err != nil {
+		this.ServeErrJson("insert user fail " + err.Error())
+		return
+	} 
+
+	targetUser := ReadUserById(lastId)
+	targetUser.Cnname = cnname
+	targetUser.Email = email
+	targetUser.Phone = phone
+	targetUser.IM = im
+	targetUser.QQ = qq
+
+	if _, err := targetUser.Update(); err != nil {
+		this.ServeErrJson("occur error " + err.Error())
+		return
+	}
+
+	this.ServeOKJson()
+}
+
 func (this *UserController) DeleteUser() {
 	me := this.Ctx.Input.GetData("CurrentUser").(*User)
 	if me.Role <= 0 {

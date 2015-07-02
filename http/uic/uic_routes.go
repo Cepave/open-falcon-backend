@@ -37,6 +37,7 @@ func ConfigRoutes() {
 			beego.NSRouter("/profile", &UserController{}, "get:ProfileGet;post:ProfilePost"),
 			beego.NSRouter("/chpwd", &UserController{}, "*:ChangePassword"),
 			beego.NSRouter("/users", &UserController{}, "get:Users"),
+			beego.NSRouter("/user/c", &UserController{}, "get:CreateUserGet;post:CreateUserPost"),
 			beego.NSRouter("/teams", &TeamController{}, "get:Teams"),
 			beego.NSRouter("/team/c", &TeamController{}, "get:CreateTeamGet;post:CreateTeamPost"),
 		)
