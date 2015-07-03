@@ -5,6 +5,7 @@
 # Get Started
 
     git clone https://github.com/Cepave/open-falcon
+    cd open-falcon
     git submodule update —-init
 
 # License
