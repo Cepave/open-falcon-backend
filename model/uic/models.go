@@ -14,7 +14,7 @@ type User struct {
 	IM      string    `json:"im" orm:"column(im)"`
 	QQ      string    `json:"qq" orm:"column(qq)"`
 	Role    int       `json:"role"`
-	Created time.Time `json:"-"`
+	Created time.Time `orm:"auto_now_add;type(datetime)"`
 }
 
 type Team struct {
@@ -22,7 +22,7 @@ type Team struct {
 	Name    string    `json:"name"`
 	Resume  string    `json:"resume"`
 	Creator int64     `json:"creator"`
-	Created time.Time `json:"-"`
+	Created time.Time `orm:"auto_now_add;type(datetime)"`
 }
 
 type RelTeamUser struct {
