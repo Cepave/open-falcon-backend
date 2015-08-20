@@ -33,7 +33,7 @@ done
 
 graph_components=("agent" "transfer" "graph" "query" "dashboard")
 judge_components=("portal" "fe" "hbs" "judge" "sender" "alarm" "links")
-other_components=("task")
+other_components=("task" "gateway")
 
 all_components=""
 for c in ${graph_components[@]};do
@@ -52,7 +52,7 @@ for c in `echo -n $all_components | tr ' ' '\n'`;do
     cd $WORKSPACE
     if [ -d "$c" ];then
         echo "pull $repo ..."
-        cd $WORKSPACE/$c && git pull origin master &> /dev/null
+        cd $WORKSPACE/$c && git reset --hard HEAD; git pull origin master &> /dev/null
     else
         echo "clone $repo ..."
         cd $WORKSPACE && git clone $repo &> /dev/null
