@@ -45,6 +45,20 @@ func WriteMailModel(mail *model.Mail) {
 	LPUSH(g.Config().Queue.Mail, string(bs))
 }
 
+func WriteQQModel(qq *model.QQ) {
+	if qq == nil {
+		return
+	}
+
+	bs, err := json.Marshal(qq)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	LPUSH(g.Config().Queue.QQ, string(bs))
+}
+
 func WriteSms(tos []string, content string) {
 	if len(tos) == 0 {
 		return
@@ -61,4 +75,13 @@ func WriteMail(tos []string, subject, content string) {
 
 	mail := &model.Mail{Tos: strings.Join(tos, ","), Subject: subject, Content: content}
 	WriteMailModel(mail)
+}
+
+func WriteQQ(tos []string, subject, content string) {
+	if len(tos) == 0 {
+		return
+	}
+
+	qq := &model.QQ{Tos: strings.Join(tos, ","), Subject: subject, Content: content}
+	WriteQQModel(qq)
 }

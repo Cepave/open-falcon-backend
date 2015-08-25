@@ -16,3 +16,12 @@ type SmsDto struct {
 	Phone    string `json:"phone"`
 	Status   string `json:"status"`
 }
+
+type QQDto struct {
+	Priority int    `json:"priority"`
+	Metric   string `json:"metric"`
+	Subject  string `json:"subject"`
+	Content  string `json:"content"`
+	Email    string `json:"email"`
+	Status   string `json:"status"`
+}
