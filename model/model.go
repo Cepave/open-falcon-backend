@@ -15,6 +15,12 @@ type Mail struct {
 	Content string `json:"content"`
 }
 
+type QQ struct {
+	Tos     string `json:"tos"`
+	Subject string `json:"subject"`
+	Content string `json:"content"`
+}
+
 func (this *Sms) String() string {
 	return fmt.Sprintf(
 		"<Tos:%s, Content:%s>",

@@ -70,3 +70,34 @@ func PopAllMail(queue string) []*model.Mail {
 
 	return ret
 }
+
+func PopAllQQ(queue string) []*model.QQ {
+	ret := []*model.QQ{}
+
+	rc := ConnPool.Get()
+	defer rc.Close()
+
+	for {
+		reply, err := redis.String(rc.Do("RPOP", queue))
+		if err != nil {
+			if err != redis.ErrNil {
+				log.Println(err)
+			}
+			break
+		}
+
+		if reply == "" || reply == "nil" {
+			continue
+		}
+
+		var qq model.QQ
+		err = json.Unmarshal([]byte(reply), &qq)
+		if err != nil {
+			log.Println(err, reply)
+			continue
+		}
+
+		ret = append(ret, &qq)
+	}
+	return ret
+}

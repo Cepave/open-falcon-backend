@@ -76,7 +76,7 @@ function pack() {
     build
     git log -1 --pretty=%h > gitversion
     version=`./$app -v`
-    tar zcvf $app-$version.tar.gz control cfg.example.json $app gitversion
+    tar zcvf $app-$version.tar.gz control cfg.example.json qq_sms.sh $app gitversion
 }
 
 function packbin() {

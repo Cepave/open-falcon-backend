@@ -20,16 +20,19 @@ type RedisConfig struct {
 type QueueConfig struct {
 	Sms  string `json:"sms"`
 	Mail string `json:"mail"`
+	QQ   string `json:"qq"`
 }
 
 type WorkerConfig struct {
 	Sms  int `json:"sms"`
 	Mail int `json:"mail"`
+	QQ   int `json:"qq"`
 }
 
 type ApiConfig struct {
 	Sms  string `json:"sms"`
 	Mail string `json:"mail"`
+	QQ   string `json:"qq"`
 }
 
 type GlobalConfig struct {
