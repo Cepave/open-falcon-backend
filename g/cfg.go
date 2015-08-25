@@ -15,6 +15,7 @@ type HttpConfig struct {
 type QueueConfig struct {
 	Sms  string `json:"sms"`
 	Mail string `json:"mail"`
+	QQ   string `json:"qq"`
 }
 
 type RedisConfig struct {
@@ -24,6 +25,7 @@ type RedisConfig struct {
 	LowQueues     []string `json:"lowQueues"`
 	UserSmsQueue  string   `json:"userSmsQueue"`
 	UserMailQueue string   `json:"userMailQueue"`
+	UserQQQueue   string   `json:"userQQQueue"`
 }
 
 type ApiConfig struct {

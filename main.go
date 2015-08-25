@@ -36,6 +36,7 @@ func main() {
 	go cron.ReadLowEvent()
 	go cron.CombineSms()
 	go cron.CombineMail()
+	go cron.CombineQQ()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

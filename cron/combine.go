@@ -28,6 +28,13 @@ func CombineMail() {
 	}
 }
 
+func CombineQQ() {
+	for {
+		time.Sleep(time.Minute)
+		combineQQ()
+	}
+}
+
 func combineMail() {
 	dtos := popAllMailDto()
 	count := len(dtos)
@@ -117,6 +124,40 @@ func combineSms() {
 
 }
 
+func combineQQ() {
+	dtos := popAllQQDto()
+	count := len(dtos)
+	if count == 0 {
+		return
+	}
+
+	dtoMap := make(map[string][]*QQDto)
+	for i := 0; i < count; i++ {
+		key := fmt.Sprintf("%d%s%s%s", dtos[i].Priority, dtos[i].Status, dtos[i].Email, dtos[i].Metric)
+		if _, ok := dtoMap[key]; ok {
+			dtoMap[key] = append(dtoMap[key], dtos[i])
+		} else {
+			dtoMap[key] = []*QQDto{dtos[i]}
+		}
+	}
+
+	// 不要在这处理，继续写回redis，否则重启alarm很容易丢数据
+	for _, arr := range dtoMap {
+		size := len(arr)
+		if size == 1 {
+			redi.WriteQQ([]string{arr[0].Email}, arr[0].Subject, arr[0].Content)
+			continue
+		}
+		subject := fmt.Sprintf("[P%d][%s] %d %s", arr[0].Priority, arr[0].Status, size, arr[0].Metric)
+		contentArr := make([]string, size)
+		for i := 0; i < size; i++ {
+			contentArr[i] = arr[i].Content
+		}
+		content := strings.Join(contentArr, "\r\n")
+		redi.WriteQQ([]string{arr[0].Email}, subject, content)
+	}
+}
+
 func popAllSmsDto() []*SmsDto {
 	ret := []*SmsDto{}
 	queue := g.Config().Redis.UserSmsQueue
@@ -178,6 +219,39 @@ func popAllMailDto() []*MailDto {
 		}
 
 		ret = append(ret, &mailDto)
+	}
+
+	return ret
+}
+
+func popAllQQDto() []*QQDto {
+	ret := []*QQDto{}
+	queue := g.Config().Redis.UserQQQueue
+
+	rc := g.RedisConnPool.Get()
+	defer rc.Close()
+
+	for {
+		reply, err := redis.String(rc.Do("RPOP", queue))
+		if err != nil {
+			if err != redis.ErrNil {
+				log.Println("get QQDto fail", err)
+			}
+			break
+		}
+
+		if reply == "" || reply == "nil" {
+			continue
+		}
+
+		var qqDto QQDto
+		err = json.Unmarshal([]byte(reply), &qqDto)
+		if err != nil {
+			log.Printf("json unmarshal QQDto: %s fail: %v", reply, err)
+			continue
+		}
+
+		ret = append(ret, &qqDto)
 	}
 
 	return ret
