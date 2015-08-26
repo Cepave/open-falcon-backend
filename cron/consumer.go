@@ -48,6 +48,7 @@ func consumeHighEvents(event *model.Event, action *api.Action) {
 	}
 
 	redis.WriteMail(mails, smsContent, mailContent)
+	redis.WriteQQ(mails, smsContent, mailContent)
 }
 
 // 低优先级的做报警合并
@@ -61,6 +62,7 @@ func consumeLowEvents(event *model.Event, action *api.Action) {
 	}
 
 	ParseUserMail(event, action)
+	ParseUserQQ(event, action)
 }
 
 func ParseUserSms(event *model.Event, action *api.Action) {
@@ -123,6 +125,41 @@ func ParseUserMail(event *model.Event, action *api.Action) {
 		bs, err := json.Marshal(dto)
 		if err != nil {
 			log.Println("json marshal MailDto fail:", err)
+			continue
+		}
+
+		_, err = rc.Do("LPUSH", queue, string(bs))
+		if err != nil {
+			log.Println("LPUSH redis", queue, "fail:", err, "dto:", string(bs))
+		}
+	}
+}
+func ParseUserQQ(event *model.Event, action *api.Action) {
+	userMap := api.GetUsers(action.Uic)
+
+	metric := event.Metric()
+	subject := GenerateSmsContent(event)
+	content := GenerateMailContent(event)
+	status := event.Status
+	priority := event.Priority()
+
+	queue := g.Config().Redis.UserQQQueue
+
+	rc := g.RedisConnPool.Get()
+	defer rc.Close()
+
+	for _, user := range userMap {
+		dto := QQDto{
+			Priority: priority,
+			Metric:   metric,
+			Subject:  subject,
+			Content:  content,
+			Email:    user.Email,
+			Status:   status,
+		}
+		bs, err := json.Marshal(dto)
+		if err != nil {
+			log.Println("json marshal QQDto fail:", err)
 			continue
 		}
 

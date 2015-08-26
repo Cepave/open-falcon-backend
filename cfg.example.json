@@ -7,7 +7,8 @@
     },
     "queue": {
         "sms": "/sms",
-        "mail": "/mail"
+        "mail": "/mail",
+        "qq": "/qq"
     },
     "redis": {
         "addr": "127.0.0.1:6379",
@@ -24,7 +25,8 @@
             "event:p6"
         ],
         "userSmsQueue": "/queue/user/sms",
-        "userMailQueue": "/queue/user/mail"
+        "userMailQueue": "/queue/user/mail",
+        "userQQQueue": "/queue/user/qq"
     },
     "api": {
         "portal": "http://falcon.example.com",
