@@ -49,12 +49,12 @@
 [submodule "fe"]
 	path = fe
 	url = https://github.com/Cepave/fe.git
-[submodule "ops-updater"]
-	path = ops-updater
-	url = https://github.com/Cepave/ops-updater.git
 [submodule "ops-common"]
 	path = ops-common
 	url = https://github.com/Cepave/ops-common.git
 [submodule "ops-meta"]
 	path = ops-meta
 	url = https://github.com/Cepave/ops-meta.git
+[submodule "ops-updater"]
+	path = ops-updater
+	url = https://github.com/Cepave/ops-updater
