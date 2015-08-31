@@ -30,6 +30,7 @@
     "shortcut": {
         "falconPortal": "http://11.11.11.11:5050/",
         "falconDashboard": "http://11.11.11.11:7070/",
+        "grafanaDashboard": "http://11.11.11.11:3001/",
         "falconAlarm": "http://11.11.11.11:9912/"
     }
 }

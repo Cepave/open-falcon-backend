@@ -34,9 +34,10 @@ type UicConfig struct {
 }
 
 type ShortcutConfig struct {
-	FalconPortal    string `json:"falconPortal"`
-	FalconDashboard string `json:"falconDashboard"`
-	FalconAlarm     string `json:"falconAlarm"`
+	FalconPortal     string `json:"falconPortal"`
+	FalconDashboard  string `json:"falconDashboard"`
+	GrafanaDashboard string `json:"grafanaDashboard"`
+	FalconAlarm      string `json:"falconAlarm"`
 }
 
 type LdapConfig struct {
