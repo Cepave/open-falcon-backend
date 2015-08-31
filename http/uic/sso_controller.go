@@ -1,9 +1,9 @@
 package uic
 
 import (
-	"github.com/open-falcon/fe/http/base"
-	"github.com/open-falcon/fe/model/uic"
-	"github.com/open-falcon/fe/utils"
+	"github.com/Cepave/fe/http/base"
+	"github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/fe/utils"
 )
 
 type SsoController struct {

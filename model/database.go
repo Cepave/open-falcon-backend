@@ -1,9 +1,9 @@
 package model
 
 import (
+	"github.com/Cepave/fe/g"
+	. "github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
-	"github.com/open-falcon/fe/g"
-	. "github.com/open-falcon/fe/model/uic"
 	_ "github.com/go-sql-driver/mysql"
 )
 

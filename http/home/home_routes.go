@@ -3,7 +3,7 @@ package home
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/open-falcon/fe/g"
+	"github.com/Cepave/fe/g"
 )
 
 func ConfigRoutes() {
