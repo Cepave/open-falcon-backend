@@ -3,8 +3,8 @@ package model
 import (
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/open-falcon/fe/g"
-	. "github.com/open-falcon/fe/model/uic"
+	"github.com/Cepave/fe/g"
+	. "github.com/Cepave/fe/model/uic"
 )
 
 func InitDatabase() {
