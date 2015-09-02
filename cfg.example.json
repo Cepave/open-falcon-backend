@@ -10,7 +10,7 @@
     },
     "queue": {
         "sms": "/sms",
-        "mail": "/mail"
+        "mail": "/mail",
         "qq": "/qq"
     },
     "worker": {
@@ -20,7 +20,7 @@
     },
     "api": {
         "sms": "http://11.11.11.11:8000/sms",
-        "mail": "http://11.11.11.11:9000/mail"
+        "mail": "http://11.11.11.11:9000/mail",
         "qq": "http://11.11.11.11:5010"
     }
 }
