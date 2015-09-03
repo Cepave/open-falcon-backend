@@ -6,6 +6,7 @@ import (
 	"github.com/open-falcon/sender/proc"
 	"github.com/open-falcon/sender/redis"
 	//"github.com/toolkits/net/httplib"
+	"github.com/kardianos/osext"
 	"log"
 	"os/exec"
 	"time"
@@ -36,7 +37,8 @@ func SendQQ(qq *model.QQ) {
 	}()
 
 	url := g.Config().Api.QQ
-	cmd := exec.Command("./qq_sms.sh", url, qq.Subject, qq.Content)
+	exePath, _ = osext.Executable()
+	cmd := exec.Command("/bin/sh", exePath+"/qq_sms.sh", url, qq.Subject, qq.Content)
 	err := cmd.Run()
 	if err != nil {
 		log.Println(err)
