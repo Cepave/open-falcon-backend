@@ -29,8 +29,8 @@
         "userQQQueue": "/queue/user/qq"
     },
     "api": {
-        "portal": "http://falcon.example.com",
-        "uic": "http://uic.example.com",
-        "links": "http://link.example.com"
+        "portal": "http://portal.owlemon.com",
+        "uic": "http://uic.owlemon.com",
+        "links": "http://links.owlemon.com"
     }
 }
