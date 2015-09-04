@@ -6,7 +6,6 @@ import (
 	"github.com/Cepave/sender/proc"
 	"github.com/Cepave/sender/redis"
 	//"github.com/toolkits/net/httplib"
-	"github.com/kardianos/osext"
 	"log"
 	"os/exec"
 	"time"
@@ -37,7 +36,6 @@ func SendQQ(qq *model.QQ) {
 	}()
 
 	url := g.Config().Api.QQ
-	exePath, _ := osext.Executable()
 	cmd := exec.Command("/bin/bash", "./qq_sms.sh", url, qq.Subject, qq.Content)
 	err := cmd.Run()
 	if err != nil {
