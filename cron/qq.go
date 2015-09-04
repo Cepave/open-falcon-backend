@@ -1,10 +1,10 @@
 package cron
 
 import (
-	"github.com/open-falcon/sender/g"
-	"github.com/open-falcon/sender/model"
-	"github.com/open-falcon/sender/proc"
-	"github.com/open-falcon/sender/redis"
+	"github.com/Cepave/sender/g"
+	"github.com/Cepave/sender/model"
+	"github.com/Cepave/sender/proc"
+	"github.com/Cepave/sender/redis"
 	//"github.com/toolkits/net/httplib"
 	"github.com/kardianos/osext"
 	"log"
@@ -37,7 +37,7 @@ func SendQQ(qq *model.QQ) {
 	}()
 
 	url := g.Config().Api.QQ
-	exePath, _ = osext.Executable()
+	exePath, _ := osext.Executable()
 	cmd := exec.Command("/bin/sh", exePath+"/qq_sms.sh", url, qq.Subject, qq.Content)
 	err := cmd.Run()
 	if err != nil {

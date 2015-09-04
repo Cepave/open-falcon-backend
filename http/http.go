@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/open-falcon/sender/g"
+	"github.com/Cepave/sender/g"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
