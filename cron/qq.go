@@ -38,7 +38,7 @@ func SendQQ(qq *model.QQ) {
 
 	url := g.Config().Api.QQ
 	exePath, _ := osext.Executable()
-	cmd := exec.Command("/bin/sh", exePath+"/qq_sms.sh", url, qq.Subject, qq.Content)
+	cmd := exec.Command("/bin/bash", "./qq_sms.sh", url, qq.Subject, qq.Content)
 	err := cmd.Run()
 	if err != nil {
 		log.Println(err)
