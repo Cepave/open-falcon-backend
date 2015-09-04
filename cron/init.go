@@ -1,7 +1,7 @@
 package cron
 
 import (
-	"github.com/open-falcon/sender/g"
+	"github.com/Cepave/sender/g"
 )
 
 var (
