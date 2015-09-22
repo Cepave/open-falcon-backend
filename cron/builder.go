@@ -28,7 +28,45 @@ func BuildCommonSMSContent(event *model.Event) string {
 func BuildCommonMailContent(event *model.Event) string {
 	link := g.Link(event)
 	return fmt.Sprintf(
-		"%s\r\nP%d\r\nEndpoint:%s\r\nMetric:%s\r\nTags:%s\r\n%s: %s%s%s\r\nNote:%s\r\nMax:%d, Current:%d\r\nTimestamp:%s\r\n%s\r\n",
+		`<html><body><table border="1" cellpadding="10" cellspacing="0" style="border: 1px solid #ccc;">
+ 			<tr style="border: 1px solid #ccc;">
+    				<td colspan="row">%s</td>
+    				<td colspan="row">%d</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">Endpoint:</td>
+    				<td scope="row">%s</td>
+			</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">Metric:</td>
+    				<td align="left">%s</td>
+  			</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">Tags:</td>
+    				<td align="left">%s</td>
+  			</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">%s</td>
+    				<td align="left">%s%s%s</td>
+  			</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">Note:</td>
+    				<td align="left">%s</td>
+  			</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">Max:</td>
+    				<td align="left">%d</td>
+  			</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">Current:</td>
+    				<td align="left">%d</td>
+  			</tr>
+  			<tr style="border: 1px solid #ccc;">
+    				<td scope="row">Timesramp:</td>
+    				<td align="left">%s</td>
+  			</tr>
+		</table>
+		<br>
+		<a href="%s">%s</a></body></html>`,
 		event.Status,
 		event.Priority(),
 		event.Endpoint,
@@ -42,6 +80,7 @@ func BuildCommonMailContent(event *model.Event) string {
 		event.MaxStep(),
 		event.CurrentStep,
 		event.FormattedTime(),
+		link,
 		link,
 	)
 }
