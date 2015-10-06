@@ -42,13 +42,14 @@ func consumeHighEvents(event *model.Event, action *api.Action) {
 
 	smsContent := GenerateSmsContent(event)
 	mailContent := GenerateMailContent(event)
+	QQContent  := GenerateQQContent(event)
 
 	if event.Priority() < 3 {
 		redis.WriteSms(phones, smsContent)
 	}
 
 	redis.WriteMail(mails, smsContent, mailContent)
-	redis.WriteQQ(mails, smsContent, mailContent)
+	redis.WriteQQ(mails, smsContent, QQContent)
 }
 
 // 低优先级的做报警合并
@@ -139,7 +140,7 @@ func ParseUserQQ(event *model.Event, action *api.Action) {
 
 	metric := event.Metric()
 	subject := GenerateSmsContent(event)
-	content := GenerateMailContent(event)
+	content := GenerateQQContent(event)
 	status := event.Status
 	priority := event.Priority()
 
