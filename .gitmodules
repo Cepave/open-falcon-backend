@@ -58,3 +58,6 @@
 [submodule "ops-updater"]
 	path = ops-updater
 	url = https://github.com/Cepave/ops-updater
+[submodule "book"]
+	path = book
+	url = https://github.com/Cepave/book.git
