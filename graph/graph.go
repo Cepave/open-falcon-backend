@@ -7,13 +7,13 @@ import (
 	"math"
 	"time"
 
-	cmodel "github.com/open-falcon/common/model"
-	cutils "github.com/open-falcon/common/utils"
+	cmodel "github.com/Cepave/common/model"
+	cutils "github.com/Cepave/common/utils"
 	rings "github.com/toolkits/consistent/rings"
 	nset "github.com/toolkits/container/set"
 	spool "github.com/toolkits/pool/simple_conn_pool"
 
-	"github.com/open-falcon/query/g"
+	"github.com/Cepave/query/g"
 )
 
 // 连接池

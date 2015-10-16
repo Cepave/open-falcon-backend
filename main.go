@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/open-falcon/query/g"
-	"github.com/open-falcon/query/graph"
-	"github.com/open-falcon/query/http"
-	"github.com/open-falcon/query/proc"
+	"github.com/Cepave/query/g"
+	"github.com/Cepave/query/graph"
+	"github.com/Cepave/query/http"
+	"github.com/Cepave/query/proc"
 )
 
 func main() {
