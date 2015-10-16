@@ -24,6 +24,7 @@ func Start() {
 	configCommonRoutes()
 	configProcHttpRoutes()
 	configGraphRoutes()
+	configZabbixRoutes()
 
 	// start http server
 	addr := g.Config().Http.Listen
