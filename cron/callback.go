@@ -2,9 +2,9 @@ package cron
 
 import (
 	"fmt"
-	"github.com/open-falcon/alarm/api"
-	"github.com/open-falcon/alarm/redis"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/alarm/api"
+	"github.com/Cepave/alarm/redis"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/net/httplib"
 	"strings"
 	"time"

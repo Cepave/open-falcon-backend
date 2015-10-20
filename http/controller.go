@@ -3,7 +3,7 @@ package http
 import (
 	"fmt"
 	"github.com/astaxie/beego"
-	"github.com/open-falcon/alarm/g"
+	"github.com/Cepave/alarm/g"
 	"github.com/toolkits/file"
 	"sort"
 	"strings"

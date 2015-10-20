@@ -2,10 +2,10 @@ package cron
 
 import (
 	"encoding/json"
-	"github.com/open-falcon/alarm/api"
-	"github.com/open-falcon/alarm/g"
-	"github.com/open-falcon/alarm/redis"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/alarm/api"
+	"github.com/Cepave/alarm/g"
+	"github.com/Cepave/alarm/redis"
+	"github.com/Cepave/common/model"
 	"log"
 )
 
