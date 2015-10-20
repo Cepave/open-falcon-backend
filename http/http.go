@@ -1,6 +1,9 @@
 package http
 
 import (
+	"github.com/astaxie/beego/orm"
+	_ "github.com/go-sql-driver/mysql"
+
 	"fmt"
 	"github.com/Cepave/alarm/g"
 	"github.com/astaxie/beego"
@@ -63,6 +66,25 @@ func Start() {
 	if addr == "" {
 		return
 	}
+
+	if g.Config().Debug {
+		beego.RunMode = "dev"
+	} else {
+		beego.RunMode = "prod"
+	}
+
+	account := g.Config().Database.Account
+	password := g.Config().Database.Password
+	host := g.Config().Database.Host
+	port := g.Config().Database.Port
+	database := g.Config().Database.Db
+	str := account + ":" + password + "@tcp(" + host + ":" + port + ")/" + database + "?charset=utf8"
+
+	orm.RegisterDriver("mysql", orm.DR_MySQL)
+	maxIdle := 30
+	maxConn := 30
+	orm.RegisterDataBase("default", "mysql", str, maxIdle, maxConn)
+	orm.RegisterModel(new(Session))
 
 	beego.Run(addr)
 
