@@ -1,14 +1,25 @@
 package http
 
 import (
+	"log"
+	"github.com/astaxie/beego/orm"
+	_ "github.com/go-sql-driver/mysql"
+	"strconv"
+
 	"fmt"
 	"github.com/astaxie/beego"
-	"github.com/open-falcon/alarm/g"
+	"github.com/Cepave/alarm/g"
 	"github.com/toolkits/file"
 	"sort"
 	"strings"
 	"time"
 )
+
+type Session struct {
+	Id   int
+	Sig string
+	Expired string
+}
 
 type MainController struct {
 	beego.Controller
@@ -37,7 +48,64 @@ func (this *MainController) ConfigReload() {
 	}
 }
 
+/**
+ * @function name:	func CheckLoginStatusByCookie(sig) bool
+ * @description:	This function checks user's login status by value of "sig" cookie.
+ * @related issues:	OWL-127
+ * @param:			sig string
+ * @return:			bool
+ * @author:			Don Hsieh
+ * @since:			10/15/2015
+ * @last modified: 	10/16/2015
+ * @called by:		func (this *MainController) Index()
+ *					 in http/controller.go
+ */
+func CheckLoginStatusByCookie(sig string) bool {
+	if sig == "" {
+		return false
+	}
+	database := g.Config().Database.Db
+	table := g.Config().Database.Table
+	o := orm.NewOrm()
+	o.Using(database)
+
+	var session Session
+	err := o.QueryTable(table).Filter("sig", sig).One(&session)
+	if err == orm.ErrMultiRows {
+		// Have multiple records
+		log.Printf("Returned Multi Rows Not One")
+		return false
+	}
+	if err == orm.ErrNoRows {
+		// No result
+		log.Printf("Not row found")
+		return false
+	}
+	expiredTimeString := session.Expired
+	expiredTimeInt, err := strconv.ParseInt(expiredTimeString, 10, 64)
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	now := time.Now().Unix()
+	expired := now > expiredTimeInt
+	if !expired {
+		return true
+	} else {
+		return false
+	}
+}
+
 func (this *MainController) Index() {
+	sig := this.Ctx.GetCookie("sig")
+	log.Println("sig =", sig)
+	isLoggedIn := CheckLoginStatusByCookie(sig)
+	if !isLoggedIn {
+		RedirectUrl := g.Config().RedirectUrl
+		this.Redirect(RedirectUrl, 302)
+	}
+
 	events := g.Events.Clone()
 
 	defer func() {
