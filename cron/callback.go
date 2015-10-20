@@ -64,6 +64,11 @@ func Callback(event *model.Event, action *api.Action) string {
 
 	req.Param("endpoint", event.Endpoint)
 	req.Param("metric", event.Metric())
+	req.Param("func", event.Func)
+	req.Param("leftValue", event.LeftValue)
+	req.Param("operator", event.Operator)
+	req.Param("rightValue", event.RightValue)
+	req.Param("note", event.Note)
 	req.Param("status", event.Status)
 	req.Param("step", fmt.Sprintf("%d", event.CurrentStep))
 	req.Param("priority", fmt.Sprintf("%d", event.Priority()))
