@@ -3,8 +3,8 @@ package cron
 import (
 	"encoding/json"
 	"github.com/garyburd/redigo/redis"
-	"github.com/open-falcon/alarm/g"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/alarm/g"
+	"github.com/Cepave/common/model"
 	"log"
 	"time"
 )
