@@ -22,10 +22,25 @@ type GraphConfig struct {
 	Cluster     map[string]string `json:"cluster"`
 }
 
+type ApiConfig struct {
+	Name	string	`json:"name"`
+	Token	string	`json:"token"`
+	Url		string	`json:"url"`
+}
+
+type DatabaseConfig struct {
+	Ip			string	`json:"ip"`
+	Port		string	`json:"port"`
+	Account		string	`json:"account"`
+	Password	string	`json:"password"`
+}
+
 type GlobalConfig struct {
-	Debug string       `json:"debug"`
-	Http  *HttpConfig  `json:"http"`
-	Graph *GraphConfig `json:"graph"`
+	Debug    string          `json:"debug"`
+	Http     *HttpConfig     `json:"http"`
+	Graph    *GraphConfig    `json:"graph"`
+	Api      *ApiConfig      `json:"api"`
+	Database *DatabaseConfig `json:"database"`
 }
 
 var (
