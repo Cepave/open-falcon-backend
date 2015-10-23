@@ -80,95 +80,118 @@ func getNow() string {
  * @return:			void
  * @author:			Don Hsieh
  * @since:			09/11/2015
- * @last modified: 	10/21/2015
+ * @last modified: 	10/22/2015
  * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostCreate()")
 	params := nodes["params"].(map[string]interface{})
-	host := params["host"].(string)
-	interfaces := params["interfaces"].([]interface{})
-	ip := ""
-	port := ""
-	for i, arg := range interfaces {
-		if i == 0 {
-			ip = arg.(map[string]interface{})["ip"].(string)
-			port = arg.(map[string]interface{})["port"].(string)
-		}
-	}
-	groups := params["groups"].([]interface{})
-	groupId := ""
-	for i, group := range groups {
-		if i == 0 {
-			groupId = group.(map[string]interface{})["groupid"].(string)
-		}
-	}
-
-	templates := params["templates"].([]interface{})
-	templateId := ""
-	for i, template := range templates {
-		if i == 0 {
-			templateId = template.(map[string]interface{})["templateid"].(string)
-		}
-	}
-
-	inventory := params["inventory"].(map[string]interface{})
-	macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
-
-	args2 := map[string]string {
-		"host": host,
-		"ip": ip,
-		"port": port,
-		"groupId": groupId,
-		"templateId": templateId,
-		"macAddr": macAddr,
-	}
-	log.Println(args2)
-	t := time.Now()
-	timestamp := t.Unix()
-	log.Println(timestamp)
-	now := getNow()
-
-	database := "graph"
-	o := orm.NewOrm()
-	o.Using(database)
-
-	endpoint := Endpoint{
-		Endpoint: host,
-		Ts: timestamp,
-		T_create: now,
-		T_modify: now,
-	}
-	resp := nodes
-	delete(resp, "params")
 	var result = make(map[string]interface{})
 
-	log.Println("endpoint =", endpoint)
-	id, err := o.Insert(&endpoint)
-	if err != nil {
-		log.Println("Error:", err)
-		result["error"] = [1]string{string(err.Error())}
-	} else {
-		grp_id, err := strconv.Atoi(groupId)
-		grp_host := Grp_host{
-			Grp_id: grp_id,
-			Host_id: int(id),
+	if _, ok := params["host"]; ok {
+		host := params["host"].(string)
+		t := time.Now()
+		timestamp := t.Unix()
+		log.Println(timestamp)
+		now := getNow()
+		args := map[string]string {
+			"host": host,
 		}
-		log.Println("grp_host =", grp_host)
-		database := "falcon_portal"
-		o.Using(database)
-		created, grp_host_id, err := o.ReadOrCreate(&grp_host, "Grp_id", "Host_id")
+
+		o := orm.NewOrm()
+		endpoint := Endpoint{
+			Endpoint: host,
+			Ts: timestamp,
+			T_create: now,
+			T_modify: now,
+		}
+
+		log.Println("endpoint =", endpoint)
+		hostId, err := o.Insert(&endpoint)
 		if err != nil {
 			log.Println("Error:", err)
 			result["error"] = [1]string{string(err.Error())}
 		} else {
-			log.Println("is created:", created)
-			log.Println("grp_host_id:", grp_host_id)
-			hostid := strconv.Itoa(int(id))
+			hostid := strconv.Itoa(int(hostId))
 			hostids := [1]string{string(hostid)}
 			result["hostids"] = hostids
+			if _, ok := params["groups"]; ok {
+				database := "falcon_portal"
+				o.Using(database)
+				groups := params["groups"].([]interface{})
+				groupId := ""
+				for i, group := range groups {
+					groupId = group.(map[string]interface{})["groupid"].(string)
+					log.Println("hostId:", hostId)
+					log.Println("groupId:", groupId)
+					if i == 0 {
+						args["groupId"] = groupId
+					}
+					grp_id, err := strconv.Atoi(groupId)
+
+					sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
+					log.Println("sqlcmd:", sqlcmd)
+					res, err := o.Raw(sqlcmd, hostId, grp_id).Exec()
+					if err != nil {
+						log.Println("Error:", err)
+						result["error"] = [1]string{string(err.Error())}
+					} else {
+						num, _ := res.RowsAffected()
+						log.Println("num:", num)
+						if num > 0 {
+							log.Println("Record existed. count:", num)
+						} else {	// Record not existed. Insert new one.
+							grp_host := Grp_host{
+								Grp_id: grp_id,
+								Host_id: int(hostId),
+							}
+							log.Println("grp_host =", grp_host)
+
+							_, err = o.Insert(&grp_host)
+							if err != nil {
+								log.Println("Error:", err)
+								result["error"] = [1]string{string(err.Error())}
+							}
+						}
+					}
+				}
+			}
 		}
+
+		if _, ok := params["interfaces"]; ok {
+			interfaces := params["interfaces"].([]interface{})
+			for i, arg := range interfaces {
+				if i == 0 {
+					ip := arg.(map[string]interface{})["ip"].(string)
+					port := arg.(map[string]interface{})["port"].(string)
+					args["ip"] = ip
+					args["port"] = port
+				}
+			}
+		}
+
+		if _, ok := params["templates"]; ok {
+			templates := params["templates"].([]interface{})
+			for i, template := range templates {
+				if i == 0 {
+					templateId := template.(map[string]interface{})["templateid"].(string)
+					args["templateId"] = templateId
+				}
+			}
+		}
+
+		if _, ok := params["inventory"]; ok {
+			inventory := params["inventory"].(map[string]interface{})
+			macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
+			args["macAddr"] = macAddr
+		}
+		log.Println("args =", args)
+	} else {
+		result["error"] = [1]string{"host name can not be null."}
 	}
+
+	resp := nodes
+	delete(resp, "params")
 	resp["result"] = result
 	RenderJson(rw, resp)
 }
@@ -219,7 +242,6 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		num, _ := res.RowsAffected()
 		log.Println("mysql row affected nums:", num)
 	}
-
 	result["hostids"] = hostids
 	resp["result"] = result
 	RenderJson(rw, resp)
@@ -620,7 +642,7 @@ func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
  * @return:			void
  * @author:			Don Hsieh
  * @since:			09/22/2015
- * @last modified: 	10/21/2015
+ * @last modified: 	10/23/2015
  * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
@@ -678,6 +700,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 		log.Println("count:", count)
 
 		if count > 0 {
+			user := "zabbix"
 			sqlcmd := "DELETE FROM falcon_portal.grp_tpl WHERE tpl_id=?"
 			res, err := o.Raw(sqlcmd, templateId).Exec()
 			if err != nil {
@@ -694,7 +717,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 				log.Println("group:", group)
 				groupId, err := strconv.Atoi(group.(map[string]interface{})["groupid"].(string))
 				log.Println("groupId:", groupId)
-				grp_tpl := Grp_tpl{Grp_id: groupId, Tpl_id: templateId}
+				grp_tpl := Grp_tpl{Grp_id: groupId, Tpl_id: templateId, Bind_user: user}
 				log.Println("grp_tpl:", grp_tpl)
 
 				_, err = o.Insert(&grp_tpl)
@@ -739,7 +762,7 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
  * @return:			void
  * @author:			Don Hsieh
  * @since:			09/11/2015
- * @last modified: 	09/23/2015
+ * @last modified: 	10/23/2015
  * @called by:		http.HandleFunc("/api", apiParser)
  *					 in func main()
  */
@@ -803,7 +826,8 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
  * @author:			Don Hsieh
  * @since:			09/09/2015
  * @last modified: 	10/21/2015
- * @called by:
+ * @called by:		func Start()
+ *					 in http/http.go
  */
 func configZabbixRoutes() {
 	http.HandleFunc("/api", apiParser)
