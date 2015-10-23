@@ -2,9 +2,14 @@ package http
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
+	"github.com/Cepave/query/g"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
@@ -69,7 +74,6 @@ func getNow() string {
 	now := t.Format("2006-01-02 15:04:05")
 	return now
 }
-
 
 /**
  * @function name:	func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
@@ -740,17 +744,100 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 /**
  * @function name:	func apiAlert(rw http.ResponseWriter, req *http.Request)
- * @description:	This function parses the method of API request.
+ * @description:	This function handles alarm API request.
  * @related issues:	OWL-093
  * @param:			rw http.ResponseWriter
  * @param:			req *http.Request
  * @return:			void
  * @author:			Don Hsieh
  * @since:			09/29/2015
- * @last modified: 	09/30/2015
+ * @last modified: 	10/23/2015
  * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func apiAlert(rw http.ResponseWriter, req *http.Request) {
+	fcname := g.Config().Api.Name
+	log.Println("fcname =", fcname)
+	log.Println("fctoken =", g.Config().Api.Token)
+	hasher := md5.New()
+	io.WriteString(hasher, g.Config().Api.Token)
+	s := hex.EncodeToString(hasher.Sum(nil))
+
+	t := time.Now()
+	now := t.Format("20060102")
+	log.Println("now =", now)
+	s = now + s
+
+	hasher = md5.New()
+	io.WriteString(hasher, s)
+	fctoken := hex.EncodeToString(hasher.Sum(nil))
+	log.Println("fctoken =", fctoken)
+
+	param := req.URL.Query()
+	log.Println("param =", param)
+	arr := param["endpoint"]
+	hostname := arr[0]
+	arr = param["time"]
+	datetime := arr[0]
+
+	arr = param["stra_id"]
+	trigger_id, err := strconv.Atoi(arr[0])
+	if err != nil {
+		log.Println(err.Error())
+	}
+	arr = param["metric"]
+	metric := arr[0]
+	arr = param["step"]
+	step := arr[0]
+	arr = param["tpl_id"]
+	tpl_id := arr[0]
+	arr = param["status"]
+	zabbix_status := arr[0]
+	arr = param["priority"]
+	zabbix_level := arr[0]
+	summary := "[OWL] " + metric + "_" + step + "_" + zabbix_level
+
+	args := map[string]interface{} {
+		"summary": summary,
+		"zabbix_status": zabbix_status,		// "PROBLEM",
+		"zabbix_level": "Information",		// "Information" or "High"
+		"trigger_id": trigger_id,
+		"host_ip": "",
+		"hostname": hostname,
+		"event_id": tpl_id,
+		"template_name": "Template Server Basic Monitor",
+		"datetime": datetime,
+		"fcname": fcname,
+		"fctoken": fctoken,
+	}
+
+	log.Println("args =", args)
+	bs, err := json.Marshal(args)
+	if err != nil {
+		log.Println("Error =", err.Error())
+	}
+
+	url := g.Config().Api.Url
+	log.Println("url =", url)
+
+	reqAlert, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(bs)))
+	if err != nil {
+		log.Println("Error =", err.Error())
+	}
+	reqAlert.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqAlert)
+	if err != nil {
+		log.Println("Error =", err.Error())
+	}
+	defer resp.Body.Close()
+
+	log.Println("response Status:", resp.Status)	// 200 OK   TypeOf(resp.Status): string
+	log.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	log.Println("response Body:", string(body))
+	rw.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	rw.Write(body)
 }
 
 /**
