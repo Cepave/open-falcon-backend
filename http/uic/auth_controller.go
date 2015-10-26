@@ -32,10 +32,16 @@ func (this *AuthController) LoginGet() {
 	}
 
 	sessionObj := ReadSessionBySig(cookieSig)
-	if sessionObj == nil || int64(sessionObj.Expired) < time.Now().Unix() {
+	if sessionObj == nil {
 		this.renderLoginPage(appSig, callback)
 		return
 	}
+
+        if int64(sessionObj.Expired) < time.Now().Unix() {
+                RemoveSessionByUid(sessionObj.Uid)
+                this.renderLoginPage(appSig, callback)
+                return
+        }
 
 	if appSig != "" && callback != "" {
 		SaveSessionAttrs(sessionObj.Uid, appSig, sessionObj.Expired)
