@@ -55,7 +55,7 @@ func (this *SsoController) Logout() {
 
 	sessionObj := uic.ReadSessionBySig(sig)
 	if sessionObj != nil {
-		uic.RemoveSessionByUid(s.Uid)
+		uic.RemoveSessionByUid(sessionObj.Uid)
 	}
 
 	this.ServeOKJson()
