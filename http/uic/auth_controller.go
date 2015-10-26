@@ -44,7 +44,6 @@ func (this *AuthController) LoginGet() {
         }
 
 	if appSig != "" && callback != "" {
-		SaveSessionAttrs(sessionObj.Uid, appSig, sessionObj.Expired)
 		this.Redirect(callback, 302)
 	} else {
 		this.Redirect("/me/info", 302)
@@ -113,12 +112,12 @@ func (this *AuthController) LoginPost() {
 		}
 	}
 
-	expired := this.CreateSession(u.Id, 3600*24*30)
-
 	appSig := this.GetString("sig", "")
 	callback := this.GetString("callback", "")
 	if appSig != "" && callback != "" {
-		SaveSessionAttrs(u.Id, appSig, expired)
+		SaveSessionAttrs(u.Id, appSig, int(time.Now().Unix()) + 3600*24*30)
+	} else {
+		this.CreateSession(u.Id, 3600*24*30)
 	}
 
 	this.ServeDataJson(callback)
