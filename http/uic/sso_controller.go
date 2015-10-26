@@ -4,6 +4,7 @@ import (
 	"github.com/Cepave/fe/http/base"
 	"github.com/Cepave/fe/model/uic"
 	"github.com/Cepave/fe/utils"
+	"time"
 )
 
 type SsoController struct {
@@ -26,6 +27,12 @@ func (this *SsoController) User() {
 		this.NotFound("no such sig")
 		return
 	}
+
+        if int64(sessionObj.Expired) < time.Now().Unix() {
+               uic.RemoveSessionByUid(sessionObj.Uid)
+               this.SessionExpired()
+               return
+        }
 
 	u := uic.ReadUserById(sessionObj.Uid)
 	if u == nil {
