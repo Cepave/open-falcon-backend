@@ -21,13 +21,13 @@ func (this *SsoController) User() {
 		return
 	}
 
-	s := uic.ReadSessionBySig(sig)
-	if s == nil {
+	sessionObj := uic.ReadSessionBySig(sig)
+	if sessionObj == nil {
 		this.NotFound("no such sig")
 		return
 	}
 
-	u := uic.ReadUserById(s.Uid)
+	u := uic.ReadUserById(sessionObj.Uid)
 	if u == nil {
 		this.NotFound("no such user")
 		return
@@ -46,8 +46,8 @@ func (this *SsoController) Logout() {
 		return
 	}
 
-	s := uic.ReadSessionBySig(sig)
-	if s != nil {
+	sessionObj := uic.ReadSessionBySig(sig)
+	if sessionObj != nil {
 		uic.RemoveSessionByUid(s.Uid)
 	}
 
