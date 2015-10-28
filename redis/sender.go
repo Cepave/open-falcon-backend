@@ -59,6 +59,20 @@ func WriteQQModel(qq *model.QQ) {
 	LPUSH(g.Config().Queue.QQ, string(bs))
 }
 
+func WriteServerchanModel(serverchan *model.Serverchan) {
+	if serverchan == nil {
+		return
+	}
+
+	bs, err := json.Marshal(serverchan)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	LPUSH(g.Config().Queue.Serverchan, string(bs))
+}
+
 func WriteSms(tos []string, content string) {
 	if len(tos) == 0 {
 		return
@@ -84,4 +98,13 @@ func WriteQQ(tos []string, subject, content string) {
 
 	qq := &model.QQ{Tos: strings.Join(tos, ","), Subject: subject, Content: content}
 	WriteQQModel(qq)
+}
+
+func WriteServerchan(tos []string, subject, content string) {
+	if len(tos) == 0 {
+		return
+	}
+
+	serverchan := &model.Serverchan{Tos: strings.Join(tos, ","), Subject: subject, Content: content}
+	WriteServerchanModel(serverchan)
 }

@@ -25,3 +25,13 @@ type QQDto struct {
 	Email    string `json:"email"`
 	Status   string `json:"status"`
 }
+
+type ServerchanDto struct {
+	Priority int    `json:"priority"`
+	Metric   string `json:"metric"`
+	Subject  string `json:"subject"`
+	Content  string `json:"content"`
+	Username string `json:"username"`
+	Sckey    string `json:"sckey"`
+	Status   string `json:"status"`
+}

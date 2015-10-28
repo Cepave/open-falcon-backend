@@ -121,3 +121,7 @@ func GenerateMailContent(event *model.Event) string {
 func GenerateQQContent(event *model.Event) string {
 	return BuildCommonQQContent(event)
 }
+
+func GenerateServerchanContent(event *model.Event) string {
+	return BuildCommonQQContent(event)
+}

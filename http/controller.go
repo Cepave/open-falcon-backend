@@ -103,7 +103,6 @@ func CheckLoginStatusByCookie(sig string) bool {
 
 func (this *MainController) Index() {
 	sig := this.Ctx.GetCookie("sig")
-	log.Println("sig =", sig)
 	isLoggedIn := CheckLoginStatusByCookie(sig)
 	if !isLoggedIn {
 		RedirectUrl := g.Config().RedirectUrl

@@ -50,6 +50,7 @@ func consumeHighEvents(event *model.Event, action *api.Action) {
 
 	redis.WriteMail(mails, smsContent, mailContent)
 	redis.WriteQQ(mails, smsContent, QQContent)
+	ParseUserServerchan(event, action)
 }
 
 // 低优先级的做报警合并
@@ -64,6 +65,7 @@ func consumeLowEvents(event *model.Event, action *api.Action) {
 
 	ParseUserMail(event, action)
 	ParseUserQQ(event, action)
+	ParseUserServerchan(event, action)
 }
 
 func ParseUserSms(event *model.Event, action *api.Action) {
@@ -135,6 +137,7 @@ func ParseUserMail(event *model.Event, action *api.Action) {
 		}
 	}
 }
+
 func ParseUserQQ(event *model.Event, action *api.Action) {
 	userMap := api.GetUsers(action.Uic)
 
@@ -161,6 +164,42 @@ func ParseUserQQ(event *model.Event, action *api.Action) {
 		bs, err := json.Marshal(dto)
 		if err != nil {
 			log.Println("json marshal QQDto fail:", err)
+			continue
+		}
+
+		_, err = rc.Do("LPUSH", queue, string(bs))
+		if err != nil {
+			log.Println("LPUSH redis", queue, "fail:", err, "dto:", string(bs))
+		}
+	}
+}
+
+func ParseUserServerchan(event *model.Event, action *api.Action) {
+	userMap := api.GetUsers(action.Uic)
+	metric := event.Metric()
+	subject := GenerateSmsContent(event)
+	content := GenerateServerchanContent(event)
+	status := event.Status
+	priority := event.Priority()
+
+	queue := g.Config().Redis.UserServerchanQueue
+
+	rc := g.RedisConnPool.Get()
+	defer rc.Close()
+
+	for _, user := range userMap {
+		dto := ServerchanDto{
+			Priority: priority,
+			Metric:   metric,
+			Subject:  subject,
+			Content:  content,
+			Username: user.Name,
+			Sckey:    user.IM,
+			Status:   status,
+		}
+		bs, err := json.Marshal(dto)
+		if err != nil {
+			log.Println("json marshal ServerchanDto fail:", err)
 			continue
 		}
 
