@@ -8,7 +8,8 @@
     "queue": {
         "sms": "/sms",
         "mail": "/mail",
-        "qq": "/qq"
+        "qq": "/qq",
+        "serverchan": "/serverchan"
     },
     "redis": {
         "addr": "127.0.0.1:6379",
@@ -26,11 +27,21 @@
         ],
         "userSmsQueue": "/queue/user/sms",
         "userMailQueue": "/queue/user/mail",
-        "userQQQueue": "/queue/user/qq"
+        "userQQQueue": "/queue/user/qq",
+        "userServerchanQueue": "/queue/user/serverchan"
     },
     "api": {
-        "portal": "http://portal.owlemon.com",
-        "uic": "http://uic.owlemon.com",
-        "links": "http://links.owlemon.com"
-    }
+        "portal": "http://portal.com",
+        "uic": "http://uic.com",
+        "links": "http://links.com"
+    },
+    "database": {
+        "host": "11.11.11.11",
+        "port": "3306",
+        "account": "yourAccount",
+        "password": "yourPassword",
+        "db": "uic",
+        "table": "session"
+    },
+    "redirectUrl": "http://11.11.11.11:1234/auth/login?callback=http%3A//11.11.11.11%3A9912/"
 }
