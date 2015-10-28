@@ -35,6 +35,13 @@ func CombineQQ() {
 	}
 }
 
+func CombineServerchan() {
+	for {
+		time.Sleep(time.Minute)
+		combineServerchan()
+	}
+}
+
 func combineMail() {
 	dtos := popAllMailDto()
 	count := len(dtos)
@@ -121,7 +128,6 @@ func combineSms() {
 
 		redi.WriteSms([]string{arr[0].Phone}, sms)
 	}
-
 }
 
 func combineQQ() {
@@ -155,6 +161,39 @@ func combineQQ() {
 		}
 		content := strings.Join(contentArr, "\r\n")
 		redi.WriteQQ([]string{arr[0].Email}, subject, content)
+	}
+}
+
+func combineServerchan() {
+	dtos := popAllServerchanDto()
+	count := len(dtos)
+	if count == 0 {
+		return
+	}
+
+	dtoMap := make(map[string][]*ServerchanDto)
+	for i := 0; i < count; i++ {
+		key := fmt.Sprintf("%d%s%s%s", dtos[i].Priority, dtos[i].Status, dtos[i].Sckey, dtos[i].Metric)
+		if _, ok := dtoMap[key]; ok {
+			dtoMap[key] = append(dtoMap[key], dtos[i])
+		} else {
+			dtoMap[key] = []*ServerchanDto{dtos[i]}
+		}
+	}
+
+	for _, arr := range dtoMap {
+		size := len(arr)
+		if size == 1 {
+			redi.WriteServerchan([]string{arr[0].Sckey}, arr[0].Subject, arr[0].Content)
+			continue
+		}
+		subject := fmt.Sprintf("[P%d][%s] %d %s", arr[0].Priority, arr[0].Status, size, arr[0].Metric)
+		contentArr := make([]string, size)
+		for i := 0; i < size; i++ {
+			contentArr[i] = arr[i].Content
+		}
+		content := strings.Join(contentArr, "\r\n")
+		redi.WriteServerchan([]string{arr[0].Sckey}, subject, content)
 	}
 }
 
@@ -252,6 +291,39 @@ func popAllQQDto() []*QQDto {
 		}
 
 		ret = append(ret, &qqDto)
+	}
+
+	return ret
+}
+
+func popAllServerchanDto() []*ServerchanDto {
+	ret := []*ServerchanDto{}
+	queue := g.Config().Redis.UserServerchanQueue
+
+	rc := g.RedisConnPool.Get()
+	defer rc.Close()
+
+	for {
+		reply, err := redis.String(rc.Do("RPOP", queue))
+		if err != nil {
+			if err != redis.ErrNil {
+				log.Println("get ServerchanDto fail", err)
+			}
+			break
+		}
+
+		if reply == "" || reply == "nil" {
+			continue
+		}
+
+		var serverchanDto ServerchanDto
+		err = json.Unmarshal([]byte(reply), &serverchanDto)
+		if err != nil {
+			log.Printf("json unmarshal ServerchanDto: %s fail: %v", reply, err)
+			continue
+		}
+
+		ret = append(ret, &serverchanDto)
 	}
 
 	return ret

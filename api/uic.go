@@ -15,6 +15,7 @@ type User struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 	Phone string `json:"phone"`
+	IM    string `json:"im"`
 }
 
 type UsersWrap struct {
