@@ -8,6 +8,7 @@ var (
 	SmsWorkerChan  chan int
 	MailWorkerChan chan int
 	QQWorkerChan   chan int
+	ServerchanWorkerChan chan int
 )
 
 func InitWorker() {
@@ -15,4 +16,5 @@ func InitWorker() {
 	SmsWorkerChan = make(chan int, workerConfig.Sms)
 	MailWorkerChan = make(chan int, workerConfig.Mail)
 	QQWorkerChan = make(chan int, workerConfig.QQ)
+	ServerchanWorkerChan = make(chan int, workerConfig.Serverchan)
 }

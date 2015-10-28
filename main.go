@@ -36,6 +36,7 @@ func main() {
 	go cron.ConsumeSms()
 	go cron.ConsumeMail()
 	go cron.ConsumeQQ()
+	go cron.ConsumeServerchan()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

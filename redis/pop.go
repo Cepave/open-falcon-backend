@@ -101,3 +101,34 @@ func PopAllQQ(queue string) []*model.QQ {
 	}
 	return ret
 }
+
+func PopAllServerchan(queue string) []*model.Serverchan {
+	ret := []*model.Serverchan{}
+
+	rc := ConnPool.Get()
+	defer rc.Close()
+
+	for {
+		reply, err := redis.String(rc.Do("RPOP", queue))
+		if err != nil {
+			if err != redis.ErrNil {
+				log.Println(err)
+			}
+			break
+		}
+
+		if reply == "" || reply == "nil" {
+			continue
+		}
+
+		var serverchan model.Serverchan
+		err = json.Unmarshal([]byte(reply), &serverchan)
+		if err != nil {
+			log.Println(err, reply)
+			continue
+		}
+
+		ret = append(ret, &serverchan)
+	}
+	return ret
+}
