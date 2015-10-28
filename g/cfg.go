@@ -16,6 +16,7 @@ type QueueConfig struct {
 	Sms  string `json:"sms"`
 	Mail string `json:"mail"`
 	QQ   string `json:"qq"`
+	Serverchan   string `json:"serverchan"`
 }
 
 type RedisConfig struct {
@@ -26,6 +27,7 @@ type RedisConfig struct {
 	UserSmsQueue  string   `json:"userSmsQueue"`
 	UserMailQueue string   `json:"userMailQueue"`
 	UserQQQueue   string   `json:"userQQQueue"`
+	UserServerchanQueue   string   `json:"userServerchanQueue"`
 }
 
 type ApiConfig struct {
@@ -34,13 +36,24 @@ type ApiConfig struct {
 	Links  string `json:"links"`
 }
 
+type DatabaseConfig struct {
+	Host     string `json:"host"`
+	Port     string `json:"port"`
+	Account  string `json:"account"`
+	Password string `json:"password"`
+	Db       string `json:"db"`
+	Table    string `json:"table"`
+}
+
 type GlobalConfig struct {
-	Debug    bool         `json:"debug"`
-	UicToken string       `json:"uicToken"`
-	Http     *HttpConfig  `json:"http"`
-	Queue    *QueueConfig `json:"queue"`
-	Redis    *RedisConfig `json:"redis"`
-	Api      *ApiConfig   `json:"api"`
+	Debug    bool            `json:"debug"`
+	UicToken string          `json:"uicToken"`
+	Http     *HttpConfig     `json:"http"`
+	Queue    *QueueConfig    `json:"queue"`
+	Redis    *RedisConfig    `json:"redis"`
+	Api      *ApiConfig      `json:"api"`
+	Database *DatabaseConfig `json:"database"`
+	RedirectUrl string       `json:"redirectUrl"`
 }
 
 var (
