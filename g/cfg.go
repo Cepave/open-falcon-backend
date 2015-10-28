@@ -21,18 +21,21 @@ type QueueConfig struct {
 	Sms  string `json:"sms"`
 	Mail string `json:"mail"`
 	QQ   string `json:"qq"`
+	Serverchan   string `json:"serverchan"`
 }
 
 type WorkerConfig struct {
 	Sms  int `json:"sms"`
 	Mail int `json:"mail"`
 	QQ   int `json:"qq"`
+	Serverchan int `json:"serverchan"`
 }
 
 type ApiConfig struct {
 	Sms  string `json:"sms"`
 	Mail string `json:"mail"`
 	QQ   string `json:"qq"`
+	Serverchan string `json:"serverchan"`
 }
 
 type GlobalConfig struct {
