@@ -35,6 +35,13 @@
         "uic": "http://uic.com",
         "links": "http://links.com"
     },
+    "shortcut": {
+        "falconPortal": "http://127.0.0.1:5050/",
+        "falconDashboard": "http://127.0.0.1:8081/",
+        "grafanaDashboard": "http://127.0.0.1:3000/",
+        "falconAlarm": "http://127.0.0.1:9912/",
+        "falconUIC": "http://127.0.0.1:1234/"
+    },
     "uic": {
         "addr": "root:@tcp(127.0.0.1:3306)/uic?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
