@@ -18,4 +18,11 @@ $(document).ready(function(){
       $(".logo-icon").rotate({ angle:270,animateTo:0, duration: 2000, easing: $.easing.easeOutBounce })
     }
   });
+  $(document).click(function(){
+      $('li.dropdown#sidemenu-user').removeClass('open');
+  });
+  $('li.dropdown#sidemenu-user').click(function(e){
+      e.stopPropagation();
+  });
+
 });
