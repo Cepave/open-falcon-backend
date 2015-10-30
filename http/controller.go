@@ -1,13 +1,13 @@
 package http
 
 import (
-	"log"
-	"github.com/astaxie/beego/orm"
-
 	"fmt"
 	"github.com/Cepave/alarm/g"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
 	"github.com/toolkits/file"
+	"log"
+
 	"sort"
 	"strings"
 	"time"
@@ -127,18 +127,17 @@ func CheckLoginStatusByCookie(sig string) bool {
 }
 
 func (this *MainController) Index() {
-	sig := this.Ctx.GetCookie("sig")
-	isLoggedIn := CheckLoginStatusByCookie(sig)
-	if !isLoggedIn {
-		RedirectUrl := g.Config().RedirectUrl
-		this.Redirect(RedirectUrl, 302)
-	}
 
 	events := g.Events.Clone()
 
 	defer func() {
 		this.Data["Now"] = time.Now().Unix()
-		this.TplName = "index.html"
+		this.TplNames = "index.html"
+		this.Data["FalconPortal"] = g.Config().Shortcut.FalconPortal
+		this.Data["FalconDashboard"] = g.Config().Shortcut.FalconDashboard
+		this.Data["GrafanaDashboard"] = g.Config().Shortcut.GrafanaDashboard
+		this.Data["FalconAlarm"] = g.Config().Shortcut.FalconAlarm
+		this.Data["FalconUIC"] = g.Config().Shortcut.FalconUIC
 	}()
 
 	count := len(events)
@@ -157,6 +156,7 @@ func (this *MainController) Index() {
 
 	sort.Sort(g.OrderedEvents(beforeOrder))
 	this.Data["Events"] = beforeOrder
+
 }
 
 func (this *MainController) Solve() {

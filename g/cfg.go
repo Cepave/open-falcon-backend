@@ -13,21 +13,21 @@ type HttpConfig struct {
 }
 
 type QueueConfig struct {
-	Sms  string `json:"sms"`
-	Mail string `json:"mail"`
-	QQ   string `json:"qq"`
-	Serverchan   string `json:"serverchan"`
+	Sms        string `json:"sms"`
+	Mail       string `json:"mail"`
+	QQ         string `json:"qq"`
+	Serverchan string `json:"serverchan"`
 }
 
 type RedisConfig struct {
-	Addr          string   `json:"addr"`
-	MaxIdle       int      `json:"maxIdle"`
-	HighQueues    []string `json:"highQueues"`
-	LowQueues     []string `json:"lowQueues"`
-	UserSmsQueue  string   `json:"userSmsQueue"`
-	UserMailQueue string   `json:"userMailQueue"`
-	UserQQQueue   string   `json:"userQQQueue"`
-	UserServerchanQueue   string   `json:"userServerchanQueue"`
+	Addr                string   `json:"addr"`
+	MaxIdle             int      `json:"maxIdle"`
+	HighQueues          []string `json:"highQueues"`
+	LowQueues           []string `json:"lowQueues"`
+	UserSmsQueue        string   `json:"userSmsQueue"`
+	UserMailQueue       string   `json:"userMailQueue"`
+	UserQQQueue         string   `json:"userQQQueue"`
+	UserServerchanQueue string   `json:"userServerchanQueue"`
 }
 
 type ApiConfig struct {
@@ -42,15 +42,23 @@ type UicConfig struct {
 	Max  int    `json:"max"`
 }
 
+type ShortcutConfig struct {
+	FalconPortal     string `json:"falconPortal"`
+	FalconDashboard  string `json:"falconDashboard"`
+	GrafanaDashboard string `json:"grafanaDashboard"`
+	FalconAlarm      string `json:"falconAlarm"`
+	FalconUIC        string `json:"falconUIC"`
+}
 type GlobalConfig struct {
-	Debug    bool            `json:"debug"`
-	UicToken string          `json:"uicToken"`
-	Http     *HttpConfig     `json:"http"`
-	Queue    *QueueConfig    `json:"queue"`
-	Redis    *RedisConfig    `json:"redis"`
-	Api      *ApiConfig      `json:"api"`
-	Uic      *UicConfig      `json:"uic"`
-	RedirectUrl string       `json:"redirectUrl"`
+	Debug       bool            `json:"debug"`
+	UicToken    string          `json:"uicToken"`
+	Http        *HttpConfig     `json:"http"`
+	Queue       *QueueConfig    `json:"queue"`
+	Redis       *RedisConfig    `json:"redis"`
+	Api         *ApiConfig      `json:"api"`
+	Shortcut    *ShortcutConfig `json:"shortcut"`
+	Uic         *UicConfig      `json:"uic"`
+	RedirectUrl string          `json:"redirectUrl"`
 }
 
 var (
