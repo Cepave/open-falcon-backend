@@ -3,8 +3,6 @@ package http
 import (
 	"log"
 	"github.com/astaxie/beego/orm"
-	_ "github.com/go-sql-driver/mysql"
-	"strconv"
 
 	"fmt"
 	"github.com/astaxie/beego"
@@ -14,12 +12,6 @@ import (
 	"strings"
 	"time"
 )
-
-type Session struct {
-	Id   int
-	Sig string
-	Expired string
-}
 
 type MainController struct {
 	beego.Controller
@@ -48,6 +40,46 @@ func (this *MainController) ConfigReload() {
 	}
 }
 
+func SelectSessionBySig(sig string) *Session {
+	if sig == "" {
+		return nil
+	}
+
+	obj := Session{Sig: sig}
+	err := orm.NewOrm().Read(&obj, "Sig")
+	if err != nil {
+		if err != orm.ErrNoRows {
+			log.Println(err.Error())
+		}
+		return nil
+	}
+	return &obj
+}
+
+func DeleteSessionById(id int64) (int64, error) {
+	r, err := orm.NewOrm().Raw("DELETE FROM `session` WHERE `id` = ?", id).Exec()
+	if err != nil {
+		return 0, err
+	}
+	return r.RowsAffected()
+}
+
+func SelectUserById(id int64) *User {
+	if id <= 0 {
+		return nil
+	}
+
+	obj := User{Id: id}
+	err := orm.NewOrm().Read(&obj, "Id")
+	if err != nil {
+		if err != orm.ErrNoRows {
+			log.Println(err.Error())
+		}
+		return nil
+	}
+	return &obj
+}
+
 /**
  * @function name:	func CheckLoginStatusByCookie(sig) bool
  * @description:	This function checks user's login status by value of "sig" cookie.
@@ -56,7 +88,7 @@ func (this *MainController) ConfigReload() {
  * @return:			bool
  * @author:			Don Hsieh
  * @since:			10/15/2015
- * @last modified: 	10/16/2015
+ * @last modified: 	10/30/2015
  * @called by:		func (this *MainController) Index()
  *					 in http/controller.go
  */
@@ -64,33 +96,26 @@ func CheckLoginStatusByCookie(sig string) bool {
 	if sig == "" {
 		return false
 	}
-	database := g.Config().Database.Db
-	table := g.Config().Database.Table
-	o := orm.NewOrm()
-	o.Using(database)
 
-	var session Session
-	err := o.QueryTable(table).Filter("sig", sig).One(&session)
-	if err == orm.ErrMultiRows {
-		// Have multiple records
-		log.Printf("Returned Multi Rows Not One")
-		return false
-	}
-	if err == orm.ErrNoRows {
-		// No result
-		log.Printf("Not row found")
-		return false
-	}
-	expiredTimeString := session.Expired
-	expiredTimeInt, err := strconv.ParseInt(expiredTimeString, 10, 64)
-	if err != nil {
-		log.Println(err.Error())
+	sessionObj := SelectSessionBySig(sig)
+	if sessionObj == nil {
+		log.Println("no such sig")
 		return false
 	}
 
-	now := time.Now().Unix()
-	expired := now > expiredTimeInt
-	if !expired {
+	if int64(sessionObj.Expired) < time.Now().Unix() {
+		log.Println("session expired")
+		DeleteSessionById(sessionObj.Id)
+		return false
+	}
+
+	user := SelectUserById(sessionObj.Uid)
+	if user == nil {
+		log.Println("no such user")
+		return false
+	}
+
+	if len(user.Name) > 0 {
 		return true
 	} else {
 		return false

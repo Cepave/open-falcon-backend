@@ -1,6 +1,7 @@
 package http
 
 import (
+	"time"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 
@@ -37,7 +38,7 @@ func Duration(now, before int64) string {
 	if d <= 7200 {
 		return "1 hour ago"
 	}
-
+	
 	if d <= 3600*24 {
 		return fmt.Sprintf("%d hours ago", d/3600)
 	}
@@ -52,6 +53,39 @@ func Duration(now, before int64) string {
 func init() {
 	configRoutes()
 	beego.AddFuncMap("duration", Duration)
+}
+
+type User struct {
+	Id      int64     `json:"id"`
+	Name    string    `json:"name"`
+	Cnname  string    `json:"cnname"`
+	Passwd  string    `json:"-"`
+	Email   string    `json:"email"`
+	Phone   string    `json:"phone"`
+	IM      string    `json:"im" orm:"column(im)"`
+	QQ      string    `json:"qq" orm:"column(qq)"`
+	Role    int       `json:"role"`
+	Created time.Time `json:"-" orm:"-"`
+}
+
+type Session struct {
+	Id      int64
+	Uid     int64
+	Sig     string
+	Expired int
+}
+
+func InitDatabase() {
+	// set default database
+	config := g.Config()
+	orm.RegisterDataBase("default", "mysql", config.Uic.Addr, config.Uic.Idle, config.Uic.Max)
+
+	// register model
+	orm.RegisterModel(new(User), new(Session))
+
+	if config.Debug == true {
+		orm.Debug = true
+	}
 }
 
 func Start() {
@@ -70,18 +104,7 @@ func Start() {
 		beego.RunMode = "prod"
 	}
 
-	account := g.Config().Database.Account
-	password := g.Config().Database.Password
-	host := g.Config().Database.Host
-	port := g.Config().Database.Port
-	database := g.Config().Database.Db
-	str := account + ":" + password + "@tcp(" + host + ":" + port + ")/" + database + "?charset=utf8"
-
-	orm.RegisterDriver("mysql", orm.DR_MySQL)
-	maxIdle := 30
-	maxConn := 30
-	orm.RegisterDataBase("default", "mysql", str, maxIdle, maxConn)
-	orm.RegisterModel(new(Session))
+	InitDatabase()
 
 	beego.Run(addr)
 
