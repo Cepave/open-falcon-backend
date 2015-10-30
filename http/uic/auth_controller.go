@@ -18,6 +18,7 @@ func (this *AuthController) Logout() {
 	u := this.Ctx.Input.GetData("CurrentUser").(*User)
 	RemoveSessionByUid(u.Id)
 	this.Ctx.SetCookie("sig", "", 0, "/")
+	this.Ctx.SetCookie("sig", "", 0, "/", ".owlemon.com")
 	this.Redirect("/auth/login", 302)
 }
 
@@ -201,5 +202,6 @@ func (this *AuthController) CreateSession(uid int64, maxAge int) int {
 	expired := int(time.Now().Unix()) + maxAge
 	SaveSessionAttrs(uid, sig, expired)
 	this.Ctx.SetCookie("sig", sig, maxAge, "/")
+	this.Ctx.SetCookie("sig", sig, maxAge, "/", ".owlemon.com")
 	return expired
 }

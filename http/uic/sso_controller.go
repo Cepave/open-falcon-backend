@@ -28,11 +28,11 @@ func (this *SsoController) User() {
 		return
 	}
 
-        if int64(sessionObj.Expired) < time.Now().Unix() {
-               uic.RemoveSessionByUid(sessionObj.Uid)
-               this.SessionExpired()
-               return
-        }
+	if int64(sessionObj.Expired) < time.Now().Unix() {
+		uic.RemoveSessionByUid(sessionObj.Uid)
+		this.SessionExpired()
+		return
+	}
 
 	u := uic.ReadUserById(sessionObj.Uid)
 	if u == nil {
