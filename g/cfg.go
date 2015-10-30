@@ -36,13 +36,10 @@ type ApiConfig struct {
 	Links  string `json:"links"`
 }
 
-type DatabaseConfig struct {
-	Host     string `json:"host"`
-	Port     string `json:"port"`
-	Account  string `json:"account"`
-	Password string `json:"password"`
-	Db       string `json:"db"`
-	Table    string `json:"table"`
+type UicConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
 }
 
 type GlobalConfig struct {
@@ -52,7 +49,7 @@ type GlobalConfig struct {
 	Queue    *QueueConfig    `json:"queue"`
 	Redis    *RedisConfig    `json:"redis"`
 	Api      *ApiConfig      `json:"api"`
-	Database *DatabaseConfig `json:"database"`
+	Uic      *UicConfig      `json:"uic"`
 	RedirectUrl string       `json:"redirectUrl"`
 }
 
