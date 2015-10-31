@@ -39,13 +39,15 @@ func (this *UserController) CreateRoot() {
 // 登录成功之后跳转的欢迎页面
 func (this *UserController) Info() {
 	this.Data["CurrentUser"] = this.Ctx.Input.GetData("CurrentUser").(*User)
-	this.TplName = "user/info.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "user/info.html"
 }
 
 // 展示当前用户的联系信息
 func (this *UserController) ProfileGet() {
 	this.Data["CurrentUser"] = this.Ctx.Input.GetData("CurrentUser").(*User)
-	this.TplName = "user/profile.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "user/profile.html"
 }
 
 // 更新个人信息
@@ -187,11 +189,13 @@ func (this *UserController) Users() {
 	this.Data["Query"] = query
 	this.Data["Me"] = me
 	this.Data["IamRoot"] = me.Name == "root"
-	this.TplName = "user/list.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "user/list.html"
 }
 
 func (this *UserController) CreateUserGet() {
-	this.TplName = "user/create.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "user/create.html"
 }
 
 func (this *UserController) CreateUserPost() {
@@ -290,7 +294,8 @@ func (this *UserController) EditGet() {
 	}
 
 	this.Data["User"] = this.Ctx.Input.GetData("TargetUser").(*User)
-	this.TplName = "user/edit.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "user/edit.html"
 }
 
 func (this *UserController) EditPost() {
@@ -422,7 +427,8 @@ func (this *UserController) About() {
 	}
 
 	this.Data["User"] = u
-	this.TplName = "user/about.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "user/about.html"
 }
 
 func (this *UserController) QrCode() {

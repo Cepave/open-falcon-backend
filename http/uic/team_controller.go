@@ -1,6 +1,7 @@
 package uic
 
 import (
+	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/http/base"
 	. "github.com/Cepave/fe/model/uic"
 	"github.com/Cepave/fe/utils"
@@ -47,11 +48,13 @@ func (this *TeamController) Teams() {
 	this.Data["Query"] = query
 	this.Data["Me"] = me
 	this.Data["IamRoot"] = me.Name == "root"
-	this.TplName = "team/list.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "team/list.html"
 }
 
 func (this *TeamController) CreateTeamGet() {
-	this.TplName = "team/create.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "team/create.html"
 }
 
 func (this *TeamController) CreateTeamPost() {
@@ -133,7 +136,8 @@ func (this *TeamController) DeleteTeam() {
 func (this *TeamController) EditGet() {
 	targetTeam := this.Ctx.Input.GetData("TargetTeam").(*Team)
 	this.Data["TargetTeam"] = targetTeam
-	this.TplName = "team/edit.html"
+	this.Data["Shortcut"] = g.Config().Shortcut
+	this.TplNames = "team/edit.html"
 }
 
 func (this *TeamController) EditPost() {
