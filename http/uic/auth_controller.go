@@ -38,11 +38,11 @@ func (this *AuthController) LoginGet() {
 		return
 	}
 
-        if int64(sessionObj.Expired) < time.Now().Unix() {
-                RemoveSessionByUid(sessionObj.Uid)
-                this.renderLoginPage(appSig, callback)
-                return
-        }
+	if int64(sessionObj.Expired) < time.Now().Unix() {
+		RemoveSessionByUid(sessionObj.Uid)
+		this.renderLoginPage(appSig, callback)
+		return
+	}
 
 	if appSig != "" && callback != "" {
 		this.Redirect(callback, 302)
@@ -116,7 +116,7 @@ func (this *AuthController) LoginPost() {
 	appSig := this.GetString("sig", "")
 	callback := this.GetString("callback", "")
 	if appSig != "" && callback != "" {
-		SaveSessionAttrs(u.Id, appSig, int(time.Now().Unix()) + 3600*24*30)
+		SaveSessionAttrs(u.Id, appSig, int(time.Now().Unix())+3600*24*30)
 	} else {
 		this.CreateSession(u.Id, 3600*24*30)
 	}
@@ -129,11 +129,13 @@ func (this *AuthController) renderLoginPage(sig, callback string) {
 	this.Data["LdapEnabled"] = g.Config().Ldap.Enabled
 	this.Data["Sig"] = sig
 	this.Data["Callback"] = callback
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "auth/login.html"
 }
 
 func (this *AuthController) RegisterGet() {
 	this.Data["CanRegister"] = g.Config().CanRegister
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "auth/register.html"
 }
 
