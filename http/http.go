@@ -1,6 +1,7 @@
 package http
 
 import (
+	"strings"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 
@@ -17,6 +18,23 @@ type Dto struct {
 	Data interface{} `json:"data"`
 }
 
+func InitDatabase() {
+	// set default database
+	config := g.Config()
+	orm.RegisterDataBase("default", "mysql", config.Db.Addr, config.Db.Idle, config.Db.Max)
+	// register model
+	orm.RegisterModel(new(Endpoint))
+
+	strConn := strings.Replace(config.Db.Addr, "graph", "falcon_portal", 1)
+	log.Println("strConn =", strConn)
+	orm.RegisterDataBase("falcon_portal", "mysql", strConn, config.Db.Idle, config.Db.Max)
+	orm.RegisterModel(new(Grp), new(Grp_host), new(Grp_tpl), new(Tpl))
+
+	if config.Debug == true {
+		orm.Debug = true
+	}
+}
+
 func Start() {
 	if !g.Config().Http.Enable {
 		log.Println("http.Start warning, not enable")
@@ -30,25 +48,7 @@ func Start() {
 	configZabbixRoutes()
 
 	// start mysql database
-	account := g.Config().Database.Account
-	password := g.Config().Database.Password
-	ip := g.Config().Database.Ip
-	port := g.Config().Database.Port
-	database := "graph"
-	strConn := account + ":" + password + "@tcp(" + ip + ":" + port + ")/" + database + "?charset=utf8"
-	orm.RegisterDriver("mysql", orm.DR_MySQL)
-	maxIdle := 30
-	maxConn := 30
-	orm.RegisterDataBase("default", "mysql", strConn, maxIdle, maxConn)
-
-	database = "falcon_portal"
-	strConn = account + ":" + password + "@tcp(" + ip + ":" + port + ")/" + database + "?charset=utf8"
-	orm.RegisterDataBase("falcon_portal", "mysql", strConn, maxIdle, maxConn)
-	orm.RegisterModel(new(Endpoint))
-	orm.RegisterModel(new(Grp))
-	orm.RegisterModel(new(Grp_host))
-	orm.RegisterModel(new(Grp_tpl))
-	orm.RegisterModel(new(Tpl))
+	InitDatabase()
 
 	// start http server
 	addr := g.Config().Http.Listen
