@@ -19,10 +19,9 @@
         "token": "apiToken",
         "url": "apiUrl"
     },
-    "database": {
-        "ip": "databaseIp",
-        "port": "databasePort",
-        "account": "databaseAccount",
-        "password": "databasePassword"
+    "db": {
+        "addr": "root:@tcp(127.0.0.1:3306)/graph?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
     }
 }

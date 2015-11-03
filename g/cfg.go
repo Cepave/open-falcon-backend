@@ -28,19 +28,18 @@ type ApiConfig struct {
 	Url		string	`json:"url"`
 }
 
-type DatabaseConfig struct {
-	Ip			string	`json:"ip"`
-	Port		string	`json:"port"`
-	Account		string	`json:"account"`
-	Password	string	`json:"password"`
+type DbConfig struct {
+	Addr     string `json:"addr"`
+	Idle     int    `json:"idle"`
+	Max      int    `json:"max"`
 }
 
 type GlobalConfig struct {
-	Debug    string          `json:"debug"`
+	Debug    bool            `json:"debug"`
 	Http     *HttpConfig     `json:"http"`
 	Graph    *GraphConfig    `json:"graph"`
 	Api      *ApiConfig      `json:"api"`
-	Database *DatabaseConfig `json:"database"`
+	Db       *DbConfig       `json:"db"`
 }
 
 var (
