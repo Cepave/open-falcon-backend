@@ -95,8 +95,8 @@ func Ldapsearch(addr,
     User_Attributes = make(map[string]string)
 	
 	userSn := sr.Entries[0].GetAttributeValue(Attributes[0])
-	userTel := sr.Entries[0].GetAttributeValue(Attributes[1])
-	userMail := sr.Entries[0].GetAttributeValue(Attributes[2])
+	userMail := sr.Entries[0].GetAttributeValue(Attributes[1])
+	userTel := sr.Entries[0].GetAttributeValue(Attributes[2])
 	
 	User_Attributes["sn"] = userSn
 	User_Attributes["telephoneNumber"] = userTel

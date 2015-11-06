@@ -15,7 +15,7 @@ const (
 	UserField  = "uid"
 )
 
-var Attributes []string = []string{"cn", "telephoneNumber","mail"}
+var Attributes []string = []string{"cn", "mail","telephoneNumber"}
 
 
 func Test_ldap_bind_fe(t *testing.T) {
