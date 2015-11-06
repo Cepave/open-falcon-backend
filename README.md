@@ -56,7 +56,12 @@ go get ./...
     "canRegister": true,
     "ldap": {
         "enabled": false,
-        "addr": "ldap.example.com:389"
+        "addr": "ldap.example.com:389",
+        "baseDN": "dc=example,dc=com",
+        "bindDN": "cn=mananger,dc=example,dc=com",#允许匿名查询的话，填""值即可
+        "bindPasswd": "12345678",
+        "userField": "uid", #用于认证的属性，通常为 uid 或 sAMAccountName(AD)。也可以使用诸如mail的属性，这样认证的用户名就是邮箱(前提ldap里有)
+        "attributes": ["sn","mail","telephoneNumber"] #数组顺序重要，依次为姓名，邮箱，电话在ldap中的属性名。fe将按这些属性名去ldap中查询新用户的属性，并插入到fe的数据库内。
     },
     "uic": {
         "addr": "root:password@tcp(127.0.0.1:3306)/fe?charset=utf8&loc=Asia%2FChongqing",

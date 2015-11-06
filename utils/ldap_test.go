@@ -15,8 +15,7 @@ const (
 	UserField  = "uid"
 )
 
-var Attributes []string = []string{"cn", "mail","telephoneNumber"}
-
+var Attributes []string = []string{"cn", "mail", "telephoneNumber"}
 
 func Test_ldap_bind_fe(t *testing.T) {
 	sucess, err := LdapBind(addr, baseDN, bindDN, bindPasswd, UserField, user, password)
@@ -24,7 +23,7 @@ func Test_ldap_bind_fe(t *testing.T) {
 	log.Println("err", err)
 }
 func Test_ldap_search_fe(t *testing.T) {
-	user_attributes, err := Ldapsearch(addr, baseDN, bindDN, bindPasswd, UserField, user,Attributes)
+	user_attributes, err := Ldapsearch(addr, baseDN, bindDN, bindPasswd, UserField, user, Attributes)
 	log.Println("user_attributes", user_attributes)
 	log.Println("err", err)
 }

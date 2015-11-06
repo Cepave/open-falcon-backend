@@ -11,7 +11,7 @@ func LdapBind(addr,
 	BindPasswd,
 	UserField,
 	user,
-	password string) (sucess bool,err error) {
+	password string) (sucess bool, err error) {
 
 	filter := "(" + UserField + "=" + user + ")"
 	conn, err := ldap.Dial("tcp", addr)
@@ -21,7 +21,7 @@ func LdapBind(addr,
 	}
 
 	defer conn.Close()
-	if BindDN != ""{
+	if BindDN != "" {
 		err = conn.Bind(BindDN, BindPasswd)
 	}
 	if err != nil {
@@ -33,14 +33,14 @@ func LdapBind(addr,
 		filter,
 		nil,
 		nil)
-	
+
 	sr, err := conn.Search(search)
 
 	if err != nil {
 
 		return false, fmt.Errorf("ldap search fail: %s", err.Error())
 	}
-	
+
 	defer func() {
 		if err := recover(); err != nil {
 			//fmt.Println("ERROR:", err)
@@ -50,7 +50,6 @@ func LdapBind(addr,
 	err = conn.Bind(sr.Entries[0].DN, password)
 	return err == nil, err
 }
-
 
 func Ldapsearch(addr,
 	BaseDN,
@@ -69,7 +68,7 @@ func Ldapsearch(addr,
 
 	defer conn.Close()
 
-	if BindDN != ""{
+	if BindDN != "" {
 		err = conn.Bind(BindDN, BindPasswd)
 	}
 	if err != nil {
@@ -92,14 +91,14 @@ func Ldapsearch(addr,
 		return nil, fmt.Errorf("ldap search fail: %s", err.Error())
 	}
 	var User_Attributes map[string]string
-    User_Attributes = make(map[string]string)
-	
+	User_Attributes = make(map[string]string)
+
 	userSn := sr.Entries[0].GetAttributeValue(Attributes[0])
 	userMail := sr.Entries[0].GetAttributeValue(Attributes[1])
 	userTel := sr.Entries[0].GetAttributeValue(Attributes[2])
-	
+
 	User_Attributes["sn"] = userSn
 	User_Attributes["telephoneNumber"] = userTel
 	User_Attributes["mail"] = userMail
-	return User_Attributes,err
+	return User_Attributes, err
 }

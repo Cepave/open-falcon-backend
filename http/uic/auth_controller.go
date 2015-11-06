@@ -75,7 +75,7 @@ func (this *AuthController) LoginPost() {
 			this.ServeErrJson("name or password error")
 			return
 		}
-		
+
 		user_attributes, err := utils.Ldapsearch(g.Config().Ldap.Addr,
 			g.Config().Ldap.BaseDN,
 			g.Config().Ldap.BindDN,
@@ -92,7 +92,6 @@ func (this *AuthController) LoginPost() {
 			userTel = user_attributes["telephoneNumber"]
 		}
 
-		
 		arr := strings.Split(name, "@")
 		var userName, userEmail string
 		if len(arr) == 2 {
@@ -110,8 +109,8 @@ func (this *AuthController) LoginPost() {
 				Name:   userName,
 				Passwd: "",
 				Cnname: userSn,
-				Phone: userTel,
-				Email: userEmail,
+				Phone:  userTel,
+				Email:  userEmail,
 			}
 			_, err = u.Save()
 			if err != nil {
