@@ -1,10 +1,10 @@
 package uic
 
 import (
-	"github.com/open-falcon/fe/g"
+	"github.com/freedomkk-qfeng/fe/g"
 	"github.com/open-falcon/fe/http/base"
 	. "github.com/open-falcon/fe/model/uic"
-	"github.com/open-falcon/fe/utils"
+	"github.com/freedomkk-qfeng/fe/utils"
 	"github.com/toolkits/str"
 	"strings"
 	"time"
@@ -59,7 +59,13 @@ func (this *AuthController) LoginPost() {
 	ldapEnabled := this.MustGetBool("ldap", false)
 
 	if ldapEnabled {
-		sucess, err := utils.LdapBind(g.Config().Ldap.Addr, name, password)
+		sucess, err := utils.LdapBind(g.Config().Ldap.Addr,
+			g.Config().Ldap.BaseDN,
+			g.Config().Ldap.BindDN,
+			g.Config().Ldap.BindPasswd,
+			g.Config().Ldap.UserField,
+			name,
+			password)
 		if err != nil {
 			this.ServeErrJson(err.Error())
 			return
@@ -69,7 +75,24 @@ func (this *AuthController) LoginPost() {
 			this.ServeErrJson("name or password error")
 			return
 		}
+		
+		user_attributes, err := utils.Ldapsearch(g.Config().Ldap.Addr,
+			g.Config().Ldap.BaseDN,
+			g.Config().Ldap.BindDN,
+			g.Config().Ldap.BindPasswd,
+			g.Config().Ldap.UserField,
+			name,
+			g.Config().Ldap.Attributes)
+		userSn := ""
+		userMail := ""
+		userTel := ""
+		if err == nil {
+			userSn = user_attributes["sn"]
+			userMail = user_attributes["mail"]
+			userTel = user_attributes["telephoneNumber"]
+		}
 
+		
 		arr := strings.Split(name, "@")
 		var userName, userEmail string
 		if len(arr) == 2 {
@@ -77,7 +100,7 @@ func (this *AuthController) LoginPost() {
 			userEmail = name
 		} else {
 			userName = name
-			userEmail = ""
+			userEmail = userMail
 		}
 
 		u = ReadUserByName(userName)
@@ -86,7 +109,9 @@ func (this *AuthController) LoginPost() {
 			u = &User{
 				Name:   userName,
 				Passwd: "",
-				Email:  userEmail,
+				Cnname: userSn,
+				Phone: userTel,
+				Email: userEmail,
 			}
 			_, err = u.Save()
 			if err != nil {
