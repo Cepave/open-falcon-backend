@@ -3,9 +3,9 @@ package http
 import (
 	"github.com/astaxie/beego"
 	"github.com/freedomkk-qfeng/fe/g"
-	"github.com/open-falcon/fe/http/home"
+	"github.com/freedomkk-qfeng/fehttp/home"
 	"github.com/freedomkk-qfeng/fe/http/uic"
-	uic_model "github.com/open-falcon/fe/model/uic"
+	uic_model "github.com/freedomkk-qfeng/femodel/uic"
 )
 
 func Start() {

@@ -1,8 +1,8 @@
 package uic
 
 import (
-	"github.com/open-falcon/fe/http/base"
-	. "github.com/open-falcon/fe/model/uic"
+	"github.com/freedomkk-qfeng/fehttp/base"
+	. "github.com/freedomkk-qfeng/femodel/uic"
 	"github.com/freedomkk-qfeng/fe/utils"
 	"strings"
 )

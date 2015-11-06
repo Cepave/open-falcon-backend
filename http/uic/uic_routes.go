@@ -3,7 +3,7 @@ package uic
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/open-falcon/fe/http/base"
+	"github.com/freedomkk-qfeng/fehttp/base"
 )
 
 func ConfigRoutes() {
