@@ -3,7 +3,7 @@ package home
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/freedomkk-qfeng/feg"
+	"github.com/freedomkk-qfeng/fe/g"
 )
 
 func ConfigRoutes() {

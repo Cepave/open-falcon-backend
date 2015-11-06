@@ -2,7 +2,7 @@ package home
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/freedomkk-qfeng/feg"
+	"github.com/freedomkk-qfeng/fe/g"
 )
 
 type HomeController struct {
