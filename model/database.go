@@ -2,8 +2,8 @@ package model
 
 import (
 	"github.com/astaxie/beego/orm"
-	"github.com/freedomkk-qfeng/fe/g"
-	. "github.com/freedomkk-qfeng/fe/model/uic"
+	"github.com/open-falcon/fe/g"
+	. "github.com/open-falcon/fe/model/uic"
 	_ "github.com/go-sql-driver/mysql"
 )
 
