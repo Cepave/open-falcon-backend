@@ -4,7 +4,7 @@ import (
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/freedomkk-qfeng/fe/g"
-	. "github.com/freedomkk-qfeng/femodel/uic"
+	. "github.com/freedomkk-qfeng/fe/model/uic"
 )
 
 func InitDatabase() {

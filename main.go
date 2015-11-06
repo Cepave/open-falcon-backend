@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/freedomkk-qfeng/fecache"
+	"github.com/freedomkk-qfeng/fe/cache"
 	"github.com/freedomkk-qfeng/fe/g"
 	"github.com/freedomkk-qfeng/fe/http"
-	"github.com/freedomkk-qfeng/femodel"
+	"github.com/freedomkk-qfeng/fe/model"
 	"github.com/toolkits/logger"
 	"log"
 	"os"

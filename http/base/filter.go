@@ -2,7 +2,7 @@ package base
 
 import (
 	"github.com/astaxie/beego/context"
-	"github.com/freedomkk-qfeng/femodel/uic"
+	"github.com/freedomkk-qfeng/fe/model/uic"
 	"strconv"
 	"time"
 )

@@ -2,9 +2,9 @@ package uic
 
 import (
 	"github.com/freedomkk-qfeng/fe/g"
-	"github.com/freedomkk-qfeng/fehttp/base"
-	. "github.com/freedomkk-qfeng/femodel/uic"
-	"github.com/freedomkk-qfeng/feutils"
+	"github.com/freedomkk-qfeng/fe/http/base"
+	. "github.com/freedomkk-qfeng/fe/model/uic"
+	"github.com/freedomkk-qfeng/fe/utils"
 	"github.com/toolkits/rsc/qr"
 	"github.com/toolkits/str"
 	"strconv"

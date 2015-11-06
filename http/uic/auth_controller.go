@@ -2,7 +2,7 @@ package uic
 
 import (
 	"github.com/freedomkk-qfeng/fe/g"
-	"github.com/freedomkk-qfeng/fehttp/base"
+	"github.com/freedomkk-qfeng/fe/http/base"
 	. "github.com/freedomkk-qfeng/femodel/uic"
 	"github.com/freedomkk-qfeng/fe/utils"
 	"github.com/toolkits/str"
