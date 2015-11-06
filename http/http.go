@@ -2,9 +2,9 @@ package http
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/open-falcon/fe/g"
+	"github.com/freedomkk-qfeng/fe/g"
 	"github.com/open-falcon/fe/http/home"
-	"github.com/open-falcon/fe/http/uic"
+	"github.com/freedomkk-qfeng/fe/http/uic"
 	uic_model "github.com/open-falcon/fe/model/uic"
 )
 
