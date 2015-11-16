@@ -17,7 +17,9 @@
     "api": {
         "name": "apiName",
         "token": "apiToken",
-        "url": "apiUrl"
+        "url": "apiUrl",
+        "graph": "http://example.com:port",
+        "dashboard": "http://example.com"
     },
     "db": {
         "addr": "root:@tcp(127.0.0.1:3306)/graph?charset=utf8&loc=Asia%2FTaipei",

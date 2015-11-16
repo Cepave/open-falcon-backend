@@ -23,9 +23,11 @@ type GraphConfig struct {
 }
 
 type ApiConfig struct {
-	Name	string	`json:"name"`
-	Token	string	`json:"token"`
-	Url		string	`json:"url"`
+	Name      string    `json:"name"`
+	Token     string    `json:"token"`
+	Url       string    `json:"url"`
+	Graph     string    `json:"graph"`
+	Dashboard string    `json:"dashboard"`
 }
 
 type DbConfig struct {
