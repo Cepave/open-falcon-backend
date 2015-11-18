@@ -26,7 +26,7 @@ type ApiConfig struct {
 	Name      string    `json:"name"`
 	Token     string    `json:"token"`
 	Url       string    `json:"url"`
-	Graph     string    `json:"graph"`
+	Query     string    `json:"query"`
 	Dashboard string    `json:"dashboard"`
 }
 

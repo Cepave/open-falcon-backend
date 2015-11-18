@@ -46,6 +46,7 @@ func Start() {
 	configProcHttpRoutes()
 	configGraphRoutes()
 	configApiRoutes()
+	configGrafanaRoutes()
 	configZabbixRoutes()
 
 	// start mysql database
