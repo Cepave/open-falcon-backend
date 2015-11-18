@@ -33,7 +33,7 @@ done
 
 graph_components=("agent" "transfer" "graph" "query" "dashboard")
 judge_components=("portal" "fe" "hbs" "judge" "sender" "alarm" "links")
-other_components=("task" "gateway")
+other_components=("task" "gateway" "nodata")
 
 all_components=""
 for c in ${graph_components[@]};do
