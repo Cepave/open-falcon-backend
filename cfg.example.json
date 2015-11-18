@@ -18,7 +18,7 @@
         "name": "apiName",
         "token": "apiToken",
         "url": "apiUrl",
-        "graph": "http://example.com:port",
+        "query": "http://example.com:port",
         "dashboard": "http://example.com"
     },
     "db": {
