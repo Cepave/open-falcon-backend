@@ -61,3 +61,6 @@
 [submodule "book"]
 	path = book
 	url = https://github.com/Cepave/book.git
+[submodule "nodata"]
+	path = nodata
+	url = https://github.com/Cepave/nodata
