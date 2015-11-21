@@ -2,9 +2,9 @@ package model
 
 import (
 	"github.com/astaxie/beego/orm"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/open-falcon/fe/g"
 	. "github.com/open-falcon/fe/model/uic"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func InitDatabase() {
