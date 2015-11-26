@@ -36,39 +36,39 @@ func BuildCommonMailContent(event *model.Event) string {
 		<body>
 			<table border="0" cellpadding="5" cellspacing="0">
                                 <tr>
-                                        <td %s >%s</td>
-                                        <td %s >%d</td></tr>
+                                        <td %s >%s&nbsp;</td>
+                                        <td %s >%d&nbsp;</td></tr>
                                 <tr>
                                         <td %s>Endpoint:</td>
-                                        <td %s>%s</td>
+                                        <td %s>%s&nbsp;</td>
                                 </tr>
                                 <tr>
                                         <td %s>Metric:</td>
-                                        <td %s>%s</td>
+                                        <td %s>%s&nbsp;</td>
                                 </tr>
                                 <tr>
                                         <td %s>Tags:</td>
-                                        <td %s>%s</td>
+                                        <td %s>%s&nbsp;</td>
                                 </tr>
                                 <tr>
                                         <td %s>%s</td>
-                                        <td %s>%s%s%s</td>
+                                        <td %s>%s%s%s&nbsp;</td>
                                 </tr>
                                 <tr>
                                         <td %s>Note:</td>
-                                        <td %s>%s</td>
+                                        <td %s>%s&nbsp;</td>
                                 </tr>
                                 <tr>
                                         <td %s>Max:</td>
-                                        <td %s>%d</td>
+                                        <td %s>%d&nbsp;</td>
                                 </tr>
                                 <tr>
                                         <td %s>Current:</td>
-                                        <td %s>%d</td>
+                                        <td %s>%d&nbsp;</td>
                                 </tr>
                                 <tr>
                                         <td %s>Timesramp:</td>
-                                        <td %s>%s</td>
+                                        <td %s>%s&nbsp;</td>
                                 </tr>
                         </table>
 			<br>
