@@ -25,7 +25,9 @@ type GraphConfig struct {
 type ApiConfig struct {
 	Name      string    `json:"name"`
 	Token     string    `json:"token"`
-	Url       string    `json:"url"`
+	Event     string    `json:"event"`
+	Map       string    `json:"map"`
+	Geo       string    `json:"geo"`
 	Query     string    `json:"query"`
 	Dashboard string    `json:"dashboard"`
 }

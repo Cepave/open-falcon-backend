@@ -56,18 +56,18 @@ type Grp_host struct {
 }
 
 /**
- * @function name:	func getNow() string
- * @description:	This function gets string of current time.
- * @related issues:	OWL-093
- * @param:			void
- * @return:			now sting
- * @author:			Don Hsieh
- * @since:			10/21/2015
- * @last modified: 	10/21/2015
- * @called by:		func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *					func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *					func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *					func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func getNow() string
+ * @description:     This function gets string of current time.
+ * @related issues:  OWL-093
+ * @param:           void
+ * @return:          now sting
+ * @author:          Don Hsieh
+ * @since:           10/21/2015
+ * @last modified:   10/21/2015
+ * @called by:       func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ *                   func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ *                   func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ *                   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
  */
 func getNow() string {
 	t := time.Now()
@@ -76,16 +76,16 @@ func getNow() string {
 }
 
 /**
- * @function name:	func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function gets host data for database insertion.
- * @related issues:	OWL-093, OWL-086, OWL-085
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/11/2015
- * @last modified: 	10/22/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function gets host data for database insertion.
+ * @related issues:  OWL-093, OWL-086, OWL-085
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/11/2015
+ * @last modified:   10/22/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostCreate()")
@@ -113,7 +113,7 @@ func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 		log.Println("endpoint =", endpoint)
 		hostId, err := o.Insert(&endpoint)
 		if err != nil {
-			log.Println("Error:", err)
+			log.Println("Error =", err.Error())
 			result["error"] = [1]string{string(err.Error())}
 		} else {
 			hostid := strconv.Itoa(int(hostId))
@@ -137,7 +137,7 @@ func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 					log.Println("sqlcmd:", sqlcmd)
 					res, err := o.Raw(sqlcmd, hostId, grp_id).Exec()
 					if err != nil {
-						log.Println("Error:", err)
+						log.Println("Error =", err.Error())
 						result["error"] = [1]string{string(err.Error())}
 					} else {
 						num, _ := res.RowsAffected()
@@ -153,7 +153,7 @@ func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 							_, err = o.Insert(&grp_host)
 							if err != nil {
-								log.Println("Error:", err)
+								log.Println("Error =", err.Error())
 								result["error"] = [1]string{string(err.Error())}
 							}
 						}
@@ -201,16 +201,16 @@ func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function deletes host from "endpoint" table.
- * @related issues:	OWL-093, OWL-086, OWL-085
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/11/2015
- * @last modified: 	10/21/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function deletes host from "endpoint" table.
+ * @related issues:  OWL-093, OWL-086, OWL-085
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/11/2015
+ * @last modified:   10/21/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 	params := nodes["params"].([]interface {})
@@ -224,7 +224,7 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		if id, err := strconv.Atoi(hostId.(string)); err == nil {
 			num, err := o.Delete(&Endpoint{Id: id})
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				if num > 0 {
@@ -241,7 +241,7 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		sql := "DELETE FROM grp_host WHERE host_id = ?"
 		res, err := o.Raw(sql, hostId).Exec()
 		if err != nil {
-			log.Println("Error:", err)
+			log.Println("Error =", err.Error())
 		}
 		num, _ := res.RowsAffected()
 		log.Println("mysql row affected nums:", num)
@@ -252,16 +252,16 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function updates host data.
- * @related issues:	OWL-093, OWL-086
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/23/2015
- * @last modified: 	10/21/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function updates host data.
+ * @related issues:  OWL-093, OWL-086
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/23/2015
+ * @last modified:   10/21/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostUpdate()")
@@ -269,7 +269,7 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	var result = make(map[string]interface{})
 	hostId, err := strconv.Atoi(params["hostid"].(string))
 	if err != nil {
-		log.Println("Error:", err)
+		log.Println("Error =", err.Error())
 		result["error"] = [1]string{string(err.Error())}
 	}
 	now := getNow()
@@ -286,7 +286,7 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			log.Println("endpoint:", endpoint)
 			err := o.Read(&endpoint)
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				log.Println("endpoint:", endpoint)
@@ -294,7 +294,7 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 				endpoint.T_modify = now
 				num, err := o.Update(&endpoint)
 				if err != nil {
-					log.Println("Error:", err)
+					log.Println("Error =", err.Error())
 					result["error"] = [1]string{string(err.Error())}
 				} else {
 					if num > 0 {
@@ -326,7 +326,7 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			sqlcmd := "DELETE FROM falcon_portal.grp_host WHERE host_id=?"
 			res, err := o.Raw(sqlcmd, hostId).Exec()
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				num, _ := res.RowsAffected()
@@ -346,7 +346,7 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 				o.Using(database)
 				_, err = o.Insert(&grp_host)
 				if err != nil {
-					log.Println("Error:", err)
+					log.Println("Error =", err.Error())
 					result["error"] = [1]string{string(err.Error())}
 				} else {
 					hostids := [1]string{strconv.Itoa(hostId)}
@@ -363,16 +363,16 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function gets hostgroup data for database insertion.
- * @related issues:	OWL-093, OWL-086
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/21/2015
- * @last modified: 	10/21/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function gets hostgroup data for database insertion.
+ * @related issues:  OWL-093, OWL-086
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/21/2015
+ * @last modified:   10/21/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostgroupCreate()")
@@ -398,7 +398,7 @@ func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 	id, err := o.Insert(&grp)
 	if err != nil {
-		log.Println("Error:", err)
+		log.Println("Error =", err.Error())
 		log.Println("TypeOf(err):", reflect.TypeOf(err))					// *mysql.MySQLError
 		log.Println("TypeOf(err.Error()):", reflect.TypeOf(err.Error()))	// string
 		result["error"] = [1]string{string(err.Error())}
@@ -412,16 +412,16 @@ func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function gets hostgroup data for database insertion.
- * @related issues:	OWL-093, OWL-086
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/21/2015
- * @last modified: 	10/21/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function gets hostgroup data for database insertion.
+ * @related issues:  OWL-093, OWL-086
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/21/2015
+ * @last modified:   10/21/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostgroupDelete()")
@@ -447,7 +447,7 @@ func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		for _, hostgroupId := range params {
 			res, err := o.Raw(sqlcmd.(string), hostgroupId).Exec()
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				num, _ := res.RowsAffected()
@@ -465,16 +465,16 @@ func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function gets hostgroup data for database insertion.
- * @related issues:	OWL-093, OWL-086
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/21/2015
- * @last modified: 	10/21/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function gets hostgroup data for database insertion.
+ * @related issues:  OWL-093, OWL-086
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/21/2015
+ * @last modified:   10/21/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostgroupUpdate()")
@@ -482,7 +482,7 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	var result = make(map[string]interface{})
 	hostgroupId, err := strconv.Atoi(params["groupid"].(string))
 	if err != nil {
-		log.Println("Error:", err)
+		log.Println("Error =", err.Error())
 		result["error"] = [1]string{string(err.Error())}
 	}
 	o := orm.NewOrm()
@@ -498,7 +498,7 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			log.Println("grp:", grp)
 			err := o.Read(&grp)
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				log.Println("grp:", grp)
@@ -506,7 +506,7 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 				log.Println("grp:", grp)
 				num, err := o.Update(&grp)
 				if err != nil {
-					log.Println("Error:", err)
+					log.Println("Error =", err.Error())
 					result["error"] = [1]string{string(err.Error())}
 				} else {
 					if num > 0 {
@@ -526,16 +526,16 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function gets template data for database insertion.
- * @related issues:	OWL-093, OWL-086
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/22/2015
- * @last modified: 	10/21/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function gets template data for database insertion.
+ * @related issues:  OWL-093, OWL-086
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/22/2015
+ * @last modified:   10/21/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func templateCreate()")
@@ -564,7 +564,7 @@ func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 	id, err := o.Insert(&tpl)
 	if err != nil {
-		log.Println("Error:", err)
+		log.Println("Error =", err.Error())
 		result["error"] = [1]string{string(err.Error())}
 	} else {
 		templateId := strconv.Itoa(int(id))
@@ -581,7 +581,7 @@ func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 		_, err = o.Insert(&grp_tpl)
 		if err != nil {
-			log.Println("Error:", err)
+			log.Println("Error =", err.Error())
 			result["error"] = [1]string{string(err.Error())}
 		}
 	}
@@ -590,16 +590,16 @@ func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function deletes template data.
- * @related issues:	OWL-093, OWL-086
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/22/2015
- * @last modified: 	10/21/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function deletes template data.
+ * @related issues:  OWL-093, OWL-086
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/22/2015
+ * @last modified:   10/21/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func templateDelete()")
@@ -620,7 +620,7 @@ func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 			log.Println("templateId =", templateId)
 			res, err := o.Raw(sqlcmd.(string), templateId).Exec()
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				num, _ := res.RowsAffected()
@@ -638,23 +638,23 @@ func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:	This function gets hostgroup data for database insertion.
- * @related issues:	OWL-093, OWL-086
- * @param:			nodes map[string]interface{}
- * @param:			rw http.ResponseWriter
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/22/2015
- * @last modified: 	10/23/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function gets hostgroup data for database insertion.
+ * @related issues:  OWL-093, OWL-086
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/22/2015
+ * @last modified:   10/23/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	params := nodes["params"].(map[string]interface{})
 	var result = make(map[string]interface{})
 	templateId, err := strconv.Atoi(params["templateid"].(string))
 	if err != nil {
-		log.Println("Error:", err)
+		log.Println("Error =", err.Error())
 		result["error"] = [1]string{string(err.Error())}
 	}
 	o := orm.NewOrm()
@@ -670,7 +670,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			log.Println("tpl:", tpl)
 			err := o.Read(&tpl)
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				log.Println("tpl:", tpl)
@@ -678,7 +678,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 				log.Println("tpl:", tpl)
 				num, err := o.Update(&tpl)
 				if err != nil {
-					log.Println("Error:", err)
+					log.Println("Error =", err.Error())
 					result["error"] = [1]string{string(err.Error())}
 				} else {
 					if num > 0 {
@@ -708,7 +708,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			sqlcmd := "DELETE FROM falcon_portal.grp_tpl WHERE tpl_id=?"
 			res, err := o.Raw(sqlcmd, templateId).Exec()
 			if err != nil {
-				log.Println("Error:", err)
+				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
 				num, _ := res.RowsAffected()
@@ -726,7 +726,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
-					log.Println("Error:", err)
+					log.Println("Error =", err.Error())
 					result["error"] = [1]string{string(err.Error())}
 				} else {
 					templateids := [1]string{strconv.Itoa(templateId)}
@@ -743,35 +743,49 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:	func apiAlert(rw http.ResponseWriter, req *http.Request)
- * @description:	This function handles alarm API request.
- * @related issues:	OWL-093
- * @param:			rw http.ResponseWriter
- * @param:			req *http.Request
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/29/2015
- * @last modified: 	10/23/2015
- * @called by:		func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @function name:   func getFctoken() fctoken string
+ * @description:     This function returns fctoken for API request.
+ * @related issues:  OWL-159
+ * @param:           void
+ * @return:          fctoken string
+ * @author:          Don Hsieh
+ * @since:           11/24/2015
+ * @last modified:   11/24/2015
+ * @called by:       func apiAlert(rw http.ResponseWriter, req *http.Request)
+ *                    in query/http/zabbix.go
+ *                   func getMapValues(chartType string) map[string]interface{}
+ *                    in query/http/grafana.go
  */
-func apiAlert(rw http.ResponseWriter, req *http.Request) {
-	fcname := g.Config().Api.Name
-	log.Println("fcname =", fcname)
-	log.Println("fctoken =", g.Config().Api.Token)
+func getFctoken() string {
 	hasher := md5.New()
 	io.WriteString(hasher, g.Config().Api.Token)
 	s := hex.EncodeToString(hasher.Sum(nil))
 
 	t := time.Now()
 	now := t.Format("20060102")
-	log.Println("now =", now)
 	s = now + s
 
 	hasher = md5.New()
 	io.WriteString(hasher, s)
 	fctoken := hex.EncodeToString(hasher.Sum(nil))
-	log.Println("fctoken =", fctoken)
+	return fctoken
+}
 
+/**
+ * @function name:   func apiAlert(rw http.ResponseWriter, req *http.Request)
+ * @description:     This function handles alarm API request.
+ * @related issues:  OWL-159, OWL-093
+ * @param:           rw http.ResponseWriter
+ * @param:           req *http.Request
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/29/2015
+ * @last modified:   11/24/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
+ */
+func apiAlert(rw http.ResponseWriter, req *http.Request) {
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
 	param := req.URL.Query()
 	log.Println("param =", param)
 	arr := param["endpoint"]
@@ -816,7 +830,7 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 		log.Println("Error =", err.Error())
 	}
 
-	url := g.Config().Api.Url
+	url := g.Config().Api.Event
 	log.Println("url =", url)
 
 	reqAlert, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(bs)))
@@ -841,17 +855,17 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 }
 
 /**
- * @function name:	func apiParser(rw http.ResponseWriter, req *http.Request)
- * @description:	This function parses the method of API request.
- * @related issues:	OWL-085
- * @param:			rw http.ResponseWriter
- * @param:			req *http.Request
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/11/2015
- * @last modified: 	10/23/2015
- * @called by:		http.HandleFunc("/api", apiParser)
- *					 in func main()
+ * @function name:   func apiParser(rw http.ResponseWriter, req *http.Request)
+ * @description:     This function parses the method of API request.
+ * @related issues:  OWL-085
+ * @param:           rw http.ResponseWriter
+ * @param:           req *http.Request
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/11/2015
+ * @last modified:   10/23/2015
+ * @called by:       http.HandleFunc("/api", apiParser)
+ *                    in func main()
  */
 func apiParser(rw http.ResponseWriter, req *http.Request) {
 	log.Println("func apiParser(rw http.ResponseWriter, req *http.Request)")
@@ -905,16 +919,16 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 }
 
 /**
- * @function name:	func configZabbixRoutes()
- * @description:	This function handles API requests.
- * @related issues:	OWL-093, OWL-085
- * @param:			void
- * @return:			void
- * @author:			Don Hsieh
- * @since:			09/09/2015
- * @last modified: 	10/21/2015
- * @called by:		func Start()
- *					 in http/http.go
+ * @function name:   func configZabbixRoutes()
+ * @description:     This function handles API requests.
+ * @related issues:  OWL-093, OWL-085
+ * @param:           void
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           09/09/2015
+ * @last modified:   10/21/2015
+ * @called by:       func Start()
+ *                    in http/http.go
  */
 func configZabbixRoutes() {
 	http.HandleFunc("/api", apiParser)
