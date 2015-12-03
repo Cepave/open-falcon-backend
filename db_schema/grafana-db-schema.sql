@@ -1,3 +1,7 @@
+CREATE DATABASE grafana;
+USE grafana;
+SET NAMES 'utf8';
+
 -- MySQL dump 10.13  Distrib 5.6.26
 --
 -- Host: 10.20.30.40    Database: grafana
