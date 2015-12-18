@@ -2,11 +2,15 @@ package uic
 
 import (
 	"encoding/base64"
+	"encoding/json"
+	"io/ioutil"
+	"log"
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/http/base"
 	. "github.com/Cepave/fe/model/uic"
 	"github.com/Cepave/fe/utils"
 	"github.com/toolkits/str"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -261,4 +265,74 @@ func getRequest(url string) map[string]interface{} {
 		log.Println("Error =", err.Error())
 	}
 	return nodes
+}
+
+/**
+ * @function name:   func (this *AuthController) LoginWithToken()
+ * @description:     This function logins user with third party token.
+ * @related issues:  OWL-206
+ * @param:           void
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/16/2015
+ * @last modified:   12/17/2015
+ * @called by:       beego.Router("/auth/login/:token", &AuthController{}, "get:LoginWithToken")
+ *                    in fe/http/uic/uic_routes.go
+ */
+func (this *AuthController) LoginWithToken() {
+	token := this.Ctx.Input.Param(":token")
+	key := g.Config().Api.Key
+	authUrl := g.Config().Api.Access + "/" + token + "/" + key
+
+	nodes := getRequest(authUrl)
+	if status, ok := nodes["status"]; ok {
+		if int(status.(float64)) == 1 {
+			data := nodes["data"].(map[string]interface {})
+			access_key := data["access_key"].(string)
+			username := data["username"].(string)
+			email := data["email"].(string)
+			log.Println("access_key =", access_key)
+
+			urlRole := g.Config().Api.Role + "/" + access_key
+			nodes := getRequest(urlRole)
+			role := 3
+			if int(nodes["status"].(float64)) == 1 {
+				permission := nodes["data"]
+				log.Println("permission =", permission)
+				if permission == "admin" {
+					role = 0
+				} else if permission == "operator" {
+					role = 1
+				} else if permission == "observer" {
+					role = 2
+				} else if permission == "deny" {
+					role = 3
+				}
+			}
+			user := ReadUserByName(username)
+			if user == nil {		// create third party user
+				InsertRegisterUser(username, "")
+				user = ReadUserByName(username)
+			}
+			user.Passwd = ""
+			user.Email = email
+			user.Role = role
+			user.Update()
+			appSig := this.GetString("sig", "")
+			callback := this.GetString("callback", "")
+			if appSig != "" && callback != "" {
+				SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
+			} else {
+				this.CreateSession(user.Id, 3600*24*30)
+			}
+			maxAge := 3600*24*30
+			this.Ctx.SetCookie("token", token, maxAge, "/")
+			this.Ctx.SetCookie("token", token, maxAge, "/", ".owlemon.com")
+			this.Redirect("/me/info", 302)
+		}
+	}
+	// not logged in. redirect to login page.
+	appSig := this.GetString("sig", "")
+	callback := this.GetString("callback", "")
+	this.renderLoginPage(appSig, callback)
 }
