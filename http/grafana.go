@@ -45,14 +45,14 @@ type City struct {
 /**
  * @function name:   func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string)
  * @description:     This function returns available hosts for Grafana query editor.
- * @related issues:  OWL-151
+ * @related issues:  OWL-221, OWL-151
  * @param:           rw http.ResponseWriter
  * @param:           req *http.Request
  * @param:           hostKeyword string
  * @return:          void
  * @author:          Don Hsieh
  * @since:           11/17/2015
- * @last modified:   11/18/2015
+ * @last modified:   12/18/2015
  * @called by:       func setQueryEditor(rw http.ResponseWriter, req *http.Request, hostKeyword string)
  */
 func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
@@ -63,10 +63,16 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	random64 := rand.Float64()
 	_r := strconv.FormatFloat(random64, 'f', -1, 32)
-	target := req.URL.Query().Get("target")
-	target = strings.Replace(target, "/api/grafana", "/api/endpoints", -1)
-	url := target + "?q=" + hostKeyword + "&tags&limit=500&_r=" + _r
-	
+	url := "/api/endpoints" + "?q=" + hostKeyword + "&tags&limit=500&_r=" + _r
+	log.Println("req.Host =", req.Host)
+	log.Println("g.Config().Api.Query =", g.Config().Api.Query)
+	if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
+		url = "http://localhost:9966" + url
+	} else {
+		url = g.Config().Api.Query + url
+	}
+	log.Println("url =", url)
+
 	reqGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println("Error =", err.Error())
@@ -147,14 +153,14 @@ func checkSegmentExpandable(segment string, counter string) bool {
 /**
  * @function name:   func getMetrics(rw http.ResponseWriter, req *http.Request, query string)
  * @description:     This function returns available segments of a metric for Grafana query editor.
- * @related issues:  OWL-151
+ * @related issues:  OWL-221, OWL-151
  * @param:           rw http.ResponseWriter
  * @param:           req *http.Request
  * @param:           query string
  * @return:          void
  * @author:          Don Hsieh
  * @since:           11/17/2015
- * @last modified:   11/18/2015
+ * @last modified:   12/18/2015
  * @called by:       func setQueryEditor(rw http.ResponseWriter, req *http.Request, hostKeyword string)
  */
 func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
@@ -196,9 +202,17 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 		form.Add("q", metric)
 		form.Add("limit", "")
 		form.Add("_r", _r)
-		
-		target := req.URL.Query().Get("target")
-		target = strings.Replace(target, "/api/grafana", "/api/counters", -1)
+
+		log.Println("req.Host =", req.Host)
+		log.Println("g.Config().Api.Query =", g.Config().Api.Query)
+		target := "/api/counters"
+		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
+			target = "http://localhost:9966" + target
+		} else {
+			target = g.Config().Api.Query + target
+		}
+		log.Println("target =", target)
+
 		reqPost, err := http.NewRequest("POST", target, strings.NewReader(form.Encode()))
 		if err != nil {
 			log.Println("Error =", err.Error())
@@ -980,14 +994,14 @@ func getChartOptions(chartType string) map[string]interface{} {
 /**
  * @function name:   func getMetricValues(req *http.Request, host string, targets []string, result []interface{}) []interface{}
  * @description:     This function returns map values for Grafana to draw graph.
- * @related issues:  OWL-159
+ * @related issues:  OWL-221, OWL-151
  * @param:           req *http.Request
  * @param:           host string
  * @param:           targets []string
  * @return:          result []interface{}
  * @author:          Don Hsieh
  * @since:           11/23/2015
- * @last modified:   11/24/2015
+ * @last modified:   12/18/2015
  * @called by:       func getValues(rw http.ResponseWriter, req *http.Request)
  */
 func getMetricValues(req *http.Request, host string, targets []string, result []interface{}) []interface{} {
@@ -1016,9 +1030,15 @@ func getMetricValues(req *http.Request, host string, targets []string, result []
 	if len(endpoint_counters) > 0 {
 		from, err := strconv.ParseInt(req.PostForm["from"][0], 10, 64)
 		until, err := strconv.ParseInt(req.PostForm["until"][0], 10, 64)
-		param := req.URL.Query()
-		url := strings.Join(param["target"], "")
-		url = strings.Replace(url, "/grafana", "/history", -1)
+		log.Println("req.Host =", req.Host)
+		log.Println("g.Config().Api.Query =", g.Config().Api.Query)
+		url := "/graph/history"
+		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
+			url = "http://localhost:9966" + url
+		} else {
+			url = g.Config().Api.Query + url
+		}
+		log.Println("url =", url)
 
 		args := map[string]interface{} {
 			"start": from,
