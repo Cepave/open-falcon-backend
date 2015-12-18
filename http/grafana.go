@@ -153,14 +153,14 @@ func checkSegmentExpandable(segment string, counter string) bool {
 /**
  * @function name:   func getMetrics(rw http.ResponseWriter, req *http.Request, query string)
  * @description:     This function returns available segments of a metric for Grafana query editor.
- * @related issues:  OWL-151
+ * @related issues:  OWL-221, OWL-151
  * @param:           rw http.ResponseWriter
  * @param:           req *http.Request
  * @param:           query string
  * @return:          void
  * @author:          Don Hsieh
  * @since:           11/17/2015
- * @last modified:   11/18/2015
+ * @last modified:   12/18/2015
  * @called by:       func setQueryEditor(rw http.ResponseWriter, req *http.Request, hostKeyword string)
  */
 func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
@@ -202,9 +202,17 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 		form.Add("q", metric)
 		form.Add("limit", "")
 		form.Add("_r", _r)
-		
-		target := req.URL.Query().Get("target")
-		target = strings.Replace(target, "/api/grafana", "/api/counters", -1)
+
+		log.Println("req.Host =", req.Host)
+		log.Println("g.Config().Api.Query =", g.Config().Api.Query)
+		target := "/api/counters"
+		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
+			target = "http://localhost:9966" + target
+		} else {
+			target = g.Config().Api.Query + target
+		}
+		log.Println("target =", target)
+
 		reqPost, err := http.NewRequest("POST", target, strings.NewReader(form.Encode()))
 		if err != nil {
 			log.Println("Error =", err.Error())
