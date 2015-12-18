@@ -114,6 +114,26 @@ function login() {
 	});
 }
 
+/**
+ * @function name:   function thirdPartyLogin()
+ * @description:     This function redirects user to third party login page.
+ * @related issues:  OWL-186
+ * @param:           void
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/17/2015
+ * @last modified:   12/17/2015
+ * @called by:       <button class="btn btn-default btn-block" type="button" onclick="thirdPartyLogin();">BOSS</button>
+ *                    in fe/views/auth/login.html
+ */
+function thirdPartyLogin() {
+	$.post('/auth/third-party', {
+	}, function(json) {
+		var redirectUrl = json.data;
+		location.href = redirectUrl;
+	});
+}
+
 function query_user() {
 	var query = $("#query").val();
 	location.href = "/me/users?query=" + query;
