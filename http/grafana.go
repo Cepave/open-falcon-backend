@@ -45,14 +45,14 @@ type City struct {
 /**
  * @function name:   func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string)
  * @description:     This function returns available hosts for Grafana query editor.
- * @related issues:  OWL-151
+ * @related issues:  OWL-221, OWL-151
  * @param:           rw http.ResponseWriter
  * @param:           req *http.Request
  * @param:           hostKeyword string
  * @return:          void
  * @author:          Don Hsieh
  * @since:           11/17/2015
- * @last modified:   11/18/2015
+ * @last modified:   12/18/2015
  * @called by:       func setQueryEditor(rw http.ResponseWriter, req *http.Request, hostKeyword string)
  */
 func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
@@ -63,10 +63,16 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	random64 := rand.Float64()
 	_r := strconv.FormatFloat(random64, 'f', -1, 32)
-	target := req.URL.Query().Get("target")
-	target = strings.Replace(target, "/api/grafana", "/api/endpoints", -1)
-	url := target + "?q=" + hostKeyword + "&tags&limit=500&_r=" + _r
-	
+	url := "/api/endpoints" + "?q=" + hostKeyword + "&tags&limit=500&_r=" + _r
+	log.Println("req.Host =", req.Host)
+	log.Println("g.Config().Api.Query =", g.Config().Api.Query)
+	if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
+		url = "http://localhost:9966" + url
+	} else {
+		url = g.Config().Api.Query + url
+	}
+	log.Println("url =", url)
+
 	reqGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println("Error =", err.Error())
