@@ -22,6 +22,15 @@ type AuthController struct {
 
 func (this *AuthController) Logout() {
 	u := this.Ctx.Input.GetData("CurrentUser").(*User)
+	token := this.Ctx.GetCookie("token")
+	if len(token) > 0 {
+		url := g.Config().Api.Logout + "/" + token
+		log.Println("logout url =", url)
+		result := getRequest(url)
+		log.Println("logout result =", result)
+		this.Ctx.SetCookie("token", "", 0, "/")
+		this.Ctx.SetCookie("token", "", 0, "/", ".owlemon.com")
+	}
 	RemoveSessionByUid(u.Id)
 	this.Ctx.SetCookie("sig", "", 0, "/")
 	this.Ctx.SetCookie("sig", "", 0, "/", ".owlemon.com")
