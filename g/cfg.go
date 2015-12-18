@@ -50,6 +50,15 @@ type LdapConfig struct {
 	Attributes []string `json:attributes`
 }
 
+type ApiConfig struct {
+	Key      string `json:"key"`
+	Redirect string `json:"redirect"`
+	Login    string `json:"login"`
+	Access   string `json:"access"`
+	Role     string `json:"role"`
+	Logout   string `json:"logout"`
+}
+
 type GlobalConfig struct {
 	Log         string          `json:"log"`
 	Company     string          `json:"company"`
@@ -60,6 +69,7 @@ type GlobalConfig struct {
 	Ldap        *LdapConfig     `json:"ldap"`
 	Uic         *UicConfig      `json:"uic"`
 	Shortcut    *ShortcutConfig `json:"shortcut"`
+	Api         *ApiConfig      `json:"api"`
 }
 
 var (
