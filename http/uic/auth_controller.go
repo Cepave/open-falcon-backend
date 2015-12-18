@@ -229,3 +229,36 @@ func (this *AuthController) LoginThirdParty() {
 	loginUrl := g.Config().Api.Login + "/" + strEncoded
 	this.ServeDataJson(loginUrl)
 }
+
+/**
+ * @function name:   func getRequest(url string) map[string]interface{}
+ * @description:     This function sends GET request to given URL.
+ * @related issues:  OWL-206, OWL-159
+ * @param:           url string
+ * @return:          map[string]interface{}
+ * @author:          Don Hsieh
+ * @since:           12/17/2015
+ * @last modified:   12/17/2015
+ * @called by:       func (this *AuthController) LoginWithToken()
+ *                    in fe/http/uic/auth_controller.go
+ */
+func getRequest(url string) map[string]interface{} {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Println("Error =", err.Error())
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error =", err.Error())
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var nodes = make(map[string]interface{})
+	if err := json.Unmarshal(body, &nodes); err != nil {
+		log.Println("Error =", err.Error())
+	}
+	return nodes
+}
