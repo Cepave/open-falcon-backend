@@ -1,11 +1,13 @@
 package uic
 
 import (
+	"encoding/base64"
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/http/base"
 	. "github.com/Cepave/fe/model/uic"
 	"github.com/Cepave/fe/utils"
 	"github.com/toolkits/str"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -182,4 +184,24 @@ func (this *AuthController) CreateSession(uid int64, maxAge int) int {
 	this.Ctx.SetCookie("sig", sig, maxAge, "/")
 	this.Ctx.SetCookie("sig", sig, maxAge, "/", ".owlemon.com")
 	return expired
+}
+
+/**
+ * @function name:   func (this *AuthController) LoginThirdParty()
+ * @description:     This function returns third party login URL.
+ * @related issues:  OWL-206
+ * @param:           void
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/17/2015
+ * @last modified:   12/17/2015
+ * @called by:       beego.Router("/auth/third-party", &AuthController{}, "post:LoginThirdParty")
+ *                    in fe/http/uic/uic_routes.go
+ */
+func (this *AuthController) LoginThirdParty() {
+	s := g.Config().Api.Redirect
+	s = base64.StdEncoding.EncodeToString([]byte(s))
+	strEncoded := url.QueryEscape(s)
+	loginUrl := g.Config().Api.Login + "/" + strEncoded
+	this.ServeDataJson(loginUrl)
 }
