@@ -284,7 +284,7 @@ func getRequest(url string) map[string]interface{} {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/16/2015
- * @last modified:   12/17/2015
+ * @last modified:   12/21/2015
  * @called by:       beego.Router("/auth/login/:token", &AuthController{}, "get:LoginWithToken")
  *                    in fe/http/uic/uic_routes.go
  */
@@ -317,6 +317,9 @@ func (this *AuthController) LoginWithToken() {
 				} else if permission == "deny" {
 					role = 3
 				}
+				maxAge := 3600*24*30
+				this.Ctx.SetCookie("token", access_key, maxAge, "/")
+				this.Ctx.SetCookie("token", access_key, maxAge, "/", ".owlemon.com")
 			}
 			user := ReadUserByName(username)
 			if user == nil {		// create third party user
@@ -334,9 +337,6 @@ func (this *AuthController) LoginWithToken() {
 			} else {
 				this.CreateSession(user.Id, 3600*24*30)
 			}
-			maxAge := 3600*24*30
-			this.Ctx.SetCookie("token", token, maxAge, "/")
-			this.Ctx.SetCookie("token", token, maxAge, "/", ".owlemon.com")
 			this.Redirect("/me/info", 302)
 		}
 	}
