@@ -91,3 +91,8 @@ code.users {
     color: green;
     line-height: 26px;
 }
+
+.xubox_layer {
+    position: absolute !important;
+}
+

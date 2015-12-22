@@ -219,6 +219,7 @@ function edit_team(tid) {
 }
 
 function delete_user(uid) {
+    window.scrollTo(0, 850);
 	my_confirm("真的要删除么？通常只有离职的时候才需要删除", [ '确定', '取消' ], function() {
 		$.post('/target-user/delete', {
 			'id' : uid
