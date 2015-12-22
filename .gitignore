@@ -22,3 +22,15 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+*.swp
+*.swo
+*.log
+# .idea
+.DS_Store
+/var
+#/nqm
+/cfg.json
+#/test/build
+
+gitversion
