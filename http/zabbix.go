@@ -163,6 +163,73 @@ func checkHostExist(hostId string, hostName string) Endpoint {
 }
 
 /**
+ * @function name:   bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
+ * @description:     This function binds a host to a host group.
+ * @related issues:  OWL-240
+ * @param:           hostId int64
+ * @param:           params map[string]interface{}
+ * @param:           args map[string]string
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/15/2015
+ * @last modified:   12/15/2015
+ * @called by:       func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
+ */
+func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
+	if _, ok := params["groups"]; ok {
+		o := orm.NewOrm()
+		database := "falcon_portal"
+		o.Using(database)
+
+		sqlcmd := "DELETE FROM falcon_portal.grp_host WHERE host_id=?"
+		res, err := o.Raw(sqlcmd, hostId).Exec()
+		if err != nil {
+			log.Println("Error =", err.Error())
+			result["error"] = [1]string{string(err.Error())}
+		} else {
+			num, _ := res.RowsAffected()
+			if num > 0 {
+				log.Println("mysql row affected nums =", num)
+			}
+		}
+
+		groups := params["groups"].([]interface{})
+		groupId := ""
+		for _, group := range groups {
+			groupId = group.(map[string]interface{})["groupid"].(string)
+			args["groupId"] = groupId
+			grp_id, err := strconv.Atoi(groupId)
+			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
+			res, err := o.Raw(sqlcmd, hostId, grp_id).Exec()
+			if err != nil {
+				log.Println("Error =", err.Error())
+				result["error"] = [1]string{string(err.Error())}
+			} else {
+				num, _ := res.RowsAffected()
+				log.Println("num =", num)
+				if num > 0 {
+					log.Println("Record existed. count =", num)
+				} else {	// Record not existed. Insert new one.
+					grp_host := Grp_host{
+						Grp_id: grp_id,
+						Host_id: int(hostId),
+					}
+					log.Println("grp_host =", grp_host)
+
+					_, err = o.Insert(&grp_host)
+					if err != nil {
+						log.Println("Error =", err.Error())
+						result["error"] = [1]string{string(err.Error())}
+					}
+				}
+			}
+		}
+	}
+}
+
+/**
  * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function gets host data for database insertion.
  * @related issues:  OWL-093, OWL-086, OWL-085
