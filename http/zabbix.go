@@ -123,6 +123,46 @@ func getHostName(params map[string]interface{}) string {
 }
 
 /**
+ * @function name:   func checkHostExist(hostId string, hostName string)
+ * @description:     This function checks if a host existed.
+ * @related issues:  OWL-240
+ * @param:           hostId string
+ * @param:           hostName string
+ * @return:          endpoint Endpoint
+ * @author:          Don Hsieh
+ * @since:           12/16/2015
+ * @last modified:   12/16/2015
+ * @called by:       func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ *                   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ */
+func checkHostExist(hostId string, hostName string) Endpoint {
+	var endpoint Endpoint
+	o := orm.NewOrm()
+	if hostId != "" {
+		hostIdint, err := strconv.Atoi(hostId)
+		if err != nil {
+			log.Println("Error =", err.Error())
+		} else {
+			endpoint := Endpoint{Id: hostIdint}
+			err := o.Read(&endpoint)
+			if err != nil {
+				log.Println("Error =", err.Error())
+			}
+		}
+	} else {
+		err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
+		if err == orm.ErrMultiRows {
+			// Have multiple records
+			log.Printf("Returned multiple rows")
+		} else if err == orm.ErrNoRows {
+			// No result
+			log.Printf("Not found")
+		}
+	}
+	return endpoint
+}
+
+/**
  * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function gets host data for database insertion.
  * @related issues:  OWL-093, OWL-086, OWL-085
