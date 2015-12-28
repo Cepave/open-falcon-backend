@@ -288,6 +288,67 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 }
 
 /**
+ * @function name:   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
+ * @description:     This function inserts a host to "endpoint" table and binds the host to its group and template.
+ * @related issues:  OWL-240
+ * @param:           hostName string
+ * @param:           params map[string]interface{}
+ * @param:           args map[string]string
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/21/2015
+ * @last modified:   12/28/2015
+ * @called by:       func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ *                   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ */
+func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
+	ip := ""
+	port := ""
+	if _, ok := params["interfaces"]; ok {
+		interfaces := params["interfaces"].([]interface{})
+		for i, arg := range interfaces {
+			if i == 0 {
+				ip = arg.(map[string]interface{})["ip"].(string)
+				port = arg.(map[string]interface{})["port"].(string)
+				args["ip"] = ip
+				args["port"] = port
+			}
+		}
+	}
+
+	t := time.Now()
+	timestamp := t.Unix()
+	log.Println(timestamp)
+	now := getNow()
+
+	endpoint := Endpoint{
+		Endpoint: hostName,
+		Ts: timestamp,
+		T_create: now,
+		T_modify: now,
+		Ipv4: ip,
+	}
+	if len(port) > 0 {
+		endpoint.Port = port
+	}
+	log.Println("endpoint =", endpoint)
+
+	o := orm.NewOrm()
+	hostId, err := o.Insert(&endpoint)
+	if err != nil {
+		log.Println("Error =", err.Error())
+		result["error"] = [1]string{string(err.Error())}
+	} else {
+		bindGroup(hostId, params, args, result)
+		hostid := strconv.Itoa(int(hostId))
+		hostids := [1]string{string(hostid)}
+		result["hostids"] = hostids
+		bindTemplate(params, args, result)
+	}
+}
+
+/**
  * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function gets host data for database insertion.
  * @related issues:  OWL-093, OWL-086, OWL-085
