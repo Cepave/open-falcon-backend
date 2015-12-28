@@ -351,13 +351,13 @@ func addHost(hostName string, params map[string]interface{}, args map[string]str
 /**
  * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function gets host data for database insertion.
- * @related issues:  OWL-093, OWL-086, OWL-085
+ * @related issues:  OWL-240, OWL-093, OWL-086, OWL-085
  * @param:           nodes map[string]interface{}
  * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/11/2015
- * @last modified:   10/22/2015
+ * @last modified:   12/28/2015
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
@@ -365,108 +365,30 @@ func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	params := nodes["params"].(map[string]interface{})
 	var result = make(map[string]interface{})
 
-	if _, ok := params["host"]; ok {
-		host := params["host"].(string)
-		t := time.Now()
-		timestamp := t.Unix()
-		log.Println(timestamp)
-		now := getNow()
-		args := map[string]string {
-			"host": host,
-		}
-
-		o := orm.NewOrm()
-		endpoint := Endpoint{
-			Endpoint: host,
-			Ts: timestamp,
-			T_create: now,
-			T_modify: now,
-		}
-
-		log.Println("endpoint =", endpoint)
-		hostId, err := o.Insert(&endpoint)
-		if err != nil {
-			log.Println("Error =", err.Error())
-			result["error"] = [1]string{string(err.Error())}
-		} else {
-			hostid := strconv.Itoa(int(hostId))
-			hostids := [1]string{string(hostid)}
-			result["hostids"] = hostids
-			if _, ok := params["groups"]; ok {
-				database := "falcon_portal"
-				o.Using(database)
-				groups := params["groups"].([]interface{})
-				groupId := ""
-				for i, group := range groups {
-					groupId = group.(map[string]interface{})["groupid"].(string)
-					log.Println("hostId:", hostId)
-					log.Println("groupId:", groupId)
-					if i == 0 {
-						args["groupId"] = groupId
-					}
-					grp_id, err := strconv.Atoi(groupId)
-
-					sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
-					log.Println("sqlcmd:", sqlcmd)
-					res, err := o.Raw(sqlcmd, hostId, grp_id).Exec()
-					if err != nil {
-						log.Println("Error =", err.Error())
-						result["error"] = [1]string{string(err.Error())}
-					} else {
-						num, _ := res.RowsAffected()
-						log.Println("num:", num)
-						if num > 0 {
-							log.Println("Record existed. count:", num)
-						} else {	// Record not existed. Insert new one.
-							grp_host := Grp_host{
-								Grp_id: grp_id,
-								Host_id: int(hostId),
-							}
-							log.Println("grp_host =", grp_host)
-
-							_, err = o.Insert(&grp_host)
-							if err != nil {
-								log.Println("Error =", err.Error())
-								result["error"] = [1]string{string(err.Error())}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if _, ok := params["interfaces"]; ok {
-			interfaces := params["interfaces"].([]interface{})
-			for i, arg := range interfaces {
-				if i == 0 {
-					ip := arg.(map[string]interface{})["ip"].(string)
-					port := arg.(map[string]interface{})["port"].(string)
-					args["ip"] = ip
-					args["port"] = port
-				}
-			}
-		}
-
-		if _, ok := params["templates"]; ok {
-			templates := params["templates"].([]interface{})
-			for i, template := range templates {
-				if i == 0 {
-					templateId := template.(map[string]interface{})["templateid"].(string)
-					args["templateId"] = templateId
-				}
-			}
-		}
-
-		if _, ok := params["inventory"]; ok {
-			inventory := params["inventory"].(map[string]interface{})
-			macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
-			args["macAddr"] = macAddr
-		}
-		log.Println("args =", args)
+	hostName := getHostName(params)
+	hostId := ""
+	endpoint := checkHostExist(hostId, hostName)
+	log.Println("returned endpoint =", endpoint)
+	log.Println("endpoint.Id =", endpoint.Id)
+	if endpoint.Id > 0 {
+		result["error"] = [1]string{"host name existed."}
 	} else {
-		result["error"] = [1]string{"host name can not be null."}
+		log.Println("host not existed")
+		if len(hostName) > 0 {
+			args := map[string]string {
+				"host": hostName,
+			}
+			addHost(hostName, params, args, result)
+			if _, ok := params["inventory"]; ok {
+				inventory := params["inventory"].(map[string]interface{})
+				macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
+				args["macAddr"] = macAddr
+			}
+			log.Println("args =", args)
+		} else {
+			result["error"] = [1]string{"host name can not be null."}
+		}
 	}
-
 	resp := nodes
 	delete(resp, "params")
 	resp["result"] = result
