@@ -76,6 +76,27 @@ func getNow() string {
 }
 
 /**
+ * @function name:   func getHostId(params map[string]interface{}) string
+ * @description:     This function gets host ID.
+ * @related issues:  OWL-240
+ * @param:           params map[string]interface{}
+ * @return:          hostId string
+ * @author:          Don Hsieh
+ * @since:           12/16/2015
+ * @last modified:   12/16/2015
+ * @called by:       func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ */
+func getHostId(params map[string]interface{}) string {
+	hostId := ""
+	if val, ok := params["hostid"]; ok {
+		if val != nil {
+			hostId = val.(string)
+		}
+	}
+	return hostId
+}
+
+/**
  * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function gets host data for database insertion.
  * @related issues:  OWL-093, OWL-086, OWL-085
