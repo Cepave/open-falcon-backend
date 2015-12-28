@@ -23,6 +23,8 @@ type Endpoint struct {
 	Ts       int64
 	T_create string
 	T_modify string
+	Ipv4     string
+	Port     string
 }
 
 type Grp struct {
