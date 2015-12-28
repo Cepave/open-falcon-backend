@@ -527,108 +527,55 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 /**
  * @function name:   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function updates host data.
- * @related issues:  OWL-093, OWL-086
+ * @related issues:  OWL-240, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
  * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/23/2015
- * @last modified:   10/21/2015
+ * @last modified:   12/28/2015
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostUpdate()")
 	params := nodes["params"].(map[string]interface{})
 	var result = make(map[string]interface{})
-	hostId, err := strconv.Atoi(params["hostid"].(string))
-	if err != nil {
-		log.Println("Error =", err.Error())
-		result["error"] = [1]string{string(err.Error())}
-	}
-	now := getNow()
-	log.Println("now:", now)
-
-	o := orm.NewOrm()
-
-	if _, ok := params["host"]; ok {
-		hostName := params["host"].(string)
-		log.Println("hostName:", hostName)
-
-		if hostName != "" {
-			endpoint := Endpoint{Id: hostId}
-			log.Println("endpoint:", endpoint)
-			err := o.Read(&endpoint)
-			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
-			} else {
-				log.Println("endpoint:", endpoint)
-				endpoint.Endpoint = hostName
-				endpoint.T_modify = now
-				num, err := o.Update(&endpoint)
-				if err != nil {
-					log.Println("Error =", err.Error())
-					result["error"] = [1]string{string(err.Error())}
-				} else {
-					if num > 0 {
-						hostids := [1]string{strconv.Itoa(hostId)}
-						result["hostids"] = hostids
-						log.Println("update hostId:", hostId)
-						log.Println("mysql row affected nums:", num)
-					}
-				}
-			}
-		}
+	hostId := getHostId(params)
+	hostName := getHostName(params)
+	args := map[string]string {
+		"host": hostName,
 	}
 
-	if _, ok := params["groups"]; ok {
-		groups := params["groups"].([]interface{})
-		log.Println("groups:", groups)
+	endpoint := checkHostExist(hostId, hostName)
+	log.Println("returned endpoint =", endpoint)
+	log.Println("endpoint.Id =", endpoint.Id)
+	if endpoint.Id > 0 {
+		log.Println("host existed")
+		hostId := endpoint.Id
+		now := getNow()
+		log.Println("now =", now)
+		endpoint.T_modify = now
 
-		count := 0
-		for _, group := range groups {
-			log.Println("group:", group)
-			count += 1
+		o := orm.NewOrm()
+		num, err := o.Update(&endpoint)
+		if err != nil {
+			log.Println("Error =", err.Error())
+			result["error"] = [1]string{string(err.Error())}
+		} else {
+			log.Println("update hostId =", hostId)
+			log.Println("mysql row affected nums =", num)
+			bindGroup(int64(endpoint.Id), params, args, result)
+			hostid := strconv.Itoa(endpoint.Id)
+			hostids := [1]string{string(hostid)}
+			result["hostids"] = hostids
+			bindTemplate(params, args, result)
 		}
-		log.Println("count:", count)
-
-		if count > 0 {
-			database := "falcon_portal"
-			o.Using(database)
-
-			sqlcmd := "DELETE FROM falcon_portal.grp_host WHERE host_id=?"
-			res, err := o.Raw(sqlcmd, hostId).Exec()
-			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
-			} else {
-				num, _ := res.RowsAffected()
-				if num > 0 {
-					log.Println("mysql row affected nums:", num)
-				}
-			}
-
-			for _, group := range groups {
-				log.Println("group:", group)
-				groupId, err := strconv.Atoi(group.(map[string]interface{})["groupid"].(string))
-				log.Println("groupId:", groupId)
-				grp_host := Grp_host{Grp_id: groupId, Host_id: hostId}
-				log.Println("grp_host:", grp_host)
-
-				database := "falcon_portal"
-				o.Using(database)
-				_, err = o.Insert(&grp_host)
-				if err != nil {
-					log.Println("Error =", err.Error())
-					result["error"] = [1]string{string(err.Error())}
-				} else {
-					hostids := [1]string{strconv.Itoa(hostId)}
-					result["hostids"] = hostids
-					log.Println("update hostId:", hostId)
-				}
-			}
-		}
+	} else {
+		log.Println("host not existed")
+		addHost(hostName, params, args, result)
 	}
+	log.Println("args =", args)
+
 	resp := nodes
 	delete(resp, "params")
 	resp["result"] = result
