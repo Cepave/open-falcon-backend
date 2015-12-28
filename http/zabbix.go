@@ -230,6 +230,62 @@ func bindGroup(hostId int64, params map[string]interface{}, args map[string]stri
 }
 
 /**
+ * @function name:   bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{})
+ * @description:     This function binds a host to a template.
+ * @related issues:  OWL-240
+ * @param:           params map[string]interface{}
+ * @param:           args map[string]string
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/15/2015
+ * @last modified:   12/15/2015
+ * @called by:       func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
+ */
+func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{}) {
+	if _, ok := params["templates"]; ok {
+		o := orm.NewOrm()
+		database := "falcon_portal"
+		o.Using(database)
+		groupId := args["groupId"]
+		grp_id, _ := strconv.Atoi(groupId)
+		templates := params["templates"].([]interface{})
+		for _, template := range templates {
+			templateId := template.(map[string]interface{})["templateid"].(string)
+			tpl_id, err := strconv.Atoi(templateId)
+			args["templateId"] = templateId
+
+			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
+			res, err := o.Raw(sqlcmd, grp_id, tpl_id).Exec()
+			if err != nil {
+				log.Println("Error =", err.Error())
+				result["error"] = [1]string{string(err.Error())}
+			} else {
+				num, _ := res.RowsAffected()
+				log.Println("num =", num)
+				if num > 0 {
+					log.Println("Record existed. count =", num)
+				} else {	// Record not existed. Insert new one.
+					grp_tpl := Grp_tpl{
+						Grp_id: grp_id,
+						Tpl_id: tpl_id,
+						Bind_user: "zabbix",
+					}
+					log.Println("grp_tpl =", grp_tpl)
+
+					_, err = o.Insert(&grp_tpl)
+					if err != nil {
+						log.Println("Error =", err.Error())
+						result["error"] = [1]string{string(err.Error())}
+					}
+				}
+			}
+		}
+	}
+}
+
+/**
  * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function gets host data for database insertion.
  * @related issues:  OWL-093, OWL-086, OWL-085
