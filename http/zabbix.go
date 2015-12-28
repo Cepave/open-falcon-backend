@@ -229,7 +229,7 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 			} else {
 				if num > 0 {
 					hostids = append(hostids, hostId.(string))
-					log.Println("RowsDeleted:", num)
+					log.Println("RowsDeleted =", num)
 				}
 			}
 		}
@@ -244,7 +244,7 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 			log.Println("Error =", err.Error())
 		}
 		num, _ := res.RowsAffected()
-		log.Println("mysql row affected nums:", num)
+		log.Println("mysql row affected nums =", num)
 	}
 	result["hostids"] = hostids
 	resp["result"] = result
@@ -399,8 +399,8 @@ func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	id, err := o.Insert(&grp)
 	if err != nil {
 		log.Println("Error =", err.Error())
-		log.Println("TypeOf(err):", reflect.TypeOf(err))					// *mysql.MySQLError
-		log.Println("TypeOf(err.Error()):", reflect.TypeOf(err.Error()))	// string
+		log.Println("TypeOf(err) =", reflect.TypeOf(err))					// *mysql.MySQLError
+		log.Println("TypeOf(err.Error()) =", reflect.TypeOf(err.Error()))	// string
 		result["error"] = [1]string{string(err.Error())}
 	} else {
 		groupid := strconv.Itoa(int(id))
@@ -453,8 +453,8 @@ func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.grp WHERE id=?" {
 					groupids = append(groupids, hostgroupId.(string))
-					log.Println("delete hostgroup id:", hostgroupId)
-					log.Println("mysql row affected nums:", num)
+					log.Println("delete hostgroup id =", hostgroupId)
+					log.Println("mysql row affected nums =", num)
 				}
 			}
 		}
@@ -491,19 +491,19 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 	if _, ok := params["name"]; ok {
 		hostgroupName := params["name"].(string)
-		log.Println("hostgroupName:", hostgroupName)
+		log.Println("hostgroupName =", hostgroupName)
 
 		if hostgroupName != "" {
 			grp := Grp{Id: hostgroupId}
-			log.Println("grp:", grp)
+			log.Println("grp =", grp)
 			err := o.Read(&grp)
 			if err != nil {
 				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
-				log.Println("grp:", grp)
+				log.Println("grp =", grp)
 				grp.Grp_name = hostgroupName
-				log.Println("grp:", grp)
+				log.Println("grp =", grp)
 				num, err := o.Update(&grp)
 				if err != nil {
 					log.Println("Error =", err.Error())
@@ -512,8 +512,8 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 					if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
 						result["groupids"] = groupids
-						log.Println("update groupid:", hostgroupId)
-						log.Println("mysql row affected nums:", num)
+						log.Println("update groupid =", hostgroupId)
+						log.Println("mysql row affected nums =", num)
 					}
 				}
 			}
@@ -626,8 +626,8 @@ func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.tpl WHERE id=?" {
 					templateids = append(templateids, templateId.(string))
-					log.Println("delete template id:", templateId)
-					log.Println("mysql row affected nums:", num)
+					log.Println("delete template id =", templateId)
+					log.Println("mysql row affected nums =", num)
 				}
 			}
 		}
@@ -663,19 +663,19 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 	if _, ok := params["name"]; ok {
 		templateName := params["name"].(string)
-		log.Println("templateName:", templateName)
+		log.Println("templateName =", templateName)
 
 		if templateName != "" {
 			tpl := Tpl{Id: templateId}
-			log.Println("tpl:", tpl)
+			log.Println("tpl =", tpl)
 			err := o.Read(&tpl)
 			if err != nil {
 				log.Println("Error =", err.Error())
 				result["error"] = [1]string{string(err.Error())}
 			} else {
-				log.Println("tpl:", tpl)
+				log.Println("tpl =", tpl)
 				tpl.Tpl_name = templateName
-				log.Println("tpl:", tpl)
+				log.Println("tpl =", tpl)
 				num, err := o.Update(&tpl)
 				if err != nil {
 					log.Println("Error =", err.Error())
@@ -684,8 +684,8 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 					if num > 0 {
 						templateids := [1]string{strconv.Itoa(templateId)}
 						result["templateids"] = templateids
-						log.Println("update template id:", templateId)
-						log.Println("mysql row affected nums:", num)
+						log.Println("update template id =", templateId)
+						log.Println("mysql row affected nums =", num)
 					}
 				}
 			}
@@ -694,14 +694,14 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 	if _, ok := params["groups"]; ok {
 		groups := params["groups"].([]interface{})
-		log.Println("groups:", groups)
+		log.Println("groups =", groups)
 
 		count := 0
 		for _, group := range groups {
-			log.Println("group:", group)
+			log.Println("group =", group)
 			count += 1
 		}
-		log.Println("count:", count)
+		log.Println("count =", count)
 
 		if count > 0 {
 			user := "zabbix"
@@ -713,16 +713,16 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			} else {
 				num, _ := res.RowsAffected()
 				if num > 0 {
-					log.Println("mysql row affected nums:", num)
+					log.Println("mysql row affected nums =", num)
 				}
 			}
 
 			for _, group := range groups {
-				log.Println("group:", group)
+				log.Println("group =", group)
 				groupId, err := strconv.Atoi(group.(map[string]interface{})["groupid"].(string))
-				log.Println("groupId:", groupId)
+				log.Println("groupId =", groupId)
 				grp_tpl := Grp_tpl{Grp_id: groupId, Tpl_id: templateId, Bind_user: user}
-				log.Println("grp_tpl:", grp_tpl)
+				log.Println("grp_tpl =", grp_tpl)
 
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
@@ -731,7 +731,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 				} else {
 					templateids := [1]string{strconv.Itoa(templateId)}
 					result["templateids"] = templateids
-					log.Println("update template id:", templateId)
+					log.Println("update template id =", templateId)
 				}
 			}
 		}
@@ -846,10 +846,10 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	log.Println("response Status:", resp.Status)	// 200 OK   TypeOf(resp.Status): string
-	log.Println("response Headers:", resp.Header)
+	log.Println("response Status =", resp.Status)	// 200 OK   TypeOf(resp.Status): string
+	log.Println("response Headers =", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Println("response Body:", string(body))
+	log.Println("response Body =", string(body))
 	rw.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	rw.Write(body)
 }
