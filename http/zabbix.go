@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"reflect"
 	"strconv"
 	"time"
 )
@@ -488,10 +487,8 @@ func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 		groupId = ""
 		err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
 		if err == orm.ErrMultiRows {
-			// Have multiple records
 			log.Printf("Returned multiple rows")
 		} else if err == orm.ErrNoRows {
-			// No result
 			log.Printf("Not found")
 		} else if endpoint.Id > 0 {
 			ip = endpoint.Ipv4
@@ -609,8 +606,6 @@ func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	id, err := o.Insert(&grp)
 	if err != nil {
 		log.Println("Error =", err.Error())
-		log.Println("TypeOf(err) =", reflect.TypeOf(err))					// *mysql.MySQLError
-		log.Println("TypeOf(err.Error()) =", reflect.TypeOf(err.Error()))	// string
 		result["error"] = [1]string{string(err.Error())}
 	} else {
 		groupid := strconv.Itoa(int(id))
@@ -670,6 +665,62 @@ func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		}
 	}
 	result["groupids"] = groupids
+	resp["result"] = result
+	RenderJson(rw, resp)
+}
+
+/**
+ * @function name:   func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function gets existed hostgroup data.
+ * @related issues:  OWL-254
+ * @param:           nodes map[string]interface{}
+ * @param:           rw http.ResponseWriter
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/29/2015
+ * @last modified:   12/29/2015
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
+ */
+func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter) {
+	log.Println("func hostgroupGet()")
+	params := nodes["params"].(map[string]interface{})
+	result := []interface{}{}
+	groupNames := []string{}
+	if val, ok := params["filter"]; ok {
+		if val != nil {
+			filter := val.(map[string]interface{})
+			if val, ok = filter["name"]; ok {
+				if val != nil {
+					for _, groupName := range val.([]interface{}) {
+						groupNames = append(groupNames, groupName.(string))
+					}
+				}
+			}
+		}
+	}
+
+	groupId := ""
+	var grp Grp
+	o := orm.NewOrm()
+	o.Using("falcon_portal")
+	for _, groupName := range groupNames {
+		item := map[string]string {}
+		groupId = ""
+		err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
+		if err == orm.ErrMultiRows {
+			log.Printf("Returned multiple rows")
+		} else if err == orm.ErrNoRows {
+			log.Printf("Not found")
+		} else if grp.Id > 0 {
+			groupId = strconv.Itoa(grp.Id)
+		}
+		item["groupid"] = groupId
+		item["groupname"] = groupName
+		result = append(result, item)
+	}
+	log.Println("result =", result)
+	resp := nodes
+	delete(resp, "params")
 	resp["result"] = result
 	RenderJson(rw, resp)
 }
@@ -1112,18 +1163,16 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 			hostgroupCreate(nodes, rw)
 		} else if method == "hostgroup.delete" {
 			hostgroupDelete(nodes, rw)
+		} else if method == "hostgroup.get" {
+			hostgroupGet(nodes, rw)
 		} else if method == "hostgroup.update" {
 			hostgroupUpdate(nodes, rw)
-		} else if method == "hostgroup.exists" {
-			// hostgroupExist(params)
 		} else if method == "template.create" {
 			templateCreate(nodes, rw)
 		} else if method == "template.delete" {
 			templateDelete(nodes, rw)
 		} else if method == "template.update" {
 			templateUpdate(nodes, rw)
-		} else if method == "template.exists" {
-			// templateExist(params)
 		}
 	}
 }
