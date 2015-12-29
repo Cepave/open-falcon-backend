@@ -686,37 +686,52 @@ func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 	params := nodes["params"].(map[string]interface{})
 	result := []interface{}{}
 	groupNames := []string{}
+	queryAll := false
 	if val, ok := params["filter"]; ok {
-		if val != nil {
-			filter := val.(map[string]interface{})
-			if val, ok = filter["name"]; ok {
-				if val != nil {
-					for _, groupName := range val.([]interface{}) {
-						groupNames = append(groupNames, groupName.(string))
-					}
+		filter := val.(map[string]interface{})
+		if val, ok = filter["name"]; ok {
+			for _, groupName := range val.([]interface{}) {
+				if groupName.(string) == "%all%" {
+					queryAll = true
+				} else {
+					groupNames = append(groupNames, groupName.(string))
 				}
 			}
 		}
 	}
-
 	groupId := ""
-	var grp Grp
 	o := orm.NewOrm()
 	o.Using("falcon_portal")
-	for _, groupName := range groupNames {
-		item := map[string]string {}
-		groupId = ""
-		err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
-		if err == orm.ErrMultiRows {
-			log.Printf("Returned multiple rows")
-		} else if err == orm.ErrNoRows {
-			log.Printf("Not found")
-		} else if grp.Id > 0 {
-			groupId = strconv.Itoa(grp.Id)
+	if queryAll {
+		var grps []*Grp
+		_, err := o.QueryTable("grp").All(&grps)
+		if err != nil {
+			log.Println("Error =", err.Error())
+		} else {
+			for _, grp := range grps {
+				item := map[string]string {}
+				item["groupid"] = strconv.Itoa(grp.Id)
+				item["groupname"] = grp.Grp_name
+				result = append(result, item)
+			}
 		}
-		item["groupid"] = groupId
-		item["groupname"] = groupName
-		result = append(result, item)
+	} else {
+		var grp Grp
+		for _, groupName := range groupNames {
+			item := map[string]string {}
+			groupId = ""
+			err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
+			if err == orm.ErrMultiRows {
+				log.Printf("Returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				log.Printf("Not found")
+			} else if grp.Id > 0 {
+				groupId = strconv.Itoa(grp.Id)
+			}
+			item["groupid"] = groupId
+			item["groupname"] = groupName
+			result = append(result, item)
+		}
 	}
 	log.Println("result =", result)
 	resp := nodes
