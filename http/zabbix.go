@@ -454,7 +454,7 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   12/29/2015
+ * @last modified:   12/30/2015
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
@@ -462,47 +462,68 @@ func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 	params := nodes["params"].(map[string]interface{})
 	result := []interface{}{}
 	hostNames := []string{}
+	queryAll := false
 	if val, ok := params["filter"]; ok {
-		if val != nil {
-			filter := val.(map[string]interface{})
-			if val, ok = filter["host"]; ok {
-				if val != nil {
-					for _, hostName := range val.([]interface{}) {
-						hostNames = append(hostNames, hostName.(string))
-					}
+		filter := val.(map[string]interface{})
+		if val, ok = filter["host"]; ok {
+			for _, hostName := range val.([]interface{}) {
+				if hostName.(string) == "_all_" {
+					queryAll = true
+				} else {
+					hostNames = append(hostNames, hostName.(string))
 				}
 			}
 		}
 	}
-
-	ip := ""
-	hostId := ""
-	groupId := ""
-	var endpoint Endpoint
 	o := orm.NewOrm()
-	for _, hostName := range hostNames {
-		item := map[string]string {}
-		ip = ""
-		hostId = ""
-		groupId = ""
-		err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
-		if err == orm.ErrMultiRows {
-			log.Printf("Returned multiple rows")
-		} else if err == orm.ErrNoRows {
-			log.Printf("Not found")
-		} else if endpoint.Id > 0 {
-			ip = endpoint.Ipv4
-			var grp_id int
-			o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
-			log.Println("grp_id =", grp_id)
-			hostId = strconv.Itoa(endpoint.Id)
-			groupId = strconv.Itoa(grp_id)
+	if queryAll {
+		var endpoints []*Endpoint
+		num, err := o.QueryTable("endpoint").All(&endpoints)
+		if err != nil {
+			log.Println("Error =", err.Error())
+		} else {
+			log.Println("num =", num)
+			for _, endpoint := range endpoints {
+				log.Println("endpoint =", endpoint)
+				item := map[string]string {}
+				var grp_id int
+				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
+				item["hostid"] = strconv.Itoa(endpoint.Id)
+				item["hostname"] = endpoint.Endpoint
+				item["ip"] = endpoint.Ipv4
+				item["groupid"] = strconv.Itoa(grp_id)
+				result = append(result, item)
+			}
 		}
-		item["hostid"] = hostId
-		item["hostname"] = hostName
-		item["ip"] = ip
-		item["groupid"] = groupId
-		result = append(result, item)
+	} else {
+		ip := ""
+		hostId := ""
+		groupId := ""
+		var endpoint Endpoint
+		for _, hostName := range hostNames {
+			item := map[string]string {}
+			ip = ""
+			hostId = ""
+			groupId = ""
+			err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
+			if err == orm.ErrMultiRows {
+				log.Printf("Returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				log.Printf("Not found")
+			} else if endpoint.Id > 0 {
+				ip = endpoint.Ipv4
+				var grp_id int
+				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
+				log.Println("grp_id =", grp_id)
+				hostId = strconv.Itoa(endpoint.Id)
+				groupId = strconv.Itoa(grp_id)
+			}
+			item["hostid"] = hostId
+			item["hostname"] = hostName
+			item["ip"] = ip
+			item["groupid"] = groupId
+			result = append(result, item)
+		}
 	}
 	log.Println("result =", result)
 	resp := nodes
@@ -686,37 +707,52 @@ func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 	params := nodes["params"].(map[string]interface{})
 	result := []interface{}{}
 	groupNames := []string{}
+	queryAll := false
 	if val, ok := params["filter"]; ok {
-		if val != nil {
-			filter := val.(map[string]interface{})
-			if val, ok = filter["name"]; ok {
-				if val != nil {
-					for _, groupName := range val.([]interface{}) {
-						groupNames = append(groupNames, groupName.(string))
-					}
+		filter := val.(map[string]interface{})
+		if val, ok = filter["name"]; ok {
+			for _, groupName := range val.([]interface{}) {
+				if groupName.(string) == "_all_" {
+					queryAll = true
+				} else {
+					groupNames = append(groupNames, groupName.(string))
 				}
 			}
 		}
 	}
-
 	groupId := ""
-	var grp Grp
 	o := orm.NewOrm()
 	o.Using("falcon_portal")
-	for _, groupName := range groupNames {
-		item := map[string]string {}
-		groupId = ""
-		err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
-		if err == orm.ErrMultiRows {
-			log.Printf("Returned multiple rows")
-		} else if err == orm.ErrNoRows {
-			log.Printf("Not found")
-		} else if grp.Id > 0 {
-			groupId = strconv.Itoa(grp.Id)
+	if queryAll {
+		var grps []*Grp
+		_, err := o.QueryTable("grp").All(&grps)
+		if err != nil {
+			log.Println("Error =", err.Error())
+		} else {
+			for _, grp := range grps {
+				item := map[string]string {}
+				item["groupid"] = strconv.Itoa(grp.Id)
+				item["groupname"] = grp.Grp_name
+				result = append(result, item)
+			}
 		}
-		item["groupid"] = groupId
-		item["groupname"] = groupName
-		result = append(result, item)
+	} else {
+		var grp Grp
+		for _, groupName := range groupNames {
+			item := map[string]string {}
+			groupId = ""
+			err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
+			if err == orm.ErrMultiRows {
+				log.Printf("Returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				log.Printf("Not found")
+			} else if grp.Id > 0 {
+				groupId = strconv.Itoa(grp.Id)
+			}
+			item["groupid"] = groupId
+			item["groupname"] = groupName
+			result = append(result, item)
+		}
 	}
 	log.Println("result =", result)
 	resp := nodes
