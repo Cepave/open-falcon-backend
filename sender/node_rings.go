@@ -1,7 +1,7 @@
 package sender
 
 import (
-	"github.com/open-falcon/transfer/g"
+	"github.com/Cepave/transfer/g"
 	"stathat.com/c/consistent"
 )
 

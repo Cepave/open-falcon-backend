@@ -2,11 +2,11 @@ package rpc
 
 import (
 	"fmt"
+	"github.com/Cepave/transfer/g"
+	"github.com/Cepave/transfer/proc"
+	"github.com/Cepave/transfer/sender"
 	cmodel "github.com/open-falcon/common/model"
 	cutils "github.com/open-falcon/common/utils"
-	"github.com/open-falcon/transfer/g"
-	"github.com/open-falcon/transfer/proc"
-	"github.com/open-falcon/transfer/sender"
 	"strconv"
 	"time"
 )
@@ -140,6 +140,10 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 
 	if cfg.Judge.Enabled {
 		sender.Push2JudgeSendQueue(items)
+	}
+
+	if cfg.Influxdb.Enabled {
+		sender.Push2InfluxdbSendQueue(items)
 	}
 
 	reply.Message = "ok"

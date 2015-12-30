@@ -2,7 +2,7 @@ package http
 
 import (
 	cutils "github.com/open-falcon/common/utils"
-	"github.com/open-falcon/transfer/proc"
+	"github.com/Cepave/transfer/proc"
 	"net/http"
 	"strconv"
 	"strings"
