@@ -183,3 +183,22 @@ CREATE TABLE `mockcfg` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+DROP TABLE IF EXISTS cluster;
+CREATE TABLE cluster
+(
+  id          INT UNSIGNED   NOT NULL AUTO_INCREMENT,
+  grp_id      INT            NOT NULL,
+  numerator   VARCHAR(10240) NOT NULL,
+  denominator VARCHAR(10240) NOT NULL,
+  endpoint    VARCHAR(255)   NOT NULL,
+  metric      VARCHAR(255)   NOT NULL,
+  tags        VARCHAR(255)   NOT NULL,
+  ds_type     VARCHAR(255)   NOT NULL,
+  step        INT            NOT NULL,
+  last_update TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  creator     VARCHAR(255)   NOT NULL,
+  PRIMARY KEY (id)
+)
+  ENGINE =InnoDB
+  DEFAULT CHARSET =latin1;
