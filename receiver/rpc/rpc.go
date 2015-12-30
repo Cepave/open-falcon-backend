@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/open-falcon/transfer/g"
+	"github.com/Cepave/transfer/g"
 	"log"
 	"net"
 	"net/rpc"

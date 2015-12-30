@@ -1,7 +1,7 @@
 package sender
 
 import (
-	"github.com/open-falcon/transfer/g"
+	"github.com/Cepave/transfer/g"
 	nlist "github.com/toolkits/container/list"
 )
 
@@ -27,4 +27,7 @@ func initSendQueues() {
 			}
 		}
 	}
+
+	Q := nlist.NewSafeListLimited(DefaultSendQueueMaxSize)
+	InfluxdbQueues["default"] = Q
 }

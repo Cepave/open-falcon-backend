@@ -1,7 +1,7 @@
 package socket
 
 import (
-	"github.com/open-falcon/transfer/g"
+	"github.com/Cepave/transfer/g"
 	"log"
 	"net"
 )

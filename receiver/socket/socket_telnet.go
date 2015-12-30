@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	cmodel "github.com/open-falcon/common/model"
-	"github.com/open-falcon/transfer/g"
-	"github.com/open-falcon/transfer/proc"
-	"github.com/open-falcon/transfer/sender"
+	"github.com/Cepave/transfer/g"
+	"github.com/Cepave/transfer/proc"
+	"github.com/Cepave/transfer/sender"
 	"net"
 	"strconv"
 	"strings"
@@ -68,6 +68,10 @@ func socketTelnetHandle(conn net.Conn) {
 
 	if cfg.Judge.Enabled {
 		sender.Push2JudgeSendQueue(items)
+	}
+
+	if cfg.Influxdb.Enabled {
+		sender.Push2InfluxdbSendQueue(items)
 	}
 
 	return

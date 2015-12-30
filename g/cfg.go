@@ -53,13 +53,24 @@ type GraphConfig struct {
 	ClusterMigrating2 map[string]*ClusterNode `json:"clusterMigrating2"`
 }
 
+type InfluxdbConfig struct {
+	Enabled     bool   `json:"enabled"`
+	Batch       int    `json:"batch"`
+	ConnTimeout int    `json:"connTimeout"`
+	CallTimeout int    `json:"callTimeout"`
+	MaxConns    int    `json:"maxConns"`
+	MaxIdle     int    `json:"maxIdle"`
+	Address     string `json:"addr"`
+}
+
 type GlobalConfig struct {
-	Debug  bool          `json:"debug"`
-	Http   *HttpConfig   `json:"http"`
-	Rpc    *RpcConfig    `json:"rpc"`
-	Socket *SocketConfig `json:"socket"`
-	Judge  *JudgeConfig  `json:"judge"`
-	Graph  *GraphConfig  `json:"graph"`
+	Debug    bool            `json:"debug"`
+	Http     *HttpConfig     `json:"http"`
+	Rpc      *RpcConfig      `json:"rpc"`
+	Socket   *SocketConfig   `json:"socket"`
+	Judge    *JudgeConfig    `json:"judge"`
+	Graph    *GraphConfig    `json:"graph"`
+	Influxdb *InfluxdbConfig `json:"influxdb"`
 }
 
 var (
