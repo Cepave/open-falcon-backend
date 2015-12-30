@@ -1,7 +1,7 @@
 package sender
 
 import (
-	"github.com/open-falcon/transfer/g"
+	"github.com/Cepave/transfer/g"
 	nlist "github.com/toolkits/container/list"
 )
 
@@ -22,4 +22,7 @@ func initSendQueues() {
 	if cfg.Tsdb.Enabled {
 		TsdbQueue = nlist.NewSafeListLimited(DefaultSendQueueMaxSize)
 	}
+
+	Q := nlist.NewSafeListLimited(DefaultSendQueueMaxSize)
+	InfluxdbQueues["default"] = Q
 }

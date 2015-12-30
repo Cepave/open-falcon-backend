@@ -1,7 +1,7 @@
 package sender
 
 import (
-	"github.com/open-falcon/transfer/proc"
+	"github.com/Cepave/transfer/proc"
 	"github.com/toolkits/container/list"
 	"log"
 	"strings"
@@ -36,6 +36,7 @@ func startLogCron() {
 func refreshSendingCacheSize() {
 	proc.JudgeQueuesCnt.SetCnt(calcSendCacheSize(JudgeQueues))
 	proc.GraphQueuesCnt.SetCnt(calcSendCacheSize(GraphQueues))
+	proc.InfluxdbQueuesCnt.SetCnt(calcSendCacheSize(InfluxdbQueues))
 }
 func calcSendCacheSize(mapList map[string]*list.SafeListLimited) int64 {
 	var cnt int64 = 0
