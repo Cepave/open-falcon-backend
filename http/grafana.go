@@ -3,8 +3,8 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/astaxie/beego/orm"
 	"github.com/Cepave/query/g"
+	"github.com/astaxie/beego/orm"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -21,7 +21,7 @@ type Idc struct {
 	Pop_id     int
 	Name       string
 	Count      int
-	Area   string
+	Area       string
 	Province   string
 	City       string
 	Updated_at string
@@ -86,8 +86,8 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
 	defer resp.Body.Close()
 
 	result := []interface{}{}
-	chart := map[string]interface{} {
-		"text": "chart",
+	chart := map[string]interface{}{
+		"text":       "chart",
 		"expandable": true,
 	}
 	result = append(result, chart)
@@ -98,9 +98,9 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
 		if err := json.Unmarshal(body, &nodes); err != nil {
 			log.Println(err.Error())
 		}
-		for _, host := range nodes["data"].([]interface {}) {
-			item := map[string]interface{} {
-				"text": host,
+		for _, host := range nodes["data"].([]interface{}) {
+			item := map[string]interface{}{
+				"text":       host,
 				"expandable": true,
 			}
 			result = append(result, item)
@@ -165,26 +165,26 @@ func checkSegmentExpandable(segment string, counter string) bool {
  */
 func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 	result := []interface{}{}
-	
+
 	query = strings.Replace(query, ".*", "", -1)
 	arrQuery := strings.Split(query, ".")
 	host, arrMetric := arrQuery[0], arrQuery[1:]
 
 	if host == "chart" {
-		chartBar := map[string]interface {} {
-			"text": "bar",
+		chartBar := map[string]interface{}{
+			"text":       "bar",
 			"expandable": false,
 		}
 		result = append(result, chartBar)
 
-		chartMap := map[string]interface {} {
-			"text": "map",
+		chartMap := map[string]interface{}{
+			"text":       "map",
 			"expandable": false,
 		}
 		result = append(result, chartMap)
 
-		chartRose := map[string]interface {} {
-			"text": "rose",
+		chartRose := map[string]interface{}{
+			"text":       "rose",
 			"expandable": false,
 		}
 		result = append(result, chartRose)
@@ -233,13 +233,13 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 				log.Println(err.Error())
 			}
 			var segmentPool = make(map[string]int)
-			for _, data := range nodes["data"].([]interface {}) {
-				counter := data.([]interface {})[0].(string)
+			for _, data := range nodes["data"].([]interface{}) {
+				counter := data.([]interface{})[0].(string)
 				segment := getNextCounterSegment(metric, counter)
 				expandable := checkSegmentExpandable(segment, counter)
 				if _, ok := segmentPool[segment]; !ok {
-					item := map[string]interface {} {
-						"text": segment,
+					item := map[string]interface{}{
+						"text":       segment,
 						"expandable": expandable,
 					}
 					result = append(result, item)
@@ -288,20 +288,20 @@ func setQueryEditor(rw http.ResponseWriter, req *http.Request) {
  * @last modified:   11/25/2015
  * @called by:       func updateMapData()
  */
-func getLocation(pop_id int) map[string] string {
-	location := map[string] string {
-		"area": "",
+func getLocation(pop_id int) map[string]string {
+	location := map[string]string{
+		"area":     "",
 		"province": "",
-		"city": "",
+		"city":     "",
 	}
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Geo
 
-	args := map[string]interface{} {
-		"fcname": fcname,
+	args := map[string]interface{}{
+		"fcname":  fcname,
 		"fctoken": fctoken,
-		"pop_id": pop_id,
+		"pop_id":  pop_id,
 	}
 	bs, err := json.Marshal(args)
 	if err != nil {
@@ -330,9 +330,9 @@ func getLocation(pop_id int) map[string] string {
 		status := int(nodes["status"].(float64))
 		if status == 1 {
 			result := nodes["result"]
-			location["area"] = result.(map[string]interface {})["area"].(string)
-			location["province"] = result.(map[string]interface {})["province"].(string)
-			location["city"] = result.(map[string]interface {})["city"].(string)
+			location["area"] = result.(map[string]interface{})["area"].(string)
+			location["province"] = result.(map[string]interface{})["province"].(string)
+			location["city"] = result.(map[string]interface{})["city"].(string)
 		}
 	}
 	return location
@@ -411,9 +411,9 @@ func updateCities() {
 					city.(map[string]int)["count"] += count
 				} else {
 					city := map[string]interface{}{
-						"city": cityName,
+						"city":     cityName,
 						"province": provinceName,
-						"count": count,
+						"count":    count,
 					}
 					cities[cityIndex] = city
 					cityNames = append(cityNames, cityIndex)
@@ -433,11 +433,11 @@ func updateCities() {
 				log.Println("Error =", err.Error())
 			} else {
 				province := Province{
-					Province: provinceName,
-					Count: count,
+					Province:   provinceName,
+					Count:      count,
 					Updated_at: getNow(),
 				}
-				if num > 0 {	// existed. update data.
+				if num > 0 { // existed. update data.
 					id, err := strconv.Atoi(rows[0]["id"].(string))
 					if err != nil {
 						log.Println("Error =", err.Error())
@@ -452,7 +452,7 @@ func updateCities() {
 							log.Println("mysql row affected nums:", num)
 						}
 					}
-				} else {		// not existed. insert data.
+				} else { // not existed. insert data.
 					provinceId, err := o.Insert(&province)
 					if err != nil {
 						log.Println("Error =", err.Error())
@@ -464,9 +464,9 @@ func updateCities() {
 		}
 		for _, cityIndex := range cityNames {
 			item := cities[cityIndex]
-			provinceName := item.(map[string]interface {})["province"].(string)
-			cityName := item.(map[string]interface {})["city"].(string)
-			count := item.(map[string]interface {})["count"].(int)
+			provinceName := item.(map[string]interface{})["province"].(string)
+			cityName := item.(map[string]interface{})["city"].(string)
+			count := item.(map[string]interface{})["count"].(int)
 			var rows []orm.Params
 			sqlcmd := "SELECT id, city FROM grafana.city WHERE city=?"
 			num, err := o.Raw(sqlcmd, cityName).Values(&rows)
@@ -474,12 +474,12 @@ func updateCities() {
 				log.Println("Error =", err.Error())
 			} else {
 				city := City{
-					Province: provinceName,
-					City: cityName,
-					Count: count,
+					Province:   provinceName,
+					City:       cityName,
+					Count:      count,
 					Updated_at: getNow(),
 				}
-				if num > 0 {	// existed. update data.
+				if num > 0 { // existed. update data.
 					id, err := strconv.Atoi(rows[0]["id"].(string))
 					if err != nil {
 						log.Println("Error =", err.Error())
@@ -494,7 +494,7 @@ func updateCities() {
 							log.Println("mysql row affected nums:", num)
 						}
 					}
-				} else {		// not existed. insert data.
+				} else { // not existed. insert data.
 					cityId, err := o.Insert(&city)
 					if err != nil {
 						log.Println("Error =", err.Error())
@@ -543,31 +543,31 @@ func updateMapData() {
 		log.Println("Error =", err.Error())
 	}
 	result := map[string]int{}
-	items := map[string]interface {}{}
+	items := map[string]interface{}{}
 	names := []string{}
 	if int(nodes["status"].(float64)) == 1 {
 		countOfPlatform := 0
 		countOfDevice := 0
-		for _, platform := range nodes["result"].([]interface {}) {
-			for _, device := range platform.(map[string]interface {})["ip_list"].([]interface {}) {
+		for _, platform := range nodes["result"].([]interface{}) {
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				countOfDevice++
-				id, err := strconv.Atoi(device.(map[string]interface {})["pop_id"].(string))
+				id, err := strconv.Atoi(device.(map[string]interface{})["pop_id"].(string))
 				if err != nil {
 					log.Println("Error =", err.Error())
 				}
-				name := device.(map[string]interface {})["pop"].(string)
+				name := device.(map[string]interface{})["pop"].(string)
 				if _, ok := result[name]; ok {
 					result[name]++
 					item := items[name]
-					count := item.(map[string]interface {})["count"].(int)
+					count := item.(map[string]interface{})["count"].(int)
 					count++
-					item.(map[string]interface {})["count"] = count
+					item.(map[string]interface{})["count"] = count
 					items[name] = item
 				} else {
 					result[name] = 1
-					item := map[string]interface{} {
-						"id": id,
-						"name": name,
+					item := map[string]interface{}{
+						"id":    id,
+						"name":  name,
 						"count": 1,
 					}
 					items[name] = item
@@ -585,9 +585,9 @@ func updateMapData() {
 		for _, name := range names {
 			log.Println("item =", items[name])
 			item := items[name]
-			pop_id := item.(map[string]interface {})["id"].(int)
-			name := item.(map[string]interface {})["name"].(string)
-			count := item.(map[string]interface {})["count"].(int)
+			pop_id := item.(map[string]interface{})["id"].(int)
+			name := item.(map[string]interface{})["name"].(string)
+			count := item.(map[string]interface{})["count"].(int)
 			now := getNow()
 			idc := Idc{
 				Pop_id: pop_id,
@@ -610,7 +610,7 @@ func updateMapData() {
 				idc.Province = province
 				idc.City = city
 				idc.Updated_at = now
-				if num > 0 {	// existed. update data.
+				if num > 0 { // existed. update data.
 					id, err := strconv.Atoi(rows[0]["id"].(string))
 					if err != nil {
 						log.Println("Error =", err.Error())
@@ -625,7 +625,7 @@ func updateMapData() {
 							log.Println("mysql row affected nums:", num)
 						}
 					}
-				} else {		// not existed. insert data.
+				} else { // not existed. insert data.
 					idcId, err := o.Insert(&idc)
 					if err != nil {
 						log.Println("Error =", err.Error())
@@ -663,8 +663,8 @@ func getMapValues(chartType string) map[string]interface{} {
 		for _, row := range rows {
 			name := row["province"]
 			count := row["count"]
-			item := map[string]interface{} {
-				"name": name,
+			item := map[string]interface{}{
+				"name":  name,
 				"value": count,
 			}
 			provinces = append(provinces, item)
@@ -680,8 +680,8 @@ func getMapValues(chartType string) map[string]interface{} {
 		for _, row := range rows {
 			name := row["city"]
 			count := row["count"]
-			item := map[string]interface{} {
-				"name": name,
+			item := map[string]interface{}{
+				"name":  name,
 				"value": count,
 			}
 			citiesInProvince = append(citiesInProvince, item)
@@ -720,56 +720,56 @@ func getBarChartOptions(chartType string, provinces []interface{}) map[string]in
 
 	grid := map[string]int{
 		"borderWidth": 0,
-		"y": 80,
-		"y2": 60,
+		"y":           80,
+		"y2":          60,
 	}
 
-	color := []string {
+	color := []string{
 		"#09aa3c",
 	}
-	label := map[string]interface{} {
-		"show": true,
-		"position": "top",
+	label := map[string]interface{}{
+		"show":      true,
+		"position":  "top",
 		"formatter": "{b}\n{c}",
 	}
-	normal := map[string]interface{} {
+	normal := map[string]interface{}{
 		"color": color,
 		"label": label,
 	}
-	itemStyle := map[string]interface{} {
+	itemStyle := map[string]interface{}{
 		"normal": normal,
 	}
 
-	xAxis := map[string]interface{} {
+	xAxis := map[string]interface{}{
 		"type": "category",
 		"show": false,
 		"data": names,
 	}
 
-	yAxis := map[string]interface{} {
+	yAxis := map[string]interface{}{
 		"type": "value",
 		"show": false,
 	}
 
-	series := map[string]interface{} {
-		"data": values,
+	series := map[string]interface{}{
+		"data":      values,
 		"itemStyle": itemStyle,
-		"name": "servers",
-		"type": "bar",
+		"name":      "servers",
+		"type":      "bar",
 	}
 
-	tooltip := map[string]string {
-		"trigger": "item",
+	tooltip := map[string]string{
+		"trigger":   "item",
 		"formatter": "{a} <br/>{b} : {c} ({d}%)",
 	}
 
-	option := map[string]interface{} {
-		"calculable" : true,
-		"grid" : grid,
-		"series": []interface{} {series},
-		"xAxis": []interface{} {xAxis},
-		"yAxis": []interface{} {yAxis},
-		"tooltip": tooltip,
+	option := map[string]interface{}{
+		"calculable": true,
+		"grid":       grid,
+		"series":     []interface{}{series},
+		"xAxis":      []interface{}{xAxis},
+		"yAxis":      []interface{}{yAxis},
+		"tooltip":    tooltip,
 	}
 
 	chart["chartType"] = chartType
@@ -798,38 +798,38 @@ func getRoseChartOptions(chartType string, provinces []interface{}) map[string]i
 	showFalse := map[string]bool{
 		"show": false,
 	}
-	emphasis := map[string]interface{} {
-		"label": showTrue,
+	emphasis := map[string]interface{}{
+		"label":     showTrue,
 		"labelLine": showTrue,
 	}
-	normal := map[string]interface{} {
-		"label": showFalse,
+	normal := map[string]interface{}{
+		"label":     showFalse,
 		"labelLine": showFalse,
 	}
-	itemStyle := map[string]interface{} {
+	itemStyle := map[string]interface{}{
 		"emphasis": emphasis,
-		"normal": normal,
+		"normal":   normal,
 	}
 
-	series := map[string]interface{} {
-		"center": []string{"50%", "50%"},
-		"data": provinces,
+	series := map[string]interface{}{
+		"center":    []string{"50%", "50%"},
+		"data":      provinces,
 		"itemStyle": itemStyle,
-		"name": "servers",
-		"radius": []int{20, 75},
-		"roseType": "radius",
-		"type": "pie",
+		"name":      "servers",
+		"radius":    []int{20, 75},
+		"roseType":  "radius",
+		"type":      "pie",
 	}
 
-	tooltip := map[string]string {
-		"trigger": "item",
+	tooltip := map[string]string{
+		"trigger":   "item",
 		"formatter": "{a} <br/>{b} : {c} ({d}%)",
 	}
 
-	option := map[string]interface{} {
-		"calculable" : true,
-		"series": []interface{} {series},
-		"tooltip": tooltip,
+	option := map[string]interface{}{
+		"calculable": true,
+		"series":     []interface{}{series},
+		"tooltip":    tooltip,
 	}
 
 	chart["chartType"] = chartType
@@ -868,8 +868,8 @@ func getChartOptions(chartType string) map[string]interface{} {
 			} else if max < count {
 				max = count
 			}
-			item := map[string]interface{} {
-				"name": name,
+			item := map[string]interface{}{
+				"name":  name,
 				"value": count,
 			}
 			provinces = append(provinces, item)
@@ -888,9 +888,9 @@ func getChartOptions(chartType string) map[string]interface{} {
 		updateMapData()
 	}
 
-	if (chartType == "rose") {
+	if chartType == "rose" {
 		return getRoseChartOptions(chartType, provinces)
-	} else if (chartType == "bar") {
+	} else if chartType == "bar" {
 		return getBarChartOptions(chartType, provinces)
 	}
 
@@ -906,15 +906,15 @@ func getChartOptions(chartType string) map[string]interface{} {
 				name += "市"
 			}
 			count := row["count"].(string)
-			item := map[string]interface{} {
-				"name": name,
+			item := map[string]interface{}{
+				"name":  name,
 				"value": count,
 			}
 			citiesInProvince = append(citiesInProvince, item)
 		}
 	}
 
-	color := []string {
+	color := []string{
 		"maroon",
 		"purple",
 		"red",
@@ -923,67 +923,67 @@ func getChartOptions(chartType string) map[string]interface{} {
 		"lightgreen",
 	}
 
-	dataRange := map[string]interface{} {
-		"x": "right",
-		"min": 0,
-		"max": max,
+	dataRange := map[string]interface{}{
+		"x":          "right",
+		"min":        0,
+		"max":        max,
 		"calculable": true,
-		"color": color,
+		"color":      color,
 	}
 
 	title := "servers"
-	legend := map[string]interface{} {
+	legend := map[string]interface{}{
 		"orient": "vertical",
-		"data": []string {title},
+		"data":   []string{title},
 	}
 
-	tooltip := map[string]string {
+	tooltip := map[string]string{
 		"trigger": "item",
 	}
 
 	label := map[string]bool{
 		"show": true,
 	}
-	emphasis := map[string]interface{} {
+	emphasis := map[string]interface{}{
 		"label": label,
 	}
-	itemStyleForProvinces := map[string]interface{} {
+	itemStyleForProvinces := map[string]interface{}{
 		"emphasis": emphasis,
 	}
-	seriesForProvinces := map[string]interface{} {
-		"data": provinces,
-		"itemStyle": itemStyleForProvinces,
-		"mapLocation": map[string]string{},
-		"mapType": "china",
-		"name": "server",
-		"roam": true,
+	seriesForProvinces := map[string]interface{}{
+		"data":         provinces,
+		"itemStyle":    itemStyleForProvinces,
+		"mapLocation":  map[string]string{},
+		"mapType":      "china",
+		"name":         "server",
+		"roam":         true,
 		"selectedMode": "single",
-		"type": "map",
+		"type":         "map",
 	}
 
-	itemStyleForCities := map[string]interface{} {
-		"normal": emphasis,
+	itemStyleForCities := map[string]interface{}{
+		"normal":   emphasis,
 		"emphasis": emphasis,
 	}
-	seriesForCities := map[string]interface{} {
-		"data": citiesInProvince,
-		"itemStyle": itemStyleForCities,
+	seriesForCities := map[string]interface{}{
+		"data":        citiesInProvince,
+		"itemStyle":   itemStyleForCities,
 		"mapLocation": map[string]string{},
-		"mapType": "china",
-		"name": title,
-		"roam": true,
-		"type": "map",
+		"mapType":     "china",
+		"name":        title,
+		"roam":        true,
+		"type":        "map",
 	}
-	series := []interface{} {
+	series := []interface{}{
 		seriesForProvinces,
 		seriesForCities,
 	}
 
-	option := map[string]interface{} {
+	option := map[string]interface{}{
 		"dataRange": dataRange,
-		"legend": legend,
-		"series": series,
-		"tooltip": tooltip,
+		"legend":    legend,
+		"series":    series,
+		"tooltip":   tooltip,
 	}
 
 	chart["chartType"] = chartType
@@ -1011,18 +1011,18 @@ func getMetricValues(req *http.Request, host string, targets []string, result []
 		host = strings.Replace(host, "{", "", -1)
 		host = strings.Replace(host, "}", "", -1)
 		hosts := strings.Split(host, ",")
-		for _, host := range hosts {	// Templating metrics request
-										// host:"{host1,host2}"
-			item := map[string]string {
+		for _, host := range hosts { // Templating metrics request
+			// host:"{host1,host2}"
+			item := map[string]string{
 				"endpoint": host,
-				"counter": metric,
+				"counter":  metric,
 			}
 			endpoint_counters = append(endpoint_counters, item)
 		}
 	} else {
-		item := map[string]string {
+		item := map[string]string{
 			"endpoint": host,
-			"counter": metric,
+			"counter":  metric,
 		}
 		endpoint_counters = append(endpoint_counters, item)
 	}
@@ -1040,10 +1040,10 @@ func getMetricValues(req *http.Request, host string, targets []string, result []
 		}
 		log.Println("url =", url)
 
-		args := map[string]interface{} {
-			"start": from,
-			"end": until,
-			"cf": "AVERAGE",
+		args := map[string]interface{}{
+			"start":             from,
+			"end":               until,
+			"cf":                "AVERAGE",
 			"endpoint_counters": endpoint_counters,
 		}
 		bs, err := json.Marshal(args)
