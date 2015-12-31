@@ -64,3 +64,6 @@
 [submodule "nodata"]
 	path = nodata
 	url = https://github.com/Cepave/nodata
+[submodule "aggregator"]
+	path = aggregator
+	url = https://github.com/Cepave/aggregator.git
