@@ -63,9 +63,11 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	random64 := rand.Float64()
 	_r := strconv.FormatFloat(random64, 'f', -1, 32)
-	url := "/api/endpoints" + "?q=" + hostKeyword + "&tags&limit=500&_r=" + _r
+	maxQuery := strconv.Itoa(g.Config().Api.Max)
+	url := "/api/endpoints" + "?q=" + hostKeyword + "&tags&limit=" + maxQuery + "&_r=" + _r
 	log.Println("req.Host =", req.Host)
 	log.Println("g.Config().Api.Query =", g.Config().Api.Query)
+	log.Println("maxQuery = ", maxQuery)
 	if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
 		url = "http://localhost:9966" + url
 	} else {
@@ -169,6 +171,7 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 	query = strings.Replace(query, ".*", "", -1)
 	arrQuery := strings.Split(query, ".")
 	host, arrMetric := arrQuery[0], arrQuery[1:]
+	maxQuery := strconv.Itoa(g.Config().Api.Max)
 
 	if host == "chart" {
 		chartBar := map[string]interface{}{
@@ -200,11 +203,12 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 		form := url.Values{}
 		form.Set("endpoints", endpoints)
 		form.Add("q", metric)
-		form.Add("limit", "")
+		form.Add("limit", maxQuery)
 		form.Add("_r", _r)
 
 		log.Println("req.Host =", req.Host)
 		log.Println("g.Config().Api.Query =", g.Config().Api.Query)
+		log.Println("maxQuery = ", maxQuery)
 		target := "/api/counters"
 		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
 			target = "http://localhost:9966" + target

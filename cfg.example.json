@@ -21,7 +21,8 @@
         "map": "https://example.com/api_map_path",
         "geo": "https://example.com/api_geo_path",
         "query": "http://example.com:port",
-        "dashboard": "http://example.com"
+        "dashboard": "http://example.com",
+        "max": 500
     },
     "db": {
         "addr": "root:@tcp(127.0.0.1:3306)/graph?charset=utf8&loc=Asia%2FTaipei",
