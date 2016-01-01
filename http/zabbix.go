@@ -660,28 +660,25 @@ func hostgroupCreate(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:     This function gets hostgroup data for database insertion.
- * @related issues:  OWL-093, OWL-086
+ * @function name:   func hostgroupDelete(nodes map[string]interface{})
+ * @description:     This function handles hostgroup.delete API requests.
+ * @related issues:  OWL-257, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/21/2015
- * @last modified:   10/21/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
+func hostgroupDelete(nodes map[string]interface{}) {
 	log.Println("func hostgroupDelete()")
 	params := nodes["params"].([]interface {})
-
-	resp := nodes
-	delete(resp, "params")
+	errors := []string{}
 	var result = make(map[string]interface{})
+	result["error"] = errors
 
 	o := orm.NewOrm()
-	database := "falcon_portal"
-	o.Using(database)
+	o.Using("falcon_portal")
 
 	args := []interface{}{}
 	args = append(args, "DELETE FROM falcon_portal.grp WHERE id=?")
@@ -695,8 +692,7 @@ func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		for _, hostgroupId := range params {
 			res, err := o.Raw(sqlcmd.(string), hostgroupId).Exec()
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.grp WHERE id=?" {
@@ -708,8 +704,7 @@ func hostgroupDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		}
 	}
 	result["groupids"] = groupids
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
@@ -1260,7 +1255,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "hostgroup.create" {
 			hostgroupCreate(nodes)
 		} else if method == "hostgroup.delete" {
-			hostgroupDelete(nodes, rw)
+			hostgroupDelete(nodes)
 		} else if method == "hostgroup.get" {
 			hostgroupGet(nodes, rw)
 		} else if method == "hostgroup.update" {
