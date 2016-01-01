@@ -488,21 +488,23 @@ func hostDelete(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func hostGet(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func hostGet(nodes map[string]interface{})
  * @description:     This function gets existed host data.
- * @related issues:  OWL-254
+ * @related issues:  OWL-257, OWL-254
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   12/30/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
+func hostGet(nodes map[string]interface{}) {
 	log.Println("func hostGet()")
 	params := nodes["params"].(map[string]interface{})
-	result := []interface{}{}
+	items := []interface{}{}
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
 	hostNames := []string{}
 	queryAll := false
 	if val, ok := params["filter"]; ok {
@@ -522,11 +524,10 @@ func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 		var endpoints []*Endpoint
 		num, err := o.QueryTable("endpoint").All(&endpoints)
 		if err != nil {
-			log.Println("Error =", err.Error())
+			setError(err.Error(), result)
 		} else {
 			log.Println("num =", num)
 			for _, endpoint := range endpoints {
-				log.Println("endpoint =", endpoint)
 				item := map[string]string {}
 				var grp_id int
 				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
@@ -534,7 +535,7 @@ func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 				item["hostname"] = endpoint.Endpoint
 				item["ip"] = endpoint.Ipv4
 				item["groupid"] = strconv.Itoa(grp_id)
-				result = append(result, item)
+				items = append(items, item)
 			}
 		}
 	} else {
@@ -549,9 +550,9 @@ func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 			groupId = ""
 			err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
 			if err == orm.ErrMultiRows {
-				log.Printf("Returned multiple rows")
+				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
-				log.Printf("Not found")
+				setError("host not found", result)
 			} else if endpoint.Id > 0 {
 				ip = endpoint.Ipv4
 				var grp_id int
@@ -564,14 +565,12 @@ func hostGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 			item["hostname"] = hostName
 			item["ip"] = ip
 			item["groupid"] = groupId
-			result = append(result, item)
+			items = append(items, item)
 		}
 	}
-	log.Println("result =", result)
-	resp := nodes
-	delete(resp, "params")
-	resp["result"] = result
-	RenderJson(rw, resp)
+	log.Println("items =", items)
+	result["items"] = items
+	nodes["result"] = result
 }
 
 /**
@@ -1273,7 +1272,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "host.delete" {
 			hostDelete(nodes)
 		} else if method == "host.get" {
-			hostGet(nodes, rw)
+			hostGet(nodes)
 		} else if method == "host.update" {
 			hostUpdate(nodes, rw)
 		} else if method == "hostgroup.create" {
