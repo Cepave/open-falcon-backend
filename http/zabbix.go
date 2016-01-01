@@ -708,21 +708,23 @@ func hostgroupDelete(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func hostgroupGet(nodes map[string]interface{})
  * @description:     This function gets existed hostgroup data.
- * @related issues:  OWL-254
+ * @related issues:  OWL-257, OWL-254
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   12/29/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter) {
+func hostgroupGet(nodes map[string]interface{}) {
 	log.Println("func hostgroupGet()")
 	params := nodes["params"].(map[string]interface{})
-	result := []interface{}{}
+	items := []interface{}{}
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
 	groupNames := []string{}
 	queryAll := false
 	if val, ok := params["filter"]; ok {
@@ -744,13 +746,13 @@ func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 		var grps []*Grp
 		_, err := o.QueryTable("grp").All(&grps)
 		if err != nil {
-			log.Println("Error =", err.Error())
+			setError(err.Error(), result)
 		} else {
 			for _, grp := range grps {
 				item := map[string]string {}
 				item["groupid"] = strconv.Itoa(grp.Id)
 				item["groupname"] = grp.Grp_name
-				result = append(result, item)
+				items = append(items, item)
 			}
 		}
 	} else {
@@ -760,22 +762,20 @@ func hostgroupGet(nodes map[string]interface{}, rw http.ResponseWriter) {
 			groupId = ""
 			err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
 			if err == orm.ErrMultiRows {
-				log.Printf("Returned multiple rows")
+				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
-				log.Printf("Not found")
+				setError("host group not found", result)
 			} else if grp.Id > 0 {
 				groupId = strconv.Itoa(grp.Id)
 			}
 			item["groupid"] = groupId
 			item["groupname"] = groupName
-			result = append(result, item)
+			items = append(items, item)
 		}
 	}
 	log.Println("result =", result)
-	resp := nodes
-	delete(resp, "params")
-	resp["result"] = result
-	RenderJson(rw, resp)
+	result["items"] = items
+	nodes["result"] = result
 }
 
 /**
@@ -1257,7 +1257,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "hostgroup.delete" {
 			hostgroupDelete(nodes)
 		} else if method == "hostgroup.get" {
-			hostgroupGet(nodes, rw)
+			hostgroupGet(nodes)
 		} else if method == "hostgroup.update" {
 			hostgroupUpdate(nodes, rw)
 		} else if method == "template.create" {
