@@ -65,10 +65,11 @@ type Grp_host struct {
  * @author:          Don Hsieh
  * @since:           10/21/2015
  * @last modified:   10/21/2015
- * @called by:       func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *                   func hostgroupCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *                   func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *                   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @called by:       func hostCreate(nodes map[string]interface{})
+ *                   func hostgroupCreate(nodes map[string]interface{})
+ *                   func templateCreate(nodes map[string]interface{})
+ *                   func hostUpdate(nodes map[string]interface{})
+ *                   func setResponse(rw http.ResponseWriter, resp map[string]interface{})
  */
 func getNow() string {
 	t := time.Now()
