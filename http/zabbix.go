@@ -1190,13 +1190,13 @@ func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
 /**
  * @function name:   func apiParser(rw http.ResponseWriter, req *http.Request)
  * @description:     This function parses the method of API request.
- * @related issues:  OWL-254, OWL-085
+ * @related issues:  OWL-257, OWL-254, OWL-085
  * @param:           rw http.ResponseWriter
  * @param:           req *http.Request
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/11/2015
- * @last modified:   12/29/2015
+ * @last modified:   01/01/2016
  * @called by:       http.HandleFunc("/api", apiParser)
  *                    in func main()
  */
@@ -1217,11 +1217,8 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 
 		var nodes = make(map[string]interface{})
 		nodes, _ = json.Map()
-
 		method := nodes["method"]
 		log.Println(method)
-		delete(nodes, "method")
-		delete(nodes, "auth")
 
 		if method == "host.create" {
 			hostCreate(nodes)
@@ -1246,6 +1243,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "template.update" {
 			templateUpdate(nodes)
 		}
+		setResponse(rw, nodes)
 	}
 }
 
