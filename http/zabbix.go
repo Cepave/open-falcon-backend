@@ -457,39 +457,34 @@ func removeHost(hostIds []string, result map[string]interface{}) {
 }
 
 /**
- * @function name:   func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func hostDelete(nodes map[string]interface{})
  * @description:     This function handles host.delete API requests.
- * @related issues:  OWL-241, OWL-093, OWL-086, OWL-085
+ * @related issues:  OWL-257, OWL-241, OWL-093, OWL-086, OWL-085
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/11/2015
  * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
+func hostDelete(nodes map[string]interface{}) {
 	params := nodes["params"].([]interface {})
-	resp := nodes
-	delete(resp, "params")
+	errors := []string{}
 	var result = make(map[string]interface{})
+	result["error"] = errors
 
 	hostIds := []string{}
 	hostId := ""
 	for _, param := range params {
-		log.Println("param =", param)
 		if val, ok := param.(map[string]interface{})["host_id"]; ok {
 			if val != nil {
-				log.Println("val =", val)
 				hostId = string(val.(json.Number))
-				log.Println("hostId =", hostId)
 				hostIds = append(hostIds, hostId)
 			}
 		}
 	}
 	removeHost(hostIds, result)
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
@@ -595,13 +590,12 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	log.Println("func hostUpdate()")
 	params := nodes["params"].(map[string]interface{})
 	var result = make(map[string]interface{})
-	hostId := getHostId(params)
 	hostName := getHostName(params)
 	args := map[string]string {
 		"host": hostName,
 	}
 
-	endpoint := checkHostExist(hostId, hostName)
+	endpoint := checkHostExist(params, result)
 	log.Println("returned endpoint =", endpoint)
 	log.Println("endpoint.Id =", endpoint.Id)
 	if endpoint.Id > 0 {
@@ -627,7 +621,7 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 		}
 	} else {
 		log.Println("host not existed")
-		addHost(hostName, params, args, result)
+		addHost(params, args, result)
 	}
 	log.Println("args =", args)
 
@@ -1275,9 +1269,9 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		delete(nodes, "auth")
 
 		if method == "host.create" {
-			hostCreate(nodes, rw)
+			hostCreate(nodes)
 		} else if method == "host.delete" {
-			hostDelete(nodes, rw)
+			hostDelete(nodes)
 		} else if method == "host.get" {
 			hostGet(nodes, rw)
 		} else if method == "host.update" {
