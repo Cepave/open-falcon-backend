@@ -936,28 +936,27 @@ func templateDelete(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:     This function gets hostgroup data for database insertion.
- * @related issues:  OWL-093, OWL-086
+ * @function name:   func templateUpdate(nodes map[string]interface{})
+ * @description:     This function updates template data.
+ * @related issues:  OWL-257, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/22/2015
- * @last modified:   10/23/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
+func templateUpdate(nodes map[string]interface{}) {
 	params := nodes["params"].(map[string]interface{})
+	errors := []string{}
 	var result = make(map[string]interface{})
+	result["error"] = errors
 	templateId, err := strconv.Atoi(params["templateid"].(string))
 	if err != nil {
-		log.Println("Error =", err.Error())
-		result["error"] = [1]string{string(err.Error())}
+		setError(err.Error(), result)
 	}
 	o := orm.NewOrm()
-	database := "falcon_portal"
-	o.Using(database)
+	o.Using("falcon_portal")
 
 	if _, ok := params["name"]; ok {
 		templateName := params["name"].(string)
@@ -968,16 +967,14 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			log.Println("tpl =", tpl)
 			err := o.Read(&tpl)
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
 				log.Println("tpl =", tpl)
 				tpl.Tpl_name = templateName
 				log.Println("tpl =", tpl)
 				num, err := o.Update(&tpl)
 				if err != nil {
-					log.Println("Error =", err.Error())
-					result["error"] = [1]string{string(err.Error())}
+					setError(err.Error(), result)
 				} else {
 					if num > 0 {
 						templateids := [1]string{strconv.Itoa(templateId)}
@@ -1006,8 +1003,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			sqlcmd := "DELETE FROM falcon_portal.grp_tpl WHERE tpl_id=?"
 			res, err := o.Raw(sqlcmd, templateId).Exec()
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
 				num, _ := res.RowsAffected()
 				if num > 0 {
@@ -1018,14 +1014,16 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			for _, group := range groups {
 				log.Println("group =", group)
 				groupId, err := strconv.Atoi(group.(map[string]interface{})["groupid"].(string))
+				if err != nil {
+					setError(err.Error(), result)
+				}
 				log.Println("groupId =", groupId)
 				grp_tpl := Grp_tpl{Grp_id: groupId, Tpl_id: templateId, Bind_user: user}
 				log.Println("grp_tpl =", grp_tpl)
 
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
-					log.Println("Error =", err.Error())
-					result["error"] = [1]string{string(err.Error())}
+					setError(err.Error(), result)
 				} else {
 					templateids := [1]string{strconv.Itoa(templateId)}
 					result["templateids"] = templateids
@@ -1034,10 +1032,7 @@ func templateUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			}
 		}
 	}
-	resp := nodes
-	delete(resp, "params")
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
@@ -1249,7 +1244,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "template.delete" {
 			templateDelete(nodes)
 		} else if method == "template.update" {
-			templateUpdate(nodes, rw)
+			templateUpdate(nodes)
 		}
 	}
 }
