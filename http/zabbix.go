@@ -187,9 +187,9 @@ func setError(error string, result map[string]interface{}) {
 }
 
 /**
- * @function name:   bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
+ * @function name:   func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
  * @description:     This function binds a host to a host group.
- * @related issues:  OWL-240
+ * @related issues:  OWL-257, OWL-240
  * @param:           hostId int64
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
@@ -197,21 +197,19 @@ func setError(error string, result map[string]interface{}) {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/15/2015
- * @last modified:   12/15/2015
- * @called by:       func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @last modified:   01/01/2016
+ * @called by:       func hostUpdate(nodes map[string]interface{})
  *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
 func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	if _, ok := params["groups"]; ok {
 		o := orm.NewOrm()
-		database := "falcon_portal"
-		o.Using(database)
+		o.Using("falcon_portal")
 
 		sqlcmd := "DELETE FROM falcon_portal.grp_host WHERE host_id=?"
 		res, err := o.Raw(sqlcmd, hostId).Exec()
 		if err != nil {
-			log.Println("Error =", err.Error())
-			result["error"] = [1]string{string(err.Error())}
+			setError(err.Error(), result)
 		} else {
 			num, _ := res.RowsAffected()
 			if num > 0 {
@@ -228,8 +226,7 @@ func bindGroup(hostId int64, params map[string]interface{}, args map[string]stri
 			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
 			res, err := o.Raw(sqlcmd, hostId, grp_id).Exec()
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
 				num, _ := res.RowsAffected()
 				log.Println("num =", num)
@@ -244,8 +241,7 @@ func bindGroup(hostId int64, params map[string]interface{}, args map[string]stri
 
 					_, err = o.Insert(&grp_host)
 					if err != nil {
-						log.Println("Error =", err.Error())
-						result["error"] = [1]string{string(err.Error())}
+						setError(err.Error(), result)
 					}
 				}
 			}
