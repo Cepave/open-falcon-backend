@@ -367,50 +367,37 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 }
 
 /**
- * @function name:   func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func hostCreate(nodes map[string]interface{})
  * @description:     This function gets host data for database insertion.
- * @related issues:  OWL-240, OWL-093, OWL-086, OWL-085
+ * @related issues:  OWL-257, OWL-240, OWL-093, OWL-086, OWL-085
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/11/2015
- * @last modified:   12/28/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
+func hostCreate(nodes map[string]interface{}) {
 	log.Println("func hostCreate()")
 	params := nodes["params"].(map[string]interface{})
+	errors := []string{}
 	var result = make(map[string]interface{})
+	result["error"] = errors
 
-	hostName := getHostName(params)
-	hostId := ""
-	endpoint := checkHostExist(hostId, hostName)
-	log.Println("returned endpoint =", endpoint)
-	log.Println("endpoint.Id =", endpoint.Id)
+	endpoint := checkHostExist(params, result)
 	if endpoint.Id > 0 {
-		result["error"] = [1]string{"host name existed."}
+		setError("host name existed: " + endpoint.Endpoint, result)
 	} else {
-		log.Println("host not existed")
-		if len(hostName) > 0 {
-			args := map[string]string {
-				"host": hostName,
-			}
-			addHost(hostName, params, args, result)
-			if _, ok := params["inventory"]; ok {
-				inventory := params["inventory"].(map[string]interface{})
-				macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
-				args["macAddr"] = macAddr
-			}
-			log.Println("args =", args)
-		} else {
-			result["error"] = [1]string{"host name can not be null."}
+		args := map[string]string {}
+		addHost(params, args, result)
+		if _, ok := params["inventory"]; ok {
+			inventory := params["inventory"].(map[string]interface{})
+			macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
+			args["macAddr"] = macAddr
 		}
+		log.Println("args =", args)
 	}
-	resp := nodes
-	delete(resp, "params")
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
