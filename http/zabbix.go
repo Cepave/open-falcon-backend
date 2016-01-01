@@ -418,8 +418,7 @@ func unbindGroup(hostId string, result map[string]interface{}) {
 	sql := "DELETE FROM grp_host WHERE host_id = ?"
 	res, err := o.Raw(sql, hostId).Exec()
 	if err != nil {
-		log.Println("Error =", err.Error())
-		result["error"] = [1]string{string(err.Error())}
+		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
 	log.Println("mysql row affected nums =", num)
