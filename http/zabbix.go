@@ -831,18 +831,17 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func templateCreate(nodes map[string]interface{})
  * @description:     This function gets template data for database insertion.
- * @related issues:  OWL-093, OWL-086
+ * @related issues:  OWL-257, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/22/2015
- * @last modified:   10/21/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
+func templateCreate(nodes map[string]interface{}) {
 	log.Println("func templateCreate()")
 	params := nodes["params"].(map[string]interface{})
 	templateName := params["host"].(string)
@@ -852,10 +851,8 @@ func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	hostgroupId := string(groupid)
 	now := getNow()
 
-	database := "falcon_portal"
 	o := orm.NewOrm()
-	o.Using(database)
-
+	o.Using("falcon_portal")
 	tpl := Tpl{
 		Tpl_name: templateName,
 		Create_user: user,
@@ -863,20 +860,21 @@ func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 	}
 	log.Println("tpl =", tpl)
 
-	resp := nodes
-	delete(resp, "params")
+	errors := []string{}
 	var result = make(map[string]interface{})
-
+	result["error"] = errors
 	id, err := o.Insert(&tpl)
 	if err != nil {
-		log.Println("Error =", err.Error())
-		result["error"] = [1]string{string(err.Error())}
+		setError(err.Error(), result)
 	} else {
 		templateId := strconv.Itoa(int(id))
 		templateids := [1]string{string(templateId)}
 		result["templateids"] = templateids
 
 		groupId, err := strconv.Atoi(hostgroupId)
+		if err != nil {
+			setError(err.Error(), result)
+		}
 		grp_tpl := Grp_tpl{
 			Grp_id: groupId,
 			Tpl_id: int(id),
@@ -886,12 +884,10 @@ func templateCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 		_, err = o.Insert(&grp_tpl)
 		if err != nil {
-			log.Println("Error =", err.Error())
-			result["error"] = [1]string{string(err.Error())}
+			setError(err.Error(), result)
 		}
 	}
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
@@ -1252,7 +1248,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "hostgroup.update" {
 			hostgroupUpdate(nodes)
 		} else if method == "template.create" {
-			templateCreate(nodes, rw)
+			templateCreate(nodes)
 		} else if method == "template.delete" {
 			templateDelete(nodes, rw)
 		} else if method == "template.update" {
