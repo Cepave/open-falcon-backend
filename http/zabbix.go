@@ -779,29 +779,28 @@ func hostgroupGet(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:     This function gets hostgroup data for database insertion.
- * @related issues:  OWL-093, OWL-086
+ * @function name:   func hostgroupUpdate(nodes map[string]interface{})
+ * @description:     This function updates hostgroup data.
+ * @related issues:  OWL-257, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/21/2015
- * @last modified:   10/21/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
+func hostgroupUpdate(nodes map[string]interface{}) {
 	log.Println("func hostgroupUpdate()")
 	params := nodes["params"].(map[string]interface{})
+	errors := []string{}
 	var result = make(map[string]interface{})
+	result["error"] = errors
 	hostgroupId, err := strconv.Atoi(params["groupid"].(string))
 	if err != nil {
-		log.Println("Error =", err.Error())
-		result["error"] = [1]string{string(err.Error())}
+		setError(err.Error(), result)
 	}
 	o := orm.NewOrm()
-	database := "falcon_portal"
-	o.Using(database)
+	o.Using("falcon_portal")
 
 	if _, ok := params["name"]; ok {
 		hostgroupName := params["name"].(string)
@@ -809,19 +808,14 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 
 		if hostgroupName != "" {
 			grp := Grp{Id: hostgroupId}
-			log.Println("grp =", grp)
 			err := o.Read(&grp)
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
-				log.Println("grp =", grp)
 				grp.Grp_name = hostgroupName
-				log.Println("grp =", grp)
 				num, err := o.Update(&grp)
 				if err != nil {
-					log.Println("Error =", err.Error())
-					result["error"] = [1]string{string(err.Error())}
+					setError(err.Error(), result)
 				} else {
 					if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
@@ -833,10 +827,7 @@ func hostgroupUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 			}
 		}
 	}
-	resp := nodes
-	delete(resp, "params")
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
@@ -1259,7 +1250,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "hostgroup.get" {
 			hostgroupGet(nodes)
 		} else if method == "hostgroup.update" {
-			hostgroupUpdate(nodes, rw)
+			hostgroupUpdate(nodes)
 		} else if method == "template.create" {
 			templateCreate(nodes, rw)
 		} else if method == "template.delete" {
