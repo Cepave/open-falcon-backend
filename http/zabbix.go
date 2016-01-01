@@ -574,41 +574,34 @@ func hostGet(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func hostUpdate(nodes map[string]interface{})
  * @description:     This function updates host data.
- * @related issues:  OWL-240, OWL-093, OWL-086
+ * @related issues:  OWL-257, OWL-240, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/23/2015
- * @last modified:   12/28/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
+func hostUpdate(nodes map[string]interface{}) {
 	log.Println("func hostUpdate()")
 	params := nodes["params"].(map[string]interface{})
+	errors := []string{}
 	var result = make(map[string]interface{})
-	hostName := getHostName(params)
-	args := map[string]string {
-		"host": hostName,
-	}
-
+	result["error"] = errors
+	args := map[string]string {}
 	endpoint := checkHostExist(params, result)
-	log.Println("returned endpoint =", endpoint)
-	log.Println("endpoint.Id =", endpoint.Id)
 	if endpoint.Id > 0 {
 		log.Println("host existed")
 		hostId := endpoint.Id
 		now := getNow()
-		log.Println("now =", now)
 		endpoint.T_modify = now
 
 		o := orm.NewOrm()
 		num, err := o.Update(&endpoint)
 		if err != nil {
-			log.Println("Error =", err.Error())
-			result["error"] = [1]string{string(err.Error())}
+			setError(err.Error(), result)
 		} else {
 			log.Println("update hostId =", hostId)
 			log.Println("mysql row affected nums =", num)
@@ -623,11 +616,7 @@ func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter) {
 		addHost(params, args, result)
 	}
 	log.Println("args =", args)
-
-	resp := nodes
-	delete(resp, "params")
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
@@ -1274,7 +1263,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "host.get" {
 			hostGet(nodes)
 		} else if method == "host.update" {
-			hostUpdate(nodes, rw)
+			hostUpdate(nodes)
 		} else if method == "hostgroup.create" {
 			hostgroupCreate(nodes, rw)
 		} else if method == "hostgroup.delete" {
