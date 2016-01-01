@@ -279,17 +279,19 @@ func getRequest(url string) map[string]interface{} {
 /**
  * @function name:   func (this *AuthController) LoginWithToken()
  * @description:     This function logins user with third party token.
- * @related issues:  OWL-206
+ * @related issues:  OWL-247, OWL-206
  * @param:           void
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/16/2015
- * @last modified:   12/21/2015
+ * @last modified:   01/01/2016
  * @called by:       beego.Router("/auth/login/:token", &AuthController{}, "get:LoginWithToken")
  *                    in fe/http/uic/uic_routes.go
  */
 func (this *AuthController) LoginWithToken() {
+	log.Println("func (this *AuthController) LoginWithToken()")
 	token := this.Ctx.Input.Param(":token")
+	log.Println("token =", token)
 	key := g.Config().Api.Key
 	authUrl := g.Config().Api.Access + "/" + token + "/" + key
 
@@ -326,10 +328,13 @@ func (this *AuthController) LoginWithToken() {
 				InsertRegisterUser(username, "")
 				user = ReadUserByName(username)
 			}
-			user.Passwd = ""
-			user.Email = email
-			user.Role = role
-			user.Update()
+			domain := strings.Split(user.Email, "@")[1]
+			if strings.Index(g.Config().Api.Login, domain) > -1 {
+				user.Passwd = ""
+				user.Email = email
+				user.Role = role
+				user.Update()
+			}
 			appSig := this.GetString("sig", "")
 			callback := this.GetString("callback", "")
 			if appSig != "" && callback != "" {
