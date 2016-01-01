@@ -891,23 +891,22 @@ func templateCreate(nodes map[string]interface{}) {
 }
 
 /**
- * @function name:   func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter)
- * @description:     This function deletes template data.
- * @related issues:  OWL-093, OWL-086
+ * @function name:   func templateDelete(nodes map[string]interface{})
+ * @description:     This function handles template.delete API requests.
+ * @related issues:  OWL-257, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
- * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/22/2015
- * @last modified:   10/21/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
-func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
+func templateDelete(nodes map[string]interface{}) {
 	log.Println("func templateDelete()")
 	params := nodes["params"].([]interface {})
-	resp := nodes
-	delete(resp, "params")
+	errors := []string{}
 	var result = make(map[string]interface{})
+	result["error"] = errors
 	o := orm.NewOrm()
 	args := []interface{}{}
 	args = append(args, "DELETE FROM falcon_portal.tpl WHERE id=?")
@@ -921,8 +920,7 @@ func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 			log.Println("templateId =", templateId)
 			res, err := o.Raw(sqlcmd.(string), templateId).Exec()
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.tpl WHERE id=?" {
@@ -934,8 +932,7 @@ func templateDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 		}
 	}
 	result["templateids"] = templateids
-	resp["result"] = result
-	RenderJson(rw, resp)
+	nodes["result"] = result
 }
 
 /**
@@ -1250,7 +1247,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		} else if method == "template.create" {
 			templateCreate(nodes)
 		} else if method == "template.delete" {
-			templateDelete(nodes, rw)
+			templateDelete(nodes)
 		} else if method == "template.update" {
 			templateUpdate(nodes, rw)
 		}
