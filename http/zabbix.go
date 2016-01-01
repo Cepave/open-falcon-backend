@@ -250,24 +250,23 @@ func bindGroup(hostId int64, params map[string]interface{}, args map[string]stri
 }
 
 /**
- * @function name:   bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{})
+ * @function name:   func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{})
  * @description:     This function binds a host to a template.
- * @related issues:  OWL-240
+ * @related issues:  OWL-257, OWL-240
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
  * @param:           result map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/15/2015
- * @last modified:   12/15/2015
- * @called by:       func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @last modified:   01/01/2016
+ * @called by:       func hostUpdate(nodes map[string]interface{})
  *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
 func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	if _, ok := params["templates"]; ok {
 		o := orm.NewOrm()
-		database := "falcon_portal"
-		o.Using(database)
+		o.Using("falcon_portal")
 		groupId := args["groupId"]
 		grp_id, _ := strconv.Atoi(groupId)
 		templates := params["templates"].([]interface{})
@@ -279,8 +278,7 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
 			res, err := o.Raw(sqlcmd, grp_id, tpl_id).Exec()
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
 				num, _ := res.RowsAffected()
 				log.Println("num =", num)
@@ -296,8 +294,7 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 
 					_, err = o.Insert(&grp_tpl)
 					if err != nil {
-						log.Println("Error =", err.Error())
-						result["error"] = [1]string{string(err.Error())}
+						setError(err.Error(), result)
 					}
 				}
 			}
