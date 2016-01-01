@@ -125,40 +125,42 @@ func getHostName(params map[string]interface{}) string {
 }
 
 /**
- * @function name:   func checkHostExist(hostId string, hostName string)
+ * @function name:   func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
  * @description:     This function checks if a host existed.
- * @related issues:  OWL-240
- * @param:           hostId string
- * @param:           hostName string
+ * @related issues:  OWL-257, OWL-240
+ * @param:           params map[string]interface{}
+ * @param:           result map[string]interface{}
  * @return:          endpoint Endpoint
  * @author:          Don Hsieh
  * @since:           12/16/2015
- * @last modified:   12/16/2015
- * @called by:       func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *                   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @last modified:   01/01/2016
+ * @called by:       func hostCreate(nodes map[string]interface{})
+ *                   func hostUpdate(nodes map[string]interface{})
  */
-func checkHostExist(hostId string, hostName string) Endpoint {
+func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint {
 	var endpoint Endpoint
 	o := orm.NewOrm()
+	hostId := getHostId(params)
+	hostName := getHostName(params)
 	if hostId != "" {
 		hostIdint, err := strconv.Atoi(hostId)
 		if err != nil {
-			log.Println("Error =", err.Error())
+			setError(err.Error(), result)
 		} else {
 			endpoint := Endpoint{Id: hostIdint}
 			err := o.Read(&endpoint)
 			if err != nil {
-				log.Println("Error =", err.Error())
+				setError(err.Error(), result)
 			}
 		}
 	} else {
 		err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
 		if err == orm.ErrMultiRows {
 			// Have multiple records
-			log.Printf("Returned multiple rows")
+			setError("returned multiple rows", result)
 		} else if err == orm.ErrNoRows {
 			// No result
-			log.Printf("Not found")
+			setError("host not found", result)
 		}
 	}
 	return endpoint
