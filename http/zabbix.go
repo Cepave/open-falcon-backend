@@ -107,8 +107,8 @@ func getHostId(params map[string]interface{}) string {
  * @author:          Don Hsieh
  * @since:           12/16/2015
  * @last modified:   12/16/2015
- * @called by:       func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter)
- *                   func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
+ *                   func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
 func getHostName(params map[string]interface{}) string {
 	hostName := ""
