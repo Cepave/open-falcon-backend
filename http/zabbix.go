@@ -395,6 +395,31 @@ func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
+ * @function name:   func unbindGroup(hostId string, result map[string]interface{})
+ * @description:     This function unbinds a host to a host group.
+ * @related issues:  OWL-241
+ * @param:           hostId string
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           01/01/2016
+ * @last modified:   01/01/2016
+ * @called by:       func removeHost(hostIds []string, result map[string]interface{})
+ */
+func unbindGroup(hostId string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	o.Using("falcon_portal")
+	sql := "DELETE FROM grp_host WHERE host_id = ?"
+	res, err := o.Raw(sql, hostId).Exec()
+	if err != nil {
+		log.Println("Error =", err.Error())
+		result["error"] = [1]string{string(err.Error())}
+	}
+	num, _ := res.RowsAffected()
+	log.Println("mysql row affected nums =", num)
+}
+
+/**
  * @function name:   func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
  * @description:     This function deletes host from "endpoint" table.
  * @related issues:  OWL-093, OWL-086, OWL-085
