@@ -1215,6 +1215,46 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 }
 
 /**
+ * @function name:   func setResponse(rw http.ResponseWriter, resp map[string]interface{})
+ * @description:     This function sets content of response and returns it.
+ * @related issues:  OWL-257
+ * @param:           rw http.ResponseWriter
+ * @param:           resp map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           01/01/2016
+ * @last modified:   01/01/2016
+ * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
+ */
+func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
+	if _, ok := resp["auth"]; ok {
+		delete(resp, "auth")
+	}
+	if _, ok := resp["method"]; ok {
+		delete(resp, "method")
+	}
+	if _, ok := resp["params"]; ok {
+		delete(resp, "params")
+	}
+	result := resp["result"].(map[string]interface{})
+	if val, ok := result["error"]; ok {
+		errors := val.([]string)
+		if len(errors) > 0 {
+			delete(resp, "result")
+			resp["error"] = errors
+		} else {
+			delete(resp["result"].(map[string]interface{}), "error")
+			if val, ok = result["items"]; ok {
+				items := result["items"]
+				resp["result"] = items
+			}
+		}
+	}
+	resp["time"] = getNow()
+	RenderJson(rw, resp)
+}
+
+/**
  * @function name:   func apiParser(rw http.ResponseWriter, req *http.Request)
  * @description:     This function parses the method of API request.
  * @related issues:  OWL-254, OWL-085
