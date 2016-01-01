@@ -434,7 +434,7 @@ func unbindGroup(hostId string, result map[string]interface{}) {
  * @author:          Don Hsieh
  * @since:           01/01/2016
  * @last modified:   01/01/2016
- * @called by:       func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @called by:       func hostDelete(nodes map[string]interface{})
  */
 func removeHost(hostIds []string, result map[string]interface{}) {
 	o := orm.NewOrm()
@@ -443,8 +443,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
 		if id, err := strconv.Atoi(hostId); err == nil {
 			num, err := o.Delete(&Endpoint{Id: id})
 			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
+				setError(err.Error(), result)
 			} else {
 				if num > 0 {
 					log.Println("RowsDeleted =", num)
