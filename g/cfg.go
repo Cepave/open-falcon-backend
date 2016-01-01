@@ -23,27 +23,28 @@ type GraphConfig struct {
 }
 
 type ApiConfig struct {
-	Name      string    `json:"name"`
-	Token     string    `json:"token"`
-	Event     string    `json:"event"`
-	Map       string    `json:"map"`
-	Geo       string    `json:"geo"`
-	Query     string    `json:"query"`
-	Dashboard string    `json:"dashboard"`
+	Name      string `json:"name"`
+	Token     string `json:"token"`
+	Event     string `json:"event"`
+	Map       string `json:"map"`
+	Geo       string `json:"geo"`
+	Query     string `json:"query"`
+	Dashboard string `json:"dashboard"`
+	Max       int    `json:"max"`
 }
 
 type DbConfig struct {
-	Addr     string `json:"addr"`
-	Idle     int    `json:"idle"`
-	Max      int    `json:"max"`
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
 }
 
 type GlobalConfig struct {
-	Debug    bool            `json:"debug"`
-	Http     *HttpConfig     `json:"http"`
-	Graph    *GraphConfig    `json:"graph"`
-	Api      *ApiConfig      `json:"api"`
-	Db       *DbConfig       `json:"db"`
+	Debug bool         `json:"debug"`
+	Http  *HttpConfig  `json:"http"`
+	Graph *GraphConfig `json:"graph"`
+	Api   *ApiConfig   `json:"api"`
+	Db    *DbConfig    `json:"db"`
 }
 
 var (
