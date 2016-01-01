@@ -86,7 +86,7 @@ func getNow() string {
  * @author:          Don Hsieh
  * @since:           12/16/2015
  * @last modified:   12/16/2015
- * @called by:       func hostUpdate(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
  */
 func getHostId(params map[string]interface{}) string {
 	hostId := ""
