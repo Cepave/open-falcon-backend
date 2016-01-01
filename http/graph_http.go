@@ -22,7 +22,6 @@ func configGraphRoutes() {
 
 	// method:post
 	http.HandleFunc("/graph/history", func(w http.ResponseWriter, r *http.Request) {
-		log.Println("http.HandleFunc('/graph/history')")
 		// statistics
 		proc.HistoryRequestCnt.Incr()
 
@@ -33,7 +32,6 @@ func configGraphRoutes() {
 			StdRender(w, "", err)
 			return
 		}
-		log.Println("body =", body)
 
 		if len(body.EndpointCounters) == 0 {
 			StdRender(w, "", errors.New("empty_payload"))
@@ -49,7 +47,6 @@ func configGraphRoutes() {
 				Endpoint:  ec.Endpoint,
 				Counter:   ec.Counter,
 			}
-			log.Println("request =", request)
 			result, err := graph.QueryOne(request)
 			if err != nil {
 				log.Printf("graph.queryOne fail, %v", err)
@@ -59,8 +56,6 @@ func configGraphRoutes() {
 			}
 			data = append(data, result)
 		}
-		log.Println("data =", data)
-		log.Println("len(data) =", len(data))
 
 		// statistics
 		proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
