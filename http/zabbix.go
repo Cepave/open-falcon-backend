@@ -164,6 +164,26 @@ func checkHostExist(hostId string, hostName string) Endpoint {
 }
 
 /**
+ * @function name:   func setError(error string, result map[string]interface{})
+ * @description:     This function sets error message.
+ * @related issues:  OWL-257
+ * @param:           error string
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           01/01/2016
+ * @last modified:   01/01/2016
+ * @called by:       func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
+ *                   func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{})
+ *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
+ *                   func hostCreate(nodes map[string]interface{})
+ */
+func setError(error string, result map[string]interface{}) {
+	log.Println("Error =", error)
+	result["error"] = append(result["error"].([]string), error)
+}
+
+/**
  * @function name:   bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
  * @description:     This function binds a host to a host group.
  * @related issues:  OWL-240
