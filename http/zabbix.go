@@ -395,15 +395,73 @@ func hostCreate(nodes map[string]interface{}, rw http.ResponseWriter) {
 }
 
 /**
- * @function name:   func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @function name:   func unbindGroup(hostId string, result map[string]interface{})
+ * @description:     This function unbinds a host to a host group.
+ * @related issues:  OWL-241
+ * @param:           hostId string
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           01/01/2016
+ * @last modified:   01/01/2016
+ * @called by:       func removeHost(hostIds []string, result map[string]interface{})
+ */
+func unbindGroup(hostId string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	o.Using("falcon_portal")
+	sql := "DELETE FROM grp_host WHERE host_id = ?"
+	res, err := o.Raw(sql, hostId).Exec()
+	if err != nil {
+		log.Println("Error =", err.Error())
+		result["error"] = [1]string{string(err.Error())}
+	}
+	num, _ := res.RowsAffected()
+	log.Println("mysql row affected nums =", num)
+}
+
+/**
+ * @function name:   func removeHost(hostIds []string, result map[string]interface{})
  * @description:     This function deletes host from "endpoint" table.
- * @related issues:  OWL-093, OWL-086, OWL-085
+ * @related issues:  OWL-241
+ * @param:           hostIds []string
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           01/01/2016
+ * @last modified:   01/01/2016
+ * @called by:       func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ */
+func removeHost(hostIds []string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	hostids := []string{}
+	for _, hostId := range hostIds {
+		if id, err := strconv.Atoi(hostId); err == nil {
+			num, err := o.Delete(&Endpoint{Id: id})
+			if err != nil {
+				log.Println("Error =", err.Error())
+				result["error"] = [1]string{string(err.Error())}
+			} else {
+				if num > 0 {
+					log.Println("RowsDeleted =", num)
+					unbindGroup(hostId, result)
+					hostids = append(hostids, hostId)
+				}
+			}
+		}
+	}
+	result["hostids"] = hostids
+}
+
+/**
+ * @function name:   func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter)
+ * @description:     This function handles host.delete API requests.
+ * @related issues:  OWL-241, OWL-093, OWL-086, OWL-085
  * @param:           nodes map[string]interface{}
  * @param:           rw http.ResponseWriter
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/11/2015
- * @last modified:   10/21/2015
+ * @last modified:   01/01/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
@@ -412,35 +470,20 @@ func hostDelete(nodes map[string]interface{}, rw http.ResponseWriter) {
 	delete(resp, "params")
 	var result = make(map[string]interface{})
 
-	o := orm.NewOrm()
-	hostids := []string{}
-	for _, hostId := range params {
-		if id, err := strconv.Atoi(hostId.(string)); err == nil {
-			num, err := o.Delete(&Endpoint{Id: id})
-			if err != nil {
-				log.Println("Error =", err.Error())
-				result["error"] = [1]string{string(err.Error())}
-			} else {
-				if num > 0 {
-					hostids = append(hostids, hostId.(string))
-					log.Println("RowsDeleted =", num)
-				}
+	hostIds := []string{}
+	hostId := ""
+	for _, param := range params {
+		log.Println("param =", param)
+		if val, ok := param.(map[string]interface{})["host_id"]; ok {
+			if val != nil {
+				log.Println("val =", val)
+				hostId = string(val.(json.Number))
+				log.Println("hostId =", hostId)
+				hostIds = append(hostIds, hostId)
 			}
 		}
 	}
-
-	database := "falcon_portal"
-	o.Using(database)
-	for _, hostId := range params {
-		sql := "DELETE FROM grp_host WHERE host_id = ?"
-		res, err := o.Raw(sql, hostId).Exec()
-		if err != nil {
-			log.Println("Error =", err.Error())
-		}
-		num, _ := res.RowsAffected()
-		log.Println("mysql row affected nums =", num)
-	}
-	result["hostids"] = hostids
+	removeHost(hostIds, result)
 	resp["result"] = result
 	RenderJson(rw, resp)
 }
