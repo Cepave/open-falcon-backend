@@ -1,81 +1,11 @@
 <!doctype html>
 <html class="no-js" lang="">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>OWL</title>
-    <meta name="description" content="<%- description %>">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="shortcut icon" type="image/x-icon" href="/static/img/favicon.ico"/>
-    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
-    <link rel="icon" href="favicon.ico" type="/static/img/favicon.ico" />
-    <link rel="shortcut icon" href="/static/favicon.ico">
-    <link rel="stylesheet" href="/static/css/bootstrap.css">
-    <link rel="stylesheet" href="/static/css/content.css">
+    <script>
+        window.location = "{{.Shortcut.FalconDashboard}}"
+    </script>
   </head>
-  <body>
-    <!--[if lt IE 8]>
-      <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-    <![endif]-->
-    <div class="ContentPage">
-        <div class="navbar-top" role="navigation">
-          <div class="row">
-            <a class="navbar-brand" href="/">
-              <img src='/static/img/owl-brand.png' width="334" height="72" alt="OWL Monitioering System" />
-            </a>
-            <ul class="nav navbar-nav navbar-right">
-              <li> <a href="/auth/login">登录/退出</a> </li>
-              <li> <a href="/me/profile">个人信息维护</a> </li>
-              <li> <a href="/me/users">通讯录</a> </li>
-              <li> <a href="/me/teams">用户组管理</a> </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="grafana-link">
-           <div class="container">
-              <div class="row">
-                 <div class="col-sm-12">
-                    <a target="_blank" href="{{.Shortcut.GrafanaDashboard}}">
-                       <h3>grafana</h3>
-                       <div class="hyperlink dashboard">
-                          <div class="dashboard__inner">
-                             <span class="icon"></span>
-                             <h4>grafana ></h4>
-                          </div>
-                       </div>
-                    </a>
-                 </div>
-              </div>
-           </div>
-        </div>
-        <div class="monitoringsystem-link">
-           <div class="container">
-              <div class="row">
-                 <div class="col-sm-4">
-                    <a target="_blank" href="{{.Shortcut.FalconPortal}}">
-                       <h3>监控Portal</h3>
-                       <div class="hyperlink portal"></div>
-                    </a>
-                 </div>
-                 <div class="col-sm-4">
-                    <a target="_blank" href="{{.Shortcut.FalconDashboard}}">
-                       <h3>监控趋势图</h3>
-                       <div class="hyperlink search"></div>
-                    </a>
-                 </div>
-                 <div class="col-sm-4">
-                    <a target="_blank" href="{{.Shortcut.FalconAlarm}}">
-                       <h3>未恢复的报警</h3>
-                       <div class="hyperlink alert"></div>
-                    </a>
-                 </div>
-              </div>
-           </div>
-        </div>
-    </div>
-  </body>
+  <body></body>
 </html>
 
 
