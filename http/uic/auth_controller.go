@@ -3,13 +3,13 @@ package uic
 import (
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
-	"log"
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/http/base"
 	. "github.com/Cepave/fe/model/uic"
 	"github.com/Cepave/fe/utils"
 	"github.com/toolkits/str"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,11 +29,11 @@ func (this *AuthController) Logout() {
 		result := getRequest(url)
 		log.Println("logout result =", result)
 		this.Ctx.SetCookie("token", "", 0, "/")
-		this.Ctx.SetCookie("token", "", 0, "/", ".owlemon.com")
+		this.Ctx.SetCookie("token", "", 0, "/", g.Config().Http.Cookie)
 	}
 	RemoveSessionByUid(u.Id)
 	this.Ctx.SetCookie("sig", "", 0, "/")
-	this.Ctx.SetCookie("sig", "", 0, "/", ".owlemon.com")
+	this.Ctx.SetCookie("sig", "", 0, "/", g.Config().Http.Cookie)
 	this.Redirect("/auth/login", 302)
 }
 
@@ -195,7 +195,7 @@ func (this *AuthController) CreateSession(uid int64, maxAge int) int {
 	expired := int(time.Now().Unix()) + maxAge
 	SaveSessionAttrs(uid, sig, expired)
 	this.Ctx.SetCookie("sig", sig, maxAge, "/")
-	this.Ctx.SetCookie("sig", sig, maxAge, "/", ".owlemon.com")
+	this.Ctx.SetCookie("sig", sig, maxAge, "/", g.Config().Http.Cookie)
 	return expired
 }
 
@@ -274,7 +274,7 @@ func (this *AuthController) LoginWithToken() {
 	nodes := getRequest(authUrl)
 	if status, ok := nodes["status"]; ok {
 		if int(status.(float64)) == 1 {
-			data := nodes["data"].(map[string]interface {})
+			data := nodes["data"].(map[string]interface{})
 			access_key := data["access_key"].(string)
 			username := data["username"].(string)
 			email := data["email"].(string)
@@ -295,12 +295,12 @@ func (this *AuthController) LoginWithToken() {
 				} else if permission == "deny" {
 					role = 3
 				}
-				maxAge := 3600*24*30
+				maxAge := 3600 * 24 * 30
 				this.Ctx.SetCookie("token", access_key, maxAge, "/")
-				this.Ctx.SetCookie("token", access_key, maxAge, "/", ".owlemon.com")
+				this.Ctx.SetCookie("token", access_key, maxAge, "/", g.Config().Http.Cookie)
 			}
 			user := ReadUserByName(username)
-			if user == nil {		// create third party user
+			if user == nil { // create third party user
 				InsertRegisterUser(username, "")
 				user = ReadUserByName(username)
 			}
