@@ -3,7 +3,8 @@
     "company": "MI",
     "http": {
         "enabled": true,
-        "listen": "0.0.0.0:1234"
+        "listen": "0.0.0.0:1234",
+        "cookie": ".example.com"
     },
     "cache": {
         "enabled": true,

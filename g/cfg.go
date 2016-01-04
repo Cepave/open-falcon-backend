@@ -11,6 +11,7 @@ import (
 type HttpConfig struct {
 	Enabled bool   `json:"enabled"`
 	Listen  string `json:"listen"`
+	Cookie  string `json:"cookie"`
 }
 
 type TimeoutConfig struct {
