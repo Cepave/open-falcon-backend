@@ -352,46 +352,43 @@ func checkInputFormat(params map[string]interface{}, result map[string]interface
  */
 func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	hostName := getHostName(params)
-	if len(hostName) > 0 {
-		args["host"] = hostName
-		ip := ""
-		port := ""
-		if _, ok := params["interfaces"]; ok {
-			interfaces := params["interfaces"].([]interface{})
-			for i, arg := range interfaces {
-				if i == 0 {
-					ip = arg.(map[string]interface{})["ip"].(string)
-					port = arg.(map[string]interface{})["port"].(string)
-					args["ip"] = ip
-					args["port"] = port
+	if len(hostName) == 0 {
+		setError("host name can not be null.", result)
+	} else {
+		valid := checkInputFormat(params, result)
+		if valid {
+			args["host"] = hostName
+			ip := ""
+			if _, ok := params["interfaces"]; ok {
+				interfaces := params["interfaces"].([]interface{})
+				for i, arg := range interfaces {
+					if i == 0 {
+						if val, ok := arg.(map[string]interface{})["ip"]; ok {
+							ip = val.(string)
+							args["ip"] = ip
+						}
+					}
 				}
 			}
-		}
-		t := time.Now()
-		timestamp := t.Unix()
-		log.Println(timestamp)
-		now := getNow()
+			host := Host{
+				Hostname: hostName,
+				Ip: ip,
+				Update_at: getNow(),
+			}
+			log.Println("host =", host)
 
-		host := Host{
-			Hostname: hostName,
-			Ip: ip,
-			Update_at: now,
+			o := orm.NewOrm()
+			hostId, err := o.Insert(&host)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				bindGroup(int(hostId), params, args, result)
+				hostid := strconv.Itoa(int(hostId))
+				hostids := [1]string{string(hostid)}
+				result["hostids"] = hostids
+				bindTemplate(params, args, result)
+			}
 		}
-		log.Println("host =", host)
-
-		o := orm.NewOrm()
-		hostId, err := o.Insert(&host)
-		if err != nil {
-			setError(err.Error(), result)
-		} else {
-			bindGroup(int(hostId), params, args, result)
-			hostid := strconv.Itoa(int(hostId))
-			hostids := [1]string{string(hostid)}
-			result["hostids"] = hostids
-			bindTemplate(params, args, result)
-		}
-	} else {
-		setError("host name can not be null.", result)
 	}
 }
 
