@@ -25,7 +25,7 @@
         "max": 500
     },
     "db": {
-        "addr": "root:@tcp(127.0.0.1:3306)/graph?charset=utf8&loc=Asia%2FTaipei",
+        "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
     }
