@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,15 +57,14 @@ type City struct {
  * @called by:       func setQueryEditor(rw http.ResponseWriter, req *http.Request, hostKeyword string)
  */
 func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
-	hostKeyword = strings.Replace(hostKeyword, "*", "", -1)
 	if len(hostKeyword) == 0 {
-		hostKeyword = "%"
+		hostKeyword = ".+"
 	}
 	rand.Seed(time.Now().UTC().UnixNano())
 	random64 := rand.Float64()
 	_r := strconv.FormatFloat(random64, 'f', -1, 32)
 	maxQuery := strconv.Itoa(g.Config().Api.Max)
-	url := "/api/endpoints" + "?q=" + hostKeyword + "&tags&limit=" + maxQuery + "&_r=" + _r
+	url := "/api/endpoints" + "?q=" + hostKeyword + "&tags&limit=" + maxQuery + "&_r=" + _r + "&regex_query=1"
 	log.Println("req.Host =", req.Host)
 	log.Println("g.Config().Api.Query =", g.Config().Api.Query)
 	log.Println("maxQuery = ", maxQuery)
@@ -169,10 +169,9 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 	result := []interface{}{}
 
 	query = strings.Replace(query, ".*", "", -1)
-	arrQuery := strings.Split(query, ".")
+	arrQuery := strings.Split(query, "#")
 	host, arrMetric := arrQuery[0], arrQuery[1:]
 	maxQuery := strconv.Itoa(g.Config().Api.Max)
-
 	if host == "chart" {
 		chartBar := map[string]interface{}{
 			"text":       "bar",
@@ -194,6 +193,9 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 		RenderJson(rw, result)
 	} else {
 		metric := strings.Join(arrMetric, ".")
+		reg, _ := regexp.Compile("(^{|}$)")
+		host = reg.ReplaceAllString(host, "")
+		host = strings.Replace(host, ",", "\",\"", -1)
 		endpoints := "[\"" + host + "\"]"
 
 		rand.Seed(time.Now().UTC().UnixNano())
@@ -207,6 +209,7 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 		form.Add("_r", _r)
 
 		log.Println("req.Host =", req.Host)
+		log.Println("endponits", endpoints)
 		log.Println("g.Config().Api.Query =", g.Config().Api.Query)
 		log.Println("maxQuery = ", maxQuery)
 		target := "/api/counters"
@@ -274,7 +277,7 @@ func setQueryEditor(rw http.ResponseWriter, req *http.Request) {
 	query = strings.Replace(query, ".%", "", -1)
 	query = strings.Replace(query, ".undefined", "", -1)
 	query = strings.Replace(query, ".select metric", "", -1)
-	if !strings.Contains(query, ".") {
+	if !strings.Contains(query, "#") {
 		getHosts(rw, req, query)
 	} else {
 		getMetrics(rw, req, query)
@@ -1102,7 +1105,7 @@ func getValues(rw http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	for _, target := range req.PostForm["target"] {
 		if !strings.Contains(target, ".select metric") {
-			targets := strings.Split(target, ".")
+			targets := strings.Split(target, "#")
 			host, targets := targets[0], targets[1:]
 			if host == "chart" {
 				chartType := targets[len(targets)-1]
