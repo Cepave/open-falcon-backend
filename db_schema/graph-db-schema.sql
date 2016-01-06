@@ -9,8 +9,6 @@ CREATE TABLE `graph`.`endpoint` (
   `ts` int(11) DEFAULT NULL,
   `t_create` DATETIME NOT NULL COMMENT 'create time',
   `t_modify` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modify time',
-  `ipv4` varchar(15) NOT NULL DEFAULT '',
-  `port` char(5) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_endpoint` (`endpoint`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
