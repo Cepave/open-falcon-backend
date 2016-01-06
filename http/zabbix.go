@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -297,6 +298,42 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 			}
 		}
 	}
+}
+
+/**
+ * @function name:   func checkInputFormat(params map[string]interface{}, result map[string]interface{}) bool
+ * @description:     This function checks input format.
+ * @related issues:  OWL-262
+ * @param:           params map[string]interface{}
+ * @param:           result map[string]interface{}
+ * @return:          valid bool
+ * @author:          Don Hsieh
+ * @since:           01/06/2016
+ * @last modified:   01/06/2016
+ * @called by:       func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
+ *                   func hostUpdate(nodes map[string]interface{})
+ */
+func checkInputFormat(params map[string]interface{}, result map[string]interface{}) bool {
+	valid := true
+	if val, ok := params["interfaces"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+			setError("interfaces shall be an array of objects [{}]", result)
+			valid = false
+		}
+	}
+	if val, ok := params["groups"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+			setError("groups shall be an array of objects [{}]", result)
+			valid = false
+		}
+	}
+	if val, ok := params["templates"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+			setError("templates shall be an array of objects [{}]", result)
+			valid = false
+		}
+	}
+	return valid
 }
 
 /**
