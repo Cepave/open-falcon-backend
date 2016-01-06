@@ -87,7 +87,7 @@ func getNow() string {
  * @author:          Don Hsieh
  * @since:           12/16/2015
  * @last modified:   12/16/2015
- * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
+ * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host
  */
 func getHostId(params map[string]interface{}) string {
 	hostId := ""
@@ -108,7 +108,7 @@ func getHostId(params map[string]interface{}) string {
  * @author:          Don Hsieh
  * @since:           12/16/2015
  * @last modified:   12/16/2015
- * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
+ * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host
  *                   func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
 func getHostName(params map[string]interface{}) string {
@@ -126,20 +126,20 @@ func getHostName(params map[string]interface{}) string {
 }
 
 /**
- * @function name:   func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
+ * @function name:   func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host
  * @description:     This function checks if a host existed.
- * @related issues:  OWL-257, OWL-240
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           params map[string]interface{}
  * @param:           result map[string]interface{}
- * @return:          endpoint Endpoint
+ * @return:          host Host
  * @author:          Don Hsieh
  * @since:           12/16/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostCreate(nodes map[string]interface{})
  *                   func hostUpdate(nodes map[string]interface{})
  */
-func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint {
-	var endpoint Endpoint
+func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host {
+	var host Host
 	o := orm.NewOrm()
 	hostId := getHostId(params)
 	hostName := getHostName(params)
@@ -148,23 +148,22 @@ func checkHostExist(params map[string]interface{}, result map[string]interface{}
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
-			endpoint := Endpoint{Id: hostIdint}
-			err := o.Read(&endpoint)
+			host := Host{Id: hostIdint}
+			err := o.Read(&host)
 			if err != nil {
 				setError(err.Error(), result)
 			}
 		}
 	} else {
-		err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
+		err := o.QueryTable("host").Filter("hostname", hostName).One(&host)
 		if err == orm.ErrMultiRows {
 			// Have multiple records
-			setError("returned multiple rows", result)
+			log.Println("returned multiple rows")
 		} else if err == orm.ErrNoRows {
 			// No result
-			setError("host not found", result)
 		}
 	}
-	return endpoint
+	return host
 }
 
 /**
