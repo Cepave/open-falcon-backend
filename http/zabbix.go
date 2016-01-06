@@ -16,14 +16,15 @@ import (
 	"time"
 )
 
-type Endpoint struct {
-	Id       int
-	Endpoint string
-	Ts       int64
-	T_create string
-	T_modify string
-	Ipv4     string
-	Port     string
+type Host struct {
+	Id             int
+	Hostname       string
+	Ip             string
+	Agent_version  string
+	Plugin_version string
+	Maintain_begin int
+	Maintain_end   int
+	Update_at      string
 }
 
 type Grp struct {
