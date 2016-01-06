@@ -250,21 +250,20 @@ func bindGroup(hostId int, params map[string]interface{}, args map[string]string
 /**
  * @function name:   func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{})
  * @description:     This function binds a host to a template.
- * @related issues:  OWL-257, OWL-240
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
  * @param:           result map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/15/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostUpdate(nodes map[string]interface{})
  *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
 func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	if _, ok := params["templates"]; ok {
 		o := orm.NewOrm()
-		o.Using("falcon_portal")
 		groupId := args["groupId"]
 		grp_id, _ := strconv.Atoi(groupId)
 		templates := params["templates"].([]interface{})
