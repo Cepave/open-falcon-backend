@@ -205,44 +205,31 @@ func setError(error string, result map[string]interface{}) {
 func bindGroup(hostId int, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	if _, ok := params["groups"]; ok {
 		o := orm.NewOrm()
-		sqlcmd := "DELETE FROM falcon_portal.grp_host WHERE host_id=?"
-		res, err := o.Raw(sqlcmd, hostId).Exec()
-		if err != nil {
-			setError(err.Error(), result)
-		} else {
-			num, _ := res.RowsAffected()
-			if num > 0 {
-				log.Println("mysql row affected nums =", num)
-			}
-		}
-
-		groups := params["groups"].([]interface{})
 		groupId := ""
+		var grp_host Grp_host
+		groups := params["groups"].([]interface{})
 		for _, group := range groups {
 			groupId = group.(map[string]interface{})["groupid"].(string)
 			args["groupId"] = groupId
 			grp_id, err := strconv.Atoi(groupId)
-			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
-			res, err := o.Raw(sqlcmd, hostId, grp_id).Exec()
-			if err != nil {
+
+			sqlcmd := "SELECT * FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
+			err = o.Raw(sqlcmd, hostId, grp_id).QueryRow(&grp_host)
+			if err == orm.ErrNoRows {
+				// No result
+				grp_host := Grp_host{
+					Grp_id: grp_id,
+					Host_id: int(hostId),
+				}
+				log.Println("grp_host =", grp_host)
+				_, err = o.Insert(&grp_host)
+				if err != nil {
+					setError(err.Error(), result)
+				}
+			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				num, _ := res.RowsAffected()
-				log.Println("num =", num)
-				if num > 0 {
-					log.Println("Record existed. count =", num)
-				} else {	// Record not existed. Insert new one.
-					grp_host := Grp_host{
-						Grp_id: grp_id,
-						Host_id: int(hostId),
-					}
-					log.Println("grp_host =", grp_host)
-
-					_, err = o.Insert(&grp_host)
-					if err != nil {
-						setError(err.Error(), result)
-					}
-				}
+				log.Println("grp_host existed =", grp_host)
 			}
 		}
 	}
