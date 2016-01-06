@@ -189,7 +189,7 @@ func setError(error string, result map[string]interface{}) {
 /**
  * @function name:   func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
  * @description:     This function binds a host to a host group.
- * @related issues:  OWL-257, OWL-240
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           hostId int64
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
@@ -197,15 +197,13 @@ func setError(error string, result map[string]interface{}) {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/15/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostUpdate(nodes map[string]interface{})
  *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
-func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
+func bindGroup(hostId int, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	if _, ok := params["groups"]; ok {
 		o := orm.NewOrm()
-		o.Using("falcon_portal")
-
 		sqlcmd := "DELETE FROM falcon_portal.grp_host WHERE host_id=?"
 		res, err := o.Raw(sqlcmd, hostId).Exec()
 		if err != nil {
