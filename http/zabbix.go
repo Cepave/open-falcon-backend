@@ -620,22 +620,23 @@ func hostUpdate(nodes map[string]interface{}) {
 	host := checkHostExist(params, result)
 	if host.Id > 0 {
 		log.Println("host existed")
-		hostId := host.Id
-		now := getNow()
-		host.Update_at = now
-
-		o := orm.NewOrm()
-		num, err := o.Update(&host)
-		if err != nil {
-			setError(err.Error(), result)
-		} else {
-			log.Println("update hostId =", hostId)
-			log.Println("mysql row affected nums =", num)
-			bindGroup(host.Id, params, args, result)
-			hostid := strconv.Itoa(host.Id)
-			hostids := [1]string{string(hostid)}
-			result["hostids"] = hostids
-			bindTemplate(params, args, result)
+		valid := checkInputFormat(params, result)
+		if valid {
+			hostId := host.Id
+			host.Update_at = getNow()
+			o := orm.NewOrm()
+			num, err := o.Update(&host)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				log.Println("update hostId =", hostId)
+				log.Println("mysql row affected nums =", num)
+				bindGroup(host.Id, params, args, result)
+				hostid := strconv.Itoa(host.Id)
+				hostids := [1]string{string(hostid)}
+				result["hostids"] = hostids
+				bindTemplate(params, args, result)
+			}
 		}
 	} else {
 		log.Println("host not existed")
