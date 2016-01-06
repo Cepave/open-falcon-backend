@@ -168,7 +168,7 @@ func checkSegmentExpandable(segment string, counter string) bool {
 func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 	result := []interface{}{}
 
-	query = strings.Replace(query, ".*", "", -1)
+	query = strings.Replace(query, "#.*", "", -1)
 	arrQuery := strings.Split(query, "#")
 	host, arrMetric := arrQuery[0], arrQuery[1:]
 	maxQuery := strconv.Itoa(g.Config().Api.Max)
@@ -196,6 +196,7 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 		reg, _ := regexp.Compile("(^{|}$)")
 		host = reg.ReplaceAllString(host, "")
 		host = strings.Replace(host, ",", "\",\"", -1)
+
 		endpoints := "[\"" + host + "\"]"
 
 		rand.Seed(time.Now().UTC().UnixNano())
