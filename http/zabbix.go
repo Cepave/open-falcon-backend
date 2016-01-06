@@ -630,7 +630,6 @@ func hostgroupCreate(nodes map[string]interface{}) {
 	now := getNow()
 
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	grp := Grp{
 		Grp_name: hostgroupName,
 		Create_user: user,
@@ -669,9 +668,6 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 
-	o := orm.NewOrm()
-	o.Using("falcon_portal")
-
 	args := []interface{}{}
 	args = append(args, "DELETE FROM falcon_portal.grp WHERE id=?")
 	args = append(args, "DELETE FROM falcon_portal.grp_host WHERE grp_id=?")
@@ -679,6 +675,7 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	args = append(args, "DELETE FROM falcon_portal.plugin_dir WHERE grp_id=?")
 	log.Println("args =", args)
 
+	o := orm.NewOrm()
 	groupids := []string{}
 	for _, sqlcmd := range args {
 		for _, hostgroupId := range params {
@@ -733,7 +730,6 @@ func hostgroupGet(nodes map[string]interface{}) {
 	}
 	groupId := ""
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	if queryAll {
 		var grps []*Grp
 		_, err := o.QueryTable("grp").All(&grps)
@@ -792,8 +788,6 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
-
 	if _, ok := params["name"]; ok {
 		hostgroupName := params["name"].(string)
 		log.Println("hostgroupName =", hostgroupName)
@@ -844,7 +838,6 @@ func templateCreate(nodes map[string]interface{}) {
 	now := getNow()
 
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	tpl := Tpl{
 		Tpl_name: templateName,
 		Create_user: user,
@@ -948,8 +941,6 @@ func templateUpdate(nodes map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
-
 	if _, ok := params["name"]; ok {
 		templateName := params["name"].(string)
 		log.Println("templateName =", templateName)
