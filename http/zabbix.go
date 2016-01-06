@@ -301,15 +301,15 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 
 /**
  * @function name:   func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
- * @description:     This function inserts a host to "endpoint" table and binds the host to its group and template.
- * @related issues:  OWL-257, OWL-240
+ * @description:     This function inserts a host to "host" table and binds the host to its group and template.
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
  * @param:           result map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/21/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostCreate(nodes map[string]interface{})
  *                   func hostUpdate(nodes map[string]interface{})
  */
@@ -335,24 +335,19 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 		log.Println(timestamp)
 		now := getNow()
 
-		endpoint := Endpoint{
-			Endpoint: hostName,
-			Ts: timestamp,
-			T_create: now,
-			T_modify: now,
-			Ipv4: ip,
+		host := Host{
+			Hostname: hostName,
+			Ip: ip,
+			Update_at: now,
 		}
-		if len(port) > 0 {
-			endpoint.Port = port
-		}
-		log.Println("endpoint =", endpoint)
+		log.Println("host =", host)
 
 		o := orm.NewOrm()
-		hostId, err := o.Insert(&endpoint)
+		hostId, err := o.Insert(&host)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
-			bindGroup(hostId, params, args, result)
+			bindGroup(int(hostId), params, args, result)
 			hostid := strconv.Itoa(int(hostId))
 			hostids := [1]string{string(hostid)}
 			result["hostids"] = hostids
