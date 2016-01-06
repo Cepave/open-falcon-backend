@@ -482,12 +482,12 @@ func hostDelete(nodes map[string]interface{}) {
 /**
  * @function name:   func hostGet(nodes map[string]interface{})
  * @description:     This function gets existed host data.
- * @related issues:  OWL-257, OWL-254
+ * @related issues:  OWL-262, OWL-257, OWL-254
  * @param:           nodes map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}) {
@@ -513,19 +513,19 @@ func hostGet(nodes map[string]interface{}) {
 	}
 	o := orm.NewOrm()
 	if queryAll {
-		var endpoints []*Endpoint
-		num, err := o.QueryTable("endpoint").All(&endpoints)
+		var hosts []*Host
+		num, err := o.QueryTable("host").All(&hosts)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
 			log.Println("num =", num)
-			for _, endpoint := range endpoints {
+			for _, host := range hosts {
 				item := map[string]string {}
 				var grp_id int
-				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
-				item["hostid"] = strconv.Itoa(endpoint.Id)
-				item["hostname"] = endpoint.Endpoint
-				item["ip"] = endpoint.Ipv4
+				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", host.Id).QueryRow(&grp_id)
+				item["hostid"] = strconv.Itoa(host.Id)
+				item["hostname"] = host.Hostname
+				item["ip"] = host.Ip
 				item["groupid"] = strconv.Itoa(grp_id)
 				items = append(items, item)
 			}
@@ -534,23 +534,23 @@ func hostGet(nodes map[string]interface{}) {
 		ip := ""
 		hostId := ""
 		groupId := ""
-		var endpoint Endpoint
+		var host Host
 		for _, hostName := range hostNames {
 			item := map[string]string {}
 			ip = ""
 			hostId = ""
 			groupId = ""
-			err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
+			err := o.QueryTable("host").Filter("hostname", hostName).One(&host)
 			if err == orm.ErrMultiRows {
 				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
 				setError("host not found", result)
-			} else if endpoint.Id > 0 {
-				ip = endpoint.Ipv4
+			} else if host.Id > 0 {
+				ip = host.Ip
 				var grp_id int
-				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
+				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", host.Id).QueryRow(&grp_id)
 				log.Println("grp_id =", grp_id)
-				hostId = strconv.Itoa(endpoint.Id)
+				hostId = strconv.Itoa(host.Id)
 				groupId = strconv.Itoa(grp_id)
 			}
 			item["hostid"] = hostId
