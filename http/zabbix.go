@@ -418,14 +418,14 @@ func unbindGroup(hostId string, result map[string]interface{}) {
 
 /**
  * @function name:   func removeHost(hostIds []string, result map[string]interface{})
- * @description:     This function deletes host from "endpoint" table.
- * @related issues:  OWL-241
+ * @description:     This function deletes host from "host" table.
+ * @related issues:  OWL-262, OWL-241
  * @param:           hostIds []string
  * @param:           result map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           01/01/2016
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostDelete(nodes map[string]interface{})
  */
 func removeHost(hostIds []string, result map[string]interface{}) {
@@ -433,7 +433,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
 	hostids := []string{}
 	for _, hostId := range hostIds {
 		if id, err := strconv.Atoi(hostId); err == nil {
-			num, err := o.Delete(&Endpoint{Id: id})
+			num, err := o.Delete(&Host{Id: id})
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
