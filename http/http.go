@@ -23,13 +23,9 @@ func InitDatabase() {
 	config := g.Config()
 	orm.RegisterDataBase("default", "mysql", config.Db.Addr, config.Db.Idle, config.Db.Max)
 	// register model
-	orm.RegisterModel(new(Endpoint))
+	orm.RegisterModel(new(Host), new(Grp), new(Grp_host), new(Grp_tpl), new(Tpl))
 
-	strConn := strings.Replace(config.Db.Addr, "graph", "falcon_portal", 1)
-	orm.RegisterDataBase("falcon_portal", "mysql", strConn, config.Db.Idle, config.Db.Max)
-	orm.RegisterModel(new(Grp), new(Grp_host), new(Grp_tpl), new(Tpl))
-
-	strConn = strings.Replace(config.Db.Addr, "graph", "grafana", 1)
+	strConn := strings.Replace(config.Db.Addr, "graph", "grafana", 1)
 	orm.RegisterDataBase("grafana", "mysql", strConn, config.Db.Idle, config.Db.Max)
 	orm.RegisterModel(new(Province), new(City), new(Idc))
 

@@ -12,18 +12,20 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"time"
 )
 
-type Endpoint struct {
-	Id       int
-	Endpoint string
-	Ts       int64
-	T_create string
-	T_modify string
-	Ipv4     string
-	Port     string
+type Host struct {
+	Id             int
+	Hostname       string
+	Ip             string
+	Agent_version  string
+	Plugin_version string
+	Maintain_begin int
+	Maintain_end   int
+	Update_at      string
 }
 
 type Grp struct {
@@ -86,7 +88,7 @@ func getNow() string {
  * @author:          Don Hsieh
  * @since:           12/16/2015
  * @last modified:   12/16/2015
- * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
+ * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host
  */
 func getHostId(params map[string]interface{}) string {
 	hostId := ""
@@ -107,7 +109,7 @@ func getHostId(params map[string]interface{}) string {
  * @author:          Don Hsieh
  * @since:           12/16/2015
  * @last modified:   12/16/2015
- * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
+ * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host
  *                   func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
 func getHostName(params map[string]interface{}) string {
@@ -125,20 +127,20 @@ func getHostName(params map[string]interface{}) string {
 }
 
 /**
- * @function name:   func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint
+ * @function name:   func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host
  * @description:     This function checks if a host existed.
- * @related issues:  OWL-257, OWL-240
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           params map[string]interface{}
  * @param:           result map[string]interface{}
- * @return:          endpoint Endpoint
+ * @return:          host Host
  * @author:          Don Hsieh
  * @since:           12/16/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostCreate(nodes map[string]interface{})
  *                   func hostUpdate(nodes map[string]interface{})
  */
-func checkHostExist(params map[string]interface{}, result map[string]interface{}) Endpoint {
-	var endpoint Endpoint
+func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host {
+	var host Host
 	o := orm.NewOrm()
 	hostId := getHostId(params)
 	hostName := getHostName(params)
@@ -147,23 +149,22 @@ func checkHostExist(params map[string]interface{}, result map[string]interface{}
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
-			endpoint := Endpoint{Id: hostIdint}
-			err := o.Read(&endpoint)
+			host := Host{Id: hostIdint}
+			err := o.Read(&host)
 			if err != nil {
 				setError(err.Error(), result)
 			}
 		}
 	} else {
-		err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
+		err := o.QueryTable("host").Filter("hostname", hostName).One(&host)
 		if err == orm.ErrMultiRows {
 			// Have multiple records
-			setError("returned multiple rows", result)
+			log.Println("returned multiple rows")
 		} else if err == orm.ErrNoRows {
 			// No result
-			setError("host not found", result)
 		}
 	}
-	return endpoint
+	return host
 }
 
 /**
@@ -189,7 +190,7 @@ func setError(error string, result map[string]interface{}) {
 /**
  * @function name:   func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
  * @description:     This function binds a host to a host group.
- * @related issues:  OWL-257, OWL-240
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           hostId int64
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
@@ -197,53 +198,38 @@ func setError(error string, result map[string]interface{}) {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/15/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostUpdate(nodes map[string]interface{})
  *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
-func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
+func bindGroup(hostId int, params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	if _, ok := params["groups"]; ok {
 		o := orm.NewOrm()
-		o.Using("falcon_portal")
-
-		sqlcmd := "DELETE FROM falcon_portal.grp_host WHERE host_id=?"
-		res, err := o.Raw(sqlcmd, hostId).Exec()
-		if err != nil {
-			setError(err.Error(), result)
-		} else {
-			num, _ := res.RowsAffected()
-			if num > 0 {
-				log.Println("mysql row affected nums =", num)
-			}
-		}
-
-		groups := params["groups"].([]interface{})
 		groupId := ""
+		var grp_host Grp_host
+		groups := params["groups"].([]interface{})
 		for _, group := range groups {
 			groupId = group.(map[string]interface{})["groupid"].(string)
 			args["groupId"] = groupId
 			grp_id, err := strconv.Atoi(groupId)
-			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
-			res, err := o.Raw(sqlcmd, hostId, grp_id).Exec()
-			if err != nil {
+
+			sqlcmd := "SELECT * FROM falcon_portal.grp_host WHERE host_id=? AND grp_id=?"
+			err = o.Raw(sqlcmd, hostId, grp_id).QueryRow(&grp_host)
+			if err == orm.ErrNoRows {
+				// No result
+				grp_host := Grp_host{
+					Grp_id: grp_id,
+					Host_id: int(hostId),
+				}
+				log.Println("grp_host =", grp_host)
+				_, err = o.Insert(&grp_host)
+				if err != nil {
+					setError(err.Error(), result)
+				}
+			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				num, _ := res.RowsAffected()
-				log.Println("num =", num)
-				if num > 0 {
-					log.Println("Record existed. count =", num)
-				} else {	// Record not existed. Insert new one.
-					grp_host := Grp_host{
-						Grp_id: grp_id,
-						Host_id: int(hostId),
-					}
-					log.Println("grp_host =", grp_host)
-
-					_, err = o.Insert(&grp_host)
-					if err != nil {
-						setError(err.Error(), result)
-					}
-				}
+				log.Println("grp_host existed =", grp_host)
 			}
 		}
 	}
@@ -252,129 +238,153 @@ func bindGroup(hostId int64, params map[string]interface{}, args map[string]stri
 /**
  * @function name:   func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{})
  * @description:     This function binds a host to a template.
- * @related issues:  OWL-257, OWL-240
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
  * @param:           result map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/15/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostUpdate(nodes map[string]interface{})
  *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
 func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	if _, ok := params["templates"]; ok {
 		o := orm.NewOrm()
-		o.Using("falcon_portal")
 		groupId := args["groupId"]
 		grp_id, _ := strconv.Atoi(groupId)
+		var grp_tpl Grp_tpl
 		templates := params["templates"].([]interface{})
 		for _, template := range templates {
 			templateId := template.(map[string]interface{})["templateid"].(string)
 			tpl_id, err := strconv.Atoi(templateId)
 			args["templateId"] = templateId
 
-			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
-			res, err := o.Raw(sqlcmd, grp_id, tpl_id).Exec()
-			if err != nil {
+			sqlcmd := "SELECT * FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
+			err = o.Raw(sqlcmd, grp_id, tpl_id).QueryRow(&grp_tpl)
+			if err == orm.ErrNoRows {
+				grp_tpl := Grp_tpl{
+					Grp_id: grp_id,
+					Tpl_id: tpl_id,
+					Bind_user: "zabbix",
+				}
+				log.Println("grp_tpl =", grp_tpl)
+				_, err = o.Insert(&grp_tpl)
+				if err != nil {
+					setError(err.Error(), result)
+				}
+			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				num, _ := res.RowsAffected()
-				log.Println("num =", num)
-				if num > 0 {
-					log.Println("Record existed. count =", num)
-				} else {	// Record not existed. Insert new one.
-					grp_tpl := Grp_tpl{
-						Grp_id: grp_id,
-						Tpl_id: tpl_id,
-						Bind_user: "zabbix",
-					}
-					log.Println("grp_tpl =", grp_tpl)
-
-					_, err = o.Insert(&grp_tpl)
-					if err != nil {
-						setError(err.Error(), result)
-					}
-				}
+				log.Println("grp_tpl existed =", grp_tpl)
 			}
 		}
 	}
 }
 
 /**
+ * @function name:   func checkInputFormat(params map[string]interface{}, result map[string]interface{}) bool
+ * @description:     This function checks input format.
+ * @related issues:  OWL-262
+ * @param:           params map[string]interface{}
+ * @param:           result map[string]interface{}
+ * @return:          valid bool
+ * @author:          Don Hsieh
+ * @since:           01/06/2016
+ * @last modified:   01/06/2016
+ * @called by:       func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
+ *                   func hostUpdate(nodes map[string]interface{})
+ */
+func checkInputFormat(params map[string]interface{}, result map[string]interface{}) bool {
+	valid := true
+	if val, ok := params["interfaces"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+			setError("interfaces shall be an array of objects [{}]", result)
+			valid = false
+		}
+	}
+	if val, ok := params["groups"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+			setError("groups shall be an array of objects [{}]", result)
+			valid = false
+		}
+	}
+	if val, ok := params["templates"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+			setError("templates shall be an array of objects [{}]", result)
+			valid = false
+		}
+	}
+	return valid
+}
+
+/**
  * @function name:   func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
- * @description:     This function inserts a host to "endpoint" table and binds the host to its group and template.
- * @related issues:  OWL-257, OWL-240
+ * @description:     This function inserts a host to "host" table and binds the host to its group and template.
+ * @related issues:  OWL-262, OWL-257, OWL-240
  * @param:           params map[string]interface{}
  * @param:           args map[string]string
  * @param:           result map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/21/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostCreate(nodes map[string]interface{})
  *                   func hostUpdate(nodes map[string]interface{})
  */
 func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	hostName := getHostName(params)
-	if len(hostName) > 0 {
-		args["host"] = hostName
-		ip := ""
-		port := ""
-		if _, ok := params["interfaces"]; ok {
-			interfaces := params["interfaces"].([]interface{})
-			for i, arg := range interfaces {
-				if i == 0 {
-					ip = arg.(map[string]interface{})["ip"].(string)
-					port = arg.(map[string]interface{})["port"].(string)
-					args["ip"] = ip
-					args["port"] = port
+	if len(hostName) == 0 {
+		setError("host name can not be null.", result)
+	} else {
+		valid := checkInputFormat(params, result)
+		if valid {
+			args["host"] = hostName
+			ip := ""
+			if _, ok := params["interfaces"]; ok {
+				interfaces := params["interfaces"].([]interface{})
+				for i, arg := range interfaces {
+					if i == 0 {
+						if val, ok := arg.(map[string]interface{})["ip"]; ok {
+							ip = val.(string)
+							args["ip"] = ip
+						}
+					}
 				}
 			}
-		}
-		t := time.Now()
-		timestamp := t.Unix()
-		log.Println(timestamp)
-		now := getNow()
+			host := Host{
+				Hostname: hostName,
+				Ip: ip,
+				Update_at: getNow(),
+			}
+			log.Println("host =", host)
 
-		endpoint := Endpoint{
-			Endpoint: hostName,
-			Ts: timestamp,
-			T_create: now,
-			T_modify: now,
-			Ipv4: ip,
+			o := orm.NewOrm()
+			hostId, err := o.Insert(&host)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				bindGroup(int(hostId), params, args, result)
+				hostid := strconv.Itoa(int(hostId))
+				hostids := [1]string{string(hostid)}
+				result["hostids"] = hostids
+				bindTemplate(params, args, result)
+			}
 		}
-		if len(port) > 0 {
-			endpoint.Port = port
-		}
-		log.Println("endpoint =", endpoint)
-
-		o := orm.NewOrm()
-		hostId, err := o.Insert(&endpoint)
-		if err != nil {
-			setError(err.Error(), result)
-		} else {
-			bindGroup(hostId, params, args, result)
-			hostid := strconv.Itoa(int(hostId))
-			hostids := [1]string{string(hostid)}
-			result["hostids"] = hostids
-			bindTemplate(params, args, result)
-		}
-	} else {
-		setError("host name can not be null.", result)
 	}
 }
 
 /**
  * @function name:   func hostCreate(nodes map[string]interface{})
  * @description:     This function gets host data for database insertion.
+ * @related issues:  OWL-262
  * @related issues:  OWL-257, OWL-240, OWL-093, OWL-086, OWL-085
  * @param:           nodes map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/11/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostCreate(nodes map[string]interface{}) {
@@ -384,9 +394,9 @@ func hostCreate(nodes map[string]interface{}) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 
-	endpoint := checkHostExist(params, result)
-	if endpoint.Id > 0 {
-		setError("host name existed: " + endpoint.Endpoint, result)
+	host := checkHostExist(params, result)
+	if host.Id > 0 {
+		setError("host name existed: " + host.Hostname, result)
 	} else {
 		args := map[string]string {}
 		addHost(params, args, result)
@@ -414,7 +424,6 @@ func hostCreate(nodes map[string]interface{}) {
  */
 func unbindGroup(hostId string, result map[string]interface{}) {
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	sql := "DELETE FROM grp_host WHERE host_id = ?"
 	res, err := o.Raw(sql, hostId).Exec()
 	if err != nil {
@@ -426,14 +435,14 @@ func unbindGroup(hostId string, result map[string]interface{}) {
 
 /**
  * @function name:   func removeHost(hostIds []string, result map[string]interface{})
- * @description:     This function deletes host from "endpoint" table.
- * @related issues:  OWL-241
+ * @description:     This function deletes host from "host" table.
+ * @related issues:  OWL-262, OWL-241
  * @param:           hostIds []string
  * @param:           result map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           01/01/2016
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func hostDelete(nodes map[string]interface{})
  */
 func removeHost(hostIds []string, result map[string]interface{}) {
@@ -441,7 +450,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
 	hostids := []string{}
 	for _, hostId := range hostIds {
 		if id, err := strconv.Atoi(hostId); err == nil {
-			num, err := o.Delete(&Endpoint{Id: id})
+			num, err := o.Delete(&Host{Id: id})
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
@@ -490,12 +499,12 @@ func hostDelete(nodes map[string]interface{}) {
 /**
  * @function name:   func hostGet(nodes map[string]interface{})
  * @description:     This function gets existed host data.
- * @related issues:  OWL-257, OWL-254
+ * @related issues:  OWL-262, OWL-257, OWL-254
  * @param:           nodes map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}) {
@@ -521,19 +530,19 @@ func hostGet(nodes map[string]interface{}) {
 	}
 	o := orm.NewOrm()
 	if queryAll {
-		var endpoints []*Endpoint
-		num, err := o.QueryTable("endpoint").All(&endpoints)
+		var hosts []*Host
+		num, err := o.QueryTable("host").All(&hosts)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
 			log.Println("num =", num)
-			for _, endpoint := range endpoints {
+			for _, host := range hosts {
 				item := map[string]string {}
 				var grp_id int
-				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
-				item["hostid"] = strconv.Itoa(endpoint.Id)
-				item["hostname"] = endpoint.Endpoint
-				item["ip"] = endpoint.Ipv4
+				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", host.Id).QueryRow(&grp_id)
+				item["hostid"] = strconv.Itoa(host.Id)
+				item["hostname"] = host.Hostname
+				item["ip"] = host.Ip
 				item["groupid"] = strconv.Itoa(grp_id)
 				items = append(items, item)
 			}
@@ -542,23 +551,23 @@ func hostGet(nodes map[string]interface{}) {
 		ip := ""
 		hostId := ""
 		groupId := ""
-		var endpoint Endpoint
+		var host Host
 		for _, hostName := range hostNames {
 			item := map[string]string {}
 			ip = ""
 			hostId = ""
 			groupId = ""
-			err := o.QueryTable("endpoint").Filter("endpoint", hostName).One(&endpoint)
+			err := o.QueryTable("host").Filter("hostname", hostName).One(&host)
 			if err == orm.ErrMultiRows {
 				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
 				setError("host not found", result)
-			} else if endpoint.Id > 0 {
-				ip = endpoint.Ipv4
+			} else if host.Id > 0 {
+				ip = host.Ip
 				var grp_id int
-				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", endpoint.Id).QueryRow(&grp_id)
+				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", host.Id).QueryRow(&grp_id)
 				log.Println("grp_id =", grp_id)
-				hostId = strconv.Itoa(endpoint.Id)
+				hostId = strconv.Itoa(host.Id)
 				groupId = strconv.Itoa(grp_id)
 			}
 			item["hostid"] = hostId
@@ -576,12 +585,12 @@ func hostGet(nodes map[string]interface{}) {
 /**
  * @function name:   func hostUpdate(nodes map[string]interface{})
  * @description:     This function updates host data.
- * @related issues:  OWL-257, OWL-240, OWL-093, OWL-086
+ * @related issues:  OWL-262, OWL-257, OWL-240, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/23/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostUpdate(nodes map[string]interface{}) {
@@ -591,25 +600,26 @@ func hostUpdate(nodes map[string]interface{}) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	args := map[string]string {}
-	endpoint := checkHostExist(params, result)
-	if endpoint.Id > 0 {
+	host := checkHostExist(params, result)
+	if host.Id > 0 {
 		log.Println("host existed")
-		hostId := endpoint.Id
-		now := getNow()
-		endpoint.T_modify = now
-
-		o := orm.NewOrm()
-		num, err := o.Update(&endpoint)
-		if err != nil {
-			setError(err.Error(), result)
-		} else {
-			log.Println("update hostId =", hostId)
-			log.Println("mysql row affected nums =", num)
-			bindGroup(int64(endpoint.Id), params, args, result)
-			hostid := strconv.Itoa(endpoint.Id)
-			hostids := [1]string{string(hostid)}
-			result["hostids"] = hostids
-			bindTemplate(params, args, result)
+		valid := checkInputFormat(params, result)
+		if valid {
+			hostId := host.Id
+			host.Update_at = getNow()
+			o := orm.NewOrm()
+			num, err := o.Update(&host)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				log.Println("update hostId =", hostId)
+				log.Println("mysql row affected nums =", num)
+				bindGroup(host.Id, params, args, result)
+				hostid := strconv.Itoa(host.Id)
+				hostids := [1]string{string(hostid)}
+				result["hostids"] = hostids
+				bindTemplate(params, args, result)
+			}
 		}
 	} else {
 		log.Println("host not existed")
@@ -638,7 +648,6 @@ func hostgroupCreate(nodes map[string]interface{}) {
 	now := getNow()
 
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	grp := Grp{
 		Grp_name: hostgroupName,
 		Create_user: user,
@@ -677,9 +686,6 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 
-	o := orm.NewOrm()
-	o.Using("falcon_portal")
-
 	args := []interface{}{}
 	args = append(args, "DELETE FROM falcon_portal.grp WHERE id=?")
 	args = append(args, "DELETE FROM falcon_portal.grp_host WHERE grp_id=?")
@@ -687,6 +693,7 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	args = append(args, "DELETE FROM falcon_portal.plugin_dir WHERE grp_id=?")
 	log.Println("args =", args)
 
+	o := orm.NewOrm()
 	groupids := []string{}
 	for _, sqlcmd := range args {
 		for _, hostgroupId := range params {
@@ -741,7 +748,6 @@ func hostgroupGet(nodes map[string]interface{}) {
 	}
 	groupId := ""
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	if queryAll {
 		var grps []*Grp
 		_, err := o.QueryTable("grp").All(&grps)
@@ -800,8 +806,6 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
-
 	if _, ok := params["name"]; ok {
 		hostgroupName := params["name"].(string)
 		log.Println("hostgroupName =", hostgroupName)
@@ -852,7 +856,6 @@ func templateCreate(nodes map[string]interface{}) {
 	now := getNow()
 
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	tpl := Tpl{
 		Tpl_name: templateName,
 		Create_user: user,
@@ -956,8 +959,6 @@ func templateUpdate(nodes map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
-
 	if _, ok := params["name"]; ok {
 		templateName := params["name"].(string)
 		log.Println("templateName =", templateName)
