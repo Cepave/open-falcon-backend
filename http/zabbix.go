@@ -568,12 +568,12 @@ func hostGet(nodes map[string]interface{}) {
 /**
  * @function name:   func hostUpdate(nodes map[string]interface{})
  * @description:     This function updates host data.
- * @related issues:  OWL-257, OWL-240, OWL-093, OWL-086
+ * @related issues:  OWL-262, OWL-257, OWL-240, OWL-093, OWL-086
  * @param:           nodes map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/23/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostUpdate(nodes map[string]interface{}) {
@@ -583,22 +583,22 @@ func hostUpdate(nodes map[string]interface{}) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	args := map[string]string {}
-	endpoint := checkHostExist(params, result)
-	if endpoint.Id > 0 {
+	host := checkHostExist(params, result)
+	if host.Id > 0 {
 		log.Println("host existed")
-		hostId := endpoint.Id
+		hostId := host.Id
 		now := getNow()
-		endpoint.T_modify = now
+		host.Update_at = now
 
 		o := orm.NewOrm()
-		num, err := o.Update(&endpoint)
+		num, err := o.Update(&host)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
 			log.Println("update hostId =", hostId)
 			log.Println("mysql row affected nums =", num)
-			bindGroup(int64(endpoint.Id), params, args, result)
-			hostid := strconv.Itoa(endpoint.Id)
+			bindGroup(host.Id, params, args, result)
+			hostid := strconv.Itoa(host.Id)
 			hostids := [1]string{string(hostid)}
 			result["hostids"] = hostids
 			bindTemplate(params, args, result)
