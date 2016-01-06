@@ -254,34 +254,30 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 		o := orm.NewOrm()
 		groupId := args["groupId"]
 		grp_id, _ := strconv.Atoi(groupId)
+		var grp_tpl Grp_tpl
 		templates := params["templates"].([]interface{})
 		for _, template := range templates {
 			templateId := template.(map[string]interface{})["templateid"].(string)
 			tpl_id, err := strconv.Atoi(templateId)
 			args["templateId"] = templateId
 
-			sqlcmd := "SELECT COUNT(*) FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
-			res, err := o.Raw(sqlcmd, grp_id, tpl_id).Exec()
-			if err != nil {
+			sqlcmd := "SELECT * FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
+			err = o.Raw(sqlcmd, grp_id, tpl_id).QueryRow(&grp_tpl)
+			if err == orm.ErrNoRows {
+				grp_tpl := Grp_tpl{
+					Grp_id: grp_id,
+					Tpl_id: tpl_id,
+					Bind_user: "zabbix",
+				}
+				log.Println("grp_tpl =", grp_tpl)
+				_, err = o.Insert(&grp_tpl)
+				if err != nil {
+					setError(err.Error(), result)
+				}
+			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				num, _ := res.RowsAffected()
-				log.Println("num =", num)
-				if num > 0 {
-					log.Println("Record existed. count =", num)
-				} else {	// Record not existed. Insert new one.
-					grp_tpl := Grp_tpl{
-						Grp_id: grp_id,
-						Tpl_id: tpl_id,
-						Bind_user: "zabbix",
-					}
-					log.Println("grp_tpl =", grp_tpl)
-
-					_, err = o.Insert(&grp_tpl)
-					if err != nil {
-						setError(err.Error(), result)
-					}
-				}
+				log.Println("grp_tpl existed =", grp_tpl)
 			}
 		}
 	}
