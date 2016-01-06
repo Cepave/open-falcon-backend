@@ -361,12 +361,13 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 /**
  * @function name:   func hostCreate(nodes map[string]interface{})
  * @description:     This function gets host data for database insertion.
+ * @related issues:  OWL-262
  * @related issues:  OWL-257, OWL-240, OWL-093, OWL-086, OWL-085
  * @param:           nodes map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/11/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/06/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostCreate(nodes map[string]interface{}) {
@@ -376,9 +377,9 @@ func hostCreate(nodes map[string]interface{}) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 
-	endpoint := checkHostExist(params, result)
-	if endpoint.Id > 0 {
-		setError("host name existed: " + endpoint.Endpoint, result)
+	host := checkHostExist(params, result)
+	if host.Id > 0 {
+		setError("host name existed: " + host.Hostname, result)
 	} else {
 		args := map[string]string {}
 		addHost(params, args, result)
@@ -406,7 +407,6 @@ func hostCreate(nodes map[string]interface{}) {
  */
 func unbindGroup(hostId string, result map[string]interface{}) {
 	o := orm.NewOrm()
-	o.Using("falcon_portal")
 	sql := "DELETE FROM grp_host WHERE host_id = ?"
 	res, err := o.Raw(sql, hostId).Exec()
 	if err != nil {
