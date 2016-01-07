@@ -504,7 +504,7 @@ func hostDelete(nodes map[string]interface{}) {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   01/06/2016
+ * @last modified:   01/07/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}) {
@@ -561,7 +561,7 @@ func hostGet(nodes map[string]interface{}) {
 			if err == orm.ErrMultiRows {
 				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
-				setError("host not found", result)
+				log.Println("host not found")
 			} else if host.Id > 0 {
 				ip = host.Ip
 				var grp_id int
