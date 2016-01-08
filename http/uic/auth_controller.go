@@ -260,7 +260,7 @@ func getRequest(url string) map[string]interface{} {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/16/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/08/2016
  * @called by:       beego.Router("/auth/login/:token", &AuthController{}, "get:LoginWithToken")
  *                    in fe/http/uic/uic_routes.go
  */
@@ -304,9 +304,7 @@ func (this *AuthController) LoginWithToken() {
 				InsertRegisterUser(username, "")
 				user = ReadUserByName(username)
 			}
-			domain := strings.Split(user.Email, "@")[1]
-			if strings.Index(g.Config().Api.Login, domain) > -1 {
-				user.Passwd = ""
+			if len(user.Passwd) == 0 {
 				user.Email = email
 				user.Role = role
 				user.Update()
