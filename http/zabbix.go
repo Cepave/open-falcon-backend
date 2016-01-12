@@ -497,6 +497,32 @@ func hostDelete(nodes map[string]interface{}) {
 }
 
 /**
+ * @function name:   func getGroups(hostId string) []interface{}
+ * @description:     This function gets hostgroups which contain the host ID.
+ * @related issues:  OWL-254
+ * @param:           hostId string
+ * @return:          groups []interface{}
+ * @author:          Don Hsieh
+ * @since:           01/12/2016
+ * @last modified:   01/12/2016
+ * @called by:       func hostGet(nodes map[string]interface{})
+ */
+func getGroups(hostId string) []interface{} {
+	groups := []interface{}{}
+	o := orm.NewOrm()
+	var grp_ids []int
+	o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", hostId).QueryRows(&grp_ids)
+	for _, grp_id := range grp_ids {
+		groupId := strconv.Itoa(grp_id)
+		group := map[string]string {
+			"groupid": groupId,
+		}
+		groups = append(groups, group)
+	}
+	return groups
+}
+
+/**
  * @function name:   func hostGet(nodes map[string]interface{})
  * @description:     This function gets existed host data.
  * @related issues:  OWL-262, OWL-257, OWL-254
