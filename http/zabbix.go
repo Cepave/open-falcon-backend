@@ -530,7 +530,7 @@ func getGroups(hostId string) []interface{} {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   01/07/2016
+ * @last modified:   01/12/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}) {
@@ -555,6 +555,8 @@ func hostGet(nodes map[string]interface{}) {
 		}
 	}
 	o := orm.NewOrm()
+	hostId := ""
+	groups := []interface{}{}
 	if queryAll {
 		var hosts []*Host
 		num, err := o.QueryTable("host").All(&hosts)
@@ -563,47 +565,37 @@ func hostGet(nodes map[string]interface{}) {
 		} else {
 			log.Println("num =", num)
 			for _, host := range hosts {
-				item := map[string]string {}
-				var grp_id int
-				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", host.Id).QueryRow(&grp_id)
-				item["hostid"] = strconv.Itoa(host.Id)
+				item := map[string]interface{}{}
+				hostId = strconv.Itoa(host.Id)
+				groups = getGroups(hostId)
+				item["hostid"] = hostId
 				item["hostname"] = host.Hostname
 				item["ip"] = host.Ip
-				item["groupid"] = strconv.Itoa(grp_id)
+				item["groups"] = groups
 				items = append(items, item)
 			}
 		}
 	} else {
-		ip := ""
-		hostId := ""
-		groupId := ""
 		var host Host
 		for _, hostName := range hostNames {
-			item := map[string]string {}
-			ip = ""
+			item := map[string]interface{}{}
 			hostId = ""
-			groupId = ""
 			err := o.QueryTable("host").Filter("hostname", hostName).One(&host)
 			if err == orm.ErrMultiRows {
 				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
 				log.Println("host not found")
 			} else if host.Id > 0 {
-				ip = host.Ip
-				var grp_id int
-				o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", host.Id).QueryRow(&grp_id)
-				log.Println("grp_id =", grp_id)
 				hostId = strconv.Itoa(host.Id)
-				groupId = strconv.Itoa(grp_id)
+				groups = getGroups(hostId)
 			}
 			item["hostid"] = hostId
 			item["hostname"] = hostName
-			item["ip"] = ip
-			item["groupid"] = groupId
+			item["ip"] = host.Ip
+			item["groups"] = groups
 			items = append(items, item)
 		}
 	}
-	log.Println("items =", items)
 	result["items"] = items
 	nodes["result"] = result
 }
