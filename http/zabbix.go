@@ -525,12 +525,12 @@ func getGroups(hostId string) []interface{} {
 /**
  * @function name:   func hostGet(nodes map[string]interface{})
  * @description:     This function gets existed host data.
- * @related issues:  OWL-262, OWL-257, OWL-254
+ * @related issues:  OWL-283, OWL-262, OWL-257, OWL-254
  * @param:           nodes map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   01/12/2016
+ * @last modified:   01/14/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}) {
@@ -557,13 +557,15 @@ func hostGet(nodes map[string]interface{}) {
 	o := orm.NewOrm()
 	hostId := ""
 	groups := []interface{}{}
+	countOfRows := 0
 	if queryAll {
 		var hosts []*Host
-		num, err := o.QueryTable("host").All(&hosts)
+		num, err := o.Raw("SELECT * FROM falcon_portal.host").QueryRows(&hosts)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
-			log.Println("num =", num)
+			countOfRows = int(num)
+			log.Println("countOfRows =", countOfRows)
 			for _, host := range hosts {
 				item := map[string]interface{}{}
 				hostId = strconv.Itoa(host.Id)
@@ -588,6 +590,7 @@ func hostGet(nodes map[string]interface{}) {
 			} else if host.Id > 0 {
 				hostId = strconv.Itoa(host.Id)
 				groups = getGroups(hostId)
+				countOfRows = 1
 			}
 			item["hostid"] = hostId
 			item["hostname"] = hostName
@@ -597,6 +600,7 @@ func hostGet(nodes map[string]interface{}) {
 		}
 	}
 	result["items"] = items
+	result["count"] = countOfRows
 	nodes["result"] = result
 }
 
