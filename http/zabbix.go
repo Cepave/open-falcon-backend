@@ -1173,13 +1173,13 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 /**
  * @function name:   func setResponse(rw http.ResponseWriter, resp map[string]interface{})
  * @description:     This function sets content of response and returns it.
- * @related issues:  OWL-257
+ * @related issues:  OWL-283, OWL-257
  * @param:           rw http.ResponseWriter
  * @param:           resp map[string]interface{}
  * @return:          void
  * @author:          Don Hsieh
  * @since:           01/01/2016
- * @last modified:   01/01/2016
+ * @last modified:   01/14/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
@@ -1201,8 +1201,10 @@ func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
 		} else {
 			delete(resp["result"].(map[string]interface{}), "error")
 			if val, ok = result["items"]; ok {
-				items := result["items"]
-				resp["result"] = items
+				resp["result"] = val
+			}
+			if val, ok = result["count"]; ok {
+				resp["count"] = val
 			}
 		}
 	}
