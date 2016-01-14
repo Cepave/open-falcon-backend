@@ -65,9 +65,6 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
 	_r := strconv.FormatFloat(random64, 'f', -1, 32)
 	maxQuery := strconv.Itoa(g.Config().Api.Max)
 	url := "/api/endpoints" + "?q=" + hostKeyword + "&tags&limit=" + maxQuery + "&_r=" + _r + "&regex_query=1"
-	log.Println("req.Host =", req.Host)
-	log.Println("g.Config().Api.Query =", g.Config().Api.Query)
-	log.Println("maxQuery = ", maxQuery)
 	if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
 		url = "http://localhost:9966" + url
 	} else {
@@ -208,11 +205,6 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 		form.Add("q", metric)
 		form.Add("limit", maxQuery)
 		form.Add("_r", _r)
-
-		log.Println("req.Host =", req.Host)
-		log.Println("endponits", endpoints)
-		log.Println("g.Config().Api.Query =", g.Config().Api.Query)
-		log.Println("maxQuery = ", maxQuery)
 		target := "/api/counters"
 		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
 			target = "http://localhost:9966" + target
@@ -1038,8 +1030,6 @@ func getMetricValues(req *http.Request, host string, targets []string, result []
 	if len(endpoint_counters) > 0 {
 		from, err := strconv.ParseInt(req.PostForm["from"][0], 10, 64)
 		until, err := strconv.ParseInt(req.PostForm["until"][0], 10, 64)
-		log.Println("req.Host =", req.Host)
-		log.Println("g.Config().Api.Query =", g.Config().Api.Query)
 		url := "/graph/history"
 		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
 			url = "http://localhost:9966" + url
