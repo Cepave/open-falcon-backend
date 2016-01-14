@@ -20,34 +20,48 @@ type ParamToAgent struct {
     Step        int64       `json:"step"`
 }
 
-type SamplingUnit struct {
-    Address    string
-    View       int
+
+type SamplingTarget struct {
+    Address     string
+    ISP         string
+    Province    string
+    City        string
+    ServerRoom  string
 }
 
-type Sample struct {
-    SampledUnit    SamplingUnit
+
+type Statistic struct {
     Timestamp      int64
     
     /**
-     * Packet Loss - int
-     * Transmission Time - float64
+     * Value could be:
+     *     Packet Loss - int
+     *     Transmission Time - float64
      */
     Value          interface{}
 }
 
 func main() {
     urlPush := "http://10.20.30.40:1988/v1/push"
+    //connectionID := "nqm-agent@10.20.30.40"
 
-	var samplingFrame []SamplingUnit    
-    samplingFrame = append(samplingFrame, SamplingUnit{"8.8.8.8", 2})
-    samplingFrame = append(samplingFrame, SamplingUnit{"8.8.4.4", 3})
+	var samplingTargetList []SamplingTarget    
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"203.208.150.145", "ChinaTelecom", "Zhejiang", "Hangzhou", "Room-1"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"203.208.146.33", "ChinaTelecom", "Zhejiang", "Hangzhou", "Room-1"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"203.208.232.53", "ChinaTelecom", "Zhejiang", "Hangzhou", "Room-2"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"211.160.177.145", "Chinanet", "Zhejiang", "Wenzhou", "Room-1"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"211.160.177.150", "Chinanet", "Zhejiang", "Wenzhou", "Room-2"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"211.160.177.70", "Chinanet", "Zhejiang", "Wenzhou", "Room-2"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"61.190.194.110", "ChinaTelecom", "Anhui", "Hefei", "Room-1"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"61.190.194.114", "ChinaTelecom", "Anhui", "Hefei", "Room-2"})
+    samplingTargetList = append(samplingTargetList, SamplingTarget{"61.190.194.222", "ChinaTelecom", "Anhui", "Hefei", "Room-2"})
     
-    samplesOfPacketLoss, samplesOfTransmissionTime := Sampling(samplingFrame)
+    statisticsOfPacketsSent, statisticsOfPacketsReceived, statisticsOfTransmissionTime := Probe(samplingTargetList)
     
     var params [] ParamToAgent
-    params = append(params, FormParams("packet-loss" ,samplesOfPacketLoss)...)
-    params = append(params, FormParams("transmission-time", samplesOfTransmissionTime)...)
+    params = append(params, FormParams("packets-sent" ,statisticsOfPacketsSent)...)
+    params = append(params, FormParams("packets-received", statisticsOfPacketsReceived)...)
+    params = append(params, FormParams("transmission-time", statisticsOfTransmissionTime)...)
     
     
     paramsBody, err := json.Marshal(params)
@@ -70,18 +84,20 @@ func main() {
     fmt.Println("Body:", string(paramsBody))
 }
 
-func FormParams(metric string, samples map[string]Sample) []ParamToAgent {
+func FormParams(metric string, statistics map[SamplingTarget]Statistic) []ParamToAgent {
     var params [] ParamToAgent
     
-    for address, sample := range samples {
-        view := strconv.Itoa(sample.SampledUnit.View)
-
-        endpoint := "nqm-endpoint"
-        value := sample.Value
+    for samplingTarget, statistic := range statistics {
+        endpoint := "nqm-agent-1@10.20.30.40"
+        value := statistic.Value
         counterType := "GAUGE"
-        tags := "view="+view+",ip="+address
-        timestamp := sample.Timestamp
-        step := int64(30)
+        tags := "target="+samplingTarget.Address+
+                ",isp="+samplingTarget.ISP+
+                ",province="+samplingTarget.Province+
+                ",city="+samplingTarget.City+
+                ",tag="+samplingTarget.ServerRoom
+        timestamp := statistic.Timestamp
+        step := int64(60)
         
         param := ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
         params = append(params, param)
@@ -89,11 +105,12 @@ func FormParams(metric string, samples map[string]Sample) []ParamToAgent {
     return params
 }
 
-func Sampling(samplingFrame []SamplingUnit) ( map[string]Sample,  map[string]Sample) {
-    samplesOfPacketLoss := make(map[string]Sample)
-    samplesOfTransmissionTime := make(map[string]Sample)
-    for _, samplingUnit := range samplingFrame {
-        fpingCommand := exec.Command("fping", "-p", "20", "-i", "10", "-c", "4", "-q", "-a", samplingUnit.Address)
+func Probe(samplingTargetList []SamplingTarget) (map[SamplingTarget]Statistic, map[SamplingTarget]Statistic, map[SamplingTarget]Statistic) {
+    statisticsOfPacketsSent := make(map[SamplingTarget]Statistic)
+    statisticsOfPacketsReceived := make(map[SamplingTarget]Statistic)
+    statisticsOfTransmissionTime := make(map[SamplingTarget]Statistic)
+    for _, samplingTarget := range samplingTargetList {
+        fpingCommand := exec.Command("fping", "-p", "20", "-i", "10", "-c", "4", "-q", "-a", samplingTarget.Address)
         cmdOutput, err := fpingCommand.CombinedOutput()
         if err != nil {
             fmt.Println("error occured:")
@@ -111,19 +128,23 @@ func Sampling(samplingFrame []SamplingUnit) ( map[string]Sample,  map[string]Sam
         })
         fmt.Println(parsedFpingResult)
         if len(parsedFpingResult) != 13 {
-            delete(samplesOfPacketLoss, samplingUnit.Address)
-            delete(samplesOfTransmissionTime, samplingUnit.Address)
+            delete(statisticsOfPacketsSent, samplingTarget)
+            delete(statisticsOfPacketsReceived, samplingTarget)
+            delete(statisticsOfTransmissionTime, samplingTarget)
             continue
         }
         xmt, err := strconv.Atoi(parsedFpingResult[4])
+        xmtStatistic := Statistic{time.Now().Unix(), xmt}
+        statisticsOfPacketsSent[samplingTarget] = xmtStatistic
+
         rcv, err := strconv.Atoi(parsedFpingResult[5])
-        samplePL := Sample{samplingUnit, time.Now().Unix(), xmt - rcv}
-        samplesOfPacketLoss[samplingUnit.Address] = samplePL
+        rcvStatistic := Statistic{time.Now().Unix(), rcv}
+        statisticsOfPacketsReceived[samplingTarget] = rcvStatistic
         
         tt, err := strconv.ParseFloat(parsedFpingResult[11],64)
-        sampleTT := Sample{samplingUnit, time.Now().Unix(), tt}
-        samplesOfTransmissionTime[samplingUnit.Address] = sampleTT
+        ttStatistic := Statistic{time.Now().Unix(), tt}
+        statisticsOfTransmissionTime[samplingTarget] = ttStatistic
     }
     
-    return samplesOfPacketLoss, samplesOfTransmissionTime
+    return statisticsOfPacketsSent, statisticsOfPacketsReceived, statisticsOfTransmissionTime
 }
