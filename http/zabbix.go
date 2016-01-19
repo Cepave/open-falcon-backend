@@ -108,7 +108,7 @@ func getHostId(params map[string]interface{}) string {
  * @return:          hostName string
  * @author:          Don Hsieh
  * @since:           12/16/2015
- * @last modified:   12/16/2015
+ * @last modified:   01/19/2015
  * @called by:       func checkHostExist(params map[string]interface{}, result map[string]interface{}) Host
  *                   func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{})
  */
@@ -117,10 +117,10 @@ func getHostName(params map[string]interface{}) string {
 	if val, ok := params["host"]; ok {
 		if val != nil {
 			hostName = val.(string)
-		} else if val, ok = params["name"]; ok {
-			if val != nil {
-				hostName = val.(string)
-			}
+		}
+	} else if val, ok = params["name"]; ok {
+		if val != nil {
+			hostName = val.(string)
 		}
 	}
 	return hostName
