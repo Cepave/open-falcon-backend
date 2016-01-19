@@ -95,7 +95,7 @@ func FormParams(metric string, statistics map[SamplingTarget]Statistic) []ParamT
                 ",isp="+samplingTarget.ISP+
                 ",province="+samplingTarget.Province+
                 ",city="+samplingTarget.City+
-                ",tag="+samplingTarget.ServerRoom
+                ",name_tag="+samplingTarget.ServerRoom
         timestamp := statistic.Timestamp
         step := int64(60)
         
