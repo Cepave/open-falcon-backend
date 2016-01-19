@@ -23,16 +23,16 @@ func syncBuiltinMetrics() {
 	duration := time.Duration(g.Config().Heartbeat.Interval) * time.Second
 
 	for {
-	REST:
 		time.Sleep(duration)
 
 		var ports = []int64{}
 		var paths = []string{}
 		var procs = make(map[string]map[int]string)
+		var urls = make(map[string]string)
 
 		hostname, err := g.Hostname()
 		if err != nil {
-			goto REST
+			continue
 		}
 
 		req := model.AgentHeartbeatRequest{
@@ -44,22 +44,43 @@ func syncBuiltinMetrics() {
 		err = g.HbsClient.Call("Agent.BuiltinMetrics", req, &resp)
 		if err != nil {
 			log.Println("ERROR:", err)
-			goto REST
+			continue
 		}
 
 		if resp.Timestamp <= timestamp {
-			goto REST
+			continue
 		}
 
 		if resp.Checksum == checksum {
-			goto REST
+			continue
 		}
 
 		timestamp = resp.Timestamp
 		checksum = resp.Checksum
 
 		for _, metric := range resp.Metrics {
-			if metric.Metric == "net.port.listen" {
+
+			if metric.Metric == g.URL_CHECK_HEALTH {
+				arr := strings.Split(metric.Tags, ",")
+				if len(arr) != 2 {
+					continue
+				}
+				url := strings.Split(arr[0], "=")
+				if len(url) != 2 {
+					continue
+				}
+				stime := strings.Split(arr[1], "=")
+				if len(stime) != 2 {
+					continue
+				}
+				if _, err := strconv.ParseInt(stime[1], 10, 64); err == nil {
+					urls[url[1]] = stime[1]
+				} else {
+					log.Println("metric ParseInt timeout failed:", err)
+				}
+			}
+
+			if metric.Metric == g.NET_PORT_LISTEN {
 				arr := strings.Split(metric.Tags, "=")
 				if len(arr) != 2 {
 					continue
@@ -74,7 +95,7 @@ func syncBuiltinMetrics() {
 				continue
 			}
 
-			if metric.Metric == "du.bs" {
+			if metric.Metric == g.DU_BS {
 				arr := strings.Split(metric.Tags, "=")
 				if len(arr) != 2 {
 					continue
@@ -84,7 +105,7 @@ func syncBuiltinMetrics() {
 				continue
 			}
 
-			if metric.Metric == "proc.num" {
+			if metric.Metric == g.PROC_NUM {
 				arr := strings.Split(metric.Tags, ",")
 
 				tmpMap := make(map[int]string)
@@ -101,6 +122,7 @@ func syncBuiltinMetrics() {
 			}
 		}
 
+		g.SetReportUrls(urls)
 		g.SetReportPorts(ports)
 		g.SetReportProcs(procs)
 		g.SetDuPaths(paths)
