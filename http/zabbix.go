@@ -961,6 +961,37 @@ func templateDelete(nodes map[string]interface{}) {
 }
 
 /**
+ * @function name:   func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Host
+ * @description:     This function checks if a template existed.
+ * @related issues:  OWL-086
+ * @param:           params map[string]interface{}
+ * @param:           result map[string]interface{}
+ * @return:          template Tpl
+ * @author:          Don Hsieh
+ * @since:           01/19/2016
+ * @last modified:   01/19/2016
+ * @called by:       func templateUpdate(nodes map[string]interface{})
+ */
+func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Tpl {
+	var template Tpl
+	templateName := ""
+	if val, ok := params["name"]; ok {
+		if val != nil {
+			templateName = val.(string)
+		}
+	}
+	o := orm.NewOrm()
+	err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
+	if err == orm.ErrMultiRows {
+		// Have multiple records
+		log.Println("returned multiple rows")
+	} else if err == orm.ErrNoRows {
+		// No result
+	}
+	return template
+}
+
+/**
  * @function name:   func templateUpdate(nodes map[string]interface{})
  * @description:     This function updates template data.
  * @related issues:  OWL-257, OWL-093, OWL-086
