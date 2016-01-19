@@ -530,7 +530,7 @@ func getGroups(hostId string) []interface{} {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           12/29/2015
- * @last modified:   01/14/2016
+ * @last modified:   01/19/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}) {
@@ -590,7 +590,7 @@ func hostGet(nodes map[string]interface{}) {
 			} else if host.Id > 0 {
 				hostId = strconv.Itoa(host.Id)
 				groups = getGroups(hostId)
-				countOfRows = 1
+				countOfRows += 1
 			}
 			item["hostid"] = hostId
 			item["hostname"] = hostName
