@@ -961,6 +961,84 @@ func templateDelete(nodes map[string]interface{}) {
 }
 
 /**
+ * @function name:   func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Host
+ * @description:     This function checks if a template existed.
+ * @related issues:  OWL-086
+ * @param:           params map[string]interface{}
+ * @param:           result map[string]interface{}
+ * @return:          template Tpl
+ * @author:          Don Hsieh
+ * @since:           01/19/2016
+ * @last modified:   01/19/2016
+ * @called by:       func templateUpdate(nodes map[string]interface{})
+ */
+func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Tpl {
+	var template Tpl
+	templateName := ""
+	if val, ok := params["name"]; ok {
+		if val != nil {
+			templateName = val.(string)
+		}
+	}
+	o := orm.NewOrm()
+	err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
+	if err == orm.ErrMultiRows {
+		// Have multiple records
+		log.Println("returned multiple rows")
+	} else if err == orm.ErrNoRows {
+		// No result
+	}
+	return template
+}
+
+/**
+ * @function name:   func bindTemplateToGroup(templateId int, params map[string]interface{}, result map[string]interface{})
+ * @description:     This function binds a template to hostgroups.
+ * @related issues:  OWL-086
+ * @param:           templateId int
+ * @param:           params map[string]interface{}
+ * @param:           result map[string]interface{}
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           01/19/2016
+ * @last modified:   01/19/2016
+ * @called by:       func templateUpdate(nodes map[string]interface{})
+ */
+func bindTemplateToGroup(templateId int, params map[string]interface{}, result map[string]interface{}) {
+	if _, ok := params["groups"]; ok {
+		o := orm.NewOrm()
+		var grp_tpl Grp_tpl
+		groups := params["groups"].([]interface{})
+		for _, group := range groups {
+			groupId := group.(map[string]interface{})["groupid"].(string)
+			grp_id, err := strconv.Atoi(groupId)
+			sqlcmd := "SELECT * FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
+			err = o.Raw(sqlcmd, grp_id, templateId).QueryRow(&grp_tpl)
+			if err == orm.ErrNoRows {
+				grp_tpl := Grp_tpl{
+					Grp_id: grp_id,
+					Tpl_id: templateId,
+					Bind_user: "zabbix",
+				}
+				log.Println("grp_tpl =", grp_tpl)
+				_, err = o.Insert(&grp_tpl)
+				if err != nil {
+					setError(err.Error(), result)
+				} else {
+					templateid := strconv.Itoa(templateId)
+					templateids := [1]string{string(templateid)}
+					result["templateids"] = templateids
+				}
+			} else if err != nil {
+				setError(err.Error(), result)
+			} else {
+				log.Println("grp_tpl existed =", grp_tpl)
+			}
+		}
+	}
+}
+
+/**
  * @function name:   func templateUpdate(nodes map[string]interface{})
  * @description:     This function updates template data.
  * @related issues:  OWL-257, OWL-093, OWL-086
@@ -968,7 +1046,7 @@ func templateDelete(nodes map[string]interface{}) {
  * @return:          void
  * @author:          Don Hsieh
  * @since:           09/22/2015
- * @last modified:   01/01/2016
+ * @last modified:   01/19/2016
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func templateUpdate(nodes map[string]interface{}) {
@@ -976,84 +1054,11 @@ func templateUpdate(nodes map[string]interface{}) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	templateId, err := strconv.Atoi(params["templateid"].(string))
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	o := orm.NewOrm()
-	if _, ok := params["name"]; ok {
-		templateName := params["name"].(string)
-		log.Println("templateName =", templateName)
-
-		if templateName != "" {
-			tpl := Tpl{Id: templateId}
-			log.Println("tpl =", tpl)
-			err := o.Read(&tpl)
-			if err != nil {
-				setError(err.Error(), result)
-			} else {
-				log.Println("tpl =", tpl)
-				tpl.Tpl_name = templateName
-				log.Println("tpl =", tpl)
-				num, err := o.Update(&tpl)
-				if err != nil {
-					setError(err.Error(), result)
-				} else {
-					if num > 0 {
-						templateids := [1]string{strconv.Itoa(templateId)}
-						result["templateids"] = templateids
-						log.Println("update template id =", templateId)
-						log.Println("mysql row affected nums =", num)
-					}
-				}
-			}
-		}
-	}
-
-	if _, ok := params["groups"]; ok {
-		groups := params["groups"].([]interface{})
-		log.Println("groups =", groups)
-
-		count := 0
-		for _, group := range groups {
-			log.Println("group =", group)
-			count += 1
-		}
-		log.Println("count =", count)
-
-		if count > 0 {
-			user := "zabbix"
-			sqlcmd := "DELETE FROM falcon_portal.grp_tpl WHERE tpl_id=?"
-			res, err := o.Raw(sqlcmd, templateId).Exec()
-			if err != nil {
-				setError(err.Error(), result)
-			} else {
-				num, _ := res.RowsAffected()
-				if num > 0 {
-					log.Println("mysql row affected nums =", num)
-				}
-			}
-
-			for _, group := range groups {
-				log.Println("group =", group)
-				groupId, err := strconv.Atoi(group.(map[string]interface{})["groupid"].(string))
-				if err != nil {
-					setError(err.Error(), result)
-				}
-				log.Println("groupId =", groupId)
-				grp_tpl := Grp_tpl{Grp_id: groupId, Tpl_id: templateId, Bind_user: user}
-				log.Println("grp_tpl =", grp_tpl)
-
-				_, err = o.Insert(&grp_tpl)
-				if err != nil {
-					setError(err.Error(), result)
-				} else {
-					templateids := [1]string{strconv.Itoa(templateId)}
-					result["templateids"] = templateids
-					log.Println("update template id =", templateId)
-				}
-			}
-		}
+	template := checkTemplateExist(params, result)
+	if template.Id > 0 {
+		bindTemplateToGroup(template.Id, params, result)
+	} else {
+		log.Println("template not existed")
 	}
 	nodes["result"] = result
 }
