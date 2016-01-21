@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/open-falcon/fe/Godeps/_workspace/src/github.com/toolkits/logger"
 	"github.com/open-falcon/fe/cache"
 	"github.com/open-falcon/fe/g"
 	"github.com/open-falcon/fe/http"
 	"github.com/open-falcon/fe/model"
-	"github.com/toolkits/logger"
 	"log"
 	"os"
 )
