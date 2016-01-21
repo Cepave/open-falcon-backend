@@ -26,7 +26,7 @@ type SamplingTarget struct {
     ISP         string
     Province    string
     City        string
-    ServerRoom  string
+    NameTag  string
 }
 
 
@@ -95,7 +95,7 @@ func FormParams(metric string, statistics map[SamplingTarget]Statistic) []ParamT
                 ",isp="+samplingTarget.ISP+
                 ",province="+samplingTarget.Province+
                 ",city="+samplingTarget.City+
-                ",name_tag="+samplingTarget.ServerRoom
+                ",name_tag="+samplingTarget.NameTag
         timestamp := statistic.Timestamp
         step := int64(60)
         
@@ -109,16 +109,25 @@ func Probe(samplingTargetList []SamplingTarget) (map[SamplingTarget]Statistic, m
     statisticsOfPacketsSent := make(map[SamplingTarget]Statistic)
     statisticsOfPacketsReceived := make(map[SamplingTarget]Statistic)
     statisticsOfTransmissionTime := make(map[SamplingTarget]Statistic)
+    var targetAddressList []string
     for _, samplingTarget := range samplingTargetList {
-        fpingCommand := exec.Command("fping", "-p", "20", "-i", "10", "-c", "4", "-q", "-a", samplingTarget.Address)
-        cmdOutput, err := fpingCommand.CombinedOutput()
-        if err != nil {
-            fmt.Println("error occured:")
-            fmt.Printf("%s", err)
-        }
-        fpingResult := string(cmdOutput)
-        fmt.Print(fpingResult)
-        
+        targetAddressList = append(targetAddressList, samplingTarget.Address)
+    }
+    commandTemplate := []string{"-p", "20", "-i", "10", "-c", "100", "-q", "-a"}
+    commandTemplate = append(commandTemplate, targetAddressList...)
+    fpingCommand := exec.Command("fping", commandTemplate...)
+    cmdOutput, err := fpingCommand.CombinedOutput()
+    if err != nil {
+        fmt.Println("error occured:")
+        fmt.Printf("%s", err)
+    }
+    fpingResults := strings.Split(string(cmdOutput),"\n")
+    fpingResults = fpingResults[:len(fpingResults)-1]
+    for i, result := range fpingResults {
+        fmt.Print("Result ", i+1, ": ")
+        fmt.Println(result)
+    }
+    for i, fpingResult := range fpingResults {
         parsedFpingResult := strings.FieldsFunc(fpingResult, func(r rune) bool {
             switch r {
                 case ' ', '\n', ':', '/', '%', '=', ',':
@@ -128,22 +137,34 @@ func Probe(samplingTargetList []SamplingTarget) (map[SamplingTarget]Statistic, m
         })
         fmt.Println(parsedFpingResult)
         if len(parsedFpingResult) != 13 {
-            delete(statisticsOfPacketsSent, samplingTarget)
-            delete(statisticsOfPacketsReceived, samplingTarget)
-            delete(statisticsOfTransmissionTime, samplingTarget)
+            delete(statisticsOfPacketsSent, samplingTargetList[i])
+            delete(statisticsOfPacketsReceived, samplingTargetList[i])
+            delete(statisticsOfTransmissionTime, samplingTargetList[i])
             continue
         }
         xmt, err := strconv.Atoi(parsedFpingResult[4])
+        if err != nil {
+            fmt.Println("error occured:")
+            fmt.Printf("%s", err)
+        }
         xmtStatistic := Statistic{time.Now().Unix(), xmt}
-        statisticsOfPacketsSent[samplingTarget] = xmtStatistic
+        statisticsOfPacketsSent[samplingTargetList[i]] = xmtStatistic
 
         rcv, err := strconv.Atoi(parsedFpingResult[5])
+        if err != nil {
+            fmt.Println("error occured:")
+            fmt.Printf("%s", err)
+        }
         rcvStatistic := Statistic{time.Now().Unix(), rcv}
-        statisticsOfPacketsReceived[samplingTarget] = rcvStatistic
+        statisticsOfPacketsReceived[samplingTargetList[i]] = rcvStatistic
         
         tt, err := strconv.ParseFloat(parsedFpingResult[11],64)
+        if err != nil {
+            fmt.Println("error occured:")
+            fmt.Printf("%s", err)
+        }
         ttStatistic := Statistic{time.Now().Unix(), tt}
-        statisticsOfTransmissionTime[samplingTarget] = ttStatistic
+        statisticsOfTransmissionTime[samplingTargetList[i]] = ttStatistic
     }
     
     return statisticsOfPacketsSent, statisticsOfPacketsReceived, statisticsOfTransmissionTime
