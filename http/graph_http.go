@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/graph"
@@ -40,21 +41,64 @@ func configGraphRoutes() {
 
 		data := []*cmodel.GraphQueryResponse{}
 		for _, ec := range body.EndpointCounters {
-			request := cmodel.GraphQueryParam{
-				Start:     int64(body.Start),
-				End:       int64(body.End),
-				ConsolFun: body.CF,
-				Endpoint:  ec.Endpoint,
-				Counter:   ec.Counter,
+			if strings.Contains(ec.Counter,"packet-loss-rate") {
+				requestPacketsSent := cmodel.GraphQueryParam{
+					Start:     int64(body.Start),
+					End:       int64(body.End),
+					ConsolFun: body.CF,
+					Endpoint:  ec.Endpoint,
+					Counter:   strings.Replace(ec.Counter, "packet-loss-rate", "packets-sent", 1),
+				}
+				resultPacketsSent, err := graph.QueryOne(requestPacketsSent)
+				if err != nil {
+					log.Printf("graph.queryOne fail, %v", err)
+				}
+				if resultPacketsSent == nil {
+					continue
+				}
+
+				requestPacketReceived := cmodel.GraphQueryParam{
+					Start:     int64(body.Start),
+					End:       int64(body.End),
+					ConsolFun: body.CF,
+					Endpoint:  ec.Endpoint,
+					Counter:   strings.Replace(ec.Counter, "packet-loss-rate", "packets-received", 1),
+				}
+				resultPacketReceived, err := graph.QueryOne(requestPacketReceived)
+				if err != nil {
+					log.Printf("graph.queryOne fail, %v", err)
+				}
+				if resultPacketReceived == nil {
+					continue
+				}
+
+				result := resultPacketsSent
+				result.Counter = strings.Replace(result.Counter, "packets-sent", "packet-loss-rate", 1)
+
+				for i := range result.Values {
+					packetLossRate :=  (resultPacketsSent.Values[i].Value		-
+									resultPacketReceived.Values[i].Value)	/
+									resultPacketsSent.Values[i].Value
+					result.Values[i].Value = packetLossRate
+				}
+				data = append(data, result)
+			} else {
+				request := cmodel.GraphQueryParam{
+					Start:     int64(body.Start),
+					End:       int64(body.End),
+					ConsolFun: body.CF,
+					Endpoint:  ec.Endpoint,
+					Counter:   ec.Counter,
+				}
+				result, err := graph.QueryOne(request)
+				if err != nil {
+					log.Printf("graph.queryOne fail, %v", err)
+				}
+				if result == nil {
+					continue
+				}
+				data = append(data, result)
 			}
-			result, err := graph.QueryOne(request)
-			if err != nil {
-				log.Printf("graph.queryOne fail, %v", err)
-			}
-			if result == nil {
-				continue
-			}
-			data = append(data, result)
 		}
 
 		// statistics
