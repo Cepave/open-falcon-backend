@@ -3,7 +3,7 @@ package uic
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/open-falcon/fe/http/base"
+	"github.com/Cepave/fe/http/base"
 )
 
 func ConfigRoutes() {
@@ -11,6 +11,8 @@ func ConfigRoutes() {
 	beego.Router("/root", &UserController{}, "get:CreateRoot")
 
 	beego.Router("/auth/login", &AuthController{}, "get:LoginGet;post:LoginPost")
+	beego.Router("/auth/login/:token", &AuthController{}, "get:LoginWithToken")
+	beego.Router("/auth/third-party", &AuthController{}, "post:LoginThirdParty")
 	beego.Router("/auth/register", &AuthController{}, "get:RegisterGet;post:RegisterPost")
 
 	beego.Router("/sso/sig", &SsoController{}, "get:Sig")

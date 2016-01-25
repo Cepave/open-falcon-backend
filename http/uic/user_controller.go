@@ -1,10 +1,10 @@
 package uic
 
 import (
-	"github.com/open-falcon/fe/g"
-	"github.com/open-falcon/fe/http/base"
-	. "github.com/open-falcon/fe/model/uic"
-	"github.com/open-falcon/fe/utils"
+	"github.com/Cepave/fe/g"
+	"github.com/Cepave/fe/http/base"
+	. "github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/fe/utils"
 	"github.com/toolkits/rsc/qr"
 	"github.com/toolkits/str"
 	"strconv"
@@ -39,12 +39,14 @@ func (this *UserController) CreateRoot() {
 // 登录成功之后跳转的欢迎页面
 func (this *UserController) Info() {
 	this.Data["CurrentUser"] = this.Ctx.Input.GetData("CurrentUser").(*User)
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "user/info.html"
 }
 
 // 展示当前用户的联系信息
 func (this *UserController) ProfileGet() {
 	this.Data["CurrentUser"] = this.Ctx.Input.GetData("CurrentUser").(*User)
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "user/profile.html"
 }
 
@@ -187,10 +189,12 @@ func (this *UserController) Users() {
 	this.Data["Query"] = query
 	this.Data["Me"] = me
 	this.Data["IamRoot"] = me.Name == "root"
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "user/list.html"
 }
 
 func (this *UserController) CreateUserGet() {
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "user/create.html"
 }
 
@@ -290,6 +294,7 @@ func (this *UserController) EditGet() {
 	}
 
 	this.Data["User"] = this.Ctx.Input.GetData("TargetUser").(*User)
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "user/edit.html"
 }
 
@@ -422,6 +427,7 @@ func (this *UserController) About() {
 	}
 
 	this.Data["User"] = u
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "user/about.html"
 }
 

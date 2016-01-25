@@ -3,7 +3,8 @@
     "company": "MI",
     "http": {
         "enabled": true,
-        "listen": "0.0.0.0:1234"
+        "listen": "0.0.0.0:1234",
+        "cookie": ".example.com"
     },
     "cache": {
         "enabled": true,
@@ -30,6 +31,15 @@
     "shortcut": {
         "falconPortal": "http://11.11.11.11:5050/",
         "falconDashboard": "http://11.11.11.11:7070/",
+        "grafanaDashboard": "http://11.11.11.11:3001/",
         "falconAlarm": "http://11.11.11.11:9912/"
+    },
+    "api": {
+        "key": "yourKey",
+        "redirect": "yourId||http://example.com/path_to_redirect/__TOKEN__",
+        "login": "https://example.com/path_to_login",
+        "access": "https://example.com/path_to_access",
+        "role": "https://example.com/path_to_role",
+        "logout": "https://example.com/path_to_logout"
     }
 }

@@ -11,6 +11,7 @@ import (
 type HttpConfig struct {
 	Enabled bool   `json:"enabled"`
 	Listen  string `json:"listen"`
+	Cookie  string `json:"cookie"`
 }
 
 type TimeoutConfig struct {
@@ -34,14 +35,24 @@ type UicConfig struct {
 }
 
 type ShortcutConfig struct {
-	FalconPortal    string `json:"falconPortal"`
-	FalconDashboard string `json:"falconDashboard"`
-	FalconAlarm     string `json:"falconAlarm"`
+	FalconPortal     string `json:"falconPortal"`
+	FalconDashboard  string `json:"falconDashboard"`
+	GrafanaDashboard string `json:"grafanaDashboard"`
+	FalconAlarm      string `json:"falconAlarm"`
 }
 
 type LdapConfig struct {
 	Enabled bool   `json:"enabled"`
 	Addr    string `json:"addr"`
+}
+
+type ApiConfig struct {
+	Key      string `json:"key"`
+	Redirect string `json:"redirect"`
+	Login    string `json:"login"`
+	Access   string `json:"access"`
+	Role     string `json:"role"`
+	Logout   string `json:"logout"`
 }
 
 type GlobalConfig struct {
@@ -54,6 +65,7 @@ type GlobalConfig struct {
 	Ldap        *LdapConfig     `json:"ldap"`
 	Uic         *UicConfig      `json:"uic"`
 	Shortcut    *ShortcutConfig `json:"shortcut"`
+	Api         *ApiConfig      `json:"api"`
 }
 
 var (

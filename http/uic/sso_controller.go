@@ -1,9 +1,10 @@
 package uic
 
 import (
-	"github.com/open-falcon/fe/http/base"
-	"github.com/open-falcon/fe/model/uic"
-	"github.com/open-falcon/fe/utils"
+	"github.com/Cepave/fe/http/base"
+	"github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/fe/utils"
+	"time"
 )
 
 type SsoController struct {
@@ -21,13 +22,19 @@ func (this *SsoController) User() {
 		return
 	}
 
-	s := uic.ReadSessionBySig(sig)
-	if s == nil {
+	sessionObj := uic.ReadSessionBySig(sig)
+	if sessionObj == nil {
 		this.NotFound("no such sig")
 		return
 	}
 
-	u := uic.ReadUserById(s.Uid)
+	if int64(sessionObj.Expired) < time.Now().Unix() {
+		uic.RemoveSessionByUid(sessionObj.Uid)
+		this.SessionExpired()
+		return
+	}
+
+	u := uic.ReadUserById(sessionObj.Uid)
 	if u == nil {
 		this.NotFound("no such user")
 		return
@@ -46,9 +53,9 @@ func (this *SsoController) Logout() {
 		return
 	}
 
-	s := uic.ReadSessionBySig(sig)
-	if s != nil {
-		uic.RemoveSessionByUid(s.Uid)
+	sessionObj := uic.ReadSessionBySig(sig)
+	if sessionObj != nil {
+		uic.RemoveSessionByUid(sessionObj.Uid)
 	}
 
 	this.ServeOKJson()

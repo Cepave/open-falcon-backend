@@ -2,7 +2,7 @@ package base
 
 import (
 	"github.com/astaxie/beego/context"
-	"github.com/open-falcon/fe/model/uic"
+	"github.com/Cepave/fe/model/uic"
 	"strconv"
 	"time"
 )

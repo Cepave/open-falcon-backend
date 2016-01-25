@@ -1,9 +1,10 @@
 package uic
 
 import (
-	"github.com/open-falcon/fe/http/base"
-	. "github.com/open-falcon/fe/model/uic"
-	"github.com/open-falcon/fe/utils"
+	"github.com/Cepave/fe/g"
+	"github.com/Cepave/fe/http/base"
+	. "github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/fe/utils"
 	"strings"
 )
 
@@ -47,10 +48,12 @@ func (this *TeamController) Teams() {
 	this.Data["Query"] = query
 	this.Data["Me"] = me
 	this.Data["IamRoot"] = me.Name == "root"
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "team/list.html"
 }
 
 func (this *TeamController) CreateTeamGet() {
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "team/create.html"
 }
 
@@ -133,6 +136,7 @@ func (this *TeamController) DeleteTeam() {
 func (this *TeamController) EditGet() {
 	targetTeam := this.Ctx.Input.GetData("TargetTeam").(*Team)
 	this.Data["TargetTeam"] = targetTeam
+	this.Data["Shortcut"] = g.Config().Shortcut
 	this.TplNames = "team/edit.html"
 }
 

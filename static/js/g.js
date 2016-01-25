@@ -114,6 +114,26 @@ function login() {
 	});
 }
 
+/**
+ * @function name:   function thirdPartyLogin()
+ * @description:     This function redirects user to third party login page.
+ * @related issues:  OWL-186
+ * @param:           void
+ * @return:          void
+ * @author:          Don Hsieh
+ * @since:           12/17/2015
+ * @last modified:   12/17/2015
+ * @called by:       <button class="btn btn-default btn-block" type="button" onclick="thirdPartyLogin();">BOSS</button>
+ *                    in fe/views/auth/login.html
+ */
+function thirdPartyLogin() {
+	$.post('/auth/third-party', {
+	}, function(json) {
+		var redirectUrl = json.data;
+		location.href = redirectUrl;
+	});
+}
+
 function query_user() {
 	var query = $("#query").val();
 	location.href = "/me/users?query=" + query;
@@ -199,6 +219,7 @@ function edit_team(tid) {
 }
 
 function delete_user(uid) {
+    window.scrollTo(0, 850);
 	my_confirm("真的要删除么？通常只有离职的时候才需要删除", [ '确定', '取消' ], function() {
 		$.post('/target-user/delete', {
 			'id' : uid

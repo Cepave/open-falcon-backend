@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/open-falcon/fe/g"
+	"github.com/Cepave/fe/g"
 	"github.com/toolkits/cache"
 	"time"
 )

@@ -24,7 +24,7 @@ CREATE TABLE `user` (
   `cnname` varchar(128) not null default '',
   `email` varchar(255) not null default '',
   `phone` varchar(16) not null default '',
-  `im` varchar(32) not null default '',
+  `im` varchar(64) not null default '',
   `qq` varchar(16) not null default '',
   `role` tinyint not null default 0,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
