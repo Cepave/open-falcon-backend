@@ -40,6 +40,7 @@ func configGraphRoutes() {
 		}
 
 		data := []*cmodel.GraphQueryResponse{}
+		var result *cmodel.GraphQueryResponse
 		isPacketLossRate := false
 		for _, ec := range body.EndpointCounters {
 			if strings.Contains(ec.Counter,"packet-loss-rate") {
@@ -55,19 +56,9 @@ func configGraphRoutes() {
 			}
 		}
 		if isPacketLossRate {
-			//var result *cmodel.GraphQueryResponse
-			/**result = cmodel.GraphQueryResponse{
-				Endpoint:    "all-endpoints",
-				Counter:     "packet-loss-rate", 
-				DsType:      "GAUGE", 
-				Step:        60, 
-				Values:      []*cmodel.RRDData{},
-			}*/
-			
 			/**
-			 * 下面這段，只是想先製造一個跟 packets-sent 的 response 一樣的 struct
+			 * 下面這段，只是想先做一個跟 packets-sent 的 response 一樣的 struct
 			 */
-			var result *cmodel.GraphQueryResponse
 			var packetSentCount []cmodel.JsonFloat
 			for _, ec := range body.EndpointCounters {
 				if strings.Contains(ec.Counter,"packets-sent") {
@@ -91,15 +82,21 @@ func configGraphRoutes() {
 			}
 			
 			for _, ec := range body.EndpointCounters {
-
+				/**
+				 * 此版本中，在 dashboard 查詢 packet-loss-rate 的時候，
+				 * dashboard 會以 packets-sent 這個 metric 來呈現搜尋到的結果。
+				 */	
 				if strings.Contains(ec.Counter,"packets-sent") {
-					
+					/**
+					 * 此版本中，packet-loss-rate 的 data，
+					 * 必須跟 packets-sent & packets-eceived 一起看。
+					 */					
 					requestPacketsSent := cmodel.GraphQueryParam{
 						Start:     int64(body.Start),
 						End:       int64(body.End),
 						ConsolFun: body.CF,
 						Endpoint:  ec.Endpoint,
-						Counter:   ec.Counter, //strings.Replace(ec.Counter, "packet-loss-rate", "packets-sent", 1),
+						Counter:   ec.Counter,
 					}
 					resultPacketsSent, err := graph.QueryOne(requestPacketsSent)
 					if err != nil {
@@ -126,16 +123,10 @@ func configGraphRoutes() {
 					}
 					data = append(data, resultPacketReceived)
 					for i := range resultPacketsSent.Values {
-						/**
-						 * 下面這行會讓 resultValues 的 Timestamp 取到最後一個 endpoint-counter pair 的 Timestamp
-						 */
-						// 上面有了 result 後這邊就不需要了 //result.Values[i].Timestamp = resultPacketsSent.Values[i].Timestamp
-
 						packetLossCount := (resultPacketsSent.Values[i].Value		-
 											resultPacketReceived.Values[i].Value)
 						result.Values[i].Value += packetLossCount
 						packetSentCount[i] += resultPacketsSent.Values[i].Value
-						log.Printf("sentCnt = %f, rcvCnt = %f, totalLossCnt = %f, totalSentCnt = %f",float64(resultPacketsSent.Values[i].Value), float64(resultPacketReceived.Values[i].Value), float64(result.Values[i].Value), float64(packetSentCount[i]))
 					}
 				}
 
@@ -144,7 +135,6 @@ func configGraphRoutes() {
 			result.Endpoint = "all-endpoints"
 			result.Counter = "packet-loss-rate"
 			for i := range result.Values {
-				//log.Printf("diff = %f, sentCnt = %f",float64(result.Values[i].Value), float64(packetSentCount))
 				result.Values[i].Value = result.Values[i].Value/packetSentCount[i]
 			}
 			result.Values = result.Values
@@ -154,7 +144,6 @@ func configGraphRoutes() {
 			/**
 			 * 下面這段，只是想先製造一個跟 transmission-time 的 response 一樣的 struct
 			 */
-			var result *cmodel.GraphQueryResponse
 			var packetSentCount []cmodel.JsonFloat
 			for _, ec := range body.EndpointCounters {
 				if strings.Contains(ec.Counter,"transmission-time") {
@@ -177,9 +166,15 @@ func configGraphRoutes() {
 				}
 			}
 			for _, ec := range body.EndpointCounters {
-
+				/**
+				 * 此版本中，在 dashboard 查詢 average 的時候，
+				 * dashboard 會以 transmission-time 這個 metric 來呈現搜尋到的結果。
+				 */	
 				if strings.Contains(ec.Counter,"transmission-time") {
-					
+					/**
+					 * 此版本中，average 的 data，
+					 * 必須跟 transmission-time & packets-sent 一起看。
+					 */	
 					requestTransmissionTime := cmodel.GraphQueryParam{
 						Start:     int64(body.Start),
 						End:       int64(body.End),
@@ -211,11 +206,9 @@ func configGraphRoutes() {
 						continue
 					}
 					data = append(data, resultPacketsSent)
-
 					for i := range resultTransmissionTime.Values {
 						result.Values[i].Value += resultTransmissionTime.Values[i].Value * resultPacketsSent.Values[i].Value
 						packetSentCount[i] += resultPacketsSent.Values[i].Value
-						//log.Printf("sentCnt = %f, rcvCnt = %f, totalLossCnt = %f, totalSentCnt = %f",float64(resultPacketsSent.Values[i].Value), float64(resultPacketReceived.Values[i].Value), float64(result.Values[i].Value), float64(packetSentCount[i]))
 					}
 				}
 
@@ -224,7 +217,6 @@ func configGraphRoutes() {
 			result.Endpoint = "all-endpoints"
 			result.Counter = "average"
 			for i := range result.Values {
-				//log.Printf("diff = %f, sentCnt = %f",float64(result.Values[i].Value), float64(packetSentCount))
 				result.Values[i].Value = result.Values[i].Value/packetSentCount[i]
 			}
 			result.Values = result.Values
