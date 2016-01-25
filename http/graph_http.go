@@ -9,6 +9,7 @@ import (
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/graph"
 	"github.com/Cepave/query/proc"
+	"regexp"
 )
 
 type GraphHistoryParam struct {
@@ -37,15 +38,15 @@ func configGraphRoutes() {
 			StdRender(w, "", errors.New("empty_payload"))
 			return
 		}
-
+		regx, _ := regexp.Compile("(\\.\\$\\s*|\\s*)$")
 		data := []*cmodel.GraphQueryResponse{}
 		for _, ec := range body.EndpointCounters {
 			request := cmodel.GraphQueryParam{
 				Start:     int64(body.Start),
 				End:       int64(body.End),
 				ConsolFun: body.CF,
-				Endpoint:  ec.Endpoint,
-				Counter:   ec.Counter,
+				Endpoint:  regx.ReplaceAllString(ec.Endpoint, ""),
+				Counter:   regx.ReplaceAllString(ec.Counter, ""),
 			}
 			result, err := graph.QueryOne(request)
 			if err != nil {
@@ -56,6 +57,7 @@ func configGraphRoutes() {
 			}
 			data = append(data, result)
 		}
+		log.Println("got length of data: ", len(data))
 
 		// statistics
 		proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
