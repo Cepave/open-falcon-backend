@@ -1,5 +1,4 @@
 SET NAMES 'utf8';
-SET CHARACTER SET 'utf8';
 SET @@session.default_storage_engine = 'InnoDB';
 
 ALTER DATABASE
