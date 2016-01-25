@@ -61,6 +61,8 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 			 * Asserts the agent
 			 */
 			c.Assert(err, IsNil)
+			c.Logf("Got resposne: %v", &resp)
+
 			c.Assert(resp.NeedPing, Equals, true)
 			c.Assert(resp.Agent.Id, Equals, 4051)
 			c.Assert(resp.Agent.IspId, Equals, int16(3))
@@ -72,16 +74,17 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 			// :~)
 
 			/**
-			 * Asserts the targets
+			 * Asserts the 1st target
 			 */
 			sort.Sort(byId(resp.Targets))
-			var expectedTargets = []model.NqmTarget {
-				{ Id: 6301, Host: "1.2.3.4", IspId: 1, ProvinceId: 4, CityId: -1, NameTag: model.UNDEFINED_STRING, },
-				{ Id: 6302, Host: "1.2.3.5", IspId: 2, ProvinceId: 4, CityId: -1, NameTag: "tag-1", },
-				{ Id: 6303, Host: "1.2.3.6", IspId: 3, ProvinceId: 4, CityId: -1, NameTag: model.UNDEFINED_STRING, },
+			var expectedTargets = model.NqmTarget {
+				Id: 6301, Host: "1.2.3.4", NameTag: model.UNDEFINED_STRING,
+				IspId: 1, IspName: "北京三信时代",
+				ProvinceId: 4, ProvinceName: "北京",
+				CityId: -1, CityName: model.UNDEFINED_STRING,
 			}
 
-			c.Assert(resp.Targets, DeepEquals, expectedTargets)
+			c.Assert(resp.Targets[0], DeepEquals, expectedTargets)
 			// :~)
 		},
 	)
