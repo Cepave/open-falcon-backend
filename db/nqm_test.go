@@ -52,6 +52,7 @@ func testRefreshAgentInfo(c *C, args []interface{}) {
 	 * Asserts the new id
 	 */
 	c.Assert(err, IsNil)
+	c.Logf("Got agent id: %d", testedAgent.Id)
 	c.Assert(testedAgent.Id > 0, Equals, true)
 	// :~)
 
