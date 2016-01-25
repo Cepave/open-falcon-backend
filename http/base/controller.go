@@ -14,7 +14,7 @@ func (this *BaseController) ServeErrJson(msg string) {
 	this.Data["json"] = map[string]interface{}{
 		"msg": msg,
 	}
-	this.ServeJson()
+	this.ServeJSON()
 }
 
 func (this *BaseController) SetPaginator(per int, nums int64) *web.Paginator {
@@ -27,7 +27,7 @@ func (this *BaseController) ServeOKJson() {
 	this.Data["json"] = map[string]interface{}{
 		"msg": "",
 	}
-	this.ServeJson()
+	this.ServeJSON()
 }
 
 func (this *BaseController) AutoServeError(err error) {
@@ -43,7 +43,7 @@ func (this *BaseController) ServeDataJson(data interface{}) {
 		"msg":  "",
 		"data": data,
 	}
-	this.ServeJson()
+	this.ServeJSON()
 }
 
 func (this *BaseController) NotFound(body string) {

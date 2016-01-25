@@ -147,12 +147,12 @@ func (this *AuthController) renderLoginPage(sig, callback string) {
 	this.Data["LdapEnabled"] = g.Config().Ldap.Enabled
 	this.Data["Sig"] = sig
 	this.Data["Callback"] = callback
-	this.TplNames = "auth/login.html"
+	this.TplName = "auth/login.html"
 }
 
 func (this *AuthController) RegisterGet() {
 	this.Data["CanRegister"] = g.Config().CanRegister
-	this.TplNames = "auth/register.html"
+	this.TplName = "auth/register.html"
 }
 
 func (this *AuthController) RegisterPost() {

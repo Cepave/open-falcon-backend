@@ -36,7 +36,7 @@ func (this *SsoController) User() {
 	this.Data["json"] = map[string]interface{}{
 		"user": u,
 	}
-	this.ServeJson()
+	this.ServeJSON()
 }
 
 func (this *SsoController) Logout() {
