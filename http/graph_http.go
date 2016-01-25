@@ -39,19 +39,18 @@ func configGraphRoutes() {
 			StdRender(w, "", errors.New("empty_payload"))
 			return
 		}
-		regx, _ := regexp.Compile("(\\.\\$\\s*|\\s*)$")
 		data := []*cmodel.GraphQueryResponse{}
 		var result *cmodel.GraphQueryResponse
 		isPacketLossRate := false
 		for _, ec := range body.EndpointCounters {
-			if strings.Contains(ec.Counter,"packet-loss-rate") {
+			if strings.Contains(ec.Counter, "packet-loss-rate") {
 				isPacketLossRate = true
 				break
 			}
 		}
 		isAverage := false
 		for _, ec := range body.EndpointCounters {
-			if strings.Contains(ec.Counter,"average") {
+			if strings.Contains(ec.Counter, "average") {
 				isAverage = true
 				break
 			}
@@ -62,7 +61,7 @@ func configGraphRoutes() {
 			 */
 			var packetSentCount []cmodel.JsonFloat
 			for _, ec := range body.EndpointCounters {
-				if strings.Contains(ec.Counter,"packets-sent") {
+				if strings.Contains(ec.Counter, "packets-sent") {
 					request := cmodel.GraphQueryParam{
 						Start:     int64(body.Start),
 						End:       int64(body.End),
@@ -81,17 +80,17 @@ func configGraphRoutes() {
 					break
 				}
 			}
-			
+
 			for _, ec := range body.EndpointCounters {
 				/**
 				 * 此版本中，在 dashboard 查詢 packet-loss-rate 的時候，
 				 * dashboard 會以 packets-sent 這個 metric 來呈現搜尋到的結果。
-				 */	
-				if strings.Contains(ec.Counter,"packets-sent") {
+				 */
+				if strings.Contains(ec.Counter, "packets-sent") {
 					/**
 					 * 此版本中，packet-loss-rate 的 data，
 					 * 必須跟 packets-sent & packets-eceived 一起看。
-					 */					
+					 */
 					requestPacketsSent := cmodel.GraphQueryParam{
 						Start:     int64(body.Start),
 						End:       int64(body.End),
@@ -124,30 +123,30 @@ func configGraphRoutes() {
 					}
 					data = append(data, resultPacketReceived)
 					for i := range resultPacketsSent.Values {
-						packetLossCount := (resultPacketsSent.Values[i].Value		-
-											resultPacketReceived.Values[i].Value)
+						packetLossCount := (resultPacketsSent.Values[i].Value -
+							resultPacketReceived.Values[i].Value)
 						result.Values[i].Value += packetLossCount
 						packetSentCount[i] += resultPacketsSent.Values[i].Value
 					}
 				}
 
 			}
-			
+
 			result.Endpoint = "all-endpoints"
 			result.Counter = "packet-loss-rate"
 			for i := range result.Values {
-				result.Values[i].Value = result.Values[i].Value/packetSentCount[i]
+				result.Values[i].Value = result.Values[i].Value / packetSentCount[i]
 			}
 			result.Values = result.Values
 			data = append(data, result)
-							
+
 		} else if isAverage {
 			/**
 			 * 下面這段，只是想先製造一個跟 transmission-time 的 response 一樣的 struct
 			 */
 			var packetSentCount []cmodel.JsonFloat
 			for _, ec := range body.EndpointCounters {
-				if strings.Contains(ec.Counter,"transmission-time") {
+				if strings.Contains(ec.Counter, "transmission-time") {
 					request := cmodel.GraphQueryParam{
 						Start:     int64(body.Start),
 						End:       int64(body.End),
@@ -170,12 +169,12 @@ func configGraphRoutes() {
 				/**
 				 * 此版本中，在 dashboard 查詢 average 的時候，
 				 * dashboard 會以 transmission-time 這個 metric 來呈現搜尋到的結果。
-				 */	
-				if strings.Contains(ec.Counter,"transmission-time") {
+				 */
+				if strings.Contains(ec.Counter, "transmission-time") {
 					/**
 					 * 此版本中，average 的 data，
 					 * 必須跟 transmission-time & packets-sent 一起看。
-					 */	
+					 */
 					requestTransmissionTime := cmodel.GraphQueryParam{
 						Start:     int64(body.Start),
 						End:       int64(body.End),
@@ -214,23 +213,24 @@ func configGraphRoutes() {
 				}
 
 			}
-			
+
 			result.Endpoint = "all-endpoints"
 			result.Counter = "average"
 			for i := range result.Values {
-				result.Values[i].Value = result.Values[i].Value/packetSentCount[i]
+				result.Values[i].Value = result.Values[i].Value / packetSentCount[i]
 			}
 			result.Values = result.Values
 			data = append(data, result)
-			
+
 		} else {
+			regx, _ := regexp.Compile("(\\.\\$\\s*|\\s*)$")
 			for _, ec := range body.EndpointCounters {
 				request := cmodel.GraphQueryParam{
 					Start:     int64(body.Start),
 					End:       int64(body.End),
 					ConsolFun: body.CF,
-					Endpoint:  ec.Endpoint,
-					Counter:   ec.Counter,
+					Endpoint:  regx.ReplaceAllString(ec.Endpoint, ""),
+					Counter:   regx.ReplaceAllString(ec.Counter, ""),
 				}
 				result, err := graph.QueryOne(request)
 				if err != nil {
@@ -241,8 +241,8 @@ func configGraphRoutes() {
 				}
 				data = append(data, result)
 			}
+			log.Println("got length of data: ", len(data))
 		}
-		log.Println("got length of data: ", len(data))
 
 		// statistics
 		proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
