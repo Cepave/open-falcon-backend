@@ -12,6 +12,7 @@ import (
 
 type Hbs int
 type Agent int
+type NqmAgent int
 
 func Start() {
 	addr := g.Config().Listen
@@ -20,6 +21,7 @@ func Start() {
 	// server.Register(new(filter.Filter))
 	server.Register(new(Agent))
 	server.Register(new(Hbs))
+	server.Register(new(NqmAgent))
 
 	l, e := net.Listen("tcp", addr)
 	if e != nil {
