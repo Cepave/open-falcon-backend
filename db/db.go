@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/open-falcon/hbs/g"
 	"log"
@@ -13,7 +14,7 @@ func Init() {
 	err := dbInit(g.Config().Database)
 
 	if err != nil {
-		log.Fatalf("open db fail: %v", err)
+		log.Fatalln(err)
 	}
 
 	DB.SetMaxIdleConns(g.Config().MaxIdle)
@@ -22,12 +23,12 @@ func Init() {
 func dbInit(dsn string) (err error) {
 	if DB, err = sql.Open("mysql", dsn)
 		err != nil {
-		return
+		return fmt.Errorf("Open DB error: %v", err)
 	}
 
 	if err = DB.Ping()
 		err != nil {
-		return
+		return fmt.Errorf("Ping DB error: %v", err)
 	}
 
 	return
