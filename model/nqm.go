@@ -70,10 +70,19 @@ type NqmTarget struct {
 
 	// The id of ISP, UNDEFINED_ID means there is not such data for this target
 	IspId int16
+	// The name of ISP
+	IspName string
+
 	// The id of province, UNDEFINED_ID means there is not such data for this target
 	ProvinceId int16
+	// The name of province
+	ProvinceName string
+
 	// The id of city, UNDEFINED_ID means there is not such data for this target
 	CityId int16
+	// The name of city
+	CityName string
+
 	// The tag of the target, UNDEFINED_STRING means no such data for this target
 	NameTag string
 }
