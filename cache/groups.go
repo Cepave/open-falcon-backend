@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/open-falcon/hbs/db"
+	"github.com/Cepave/hbs/db"
 	"sync"
 )
 
