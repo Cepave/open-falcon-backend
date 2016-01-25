@@ -10,12 +10,10 @@ import (
 
 // Inserts a new agent or updates existing one
 func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
-	var result sql.Result
-
 	/**
 	 * Update the data
 	 */
-	if result, err = DB.Exec(
+	if _, err = DB.Exec(
 		`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address)
 		VALUES(?, ?, ?)
@@ -37,8 +35,17 @@ func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
 	/**
 	 * Loads id from auto-generated PK
 	 */
-	lastId, _ := result.LastInsertId()
-	agent.Id = int(lastId)
+	if err = DB.QueryRow(
+		`
+		SELECT ag_id
+		FROM nqm_agent
+		WHERE ag_connection_id = ?
+		`,
+		agent.ConnectionId(),
+	).Scan(&agent.Id)
+		err != nil {
+		return
+	}
 	// :~)
 
 	return
