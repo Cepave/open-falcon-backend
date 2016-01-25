@@ -104,10 +104,9 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
 			}
 			result = append(result, item)
 		}
-		RenderJson(rw, result)
-	} else {
-		RenderJson(rw, result)
 	}
+
+	RenderJson(rw, result)
 }
 
 /**
@@ -123,11 +122,18 @@ func getHosts(rw http.ResponseWriter, req *http.Request, hostKeyword string) {
  * @called by:       func getMetrics(rw http.ResponseWriter, req *http.Request, query string)
  */
 func getNextCounterSegment(metric string, counter string) string {
+	segment := ""
 	if len(metric) > 0 {
 		metric += "."
 	}
-	counter = strings.Replace(counter, metric, "", 1)
-	segment := strings.Split(counter, ".")[0]
+	if counter+"." == metric {
+		//when the counter metric are the same, will retrun "*" as the ending chartacter of query
+		segment = "$"
+	} else {
+		log.Println("metric = ", metric, "counter = ", counter)
+		counter = strings.Replace(counter, metric, "", 1)
+		segment = strings.Split(counter, ".")[0]
+	}
 	return segment
 }
 
@@ -144,6 +150,9 @@ func getNextCounterSegment(metric string, counter string) string {
  * @called by:       func getMetrics(rw http.ResponseWriter, req *http.Request, query string)
  */
 func checkSegmentExpandable(segment string, counter string) bool {
+	if segment == "$" {
+		return false
+	}
 	segments := strings.Split(counter, ".")
 	expandable := !(segment == segments[len(segments)-1])
 	return expandable
@@ -164,8 +173,8 @@ func checkSegmentExpandable(segment string, counter string) bool {
  */
 func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 	result := []interface{}{}
-
-	query = strings.Replace(query, "#.*", "", -1)
+	regx, _ := regexp.Compile("(#?\\.\\*$|\\.\\$)")
+	query = regx.ReplaceAllString(query, "")
 	arrQuery := strings.Split(query, "#")
 	host, arrMetric := arrQuery[0], arrQuery[1:]
 	maxQuery := strconv.Itoa(g.Config().Api.Max)
@@ -232,24 +241,28 @@ func getMetrics(rw http.ResponseWriter, req *http.Request, query string) {
 			if err := json.Unmarshal(body, &nodes); err != nil {
 				log.Println(err.Error())
 			}
-			var segmentPool = make(map[string]int)
+			var segmentPool = make(map[string]bool)
 			for _, data := range nodes["data"].([]interface{}) {
 				counter := data.([]interface{})[0].(string)
 				segment := getNextCounterSegment(metric, counter)
 				expandable := checkSegmentExpandable(segment, counter)
 				if _, ok := segmentPool[segment]; !ok {
-					item := map[string]interface{}{
-						"text":       segment,
-						"expandable": expandable,
-					}
-					result = append(result, item)
-					segmentPool[segment] = 1
+					segmentPool[segment] = expandable
+				} else if segmentPool[segment] == false {
+					//for solve issue of mertice has 2 different type of expandable
+					//ex. ["used"] and ["used.percent"]
+					segmentPool[segment] = expandable
 				}
 			}
-			RenderJson(rw, result)
-		} else {
-			RenderJson(rw, result)
+			for key, value := range segmentPool {
+				item := map[string]interface{}{
+					"text":       key,
+					"expandable": value,
+				}
+				result = append(result, item)
+			}
 		}
+		RenderJson(rw, result)
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/graph"
 	"github.com/Cepave/query/proc"
+	"regexp"
 )
 
 type GraphHistoryParam struct {
@@ -17,6 +18,27 @@ type GraphHistoryParam struct {
 	End              int                     `json:"end"`
 	CF               string                  `json:"cf"`
 	EndpointCounters []cmodel.GraphInfoParam `json:"endpoint_counters"`
+}
+
+func graphQueryOne(body GraphHistoryParam, ec cmodel.GraphInfoParam, endpoint string, counter string) {
+	if endpoint == nil {
+		endpoint = ec.Endpoint
+	}
+	if counter == nil {
+		counter = ec.Counter
+	}
+	request := cmodel.GraphQueryParam{
+		Start:     int64(body.Start),
+		End:       int64(body.End),
+		ConsolFun: body.CF,
+		Endpoint:  endpoint,
+		Counter:   counter,
+	}
+	result, err := graph.QueryOne(request)
+	if err != nil {
+		log.Printf("graph.queryOne fail, %v, (endpoint, counter) = (%s, %s)", err, endpoint, counter)
+	}
+	return result
 }
 
 func configGraphRoutes() {
@@ -41,206 +63,72 @@ func configGraphRoutes() {
 
 		data := []*cmodel.GraphQueryResponse{}
 		var result *cmodel.GraphQueryResponse
-		isPacketLossRate := false
 		for _, ec := range body.EndpointCounters {
-			if strings.Contains(ec.Counter,"packet-loss-rate") {
-				isPacketLossRate = true
-				break
-			}
-		}
-		isAverage := false
-		for _, ec := range body.EndpointCounters {
-			if strings.Contains(ec.Counter,"average") {
-				isAverage = true
-				break
-			}
-		}
-		if isPacketLossRate {
-			/**
-			 * 下面這段，只是想先做一個跟 packets-sent 的 response 一樣的 struct
-			 */
-			var packetSentCount []cmodel.JsonFloat
-			for _, ec := range body.EndpointCounters {
-				if strings.Contains(ec.Counter,"packets-sent") {
-					request := cmodel.GraphQueryParam{
-						Start:     int64(body.Start),
-						End:       int64(body.End),
-						ConsolFun: body.CF,
-						Endpoint:  ec.Endpoint,
-						Counter:   ec.Counter,
-					}
-					result, err = graph.QueryOne(request)
-					for i := range result.Values {
-						result.Values[i].Value = cmodel.JsonFloat(0.0)
-						packetSentCount = append(packetSentCount, cmodel.JsonFloat(0.0))
-					}
-					if err != nil {
-						log.Printf("graph.queryOne fail, %v", err)
-					}
-					break
+			if strings.Contains(ec.Counter, "packets-sent") || strings.Contains(ec.Counter, "transmission-time") {
+				// NQM Case
+				var packetSentCount []cmodel.JsonFloat
+				// clone a response
+				result = graphQueryOne(ec, body, nil, nil)
+				for i := range result.Values {
+					result.Values[i].Value = cmodel.JsonFloat(0.0)
+					packetSentCount = append(packetSentCount, cmodel.JsonFloat(0.0))
 				}
-			}
-			
-			for _, ec := range body.EndpointCounters {
-				/**
-				 * 此版本中，在 dashboard 查詢 packet-loss-rate 的時候，
-				 * dashboard 會以 packets-sent 這個 metric 來呈現搜尋到的結果。
-				 */	
-				if strings.Contains(ec.Counter,"packets-sent") {
-					/**
-					 * 此版本中，packet-loss-rate 的 data，
-					 * 必須跟 packets-sent & packets-eceived 一起看。
-					 */					
-					requestPacketsSent := cmodel.GraphQueryParam{
-						Start:     int64(body.Start),
-						End:       int64(body.End),
-						ConsolFun: body.CF,
-						Endpoint:  ec.Endpoint,
-						Counter:   ec.Counter,
-					}
-					resultPacketsSent, err := graph.QueryOne(requestPacketsSent)
-					if err != nil {
-						log.Printf("graph.queryOne fail, %v", err)
-					}
-					if resultPacketsSent == nil {
-						continue
-					}
-					data = append(data, resultPacketsSent)
+				if result == nil {
+					continue
+				}
 
-					requestPacketReceived := cmodel.GraphQueryParam{
-						Start:     int64(body.Start),
-						End:       int64(body.End),
-						ConsolFun: body.CF,
-						Endpoint:  ec.Endpoint,
-						Counter:   strings.Replace(ec.Counter, "packets-sent", "packets-received", 1),
+				resultSent = graphQueryOne(ec, body, nil, nil)
+				if resultSent == nil {
+					continue
+				}
+				data = append(data, resultSent)
+
+				if strings.Contains(ec.Counter, "packets-sent") {
+					counter = strings.Replace(ec.Counter, "packets-sent", "packets-received", 1)
+					if resultReceived = graphQueryOne(ec, body, nil, counter); resultReceived {
+						data = append(data, result)
+						for i := range resultSent.Values {
+							packetLossCount := (resultSent.Values[i].Value - resultReceived.Values[i].Value)
+							result.Values[i].Value += packetLossCount
+							packetSentCount[i] += resultSent.Values[i].Value
+						}
 					}
-					resultPacketReceived, err := graph.QueryOne(requestPacketReceived)
-					if err != nil {
-						log.Printf("graph.queryOne fail, %v", err)
-					}
-					if resultPacketReceived == nil {
-						continue
-					}
-					data = append(data, resultPacketReceived)
-					for i := range resultPacketsSent.Values {
-						packetLossCount := (resultPacketsSent.Values[i].Value		-
-											resultPacketReceived.Values[i].Value)
-						result.Values[i].Value += packetLossCount
-						packetSentCount[i] += resultPacketsSent.Values[i].Value
+				} else if strings.Contains(ec.Counter, "transmission-time") {
+					counter = strings.Replace(ec.Counter, "transmission-time", "packets-sent", 1)
+					if resultTransmissionTime = graphQueryOne(ec, body, nil, counter); resultTransmissionTime {
+						data = append(data, resultPacketsSent)
+						for i := range resultTransmissionTime.Values {
+							result.Values[i].Value += resultTransmissionTime.Values[i].Value * resultPacketsSent.Values[i].Value
+							packetSentCount[i] += resultPacketsSent.Values[i].Value
+						}
 					}
 				}
 
-			}
-			
-			result.Endpoint = "all-endpoints"
-			result.Counter = "packet-loss-rate"
-			for i := range result.Values {
-				result.Values[i].Value = result.Values[i].Value/packetSentCount[i]
-			}
-			result.Values = result.Values
-			data = append(data, result)
-							
-		} else if isAverage {
-			/**
-			 * 下面這段，只是想先製造一個跟 transmission-time 的 response 一樣的 struct
-			 */
-			var packetSentCount []cmodel.JsonFloat
-			for _, ec := range body.EndpointCounters {
-				if strings.Contains(ec.Counter,"transmission-time") {
-					request := cmodel.GraphQueryParam{
-						Start:     int64(body.Start),
-						End:       int64(body.End),
-						ConsolFun: body.CF,
-						Endpoint:  ec.Endpoint,
-						Counter:   ec.Counter,
-					}
-					result, err = graph.QueryOne(request)
-					for i := range result.Values {
-						result.Values[i].Value = cmodel.JsonFloat(0.0)
-						packetSentCount = append(packetSentCount, cmodel.JsonFloat(0.0))
-					}
-					if err != nil {
-						log.Printf("graph.queryOne fail, %v", err)
-					}
-					break
+				if strings.Contains(ec.Counter, "packets-sent") {
+					result.Endpoint = "all-endpoints"
+					result.Counter = "packet-loss-rate"
+				} else if strings.Contains(ec.Counter, "transmission-time") {
+					result.Endpoint = "all-endpoints"
+					result.Counter = "average"
 				}
-			}
-			for _, ec := range body.EndpointCounters {
-				/**
-				 * 此版本中，在 dashboard 查詢 average 的時候，
-				 * dashboard 會以 transmission-time 這個 metric 來呈現搜尋到的結果。
-				 */	
-				if strings.Contains(ec.Counter,"transmission-time") {
-					/**
-					 * 此版本中，average 的 data，
-					 * 必須跟 transmission-time & packets-sent 一起看。
-					 */	
-					requestTransmissionTime := cmodel.GraphQueryParam{
-						Start:     int64(body.Start),
-						End:       int64(body.End),
-						ConsolFun: body.CF,
-						Endpoint:  ec.Endpoint,
-						Counter:   ec.Counter,
-					}
-					resultTransmissionTime, err := graph.QueryOne(requestTransmissionTime)
-					if err != nil {
-						log.Printf("graph.queryOne fail, %v", err)
-					}
-					if resultTransmissionTime == nil {
-						continue
-					}
-					data = append(data, resultTransmissionTime)
+				for i := range result.Values {
+					result.Values[i].Value = result.Values[i].Value / packetSentCount[i]
+				}
+				result.Values = result.Values
+				data = append(data, result)
 
-					requestPacketsSent := cmodel.GraphQueryParam{
-						Start:     int64(body.Start),
-						End:       int64(body.End),
-						ConsolFun: body.CF,
-						Endpoint:  ec.Endpoint,
-						Counter:   strings.Replace(ec.Counter, "transmission-time", "packets-sent", 1),
-					}
-					resultPacketsSent, err := graph.QueryOne(requestPacketsSent)
-					if err != nil {
-						log.Printf("graph.queryOne fail, %v", err)
-					}
-					if resultPacketsSent == nil {
-						continue
-					}
-					data = append(data, resultPacketsSent)
-					for i := range resultTransmissionTime.Values {
-						result.Values[i].Value += resultTransmissionTime.Values[i].Value * resultPacketsSent.Values[i].Value
-						packetSentCount[i] += resultPacketsSent.Values[i].Value
-					}
-				}
-
-			}
-			
-			result.Endpoint = "all-endpoints"
-			result.Counter = "average"
-			for i := range result.Values {
-				result.Values[i].Value = result.Values[i].Value/packetSentCount[i]
-			}
-			result.Values = result.Values
-			data = append(data, result)
-			
-		} else {
-			for _, ec := range body.EndpointCounters {
-				request := cmodel.GraphQueryParam{
-					Start:     int64(body.Start),
-					End:       int64(body.End),
-					ConsolFun: body.CF,
-					Endpoint:  ec.Endpoint,
-					Counter:   ec.Counter,
-				}
-				result, err := graph.QueryOne(request)
-				if err != nil {
-					log.Printf("graph.queryOne fail, %v", err)
-				}
+			} else {
+				regx, _ := regexp.Compile("(\\.\\$\\s*|\\s*)$")
+				endpoint = regx.ReplaceAllString(ec.Endpoint, "")
+				counter = regx.ReplaceAllString(ec.Counter, "")
+				result = graphQueryOne(ec, body, endpoint, counter)
 				if result == nil {
 					continue
 				}
 				data = append(data, result)
 			}
 		}
+		log.Println("got length of data: ", len(data))
 
 		// statistics
 		proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
