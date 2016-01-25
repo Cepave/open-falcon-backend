@@ -49,12 +49,12 @@ func (this *TeamController) Teams() {
 	this.Data["Me"] = me
 	this.Data["IamRoot"] = me.Name == "root"
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "team/list.html"
+	this.TplName = "team/list.html"
 }
 
 func (this *TeamController) CreateTeamGet() {
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "team/create.html"
+	this.TplName = "team/create.html"
 }
 
 func (this *TeamController) CreateTeamPost() {
@@ -113,7 +113,7 @@ func (this *TeamController) Users() {
 		"users": MembersByTeamName(teamName),
 		"msg":   "",
 	}
-	this.ServeJson()
+	this.ServeJSON()
 }
 
 func (this *TeamController) DeleteTeam() {
@@ -137,7 +137,7 @@ func (this *TeamController) EditGet() {
 	targetTeam := this.Ctx.Input.GetData("TargetTeam").(*Team)
 	this.Data["TargetTeam"] = targetTeam
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "team/edit.html"
+	this.TplName = "team/edit.html"
 }
 
 func (this *TeamController) EditPost() {
@@ -170,7 +170,7 @@ func (this *TeamController) Query() {
 		"msg":   "",
 		"teams": ts,
 	}
-	this.ServeJson()
+	this.ServeJSON()
 }
 
 func (this *TeamController) All() {

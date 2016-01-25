@@ -40,14 +40,14 @@ func (this *UserController) CreateRoot() {
 func (this *UserController) Info() {
 	this.Data["CurrentUser"] = this.Ctx.Input.GetData("CurrentUser").(*User)
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "user/info.html"
+	this.TplName = "user/info.html"
 }
 
 // 展示当前用户的联系信息
 func (this *UserController) ProfileGet() {
 	this.Data["CurrentUser"] = this.Ctx.Input.GetData("CurrentUser").(*User)
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "user/profile.html"
+	this.TplName = "user/profile.html"
 }
 
 // 更新个人信息
@@ -190,12 +190,12 @@ func (this *UserController) Users() {
 	this.Data["Me"] = me
 	this.Data["IamRoot"] = me.Name == "root"
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "user/list.html"
+	this.TplName = "user/list.html"
 }
 
 func (this *UserController) CreateUserGet() {
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "user/create.html"
+	this.TplName = "user/create.html"
 }
 
 func (this *UserController) CreateUserPost() {
@@ -295,7 +295,7 @@ func (this *UserController) EditGet() {
 
 	this.Data["User"] = this.Ctx.Input.GetData("TargetUser").(*User)
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "user/edit.html"
+	this.TplName = "user/edit.html"
 }
 
 func (this *UserController) EditPost() {
@@ -386,7 +386,7 @@ func (this *UserController) Query() {
 	var users []User
 	QueryUsers(query).Limit(limit).All(&users, "Id", "Name", "Cnname", "Email")
 	this.Data["json"] = map[string]interface{}{"users": users}
-	this.ServeJson()
+	this.ServeJSON()
 }
 
 func (this *UserController) In() {
@@ -428,7 +428,7 @@ func (this *UserController) About() {
 
 	this.Data["User"] = u
 	this.Data["Shortcut"] = g.Config().Shortcut
-	this.TplNames = "user/about.html"
+	this.TplName = "user/about.html"
 }
 
 func (this *UserController) QrCode() {
