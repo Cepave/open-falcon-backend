@@ -10,16 +10,51 @@ import (
 var DB *sql.DB
 
 func Init() {
-	var err error
-	DB, err = sql.Open("mysql", g.Config().Database)
+	err := dbInit(g.Config().Database)
+
 	if err != nil {
-		log.Fatalln("open db fail:", err)
+		log.Fatalf("open db fail: %v", err)
 	}
 
 	DB.SetMaxIdleConns(g.Config().MaxIdle)
+}
 
-	err = DB.Ping()
-	if err != nil {
-		log.Fatalln("ping db fail:", err)
+func dbInit(dsn string) (err error) {
+	if DB, err = sql.Open("mysql", dsn)
+		err != nil {
+		return
 	}
+
+	if err = DB.Ping()
+		err != nil {
+		return
+	}
+
+	return
+}
+
+// Convenient IoC for transaction processing
+func inTx(txCallback func(tx *sql.Tx) error) (err error) {
+	var tx *sql.Tx
+
+	if tx, err = DB.Begin()
+		err != nil {
+		return
+	}
+
+	/**
+	 * The transaction result by whether or not the callback has error
+	 */
+	defer func() {
+		if err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	// :~)
+
+	err = txCallback(tx)
+
+	return
 }
