@@ -177,8 +177,11 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 			&currentTarget.Id,
 			&currentTarget.Host,
 			&currentTarget.IspId,
+			&currentTarget.IspName,
 			&currentTarget.ProvinceId,
+			&currentTarget.ProvinceName,
 			&currentTarget.CityId,
+			&currentTarget.CityName,
 			&nameTag,
 		)
 
@@ -194,55 +197,83 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 func loadAllTargets() (*sql.Rows, error) {
 	return DB.Query(
 		`
-		SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
-		FROM nqm_target
+		SELECT tg_id, tg_host,
+			isp_id, isp_name,
+			pv_id, pv_name,
+			ct_id, ct_name, tg.tg_name_tag
+		FROM nqm_target AS tg
+			INNER JOIN
+			owl_isp AS isp
+			ON tg.tg_isp_id = isp.isp_id
+			INNER JOIN
+			owl_province AS pv
+			ON tg.tg_pv_id = pv.pv_id
+			INNER JOIN
+			owl_city AS ct
+			ON tg.tg_ct_id = ct.ct_id
 		`,
 	)
 }
 func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 	return DB.Query(
 		`
-		/* Matched target by ISP */
-		SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
-		FROM nqm_target tg
-			INNER JOIN
-			nqm_pt_target_filter_isp AS tfisp
-			ON tfisp.tfisp_pt_ag_id = ?
-				AND tg.tg_isp_id = tfisp.tfisp_isp_id
-		/* :~) */
-		UNION
-		/* Matched target by province */
-		SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
-		FROM nqm_target tg
-			INNER JOIN
-			nqm_pt_target_filter_province AS tfpv
-			ON tfpv.tfpv_pt_ag_id = ?
-				AND tg.tg_pv_id = tfpv.tfpv_pv_id
-		/* :~) */
-		UNION
-		/* Matched target by city */
-		SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
-		FROM nqm_target tg
-			INNER JOIN
-			nqm_pt_target_filter_city AS tfct
-			ON tfct.tfct_pt_ag_id = ?
-				AND tg.tg_ct_id = tfct.tfct_ct_id
-		/* :~) */
-		UNION
-		/* Matched target by name tag */
-		SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
-		FROM nqm_target tg
-			INNER JOIN
-			nqm_pt_target_filter_name_tag AS tfnt
-			ON tfnt.tfnt_pt_ag_id = ?
-				AND tg.tg_name_tag = tfnt.tfnt_name_tag
-		/* :~) */
-		UNION
-		/* Matched target which to be probed by all */
-		SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
-		FROM nqm_target tg
-		WHERE tg_probed_by_all = true
-		/* :~) */
+		SELECT
+			tg_id, tg_host,
+			isp_id, isp_name,
+			pv_id, pv_name,
+			ct_id, ct_name, tg.tg_name_tag
+		FROM (
+			/* Matched target by ISP */
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			FROM nqm_target tg
+				INNER JOIN
+				nqm_pt_target_filter_isp AS tfisp
+				ON tfisp.tfisp_pt_ag_id = ?
+					AND tg.tg_isp_id = tfisp.tfisp_isp_id
+			/* :~) */
+			UNION
+			/* Matched target by province */
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			FROM nqm_target tg
+				INNER JOIN
+				nqm_pt_target_filter_province AS tfpv
+				ON tfpv.tfpv_pt_ag_id = ?
+					AND tg.tg_pv_id = tfpv.tfpv_pv_id
+			/* :~) */
+			UNION
+			/* Matched target by city */
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			FROM nqm_target tg
+				INNER JOIN
+				nqm_pt_target_filter_city AS tfct
+				ON tfct.tfct_pt_ag_id = ?
+					AND tg.tg_ct_id = tfct.tfct_ct_id
+			/* :~) */
+			UNION
+			/* Matched target by name tag */
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			FROM nqm_target tg
+				INNER JOIN
+				nqm_pt_target_filter_name_tag AS tfnt
+				ON tfnt.tfnt_pt_ag_id = ?
+					AND tg.tg_name_tag = tfnt.tfnt_name_tag
+			/* :~) */
+			UNION
+			/* Matched target which to be probed by all */
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			FROM nqm_target tg
+			WHERE tg_probed_by_all = true
+			/* :~) */
+		) AS tg
+		INNER JOIN
+		owl_isp AS isp
+		ON tg.tg_isp_id = isp.isp_id
+		INNER JOIN
+		owl_province AS pv
+		ON tg.tg_pv_id = pv.pv_id
+		INNER JOIN
+		owl_city AS ct
+		ON tg.tg_ct_id = ct.ct_id
 		`,
 		agentId, agentId, agentId, agentId,
 	)
