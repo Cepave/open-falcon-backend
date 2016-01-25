@@ -1,8 +1,17 @@
 package model
 
+import (
+	"fmt"
+)
+
 const (
 	// Value of undefined id
 	UNDEFINED_ID = -1
+
+	UNDEFINED_ISP_ID = int16(UNDEFINED_ID)
+	UNDEFINED_PROVINCE_ID = int16(UNDEFINED_ID)
+	UNDEFINED_CITY_ID = int16(UNDEFINED_ID)
+
 	// Value of undefined string
 	UNDEFINED_STRING = "<UNDEFINED>"
 )
@@ -10,12 +19,12 @@ const (
 // Represents the request for ping task by NQM agent
 type NqmPingTaskRequest struct {
 	// The connection id of agent(used to identify task configruation)
-	ConnectionId string
+	ConnectionId string `valid:"required"`
 	// The hostname of agent
-	Hostname string
+	Hostname string `valid:"required"`
 	// The IP address of agent
 	// Could be IPv4 or IPv6 format
-	IpAddress string
+	IpAddress string `valid:"required"`
 }
 
 // Represents the response for ping task requested from NQM agent
@@ -25,10 +34,16 @@ type NqmPingTaskResponse struct {
 	// Whether or not the task should be performed
 	NeedPing bool
 
+	// The data of agent
+	// nil if there is no need for ping
+	Agent *NqmAgent
+
 	// The list of target hosts to be probed(ping)
+	// nil if there is no need for ping
 	Targets []NqmTarget
 
 	// The command/arguments of command to be executed
+	// nil if there is no need for ping
 	Command []string
 }
 
@@ -61,4 +76,11 @@ type NqmTarget struct {
 	CityId int16
 	// The tag of the target, UNDEFINED_STRING means no such data for this target
 	NameTag string
+}
+
+func (target NqmTarget) String() string {
+	return fmt.Sprintf(
+		"Id: [%d] Host: [%s] IspId: [%d] ProvinceId: [%d], City: [%d], Name tag: [%s]",
+		target.Id, target.Host, target.IspId, target.ProvinceId, target.CityId, target.NameTag,
+	)
 }
