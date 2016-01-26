@@ -41,6 +41,80 @@ func graphQueryOne(ec cmodel.GraphInfoParam, body GraphHistoryParam, endpoint st
 	return result
 }
 
+func makeOneFakeResult(body GraphHistoryParam) *cmodel.GraphQueryResponse {
+	for _, ec := range body.EndpointCounters {
+		if !strings.Contains(ec.Counter,"packet-loss-rate") && !strings.Contains(ec.Counter,"average") {
+			fakeResult := graphQueryOne(ec, body,"" , "")
+			for i := range fakeResult.Values {
+				fakeResult.Values[i].Value = cmodel.JsonFloat(0.0)
+			}
+			return fakeResult
+		}
+	}
+	return nil
+}
+
+func detectCounter(counter string, body GraphHistoryParam) bool {
+	for _, ec := range body.EndpointCounters {		
+		if strings.Contains(ec.Counter, counter) {		
+			return true		
+		}		
+	}
+	return false
+}
+
+func nqmData(body GraphHistoryParam, nqmDataCounter string, rawDataCounter string) []*cmodel.GraphQueryResponse {
+
+	result := makeOneFakeResult(body)
+	if result == nil {
+		return nil
+	}
+	data := []*cmodel.GraphQueryResponse{}
+	packetSentCount := make([]cmodel.JsonFloat, len(result.Values))
+	for i := range result.Values {
+		packetSentCount[i] = cmodel.JsonFloat(0.0)
+	}
+	for _, ec := range body.EndpointCounters {
+		if !strings.Contains(ec.Counter, rawDataCounter) {
+			continue
+		}
+
+		resultRaw := graphQueryOne(ec, body, "", "")
+		if resultRaw == nil {
+			continue
+		}
+		data = append(data, resultRaw)
+
+		if rawDataCounter == "packets-sent" {
+			counter := strings.Replace(ec.Counter, "packets-sent", "packets-received", 1)
+			if resultAdditional := graphQueryOne(ec, body, "", counter); resultAdditional != nil {
+				data = append(data, resultAdditional)
+				for i := range resultRaw.Values {
+					packetLossCount := (resultRaw.Values[i].Value - resultAdditional.Values[i].Value)
+					result.Values[i].Value += packetLossCount
+					packetSentCount[i] += resultRaw.Values[i].Value
+				}
+			}
+		} else if rawDataCounter == "transmission-time" {
+			counter := strings.Replace(ec.Counter, "transmission-time", "packets-sent", 1)
+			if resultAdditional := graphQueryOne(ec, body, "", counter); resultAdditional != nil {
+				data = append(data, resultAdditional)
+				for i := range resultAdditional.Values {
+					result.Values[i].Value += resultAdditional.Values[i].Value * resultRaw.Values[i].Value
+					packetSentCount[i] += resultAdditional.Values[i].Value
+				}
+			}
+		}
+	}
+	for i := range result.Values {
+		result.Values[i].Value = result.Values[i].Value / packetSentCount[i]
+	}
+	result.Endpoint = "all-endpoints"
+	result.Counter = nqmDataCounter
+	data = append(data, result)
+	return data
+}
+
 func configGraphRoutes() {
 
 	// method:post
@@ -62,66 +136,23 @@ func configGraphRoutes() {
 		}
 
 		data := []*cmodel.GraphQueryResponse{}
-		var result *cmodel.GraphQueryResponse
-		for _, ec := range body.EndpointCounters {
-			if strings.Contains(ec.Counter, "packets-sent") || strings.Contains(ec.Counter, "transmission-time") {
-				// NQM Case
-				var packetSentCount []cmodel.JsonFloat
-				// clone a response
-				result = graphQueryOne(ec, body, "", "")
-				for i := range result.Values {
-					result.Values[i].Value = cmodel.JsonFloat(0.0)
-					packetSentCount = append(packetSentCount, cmodel.JsonFloat(0.0))
-				}
-				if result == nil {
-					continue
-				}
 
-				resultSent := graphQueryOne(ec, body, "", "")
-				if resultSent == nil {
-					continue
-				}
-				data = append(data, resultSent)
-
-				if strings.Contains(ec.Counter, "packets-sent") {
-					counter := strings.Replace(ec.Counter, "packets-sent", "packets-received", 1)
-					if resultReceived := graphQueryOne(ec, body, "", counter); resultReceived != nil {
-						data = append(data, result)
-						for i := range resultSent.Values {
-							packetLossCount := (resultSent.Values[i].Value - resultReceived.Values[i].Value)
-							result.Values[i].Value += packetLossCount
-							packetSentCount[i] += resultSent.Values[i].Value
-						}
-					}
-				} else if strings.Contains(ec.Counter, "transmission-time") {
-					counter := strings.Replace(ec.Counter, "transmission-time", "packets-sent", 1)
-					if resultTransmissionTime := graphQueryOne(ec, body, "", counter); resultTransmissionTime != nil {
-						data = append(data, resultSent)
-						for i := range resultTransmissionTime.Values {
-							result.Values[i].Value += resultTransmissionTime.Values[i].Value * resultSent.Values[i].Value
-							packetSentCount[i] += resultSent.Values[i].Value
-						}
-					}
-				}
-
-				if strings.Contains(ec.Counter, "packets-sent") {
-					result.Endpoint = "all-endpoints"
-					result.Counter = "packet-loss-rate"
-				} else if strings.Contains(ec.Counter, "transmission-time") {
-					result.Endpoint = "all-endpoints"
-					result.Counter = "average"
-				}
-				for i := range result.Values {
-					result.Values[i].Value = result.Values[i].Value / packetSentCount[i]
-				}
-				result.Values = result.Values
-				data = append(data, result)
-
-			} else {
+		isPacketLossRate := detectCounter("packet-loss-rate", body)
+		isAverage := detectCounter("average", body)
+		
+		if isPacketLossRate || isAverage {
+			// NQM Case
+			if isPacketLossRate {
+				data = append(data, nqmData(body, "packet-loss-rate", "packets-sent")... )
+			} else if isAverage {
+				data = append(data, nqmData(body, "average", "transmission-time")... )
+			}
+		} else {
+			for _, ec := range body.EndpointCounters {
 				regx, _ := regexp.Compile("(\\.\\$\\s*|\\s*)$")
 				endpoint := regx.ReplaceAllString(ec.Endpoint, "")
 				counter := regx.ReplaceAllString(ec.Counter, "")
-				result = graphQueryOne(ec, body, endpoint, counter)
+				result := graphQueryOne(ec, body, endpoint, counter)
 				if result == nil {
 					continue
 				}
