@@ -20,11 +20,11 @@ type GraphHistoryParam struct {
 	EndpointCounters []cmodel.GraphInfoParam `json:"endpoint_counters"`
 }
 
-func graphQueryOne(body GraphHistoryParam, ec cmodel.GraphInfoParam, endpoint string, counter string) {
-	if endpoint == nil {
+func graphQueryOne(ec cmodel.GraphInfoParam, body GraphHistoryParam, endpoint string, counter string) *cmodel.GraphQueryResponse {
+	if endpoint == "" {
 		endpoint = ec.Endpoint
 	}
-	if counter == nil {
+	if counter == "" {
 		counter = ec.Counter
 	}
 	request := cmodel.GraphQueryParam{
@@ -68,7 +68,7 @@ func configGraphRoutes() {
 				// NQM Case
 				var packetSentCount []cmodel.JsonFloat
 				// clone a response
-				result = graphQueryOne(ec, body, nil, nil)
+				result = graphQueryOne(ec, body, "", "")
 				for i := range result.Values {
 					result.Values[i].Value = cmodel.JsonFloat(0.0)
 					packetSentCount = append(packetSentCount, cmodel.JsonFloat(0.0))
@@ -77,15 +77,15 @@ func configGraphRoutes() {
 					continue
 				}
 
-				resultSent = graphQueryOne(ec, body, nil, nil)
+				resultSent := graphQueryOne(ec, body, "", "")
 				if resultSent == nil {
 					continue
 				}
 				data = append(data, resultSent)
 
 				if strings.Contains(ec.Counter, "packets-sent") {
-					counter = strings.Replace(ec.Counter, "packets-sent", "packets-received", 1)
-					if resultReceived = graphQueryOne(ec, body, nil, counter); resultReceived {
+					counter := strings.Replace(ec.Counter, "packets-sent", "packets-received", 1)
+					if resultReceived := graphQueryOne(ec, body, "", counter); resultReceived != nil {
 						data = append(data, result)
 						for i := range resultSent.Values {
 							packetLossCount := (resultSent.Values[i].Value - resultReceived.Values[i].Value)
@@ -94,12 +94,12 @@ func configGraphRoutes() {
 						}
 					}
 				} else if strings.Contains(ec.Counter, "transmission-time") {
-					counter = strings.Replace(ec.Counter, "transmission-time", "packets-sent", 1)
-					if resultTransmissionTime = graphQueryOne(ec, body, nil, counter); resultTransmissionTime {
-						data = append(data, resultPacketsSent)
+					counter := strings.Replace(ec.Counter, "transmission-time", "packets-sent", 1)
+					if resultTransmissionTime := graphQueryOne(ec, body, "", counter); resultTransmissionTime != nil {
+						data = append(data, resultSent)
 						for i := range resultTransmissionTime.Values {
-							result.Values[i].Value += resultTransmissionTime.Values[i].Value * resultPacketsSent.Values[i].Value
-							packetSentCount[i] += resultPacketsSent.Values[i].Value
+							result.Values[i].Value += resultTransmissionTime.Values[i].Value * resultSent.Values[i].Value
+							packetSentCount[i] += resultSent.Values[i].Value
 						}
 					}
 				}
@@ -119,8 +119,8 @@ func configGraphRoutes() {
 
 			} else {
 				regx, _ := regexp.Compile("(\\.\\$\\s*|\\s*)$")
-				endpoint = regx.ReplaceAllString(ec.Endpoint, "")
-				counter = regx.ReplaceAllString(ec.Counter, "")
+				endpoint := regx.ReplaceAllString(ec.Endpoint, "")
+				counter := regx.ReplaceAllString(ec.Counter, "")
 				result = graphQueryOne(ec, body, endpoint, counter)
 				if result == nil {
 					continue
