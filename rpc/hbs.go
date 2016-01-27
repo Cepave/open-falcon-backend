@@ -2,9 +2,9 @@ package rpc
 
 import (
 	"fmt"
-	"github.com/open-falcon/common/model"
-	"github.com/open-falcon/common/utils"
-	"github.com/open-falcon/hbs/cache"
+	"github.com/Cepave/common/model"
+	"github.com/Cepave/common/utils"
+	"github.com/Cepave/hbs/cache"
 )
 
 func (t *Hbs) GetExpressions(req model.NullRpcRequest, reply *model.ExpressionResponse) error {

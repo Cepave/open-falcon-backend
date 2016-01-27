@@ -2,10 +2,10 @@ package rpc
 
 import (
 	"bytes"
-	"github.com/open-falcon/common/model"
-	"github.com/open-falcon/common/utils"
-	"github.com/open-falcon/hbs/cache"
-	"github.com/open-falcon/hbs/g"
+	"github.com/Cepave/common/model"
+	"github.com/Cepave/common/utils"
+	"github.com/Cepave/hbs/cache"
+	"github.com/Cepave/hbs/g"
 	"sort"
 	"strings"
 	"time"
