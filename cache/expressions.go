@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/common/model"
 	"github.com/Cepave/hbs/db"
 	"sync"
 )

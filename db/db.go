@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/open-falcon/hbs/g"
+	"github.com/Cepave/hbs/g"
 	"log"
 )
 

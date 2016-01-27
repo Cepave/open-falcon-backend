@@ -2,8 +2,8 @@ package db
 
 import (
 	"fmt"
-	"github.com/open-falcon/common/model"
-	"github.com/open-falcon/hbs/g"
+	"github.com/Cepave/common/model"
+	"github.com/Cepave/hbs/g"
 	"log"
 )
 
