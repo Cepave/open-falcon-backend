@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/common/model"
 	"log"
 )
 
