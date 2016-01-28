@@ -135,7 +135,7 @@ func FormParams(agent *model.NqmAgent, metric string, statistics map[SamplingTar
         endpoint := *connectionId
         value := statistic.Value
         counterType := "GAUGE"
-        tags := ",nqm-agent-isp="+agent.IspName+
+        tags := "nqm-agent-isp="+agent.IspName+
                 ",nqm-agent-province="+agent.ProvinceName+
                 ",nqm-agent-city="+agent.CityName+
                 ",target-ip="+samplingTarget.Address+
