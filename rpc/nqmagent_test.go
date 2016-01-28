@@ -61,14 +61,18 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 			 * Asserts the agent
 			 */
 			c.Assert(err, IsNil)
-			c.Logf("Got resposne: %v", &resp)
+			c.Logf("Got response: %v", &resp)
+			c.Logf("Agent : %v", resp.Agent)
 
 			c.Assert(resp.NeedPing, Equals, true)
 			c.Assert(resp.Agent.Id, Equals, 4051)
 			c.Assert(resp.Agent.Name, Equals, "ag-name-1")
 			c.Assert(resp.Agent.IspId, Equals, int16(3))
+			c.Assert(resp.Agent.IspName, Equals, "移动")
 			c.Assert(resp.Agent.ProvinceId, Equals, int16(2))
+			c.Assert(resp.Agent.ProvinceName, Equals, "山西")
 			c.Assert(resp.Agent.CityId, Equals, model.UNDEFINED_CITY_ID)
+			c.Assert(resp.Agent.CityName, Equals, model.UNDEFINED_STRING)
 
 			c.Assert(len(resp.Targets), Equals, 3)
 			c.Assert(resp.Command[0], Equals, "fping")
@@ -77,6 +81,10 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 			/**
 			 * Asserts the 1st target
 			 */
+			for _, v := range resp.Targets {
+				c.Log("Target: %v", v)
+			}
+
 			sort.Sort(byId(resp.Targets))
 			var expectedTargets = model.NqmTarget {
 				Id: 6301, Host: "1.2.3.4", NameTag: model.UNDEFINED_STRING,
