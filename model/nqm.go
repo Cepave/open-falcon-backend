@@ -52,6 +52,9 @@ type NqmAgent struct {
 	// The id of agent
 	Id int
 
+	// The name of agent
+	Name string
+
 	// The id of ISP, UNDEFINED_ID means there is not such data for this target
 	IspId int16
 	// The id of province, UNDEFINED_ID means there is not such data for this target
