@@ -65,6 +65,7 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 
 			c.Assert(resp.NeedPing, Equals, true)
 			c.Assert(resp.Agent.Id, Equals, 4051)
+			c.Assert(resp.Agent.Name, Equals, "ag-name-1")
 			c.Assert(resp.Agent.IspId, Equals, int16(3))
 			c.Assert(resp.Agent.ProvinceId, Equals, int16(2))
 			c.Assert(resp.Agent.CityId, Equals, model.UNDEFINED_CITY_ID)
@@ -106,8 +107,8 @@ func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 
 		hbstesting.ExecuteQueriesOrFailInTx(
 			`
-			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_pv_id, ag_ct_id)
-			VALUES (4051, 'ag-rpc-1', 'rpc-1.org', 0x12345672, 3, 2, -1)
+			INSERT INTO nqm_agent(ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_pv_id, ag_ct_id)
+			VALUES (4051, 'ag-name-1', 'ag-rpc-1', 'rpc-1.org', 0x12345672, 3, 2, -1)
 			`,
 			`
 			INSERT INTO nqm_target(

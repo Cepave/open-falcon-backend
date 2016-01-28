@@ -64,6 +64,8 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 	}
 
 	err = inTx(func(tx *sql.Tx) (err error) {
+		var dbAgentName sql.NullString
+
 		if err = tx.QueryRow(
 			/**
 			 * Gets one row if the executing of ping task is needed
@@ -74,7 +76,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			 * 3) The agent is disabled
 			 */
 			`
-			SELECT ag_isp_id, ag_pv_id, ag_ct_id
+			SELECT ag_isp_id, ag_name, ag_pv_id, ag_ct_id
 			FROM nqm_agent AS ag
 				INNER JOIN
 				(
@@ -94,7 +96,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			`,
 			// :~)
 			agentId, checkedTime.Unix(),
-		).Scan(&result.IspId, &result.ProvinceId, &result.CityId)
+		).Scan(&result.IspId, &dbAgentName, &result.ProvinceId, &result.CityId)
 			err != nil {
 
 			/**
@@ -108,6 +110,16 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 
 			return
 		}
+
+		/**
+		 * Loads name of agent
+		 */
+		if dbAgentName.Valid {
+			result.Name = dbAgentName.String
+		} else {
+			result.Name = commonModel.UNDEFINED_STRING
+		}
+		// :~)
 
 		/**
 		 * Updates the last execute
