@@ -243,6 +243,7 @@ CREATE TABLE IF NOT EXISTS owl_city(
 
 CREATE TABLE IF NOT EXISTS nqm_agent(
 	ag_id INT PRIMARY KEY AUTO_INCREMENT,
+	ag_name VARCHAR(128),
 	ag_connection_id VARCHAR(128) NOT NULL,
 	ag_hostname VARCHAR(256) NOT NULL,
 	ag_ip_address VARBINARY(16) NOT NULL,
@@ -263,7 +264,8 @@ CREATE TABLE IF NOT EXISTS nqm_agent(
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT,
 	CONSTRAINT UNIQUE INDEX unq_nqm_agent__ag_connection_id
-		(ag_connection_id)
+		(ag_connection_id),
+	INDEX ix_nqm_agent__ag_name(ag_name)
 );
 
 CREATE TABLE IF NOT EXISTS nqm_target(
