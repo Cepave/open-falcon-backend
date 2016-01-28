@@ -76,7 +76,10 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			 * 3) The agent is disabled
 			 */
 			`
-			SELECT ag_isp_id, ag_name, ag_pv_id, ag_ct_id
+			SELECT ag_name,
+				isp_id, isp_name,
+				pv_id, pv_name,
+				ct_id, ct_name
 			FROM nqm_agent AS ag
 				INNER JOIN
 				(
@@ -93,10 +96,24 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 				) AS pt
 				ON ag.ag_id = pt.pt_ag_id
 					AND ag.ag_status & b'00000001' = b'00000001'
+				INNER JOIN
+				owl_isp AS isp
+				ON ag.ag_isp_id = isp.isp_id
+				INNER JOIN
+				owl_province AS pv
+				ON ag.ag_pv_id = pv.pv_id
+				INNER JOIN
+				owl_city AS ct
+				ON ag.ag_ct_id = ct.ct_id
 			`,
 			// :~)
 			agentId, checkedTime.Unix(),
-		).Scan(&result.IspId, &dbAgentName, &result.ProvinceId, &result.CityId)
+		).Scan(
+			&dbAgentName,
+			&result.IspId, &result.IspName,
+			&result.ProvinceId, &result.ProvinceName,
+			&result.CityId, &result.CityName,
+		)
 			err != nil {
 
 			/**
