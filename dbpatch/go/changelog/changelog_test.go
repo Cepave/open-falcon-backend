@@ -3,7 +3,7 @@ package changelog
 import (
 	"testing"
 	dbsql "database/sql"
-	patchsql "db-patch/sql"
+	patchsql "github.com/Cepave/scripts/dbpatch/go/sql"
 	"flag"
 	. "gopkg.in/check.v1"
 )
@@ -62,7 +62,7 @@ func (suite *ChangeLogSuite) TestLoadChangeLog(c *C) {
  * Tests the loading of change log from file
  */
 func (suite *ChangeLogSuite) TestLoadChangeLogFromFile(c *C) {
-	var testedConfigOfPatches, err = LoadChangeLogFromFile("TestLoadChangeLogFromFile.yaml")
+	var testedConfigOfPatches, err = LoadChangeLogFromFile("../test/TestLoadChangeLogFromFile.yaml")
 
 	c.Assert(err, IsNil)
 	c.Assert(len(testedConfigOfPatches), Equals, 2)
@@ -74,7 +74,7 @@ func (suite *ChangeLogSuite) TestLoadChangeLogFromFile(c *C) {
 func (suite *ChangeLogSuite) TestLoadScripts(c *C) {
 	var samplePatchConfig = PatchConfig{
 		Id: "hello-1",
-		Filename: "hello-1.sql",
+		Filename: "../test/hello-1.sql",
 	}
 
 	var testScripts, err = samplePatchConfig.loadScripts(".", ";")
@@ -89,6 +89,8 @@ var dbConfig *patchsql.DatabaseConfig = nil
 
 // 1. Setup connection of database
 func (s *ChangeLogSuite) SetUpSuite(c *C) {
+	flag.Parse()
+
 	if *driverName == "" {
 		c.Log("No database assigned, some tests would be skipped")
 		return
