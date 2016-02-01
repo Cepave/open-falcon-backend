@@ -15,7 +15,12 @@ var _ = Suite(&TestRpcNqmAgentSuite{})
  * Tests the data validation for ping task
  */
 func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
-	var testeCases = [][]interface{} {
+	var testeCases = []struct {
+		connectionId string
+		hostname string
+		ipAddress string
+		checker Checker
+	} {
 		{ "120.49.58.19", "localhost.localdomain", "120.49.58.19", IsNil },
 		{ "", "localhost.localdomain", "120.49.58.19", NotNil },
 		{ "120.49.58.19", "", "120.49.58.19", NotNil },
@@ -25,13 +30,13 @@ func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
 	for _, v := range testeCases {
 		err := validatePingTask(
 			&model.NqmPingTaskRequest{
-				ConnectionId: v[0].(string),
-				Hostname: v[1].(string),
-				IpAddress: v[2].(string),
+				ConnectionId: v.connectionId,
+				Hostname: v.hostname,
+				IpAddress: v.ipAddress,
 			},
 		)
 
-		c.Assert(err, v[3].(Checker))
+		c.Assert(err, v.checker)
 	}
 }
 
