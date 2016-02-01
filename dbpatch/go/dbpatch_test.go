@@ -2,7 +2,7 @@ package main
 
 import (
 	"testing"
-	"github.com/mikelue/owl-dbpatch/changelog"
+	"github.com/Cepave/scripts/dbpatch/go/changelog"
 	. "gopkg.in/check.v1"
 )
 

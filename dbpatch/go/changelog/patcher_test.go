@@ -37,6 +37,7 @@ func assertChangeLogSchema(c *C) {
 			SELECT COUNT(*)
 			FROM INFORMATION_SCHEMA.TABLES
 			WHERE TABLE_NAME = ?
+				AND TABLE_SCHEMA = DATABASE()
 			`,
 			"sysdb_change_log",
 		).
