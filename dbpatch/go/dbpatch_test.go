@@ -16,7 +16,13 @@ var _ = Suite(&DefaultSuite{})
  * Tests the checking of configuration
  */
 func (s *DefaultSuite) TestCheckRunPatchConfig(c *C) {
-	var testCases = [][]interface{} {
+	var testCases = []struct {
+		driverName string
+		dsn string
+		changeLog string
+		patchFileBase string
+		expectedResult bool
+	} {
 		{ "mysql", "msyql://localhost/", "changeLog.json", "patch-files", true }, // Passed check
 		{ "", "msyql://localhost/", "changeLog.json", "patch-files", false }, // Failed check
 		{ "mysql", "", "changeLog.json", "patch-files", false }, // Failed check
@@ -24,12 +30,12 @@ func (s *DefaultSuite) TestCheckRunPatchConfig(c *C) {
 
 	for _, testCase := range testCases {
 		var testedResult = checkRunPatchConfig(&changelog.ChangeLogConfig{
-			DriverName: testCase[0].(string),
-			Dsn: testCase[1].(string),
-			ChangeLog: testCase[2].(string),
-			PatchFileBase: testCase[3].(string),
+			DriverName: testCase.driverName,
+			Dsn: testCase.dsn,
+			ChangeLog: testCase.changeLog,
+			PatchFileBase: testCase.patchFileBase,
 		})
 
-		c.Assert(testedResult, Equals, testCase[4].(bool))
+		c.Assert(testedResult, Equals, testCase.expectedResult)
 	}
 }
