@@ -52,12 +52,23 @@ type NqmAgent struct {
 	// The id of agent
 	Id int
 
+	// The name of agent
+	Name string
+
 	// The id of ISP, UNDEFINED_ID means there is not such data for this target
 	IspId int16
+	// The name of ISP
+	IspName string
+
 	// The id of province, UNDEFINED_ID means there is not such data for this target
 	ProvinceId int16
+	// The name of province
+	ProvinceName string
+
 	// The id of city, UNDEFINED_ID means there is not such data for this target
 	CityId int16
+	// The name of city
+	CityName string
 }
 
 // Represents the data of target used by NQM agent
@@ -89,7 +100,21 @@ type NqmTarget struct {
 
 func (target NqmTarget) String() string {
 	return fmt.Sprintf(
-		"Id: [%d] Host: [%s] IspId: [%d] ProvinceId: [%d], City: [%d], Name tag: [%s]",
-		target.Id, target.Host, target.IspId, target.ProvinceId, target.CityId, target.NameTag,
+		"Id: [%d] Host: [%s] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: [%s]",
+		target.Id, target.Host,
+		target.IspName, target.IspId,
+		target.ProvinceName, target.ProvinceId,
+		target.CityName, target.CityId,
+		target.NameTag,
+	)
+}
+
+func (agent NqmAgent) String() string {
+	return fmt.Sprintf(
+		"Id: [%d] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d]",
+		agent.Id,
+		agent.IspName, agent.IspId,
+		agent.ProvinceName, agent.ProvinceId,
+		agent.CityName, agent.CityId,
 	)
 }
