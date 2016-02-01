@@ -155,19 +155,19 @@ func (suite *ChangeLogSuite) TestApplyPatchWithError(c *C) {
  * Tests the checking for whether or not a patch has been applied on database
  */
 func (suite *ChangeLogSuite) TestHasPatchApplied(c *C) {
-	var testCases = [][]interface{} {
+	var testCases = []struct {
+		patchConfig PatchConfig
+		expectedResult bool
+	} {
 		{ PatchConfig { Id: "hp-sample-1" }, true }, // Successful
 		{ PatchConfig { Id: "hp-sample-2" }, false }, // Failed
 		{ PatchConfig { Id: "hp-sample-3" }, false }, // Not applied
 	}
 
-	for _, v := range testCases {
-		var patchConfig = v[0].(PatchConfig)
-		var expectedResult = v[1].(bool)
-
-		testedResult, err := hasPatchApplied(dbConfig, &patchConfig)
+	for _, testCase := range testCases {
+		testedResult, err := hasPatchApplied(dbConfig, &testCase.patchConfig)
 		c.Assert(err, IsNil)
-		c.Assert(testedResult, Equals, expectedResult)
+		c.Assert(testedResult, Equals, testCase.expectedResult)
 	}
 }
 
