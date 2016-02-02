@@ -1,0 +1,20 @@
+- {
+    id: "mike-1",
+    filename: "mike-1.sql",
+    comment: "The initialization of existing database schema"
+}
+- {
+    id: "mike-2",
+    filename: "mike-2.sql",
+    comment: "NQM database schema"
+}
+- {
+    id: "mike-3",
+    filename: "mike-3.sql",
+    comment: "Buildin data of ISP, province, and city"
+}
+- {
+    id: "mike-4",
+    filename: "mike-4.sql",
+    comment: "Add name of agent"
+}
