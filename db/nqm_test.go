@@ -26,8 +26,13 @@ func (s *TestDbNqmSuite) TearDownSuite(c *C) {
 /**
  * Tests the insertion and refresh for a agent
  */
+type refreshAgentTestCase struct {
+	connectionId string
+	hostName string
+	ipAddress string
+}
 func (suite *TestDbNqmSuite) TestRefreshAgentInfo(c *C) {
-	var testedCases = [][]interface{} {
+	var testedCases = []refreshAgentTestCase {
 		{ "refresh-1", "refresh1.com", "100.20.44.12" }, // First time creation of data
 		{ "refresh-1", "refresh2.com", "100.20.44.13" }, // Refresh of data
 	}
@@ -37,12 +42,12 @@ func (suite *TestDbNqmSuite) TestRefreshAgentInfo(c *C) {
 	}
 }
 
-func testRefreshAgentInfo(c *C, args []interface{}) {
+func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
 	var testedAgent = model.NewNqmAgent(
 		&commonModel.NqmPingTaskRequest {
-			ConnectionId: args[0].(string),
-			Hostname: args[1].(string),
-			IpAddress: args[2].(string),
+			ConnectionId: args.connectionId,
+			Hostname: args.hostName,
+			IpAddress: args.ipAddress,
 		},
 	)
 
@@ -86,7 +91,10 @@ func (targets byId) Swap(i, j int)      { targets[i], targets[j] = targets[j], t
 func (targets byId) Less(i, j int) bool { return targets[i].Id < targets[j].Id }
 
 func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
-	testedCases := [][]interface{} {
+	testedCases := []struct {
+		agentId int
+		expectedIdOfTargets []int
+	} {
 		{ 2301, []int{ 4021, 4022, 4023, 4024, 4025 } }, // All of the targets
 		{ 2302, []int{ 4021, 4022 } }, // Targets are matched by ISP
 		{ 2303, []int{ 4021, 4023 } }, // Targets are matched by province
@@ -96,12 +104,11 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 	}
 
 	for _, v := range testedCases {
-		testedTargets, err := GetTargetsByAgentForRpc(v[0].(int))
+		testedTargets, err := GetTargetsByAgentForRpc(v.agentId)
 
 		c.Assert(err, IsNil)
 
-		expectedIdsOfTarget := v[1].([]int)
-		c.Assert(len(testedTargets), Equals, len(expectedIdsOfTarget))
+		c.Assert(len(testedTargets), Equals, len(v.expectedIdOfTargets))
 
 		sort.Sort(byId(testedTargets))
 
@@ -109,7 +116,7 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 		 * Asserts the matching for concise id of targets
 		 */
 		for i, target := range testedTargets {
-			c.Assert(target.Id, Equals, expectedIdsOfTarget[i])
+			c.Assert(target.Id, Equals, v.expectedIdOfTargets[i])
 		}
 		// :~)
 	}
@@ -118,8 +125,13 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 /**
  * Tests getting data of agent for RPC
  */
+type getAndRefreshNeedPingAgentTestCase struct {
+	agentId int
+	checkTime string
+	checker Checker
+}
 func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
-	testedCases := [][]interface{} {
+	testedCases := []getAndRefreshNeedPingAgentTestCase {
 		{ 1301, "2115-08-08T00:00:00+00:00", IsNil }, // No ping task setting
 		{ 1302, "2010-05-05T10:59:00+08:00", IsNil }, // The period is not elapsed yet
 		{ 1303, "2013-10-01T00:00:00+08:00", NotNil }, // Never executed
@@ -132,31 +144,30 @@ func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
 	}
 }
 
-func testNeedPingAgent(c *C, args []interface{}) {
-	sampleAgentId := args[0].(int)
-	sampleCheckedTime, _ := time.Parse(time.RFC3339, args[1].(string))
+func testNeedPingAgent(c *C, testCase getAndRefreshNeedPingAgentTestCase) {
+	sampleCheckedTime, _ := time.Parse(time.RFC3339, testCase.checkTime)
 
-	c.Logf("Agent Id: %d", sampleAgentId)
+	c.Logf("Agent Id: %d", testCase.agentId)
 
 	testedAgent, err := GetAndRefreshNeedPingAgentForRpc(
-		sampleAgentId, sampleCheckedTime,
+		testCase.agentId, sampleCheckedTime,
 	)
 
 	/**
 	 * Asserts the result data
 	 */
 	c.Assert(err, IsNil)
-	c.Assert(testedAgent, args[2].(Checker))
+	c.Assert(testedAgent, testCase.checker)
 	// :~)
 
-	if args[2].(Checker) == IsNil {
+	if testCase.checker == IsNil {
 		return
 	}
 
 	/**
 	 * Asserts the content of returned agent
 	 */
-	c.Assert(testedAgent.Id, Equals, sampleAgentId)
+	c.Assert(testedAgent.Id, Equals, testCase.agentId)
 	c.Assert(testedAgent.IspId, Equals, int16(3))
 	c.Assert(testedAgent.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
 	c.Assert(testedAgent.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
@@ -176,7 +187,7 @@ func testNeedPingAgent(c *C, args []interface{}) {
 		FROM nqm_ping_task
 		WHERE pt_ag_id = ?
 		`,
-		sampleAgentId,
+		testCase.agentId,
 	)
 
 	c.Assert(unixTime, Equals, sampleCheckedTime.Unix())
@@ -187,7 +198,10 @@ func testNeedPingAgent(c *C, args []interface{}) {
  * Tests the state of ping task
  */
 func (suite *TestDbNqmSuite) TestGetPingTaskState(c *C) {
-	testedCases := [][]interface{} {
+	testedCases := []struct {
+		agentId int
+		expectedStatus int
+	} {
 		{ 2001, NO_PING_TASK }, // The agent has no ping task
 		{ 2002, HAS_PING_TASK_ALL_MATCHING }, // The agent has ping task with all of the targets
 		{ 2003, HAS_PING_TASK_WITH_FILTER }, // The agent has ping task with ISP filter
@@ -197,11 +211,10 @@ func (suite *TestDbNqmSuite) TestGetPingTaskState(c *C) {
 	}
 
 	for _, v := range testedCases {
-		expectedResult := v[1].(int)
-		testedResult, err := getPingTaskState(v[0].(int))
+		testedResult, err := getPingTaskState(v.agentId)
 
 		c.Assert(err, IsNil)
-		c.Assert(testedResult, Equals, expectedResult)
+		c.Assert(testedResult, Equals, v.expectedStatus)
 	}
 }
 
