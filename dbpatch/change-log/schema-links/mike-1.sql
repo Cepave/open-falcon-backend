@@ -1,0 +1,14 @@
+SET NAMES 'utf8';
+
+CREATE TABLE IF NOT EXISTS alert
+(
+  id        INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  path      VARCHAR(16)  NOT NULL DEFAULT '',
+  content   TEXT         NOT NULL,
+  create_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY alert_path(path)
+)
+  ENGINE =InnoDB
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
