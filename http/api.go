@@ -9,7 +9,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 )
 
 /**
@@ -237,6 +239,66 @@ func getAgentAliveData(hostnames []string, versions map[string]string, result ma
 		setError(err.Error(), result)
 	}
 	return data
+}
+
+func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, versions map[string]string, result map[string]interface{}) {
+	name := ""
+	version := ""
+	status := ""
+	alive := 0
+	countOfNormal := 0
+	countOfWarn := 0
+	countOfDead := 0
+	anomalies := []interface{}{}
+	items := []interface{}{}
+	for key, row := range data {
+		name = row.Endpoint
+		var diff int64
+		diff =  0
+		var timestamp int64
+		timestamp = 0
+		status = "dead"
+		alive = 0
+		if name == "" {
+			name = hostnames[key]
+		} else {
+			alive = int(row.Value.Value)
+			timestamp = row.Value.Timestamp
+			now := time.Now().Unix()
+			diff =  now - timestamp
+		}
+		version = versions[name]
+		if alive > 0 {
+			if diff > 3600 {
+				status = "warm"
+				countOfWarn += 1
+			} else {
+				status = "normal"
+				countOfNormal += 1
+			}
+		} else {
+			countOfDead += 1
+		}
+		item := map[string]interface{}{}
+		item["id"] = strconv.Itoa(key + 1)
+		item["hostname"] = name
+		item["agent_version"] = version
+		item["alive"] = alive
+		item["timestamp"] = timestamp
+		item["diff"] = diff
+		item["status"] = status
+		items = append(items, item)
+		if diff > 60 * 60 * 24 && timestamp > 0 {
+			anomalies = append(anomalies, item)
+		}
+	}
+	var count = make(map[string]interface{})
+	count["all"] = len(data)
+	count["normal"] = countOfNormal
+	count["warn"] = countOfWarn
+	count["dead"] = countOfDead
+	result["count"] = count
+	result["items"] = items
 }
 
 /**
