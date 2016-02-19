@@ -317,22 +317,11 @@ func getAlive(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-/**
- * @function name:   func configApiRoutes()
- * @description:     This function handles API requests.
- * @related issues:  OWL-171
- * @param:           void
- * @return:          void
- * @author:          Don Hsieh
- * @since:           11/12/2015
- * @last modified:   11/13/2015
- * @called by:       func Start()
- *                    in http/http.go
- */
 func configApiRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
 	http.HandleFunc("/api/endpoints", dashboardEndpoints)
 	http.HandleFunc("/api/counters", dashboardCounters)
 	http.HandleFunc("/api/chart", dashboardChart)
+	http.HandleFunc("/api/alive", getAlive)
 }
