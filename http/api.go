@@ -301,6 +301,22 @@ func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, vers
 	result["items"] = items
 }
 
+func getAlive(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+
+	data := []cmodel.GraphLastResp{}
+	hostnames := []string{}
+	var versions = make(map[string]string)
+	data = getAgentAliveData(hostnames, versions, result)
+	processAgentAliveData(data, hostnames, versions, result)
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 /**
  * @function name:   func configApiRoutes()
  * @description:     This function handles API requests.
