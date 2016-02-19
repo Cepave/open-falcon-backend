@@ -2,10 +2,16 @@ package http
 
 import (
 	"bytes"
+	"encoding/json"
+	"github.com/astaxie/beego/orm"
+	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/g"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 /**
@@ -190,22 +196,132 @@ func dashboardChart(rw http.ResponseWriter, req *http.Request) {
 	postByForm(rw, req, url)
 }
 
-/**
- * @function name:   func configApiRoutes()
- * @description:     This function handles API requests.
- * @related issues:  OWL-171
- * @param:           void
- * @return:          void
- * @author:          Don Hsieh
- * @since:           11/12/2015
- * @last modified:   11/13/2015
- * @called by:       func Start()
- *                    in http/http.go
- */
+func getAgentAliveData(hostnames []string, versions map[string]string, result map[string]interface{}) []cmodel.GraphLastResp {
+	var queries []cmodel.GraphLastParam
+	o := orm.NewOrm()
+	var hosts []*Host
+	_, err := o.Raw("SELECT hostname, agent_version FROM falcon_portal.host ORDER BY hostname ASC").QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, host := range hosts {
+			var query cmodel.GraphLastParam
+			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
+				hostnames = append(hostnames, host.Hostname)
+				versions[host.Hostname] = host.Agent_version
+				query.Endpoint = host.Hostname
+				query.Counter = "agent.alive"
+				queries = append(queries, query)
+			}
+		}
+	}
+	s, err := json.Marshal(queries)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	url := g.Config().Api.Query + "/graph/last"
+	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqPost)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	data := []cmodel.GraphLastResp{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	return data
+}
+
+func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, versions map[string]string, result map[string]interface{}) {
+	name := ""
+	version := ""
+	status := ""
+	alive := 0
+	countOfNormal := 0
+	countOfWarn := 0
+	countOfDead := 0
+	anomalies := []interface{}{}
+	items := []interface{}{}
+	for key, row := range data {
+		name = row.Endpoint
+		var diff int64
+		diff =  0
+		var timestamp int64
+		timestamp = 0
+		status = "dead"
+		alive = 0
+		if name == "" {
+			name = hostnames[key]
+		} else {
+			alive = int(row.Value.Value)
+			timestamp = row.Value.Timestamp
+			now := time.Now().Unix()
+			diff =  now - timestamp
+		}
+		version = versions[name]
+		if alive > 0 {
+			if diff > 3600 {
+				status = "warm"
+				countOfWarn += 1
+			} else {
+				status = "normal"
+				countOfNormal += 1
+			}
+		} else {
+			countOfDead += 1
+		}
+		item := map[string]interface{}{}
+		item["id"] = strconv.Itoa(key + 1)
+		item["hostname"] = name
+		item["agent_version"] = version
+		item["alive"] = alive
+		item["timestamp"] = timestamp
+		item["diff"] = diff
+		item["status"] = status
+		items = append(items, item)
+		if diff > 60 * 60 * 24 && timestamp > 0 {
+			anomalies = append(anomalies, item)
+		}
+	}
+	var count = make(map[string]interface{})
+	count["all"] = len(data)
+	count["normal"] = countOfNormal
+	count["warn"] = countOfWarn
+	count["dead"] = countOfDead
+	result["count"] = count
+	result["items"] = items
+}
+
+func getAlive(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+
+	data := []cmodel.GraphLastResp{}
+	hostnames := []string{}
+	var versions = make(map[string]string)
+	data = getAgentAliveData(hostnames, versions, result)
+	processAgentAliveData(data, hostnames, versions, result)
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configApiRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
 	http.HandleFunc("/api/endpoints", dashboardEndpoints)
 	http.HandleFunc("/api/counters", dashboardCounters)
 	http.HandleFunc("/api/chart", dashboardChart)
+	http.HandleFunc("/api/alive", getAlive)
 }
