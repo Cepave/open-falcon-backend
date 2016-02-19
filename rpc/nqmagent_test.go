@@ -15,7 +15,12 @@ var _ = Suite(&TestRpcNqmAgentSuite{})
  * Tests the data validation for ping task
  */
 func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
-	var testeCases = [][]interface{} {
+	var testeCases = []struct {
+		connectionId string
+		hostname string
+		ipAddress string
+		checker Checker
+	} {
 		{ "120.49.58.19", "localhost.localdomain", "120.49.58.19", IsNil },
 		{ "", "localhost.localdomain", "120.49.58.19", NotNil },
 		{ "120.49.58.19", "", "120.49.58.19", NotNil },
@@ -25,13 +30,13 @@ func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
 	for _, v := range testeCases {
 		err := validatePingTask(
 			&model.NqmPingTaskRequest{
-				ConnectionId: v[0].(string),
-				Hostname: v[1].(string),
-				IpAddress: v[2].(string),
+				ConnectionId: v.connectionId,
+				Hostname: v.hostname,
+				IpAddress: v.ipAddress,
 			},
 		)
 
-		c.Assert(err, v[3].(Checker))
+		c.Assert(err, v.checker)
 	}
 }
 
@@ -61,13 +66,18 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 			 * Asserts the agent
 			 */
 			c.Assert(err, IsNil)
-			c.Logf("Got resposne: %v", &resp)
+			c.Logf("Got response: %v", &resp)
+			c.Logf("Agent : %v", resp.Agent)
 
 			c.Assert(resp.NeedPing, Equals, true)
 			c.Assert(resp.Agent.Id, Equals, 4051)
+			c.Assert(resp.Agent.Name, Equals, "ag-name-1")
 			c.Assert(resp.Agent.IspId, Equals, int16(3))
+			c.Assert(resp.Agent.IspName, Equals, "移动")
 			c.Assert(resp.Agent.ProvinceId, Equals, int16(2))
+			c.Assert(resp.Agent.ProvinceName, Equals, "山西")
 			c.Assert(resp.Agent.CityId, Equals, model.UNDEFINED_CITY_ID)
+			c.Assert(resp.Agent.CityName, Equals, model.UNDEFINED_STRING)
 
 			c.Assert(len(resp.Targets), Equals, 3)
 			c.Assert(resp.Command[0], Equals, "fping")
@@ -76,6 +86,10 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 			/**
 			 * Asserts the 1st target
 			 */
+			for _, v := range resp.Targets {
+				c.Log("Target: %v", v)
+			}
+
 			sort.Sort(byId(resp.Targets))
 			var expectedTargets = model.NqmTarget {
 				Id: 6301, Host: "1.2.3.4", NameTag: model.UNDEFINED_STRING,
@@ -106,8 +120,8 @@ func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 
 		hbstesting.ExecuteQueriesOrFailInTx(
 			`
-			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_pv_id, ag_ct_id)
-			VALUES (4051, 'ag-rpc-1', 'rpc-1.org', 0x12345672, 3, 2, -1)
+			INSERT INTO nqm_agent(ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_pv_id, ag_ct_id)
+			VALUES (4051, 'ag-name-1', 'ag-rpc-1', 'rpc-1.org', 0x12345672, 3, 2, -1)
 			`,
 			`
 			INSERT INTO nqm_target(
