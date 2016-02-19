@@ -2,10 +2,14 @@ package http
 
 import (
 	"bytes"
+	"encoding/json"
+	"github.com/astaxie/beego/orm"
+	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/g"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 /**
@@ -188,6 +192,51 @@ func dashboardCounters(rw http.ResponseWriter, req *http.Request) {
 func dashboardChart(rw http.ResponseWriter, req *http.Request) {
 	url := g.Config().Api.Dashboard + "/chart"
 	postByForm(rw, req, url)
+}
+
+func getAgentAliveData(hostnames []string, versions map[string]string, result map[string]interface{}) []cmodel.GraphLastResp {
+	var queries []cmodel.GraphLastParam
+	o := orm.NewOrm()
+	var hosts []*Host
+	_, err := o.Raw("SELECT hostname, agent_version FROM falcon_portal.host ORDER BY hostname ASC").QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, host := range hosts {
+			var query cmodel.GraphLastParam
+			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
+				hostnames = append(hostnames, host.Hostname)
+				versions[host.Hostname] = host.Agent_version
+				query.Endpoint = host.Hostname
+				query.Counter = "agent.alive"
+				queries = append(queries, query)
+			}
+		}
+	}
+	s, err := json.Marshal(queries)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	url := g.Config().Api.Query + "/graph/last"
+	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqPost)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	data := []cmodel.GraphLastResp{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	return data
 }
 
 /**
