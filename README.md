@@ -22,16 +22,6 @@ source .bashrc
 
 # 编译安装fe模块
 
-fe模块使用了beego框架，最近beego升级了，api不向后兼容，好多朋友出现安装fe失败的问题。这里有个临时方案，我保存了一个老版本的beego
-
-```
-cd $GOPATH/src/github.com/astaxie
-rm -rf beego
-git clone https://git.coding.net/ulricqin/beego.bak.git beego
-```
-
-之后找时间使用godep处理一下依赖
-
 ```
 cd $GOPATH/src/github.com/open-falcon
 git clone https://github.com/open-falcon/fe.git
