@@ -90,10 +90,11 @@ func (this *User) Save() (int64, error) {
 	return id, err
 }
 
-func InsertRegisterUser(name, password string) (int64, error) {
+func InsertRegisterUser(name, password, email string) (int64, error) {
 	userPtr := &User{
 		Name:   name,
 		Passwd: password,
+		Email:  email,
 	}
 	return userPtr.Save()
 }

@@ -52,8 +52,8 @@ func (this *BaseController) NotFound(body string) {
 }
 
 func (this *BaseController) SessionExpired() {
-        this.Ctx.ResponseWriter.WriteHeader(404)
-        this.Ctx.ResponseWriter.Write([]byte("The Session Is Expired"))
+	this.Ctx.ResponseWriter.WriteHeader(404)
+	this.Ctx.ResponseWriter.Write([]byte("The Session Is Expired"))
 }
 
 func (this *BaseController) MustGetInt(key string, def int) int {
