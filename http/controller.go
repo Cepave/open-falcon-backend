@@ -34,7 +34,7 @@ func (this *MainController) Workdir() {
 }
 
 func (this *MainController) ConfigReload() {
-	remoteAddr := this.Ctx.Request.RemoteAddr
+	remoteAddr := this.Ctx.Input.Context.Request.RemoteAddr
 	if strings.HasPrefix(remoteAddr, "127.0.0.1") {
 		g.ParseConfig(g.ConfigFile)
 		this.Data["json"] = g.Config()
@@ -141,7 +141,7 @@ func (this *MainController) Index() {
 
 	defer func() {
 		this.Data["Now"] = time.Now().Unix()
-		this.TplNames = "index.html"
+		this.TplName = "index.html"
 		this.Data["FalconPortal"] = g.Config().Shortcut.FalconPortal
 		this.Data["FalconDashboard"] = g.Config().Shortcut.FalconDashboard
 		this.Data["GrafanaDashboard"] = g.Config().Shortcut.GrafanaDashboard
