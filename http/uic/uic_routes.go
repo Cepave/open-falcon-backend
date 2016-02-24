@@ -6,20 +6,7 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-const apiURLBase string = "/api/v1"
-
-func owlapi(urlpath string) string {
-	return apiURLBase + urlpath
-}
 func ConfigRoutes() {
-	//owl-protal-routes
-	apins := beego.NewNamespace("/api/v1",
-		beego.NSGet("/notallowed", func(ctx *context.Context) {
-			ctx.Output.Body([]byte("notAllowed"))
-		}),
-		beego.NSRouter("/auth/register", &AuthApiController{}, "post:RegisterPost"),
-	)
-	beego.AddNamespace(apins)
 
 	//open-falcon's routes
 	beego.Router("/root", &UserController{}, "get:CreateRoot")
@@ -40,6 +27,18 @@ func ConfigRoutes() {
 	beego.Router("/team/users", &TeamController{}, "get:Users")
 	beego.Router("/team/query", &TeamController{}, "get:Query")
 	beego.Router("/team/all", &TeamController{}, "get:All")
+
+	//owl-protal-routes
+	apins := beego.NewNamespace("/api/v1",
+		beego.NSGet("/notallowed", func(ctx *context.Context) {
+			ctx.Output.Body([]byte("notAllowed"))
+		}),
+		beego.NSRouter("/auth/register", &AuthApiController{}, "post:RegisterPost"),
+		beego.NSRouter("/auth/login", &AuthApiController{}, "post:LoginPost"),
+		beego.NSRouter("/auth/sessioncheck", &AuthApiController{}, "post:AuthSession"),
+		beego.NSRouter("/auth/logout", &AuthApiController{}, "post:LogoutPost"),
+	)
+	beego.AddNamespace(apins)
 
 	loginRequired :=
 		beego.NewNamespace("/me",

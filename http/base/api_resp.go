@@ -1,5 +1,9 @@
 package base
 
+import (
+	"regexp"
+)
+
 type ApiResp struct {
 	Version string                 `json:"value,omitempty"`
 	Method  string                 `json:"method,omitempty"`
@@ -8,11 +12,13 @@ type ApiResp struct {
 	Data    map[string]interface{} `json:"data,omitempty"`
 }
 
-func (this *BaseController) ApiBasicParams() (apiResp *ApiResp, errorTmp, dataTmp map[string]interface{}) {
+func (this *BaseController) BasicRespGen() (apiResp *ApiResp) {
 	apiResp = new(ApiResp)
-	apiResp.Version = "v1"
-	errorTmp = map[string]interface{}{}
-	dataTmp = map[string]interface{}{}
+	r, _ := regexp.Compile("/api/([^/]+)")
+	apiResp.Version = r.FindStringSubmatch(this.Ctx.Request.URL.RequestURI())[1]
+	apiResp.Method = this.Ctx.Request.Method
+	apiResp.Error = map[string]interface{}{}
+	apiResp.Data = map[string]interface{}{}
 	return
 }
 
