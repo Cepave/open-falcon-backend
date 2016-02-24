@@ -99,9 +99,9 @@ func Start() {
 	}
 
 	if g.Config().Debug {
-		beego.RunMode = "dev"
+		beego.BConfig.RunMode = "dev"
 	} else {
-		beego.RunMode = "prod"
+		beego.BConfig.RunMode = "prod"
 	}
 
 	InitDatabase()
