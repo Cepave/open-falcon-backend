@@ -1,6 +1,5 @@
-# API URL doc
-
-## API list
+# UIC API list
+`Don't forget do URL encoding..`
 * `POST` /api/v1/auth/register
   * params:
     * `name` string [useraccount]

@@ -34,6 +34,12 @@ type UicConfig struct {
 	Max  int    `json:"max"`
 }
 
+type GraphConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
+}
+
 type ShortcutConfig struct {
 	FalconPortal     string `json:"falconPortal"`
 	FalconDashboard  string `json:"falconDashboard"`
@@ -64,6 +70,7 @@ type GlobalConfig struct {
 	CanRegister bool            `json:"canRegister"`
 	Ldap        *LdapConfig     `json:"ldap"`
 	Uic         *UicConfig      `json:"uic"`
+	Graph       *GraphConfig    `json:"graph"`
 	Shortcut    *ShortcutConfig `json:"shortcut"`
 	Api         *ApiConfig      `json:"api"`
 }
