@@ -29,14 +29,14 @@ func ConfigRoutes() {
 	beego.Router("/team/all", &TeamController{}, "get:All")
 
 	//owl-protal-routes
-	apins := beego.NewNamespace("/api/v1",
+	apins := beego.NewNamespace("/api/v1/auth",
 		beego.NSGet("/notallowed", func(ctx *context.Context) {
 			ctx.Output.Body([]byte("notAllowed"))
 		}),
-		beego.NSRouter("/auth/register", &AuthApiController{}, "post:RegisterPost"),
-		beego.NSRouter("/auth/login", &AuthApiController{}, "post:LoginPost"),
-		beego.NSRouter("/auth/sessioncheck", &AuthApiController{}, "post:AuthSession"),
-		beego.NSRouter("/auth/logout", &AuthApiController{}, "post:LogoutPost"),
+		beego.NSRouter("/register", &AuthApiController{}, "post:Register"),
+		beego.NSRouter("/login", &AuthApiController{}, "post:Login"),
+		beego.NSRouter("/sessioncheck", &AuthApiController{}, "get:AuthSession;post:AuthSession"),
+		beego.NSRouter("/logout", &AuthApiController{}, "get:Logout;post:Logout"),
 	)
 	beego.AddNamespace(apins)
 

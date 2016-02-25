@@ -20,41 +20,41 @@ func (this *AuthApiController) ResposeError(apiBasicParams *base.ApiResp, msg st
 	this.ServeApiJson(apiBasicParams)
 }
 
-func (this *AuthApiController) SessionCheck(name, token string) (session *Session, err error) {
+func (this *AuthApiController) SessionCheck(name, sig string) (session *Session, err error) {
 	switch {
-	case token == "" || name == "":
-		err = errors.New("name or token is empty, please check again")
-	case ReadSessionBySig(token).Uid != SelectUserIdByName(name):
+	case sig == "" || name == "":
+		err = errors.New("name or sig is empty, please check again")
+	case ReadSessionBySig(sig).Uid != SelectUserIdByName(name):
 		err = errors.New("can not find this kind of session")
 	default:
-		session = ReadSessionBySig(token)
+		session = ReadSessionBySig(sig)
 	}
 	return
 }
 
 func (this *AuthApiController) AuthSession() {
 	baseResp := this.BasicRespGen()
-	name := this.GetString("name", "")
-	token := this.GetString("token", "")
-	session, err := this.SessionCheck(name, token)
+	name := this.GetString("name", this.Ctx.GetCookie("name"))
+	sig := this.GetString("sig", this.Ctx.GetCookie("sig"))
+	session, err := this.SessionCheck(name, sig)
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
 	case session.Sig != "":
-		baseResp.Data["token"] = session.Sig
+		baseResp.Data["sig"] = session.Sig
 		baseResp.Data["expired"] = session.Expired
-		baseResp.Data["message"] = "this token is works!"
+		baseResp.Data["message"] = "session passed!"
 	default:
-		baseResp.Error["message"] = "sesion checking failed for a unknow reason, please ask administor for help."
+		baseResp.Error["message"] = "sesion checking failed for a unknow reason, please ask administor for help"
 	}
 	this.ServeApiJson(baseResp)
 }
 
-func (this *AuthApiController) LogoutPost() {
+func (this *AuthApiController) Logout() {
 	baseResp := this.BasicRespGen()
-	name := this.GetString("name", "")
-	token := this.GetString("token", "")
-	session, err := this.SessionCheck(name, token)
+	name := this.GetString("name", this.Ctx.GetCookie("name"))
+	sig := this.GetString("sig", this.Ctx.GetCookie("sig"))
+	session, err := this.SessionCheck(name, sig)
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
@@ -63,19 +63,19 @@ func (this *AuthApiController) LogoutPost() {
 		if err != nil {
 			this.ResposeError(baseResp, err.Error())
 		} else {
-			baseResp.Data["message"] = "Session is deleted."
+			baseResp.Data["message"] = "session is removed"
 		}
 	}
 	this.ServeApiJson(baseResp)
 }
 
-func (this *AuthApiController) LoginPost() {
+func (this *AuthApiController) Login() {
 	baseResp := this.BasicRespGen()
 	name := this.GetString("name", "")
 	password := this.GetString("password", "")
 
 	if name == "" || password == "" {
-		this.ResposeError(baseResp, "name or password is blank")
+		this.ResposeError(baseResp, "name or password is blank"+name+password)
 	}
 
 	user := ReadUserByName(name)
@@ -105,7 +105,7 @@ func (this *AuthApiController) LoginPost() {
 	this.ServeApiJson(baseResp)
 }
 
-func (this *AuthApiController) RegisterPost() {
+func (this *AuthApiController) Register() {
 	baseResp := this.BasicRespGen()
 	if !g.Config().CanRegister {
 		this.ResposeError(baseResp, "registration system is not open")

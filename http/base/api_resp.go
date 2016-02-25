@@ -24,9 +24,9 @@ func (this *BaseController) BasicRespGen() (apiResp *ApiResp) {
 
 func (this *BaseController) ServeApiJson(msg *ApiResp) {
 	if len(msg.Error) != 0 {
-		msg.Status = "Failed"
+		msg.Status = "failed"
 	} else {
-		msg.Status = "Success"
+		msg.Status = "success"
 	}
 
 	this.Data["json"] = msg

@@ -14,7 +14,7 @@
       {
         "value": "v1",
         "method": "POST",
-        "status": "Success",
+        "status": "success",
         "data": {
           "expired": 1458815516,
           "sig": "a9de7114da1811e5adb7001500c6ca5a"
@@ -24,12 +24,12 @@
       * sig: user session token
       * expired: token expired time
     * failed
-    
+
       ```
       {
         "value": "v1",
         "method": "POST",
-        "status": "Failed",
+        "status": "failed",
         "error": {
           "message": "name is already existent"
         }
@@ -46,7 +46,7 @@
       {
         "value": "v1",
         "method": "POST",
-        "status": "Success",
+        "status": "success",
         "data": {
           "expired": 1458875558,
           "sig": "75981f64daa411e59eaa001500c6ca5a"
@@ -56,21 +56,22 @@
       * sig: user session token
       * expired: token expired time
     * failed
-    
+
       ```
       {
         "value": "v1",
         "method": "POST",
-        "status": "Failed",
+        "status": "failed",
         "error": {
           "message": "password error"
         }
       }
       ```
-* `POST` /api/v1/auth/logout
+* `GET` `POST` /api/v1/auth/logout
   * params:
-    * `name` string [useraccount]
-    * `token` string
+    * `name` string [useraccount] option
+    * `sig` string option
+  * if params are null, will check the same key on cookie set
   * response:
     * ok
 
@@ -78,28 +79,29 @@
       {
         "value": "v1",
         "method": "POST",
-        "status": "Success",
+        "status": "success",
         "data": {
-          "message": "Session is deleted."
+          "message": "session is removed"
         }
       }
       ```
     * failed
-    
+
       ```
       {
         "value": "v1",
         "method": "POST",
-        "status": "Failed",
+        "status": "failed",
         "error": {
-          "message": "name or token is empty, please check again"
+          "message": "name or sig is empty, please check again"
         }
       }
       ```
-* `POST` /api/v1/auth/sessioncheck
+* `GET` `POST` /api/v1/auth/sessioncheck
   * params:
-    * `name` string [useraccount]
-    * `token` string
+    * `name` string [useraccount] option
+    * `sig` string option
+  * if params are null, will check the same key on cookie set
   * response:
     * ok
 
@@ -107,23 +109,23 @@
       {
         "value": "v1",
         "method": "POST",
-        "status": "Success",
+        "status": "success",
         "data": {
           "expired": 1458889692,
-          "message": "this token is works!",
-          "token": "5dda5bacdac511e5b83b001500c6ca5a"
+          "message": "session passed!",
+          "sig": "5dda5bacdac511e5b83b001500c6ca5a"
         }
       }
       ```
-      * token: user session token
+      * sig: user session token
       * expired: token expired time
     * failed
-    
+
       ```
       {
         "value": "v1",
         "method": "POST",
-        "status": "Failed",
+        "status": "failed",
         "error": {
           "message": "can not find this kind of session"
         }
