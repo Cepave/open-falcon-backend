@@ -21,13 +21,14 @@ func (this *AuthApiController) ResposeError(apiBasicParams *base.ApiResp, msg st
 }
 
 func (this *AuthApiController) SessionCheck(name, sig string) (session *Session, err error) {
-	switch {
-	case sig == "" || name == "":
+	if sig == "" || name == "" {
 		err = errors.New("name or sig is empty, please check again")
-	case ReadSessionBySig(sig).Uid != SelectUserIdByName(name):
+		return
+	}
+	session = ReadSessionBySig(sig)
+	if session.Uid != SelectUserIdByName(name) {
 		err = errors.New("can not find this kind of session")
-	default:
-		session = ReadSessionBySig(sig)
+		return
 	}
 	return
 }
@@ -41,7 +42,7 @@ func (this *AuthApiController) AuthSession() {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
 	case session.Sig != "":
-		baseResp.Data["sig"] = session.Sig
+		baseResp.Data["sigs"] = session
 		baseResp.Data["expired"] = session.Expired
 		baseResp.Data["message"] = "session passed!"
 	default:
@@ -59,7 +60,7 @@ func (this *AuthApiController) Logout() {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
 	default:
-		_, err := DeleteSessionById(session.Id)
+		_, err := RemoveSessionByUid(session.Uid)
 		if err != nil {
 			this.ResposeError(baseResp, err.Error())
 		} else {
@@ -75,7 +76,7 @@ func (this *AuthApiController) Login() {
 	password := this.GetString("password", "")
 
 	if name == "" || password == "" {
-		this.ResposeError(baseResp, "name or password is blank"+name+password)
+		this.ResposeError(baseResp, "name or password is blank")
 	}
 
 	user := ReadUserByName(name)
