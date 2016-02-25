@@ -1,6 +1,8 @@
 package base
 
 import (
+	"errors"
+	"github.com/Cepave/fe/model/uic"
 	"regexp"
 )
 
@@ -31,4 +33,24 @@ func (this *BaseController) ServeApiJson(msg *ApiResp) {
 
 	this.Data["json"] = msg
 	this.ServeJSON()
+}
+
+func (this *BaseController) SessionCheck() (session *uic.Session, err error) {
+	name := this.GetString("name", this.Ctx.GetCookie("name"))
+	sig := this.GetString("sig", this.Ctx.GetCookie("sig"))
+	if sig == "" || name == "" {
+		err = errors.New("name or sig is empty, please check again")
+		return
+	}
+	session = uic.ReadSessionBySig(sig)
+	if session.Uid != uic.SelectUserIdByName(name) {
+		err = errors.New("can not find this kind of session")
+		return
+	}
+	return
+}
+
+func (this *BaseController) ResposeError(apiBasicParams *ApiResp, msg string) {
+	apiBasicParams.Error["message"] = msg
+	this.ServeApiJson(apiBasicParams)
 }

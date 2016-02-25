@@ -1,7 +1,6 @@
 package uic
 
 import (
-	"errors"
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/http/base"
 	. "github.com/Cepave/fe/model/uic"
@@ -15,29 +14,9 @@ type AuthApiController struct {
 	base.BaseController
 }
 
-func (this *AuthApiController) ResposeError(apiBasicParams *base.ApiResp, msg string) {
-	apiBasicParams.Error["message"] = msg
-	this.ServeApiJson(apiBasicParams)
-}
-
-func (this *AuthApiController) SessionCheck(name, sig string) (session *Session, err error) {
-	if sig == "" || name == "" {
-		err = errors.New("name or sig is empty, please check again")
-		return
-	}
-	session = ReadSessionBySig(sig)
-	if session.Uid != SelectUserIdByName(name) {
-		err = errors.New("can not find this kind of session")
-		return
-	}
-	return
-}
-
 func (this *AuthApiController) AuthSession() {
 	baseResp := this.BasicRespGen()
-	name := this.GetString("name", this.Ctx.GetCookie("name"))
-	sig := this.GetString("sig", this.Ctx.GetCookie("sig"))
-	session, err := this.SessionCheck(name, sig)
+	session, err := this.SessionCheck()
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
@@ -53,9 +32,7 @@ func (this *AuthApiController) AuthSession() {
 
 func (this *AuthApiController) Logout() {
 	baseResp := this.BasicRespGen()
-	name := this.GetString("name", this.Ctx.GetCookie("name"))
-	sig := this.GetString("sig", this.Ctx.GetCookie("sig"))
-	session, err := this.SessionCheck(name, sig)
+	session, err := this.SessionCheck()
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
