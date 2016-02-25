@@ -20,6 +20,7 @@ func (this *AuthApiController) AuthSession() {
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
+		return
 	case session.Sig != "":
 		baseResp.Data["sigs"] = session
 		baseResp.Data["expired"] = session.Expired
@@ -28,6 +29,7 @@ func (this *AuthApiController) AuthSession() {
 		baseResp.Error["message"] = "sesion checking failed for a unknow reason, please ask administor for help"
 	}
 	this.ServeApiJson(baseResp)
+	return
 }
 
 func (this *AuthApiController) Logout() {
@@ -36,15 +38,18 @@ func (this *AuthApiController) Logout() {
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
+		return
 	default:
 		_, err := RemoveSessionByUid(session.Uid)
 		if err != nil {
 			this.ResposeError(baseResp, err.Error())
+			return
 		} else {
 			baseResp.Data["message"] = "session is removed"
 		}
 	}
 	this.ServeApiJson(baseResp)
+	return
 }
 
 func (this *AuthApiController) Login() {
@@ -54,14 +59,17 @@ func (this *AuthApiController) Login() {
 
 	if name == "" || password == "" {
 		this.ResposeError(baseResp, "name or password is blank")
+		return
 	}
 
 	user := ReadUserByName(name)
 	switch {
 	case user == nil:
 		this.ResposeError(baseResp, "no such user")
+		return
 	case user.Passwd != str.Md5Encode(g.Config().Salt+password):
 		this.ResposeError(baseResp, "password error")
+		return
 	}
 
 	appSig := this.GetString("sig", "")
@@ -81,6 +89,7 @@ func (this *AuthApiController) Login() {
 		baseResp.Data["expired"] = expired
 	}
 	this.ServeApiJson(baseResp)
+	return
 }
 
 func (this *AuthApiController) Register() {
@@ -100,14 +109,18 @@ func (this *AuthApiController) Register() {
 	switch {
 	case password != repeatPassword:
 		this.ResposeError(baseResp, "password not equal the repeart one")
+		return
 	case !utils.IsUsernameValid(name):
 		this.ResposeError(baseResp, "name pattern is invalid")
+		return
 	case ReadUserIdByName(name) > 0:
 		this.ResposeError(baseResp, "name is already existent")
+		return
 	default:
 		lastID, err = InsertRegisterUser(name, str.Md5Encode(g.Config().Salt+password), email)
 		if err != nil {
 			this.ResposeError(baseResp, "insert user fail "+err.Error())
+			return
 		}
 	}
 
@@ -115,6 +128,7 @@ func (this *AuthApiController) Register() {
 	baseResp.Data["sig"] = sig
 	baseResp.Data["expired"] = expired
 	this.ServeApiJson(baseResp)
+	return
 }
 
 func (this *AuthApiController) CreateSession(uid int64, maxAge int) (sig string, expired int) {

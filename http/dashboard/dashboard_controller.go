@@ -11,14 +11,20 @@ type BashBoardController struct {
 
 func (this *BashBoardController) EndpRegxqury() {
 	baseResp := this.BasicRespGen()
-	this.SessionCheck()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
 	queryStr := this.GetString("queryStr", "")
 	if queryStr == "" {
 		this.ResposeError(baseResp, "query string is empty, please it")
+		return
 	}
 	enp, err := dashboard.QueryEndpintByNameRegx(queryStr)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
+		return
 	}
 	if len(enp) > 0 {
 		baseResp.Data["endpoints"] = enp
@@ -26,4 +32,5 @@ func (this *BashBoardController) EndpRegxqury() {
 		baseResp.Data["endpoints"] = []string{}
 	}
 	this.ServeApiJson(baseResp)
+	return
 }
