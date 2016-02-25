@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
+    "sort"
 	"sync"
 )
 
@@ -73,6 +74,24 @@ func (this *SafeEvents) Clone() map[string]*EventDto {
 		m[key] = val
 	}
 	return m
+}
+
+func (this *SafeEvents) CloneToOrderedEvents() OrderedEvents {
+	events := this.Clone()
+	count := len(events)
+	if count == 0 {
+		return OrderedEvents([]*EventDto{})
+	}
+
+	sortedEvent := make([]*EventDto, count)
+	i := 0
+	for _, event := range events {
+		sortedEvent[i] = event
+		i++
+	}
+    // Sorted by Timestamp of EventDto
+	sort.Sort(OrderedEvents(sortedEvent))
+	return OrderedEvents(sortedEvent)
 }
 
 func (this *SafeEvents) Put(event *model.Event) {

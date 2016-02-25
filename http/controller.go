@@ -8,7 +8,7 @@ import (
 	"github.com/toolkits/file"
 	"log"
 
-	"sort"
+	// "sort"
 	"strings"
 	"time"
 
@@ -127,18 +127,10 @@ func CheckLoginStatusByCookie(sig string) bool {
 }
 
 func (this *MainController) Index() {
-
-	if false == g.Config().Debug {
-		sig := this.Ctx.GetCookie("sig")
-		isLoggedIn := CheckLoginStatusByCookie(sig)
-		if !isLoggedIn {
-			RedirectUrl := g.Config().RedirectUrl
-			this.Redirect(RedirectUrl, 302)
-		}
+	// Only check the Login status in Prodution env.
+	if g.Config().Debug == false {
+		checkLogin(this)
 	}
-
-	events := g.Events.Clone()
-
 	defer func() {
 		this.Data["Now"] = time.Now().Unix()
 		this.TplName = "index.html"
@@ -149,23 +141,17 @@ func (this *MainController) Index() {
 		this.Data["FalconUIC"] = g.Config().Shortcut.FalconUIC
 	}()
 
-	count := len(events)
-	if count == 0 {
-		this.Data["Events"] = []*g.EventDto{}
-		return
+	this.Data["Events"] = g.Events.CloneToOrderedEvents()
+}
+
+func (this *MainController) Event() {
+	// Only check the Login status in Prodution env.
+	if g.Config().Debug == false {
+		checkLogin(this)
 	}
 
-	// 按照持续时间排序
-	beforeOrder := make([]*g.EventDto, count)
-	i := 0
-	for _, event := range events {
-		beforeOrder[i] = event
-		i++
-	}
-
-	sort.Sort(g.OrderedEvents(beforeOrder))
-	this.Data["Events"] = beforeOrder
-
+	this.Data["json"] = g.Events.CloneToOrderedEvents()
+	this.ServeJSON()
 }
 
 func (this *MainController) Solve() {
@@ -182,3 +168,30 @@ func (this *MainController) Solve() {
 
 	this.Ctx.WriteString("")
 }
+
+func checkLogin(m *MainController) {
+	sig := m.Ctx.GetCookie("sig")
+	isLoggedIn := CheckLoginStatusByCookie(sig)
+	if !isLoggedIn {
+		RedirectUrl := g.Config().RedirectUrl
+		m.Redirect(RedirectUrl, 302)
+	}
+}
+
+// func getOrderedEventsClone() []*g.EventDto {
+// 	events := g.Events.Clone()
+// 	count := len(events)
+// 	if count == 0 {
+// 		return []*g.EventDto{}
+// 	}
+
+// 	sortedEvent := make([]*g.EventDto, count)
+// 	i := 0
+// 	for _, event := range events {
+// 		sortedEvent[i] = event
+// 		i++
+// 	}
+//     // Sorted by Timestamp of EventDto
+// 	sort.Sort(g.OrderedEvents(sortedEvent))
+// 	return sortedEvent
+// }
