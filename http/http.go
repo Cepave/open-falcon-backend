@@ -18,6 +18,7 @@ func configRoutes() {
 	beego.Router("/health", &MainController{}, "get:Health")
 	beego.Router("/workdir", &MainController{}, "get:Workdir")
 	beego.Router("/config/reload", &MainController{}, "get:ConfigReload")
+    beego.Router("/event", &MainController{}, "get:Event")
 	beego.Router("/event/solve", &MainController{}, "post:Solve")
 }
 
