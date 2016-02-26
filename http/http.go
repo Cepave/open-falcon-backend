@@ -7,6 +7,7 @@ import (
 	"github.com/Cepave/fe/http/uic"
 	uic_model "github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/plugins/cors"
 )
 
 func Start() {
@@ -24,5 +25,8 @@ func Start() {
 	dashboard.ConfigRoutes()
 
 	beego.AddFuncMap("member", uic_model.MembersByTeamId)
+	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
+		AllowAllOrigins: true,
+	}))
 	beego.Run(addr)
 }
