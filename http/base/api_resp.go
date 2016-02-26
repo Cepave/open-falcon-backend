@@ -7,7 +7,7 @@ import (
 )
 
 type ApiResp struct {
-	Version string                 `json:"value,omitempty"`
+	Version string                 `json:"version,omitempty"`
 	Method  string                 `json:"method,omitempty"`
 	Status  string                 `json:"status,omitempty"`
 	Error   map[string]interface{} `json:"error,omitempty"`

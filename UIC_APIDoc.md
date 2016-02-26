@@ -11,7 +11,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "success",
         "data": {
@@ -26,7 +26,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "failed",
         "error": {
@@ -43,7 +43,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "success",
         "data": {
@@ -58,7 +58,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "failed",
         "error": {
@@ -76,7 +76,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "success",
         "data": {
@@ -88,7 +88,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "failed",
         "error": {
@@ -106,7 +106,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "success",
         "data": {
@@ -122,7 +122,7 @@
 
       ```
       {
-        "value": "v1",
+        "version": "v1",
         "method": "POST",
         "status": "failed",
         "error": {
