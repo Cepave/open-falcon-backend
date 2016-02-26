@@ -7,8 +7,6 @@ import (
 	"github.com/astaxie/beego/orm"
 	"github.com/toolkits/file"
 	"log"
-
-	// "sort"
 	"strings"
 	"time"
 )
@@ -123,9 +121,8 @@ func CheckLoginStatusByCookie(sig string) bool {
 }
 
 func (this *MainController) Index() {
-	// Only check the Login status in Prodution env.
-    if g.Config().Debug == false {
-        checkLogin(this)
+    if checkLogin(this) == false {
+        return
     }
 	defer func() {
 		this.Data["Now"] = time.Now().Unix()
@@ -136,16 +133,14 @@ func (this *MainController) Index() {
 		this.Data["FalconAlarm"] = g.Config().Shortcut.FalconAlarm
 		this.Data["FalconUIC"] = g.Config().Shortcut.FalconUIC
 	}()
-
+    
 	this.Data["Events"] = g.Events.CloneToOrderedEvents()
 }
 
 func (this *MainController) Event() {
-    // Only check the Login status in Prodution env.
-    if g.Config().Debug == false {
-        checkLogin(this)
+    if checkLogin(this) == false {
+        return
     }
-    
     this.Data["json"] = g.Events.CloneToOrderedEvents()
     this.ServeJSON()
 }
@@ -165,29 +160,18 @@ func (this *MainController) Solve() {
 	this.Ctx.WriteString("")
 }
 
-func checkLogin(m *MainController) {
+func checkLogin(m *MainController) bool {
+    // Skip the login check in debug mode.
+    if g.Config().Debug {
+        return true
+    }
+    
     sig := m.Ctx.GetCookie("sig")
     isLoggedIn := CheckLoginStatusByCookie(sig)
     if !isLoggedIn {
         RedirectUrl := g.Config().RedirectUrl
         m.Redirect(RedirectUrl, 302)
+        return false
     }
+    return true
 }
-
-// func getOrderedEventsClone() []*g.EventDto {
-// 	events := g.Events.Clone()
-// 	count := len(events)
-// 	if count == 0 {
-// 		return []*g.EventDto{}
-// 	}
-
-// 	sortedEvent := make([]*g.EventDto, count)
-// 	i := 0
-// 	for _, event := range events {
-// 		sortedEvent[i] = event
-// 		i++
-// 	}
-//     // Sorted by Timestamp of EventDto
-// 	sort.Sort(g.OrderedEvents(sortedEvent))
-// 	return sortedEvent
-// }
