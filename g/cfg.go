@@ -34,7 +34,7 @@ type UicConfig struct {
 	Max  int    `json:"max"`
 }
 
-type GraphConfig struct {
+type GraphDBConfig struct {
 	Addr string `json:"addr"`
 	Idle int    `json:"idle"`
 	Max  int    `json:"max"`
@@ -61,6 +61,19 @@ type ApiConfig struct {
 	Logout   string `json:"logout"`
 }
 
+type GraphConfig struct {
+	ConnTimeout int32             `json:"connTimeout"`
+	CallTimeout int32             `json:"callTimeout"`
+	MaxConns    int32             `json:"maxConns"`
+	MaxIdle     int32             `json:"maxIdle"`
+	Replicas    int32             `json:"replicas"`
+	Cluster     map[string]string `json:"cluster"`
+}
+
+type GrpcConfig struct {
+	Port int `json:"port"`
+}
+
 type GlobalConfig struct {
 	Log         string          `json:"log"`
 	Company     string          `json:"company"`
@@ -70,9 +83,11 @@ type GlobalConfig struct {
 	CanRegister bool            `json:"canRegister"`
 	Ldap        *LdapConfig     `json:"ldap"`
 	Uic         *UicConfig      `json:"uic"`
-	Graph       *GraphConfig    `json:"graph"`
+	GraphDB     *GraphDBConfig  `json:"graphdb"`
 	Shortcut    *ShortcutConfig `json:"shortcut"`
 	Api         *ApiConfig      `json:"api"`
+	Graph       *GraphConfig    `json:"graph"`
+	Grpc        *GrpcConfig     `json:"grpc"`
 }
 
 var (

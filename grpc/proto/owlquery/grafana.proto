@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package grafana;
+
+// The query service definition.
+service OwlQuery {
+  // Sends a query to server
+  rpc Query (QueryInput) returns (QueryReply) {}
+}
+
+// query string that will send to server
+message QueryInput {
+  int32 start_ts = 1;
+  int32 end_ts = 2;
+  string consolfun = 3;
+  string endpoint = 4;
+  string counter = 5;
+}
+
+// The response message from server
+message QueryReply {
+  string result = 1;
+}

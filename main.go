@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/Cepave/fe/cache"
 	"github.com/Cepave/fe/g"
+	"github.com/Cepave/fe/graph"
+	"github.com/Cepave/fe/grpc"
 	"github.com/Cepave/fe/http"
 	"github.com/Cepave/fe/model"
 	"github.com/toolkits/logger"
@@ -31,6 +33,9 @@ func main() {
 
 	model.InitDatabase()
 	cache.InitCache()
+
+	graph.Start()
+	go grpc.Start()
 
 	http.Start()
 }

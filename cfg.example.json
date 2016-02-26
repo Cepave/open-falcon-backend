@@ -28,6 +28,11 @@
         "idle": 10,
         "max": 100
     },
+    "graphdb": {
+        "addr": "root@tcp(127.0.0.1:3306)/graph?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 1000
+    },
     "shortcut": {
         "falconPortal": "http://11.11.11.11:5050/",
         "falconDashboard": "http://11.11.11.11:7070/",
@@ -41,5 +46,18 @@
         "access": "https://example.com/path_to_access",
         "role": "https://example.com/path_to_role",
         "logout": "https://example.com/path_to_logout"
+    },
+    "graph": {
+        "connTimeout": 1000,
+        "callTimeout": 5000,
+        "maxConns": 32,
+        "maxIdle": 32,
+        "replicas": 500,
+        "cluster": {
+            "node-00": "127.0.0.1:6070"
+        }
+    },
+    "grpc":{
+        "port": 8080
     }
 }
