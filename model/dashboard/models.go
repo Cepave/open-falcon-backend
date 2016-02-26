@@ -5,7 +5,7 @@ import (
 )
 
 type Endpoint struct {
-	ID       int64     `json:"id"`
+	Id       int64     `json:"id"`
 	Endpoint string    `json:"endpoint"`
 	Ts       int64     `json:"ts"`
 	TCreate  time.Time `json:"-"`
@@ -14,7 +14,7 @@ type Endpoint struct {
 }
 
 type EndpointCounter struct {
-	ID         int64     `json:"id"`
+	Id         int64     `json:"id"`
 	EndpointID int64     `json:"endpoint_id"`
 	Counter    string    `json:"counter"`
 	Step       int64     `json:"step"`
