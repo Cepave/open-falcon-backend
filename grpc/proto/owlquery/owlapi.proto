@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package grafana;
+package owlapi;
 
 // The query service definition.
 service OwlQuery {
@@ -10,9 +10,9 @@ service OwlQuery {
 
 // query string that will send to server
 message QueryInput {
-  int32 start_ts = 1;
-  int32 end_ts = 2;
-  string consolfun = 3;
+  int32 startTs = 1;
+  int32 endTs = 2;
+  string computeMethod = 3;
   string endpoint = 4;
   string counter = 5;
 }

@@ -6,7 +6,7 @@ import (
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/graph"
-	pb "github.com/Cepave/query/grpc/proto/owlquery"
+	pb "github.com/Cepave/fe/grpc/proto/owlquery"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"
@@ -20,7 +20,7 @@ func getq(q *pb.QueryInput) cmodel.GraphQueryParam {
 	request := cmodel.GraphQueryParam{
 		Start:     int64(q.StartTs),
 		End:       int64(q.EndTs),
-		ConsolFun: q.Consolfun,
+		ConsolFun: q.ComputeMethod,
 		Endpoint:  q.Endpoint,
 		Counter:   q.Counter,
 	}
