@@ -77,14 +77,17 @@ func (this *AuthApiController) Login() {
 	sig, expired := ReadSessionByName(name)
 	switch {
 	case sig != "":
+		baseResp.Data["name"] = name
 		baseResp.Data["sig"] = sig
 		baseResp.Data["expired"] = expired
 	case appSig != "" && callback != "":
 		SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
+		baseResp.Data["name"] = name
 		baseResp.Data["sig"] = appSig
 		baseResp.Data["expired"] = int(time.Now().Unix()) + 3600*24*30
 	default:
 		sig, expired := this.CreateSession(user.Id, 3600*24*30)
+		baseResp.Data["name"] = name
 		baseResp.Data["sig"] = sig
 		baseResp.Data["expired"] = expired
 	}
@@ -125,6 +128,7 @@ func (this *AuthApiController) Register() {
 	}
 
 	sig, expired := this.CreateSession(lastID, 3600*24*30)
+	baseResp.Data["name"] = name
 	baseResp.Data["sig"] = sig
 	baseResp.Data["expired"] = expired
 	this.ServeApiJson(baseResp)
