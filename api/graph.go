@@ -5,13 +5,13 @@ import (
 	"math"
 	"time"
 
-	cmodel "github.com/open-falcon/common/model"
-	cutils "github.com/open-falcon/common/utils"
-	"github.com/open-falcon/graph/g"
-	"github.com/open-falcon/graph/index"
-	"github.com/open-falcon/graph/proc"
-	"github.com/open-falcon/graph/rrdtool"
-	"github.com/open-falcon/graph/store"
+	cmodel "github.com/Cepave/common/model"
+	cutils "github.com/Cepave/common/utils"
+	"github.com/Cepave/graph/g"
+	"github.com/Cepave/graph/index"
+	"github.com/Cepave/graph/proc"
+	"github.com/Cepave/graph/rrdtool"
+	"github.com/Cepave/graph/store"
 )
 
 type Graph int

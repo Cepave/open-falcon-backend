@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	cmodel "github.com/open-falcon/common/model"
-	"github.com/open-falcon/graph/g"
+	cmodel "github.com/Cepave/common/model"
+	"github.com/Cepave/graph/g"
 )
 
 // 初始化索引功能模块
