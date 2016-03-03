@@ -64,9 +64,6 @@
 [submodule "aggregator"]
 	path = aggregator
 	url = https://github.com/Cepave/aggregator.git
-[submodule "scripts"]
-	path = scripts
-	url = https://github.com/cepave/scripts.git
 [submodule "commands/agent"]
 	path = commands/agent
 	url = https://github.com/Cepave/agent
@@ -103,3 +100,9 @@
 [submodule "commands/hbs"]
 	path = commands/hbs
 	url = https://github.com/Cepave/hbs
+[submodule "scripts/mysql"]
+	path = scripts/mysql
+	url = https://github.com/cepave/scripts.git
+[submodule "commands/api"]
+	path = commands/api
+	url = https://github.com/cepave/fe.git
