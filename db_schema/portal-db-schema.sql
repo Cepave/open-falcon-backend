@@ -201,7 +201,7 @@ CREATE TABLE cluster
   PRIMARY KEY (id)
 )
   ENGINE =InnoDB
-  DEFAULT CHARSET =latin1;
+  DEFAULT CHARSET =utf8;
 
 SET NAMES 'utf8';
 SET @@session.default_storage_engine = 'InnoDB';
@@ -217,14 +217,18 @@ CREATE TABLE IF NOT EXISTS owl_isp(
 		(isp_acronym ASC),
 	INDEX ix_owl_isp__isp_name
 		(isp_name ASC)
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS owl_province(
 	pv_id SMALLINT PRIMARY KEY,
 	pv_name VARCHAR(64) NOT NULL,
 	CONSTRAINT UNIQUE INDEX unq_owl_province__pv_name
 		(pv_name ASC)
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS owl_city(
 	ct_id SMALLINT PRIMARY KEY,
@@ -239,7 +243,9 @@ CREATE TABLE IF NOT EXISTS owl_city(
 			ON UPDATE RESTRICT,
 	CONSTRAINT UNIQUE INDEX unq_owl_city__ct_post_code
 		(ct_post_code)
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_agent(
 	ag_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -266,7 +272,9 @@ CREATE TABLE IF NOT EXISTS nqm_agent(
 	CONSTRAINT UNIQUE INDEX unq_nqm_agent__ag_connection_id
 		(ag_connection_id),
 	INDEX ix_nqm_agent__ag_name(ag_name)
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_target(
 	tg_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -295,7 +303,9 @@ CREATE TABLE IF NOT EXISTS nqm_target(
 		(tg_ct_id) REFERENCES owl_city(ct_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_ping_task(
 	pt_ag_id INT PRIMARY KEY,
@@ -305,7 +315,9 @@ CREATE TABLE IF NOT EXISTS nqm_ping_task(
 		(pt_ag_id) REFERENCES nqm_agent(ag_id)
 			ON DELETE CASCADE
 			ON UPDATE CASCADE
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_name_tag(
 	tfnt_pt_ag_id INT,
@@ -315,7 +327,9 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_name_tag(
 		(tfnt_pt_ag_id) REFERENCES nqm_ping_task(pt_ag_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_isp(
 	tfisp_pt_ag_id INT,
@@ -329,7 +343,9 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_isp(
 		(tfisp_isp_id) REFERENCES owl_isp(isp_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_province(
 	tfpv_pt_ag_id INT,
@@ -343,7 +359,9 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_province(
 		(tfpv_pv_id) REFERENCES owl_province(pv_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_city(
 	tfct_pt_ag_id INT,
@@ -357,7 +375,9 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_city(
 		(tfct_ct_id) REFERENCES owl_city(ct_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT
-);
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_unicode_ci;
 
 INSERT INTO owl_isp(isp_id, isp_name, isp_acronym)
 VALUES
