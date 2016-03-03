@@ -3,7 +3,16 @@ package main
 import (
 	"fmt"
 	"github.com/Cepave/open-falcon/commands/agent"
+	"github.com/Cepave/open-falcon/commands/aggregator"
+	"github.com/Cepave/open-falcon/commands/api"
+	"github.com/Cepave/open-falcon/commands/graph"
 	"github.com/Cepave/open-falcon/commands/hbs"
+	"github.com/Cepave/open-falcon/commands/judge"
+	"github.com/Cepave/open-falcon/commands/nodata"
+	"github.com/Cepave/open-falcon/commands/query"
+	"github.com/Cepave/open-falcon/commands/sender"
+	"github.com/Cepave/open-falcon/commands/task"
+	"github.com/Cepave/open-falcon/commands/transfer"
 	"github.com/mitchellh/cli"
 	"io/ioutil"
 	"log"
@@ -21,8 +30,44 @@ func init() {
 			return &agent.Command{}, nil
 		},
 
+		"aggregator": func() (cli.Command, error) {
+			return &aggregator.Command{}, nil
+		},
+
+		"api": func() (cli.Command, error) {
+			return &api.Command{}, nil
+		},
+
+		"graph": func() (cli.Command, error) {
+			return &graph.Command{}, nil
+		},
+
 		"hbs": func() (cli.Command, error) {
 			return &hbs.Command{}, nil
+		},
+
+		"judge": func() (cli.Command, error) {
+			return &judge.Command{}, nil
+		},
+
+		"nodata": func() (cli.Command, error) {
+			return &nodata.Command{}, nil
+		},
+
+		"query": func() (cli.Command, error) {
+			return &query.Command{}, nil
+		},
+
+		"sender": func() (cli.Command, error) {
+			return &sender.Command{}, nil
+		},
+
+		"task": func() (cli.Command, error) {
+			return &task.Command{}, nil
+		},
+
+		"transfer": func() (cli.Command, error) {
+			return &transfer.Command{}, nil
 		},
 	}
 }
