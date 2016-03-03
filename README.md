@@ -7,6 +7,11 @@
     git clone https://github.com/Cepave/open-falcon
     cd open-falcon
     git submodule update —-init
+    make 
+
+# Run Open-Falcon Agent
+
+    ./open-falcon agent
 
 # License
 

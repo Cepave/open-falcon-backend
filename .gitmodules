@@ -67,3 +67,39 @@
 [submodule "scripts/mysql"]
 	path = scripts/mysql
 	url = https://github.com/cepave/scripts.git
+[submodule "modules/agent"]
+	path = modules/agent
+	url = https://github.com/cepave/agent
+[submodule "modules/aggregator"]
+	path = modules/aggregator
+	url = https://github.com/cepave/aggregator
+[submodule "modules/graph"]
+	path = modules/graph
+	url = https://github.com/cepave/graph
+[submodule "modules/hbs"]
+	path = modules/hbs
+	url = https://github.com/cepave/hbs
+[submodule "modules/judge"]
+	path = modules/judge
+	url = https://github.com/cepave/judge
+[submodule "modules/links"]
+	path = modules/links
+	url = https://github.com/cepave/links
+[submodule "modules/nodata"]
+	path = modules/nodata
+	url = https://github.com/cepave/nodata
+[submodule "modules/nqm"]
+	path = modules/nqm
+	url = https://github.com/cepave/nqm
+[submodule "modules/query"]
+	path = modules/query
+	url = https://github.com/cepave/query
+[submodule "modules/sender"]
+	path = modules/sender
+	url = https://github.com/cepave/sender
+[submodule "modules/task"]
+	path = modules/task
+	url = https://github.com/cepave/task
+[submodule "modules/transfer"]
+	path = modules/transfer
+	url = https://github.com/cepave/transfer
