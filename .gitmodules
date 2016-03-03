@@ -64,45 +64,6 @@
 [submodule "aggregator"]
 	path = aggregator
 	url = https://github.com/Cepave/aggregator.git
-[submodule "commands/agent"]
-	path = commands/agent
-	url = https://github.com/Cepave/agent
-[submodule "commands/graph"]
-	path = commands/graph
-	url = https://github.com/Cepave/graph
-[submodule "commands/aggregator"]
-	path = commands/aggregator
-	url = https://github.com/Cepave/aggregator
-[submodule "commands/judge"]
-	path = commands/judge
-	url = https://github.com/Cepave/judge
-[submodule "commands/links"]
-	path = commands/links
-	url = https://github.com/Cepave/links
-[submodule "commands/nodata"]
-	path = commands/nodata
-	url = https://github.com/Cepave/nodata
-[submodule "commands/nqm"]
-	path = commands/nqm
-	url = https://github.com/Cepave/nqm
-[submodule "commands/query"]
-	path = commands/query
-	url = https://github.com/Cepave/query
-[submodule "commands/sender"]
-	path = commands/sender
-	url = https://github.com/Cepave/sender
-[submodule "commands/task"]
-	path = commands/task
-	url = https://github.com/Cepave/task
-[submodule "commands/transfer"]
-	path = commands/transfer
-	url = https://github.com/Cepave/transfer
-[submodule "commands/hbs"]
-	path = commands/hbs
-	url = https://github.com/Cepave/hbs
 [submodule "scripts/mysql"]
 	path = scripts/mysql
 	url = https://github.com/cepave/scripts.git
-[submodule "commands/api"]
-	path = commands/api
-	url = https://github.com/cepave/fe.git
