@@ -1,13 +1,14 @@
 package uic
 
 import (
+	"strings"
+	"time"
+
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/http/base"
 	. "github.com/Cepave/fe/model/uic"
 	"github.com/Cepave/fe/utils"
 	"github.com/toolkits/str"
-	"strings"
-	"time"
 )
 
 type AuthApiController struct {
@@ -131,6 +132,51 @@ func (this *AuthApiController) Register() {
 	baseResp.Data["name"] = name
 	baseResp.Data["sig"] = sig
 	baseResp.Data["expired"] = expired
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *AuthApiController) GetUser() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	} else {
+		username := this.GetString("cName", this.Ctx.GetCookie("name"))
+		user := ReadUserByName(username)
+		if user == nil {
+			this.ResposeError(baseResp, "not found user")
+			return
+		}
+		baseResp.Data["name"] = user.Name
+		baseResp.Data["email"] = user.Email
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *AuthApiController) UpdateUser() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	} else {
+		username := this.GetString("cName", this.Ctx.GetCookie("name"))
+		user := ReadUserByName(username)
+		user.Email = strings.TrimSpace(this.GetString("email", user.Email))
+		passwdtmp := strings.TrimSpace(this.GetString("password", ""))
+		if passwdtmp != "" {
+			user.Passwd = str.Md5Encode(g.Config().Salt + passwdtmp)
+		}
+		_, err := user.Update()
+		if err != nil {
+			this.ResposeError(baseResp, err.Error())
+			return
+		}
+	}
 	this.ServeApiJson(baseResp)
 	return
 }
