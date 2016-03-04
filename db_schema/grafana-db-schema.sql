@@ -1,6 +1,8 @@
-CREATE DATABASE grafana;
+CREATE DATABASE grafana
+  DEFAULT CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
 USE grafana;
-SET NAMES 'utf8';
+SET NAMES utf8;
 
 -- MySQL dump 10.13  Distrib 5.6.26
 --

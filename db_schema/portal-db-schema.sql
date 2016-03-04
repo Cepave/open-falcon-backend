@@ -1,6 +1,8 @@
-﻿CREATE DATABASE falcon_portal;
+﻿CREATE DATABASE falcon_portal
+  DEFAULT CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
 USE falcon_portal;
-SET NAMES 'utf8';
+SET NAMES utf8;
 
 /**
  * 这里的机器是从机器管理系统中同步过来的
