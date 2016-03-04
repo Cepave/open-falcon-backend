@@ -132,3 +132,67 @@
         }
       }
       ```
+* `POST` /api/v1/auth/user
+  * params:
+    * `cName` string [useraccount] option
+    * `cSig` string option
+  * if params are null, will check [name & sig]
+  * response:
+    * ok
+
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "success",
+        "data": {
+          "email": "test@cepave.com",
+          "name": "cepavetest"
+        }
+      }
+      ```
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "failed",
+        "error": {
+          "message": "can not find this kind of session"
+        }
+      }
+      ```
+* `POST` /api/v1/auth/user/update
+  * params:
+    * `cName` string [useraccount] option
+    * `cSig` string option
+    * `email` string option
+    * `password` string option
+  * if params are null, will check [name & sig]
+  * response:
+    * ok
+
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "success",
+        "data": {
+          "email": "test@cepave.com",
+          "name": "cepavetest"
+        }
+      }
+      ```
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "failed",
+        "error": {
+          "message": "can not find this kind of session"
+        }
+      }
+      ```
