@@ -1,6 +1,8 @@
-create database graph;
-use graph;
-set names utf8;
+CREATE DATABASE graph
+  DEFAULT CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
+USE graph;
+SET NAMES utf8;
 
 DROP TABLE if exists `graph`.`endpoint`;
 CREATE TABLE `graph`.`endpoint` (
