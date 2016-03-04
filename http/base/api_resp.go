@@ -36,8 +36,8 @@ func (this *BaseController) ServeApiJson(msg *ApiResp) {
 }
 
 func (this *BaseController) SessionCheck() (session *uic.Session, err error) {
-	name := this.GetString("name", this.Ctx.GetCookie("name"))
-	sig := this.GetString("sig", this.Ctx.GetCookie("sig"))
+	name := this.GetString("cName", this.Ctx.GetCookie("name"))
+	sig := this.GetString("cSig", this.Ctx.GetCookie("sig"))
 	if sig == "" || name == "" {
 		err = errors.New("name or sig is empty, please check again")
 		return

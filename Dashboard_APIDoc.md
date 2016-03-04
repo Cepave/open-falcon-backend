@@ -1,7 +1,7 @@
 # Dashboard API list
 `Don't forget do URL encoding..`
 `will check session automatically`
-* `GET` `POST` /api/v1/dashbaord/endpoints
+* `GET` `POST` /api/v1/dashboard/endpoints
   * params:
     * `queryStr` string [regex query string]
   * response:
@@ -47,7 +47,7 @@
         }
       }
       ```
-* `GET` `POST` /api/v1/dashbaord/endpointcounters
+* `GET` `POST` /api/v1/dashboard/endpointcounters
   * params:
     * `endpoints` []string (list of host name)
       * ex. ["docker-agent","testmachine"]

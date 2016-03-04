@@ -70,9 +70,9 @@
       ```
 * `GET` `POST` /api/v1/auth/logout
   * params:
-    * `name` string [useraccount] option
-    * `sig` string option
-  * if params are null, will check the same key on cookie set
+    * `cName` string [useraccount] option
+    * `cSig` string option
+  * if params are null, will check [name & sig]
   * response:
     * ok
 
@@ -100,9 +100,9 @@
       ```
 * `GET` `POST` /api/v1/auth/sessioncheck
   * params:
-    * `name` string [useraccount] option
-    * `sig` string option
-  * if params are null, will check the same key on cookie set
+    * `cName` string [useraccount] option
+    * `cSig` string option
+  * if params are null, will check [name & sig]
   * response:
     * ok
 
