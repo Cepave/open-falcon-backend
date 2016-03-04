@@ -19,9 +19,11 @@
 -- Table structure for table `dashboard_graph`
 --
 
-CREATE database `dashboard`;
-
-use `dashboard`;
+CREATE DATABASE dashboard
+  DEFAULT CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
+USE dashboard;
+SET NAMES utf8;
 
 DROP TABLE IF EXISTS `dashboard_graph`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

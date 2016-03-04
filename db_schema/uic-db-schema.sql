@@ -1,8 +1,10 @@
-create database uic;
-use uic;
-set names utf8;
+create database uic
+  DEFAULT CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
+USE uic;
+SET NAMES utf8;
 
-drop table if exists team;
+DROP TABLE if exists team;
 CREATE TABLE `team` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
@@ -16,7 +18,7 @@ CREATE TABLE `team` (
 /**
  * role: -1:blocked 0:normal 1:admin 2:root
  */
-drop table if exists `user`;
+DROP TABLE if exists `user`;
 CREATE TABLE `user` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
@@ -33,7 +35,7 @@ CREATE TABLE `user` (
   UNIQUE KEY `idx_user_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-drop table if exists `rel_team_user`;
+DROP TABLE if exists `rel_team_user`;
 CREATE TABLE `rel_team_user` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `tid` int(10) unsigned not null,
@@ -43,7 +45,7 @@ CREATE TABLE `rel_team_user` (
   KEY `idx_rel_uid` (`uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-drop table if exists `session`;
+DROP TABLE if exists `session`;
 CREATE TABLE `session` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `uid` int(10) unsigned not null,

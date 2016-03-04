@@ -1,6 +1,8 @@
-CREATE DATABASE falcon_links;
+CREATE DATABASE falcon_links
+  DEFAULT CHARACTER SET utf8
+  DEFAULT COLLATE utf8_general_ci;
 USE falcon_links;
-SET NAMES 'utf8';
+SET NAMES utf8;
 
 
 DROP TABLE IF EXISTS alert;
