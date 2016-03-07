@@ -2,18 +2,15 @@ package dashboard
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/orm"
 	"regexp"
+
+	"github.com/astaxie/beego/orm"
 )
 
 func QueryEndpointidbyNames(endpoints []string) (enp []Endpoint, err error) {
 	q := orm.NewOrm()
 	q.Using("graph")
 	q.QueryTable("endpoint")
-	sql_wrapper := make([]string, len(endpoints))
-	for i, v := range endpoints {
-		sql_wrapper[i] = v
-	}
 	qb, _ := orm.NewQueryBuilder("mysql")
 	qt := qb.Select("*").From("endpoint").Where("endpoint").In(endpoints...)
 	_, err = q.Raw(qt.String()).QueryRows(&enp)
