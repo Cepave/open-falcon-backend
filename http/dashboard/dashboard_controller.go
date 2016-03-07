@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -95,28 +96,69 @@ func (this *BashBoardController) HostGroupQuery() {
 	return
 }
 
-func (this *BashBoardController) HostsQueryByHostGroup() {
+func (this *BashBoardController) HostsQueryByHostGroups() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
-	hostgroup := this.GetString("hostgroup", "")
-	if hostgroup == "" {
+
+	hostgroups := this.GetString("hostgroups", "")
+	hostgroupscheck, _ := regexp.Compile("^\\s*\\[\\s*\\]\\s*$")
+	if hostgroups == "" || hostgroupscheck.MatchString(hostgroups) {
 		this.ResposeError(baseResp, "query string is empty, please it")
 		return
 	}
+	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
+	hostgroupsArr := strings.Split(rexstr.ReplaceAllString(hostgroups, ""), ",")
+	hosts_resp, err := dashboard.GetHostsByHostGroupName(hostgroupsArr)
 
-	hosts, err := dashboard.GetHostsByHostGroupName(hostgroup)
+	if len(hosts_resp) > 0 {
+		baseResp.Data["hosts"] = hosts_resp
+	} else {
+		baseResp.Data["hosts"] = []string{}
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *BashBoardController) CounterQueryByHostGroup() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+
+	hostgroups := this.GetString("hostgroups", "")
+	hostgroupscheck, _ := regexp.Compile("^\\s*\\[\\s*\\]\\s*$")
+	if hostgroups == "" || hostgroupscheck.MatchString(hostgroups) {
+		this.ResposeError(baseResp, "query string is empty, please it")
+		return
+	}
+	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
+	hostgroupsArr := strings.Split(rexstr.ReplaceAllString(hostgroups, ""), ",")
+
+	hosts, err := dashboard.GetHostsByHostGroupName(hostgroupsArr)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
 	if len(hosts) > 0 {
-		baseResp.Data["hosts"] = hosts
-	} else {
-		baseResp.Data["hosts"] = []string{}
+		var endpoints []string
+		for _, v := range hosts {
+			endpoints = append(endpoints, fmt.Sprintf("\"%v\"", v.Hostname))
+		}
+		counters, err := dashboard.QueryCounterByEndpoints(endpoints)
+		if err != nil {
+			this.ResposeError(baseResp, err.Error())
+			return
+		} else if len(counters) > 0 {
+			baseResp.Data["counters"] = counters
+		} else {
+			baseResp.Data["counters"] = []string{}
+		}
 	}
 	this.ServeApiJson(baseResp)
 	return

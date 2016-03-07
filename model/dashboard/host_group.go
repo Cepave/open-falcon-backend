@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/astaxie/beego/orm"
 )
@@ -13,18 +14,27 @@ func QueryHostGroupByNameRegx(queryStr string) (hostgroup []HostGroup, err error
 	return
 }
 
-func GetHostsByHostGroupName(hostGroupName string) (hostgroup []Hosts, err error) {
-	hostgroupid, aerr := getHostGroupIdByName(hostGroupName)
-	if aerr != nil {
-		err = aerr
+func GetHostsByHostGroupName(hostGroupName []string) (hosts []Hosts, err error) {
+	if len(hostGroupName) == 0 {
+		err = errors.New("query string is empty")
 		return
 	}
-	hostids, err := getHostIdsByHostGroupId(hostgroupid)
-	if aerr != nil {
-		err = aerr
-		return
+
+	host_tmp := map[string]Hosts{}
+	for _, v := range hostGroupName {
+		v = strings.Replace(v, "\"", "", -1)
+		hostgroupid, _ := getHostGroupIdByName(v)
+		hostids, _ := getHostIdsByHostGroupId(hostgroupid)
+		ho, _ := getHostsByHostIds(hostids)
+		for _, v2 := range ho {
+			if _, ok := host_tmp[v2.Hostname]; ok != true {
+				host_tmp[v2.Hostname] = v2
+			}
+		}
 	}
-	hostgroup, err = getHostsByHostIds(hostids)
+	for _, v := range host_tmp {
+		hosts = append(hosts, v)
+	}
 	return
 }
 

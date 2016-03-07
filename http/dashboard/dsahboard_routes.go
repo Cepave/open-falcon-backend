@@ -19,7 +19,8 @@ func ConfigRoutes() {
 			ctx.Output.Body([]byte("notAllowed"))
 		}),
 		beego.NSRouter("/query", &BashBoardController{}, "get:HostGroupQuery;post:HostGroupQuery"),
-		beego.NSRouter("/hosts", &BashBoardController{}, "get:HostsQueryByHostGroup;post:HostsQueryByHostGroup"),
+		beego.NSRouter("/hosts", &BashBoardController{}, "get:HostsQueryByHostGroups;post:HostsQueryByHostGroups"),
+		beego.NSRouter("/hostgroupscounters", &BashBoardController{}, "get:CounterQueryByHostGroup;post:CounterQueryByHostGroup"),
 	)
 	beego.AddNamespace(dashboard)
 	beego.AddNamespace(hostgroup)

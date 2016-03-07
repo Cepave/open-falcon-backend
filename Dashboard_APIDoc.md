@@ -127,53 +127,102 @@
     }
     ```
 * `GET` `POST` /api/v1//hostgroup/hosts
-* params:
-  * `hostgroup` specific name of a hostgroup
-    * ex. "docker"
-* response:
-  * ok
+  * params:
+    * `hostgroups` list of hostgroup
+      * ex. ["docker-agent","testmachine"]
 
-    ```
-    {
-      "version": "v1",
-      "method": "POST",
-      "status": "success",
-      "data": {
-        "hosts": [
-          {
-            "id": 1,
-            "hostname": "docker-agent",
-            "ip": "172.17.0.17",
-            "agent_version": "5.1.0",
-            "plugin_version": "plugin not enabled",
-            "maintain_begin": 0,
-            "maintain_end": 0,
-            "update_at": "2016-01-04T16:43:37+08:00"
-          },
-          {
-            "id": 28988,
-            "hostname": "docker-task",
-            "ip": "",
-            "agent_version": "",
-            "plugin_version": "",
-            "maintain_begin": 0,
-            "maintain_end": 0,
-            "update_at": "2016-03-07T13:41:21+08:00"
-          }
-        ]
-      }
-    }
-    ```
-    * hosts: hosts list of hostgorup
-  * failed
+  * response:
+    * ok
 
-    ```
-    {
-      "version": "v1",
-      "method": "POST",
-      "status": "failed",
-      "error": {
-        "message": "query string is empty, please it"
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "success",
+        "data": {
+          "hosts": [
+            {
+              "id": 1,
+              "hostname": "docker-agent",
+              "ip": "172.17.0.17",
+              "agent_version": "5.1.0",
+              "plugin_version": "plugin not enabled",
+              "maintain_begin": 0,
+              "maintain_end": 0,
+              "update_at": "2016-01-04T16:43:37+08:00"
+            },
+            {
+              "id": 28988,
+              "hostname": "docker-task",
+              "ip": "",
+              "agent_version": "",
+              "plugin_version": "",
+              "maintain_begin": 0,
+              "maintain_end": 0,
+              "update_at": "2016-03-07T13:41:21+08:00"
+            }
+          ]
+        }
       }
-    }
-    ```
+      ```
+      * hosts: hosts list of hostgorup
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "failed",
+        "error": {
+          "message": "query string is empty, please it"
+        }
+      }
+      ```
+
+* `GET` `POST` /api/v1//hostgroup/hostgroupscounters
+  * params:
+    * `hostgroups` list of hostgroup
+      * ex. ["docker-agent","testmachine"]
+
+  * response:
+    * ok
+
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "success",
+        "data": {
+          "counters": [
+            "falcon.task.alive",
+            "agent.alive",
+            "cpu.guest",
+            "cpu.idle",
+            "cpu.iowait",
+            "cpu.irq",
+            "cpu.nice",
+            "cpu.softirq",
+            "cpu.steal",
+            "cpu.switches",
+            "cpu.system",
+            "cpu.user",
+            "df.bytes.free.percent/fstype=ext4,mount=/config",
+            "df.inodes.free.percent/fstype=ext4,mount=/config",
+            "df.statistics.total",
+            "df.statistics.used"
+          ]
+        }
+      }
+      ```
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "POST",
+        "status": "failed",
+        "error": {
+          "message": "query string is empty, please it"
+        }
+      }
+      ```
