@@ -23,26 +23,26 @@ var (
 	HttpRecvCnt   = nproc.NewSCounterQps("HttpRecvCnt")
 	SocketRecvCnt = nproc.NewSCounterQps("SocketRecvCnt")
 
-	SendToJudgeCnt          = nproc.NewSCounterQps("SendToJudgeCnt")
-	SendToGraphCnt          = nproc.NewSCounterQps("SendToGraphCnt")
-	SendToGraphMigratingCnt = nproc.NewSCounterQps("SendToGraphMigratingCnt")
-	SendToInfluxdbCnt       = nproc.NewSCounterQps("SendToInfluxdbCnt")
+	SendToJudgeCnt    = nproc.NewSCounterQps("SendToJudgeCnt")
+	SendToTsdbCnt     = nproc.NewSCounterQps("SendToTsdbCnt")
+	SendToGraphCnt    = nproc.NewSCounterQps("SendToGraphCnt")
+	SendToInfluxdbCnt = nproc.NewSCounterQps("SendToInfluxdbCnt")
 
-	SendToJudgeDropCnt          = nproc.NewSCounterQps("SendToJudgeDropCnt")
-	SendToGraphDropCnt          = nproc.NewSCounterQps("SendToGraphDropCnt")
-	SendToGraphMigratingDropCnt = nproc.NewSCounterQps("SendToGraphMigratingDropCnt")
-	SendToInfluxdbDropCnt       = nproc.NewSCounterQps("SendToInfluxdbDropCnt")
+	SendToJudgeDropCnt    = nproc.NewSCounterQps("SendToJudgeDropCnt")
+	SendToTsdbDropCnt     = nproc.NewSCounterQps("SendToTsdbDropCnt")
+	SendToGraphDropCnt    = nproc.NewSCounterQps("SendToGraphDropCnt")
+	SendToInfluxdbDropCnt = nproc.NewSCounterQps("SendToInfluxdbDropCnt")
 
-	SendToJudgeFailCnt          = nproc.NewSCounterQps("SendToJudgeFailCnt")
-	SendToGraphFailCnt          = nproc.NewSCounterQps("SendToGraphFailCnt")
-	SendToGraphMigratingFailCnt = nproc.NewSCounterQps("SendToGraphMigratingFailCnt")
-	SendToInfluxdbFailCnt       = nproc.NewSCounterQps("SendToInfluxdbFailCnt")
+	SendToJudgeFailCnt    = nproc.NewSCounterQps("SendToJudgeFailCnt")
+	SendToTsdbFailCnt     = nproc.NewSCounterQps("SendToTsdbFailCnt")
+	SendToGraphFailCnt    = nproc.NewSCounterQps("SendToGraphFailCnt")
+	SendToInfluxdbFailCnt = nproc.NewSCounterQps("SendToInfluxdbFailCnt")
 
 	// 发送缓存大小
-	JudgeQueuesCnt          = nproc.NewSCounterBase("JudgeSendCacheCnt")
-	GraphQueuesCnt          = nproc.NewSCounterBase("GraphSendCacheCnt")
-	GraphMigratingQueuesCnt = nproc.NewSCounterBase("GraphMigratingCacheCnt")
-	InfluxdbQueuesCnt       = nproc.NewSCounterBase("InfluxdbSendCacheCnt")
+	JudgeQueuesCnt    = nproc.NewSCounterBase("JudgeSendCacheCnt")
+	TsdbQueuesCnt     = nproc.NewSCounterBase("TsdbSendCacheCnt")
+	GraphQueuesCnt    = nproc.NewSCounterBase("GraphSendCacheCnt")
+	InfluxdbQueuesCnt = nproc.NewSCounterBase("InfluxdbSendCacheCnt")
 )
 
 func Start() {
@@ -60,26 +60,26 @@ func GetAll() []interface{} {
 
 	// send cnt
 	ret = append(ret, SendToJudgeCnt.Get())
+	ret = append(ret, SendToTsdbCnt.Get())
 	ret = append(ret, SendToGraphCnt.Get())
-	ret = append(ret, SendToGraphMigratingCnt.Get())
 	ret = append(ret, SendToInfluxdbCnt.Get())
 
 	// drop cnt
 	ret = append(ret, SendToJudgeDropCnt.Get())
+	ret = append(ret, SendToTsdbDropCnt.Get())
 	ret = append(ret, SendToGraphDropCnt.Get())
-	ret = append(ret, SendToGraphMigratingDropCnt.Get())
 	ret = append(ret, SendToInfluxdbDropCnt.Get())
 
 	// send fail cnt
 	ret = append(ret, SendToJudgeFailCnt.Get())
+	ret = append(ret, SendToTsdbFailCnt.Get())
 	ret = append(ret, SendToGraphFailCnt.Get())
-	ret = append(ret, SendToGraphMigratingFailCnt.Get())
 	ret = append(ret, SendToInfluxdbFailCnt.Get())
 
 	// cache cnt
 	ret = append(ret, JudgeQueuesCnt.Get())
+	ret = append(ret, TsdbQueuesCnt.Get())
 	ret = append(ret, GraphQueuesCnt.Get())
-	ret = append(ret, GraphMigratingQueuesCnt.Get())
 	ret = append(ret, InfluxdbQueuesCnt.Get())
 
 	return ret

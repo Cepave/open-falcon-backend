@@ -1,5 +1,6 @@
 {
     "debug": true,
+    "minStep": 30,
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:6060"
@@ -33,12 +34,19 @@
         "maxConns": 32,
         "maxIdle": 32,
         "replicas": 500,
-        "migrating": false,
         "cluster": {
             "graph-00" : "127.0.0.1:6070"
-        },
-        "clusterMigrating": {
         }
+    },
+    "tsdb": {
+        "enabled": false,
+        "batch": 200,
+        "connTimeout": 1000,
+        "callTimeout": 5000,
+        "maxConns": 32,
+        "maxIdle": 32,
+        "retry": 3,
+        "address": "127.0.0.1:8088"
     },
     "influxdb": {
         "enabled": false,
@@ -50,3 +58,4 @@
         "addr": "root:@http(127.0.0.1:8086)/db"
     }
 }
+

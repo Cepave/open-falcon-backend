@@ -2,10 +2,10 @@ package sender
 
 import (
 	"errors"
-	"log"
 	"github.com/Cepave/transfer/g"
 	cpool "github.com/Cepave/transfer/sender/conn_pool"
 	nset "github.com/toolkits/container/set"
+	"log"
 	"strings"
 )
 
@@ -99,27 +99,20 @@ func initConnPools() {
 	JudgeConnPools = cpool.CreateSafeRpcConnPools(cfg.Judge.MaxConns, cfg.Judge.MaxIdle,
 		cfg.Judge.ConnTimeout, cfg.Judge.CallTimeout, judgeInstances.ToSlice())
 
+	// tsdb
+	if cfg.Tsdb.Enabled {
+		TsdbConnPoolHelper = cpool.NewTsdbConnPoolHelper(cfg.Tsdb.Address, cfg.Tsdb.MaxConns, cfg.Tsdb.MaxIdle, cfg.Tsdb.ConnTimeout, cfg.Tsdb.CallTimeout)
+	}
+
 	// graph
 	graphInstances := nset.NewSafeSet()
-	for _, nitem := range cfg.Graph.Cluster2 {
+	for _, nitem := range cfg.Graph.ClusterList {
 		for _, addr := range nitem.Addrs {
 			graphInstances.Add(addr)
 		}
 	}
 	GraphConnPools = cpool.CreateSafeRpcConnPools(cfg.Graph.MaxConns, cfg.Graph.MaxIdle,
 		cfg.Graph.ConnTimeout, cfg.Graph.CallTimeout, graphInstances.ToSlice())
-
-	// graph migrating
-	if cfg.Graph.Migrating && cfg.Graph.ClusterMigrating != nil {
-		graphMigratingInstances := nset.NewSafeSet()
-		for _, cnode := range cfg.Graph.ClusterMigrating2 {
-			for _, addr := range cnode.Addrs {
-				graphMigratingInstances.Add(addr)
-			}
-		}
-		GraphMigratingConnPools = cpool.CreateSafeRpcConnPools(cfg.Graph.MaxConns, cfg.Graph.MaxIdle,
-			cfg.Graph.ConnTimeout, cfg.Graph.CallTimeout, graphMigratingInstances.ToSlice())
-	}
 
 	influxdbInstances := make([]cpool.InfluxdbConnection, 1)
 	dsn, err := parseDSN(cfg.Influxdb.Address)
@@ -135,6 +128,6 @@ func initConnPools() {
 func DestroyConnPools() {
 	JudgeConnPools.Destroy()
 	GraphConnPools.Destroy()
-	GraphMigratingConnPools.Destroy()
+	TsdbConnPoolHelper.Destroy()
 	InfluxdbConnPools.Destroy()
 }
