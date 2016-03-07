@@ -3,9 +3,10 @@ package g
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/toolkits/file"
 	"log"
 	"sync"
+
+	"github.com/toolkits/file"
 )
 
 type HttpConfig struct {
@@ -35,6 +36,11 @@ type UicConfig struct {
 }
 
 type GraphDBConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
+}
+type FalconPortalConfig struct {
 	Addr string `json:"addr"`
 	Idle int    `json:"idle"`
 	Max  int    `json:"max"`
@@ -75,19 +81,20 @@ type GrpcConfig struct {
 }
 
 type GlobalConfig struct {
-	Log         string          `json:"log"`
-	Company     string          `json:"company"`
-	Cache       *CacheConfig    `json:"cache"`
-	Http        *HttpConfig     `json:"http"`
-	Salt        string          `json:"salt"`
-	CanRegister bool            `json:"canRegister"`
-	Ldap        *LdapConfig     `json:"ldap"`
-	Uic         *UicConfig      `json:"uic"`
-	GraphDB     *GraphDBConfig  `json:"graphdb"`
-	Shortcut    *ShortcutConfig `json:"shortcut"`
-	Api         *ApiConfig      `json:"api"`
-	Graph       *GraphConfig    `json:"graph"`
-	Grpc        *GrpcConfig     `json:"grpc"`
+	Log          string              `json:"log"`
+	Company      string              `json:"company"`
+	Cache        *CacheConfig        `json:"cache"`
+	Http         *HttpConfig         `json:"http"`
+	Salt         string              `json:"salt"`
+	CanRegister  bool                `json:"canRegister"`
+	Ldap         *LdapConfig         `json:"ldap"`
+	Uic          *UicConfig          `json:"uic"`
+	GraphDB      *GraphDBConfig      `json:"graphdb"`
+	FalconPortal *FalconPortalConfig `json:"falcon_portal"`
+	Shortcut     *ShortcutConfig     `json:"shortcut"`
+	Api          *ApiConfig          `json:"api"`
+	Graph        *GraphConfig        `json:"graph"`
+	Grpc         *GrpcConfig         `json:"grpc"`
 }
 
 var (

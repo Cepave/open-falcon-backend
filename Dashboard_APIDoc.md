@@ -33,8 +33,7 @@
         }
       }
       ```
-      * sig: user session token
-      * expired: token expired time
+      * endpoints: matched endpoints
     * failed
 
       ```
@@ -89,3 +88,92 @@
         }
       }
       ```
+
+* `GET` `POST` /api/v1//hostgroup/query
+  * params:
+    * `queryStr` string [regex query string]
+  * response:
+    * ok
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "success",
+      "data": {
+        "hostgroups": [
+          {
+            "id": 2,
+            "grp_name": "docker",
+            "create_user": "cepavetest",
+            "create_at": "2016-03-07T13:41:52+08:00",
+            "come_from": 1
+          }
+        ]
+      }
+    }
+    ```
+    * hostgroups: matched hostgroups
+  * failed
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "failed",
+      "error": {
+        "message": "query string is empty, please it"
+      }
+    }
+    ```
+* `GET` `POST` /api/v1//hostgroup/hosts
+* params:
+  * `hostgroup` specific name of a hostgroup
+    * ex. "docker"
+* response:
+  * ok
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "success",
+      "data": {
+        "hosts": [
+          {
+            "id": 1,
+            "hostname": "docker-agent",
+            "ip": "172.17.0.17",
+            "agent_version": "5.1.0",
+            "plugin_version": "plugin not enabled",
+            "maintain_begin": 0,
+            "maintain_end": 0,
+            "update_at": "2016-01-04T16:43:37+08:00"
+          },
+          {
+            "id": 28988,
+            "hostname": "docker-task",
+            "ip": "",
+            "agent_version": "",
+            "plugin_version": "",
+            "maintain_begin": 0,
+            "maintain_end": 0,
+            "update_at": "2016-03-07T13:41:21+08:00"
+          }
+        ]
+      }
+    }
+    ```
+    * hosts: hosts list of hostgorup
+  * failed
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "failed",
+      "error": {
+        "message": "query string is empty, please it"
+      }
+    }
+    ```

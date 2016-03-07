@@ -1,10 +1,11 @@
 package dashboard
 
 import (
-	"github.com/Cepave/fe/http/base"
-	"github.com/Cepave/fe/model/dashboard"
 	"regexp"
 	"strings"
+
+	"github.com/Cepave/fe/http/base"
+	"github.com/Cepave/fe/model/dashboard"
 )
 
 type BashBoardController struct {
@@ -62,6 +63,60 @@ func (this *BashBoardController) CounterQuery() {
 		baseResp.Data["counters"] = []string{}
 	default:
 		baseResp.Data["counters"] = counters
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *BashBoardController) HostGroupQuery() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	queryStr := this.GetString("queryStr", "")
+	if queryStr == "" {
+		this.ResposeError(baseResp, "query string is empty, please it")
+		return
+	}
+
+	hostgroupList, err := dashboard.QueryHostGroupByNameRegx(queryStr)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	if len(hostgroupList) > 0 {
+		baseResp.Data["hostgroups"] = hostgroupList
+	} else {
+		baseResp.Data["hostgroups"] = []string{}
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *BashBoardController) HostsQueryByHostGroup() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	hostgroup := this.GetString("hostgroup", "")
+	if hostgroup == "" {
+		this.ResposeError(baseResp, "query string is empty, please it")
+		return
+	}
+
+	hosts, err := dashboard.GetHostsByHostGroupName(hostgroup)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	if len(hosts) > 0 {
+		baseResp.Data["hosts"] = hosts
+	} else {
+		baseResp.Data["hosts"] = []string{}
 	}
 	this.ServeApiJson(baseResp)
 	return
