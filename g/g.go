@@ -13,14 +13,16 @@ import (
 // 0.0.10: use more efficient proc & sema, rm conn_pool status log
 // 0.0.11: fix bug: all graphs' traffic delined when one graph broken down, modify retry interval
 // 0.0.14: support sending multi copies to graph node, align ts for judge, add filter
+// 0.0.15: support tsdb
+// 0.0.16: support config of min step
+// 0.0.17: remove migrating, which is implemented in graph
 
 const (
-	VERSION      = "0.0.14"
+	VERSION      = "0.0.17"
 	GAUGE        = "GAUGE"
 	COUNTER      = "COUNTER"
 	DERIVE       = "DERIVE"
 	DEFAULT_STEP = 60
-	MIN_STEP     = 30
 )
 
 func init() {

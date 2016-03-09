@@ -1,6 +1,7 @@
 package sender
 
 import (
+	"bytes"
 	"github.com/Cepave/transfer/g"
 	"github.com/Cepave/transfer/proc"
 	cmodel "github.com/open-falcon/common/model"
@@ -19,12 +20,19 @@ const (
 func startSendTasks() {
 	cfg := g.Config()
 	// init semaphore
-	judgeConcurrent := cfg.Judge.MaxIdle
-	graphConcurrent := cfg.Graph.MaxIdle
+	judgeConcurrent := cfg.Judge.MaxConns
+	graphConcurrent := cfg.Graph.MaxConns
+	tsdbConcurrent := cfg.Tsdb.MaxConns
 	influxdbConcurrent := cfg.Influxdb.MaxIdle
+
+	if tsdbConcurrent < 1 {
+		tsdbConcurrent = 1
+	}
+
 	if judgeConcurrent < 1 {
 		judgeConcurrent = 1
 	}
+
 	if graphConcurrent < 1 {
 		graphConcurrent = 1
 	}
@@ -38,20 +46,15 @@ func startSendTasks() {
 		go forward2JudgeTask(queue, node, judgeConcurrent)
 	}
 
-	for node, nitem := range cfg.Graph.Cluster2 {
+	for node, nitem := range cfg.Graph.ClusterList {
 		for _, addr := range nitem.Addrs {
 			queue := GraphQueues[node+addr]
 			go forward2GraphTask(queue, node, addr, graphConcurrent)
 		}
 	}
 
-	if cfg.Graph.Migrating {
-		for node, cnodem := range cfg.Graph.ClusterMigrating2 {
-			for _, addr := range cnodem.Addrs {
-				queue := GraphMigratingQueues[node+addr]
-				go forward2GraphMigratingTask(queue, node, addr, graphConcurrent)
-			}
-		}
+	if cfg.Tsdb.Enabled {
+		go forward2TsdbTask(tsdbConcurrent)
 	}
 
 	go forward2InfluxdbTask(InfluxdbQueues["default"], influxdbConcurrent)
@@ -149,48 +152,46 @@ func forward2GraphTask(Q *list.SafeListLimited, node string, addr string, concur
 	}
 }
 
-// Graph定时任务, 进行数据迁移时的 数据冗余发送
-func forward2GraphMigratingTask(Q *list.SafeListLimited, node string, addr string, concurrent int) {
-	batch := g.Config().Graph.Batch // 一次发送,最多batch条数据
+// Tsdb定时任务, 将数据通过api发送到tsdb
+func forward2TsdbTask(concurrent int) {
+	batch := g.Config().Tsdb.Batch // 一次发送,最多batch条数据
+	retry := g.Config().Tsdb.MaxRetry
 	sema := nsema.NewSemaphore(concurrent)
 
 	for {
-		items := Q.PopBackBy(batch)
-		count := len(items)
-		if count == 0 {
+		items := TsdbQueue.PopBackBy(batch)
+		if len(items) == 0 {
 			time.Sleep(DefaultSendTaskSleepInterval)
 			continue
 		}
-
-		graphItems := make([]*cmodel.GraphItem, count)
-		for i := 0; i < count; i++ {
-			graphItems[i] = items[i].(*cmodel.GraphItem)
-		}
-
+		//  同步Call + 有限并发 进行发送
 		sema.Acquire()
-		go func(addr string, graphItems []*cmodel.GraphItem, count int) {
+		go func(itemList []interface{}) {
 			defer sema.Release()
 
-			resp := &cmodel.SimpleRpcResponse{}
-			var err error
-			sendOk := false
-			for i := 0; i < 3; i++ { //最多重试3次
-				err = GraphMigratingConnPools.Call(addr, "Graph.Send", graphItems, resp)
-				if err == nil {
-					sendOk = true
-					break
-				}
-				time.Sleep(time.Millisecond * 10) //发送失败了,睡10ms
+			var tsdbBuffer bytes.Buffer
+			for i := 0; i < len(itemList); i++ {
+				tsdbItem := itemList[i].(*cmodel.TsdbItem)
+				tsdbBuffer.WriteString(tsdbItem.TsdbString())
+				tsdbBuffer.WriteString("\n")
 			}
 
-			// statistics
-			if !sendOk {
-				log.Printf("send to graph migrating %s:%s fail: %v", node, addr, err)
-				proc.SendToGraphMigratingFailCnt.IncrBy(int64(count))
-			} else {
-				proc.SendToGraphMigratingCnt.IncrBy(int64(count))
+			var err error
+			for i := 0; i < retry; i++ {
+				err = TsdbConnPoolHelper.Send(tsdbBuffer.Bytes())
+				if err == nil {
+					proc.SendToTsdbCnt.IncrBy(int64(len(itemList)))
+					break
+				}
+				time.Sleep(100 * time.Millisecond)
 			}
-		}(addr, graphItems, count)
+
+			if err != nil {
+				proc.SendToTsdbFailCnt.IncrBy(int64(len(itemList)))
+				log.Println(err)
+				return
+			}
+		}(items)
 	}
 }
 

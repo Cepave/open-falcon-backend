@@ -135,11 +135,15 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 	cfg := g.Config()
 
 	if cfg.Graph.Enabled {
-		sender.Push2GraphSendQueue(items, cfg.Graph.Migrating)
+		sender.Push2GraphSendQueue(items)
 	}
 
 	if cfg.Judge.Enabled {
 		sender.Push2JudgeSendQueue(items)
+	}
+
+	if cfg.Tsdb.Enabled {
+		sender.Push2TsdbSendQueue(items)
 	}
 
 	if cfg.Influxdb.Enabled {
