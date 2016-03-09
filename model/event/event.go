@@ -24,7 +24,7 @@ type Event struct {
 	Timestamp    time.Time `json:"timestamp"`
 	UpdateAt     time.Time `json:"update_at"`
 	ClosedAt     time.Time `json:"closed_at"`
-	UserModified string    `json:"user_modified"`
+	UserModified int       `json:"user_modified"`
 	ExpressionId int       `json:"expression_id"`
 	StrategyId   int       `json:"strategy_id"`
 	TemplateId   int       `json:"template_id"`
