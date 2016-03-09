@@ -31,22 +31,25 @@ go get ./...
 ```
 CREATE TABLE event (
 	id VARCHAR(50),
-	endpoint VARCHAR(100),
-	metric VARCHAR(200),
+	endpoint VARCHAR(100) NOT NULL,
+	metric VARCHAR(200) NOT NULL,
 	func VARCHAR(50),
-	cond VARCHAR(200),
+	cond VARCHAR(200) NOT NULL,
 	note VARCHAR(500),
-	max_step INT(6),
-	current_step INT(6),
-	priority INT(6),
-	status VARCHAR(20),
-	timestamp Timestamp,
+	max_step int(10) unsigned,
+	current_step int(10) unsigned,
+	priority INT(6) NOT NULL,
+	status VARCHAR(20) NOT NULL,
+	timestamp Timestamp NOT NULL,
 	update_at Timestamp,
 	closed_at Timestamp,
-	user_modified INT(6),
-	expression_id INT(6),
-	strategy_id INT(6),
-	template_id INT(6),
-	PRIMARY KEY (id)
-)
+	user_modified int(10) unsigned,
+	expression_id int(10) unsigned,
+	strategy_id int(10) unsigned,
+	template_id int(10) unsigned,
+	PRIMARY KEY (id),
+	INDEX (endpoint),
+	FOREIGN KEY (strategy_id) REFERENCES strategy(id),
+	FOREIGN KEY (template_id) REFERENCES tpl(id)
+);
 ```
