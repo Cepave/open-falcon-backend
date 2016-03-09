@@ -9,6 +9,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/open-falcon/common/model"
+	"github.com/toolkits/net"
+	"github.com/toolkits/slice"
 )
 
 var Root string
@@ -32,8 +36,7 @@ func InitLocalIps() {
 }
 
 var (
-	HbsClient      *SingleConnRpcClient
-	TransferClient *SingleConnRpcClient
+	HbsClient *SingleConnRpcClient
 )
 
 func InitRpcClients() {
@@ -41,13 +44,6 @@ func InitRpcClients() {
 		HbsClient = &SingleConnRpcClient{
 			RpcServer: Config().Heartbeat.Addr,
 			Timeout:   time.Duration(Config().Heartbeat.Timeout) * time.Millisecond,
-		}
-	}
-
-	if Config().Transfer.Enabled {
-		TransferClient = &SingleConnRpcClient{
-			RpcServer: Config().Transfer.Addr,
-			Timeout:   time.Duration(Config().Transfer.Timeout) * time.Millisecond,
 		}
 	}
 }
@@ -64,10 +60,7 @@ func SendToTransfer(metrics []*model.MetricValue) {
 	}
 
 	var resp model.TransferResponse
-	err := TransferClient.Call("Transfer.Update", metrics, &resp)
-	if err != nil {
-		log.Println("call Transfer.Update fail", err)
-	}
+	SendMetrics(metrics, &resp)
 
 	if debug {
 		log.Println("<=", &resp)
