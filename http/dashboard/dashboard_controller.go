@@ -9,11 +9,11 @@ import (
 	"github.com/Cepave/fe/model/dashboard"
 )
 
-type BashBoardController struct {
+type DashBoardController struct {
 	base.BaseController
 }
 
-func (this *BashBoardController) EndpRegxqury() {
+func (this *DashBoardController) EndpRegxqury() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
@@ -40,7 +40,7 @@ func (this *BashBoardController) EndpRegxqury() {
 }
 
 //counter query by endpoints
-func (this *BashBoardController) CounterQuery() {
+func (this *DashBoardController) CounterQuery() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
@@ -69,7 +69,7 @@ func (this *BashBoardController) CounterQuery() {
 	return
 }
 
-func (this *BashBoardController) HostGroupQuery() {
+func (this *DashBoardController) HostGroupQuery() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
@@ -96,7 +96,7 @@ func (this *BashBoardController) HostGroupQuery() {
 	return
 }
 
-func (this *BashBoardController) HostsQueryByHostGroups() {
+func (this *DashBoardController) HostsQueryByHostGroups() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
@@ -123,7 +123,7 @@ func (this *BashBoardController) HostsQueryByHostGroups() {
 	return
 }
 
-func (this *BashBoardController) CounterQueryByHostGroup() {
+func (this *DashBoardController) CounterQueryByHostGroup() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
