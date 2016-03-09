@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Cepave/alarm/cron"
-	"github.com/Cepave/alarm/g"
-	"github.com/Cepave/alarm/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Cepave/alarm/cron"
+	"github.com/Cepave/alarm/g"
+	"github.com/Cepave/alarm/http"
+	"github.com/Cepave/alarm/model"
 )
 
 func main() {
@@ -29,9 +31,9 @@ func main() {
 
 	g.ParseConfig(*cfg)
 	g.InitRedisConnPool()
+	model.InitDatabase()
 
 	go http.Start()
-
 	go cron.ReadHighEvent()
 	go cron.ReadLowEvent()
 	go cron.CombineSms()
