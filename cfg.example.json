@@ -21,7 +21,12 @@
     "canRegister": true,
     "ldap": {
         "enabled": false,
-        "addr": "ldap.example.com:389"
+        "addr": "ldap.example.com:389",
+        "baseDN": "dc=example,dc=com",
+        "bindDN": "cn=mananger,dc=example,dc=com",
+        "bindPasswd": "12345678",
+        "userField": "uid",
+        "attributes": ["sn","mail","telephoneNumber"]
     },
     "uic": {
         "addr": "root:@tcp(127.0.0.1:3306)/uic?charset=utf8&loc=Asia%2FChongqing",

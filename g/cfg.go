@@ -42,8 +42,22 @@ type ShortcutConfig struct {
 }
 
 type LdapConfig struct {
-	Enabled bool   `json:"enabled"`
-	Addr    string `json:"addr"`
+	Enabled    bool     `json:"enabled"`
+	Addr       string   `json:"addr"`
+	BindDN     string   `json:"bindDN"`
+	BaseDN     string   `json:"baseDN`
+	BindPasswd string   `json:"bindPasswd"`
+	UserField  string   `json:"userField"`
+	Attributes []string `json:attributes`
+}
+
+type ApiConfig struct {
+	Key      string `json:"key"`
+	Redirect string `json:"redirect"`
+	Login    string `json:"login"`
+	Access   string `json:"access"`
+	Role     string `json:"role"`
+	Logout   string `json:"logout"`
 }
 
 type ApiConfig struct {

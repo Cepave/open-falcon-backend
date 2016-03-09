@@ -8,8 +8,6 @@ import (
 	"github.com/Cepave/fe/http"
 	"github.com/Cepave/fe/model"
 	"github.com/toolkits/logger"
-	"log"
-	"os"
 )
 
 func main() {

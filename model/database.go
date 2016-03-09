@@ -1,10 +1,10 @@
 package model
 
 import (
-	"github.com/astaxie/beego/orm"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/Cepave/fe/g"
 	. "github.com/Cepave/fe/model/uic"
+	"github.com/astaxie/beego/orm"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func InitDatabase() {
