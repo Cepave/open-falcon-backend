@@ -3,9 +3,9 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/astaxie/beego/orm"
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/g"
+	"github.com/astaxie/beego/orm"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -254,7 +254,7 @@ func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, vers
 	for key, row := range data {
 		name = row.Endpoint
 		var diff int64
-		diff =  0
+		diff = 0
 		var timestamp int64
 		timestamp = 0
 		status = "dead"
@@ -265,7 +265,7 @@ func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, vers
 			alive = int(row.Value.Value)
 			timestamp = row.Value.Timestamp
 			now := time.Now().Unix()
-			diff =  now - timestamp
+			diff = now - timestamp
 		}
 		version = versions[name]
 		if alive > 0 {
@@ -288,7 +288,7 @@ func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, vers
 		item["diff"] = diff
 		item["status"] = status
 		items = append(items, item)
-		if diff > 60 * 60 * 24 && timestamp > 0 {
+		if diff > 60*60*24 && timestamp > 0 {
 			anomalies = append(anomalies, item)
 		}
 	}
