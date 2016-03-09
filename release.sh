@@ -33,7 +33,7 @@ done
 
 graph_components=("agent" "transfer" "graph" "query" "dashboard")
 judge_components=("portal" "fe" "hbs" "judge" "sender" "alarm" "links")
-other_components=("task" "gateway" "nodata")
+other_components=("task" "gateway" "nodata" "aggregator")
 
 all_components=""
 for c in ${graph_components[@]};do
@@ -66,7 +66,8 @@ for c in `echo -n $all_components | tr ' ' '\n'`;do
 
 done
 
-cd $output_dir && tar -zcf $WORKSPACE/open-falcon-latest.tar.gz *.tar.gz &> /dev/null
+OF_RELEASE_VERSION=0.1.0
+cd $output_dir && tar -zcf $WORKSPACE/of-release-$OF_RELEASE_VERSION.tar.gz *.tar.gz &> /dev/null
 echo
-echo "--> $WORKSPACE/open-falcon-latest.tar.gz"
+echo "--> $WORKSPACE/of-release-$OF_RELEASE_VERSION.tar.gz"
 echo
