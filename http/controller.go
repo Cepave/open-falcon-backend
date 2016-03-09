@@ -9,6 +9,10 @@ import (
 	"log"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego"
+	"github.com/open-falcon/alarm/g"
+	"github.com/toolkits/file"
 )
 
 type MainController struct {
@@ -121,9 +125,9 @@ func CheckLoginStatusByCookie(sig string) bool {
 }
 
 func (this *MainController) Index() {
-    if checkLogin(this) == false {
-        return
-    }
+	if checkLogin(this) == false {
+		return
+	}
 	defer func() {
 		this.Data["Now"] = time.Now().Unix()
 		this.TplName = "index.html"
@@ -133,16 +137,16 @@ func (this *MainController) Index() {
 		this.Data["FalconAlarm"] = g.Config().Shortcut.FalconAlarm
 		this.Data["FalconUIC"] = g.Config().Shortcut.FalconUIC
 	}()
-    
+
 	this.Data["Events"] = g.Events.CloneToOrderedEvents()
 }
 
 func (this *MainController) Event() {
-    if checkLogin(this) == false {
-        return
-    }
-    this.Data["json"] = g.Events.CloneToOrderedEvents()
-    this.ServeJSON()
+	if checkLogin(this) == false {
+		return
+	}
+	this.Data["json"] = g.Events.CloneToOrderedEvents()
+	this.ServeJSON()
 }
 
 func (this *MainController) Solve() {
@@ -161,17 +165,17 @@ func (this *MainController) Solve() {
 }
 
 func checkLogin(m *MainController) bool {
-    // Skip the login check in debug mode.
-    if g.Config().Debug {
-        return true
-    }
-    
-    sig := m.Ctx.GetCookie("sig")
-    isLoggedIn := CheckLoginStatusByCookie(sig)
-    if !isLoggedIn {
-        RedirectUrl := g.Config().RedirectUrl
-        m.Redirect(RedirectUrl, 302)
-        return false
-    }
-    return true
+	// Skip the login check in debug mode.
+	if g.Config().Debug {
+		return true
+	}
+
+	sig := m.Ctx.GetCookie("sig")
+	isLoggedIn := CheckLoginStatusByCookie(sig)
+	if !isLoggedIn {
+		RedirectUrl := g.Config().RedirectUrl
+		m.Redirect(RedirectUrl, 302)
+		return false
+	}
+	return true
 }

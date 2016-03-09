@@ -6,10 +6,13 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
-	"github.com/astaxie/beego"
 	"github.com/Cepave/alarm/g"
+	"github.com/astaxie/beego"
 	"log"
 	_ "net/http/pprof"
+
+	"github.com/astaxie/beego"
+	"github.com/open-falcon/alarm/g"
 )
 
 func configRoutes() {
