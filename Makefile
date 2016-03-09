@@ -1,8 +1,8 @@
-BIN = falcon-agent
+BIN = falcon-agent aggregator graph hbs judge nodata query sender task transfer
 TARGET = open-falcon
 
 all: $(BIN)
-	mkdir bin
+	mkdir -p bin
 	mv $(BIN) ./bin/
 	go build -o open-falcon
 
@@ -16,8 +16,8 @@ hbs:
 	go build -o $@ github.com/cepave/open-falcon/modules/hbs
 judge:
 	go build -o $@ github.com/cepave/open-falcon/modules/judge
-links:
-	go build -o $@ github.com/cepave/open-falcon/modules/links
+#links:
+#	go build -o $@ github.com/cepave/open-falcon/modules/links
 nodata:
 	go build -o $@ github.com/cepave/open-falcon/modules/nodata
 query:
