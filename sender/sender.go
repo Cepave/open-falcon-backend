@@ -205,8 +205,8 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 	for _, item := range items {
 		// align ts
 		step := int(item.Step)
-		if step < g.MIN_STEP {
-			step = g.MIN_STEP
+		if step < MinStep {
+			step = MinStep
 		}
 		ts := alignTs(item.Timestamp, int64(step))
 
