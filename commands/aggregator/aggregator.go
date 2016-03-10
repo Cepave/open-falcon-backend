@@ -1,10 +1,11 @@
 package aggregator
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
-
+	"github.com/Cepave/open-falcon/g"
 	"github.com/mitchellh/cli"
 )
 
@@ -20,9 +21,16 @@ type Command struct {
 }
 
 func (c *Command) Run(args []string) int {
-	cmd := exec.Command("./agent", "arguments")
+	fmt.Println("Run an instance:",g.AGGREGATOR_APP)
+    cmdArgs := g.ConfigArgs(g.AGGREGATOR_CONF)
+    if (cmdArgs==nil) {
+        return 0
+    }
+	cmd := exec.Command(g.AGENT_BIN, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	dir, _ := os.Getwd()
+	cmd.Dir = dir
 	cmd.Run()
 	return 0
 }

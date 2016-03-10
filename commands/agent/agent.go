@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-
+	"github.com/Cepave/open-falcon/g"
 	"github.com/mitchellh/cli"
 )
 
@@ -21,8 +21,12 @@ type Command struct {
 }
 
 func (c *Command) Run(args []string) int {
-	fmt.Println("Run an agent")
-	cmd := exec.Command("./bin/falcon-agent", "arguments")
+	fmt.Println("Run an instance:",g.AGENT_APP)
+    cmdArgs := g.ConfigArgs(g.AGENT_CONF)
+    if (cmdArgs==nil) {
+        return 0
+    }
+	cmd := exec.Command(g.AGENT_BIN, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	dir, _ := os.Getwd()
