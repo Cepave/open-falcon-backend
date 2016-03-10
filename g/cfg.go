@@ -60,15 +60,6 @@ type ApiConfig struct {
 	Logout   string `json:"logout"`
 }
 
-type ApiConfig struct {
-	Key      string `json:"key"`
-	Redirect string `json:"redirect"`
-	Login    string `json:"login"`
-	Access   string `json:"access"`
-	Role     string `json:"role"`
-	Logout   string `json:"logout"`
-}
-
 type GlobalConfig struct {
 	Log         string          `json:"log"`
 	Company     string          `json:"company"`
