@@ -1,5 +1,4 @@
 package g
-
 const (
-	COMMIT = "gitversion"
+    COMMIT = "b7f3164"
 )
