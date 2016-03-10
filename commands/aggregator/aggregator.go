@@ -2,11 +2,11 @@ package aggregator
 
 import (
 	"fmt"
+	"github.com/Cepave/open-falcon/g"
+	"github.com/mitchellh/cli"
 	"os"
 	"os/exec"
 	"strings"
-	"github.com/Cepave/open-falcon/g"
-	"github.com/mitchellh/cli"
 )
 
 // Command is a Command implementation that runs a Consul agent.
@@ -21,12 +21,12 @@ type Command struct {
 }
 
 func (c *Command) Run(args []string) int {
-	fmt.Println("Run an instance:",g.AGGREGATOR_APP)
-    cmdArgs := g.ConfigArgs(g.AGGREGATOR_CONF)
-    if (cmdArgs==nil) {
-        return 0
-    }
-	cmd := exec.Command(g.AGENT_BIN, cmdArgs...)
+	fmt.Println("Run an instance:", g.AGGREGATOR_APP)
+	cmdArgs := g.ConfigArgs(g.AGGREGATOR_CONF)
+	if cmdArgs == nil {
+		return 0
+	}
+	cmd := exec.Command(g.AGGREGATOR_BIN, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	dir, _ := os.Getwd()
@@ -43,7 +43,7 @@ func (c *Command) Help() string {
 	helpText := `
 Usage: Open-Falcon agent [options]
 
-  Starts the Consul agent and runs until an interrupt is received. The
+  Starts the Open-Falcon agent and runs until an interrupt is received. The
   agent represents a single node in a cluster.
 
 Options:
