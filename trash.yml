@@ -1,0 +1,23 @@
+package: github.com/Cepave/open-falcon
+
+import:
+- package: github.com/Cepave/common
+  version: origin/develop
+
+- package: github.com/Cepave/fe
+  version: origin/master
+
+- package: github.com/Cepave/graph
+  version: with-OF-v0.1.0
+
+- package: github.com/Cepave/hbs
+  version: with-OF-v0.1.0
+
+- package: github.com/Cepave/query
+  version: with-OF-v0.1.0
+
+- package: github.com/Cepave/scripts
+  version: with-OF-v0.1.0
+
+- package: github.com/Cepave/sender
+  version: with-OF-v0.1.0
