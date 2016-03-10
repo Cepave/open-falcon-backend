@@ -1,4 +1,4 @@
-OUT = bin
+BIN = agent aggregator graph hbs judge nodata query sender task transfer fe
 TARGET = open-falcon
 
 GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
@@ -6,32 +6,11 @@ GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
 PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' version.go)
 
-all:agent aggregator graph hbs judge nodata query sender task transfer fe
-	mkdir -p bin
+all: $(BIN)
 	go build -o open-falcon
 
-agent:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/agent
-aggregator:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/aggregator
-graph:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/graph
-hbs:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/hbs
-judge:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/judge
-nodata:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/nodata
-query:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/query
-sender:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/sender
-task:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/task
-transfer:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/transfer
-fe:
-	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/fe
+$(BIN)):
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/$@
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
 dev: format

@@ -1,7 +1,7 @@
 package g
 
 const (
-	AGENT_BIN  = "./bin/falcon-agent"
+	AGENT_BIN  = "./bin/agent"
 	AGENT_CONF = "./config/agent.json"
 	AGENT_APP  = "falcon-agent"
 
