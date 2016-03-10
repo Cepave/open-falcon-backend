@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/model/dashboard"
+	"github.com/Cepave/fe/model/event"
 	"github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
@@ -16,7 +17,8 @@ func InitDatabase() {
 	orm.RegisterDataBase("falcon_portal", "mysql", config.FalconPortal.Addr, config.FalconPortal.Idle, config.FalconPortal.Max)
 
 	// register model
-	orm.RegisterModel(new(uic.User), new(uic.Team), new(uic.Session), new(uic.RelTeamUser), new(dashboard.Endpoint), new(dashboard.EndpointCounter), new(dashboard.HostGroup), new(dashboard.Hosts))
+	orm.RegisterModel(new(uic.User), new(uic.Team), new(uic.Session), new(uic.RelTeamUser), new(dashboard.Endpoint),
+		new(dashboard.EndpointCounter), new(dashboard.HostGroup), new(dashboard.Hosts), new(event.Event))
 
 	if config.Log == "debug" {
 		orm.Debug = true
