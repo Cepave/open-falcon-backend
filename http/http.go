@@ -35,7 +35,7 @@ func InitDatabase() {
 }
 
 func Start() {
-	if !g.Config().Http.Enable {
+	if !g.Config().Http.Enabled {
 		log.Println("http.Start warning, not enable")
 		return
 	}
