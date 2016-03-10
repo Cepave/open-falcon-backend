@@ -26,9 +26,9 @@ format:
 tools:
 	go get -u -v $(GOTOOLS)
 
-pack:
-	git clean -f -d ./bin
-	git clean -f -d ./config
+checkbin:
+pack: checkbin
+	rm -rf open-falcon-v$(VERSION).tar.gz
 	tar -zcvf open-falcon-v$(VERSION).tar.gz ./bin ./config ./open-falcon ./cfg.json
 
 clean:
@@ -36,5 +36,6 @@ clean:
 	git clean -f -d ./config
 	rm -rf ./bin
 	rm -rf ./$(TARGET)
+	rm -rf open-falcon-v$(VERSION).tar.gz
 
 .PHONY: agent aggregator graph hbs judge nodata query sender task transfer fe clean all
