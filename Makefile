@@ -3,31 +3,30 @@ TARGET = open-falcon
 
 all: $(BIN)
 	mkdir -p bin
-	mv $(BIN) ./bin/
 	go build -o open-falcon
 
 falcon-agent:
-	go build -o $@ github.com/cepave/open-falcon/modules/agent
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/agent
 aggregator:
-	go build -o $@ github.com/cepave/open-falcon/modules/aggregator 
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/aggregator 
 graph:
-	go build -o $@ github.com/cepave/open-falcon/modules/graph
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/graph
 hbs:
-	go build -o $@ github.com/cepave/open-falcon/modules/hbs
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/hbs
 judge:
-	go build -o $@ github.com/cepave/open-falcon/modules/judge
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/judge
 #links:
-#	go build -o $@ github.com/cepave/open-falcon/modules/links
+#	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/links
 nodata:
-	go build -o $@ github.com/cepave/open-falcon/modules/nodata
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/nodata
 query:
-	go build -o $@ github.com/cepave/open-falcon/modules/query
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/query
 sender:
-	go build -o $@ github.com/cepave/open-falcon/modules/sender
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/sender
 task:
-	go build -o $@ github.com/cepave/open-falcon/modules/task
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/task
 transfer:
-	go build -o $@ github.com/cepave/open-falcon/modules/transfer
+	go build -o ./bin/$@ github.com/cepave/open-falcon/modules/transfer
 
 clean:
 	rm -rf ./bin
