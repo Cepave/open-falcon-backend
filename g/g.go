@@ -1,0 +1,5 @@
+package g
+
+func init() {
+    
+}
