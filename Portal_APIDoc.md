@@ -1,15 +1,18 @@
 # Portal API list
-`Don't forget do URL encoding..`
-`will check session automatically`
+`Don't forget do URL encoding.. will check session automatically`
 * `GET` `POST` /api/v1/portal/events/get
+  * `required login session`
   * params:
     * `startTime` timestamp
       * ex: 1457450919
     * `endTime` timestamp
     * `priority` int
       * ex: 0
+      * -1 means no specific any priority level, get all.
     * `status` string options
       * ex: "PORBLEM"
+      * "ALL" means no specific any status, get all.
+    * `if you keep all params is empty`, will get all event and status matched "PROBLEM".
   * response:
     * ok
 
@@ -75,6 +78,7 @@
       }
       ```
 * `GET` `POST` /api/v1/portal/events/close
+  * `required login session`
   * params:
     * `id` string
       * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"

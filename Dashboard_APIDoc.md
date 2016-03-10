@@ -1,7 +1,7 @@
 # Dashboard API list
-`Don't forget do URL encoding..`
-`will check session automatically`
+`Don't forget do URL encoding.. will check session automatically`
 * `GET` `POST` /api/v1/dashboard/endpoints
+  * `required login session`
   * params:
     * `queryStr` string [regex query string]
   * response:
@@ -47,6 +47,7 @@
       }
       ```
 * `GET` `POST` /api/v1/dashboard/endpointcounters
+  * `required login session`
   * params:
     * `endpoints` []string (list of host name)
       * ex. ["docker-agent","testmachine"]
@@ -90,6 +91,7 @@
       ```
 
 * `GET` `POST` /api/v1//hostgroup/query
+  * `required login session`
   * params:
     * `queryStr` string [regex query string]
   * response:
@@ -127,6 +129,7 @@
     }
     ```
 * `GET` `POST` /api/v1//hostgroup/hosts
+  * `required login session`
   * params:
     * `hostgroups` list of hostgroup
       * ex. ["docker-agent","testmachine"]
@@ -180,6 +183,7 @@
       ```
 
 * `GET` `POST` /api/v1//hostgroup/hostgroupscounters
+  * `required login session`
   * params:
     * `hostgroups` list of hostgroup
       * ex. ["docker-agent","testmachine"]
