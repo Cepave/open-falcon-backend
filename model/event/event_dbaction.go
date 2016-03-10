@@ -25,7 +25,7 @@ func GetEvent(startTime int64, endTime int64, priority int, status string) (resu
 			query_tmp = fmt.Sprintf("%v priority = %d", query_tmp, priority)
 		}
 	}
-	if status != "" {
+	if status != "ALL" {
 		if flag {
 			query_tmp = fmt.Sprintf("%v and status = '%s'", query_tmp, status)
 		} else {

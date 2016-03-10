@@ -20,10 +20,7 @@ func (this *PortalController) EventGet() {
 	endTime, _ := this.GetInt64("endTime", 0)
 	prioprity, _ := this.GetInt("prioprity", -1)
 	status := this.GetString("status", "PROBLEM")
-	if startTime == 0 || endTime == 0 {
-		this.ResposeError(baseResp, "You dosen't pick the time range")
-		return
-	}
+
 	events, err := event.GetEvent(startTime, endTime, prioprity, status)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
