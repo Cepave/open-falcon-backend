@@ -2,6 +2,7 @@ package event
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	coommonModel "github.com/Cepave/common/model"
@@ -36,11 +37,56 @@ func InsertEvent(eve *coommonModel.Event) {
 	var event []Event
 	q.Raw("select * from event where id = ?", eve.Id).QueryRows(&event)
 	if len(event) == 0 {
-		res, err := q.Raw("INSERT INTO event (id,endpoint,metric,func,cond,note,max_step,current_step,priority,status,timestamp,update_at,expression_id,strategy_id,template_id) VALUES(?, ?, ?, ?,?,?, ?, ?, ?,?,?, ?, ?,?,?)", eve.Id, eve.Endpoint, eve.Metric(), eve.Func(), fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
-			eve.Note(), eve.MaxStep(), eve.CurrentStep, eve.Priority(), eve.Status, time.Unix(eve.EventTime, 0), time.Unix(eve.EventTime, 0), eve.ExpressionId(), eve.StrategyId(), eve.TplId()).Exec()
-		fmt.Println("%v, %v", res, err)
+
+		sqltemplete := `INSERT INTO event (
+					id,
+					endpoint,
+					metric,
+					func,
+					cond,
+					note,
+					max_step,
+					current_step,
+					priority,
+					status,
+					timestamp,
+					update_at,
+					expression_id,
+					strategy_id,
+					template_id
+					) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+		res, err := q.Raw(
+			sqltemplete,
+			eve.Id,
+			eve.Endpoint,
+			eve.Metric(),
+			eve.Func(),
+			//cond
+			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
+			eve.Note(),
+			eve.MaxStep(),
+			eve.CurrentStep,
+			eve.Priority(),
+			eve.Status,
+			//timestamp
+			time.Unix(eve.EventTime, 0),
+			//update_at
+			time.Unix(eve.EventTime, 0),
+			eve.ExpressionId(),
+			eve.StrategyId(),
+			//template_id
+			eve.TplId()).Exec()
+		log.Printf("%v, %v", res, err)
+
 	} else {
-		res, err := q.Raw("UPDATE event SET update_at = ?, current_step = ?, cond = ?  WHERE id = ?", time.Unix(eve.EventTime, 0), eve.CurrentStep, fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()), eve.Id).Exec()
-		fmt.Println("%v, %v", res, err)
+
+		res, err := q.Raw(
+			"UPDATE event SET update_at = ?, current_step = ?, cond = ?  WHERE id = ?",
+			time.Unix(eve.EventTime, 0),
+			eve.CurrentStep,
+			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
+			eve.Id).Exec()
+		log.Printf("%v, %v", res, err)
+
 	}
 }
