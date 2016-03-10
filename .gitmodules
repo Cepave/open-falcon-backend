@@ -103,3 +103,6 @@
 [submodule "modules/transfer"]
 	path = modules/transfer
 	url = https://github.com/cepave/transfer
+[submodule "modules/fe"]
+	path = modules/fe
+	url = https://github.com/cepave/fe.git

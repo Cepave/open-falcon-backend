@@ -1,11 +1,12 @@
 package judge
 
 import (
+	"fmt"
+	"github.com/Cepave/open-falcon/g"
+	"github.com/mitchellh/cli"
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/mitchellh/cli"
 )
 
 // Command is a Command implementation that runs a Consul agent.
@@ -20,9 +21,16 @@ type Command struct {
 }
 
 func (c *Command) Run(args []string) int {
-	cmd := exec.Command("./agent", "arguments")
+	fmt.Println("Run an instance:", g.JUDGE_APP)
+	cmdArgs := g.ConfigArgs(g.JUDGE_CONF)
+	if cmdArgs == nil {
+		return 0
+	}
+	cmd := exec.Command(g.JUDGE_BIN, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	dir, _ := os.Getwd()
+	cmd.Dir = dir
 	cmd.Run()
 	return 0
 }
@@ -35,7 +43,7 @@ func (c *Command) Help() string {
 	helpText := `
 Usage: Open-Falcon agent [options]
 
-  Starts the Consul agent and runs until an interrupt is received. The
+  Starts the Open-Falcon agent and runs until an interrupt is received. The
   agent represents a single node in a cluster.
 
 Options:
