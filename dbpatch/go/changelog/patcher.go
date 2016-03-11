@@ -200,14 +200,18 @@ func hasPatchApplied(dbConfig *patchsql.DatabaseConfig, patchConfig *PatchConfig
 		func(db *dbsql.DB) (err error) {
 			var successRow = -1
 
+			/**
+			 * Since MySQL would gives you total number of COUNT(*)
+			 * even if you use limit express,
+			 * we just check the counting of success patching >= 1
+			 */
 			if err = db.QueryRow(
 				`
-				SELECT COUNT(dcl_id)
+				SELECT COUNT(*)
 				FROM sysdb_change_log
 				WHERE dcl_named_id = ?
 					AND dcl_result = 2
 				ORDER BY dcl_time_update DESC
-				LIMIT 1
 				`,
 				patchConfig.Id,
 			).Scan(&successRow)
@@ -215,7 +219,7 @@ func hasPatchApplied(dbConfig *patchsql.DatabaseConfig, patchConfig *PatchConfig
 				return
 			}
 
-			result = successRow == 1
+			result = successRow >= 1
 			return
 		},
 	)
