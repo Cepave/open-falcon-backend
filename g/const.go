@@ -43,5 +43,5 @@ const (
 
 	API_BIN  = "./bin/fe"
 	API_CONF = "./config/fe.json"
-	API_APP  = "falcon-api"
+	API_APP  = "falcon-fe"
 )

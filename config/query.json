@@ -1,8 +1,8 @@
 {
     "debug": false,
     "http": {
-        "enable":  true,
-        "listen":   "0.0.0.0:9966"
+        "enabled": true,
+        "listen": "0.0.0.0:9966"
     },
     "graph": {
         "connTimeout": 1000,
@@ -11,21 +11,21 @@
         "maxIdle": 32,
         "replicas": 500,
         "cluster": {
-            "node-00": "127.0.0.1:6070"
+            "graph-00": "10.20.30.40:6070"
         }
     },
     "api": {
-        "name": "apiName",
-        "token": "apiToken",
-        "event": "https://example.com/api_event_path",
-        "map": "https://example.com/api_map_path",
-        "geo": "https://example.com/api_geo_path",
-        "query": "http://example.com:port",
-        "dashboard": "http://example.com",
-        "max": 500
+        "name": "api_owl",
+        "token": "fastweb_owl",
+        "event": "https://cdnboss-api.fastweb.com.cn/Monitor/add_zabbix_event",
+        "map": "https://cdnboss-api.fastweb.com.cn/Base/platform/get_ip",
+        "geo": "https://cdnboss-api.fastweb.com.cn/pop/get_area",
+        "query": "http://10.20.30.40:9966",
+        "dashboard": "http://172.17.0.12:8081",
+		"max": 1000
     },
     "db": {
-        "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
+        "addr": "root:password@tcp(172.17.0.3:3306)/graph?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
     }

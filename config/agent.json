@@ -1,22 +1,22 @@
 {
-    "debug": true,
-    "hostname": "",
+    "debug": false,
+    "hostname": "docker-agent",
     "ip": "",
     "plugin": {
         "enabled": false,
         "dir": "./plugin",
-        "git": "https://github.com/Cepave/plugin.git",
+        "git": "https://coding.net/ulricqin/plugin.git",
         "logs": "./logs"
     },
     "heartbeat": {
         "enabled": true,
-        "addr": "127.0.0.1:6030",
+        "addr": "10.20.30.40:6030",
         "interval": 60,
         "timeout": 1000
     },
     "transfer": {
         "enabled": true,
-        "addr": "127.0.0.1:8433",
+        "addr": "10.20.30.40:8433",
         "interval": 60,
         "timeout": 1000
     },
@@ -26,7 +26,7 @@
         "backdoor": false
     },
     "collector": {
-        "ifacePrefix": ["eth", "em", "bond", "enp"]
+        "ifacePrefix": ["eth", "em"]
     },
     "ignore": {
         "cpu.busy": true,
@@ -47,3 +47,4 @@
         "mem.swapfree": true
     }
 }
+

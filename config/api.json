@@ -8,7 +8,7 @@
     },
     "cache": {
         "enabled": true,
-        "redis": "127.0.0.1:6379",
+        "redis": "172.17.0.2:6379",
         "idle": 10,
         "max": 1000,
         "timeout": {
@@ -24,15 +24,15 @@
         "addr": "ldap.example.com:389"
     },
     "uic": {
-        "addr": "root:@tcp(127.0.0.1:3306)/uic?charset=utf8&loc=Asia%2FChongqing",
+        "addr": "root:@tcp(172.17.0.3:3306)/uic?charset=utf8&loc=Asia%2FChongqing",
         "idle": 10,
         "max": 100
     },
     "shortcut": {
-        "falconPortal": "http://11.11.11.11:5050/",
-        "falconDashboard": "http://11.11.11.11:7070/",
-        "grafanaDashboard": "http://11.11.11.11:3001/",
-        "falconAlarm": "http://11.11.11.11:9912/"
+        "falconPortal": "http://10.20.30.40:5050/",
+        "falconDashboard": "http://10.20.30.40:7070/",
+        "grafanaDashboard": "http://10.20.30.40:3001/",
+        "falconAlarm": "http://10.20.30.40:9912/"
     },
     "api": {
         "key": "yourKey",
