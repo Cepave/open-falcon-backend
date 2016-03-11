@@ -3,9 +3,10 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/astaxie/beego/orm"
+	"github.com/bitly/go-simplejson"
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/g"
-	"github.com/astaxie/beego/orm"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -322,6 +323,79 @@ func getAlive(rw http.ResponseWriter, req *http.Request) {
 	processAgentAliveData(data, hostnames, versions, result)
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
+func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(req.Body)
+	json, err := simplejson.NewJson(buf.Bytes())
+	if err != nil {
+		setError(err.Error(), result)
+	}
+
+	var nodes = make(map[string]interface{})
+	nodes, _ = json.Map()
+	strategyId := ""
+	tagName := ""
+	tagValue := ""
+	if value, ok := nodes["strategyId"]; ok {
+		strategyId = value.(string)
+		delete(nodes, "strategyId")
+	}
+	if value, ok := nodes["tagName"]; ok {
+		tagName = value.(string)
+		delete(nodes, "tagName")
+	}
+	if value, ok := nodes["tagValue"]; ok {
+		tagValue = value.(string)
+		delete(nodes, "tagValue")
+	}
+
+	if len(strategyId) > 0 && len(tagName) > 0 && len(tagValue) > 0 {
+		strategyIdint, err := strconv.Atoi(strategyId)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			o := orm.NewOrm()
+			var tag Tag
+			sqlcmd := "SELECT * FROM falcon_portal.tags WHERE strategy_id=?"
+			err = o.Raw(sqlcmd, strategyIdint).QueryRow(&tag)
+			if err == orm.ErrNoRows {
+				log.Println("tag not found")
+				sql := "INSERT INTO tags(strategy_id, name, value, create_at) VALUES(?, ?, ?, ?)"
+				res, err := o.Raw(sql, strategyIdint, tagName, tagValue, getNow()).Exec()
+				if err != nil {
+					setError(err.Error(), result)
+				} else {
+					num, _ := res.RowsAffected()
+					log.Println("mysql row affected nums =", num)
+					result["strategyId"] = strategyId
+					result["action"] = "create"
+				}
+			} else if err != nil {
+				setError(err.Error(), result)
+			} else {
+				log.Println("tag existed =", tag)
+				sql := "UPDATE tags SET name = ?, value = ? WHERE strategy_id = ?"
+				res, err := o.Raw(sql, tagName, tagValue, strategyIdint).Exec()
+				if err != nil {
+					setError(err.Error(), result)
+				} else {
+					num, _ := res.RowsAffected()
+					log.Println("mysql row affected nums =", num)
+					result["strategyId"] = strategyId
+					result["action"] = "update"
+				}
+			}
+		}
+	} else {
+		setError("Input value errors.", result)
+	}
+	nodes["result"] = result
 	setResponse(rw, nodes)
 }
 
