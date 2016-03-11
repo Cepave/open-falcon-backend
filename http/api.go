@@ -406,4 +406,5 @@ func configApiRoutes() {
 	http.HandleFunc("/api/counters", dashboardCounters)
 	http.HandleFunc("/api/chart", dashboardChart)
 	http.HandleFunc("/api/alive", getAlive)
+	http.HandleFunc("/api/tags/update", setStrategyTags)
 }
