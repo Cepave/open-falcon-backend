@@ -9,10 +9,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/open-falcon/common/model"
-	"github.com/toolkits/net"
-	"github.com/toolkits/slice"
 )
 
 var Root string
