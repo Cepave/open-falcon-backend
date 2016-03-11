@@ -399,6 +399,59 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getTemplateTags(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	countOfTags := int64(0)
+	arguments := strings.Split(req.URL.Path, "/")
+	if arguments[len(arguments)-1] == "tags" {
+		templateId, err := strconv.Atoi(arguments[len(arguments)-2])
+		if err != nil {
+			setError(err.Error(), result)
+		}
+		o := orm.NewOrm()
+		var strategyIds []int64
+		_, err = o.Raw("SELECT id FROM falcon_portal.strategy WHERE tpl_id = ? ORDER BY id ASC", templateId).QueryRows(&strategyIds)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			sids := ""
+			for key, strategyId := range strategyIds {
+				sid := strconv.Itoa(int(strategyId))
+				if key == 0 {
+					sids = sid
+				} else {
+					sids += ", " + sid
+				}
+			}
+			sqlcmd := "SELECT strategy_id, name, value FROM falcon_portal.tags WHERE strategy_id IN ("
+			sqlcmd += sids
+			sqlcmd += ") ORDER BY strategy_id ASC"
+			var tags []*Tag
+			countOfTags, err = o.Raw(sqlcmd).QueryRows(&tags)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				for _, tag := range tags {
+					item := map[string]string{}
+					item["templateId"] = strconv.Itoa(templateId)
+					item["strategyId"] = strconv.Itoa(int(tag.StrategyId))
+					item["tagName"] = tag.Name
+					item["tagValue"] = tag.Value
+					items = append(items, item)
+				}
+			}
+		}
+	}
+	result["items"] = items
+	result["count"] = countOfTags
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	setResponse(rw, nodes)
+}
+
 func configApiRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
