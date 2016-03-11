@@ -14,6 +14,14 @@ import (
 	"time"
 )
 
+type Tag struct {
+	StrategyId int
+	Name       string
+	Value      string
+	Create_at  string
+	Update_at  string
+}
+
 /**
  * @function name:   func postByJson(rw http.ResponseWriter, req *http.Request, url string)
  * @description:     This function sends a POST request in JSON format.
