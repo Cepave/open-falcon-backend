@@ -5,19 +5,31 @@ import:
   version: origin/develop
 
 - package: github.com/Cepave/fe
-  version: origin/master
+  version: origin/develop
 
 - package: github.com/Cepave/graph
-  version: with-OF-v0.1.0
+  version: origin/develop
 
 - package: github.com/Cepave/hbs
-  version: with-OF-v0.1.0
+  version: origin/develop
 
 - package: github.com/Cepave/query
-  version: with-OF-v0.1.0
+  version: origin/develop
 
 - package: github.com/Cepave/scripts
-  version: with-OF-v0.1.0
+  version: origin/develop
 
 - package: github.com/Cepave/sender
-  version: with-OF-v0.1.0
+  version: origin/develop
+
+- package: github.com/Cepave/agent
+  version: origin/develop
+
+- package: github.com/Cepave/aggregator
+  version: origin/develop
+
+- package: github.com/Cepave/nodata
+  version: origin/develop
+
+- package: github.com/Cepave/judge
+  version: origin/develop
