@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	MUtils "github.com/open-falcon/common/utils"
+	MUtils "github.com/Cepave/common/utils"
 	"math"
 )
 

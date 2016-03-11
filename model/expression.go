@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"github.com/open-falcon/common/utils"
+	"github.com/Cepave/common/utils"
 )
 
 type Expression struct {
