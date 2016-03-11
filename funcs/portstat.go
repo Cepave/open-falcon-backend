@@ -2,8 +2,8 @@ package funcs
 
 import (
 	"fmt"
-	"github.com/cepave/agent/g"
-	"github.com/cepave/common/model"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/nux"
 	"github.com/toolkits/slice"
 	"log"

@@ -2,7 +2,7 @@ package funcs
 
 import (
 	"fmt"
-	"github.com/cepave/common/model"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/nux"
 	"log"
 )

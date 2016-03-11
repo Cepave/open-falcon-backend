@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/cepave/agent/cron"
-	"github.com/cepave/agent/funcs"
-	"github.com/cepave/agent/g"
-	"github.com/cepave/agent/http"
+	"github.com/Cepave/agent/cron"
+	"github.com/Cepave/agent/funcs"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/agent/http"
 	"os"
 )
 

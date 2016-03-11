@@ -1,7 +1,7 @@
 package funcs
 
 import (
-	"github.com/cepave/common/model"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/nux"
 	"log"
 )

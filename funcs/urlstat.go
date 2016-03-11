@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/cepave/agent/g"
-	"github.com/cepave/common/model"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/file"
 	"github.com/toolkits/sys"
 )

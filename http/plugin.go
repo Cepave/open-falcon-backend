@@ -2,8 +2,8 @@ package http
 
 import (
 	"fmt"
-	"github.com/cepave/agent/g"
-	"github.com/cepave/agent/plugins"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/agent/plugins"
 	"github.com/toolkits/file"
 	"net/http"
 	"os/exec"

@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/cepave/agent/g"
+	"github.com/Cepave/agent/g"
 	"log"
 	"net/http"
 	_ "net/http/pprof"

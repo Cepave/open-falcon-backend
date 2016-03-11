@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"github.com/cepave/agent/funcs"
+	"github.com/Cepave/agent/funcs"
 	"github.com/toolkits/nux"
 	"net/http"
 	"runtime"
