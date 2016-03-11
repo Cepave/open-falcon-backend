@@ -33,3 +33,6 @@ import:
 
 - package: github.com/Cepave/judge
   version: origin/develop
+
+- package: github.com/Cepave/transfer
+  version: origin/develop
