@@ -1,18 +1,16 @@
 package http
 
 import (
-	"time"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
+	"time"
 
 	"fmt"
 	"github.com/Cepave/alarm/g"
-	"github.com/astaxie/beego"
 	"log"
 	_ "net/http/pprof"
 
 	"github.com/astaxie/beego"
-	"github.com/open-falcon/alarm/g"
 )
 
 func configRoutes() {
@@ -21,7 +19,7 @@ func configRoutes() {
 	beego.Router("/health", &MainController{}, "get:Health")
 	beego.Router("/workdir", &MainController{}, "get:Workdir")
 	beego.Router("/config/reload", &MainController{}, "get:ConfigReload")
-    beego.Router("/event", &MainController{}, "get:Event")
+	beego.Router("/event", &MainController{}, "get:Event")
 	beego.Router("/event/solve", &MainController{}, "post:Solve")
 }
 
@@ -42,7 +40,7 @@ func Duration(now, before int64) string {
 	if d <= 7200 {
 		return "1 hour ago"
 	}
-	
+
 	if d <= 3600*24 {
 		return fmt.Sprintf("%d hours ago", d/3600)
 	}

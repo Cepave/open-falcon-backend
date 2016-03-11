@@ -9,10 +9,6 @@ import (
 	"log"
 	"strings"
 	"time"
-
-	"github.com/astaxie/beego"
-	"github.com/open-falcon/alarm/g"
-	"github.com/toolkits/file"
 )
 
 type MainController struct {
