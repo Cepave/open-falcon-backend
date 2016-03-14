@@ -39,6 +39,7 @@ func ConfigRoutes() {
 		beego.NSRouter("/logout", &AuthApiController{}, "get:Logout;post:Logout"),
 		beego.NSRouter("/user", &AuthApiController{}, "post:GetUser"),
 		beego.NSRouter("/user/update", &AuthApiController{}, "put:UpdateUser;post:UpdateUser"),
+		beego.NSRouter("/team/count", &AuthApiController{}, "get:CountNumOfTeam;post:CountNumOfTeam"),
 	)
 	beego.AddNamespace(apins)
 

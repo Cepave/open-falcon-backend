@@ -87,3 +87,11 @@ func getHostsByHostIds(hostId []int64) (hosts []Hosts, err error) {
 	_, err = q.Raw(queryperfix).QueryRows(&hosts)
 	return
 }
+
+func CountNumOfHostGroup() (c int, err error) {
+	var h []HostGroup
+	q := getOrmObj()
+	_, err = q.Raw("select * from `grp_host`").QueryRows(&h)
+	c = len(h)
+	return
+}

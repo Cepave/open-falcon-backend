@@ -21,6 +21,7 @@ func ConfigRoutes() {
 		beego.NSRouter("/query", &DashBoardController{}, "get:HostGroupQuery;post:HostGroupQuery"),
 		beego.NSRouter("/hosts", &DashBoardController{}, "get:HostsQueryByHostGroups;post:HostsQueryByHostGroups"),
 		beego.NSRouter("/hostgroupscounters", &DashBoardController{}, "get:CounterQueryByHostGroup;post:CounterQueryByHostGroup"),
+		beego.NSRouter("/count", &DashBoardController{}, "get:CountNumOfHostGroup;post:CountNumOfHostGroup"),
 	)
 	beego.AddNamespace(dashboard)
 	beego.AddNamespace(hostgroup)

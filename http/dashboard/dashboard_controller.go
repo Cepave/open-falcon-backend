@@ -163,3 +163,22 @@ func (this *DashBoardController) CounterQueryByHostGroup() {
 	this.ServeApiJson(baseResp)
 	return
 }
+
+func (this *DashBoardController) CountNumOfHostGroup() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	} else {
+		numberOfteam, err := dashboard.CountNumOfHostGroup()
+		if err != nil {
+			this.ResposeError(baseResp, err.Error())
+			return
+		}
+		baseResp.Data["count"] = numberOfteam
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
