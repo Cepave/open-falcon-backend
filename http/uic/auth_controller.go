@@ -293,6 +293,26 @@ func setUserInfo(nodes map[string]interface{}, userInfo map[string]string) {
 	}
 }
 
+func getUserRole(access_key string) int {
+	urlRole := g.Config().Api.Role + "/" + access_key
+	nodes := sendHttpGetRequest(urlRole)
+	role := -1
+	if int(nodes["status"].(float64)) == 1 {
+		permission := nodes["data"]
+		log.Println("permission =", permission)
+		if permission == "admin" {
+			role = 0
+		} else if permission == "operator" {
+			role = 1
+		} else if permission == "observer" {
+			role = 2
+		} else if permission == "deny" {
+			role = 3
+		}
+	}
+	return role
+}
+
 /**
  * @function name:   func (this *AuthController) LoginWithToken()
  * @description:     This function logins user with third party token.
