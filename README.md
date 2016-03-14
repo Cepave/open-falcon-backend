@@ -91,3 +91,33 @@ go get ./...
 ```
 ex. curl -X POST "cName=cepave&cSig=ooxx1234sessionkey"
 ```
+
+## GRPC query
+GRPC client 必須按照 `grpc/proto/owlquery/owlapi.proto` 實做.<br>
+對於GRPC query的javascript實做範例
+```
+var PROTO_PATH = __dirname + '/owlapi.proto';
+
+var grpc = require('../');
+var grafana_proto = grpc.load(PROTO_PATH).owlapi;
+
+
+function main() {
+  //connect to grpc server
+  var client = new grafana_proto.OwlQuery('127.0.0.1:1235',
+                                       grpc.credentials.createInsecure());
+
+  var start_ts = 1457427694;
+  var end_ts = 1457664825;
+  var consolfun = "AVERAGE";
+  //also support endpoint = "docker-agent"
+  var endpoint = "[\"docker-agent\", \"docker-task\"]";
+  //also support endpoint = "cpu.idle"
+  var counter = "[\"cpu.idle\", \"cpu.nice\"]";
+
+  client.query({startTs: start_ts, endTs: end_ts, computeMethod: consolfun, endpoint: endpoint, counter: counter}, function(err, response) {
+    var result = JSON.parse(response.result);
+    console.log(result);
+  });
+}
+```
