@@ -13,6 +13,7 @@ func ConfigRoutes() {
 		}),
 		beego.NSRouter("/events/get", &PortalController{}, "get:EventGet;post:EventGet"),
 		beego.NSRouter("/events/close", &PortalController{}, "get:ColseCase;post:ColseCase;put:ColseCase"),
+		beego.NSRouter("/tpl/count", &PortalController{}, "get:CountNumOfTlp;post:CountNumOfTlp"),
 	)
 	beego.AddNamespace(portal)
 }

@@ -52,3 +52,22 @@ func (this *PortalController) ColseCase() {
 	this.ServeApiJson(baseResp)
 	return
 }
+
+func (this *PortalController) CountNumOfTlp() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	} else {
+		numberOfteam, err := event.CountNumOfTlp()
+		if err != nil {
+			this.ResposeError(baseResp, err.Error())
+			return
+		}
+		baseResp.Data["count"] = numberOfteam
+	}
+	this.ServeApiJson(baseResp)
+	return
+}

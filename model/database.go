@@ -18,7 +18,7 @@ func InitDatabase() {
 
 	// register model
 	orm.RegisterModel(new(uic.User), new(uic.Team), new(uic.Session), new(uic.RelTeamUser), new(dashboard.Endpoint),
-		new(dashboard.EndpointCounter), new(dashboard.HostGroup), new(dashboard.Hosts), new(event.Event))
+		new(dashboard.EndpointCounter), new(dashboard.HostGroup), new(dashboard.Hosts), new(event.Event), new(event.Tpl))
 
 	if config.Log == "debug" {
 		orm.Debug = true

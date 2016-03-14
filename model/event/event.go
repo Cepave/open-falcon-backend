@@ -23,3 +23,12 @@ type Event struct {
 	StrategyId   int       `json:"strategy_id"`
 	TemplateId   int       `json:"template_id"`
 }
+
+type Tpl struct {
+	Id         int    `json:"id" orm:"pk"`
+	TplName    string `json:"tpl_name"`
+	ParentId   string `json:"parent_id "`
+	ActionId   string `json:"action_id"`
+	CreateUser string `json:"create_user"`
+	CreateAt   string `json:"create_at"`
+}

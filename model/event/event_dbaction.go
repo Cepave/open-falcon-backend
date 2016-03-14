@@ -48,3 +48,12 @@ func CloseEvent(username string, id string) (err error) {
 	_, err = q.Raw("Update event SET user_modified = ?, closed_at = ?, status = ? WHERE id = ?", userid, time.Now(), "SOLVED", id).Exec()
 	return
 }
+
+func CountNumOfTlp() (c int, err error) {
+	var h []Tpl
+	q := orm.NewOrm()
+	q.Using("falcon_portal")
+	_, err = q.Raw("select * from `tpl`").QueryRows(&h)
+	c = len(h)
+	return
+}
