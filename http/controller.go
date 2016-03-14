@@ -2,15 +2,14 @@ package http
 
 import (
 	"fmt"
-	"log"
-	"strings"
-	"time"
-
 	"github.com/Cepave/alarm/g"
 	. "github.com/Cepave/alarm/model/uic"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/toolkits/file"
+	"log"
+	"strings"
+	"time"
 )
 
 type MainController struct {

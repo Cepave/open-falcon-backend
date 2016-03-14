@@ -4,11 +4,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
+	"github.com/Cepave/alarm/g"
 	"log"
 	_ "net/http/pprof"
 
-	"github.com/Cepave/alarm/g"
-	//eventmodel "github.com/Cepave/alarm/model"
 	"github.com/astaxie/beego"
 )
 
