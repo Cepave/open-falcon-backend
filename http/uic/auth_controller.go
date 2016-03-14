@@ -26,7 +26,7 @@ func (this *AuthController) Logout() {
 	if len(token) > 0 {
 		url := g.Config().Api.Logout + "/" + token
 		log.Println("logout url =", url)
-		result := getRequest(url)
+		result := sendHttpGetRequest(url)
 		log.Println("logout result =", result)
 		this.Ctx.SetCookie("token", "", 0, "/")
 		this.Ctx.SetCookie("token", "", 0, "/", g.Config().Http.Cookie)
@@ -244,7 +244,7 @@ func (this *AuthController) LoginThirdParty() {
 }
 
 /**
- * @function name:   func getRequest(url string) map[string]interface{}
+ * @function name:   func sendHttpGetRequest(url string) map[string]interface{}
  * @description:     This function sends GET request to given URL.
  * @related issues:  OWL-206, OWL-159
  * @param:           url string
@@ -255,7 +255,7 @@ func (this *AuthController) LoginThirdParty() {
  * @called by:       func (this *AuthController) LoginWithToken()
  *                    in fe/http/uic/auth_controller.go
  */
-func getRequest(url string) map[string]interface{} {
+func sendHttpGetRequest(url string) map[string]interface{} {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println("Error =", err.Error())
@@ -263,17 +263,19 @@ func getRequest(url string) map[string]interface{} {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
+	defer resp.Body.Close()
 	if err != nil {
 		log.Println("Error =", err.Error())
+		return nil
+	} else {
+		body, _ := ioutil.ReadAll(resp.Body)
+		var nodes = make(map[string]interface{})
+		if err := json.Unmarshal(body, &nodes); err != nil {
+			log.Println("Error =", err.Error())
+			return nil
+		}
+		return nodes
 	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	var nodes = make(map[string]interface{})
-	if err := json.Unmarshal(body, &nodes); err != nil {
-		log.Println("Error =", err.Error())
-	}
-	return nodes
 }
 
 /**
@@ -295,7 +297,7 @@ func (this *AuthController) LoginWithToken() {
 	key := g.Config().Api.Key
 	authUrl := g.Config().Api.Access + "/" + token + "/" + key
 
-	nodes := getRequest(authUrl)
+	nodes := sendHttpGetRequest(authUrl)
 	if status, ok := nodes["status"]; ok {
 		if int(status.(float64)) == 1 {
 			data := nodes["data"].(map[string]interface{})
@@ -305,7 +307,7 @@ func (this *AuthController) LoginWithToken() {
 			log.Println("access_key =", access_key)
 
 			urlRole := g.Config().Api.Role + "/" + access_key
-			nodes := getRequest(urlRole)
+			nodes := sendHttpGetRequest(urlRole)
 			role := 3
 			if int(nodes["status"].(float64)) == 1 {
 				permission := nodes["data"]
