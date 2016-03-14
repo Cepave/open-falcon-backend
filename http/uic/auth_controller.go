@@ -278,6 +278,21 @@ func sendHttpGetRequest(url string) map[string]interface{} {
 	}
 }
 
+func setUserInfo(nodes map[string]interface{}, userInfo map[string]string) {
+	if status, ok := nodes["status"]; ok {
+		if int(status.(float64)) == 1 {
+			data := nodes["data"].(map[string]interface{})
+			access_key := data["access_key"].(string)
+			username := data["username"].(string)
+			email := data["email"].(string)
+			log.Println("access_key =", access_key)
+			userInfo["username"] = username
+			userInfo["email"] = email
+			userInfo["access_key"] = access_key
+		}
+	}
+}
+
 /**
  * @function name:   func (this *AuthController) LoginWithToken()
  * @description:     This function logins user with third party token.
