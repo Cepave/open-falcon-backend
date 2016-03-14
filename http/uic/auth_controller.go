@@ -333,55 +333,54 @@ func (this *AuthController) LoginWithToken() {
 	authUrl := g.Config().Api.Access + "/" + token + "/" + key
 
 	nodes := sendHttpGetRequest(authUrl)
-	if status, ok := nodes["status"]; ok {
-		if int(status.(float64)) == 1 {
-			data := nodes["data"].(map[string]interface{})
-			access_key := data["access_key"].(string)
-			username := data["username"].(string)
-			email := data["email"].(string)
-			log.Println("access_key =", access_key)
-
-			urlRole := g.Config().Api.Role + "/" + access_key
-			nodes := sendHttpGetRequest(urlRole)
-			role := 3
-			if int(nodes["status"].(float64)) == 1 {
-				permission := nodes["data"]
-				log.Println("permission =", permission)
-				if permission == "admin" {
-					role = 0
-				} else if permission == "operator" {
-					role = 1
-				} else if permission == "observer" {
-					role = 2
-				} else if permission == "deny" {
-					role = 3
-				}
-				maxAge := 3600 * 24 * 30
-				this.Ctx.SetCookie("token", access_key, maxAge, "/")
-				this.Ctx.SetCookie("token", access_key, maxAge, "/", g.Config().Http.Cookie)
-			}
-			user := ReadUserByName(username)
-			if user == nil { // create third party user
-				InsertRegisterUser(username, "")
-				user = ReadUserByName(username)
-			}
-			if len(user.Passwd) == 0 {
-				user.Email = email
-				user.Role = role
-				user.Update()
-			}
-			appSig := this.GetString("sig", "")
-			callback := this.GetString("callback", "")
-			if appSig != "" && callback != "" {
-				SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
-			} else {
-				this.CreateSession(user.Id, 3600*24*30)
-			}
-			this.Redirect("/me/info", 302)
-		}
+	if nodes == nil {
+		nodes = sendHttpGetRequest(authUrl)
 	}
-	// not logged in. redirect to login page.
-	appSig := this.GetString("sig", "")
-	callback := this.GetString("callback", "")
-	this.renderLoginPage(appSig, callback)
+	log.Println("nodes =", nodes)
+
+	var userInfo = make(map[string]string)
+	userInfo["username"] = ""
+	userInfo["email"] = ""
+	userInfo["access_key"] = ""
+	if nodes != nil {
+		setUserInfo(nodes, userInfo)
+	}
+	log.Println("userInfo =", userInfo)
+
+	username := userInfo["username"]
+	if len(username) > 0 {
+		access_key := userInfo["access_key"]
+		user := ReadUserByName(username)
+		if user == nil { // create third party user
+			InsertRegisterUser(username, "")
+			user = ReadUserByName(username)
+		}
+		if len(user.Passwd) == 0 {
+			role := getUserRole(access_key)
+			if role < 1 {
+				role = getUserRole(access_key)
+			}
+			email := userInfo["email"]
+			user.Email = email
+			user.Role = role
+			user.Update()
+		}
+		maxAge := 3600 * 24 * 30
+		this.Ctx.SetCookie("token", access_key, maxAge, "/")
+		this.Ctx.SetCookie("token", access_key, maxAge, "/", g.Config().Http.Cookie)
+
+		appSig := this.GetString("sig", "")
+		callback := this.GetString("callback", "")
+		if appSig != "" && callback != "" {
+			SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
+		} else {
+			this.CreateSession(user.Id, 3600*24*30)
+		}
+		this.Redirect("/me/info", 302)
+	} else {
+		// not logged in. redirect to login page.
+		appSig := this.GetString("sig", "")
+		callback := this.GetString("callback", "")
+		this.renderLoginPage(appSig, callback)
+	}
 }
