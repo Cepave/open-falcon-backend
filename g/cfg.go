@@ -2,12 +2,14 @@ package g
 
 import (
 	"encoding/json"
-	"github.com/toolkits/file"
 	"log"
 	"sync"
+
+	"github.com/toolkits/file"
 )
 
 type HttpConfig struct {
+	Debug   bool   `json:"debug"`
 	Enabled bool   `json:"enabled"`
 	Listen  string `json:"listen"`
 }
@@ -17,6 +19,12 @@ type QueueConfig struct {
 	Mail       string `json:"mail"`
 	QQ         string `json:"qq"`
 	Serverchan string `json:"serverchan"`
+}
+
+type FalconPortalConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
 }
 
 type RedisConfig struct {
@@ -50,15 +58,16 @@ type ShortcutConfig struct {
 	FalconUIC        string `json:"falconUIC"`
 }
 type GlobalConfig struct {
-	Debug       bool            `json:"debug"`
-	UicToken    string          `json:"uicToken"`
-	Http        *HttpConfig     `json:"http"`
-	Queue       *QueueConfig    `json:"queue"`
-	Redis       *RedisConfig    `json:"redis"`
-	Api         *ApiConfig      `json:"api"`
-	Shortcut    *ShortcutConfig `json:"shortcut"`
-	Uic         *UicConfig      `json:"uic"`
-	RedirectUrl string          `json:"redirectUrl"`
+	Debug        bool                `json:"debug"`
+	UicToken     string              `json:"uicToken"`
+	Http         *HttpConfig         `json:"http"`
+	FalconPortal *FalconPortalConfig `json:"falcon_portal"`
+	Queue        *QueueConfig        `json:"queue"`
+	Redis        *RedisConfig        `json:"redis"`
+	Api          *ApiConfig          `json:"api"`
+	Shortcut     *ShortcutConfig     `json:"shortcut"`
+	Uic          *UicConfig          `json:"uic"`
+	RedirectUrl  string              `json:"redirectUrl"`
 }
 
 var (

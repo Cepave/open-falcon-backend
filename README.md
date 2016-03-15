@@ -25,3 +25,31 @@ go get ./...
 - queue: 要发送的短信、邮件写入的队列，需要与sender配置一致
 - redis: highQueues和lowQueues区别是是否做报警合并，默认配置是P0/P1不合并，收到之后直接发出；>=P2做报警合并
 - api: 其他各个组件的地址
+
+## Create Event Table
+* use falcon_portal
+```
+CREATE TABLE event (
+	id VARCHAR(50),
+	endpoint VARCHAR(100) NOT NULL,
+	metric VARCHAR(200) NOT NULL,
+	func VARCHAR(50),
+	cond VARCHAR(200) NOT NULL,
+	note VARCHAR(500),
+	max_step int(10) unsigned,
+	current_step int(10) unsigned,
+	priority INT(6) NOT NULL,
+	status VARCHAR(20) NOT NULL,
+	timestamp Timestamp NOT NULL,
+	update_at Timestamp,
+	closed_at Timestamp,
+	user_modified int(10) unsigned,
+	expression_id int(10) unsigned,
+	strategy_id int(10) unsigned,
+	template_id int(10) unsigned,
+	PRIMARY KEY (id),
+	INDEX (endpoint),
+	FOREIGN KEY (strategy_id) REFERENCES strategy(id),
+	FOREIGN KEY (template_id) REFERENCES tpl(id)
+);
+```

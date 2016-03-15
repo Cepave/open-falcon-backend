@@ -1,9 +1,7 @@
 package http
 
 import (
-	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-	"time"
 
 	"fmt"
 	"github.com/Cepave/alarm/g"
@@ -57,39 +55,6 @@ func init() {
 	beego.AddFuncMap("duration", Duration)
 }
 
-type User struct {
-	Id      int64     `json:"id"`
-	Name    string    `json:"name"`
-	Cnname  string    `json:"cnname"`
-	Passwd  string    `json:"-"`
-	Email   string    `json:"email"`
-	Phone   string    `json:"phone"`
-	IM      string    `json:"im" orm:"column(im)"`
-	QQ      string    `json:"qq" orm:"column(qq)"`
-	Role    int       `json:"role"`
-	Created time.Time `json:"-" orm:"-"`
-}
-
-type Session struct {
-	Id      int64
-	Uid     int64
-	Sig     string
-	Expired int
-}
-
-func InitDatabase() {
-	// set default database
-	config := g.Config()
-	orm.RegisterDataBase("default", "mysql", config.Uic.Addr, config.Uic.Idle, config.Uic.Max)
-
-	// register model
-	orm.RegisterModel(new(User), new(Session))
-
-	if config.Debug == true {
-		orm.Debug = true
-	}
-}
-
 func Start() {
 	if !g.Config().Http.Enabled {
 		return
@@ -105,8 +70,6 @@ func Start() {
 	} else {
 		beego.BConfig.RunMode = "prod"
 	}
-
-	InitDatabase()
 
 	beego.Run(addr)
 

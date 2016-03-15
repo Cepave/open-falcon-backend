@@ -2,11 +2,13 @@ package cron
 
 import (
 	"encoding/json"
-	"github.com/garyburd/redigo/redis"
-	"github.com/Cepave/alarm/g"
-	"github.com/Cepave/common/model"
 	"log"
 	"time"
+
+	"github.com/Cepave/alarm/g"
+	eventmodel "github.com/Cepave/alarm/model/event"
+	"github.com/Cepave/common/model"
+	"github.com/garyburd/redigo/redis"
 )
 
 func ReadHighEvent() {
@@ -72,7 +74,8 @@ func popEvent(queues []string) (*model.Event, error) {
 		log.Println("======>>>>")
 		log.Println(event.String())
 	}
-
+	//insert event into database
+	eventmodel.InsertEvent(&event)
 	// save in memory. display in dashboard
 	g.Events.Put(&event)
 
