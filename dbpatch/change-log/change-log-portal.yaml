@@ -18,3 +18,8 @@
     filename: "mike-4.sql",
     comment: "Add name of agent"
 }
+- {
+    id: "masato-1"
+    filename: "masato-1.sql"
+    comment: "Add event of alram in portal"
+}
