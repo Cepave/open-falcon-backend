@@ -207,7 +207,7 @@ CREATE TABLE cluster
 
 
 DROP TABLE IF EXISTS event;
-CREATE TABLE event 
+CREATE TABLE IF NOT EXISTS event
 (
     id VARCHAR(50),
     endpoint VARCHAR(100) NOT NULL,
