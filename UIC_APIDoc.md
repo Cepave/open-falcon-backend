@@ -146,8 +146,11 @@
         "method": "POST",
         "status": "success",
         "data": {
-          "email": "test@cepave.com",
-          "name": "cepavetest"
+          "cnname": "masato",
+          "email": "",
+          "im": "masato",
+          "name": "cepavetest",
+          "qq": "masato"
         }
       }
       ```
@@ -169,6 +172,9 @@
     * `cSig` string option
     * `email` string option
     * `password` string option
+    * `cnname` string option
+    * `im` string option
+    * `qq` string option
   * if params are null, will check [name & sig]
   * response:
     * ok

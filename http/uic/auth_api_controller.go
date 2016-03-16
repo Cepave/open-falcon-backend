@@ -151,6 +151,9 @@ func (this *AuthApiController) GetUser() {
 		}
 		baseResp.Data["name"] = user.Name
 		baseResp.Data["email"] = user.Email
+		baseResp.Data["cnname"] = user.Cnname
+		baseResp.Data["im"] = user.IM
+		baseResp.Data["qq"] = user.QQ
 	}
 	this.ServeApiJson(baseResp)
 	return
@@ -167,6 +170,9 @@ func (this *AuthApiController) UpdateUser() {
 		username := this.GetString("cName", this.Ctx.GetCookie("name"))
 		user := ReadUserByName(username)
 		user.Email = strings.TrimSpace(this.GetString("email", user.Email))
+		user.Cnname = strings.TrimSpace(this.GetString("cnname", user.Cnname))
+		user.IM = strings.TrimSpace(this.GetString("im", user.IM))
+		user.QQ = strings.TrimSpace(this.GetString("qq", user.QQ))
 		passwdtmp := strings.TrimSpace(this.GetString("password", ""))
 		if passwdtmp != "" {
 			user.Passwd = str.Md5Encode(g.Config().Salt + passwdtmp)
