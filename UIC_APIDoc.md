@@ -150,7 +150,8 @@
           "email": "",
           "im": "masato",
           "name": "cepavetest",
-          "qq": "masato"
+          "qq": "masato",
+          "phone": ""
         }
       }
       ```
@@ -175,6 +176,7 @@
     * `cnname` string option
     * `im` string option
     * `qq` string option
+    * `phone` string option
   * if params are null, will check [name & sig]
   * response:
     * ok

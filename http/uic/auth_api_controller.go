@@ -154,6 +154,7 @@ func (this *AuthApiController) GetUser() {
 		baseResp.Data["cnname"] = user.Cnname
 		baseResp.Data["im"] = user.IM
 		baseResp.Data["qq"] = user.QQ
+		baseResp.Data["phone"] = user.Phone
 	}
 	this.ServeApiJson(baseResp)
 	return
@@ -173,6 +174,7 @@ func (this *AuthApiController) UpdateUser() {
 		user.Cnname = strings.TrimSpace(this.GetString("cnname", user.Cnname))
 		user.IM = strings.TrimSpace(this.GetString("im", user.IM))
 		user.QQ = strings.TrimSpace(this.GetString("qq", user.QQ))
+		user.Phone = strings.TrimSpace(this.GetString("phone", user.Phone))
 		passwdtmp := strings.TrimSpace(this.GetString("password", ""))
 		if passwdtmp != "" {
 			user.Passwd = str.Md5Encode(g.Config().Salt + passwdtmp)
