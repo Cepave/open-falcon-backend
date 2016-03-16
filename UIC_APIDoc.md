@@ -173,6 +173,9 @@
     * `cSig` string option
     * `email` string option
     * `password` string option
+      * if this is inputed, that is reuqired the currenct password
+    * `oldpasswd` string option
+      * current password of this user
     * `cnname` string option
     * `im` string option
     * `qq` string option

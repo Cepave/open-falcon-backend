@@ -176,8 +176,14 @@ func (this *AuthApiController) UpdateUser() {
 		user.QQ = strings.TrimSpace(this.GetString("qq", user.QQ))
 		user.Phone = strings.TrimSpace(this.GetString("phone", user.Phone))
 		passwdtmp := strings.TrimSpace(this.GetString("password", ""))
+		oldpasswdtmp := strings.TrimSpace(this.GetString("oldpassword", ""))
 		if passwdtmp != "" {
-			user.Passwd = str.Md5Encode(g.Config().Salt + passwdtmp)
+			if oldpasswdtmp == "" || user.Passwd != str.Md5Encode(g.Config().Salt+oldpasswdtmp) {
+				this.ResposeError(baseResp, "original password is empty or the password you inputed is not matched the original one.")
+				return
+			} else {
+				user.Passwd = str.Md5Encode(g.Config().Salt + passwdtmp)
+			}
 		}
 		_, err := user.Update()
 		if err != nil {
