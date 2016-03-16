@@ -173,7 +173,7 @@
     * `cSig` string option
     * `email` string option
     * `password` string option
-      * if this is inputed, that is reuqired the currenct password
+      * if this is inputed, the original password of current user is required.
     * `oldpasswd` string option
       * current password of this user
     * `cnname` string option
