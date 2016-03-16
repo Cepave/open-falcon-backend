@@ -183,11 +183,7 @@
       {
         "version": "v1",
         "method": "POST",
-        "status": "success",
-        "data": {
-          "email": "test@cepave.com",
-          "name": "cepavetest"
-        }
+        "status": "success"
       }
       ```
     * failed
