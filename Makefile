@@ -47,4 +47,4 @@ clean:
 	rm -rf ./$(TARGET)
 	rm -rf open-falcon-v$(VERSION).tar.gz
 
-.PHONY: clean all # agent aggregator graph hbs judge nodata query sender task transfer fe
+.PHONY: clean all agent aggregator graph hbs judge nodata query sender task transfer fe
