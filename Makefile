@@ -10,7 +10,7 @@ all: $(BIN)
 	go build -o open-falcon
 
 $(BIN):
-	go build -o ./bin/$@ github.com/Cepave/open-falcon/modules/$@
+	go build -o ./bin/falcon-$@ github.com/Cepave/open-falcon/modules/$@
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
 dev: format
