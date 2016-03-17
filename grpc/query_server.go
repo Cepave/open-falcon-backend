@@ -84,10 +84,17 @@ func rrdQuery(in *pb.QueryInput) (resp []*cmodel.GraphQueryResponse) {
 }
 
 func (s *server) Query(ctx context.Context, in *pb.QueryInput) (*pb.QueryReply, error) {
-	result := rrdQuery(in)
-	//genreate json string and send back to client
-	res, _ := json.Marshal(result)
-	return &pb.QueryReply{Result: string(res)}, nil
+	resTmp := rrdQuery(in)
+	if len(resTmp) == 1 {
+		result := resTmp[0]
+		//genreate json string and send back to client
+		res, _ := json.Marshal(result)
+		return &pb.QueryReply{Result: string(res)}, nil
+	} else {
+		//genreate json string and send back to client
+		res, _ := json.Marshal(resTmp)
+		return &pb.QueryReply{Result: string(res)}, nil
+	}
 }
 
 func Start() {
