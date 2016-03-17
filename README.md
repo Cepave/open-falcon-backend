@@ -2,7 +2,7 @@
 
 数据收集，是监控系统一个最基本的功能，在Open-Falcon中，Agent采集到的数据，会先发送给Transfer组件。Transfer在接收到客户端发送的数据，做一些数据规整，检查之后，转发到多个后端系统去处理。在转发到每个后端业务系统的时候，Transfer会根据一致性哈希算法，进行数据分片，来达到后端业务系统的水平扩展。Transfer自身是无状态的，挂掉一台或者多台不会有任何影响。
 
-Transfer支持的业务后端，有三种，Judge、Graph、OpenTSDB(开源版本尚未开放此功能)。Judge是我们开发的高性能告警判定组件，Graph是我们开发的高性能数据存储、归档、查询组件，OpenTSDB是开源的时间序列数据存储服务。每个业务后端，都可以通过Transfer的配置文件来开启。
+Transfer支持的业务后端，有三种，Judge、Graph、OpenTSDB。Judge是我们开发的高性能告警判定组件，Graph是我们开发的高性能数据存储、归档、查询组件，OpenTSDB是开源的时间序列数据存储服务。每个业务后端，都可以通过Transfer的配置文件来开启。
 
 Transfer的数据来源，一般有四种：
 
@@ -104,7 +104,14 @@ u want sending items via java jsonrpc client? turn to one java example: [jsonrpc
         - maxConns: 连接池相关配置，最大连接数，建议保持默认
         - maxIdle: 连接池相关配置，最大空闲连接数，建议保持默认
         - replicas: 这是一致性hash算法需要的节点副本数量，建议不要变更，保持默认即可
-        - migrating: true/false，当我们需要对graph后端列表进行扩容的时候，设置为true, transfer会根据扩容前后的实例信息，对每个数据采集项，进行两次一致性哈希计算，根据计算结果，来决定是否需要发送双份的数据，当新扩容的服务器积累了足够久的数据后，就可以设置为false。
-        - cluster: key-value形式的字典，表示后端的graph列表，其中key代表后端graph名字，value代表的是具体的ip:port(多个地址 用逗号隔开, transfer会将同一份数据 发送至各个地址)
-        - clusterMigrating: key-value形式的字典，表示新扩容的后端的graph列表，其中key代表后端graph名字，value代表的是具体的ip:port(多个地址 用逗号隔开, transfer会将同一份数据 发送至各个地址)
+        - cluster: key-value形式的字典，表示后端的graph列表，其中key代表后端graph名字，value代表的是具体的ip:port(多个地址用逗号隔开, transfer会将同一份数据发送至各个地址，利用这个特性可以实现数据的多重备份)
 
+    tsdb
+        - enabled: true/false, 表示是否开启向open tsdb发送数据
+        - batch: 数据转发的批量大小，可以加快发送速度
+        - connTimeout: 单位是毫秒，与后端建立连接的超时时间，可以根据网络质量微调，建议保持默认
+        - callTimeout: 单位是毫秒，发送数据给后端的超时时间，可以根据网络质量微调，建议保持默认
+        - maxConns: 连接池相关配置，最大连接数，建议保持默认
+        - maxIdle: 连接池相关配置，最大空闲连接数，建议保持默认
+        - retry: 连接后端的重试次数和发送数据的重试次数
+        - address: tsdb地址或者tsdb集群vip地址, 通过tcp连接tsdb. 

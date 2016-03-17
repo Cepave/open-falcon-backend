@@ -14,34 +14,44 @@ const (
 	DefaultSendQueueMaxSize = 102400 //10.24w
 )
 
+// 默认参数
+var (
+	MinStep int //最小上报周期,单位sec
+)
+
 // 服务节点的一致性哈希环
 // pk -> node
 var (
-	JudgeNodeRing          *ConsistentHashNodeRing
-	GraphNodeRing          *ConsistentHashNodeRing
-	GraphMigratingNodeRing *ConsistentHashNodeRing
+	JudgeNodeRing *ConsistentHashNodeRing
+	GraphNodeRing *ConsistentHashNodeRing
 )
 
 // 发送缓存队列
 // node -> queue_of_data
 var (
-	JudgeQueues          = make(map[string]*nlist.SafeListLimited)
-	GraphQueues          = make(map[string]*nlist.SafeListLimited)
-	GraphMigratingQueues = make(map[string]*nlist.SafeListLimited)
-	InfluxdbQueues       = make(map[string]*nlist.SafeListLimited)
+	TsdbQueue      *nlist.SafeListLimited
+	JudgeQueues    = make(map[string]*nlist.SafeListLimited)
+	GraphQueues    = make(map[string]*nlist.SafeListLimited)
+	InfluxdbQueues = make(map[string]*nlist.SafeListLimited)
 )
 
 // 连接池
 // node_address -> connection_pool
 var (
-	JudgeConnPools          *cpool.SafeRpcConnPools
-	GraphConnPools          *cpool.SafeRpcConnPools
-	GraphMigratingConnPools *cpool.SafeRpcConnPools
-	InfluxdbConnPools       *cpool.InfluxdbConnPools
+	JudgeConnPools     *cpool.SafeRpcConnPools
+	TsdbConnPoolHelper *cpool.TsdbConnPoolHelper
+	GraphConnPools     *cpool.SafeRpcConnPools
+	InfluxdbConnPools  *cpool.InfluxdbConnPools
 )
 
 // 初始化数据发送服务, 在main函数中调用
 func Start() {
+	// 初始化默认参数
+	MinStep = g.Config().MinStep
+	if MinStep < 1 {
+		MinStep = 30 //默认30s
+	}
+	//
 	initConnPools()
 	initSendQueues()
 	initNodeRings()
@@ -63,8 +73,8 @@ func Push2JudgeSendQueue(items []*cmodel.MetaData) {
 
 		// align ts
 		step := int(item.Step)
-		if step < g.MIN_STEP {
-			step = g.MIN_STEP
+		if step < MinStep {
+			step = MinStep
 		}
 		ts := alignTs(item.Timestamp, int64(step))
 
@@ -87,8 +97,7 @@ func Push2JudgeSendQueue(items []*cmodel.MetaData) {
 }
 
 // 将数据 打入 某个Graph的发送缓存队列, 具体是哪一个Graph 由一致性哈希 决定
-// 如果正在数据迁移, 数据除了打到原有配置上 还要向新的配置上打一份(新老重叠时要去重,防止将一条数据向一台Graph上打两次)
-func Push2GraphSendQueue(items []*cmodel.MetaData, migrating bool) {
+func Push2GraphSendQueue(items []*cmodel.MetaData) {
 	cfg := g.Config().Graph
 
 	for _, item := range items {
@@ -109,7 +118,7 @@ func Push2GraphSendQueue(items []*cmodel.MetaData, migrating bool) {
 			continue
 		}
 
-		cnode := cfg.Cluster2[node]
+		cnode := cfg.ClusterList[node]
 		errCnt := 0
 		for _, addr := range cnode.Addrs {
 			Q := GraphQueues[node+addr]
@@ -121,30 +130,6 @@ func Push2GraphSendQueue(items []*cmodel.MetaData, migrating bool) {
 		// statistics
 		if errCnt > 0 {
 			proc.SendToGraphDropCnt.Incr()
-		}
-
-		if migrating {
-			migratingNode, err := GraphMigratingNodeRing.GetNode(pk)
-			if err != nil {
-				log.Println("E:", err)
-				continue
-			}
-
-			if node != migratingNode { // 数据迁移时,进行新老去重
-				cnodem := cfg.ClusterMigrating2[migratingNode]
-				errCnt := 0
-				for _, addr := range cnodem.Addrs {
-					MQ := GraphMigratingQueues[migratingNode+addr]
-					if !MQ.PushFront(graphItem) {
-						errCnt += 1
-					}
-				}
-
-				// statistics
-				if errCnt > 0 {
-					proc.SendToGraphMigratingDropCnt.Incr()
-				}
-			}
 		}
 	}
 }
@@ -159,8 +144,8 @@ func convert2GraphItem(d *cmodel.MetaData) (*cmodel.GraphItem, error) {
 	item.Timestamp = d.Timestamp
 	item.Value = d.Value
 	item.Step = int(d.Step)
-	if item.Step < g.MIN_STEP {
-		item.Step = g.MIN_STEP
+	if item.Step < MinStep {
+		item.Step = MinStep
 	}
 	item.Heartbeat = item.Step * 2
 
@@ -185,6 +170,32 @@ func convert2GraphItem(d *cmodel.MetaData) (*cmodel.GraphItem, error) {
 	return item, nil
 }
 
+// 将原始数据入到tsdb发送缓存队列
+func Push2TsdbSendQueue(items []*cmodel.MetaData) {
+	for _, item := range items {
+		tsdbItem := convert2TsdbItem(item)
+		isSuccess := TsdbQueue.PushFront(tsdbItem)
+
+		if !isSuccess {
+			proc.SendToTsdbDropCnt.Incr()
+		}
+	}
+}
+
+// 转化为tsdb格式
+func convert2TsdbItem(d *cmodel.MetaData) *cmodel.TsdbItem {
+	t := cmodel.TsdbItem{Tags: make(map[string]string)}
+
+	for k, v := range d.Tags {
+		t.Tags[k] = v
+	}
+	t.Tags["endpoint"] = d.Endpoint
+	t.Metric = d.Metric
+	t.Timestamp = d.Timestamp
+	t.Value = d.Value
+	return &t
+}
+
 func alignTs(ts int64, period int64) int64 {
 	return ts - ts%period
 }
@@ -194,8 +205,8 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 	for _, item := range items {
 		// align ts
 		step := int(item.Step)
-		if step < g.MIN_STEP {
-			step = g.MIN_STEP
+		if step < MinStep {
+			step = MinStep
 		}
 		ts := alignTs(item.Timestamp, int64(step))
 

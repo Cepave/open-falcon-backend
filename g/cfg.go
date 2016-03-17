@@ -34,23 +34,31 @@ type JudgeConfig struct {
 	MaxIdle     int                     `json:"maxIdle"`
 	Replicas    int                     `json:"replicas"`
 	Cluster     map[string]string       `json:"cluster"`
-	Cluster2    map[string]*ClusterNode `json:"cluster2"`
+	ClusterList map[string]*ClusterNode `json:"clusterList"`
 }
 
 type GraphConfig struct {
-	Enabled           bool                    `json:"enabled"`
-	Batch             int                     `json:"batch"`
-	ConnTimeout       int                     `json:"connTimeout"`
-	CallTimeout       int                     `json:"callTimeout"`
-	PingMethod        string                  `json:"pingMethod"`
-	MaxConns          int                     `json:"maxConns"`
-	MaxIdle           int                     `json:"maxIdle"`
-	Replicas          int                     `json:"replicas"`
-	Migrating         bool                    `json:"migrating"`
-	Cluster           map[string]string       `json:"cluster"`
-	ClusterMigrating  map[string]string       `json:"clusterMigrating"`
-	Cluster2          map[string]*ClusterNode `json:"cluster2"`
-	ClusterMigrating2 map[string]*ClusterNode `json:"clusterMigrating2"`
+	Enabled     bool                    `json:"enabled"`
+	Batch       int                     `json:"batch"`
+	ConnTimeout int                     `json:"connTimeout"`
+	CallTimeout int                     `json:"callTimeout"`
+	PingMethod  string                  `json:"pingMethod"`
+	MaxConns    int                     `json:"maxConns"`
+	MaxIdle     int                     `json:"maxIdle"`
+	Replicas    int                     `json:"replicas"`
+	Cluster     map[string]string       `json:"cluster"`
+	ClusterList map[string]*ClusterNode `json:"clusterList"`
+}
+
+type TsdbConfig struct {
+	Enabled     bool   `json:"enabled"`
+	Batch       int    `json:"batch"`
+	ConnTimeout int    `json:"connTimeout"`
+	CallTimeout int    `json:"callTimeout"`
+	MaxConns    int    `json:"maxConns"`
+	MaxIdle     int    `json:"maxIdle"`
+	MaxRetry    int    `json:"retry"`
+	Address     string `json:"address"`
 }
 
 type InfluxdbConfig struct {
@@ -65,11 +73,13 @@ type InfluxdbConfig struct {
 
 type GlobalConfig struct {
 	Debug    bool            `json:"debug"`
+	MinStep  int             `json:"minStep"` //最小周期,单位sec
 	Http     *HttpConfig     `json:"http"`
 	Rpc      *RpcConfig      `json:"rpc"`
 	Socket   *SocketConfig   `json:"socket"`
 	Judge    *JudgeConfig    `json:"judge"`
 	Graph    *GraphConfig    `json:"graph"`
+	Tsdb     *TsdbConfig     `json:"tsdb"`
 	Influxdb *InfluxdbConfig `json:"influxdb"`
 }
 
@@ -108,9 +118,8 @@ func ParseConfig(cfg string) {
 	}
 
 	// split cluster config
-	c.Judge.Cluster2 = formatClusterItems(c.Judge.Cluster)
-	c.Graph.Cluster2 = formatClusterItems(c.Graph.Cluster)
-	c.Graph.ClusterMigrating2 = formatClusterItems(c.Graph.ClusterMigrating)
+	c.Judge.ClusterList = formatClusterItems(c.Judge.Cluster)
+	c.Graph.ClusterList = formatClusterItems(c.Graph.Cluster)
 
 	configLock.Lock()
 	defer configLock.Unlock()
