@@ -1,0 +1,91 @@
+package start
+
+import (
+	"fmt"
+	"github.com/Cepave/open-falcon/g"
+	"github.com/mitchellh/cli"
+	"os"
+	"os/exec"
+	"strings"
+	"time"
+)
+
+// Command is a Command implementation that runs a Consul agent.
+// The command will not end unless a shutdown message is sent on the
+// ShutdownCh. If two messages are sent on the ShutdownCh it will forcibly
+// exit.
+type Command struct {
+	Revision          string
+	Version           string
+	VersionPrerelease string
+	Ui                cli.Ui
+}
+
+func (c *Command) Run(args []string) int {
+	if len(args) == 0 {
+		return cli.RunResultHelp
+	}
+	if args[0] == "all" {
+		args = g.GetAllModuleArgs()
+	}
+	for _, moduleName := range args {
+		moduleStatus := g.CheckModuleStatus(moduleName)
+
+		if moduleStatus == g.ModuleExistentNotRunning {
+			fmt.Print("Starting [", g.ModuleApps[moduleName], "]...")
+			cmdArgs, err := g.GetConfFileArgs(g.ModuleConfs[moduleName])
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			// fe workaround
+			if moduleName == "fe" {
+				os.Chdir("bin/fe")
+				cmd := exec.Command("./control", "start")
+				dir, _ := os.Getwd()
+				cmd.Dir = dir
+				cmd.Start()
+				fmt.Println("successfully!!")
+				time.Sleep(1 * time.Second)
+				g.CheckModuleStatus(moduleName)
+				err = os.Chdir("../../")
+				continue
+			}
+			logPath := g.LogDir + "/" + moduleName + ".log"
+			LogOutput, err := os.OpenFile(logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+			if err != nil {
+				fmt.Println("Error in opening file:", err)
+				continue
+			}
+			defer LogOutput.Close()
+
+			cmd := exec.Command(g.ModuleBins[moduleName], cmdArgs...)
+			cmd.Stdout = LogOutput
+			cmd.Stderr = LogOutput
+			dir, _ := os.Getwd()
+			cmd.Dir = dir
+			cmd.Start()
+			fmt.Println("successfully!!")
+			time.Sleep(1 * time.Second)
+			g.CheckModuleStatus(moduleName)
+		}
+	}
+	return 0
+}
+
+func (c *Command) Synopsis() string {
+	return "Start Open-Falcon modules"
+}
+
+func (c *Command) Help() string {
+	helpText := `
+Usage: open-falcon start [Module ...]
+
+  Start the specified Open-Falcon modules and run until a stop command is received.
+  A module represents a single node in a cluster.
+
+Modules:
+
+  ` + "all " + strings.Join(g.GetAllModuleArgs(), " ")
+	return strings.TrimSpace(helpText)
+}
