@@ -51,6 +51,31 @@ func QueryStrategies(tpls map[int]*model.Template) (map[int]*model.Strategy, err
 				if len(kv) != 2 {
 					continue
 				}
+				if strings.Contains(kv[1], "$") {
+					strategyId := s.Id
+					tagName := kv[1]
+					sql = fmt.Sprintf(
+						"select %s from tags where strategy_id = %d and name = '%s'",
+						"value",
+						strategyId,
+						tagName,
+					)
+					row := DB.QueryRow(sql)
+					if err != nil {
+						log.Println("ERROR:", err.Error())
+						continue
+					}
+					var value string
+					err = row.Scan(&value)
+					if err != nil {
+						log.Println("ERROR:", err.Error())
+						continue
+					}
+					log.Println("templateId =", tid)
+					log.Println("strategyId =", strategyId)
+					log.Println(kv[1] + " =", value)
+					kv[1] = value
+				}
 				tt[kv[0]] = kv[1]
 			}
 		}
