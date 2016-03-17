@@ -3,7 +3,6 @@ package g
 const (
 	LogDir = "./logs"
 
-
 	// Modules' status
 	ModuleRunning            = 0
 	ModuleExistentNotRunning = 1
