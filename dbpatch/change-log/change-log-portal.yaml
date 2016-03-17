@@ -18,3 +18,8 @@
     filename: "mike-4.sql",
     comment: "Add name of agent"
 }
+- {
+    id: "don-7.sql",
+    filename: "don-7.sql",
+    comment: "[OWL-302] add CREATE TABLE tags"
+}
