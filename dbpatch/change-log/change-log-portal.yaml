@@ -19,7 +19,12 @@
     comment: "Add name of agent"
 }
 - {
-    id: "myhung-5",
-    filename: "myhung-5.sql",
+    id: "masato-5",
+    filename: "masato-5.sql",
+    comment: "Add event of alram in portal",
+}
+- {
+    id: "myhung-6",
+    filename: "myhung-6.sql",
     comment: "Change city, isp, and province name english into chinese"
 }
