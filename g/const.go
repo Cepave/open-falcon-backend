@@ -7,7 +7,6 @@ const (
 	// Modules' status
 	ModuleRunning            = 0
 	ModuleExistentNotRunning = 1
-	ModuleNonexistent        = 2
 
 	//Command exit code
 	Command_EX_OK  = 0

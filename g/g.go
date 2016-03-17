@@ -8,7 +8,7 @@ var Modules map[string]bool
 var ModuleBins map[string]string
 var ModuleConfs map[string]string
 var ModuleApps map[string]string
-var Order []string
+var AllModulesInOrder []string
 
 func init() {
 	//	dirs, _ := ioutil.ReadDir("./modules")
@@ -71,8 +71,9 @@ func init() {
 		"task":       "falcon-task",
 		"transfer":   "falcon-transfer",
 	}
-	// Deploy modules in this order:
-	Order = []string{
+
+	// Modules are deployed in this order
+	AllModulesInOrder = []string{
 		"graph",
 		"hbs",
 		"fe",

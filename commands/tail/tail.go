@@ -25,10 +25,10 @@ func (c *Command) Run(args []string) int {
 		return cli.RunResultHelp
 	}
 	moduleName := args[0]
-	moduleStatus := g.CheckModuleStatus(moduleName)
-
-	if moduleStatus == g.ModuleNonexistent {
-		fmt.Println("** tail failed **")
+	err := g.ModuleExists(moduleName)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("** start failed **")
 		return g.Command_EX_ERR
 	}
 
@@ -50,7 +50,7 @@ func (c *Command) Run(args []string) int {
 	cmd.Stderr = os.Stderr
 	dir, _ := os.Getwd()
 	cmd.Dir = dir
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		fmt.Println("** tail failed **")
 		return g.Command_EX_ERR
@@ -71,6 +71,6 @@ Usage: open-falcon tail [Module]
 
 Modules:
 
-  ` + strings.Join(g.GetAllModuleArgs(), " ")
+  ` + strings.Join(g.AllModulesInOrder, " ")
 	return strings.TrimSpace(helpText)
 }

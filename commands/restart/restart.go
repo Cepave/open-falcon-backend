@@ -24,12 +24,16 @@ func (c *Command) Run(args []string) int {
 	if len(args) == 0 {
 		return cli.RunResultHelp
 	}
-	for _, moduleName := range args {
-		err := g.ModuleExists(moduleName)
-		if err != nil {
-			fmt.Println(err)
-			fmt.Println("** restart failed **")
-			return g.Command_EX_ERR
+	if (len(args) == 1) && (args[0] == "all") {
+		args = g.GetModuleArgsInOrder(g.AllModulesInOrder)
+	} else {
+		for _, moduleName := range args {
+			err := g.ModuleExists(moduleName)
+			if err != nil {
+				fmt.Println(err)
+				fmt.Println("** restart failed **")
+				return g.Command_EX_ERR
+			}
 		}
 	}
 
@@ -53,6 +57,6 @@ Usage: open-falcon restart [Module ...]
 
 Modules:
 
-  ` + "all " + strings.Join(g.GetAllModuleArgs(), " ")
+  ` + "all " + strings.Join(g.AllModulesInOrder, " ")
 	return strings.TrimSpace(helpText)
 }

@@ -37,23 +37,34 @@ func CheckModulePid(name string) (string, error) {
 	return pidStr, nil
 }
 
-func GetAllModuleArgs() []string {
-	var allModules []string
-	for _, name := range Order {
-		if Modules[name] {
-			allModules = append(allModules, name)
+func GetModuleArgsInOrder(moduleArgs []string) []string {
+	var modulesInOrder []string
+
+	// get arguments which are found in the order
+	for _, nameOrder := range AllModulesInOrder {
+		for _, nameArg := range moduleArgs {
+			if nameOrder == nameArg {
+				modulesInOrder = append(modulesInOrder, nameOrder)
+			}
 		}
 	}
-	return allModules
+	// get arguments which are not found in the order
+	for _, nameArg := range moduleArgs {
+		end := 0
+		for _, nameOrder := range modulesInOrder {
+			if nameOrder == nameArg {
+				break
+			}
+			end++
+		}
+		if end == len(modulesInOrder) {
+			modulesInOrder = append(modulesInOrder, nameArg)
+		}
+	}
+	return modulesInOrder
 }
 
 func CheckModuleStatus(name string) int {
-	err := ModuleExists(name)
-	if err != nil {
-		fmt.Println(err)
-		return ModuleNonexistent
-	}
-
 	fmt.Print("Checking status [", ModuleApps[name], "]...")
 
 	pidStr, err := CheckModulePid(ModuleApps[name])

@@ -22,16 +22,20 @@ func (c *Command) Run(args []string) int {
 	if len(args) == 0 {
 		return cli.RunResultHelp
 	}
-	if args[0] == "all" {
-		args = g.GetAllModuleArgs()
+	if (len(args) == 1) && (args[0] == "all") {
+		args = g.AllModulesInOrder
+	} else {
+		for _, moduleName := range args {
+			err := g.ModuleExists(moduleName)
+			if err != nil {
+				fmt.Println(err)
+				fmt.Println("** status failed **")
+				return g.Command_EX_ERR
+			}
+		}
 	}
 	for _, moduleName := range args {
-		moduleStatus := g.CheckModuleStatus(moduleName)
-
-		if moduleStatus == g.ModuleNonexistent {
-			fmt.Println("** status failed **")
-			return g.Command_EX_ERR
-		}
+		g.CheckModuleStatus(moduleName)
 	}
 	return g.Command_EX_OK
 }
@@ -48,6 +52,6 @@ Usage: open-falcon status [Modules ...]
 
 Modules:
 
-  ` + "all " + strings.Join(g.GetAllModuleArgs(), " ")
+  ` + "all " + strings.Join(g.AllModulesInOrder, " ")
 	return strings.TrimSpace(helpText)
 }

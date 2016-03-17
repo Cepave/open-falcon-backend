@@ -53,6 +53,6 @@ Usage: open-falcon reload [Module]
 
 Modules:
 
-  ` + "fe" //strings.Join(g.GetAllModuleArgs(), " ")
+  ` + "fe" //strings.Join(g.AllModulesInOrder, " ")
 	return strings.TrimSpace(helpText)
 }
