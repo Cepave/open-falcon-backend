@@ -352,7 +352,7 @@ func (this *AuthController) LoginWithToken() {
 		access_key := userInfo["access_key"]
 		user := ReadUserByName(username)
 		if user == nil { // create third party user
-			InsertRegisterUser(username, "")
+			InsertRegisterUser(username, "", "")
 			user = ReadUserByName(username)
 		}
 		if len(user.Passwd) == 0 {
