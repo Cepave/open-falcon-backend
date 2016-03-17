@@ -1,5 +1,4 @@
 TARGET_SOURCE := $(shell find main.go g commands -name '*.go')
-MODULES_SOURCE := $(shell find modules -name '*.go')
 
 CMD = agent aggregator graph hbs judge nodata query sender task transfer fe
 BIN = bin/falcon-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer bin/falcon-fe
@@ -18,7 +17,7 @@ $(CMD):
 $(TARGET): $(TARGET_SOURCE)
 	go build -o open-falcon
 
-$(BIN): $(MODULES_SOURCE)
+$(BIN):
 	go build -o $@ github.com/Cepave/open-falcon/modules/$(@:bin/falcon-%=%)
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
@@ -48,3 +47,15 @@ clean:
 	rm -rf open-falcon-v$(VERSION).tar.gz
 
 .PHONY: clean all agent aggregator graph hbs judge nodata query sender task transfer fe
+
+bin/falcon-agent : $(shell find modules/agent/ -name '*.go')
+bin/falcon-aggregator : $(shell find modules/aggregator/ -name '*.go')
+bin/falcon-graph : $(shell find modules/graph/ -name '*.go')
+bin/falcon-hbs : $(shell find modules/hbs/ -name '*.go')
+bin/falcon-judge : $(shell find modules/judge/ -name '*.go')
+bin/falcon-nodata : $(shell find modules/nodata/ -name '*.go')
+bin/falcon-query : $(shell find modules/query/ -name '*.go')
+bin/falcon-sender : $(shell find modules/sender/ -name '*.go')
+bin/falcon-task : $(shell find modules/task/ -name '*.go')
+bin/falcon-transfer : $(shell find modules/transfer/ -name '*.go')
+bin/falcon-fe: $(shell find modules/fe/ -name '*.go')
