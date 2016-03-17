@@ -1,6 +1,7 @@
 package tail
 
 import (
+	"fmt"
 	"github.com/Cepave/open-falcon/g"
 	"github.com/mitchellh/cli"
 	"os"
@@ -43,7 +44,11 @@ func (c *Command) Run(args []string) int {
 	cmd.Stderr = os.Stderr
 	dir, _ := os.Getwd()
 	cmd.Dir = dir
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println("** tail failed **")
+		return g.Command_EX_ERR
+	}
 	return 0
 }
 

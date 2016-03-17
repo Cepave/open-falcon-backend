@@ -31,12 +31,16 @@ func (c *Command) Run(args []string) int {
 	for _, moduleName := range args {
 		moduleStatus := g.CheckModuleStatus(moduleName)
 
+		if moduleStatus == g.ModuleNonexistent {
+			fmt.Println("** start failed **")
+			return g.Command_EX_ERR
+		}
 		if moduleStatus == g.ModuleExistentNotRunning {
 			fmt.Print("Starting [", g.ModuleApps[moduleName], "]...")
 			cmdArgs, err := g.GetConfFileArgs(g.ModuleConfs[moduleName])
 			if err != nil {
 				fmt.Println(err)
-				continue
+				return g.Command_EX_ERR
 			}
 			// fe workaround
 			if moduleName == "fe" {
@@ -47,15 +51,18 @@ func (c *Command) Run(args []string) int {
 				cmd.Start()
 				fmt.Println("successfully!!")
 				time.Sleep(1 * time.Second)
-				g.CheckModuleStatus(moduleName)
-				err = os.Chdir("../../")
+				moduleStatus = g.CheckModuleStatus(moduleName)
+				if moduleStatus == g.ModuleExistentNotRunning {
+					return g.Command_EX_ERR
+				}
+				os.Chdir("../../")
 				continue
 			}
 			logPath := g.LogDir + "/" + moduleName + ".log"
 			LogOutput, err := os.OpenFile(logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 			if err != nil {
 				fmt.Println("Error in opening file:", err)
-				continue
+				return g.Command_EX_ERR
 			}
 			defer LogOutput.Close()
 
@@ -67,10 +74,14 @@ func (c *Command) Run(args []string) int {
 			cmd.Start()
 			fmt.Println("successfully!!")
 			time.Sleep(1 * time.Second)
-			g.CheckModuleStatus(moduleName)
+			moduleStatus = g.CheckModuleStatus(moduleName)
+			if moduleStatus == g.ModuleExistentNotRunning {
+				fmt.Println("** start failed **")
+				return g.Command_EX_ERR
+			}
 		}
 	}
-	return 0
+	return g.Command_EX_OK
 }
 
 func (c *Command) Synopsis() string {

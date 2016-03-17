@@ -27,7 +27,7 @@ func (c *Command) Run(args []string) int {
 	for _, moduleName := range args {
 		g.CheckModuleStatus(moduleName)
 	}
-	return 0
+	return g.Command_EX_OK
 }
 
 func (c *Command) Synopsis() string {

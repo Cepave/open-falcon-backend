@@ -1,6 +1,8 @@
 package reload
 
 import (
+	"fmt"
+	"github.com/Cepave/open-falcon/g"
 	"github.com/mitchellh/cli"
 	"os"
 	"os/exec"
@@ -30,8 +32,12 @@ func (c *Command) Run(args []string) int {
 	cmd.Stderr = os.Stderr
 	dir, _ := os.Getwd()
 	cmd.Dir = dir
-	cmd.Run()
-	return 0
+	err := cmd.Run()
+	if err != nil {
+		fmt.Println("** reload failed **")
+		return g.Command_EX_ERR
+	}
+	return g.Command_EX_OK
 }
 
 func (c *Command) Synopsis() string {

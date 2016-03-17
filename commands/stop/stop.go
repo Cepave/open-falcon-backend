@@ -45,9 +45,14 @@ func (c *Command) Run(args []string) int {
 		cmd.Start()
 		fmt.Println("with PID [", pidStr, "]...successfully!!")
 		time.Sleep(1 * time.Second)
-		g.CheckModuleStatus(moduleName)
+
+		moduleStatus = g.CheckModuleStatus(moduleName)
+		if moduleStatus == g.ModuleRunning {
+			fmt.Println("** stop failed **")
+			return g.Command_EX_ERR
+		}
 	}
-	return 0
+	return g.Command_EX_OK
 }
 
 func (c *Command) Synopsis() string {
