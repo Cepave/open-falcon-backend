@@ -24,8 +24,8 @@ func (c *Command) Run(args []string) int {
 	if len(args) != 1 || args[0] != "fe" {
 		return cli.RunResultHelp
 	}
-
 	// fe workaround
+	// check if the input module strings exist in the future
 	os.Chdir("bin/fe")
 	cmd := exec.Command("./control", "reload")
 	cmd.Stdout = os.Stdout

@@ -1,6 +1,7 @@
 package restart
 
 import (
+	"fmt"
 	"github.com/Cepave/open-falcon/commands/start"
 	"github.com/Cepave/open-falcon/commands/stop"
 	"github.com/Cepave/open-falcon/g"
@@ -23,11 +24,20 @@ func (c *Command) Run(args []string) int {
 	if len(args) == 0 {
 		return cli.RunResultHelp
 	}
+	for _, moduleName := range args {
+		err := g.ModuleExists(moduleName)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("** restart failed **")
+			return g.Command_EX_ERR
+		}
+	}
+
 	var stopCmd stop.Command
 	var startCmd start.Command
 	stopCmd.Run(args)
 	startCmd.Run(args)
-	return 0
+	return g.Command_EX_OK
 }
 
 func (c *Command) Synopsis() string {

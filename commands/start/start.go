@@ -80,6 +80,7 @@ func (c *Command) Run(args []string) int {
 				return g.Command_EX_ERR
 			}
 		}
+		// Skip starting if the module is already running
 	}
 	return g.Command_EX_OK
 }

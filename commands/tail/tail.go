@@ -25,6 +25,12 @@ func (c *Command) Run(args []string) int {
 		return cli.RunResultHelp
 	}
 	moduleName := args[0]
+	moduleStatus := g.CheckModuleStatus(moduleName)
+
+	if moduleStatus == g.ModuleNonexistent {
+		fmt.Println("** tail failed **")
+		return g.Command_EX_ERR
+	}
 
 	// fe workaround
 	if moduleName == "fe" {

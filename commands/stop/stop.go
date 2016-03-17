@@ -31,7 +31,12 @@ func (c *Command) Run(args []string) int {
 	for _, moduleName := range args {
 		moduleStatus := g.CheckModuleStatus(moduleName)
 
-		if moduleStatus != g.ModuleRunning {
+		if moduleStatus == g.ModuleNonexistent {
+			fmt.Println("** stop failed **")
+			return g.Command_EX_ERR
+		}
+		if moduleStatus == g.ModuleExistentNotRunning {
+			// Skip stopping if the module is stopped
 			continue
 		}
 

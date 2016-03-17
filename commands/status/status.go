@@ -1,6 +1,7 @@
 package status
 
 import (
+	"fmt"
 	"github.com/Cepave/open-falcon/g"
 	"github.com/mitchellh/cli"
 	"strings"
@@ -25,7 +26,12 @@ func (c *Command) Run(args []string) int {
 		args = g.GetAllModuleArgs()
 	}
 	for _, moduleName := range args {
-		g.CheckModuleStatus(moduleName)
+		moduleStatus := g.CheckModuleStatus(moduleName)
+
+		if moduleStatus == g.ModuleNonexistent {
+			fmt.Println("** status failed **")
+			return g.Command_EX_ERR
+		}
 	}
 	return g.Command_EX_OK
 }
