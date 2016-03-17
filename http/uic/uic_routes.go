@@ -1,15 +1,15 @@
 package uic
 
 import (
+	"github.com/Cepave/fe/http/base"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/Cepave/fe/http/base"
 )
 
 func ConfigRoutes() {
 
+	//open-falcon's routes
 	beego.Router("/root", &UserController{}, "get:CreateRoot")
-
 	beego.Router("/auth/login", &AuthController{}, "get:LoginGet;post:LoginPost")
 	beego.Router("/auth/login/:token", &AuthController{}, "get:LoginWithToken")
 	beego.Router("/auth/third-party", &AuthController{}, "post:LoginThirdParty")
@@ -27,6 +27,21 @@ func ConfigRoutes() {
 	beego.Router("/team/users", &TeamController{}, "get:Users")
 	beego.Router("/team/query", &TeamController{}, "get:Query")
 	beego.Router("/team/all", &TeamController{}, "get:All")
+
+	//owl-protal-routes
+	apins := beego.NewNamespace("/api/v1/auth",
+		beego.NSGet("/notallowed", func(ctx *context.Context) {
+			ctx.Output.Body([]byte("notAllowed"))
+		}),
+		beego.NSRouter("/register", &AuthApiController{}, "post:Register"),
+		beego.NSRouter("/login", &AuthApiController{}, "post:Login"),
+		beego.NSRouter("/sessioncheck", &AuthApiController{}, "get:AuthSession;post:AuthSession"),
+		beego.NSRouter("/logout", &AuthApiController{}, "get:Logout;post:Logout"),
+		beego.NSRouter("/user", &AuthApiController{}, "post:GetUser"),
+		beego.NSRouter("/user/update", &AuthApiController{}, "put:UpdateUser;post:UpdateUser"),
+		beego.NSRouter("/team/count", &AuthApiController{}, "get:CountNumOfTeam;post:CountNumOfTeam"),
+	)
+	beego.AddNamespace(apins)
 
 	loginRequired :=
 		beego.NewNamespace("/me",

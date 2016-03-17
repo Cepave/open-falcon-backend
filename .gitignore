@@ -24,6 +24,7 @@ _testmain.go
 
 *.sw[op]
 /cfg.json
+/cfg_vm.json
 /var
 /log
 /tmp
@@ -32,4 +33,3 @@ _testmain.go
 *.log
 /falcon-fe*
 /fe*
-

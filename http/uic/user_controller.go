@@ -247,7 +247,7 @@ func (this *UserController) CreateUserPost() {
 		return
 	}
 
-	lastId, err := InsertRegisterUser(name, str.Md5Encode(g.Config().Salt+password))
+	lastId, err := InsertRegisterUser(name, str.Md5Encode(g.Config().Salt+password), email)
 	if err != nil {
 		this.ServeErrJson("insert user fail " + err.Error())
 		return

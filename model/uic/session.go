@@ -1,25 +1,29 @@
 package uic
 
 import (
+	"errors"
 	"fmt"
 	"github.com/astaxie/beego/orm"
 	"github.com/toolkits/cache"
 	"github.com/toolkits/logger"
+	"log"
 	"time"
 )
 
 func SelectSessionBySig(sig string) *Session {
-	if sig == "" {
-		return nil
-	}
 
 	obj := Session{Sig: sig}
+	if sig == "" {
+		obj.Uid = -1
+		return &obj
+	}
+
 	err := orm.NewOrm().Read(&obj, "Sig")
 	if err != nil {
 		if err != orm.ErrNoRows {
 			logger.Errorln(err)
 		}
-		return nil
+		obj.Uid = -1
 	}
 	return &obj
 }
@@ -51,7 +55,23 @@ func SaveSessionAttrs(uid int64, sig string, expired int) (int64, error) {
 	return s.Save()
 }
 
-func RemoveSessionByUid(uid int64) {
+func ReadSessionByName(name string) (sig string, expired int) {
+	uid := ReadUserIdByName(name)
+	sig, expired = ReadSessionByUid(uid)
+	return
+}
+
+func ReadSessionByUid(uid int64) (sig string, expired int) {
+	var ss []Session
+	Sessions().Filter("Uid", uid).All(&ss, "Id", "Sig", "expired")
+	if len(ss) != 0 {
+		sig = ss[0].Sig
+		expired = ss[0].Expired
+	}
+	return
+}
+
+func RemoveSessionByUid(uid int64) (num int64, err error) {
 	var ss []Session
 	Sessions().Filter("Uid", uid).All(&ss, "Id", "Sig")
 	if ss == nil || len(ss) == 0 {
@@ -59,19 +79,38 @@ func RemoveSessionByUid(uid int64) {
 	}
 
 	for _, s := range ss {
-		num, err := DeleteSessionById(s.Id)
+		num, err = DeleteSessionById(s.Id)
 		if err == nil && num > 0 {
-			cache.Delete(fmt.Sprintf("session:obj:%s", s.Sig))
+			deletekey := fmt.Sprintf("session:obj:%s", s.Sig)
+			log.Printf("%v", deletekey)
+			cache.Delete(deletekey)
+		} else {
+			return
 		}
 	}
+	return
+}
+
+func ReadSessionById(id int64) (s *Session, err error) {
+	var ss []Session
+	Sessions().Filter("Id", id).All(&ss, "Id", "Sig", "expired")
+	if ss == nil || len(ss) == 0 {
+		err = errors.New("not found this session token")
+	} else {
+		s = &ss[0]
+	}
+	return
 }
 
 func DeleteSessionById(id int64) (int64, error) {
+	_, err := ReadSessionById(id)
+	if err != nil {
+		return 0, err
+	}
 	r, err := orm.NewOrm().Raw("DELETE FROM `session` WHERE `id` = ?", id).Exec()
 	if err != nil {
 		return 0, err
 	}
-
 	return r.RowsAffected()
 }
 

@@ -69,7 +69,6 @@ func (this *AuthController) LoginGet() {
 func (this *AuthController) LoginPost() {
 	name := this.GetString("name", "")
 	password := this.GetString("password", "")
-
 	if name == "" || password == "" {
 		this.ServeErrJson("name or password is blank")
 		return
@@ -187,6 +186,7 @@ func (this *AuthController) RegisterPost() {
 	name := strings.TrimSpace(this.GetString("name", ""))
 	password := strings.TrimSpace(this.GetString("password", ""))
 	repeatPassword := strings.TrimSpace(this.GetString("repeat_password", ""))
+	email := strings.TrimSpace(this.GetString("email", ""))
 
 	if password != repeatPassword {
 		this.ServeErrJson("password not equal the repeart one")
@@ -203,7 +203,7 @@ func (this *AuthController) RegisterPost() {
 		return
 	}
 
-	lastId, err := InsertRegisterUser(name, str.Md5Encode(g.Config().Salt+password))
+	lastId, err := InsertRegisterUser(name, str.Md5Encode(g.Config().Salt+password), email)
 	if err != nil {
 		this.ServeErrJson("insert user fail " + err.Error())
 		return

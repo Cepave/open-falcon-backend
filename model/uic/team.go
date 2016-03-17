@@ -2,12 +2,13 @@ package uic
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/orm"
-	"github.com/toolkits/cache"
-	"github.com/toolkits/logger"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego/orm"
+	"github.com/toolkits/cache"
+	"github.com/toolkits/logger"
 )
 
 func QueryMineTeams(query string, uid int64) (orm.QuerySeter, error) {
@@ -35,6 +36,12 @@ func QueryMineTeams(query string, uid int64) (orm.QuerySeter, error) {
 
 	qs = qs.SetCond(condResult)
 	return qs, nil
+}
+
+func CountNumOfTeam() (c int64, err error) {
+	qs := orm.NewOrm().QueryTable(new(Team))
+	c, err = qs.Count()
+	return
 }
 
 func QueryAllTeams(query string) orm.QuerySeter {

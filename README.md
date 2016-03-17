@@ -79,3 +79,50 @@ go get ./...
 # 设置root账号的密码
 
 该项目中的注册用户是有不同角色的，目前分三种角色：普通用户、管理员、root账号。系统启动之后第一件事情应该是设置root的密码，浏览器访问：http://fe.example.com/root?password=abc （此处假设你的项目访问地址是fe.example.com，也可以使用ip）,这样就设置了root账号的密码为abc。普通用户可以支持注册。
+
+# OWL2.0API
+
+## supported api
+* UIC
+  * 使用者相關
+* dashboard
+  * endpoint hostgroup counter query相關
+* portal
+  * alarm event 相關
+- 其他詳細請瀏覽各自的APIDoc
+
+## LogIn Session Check
+如果APIDoc中註明`required login session`, 請在須叫api時帶上cName & cSig.
+```
+ex. curl -X POST "cName=cepave&cSig=ooxx1234sessionkey"
+```
+
+## GRPC query
+GRPC client 必須按照 `grpc/proto/owlquery/owlapi.proto` 實做.<br>
+對於GRPC query的javascript實做範例
+```
+var PROTO_PATH = __dirname + '/owlapi.proto';
+
+var grpc = require('../');
+var grafana_proto = grpc.load(PROTO_PATH).owlapi;
+
+
+function main() {
+  //connect to grpc server
+  var client = new grafana_proto.OwlQuery('127.0.0.1:1235',
+                                       grpc.credentials.createInsecure());
+
+  var start_ts = 1457427694;
+  var end_ts = 1457664825;
+  var consolfun = "AVERAGE";
+  //also support endpoint = "docker-agent"
+  var endpoint = "[\"docker-agent\", \"docker-task\"]";
+  //also support endpoint = "cpu.idle"
+  var counter = "[\"cpu.idle\", \"cpu.nice\"]";
+
+  client.query({startTs: start_ts, endTs: end_ts, computeMethod: consolfun, endpoint: endpoint, counter: counter}, function(err, response) {
+    var result = JSON.parse(response.result);
+    console.log(result);
+  });
+}
+```
