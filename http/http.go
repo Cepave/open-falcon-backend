@@ -1,9 +1,9 @@
 package http
 
 import (
-	"strings"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
+	"strings"
 
 	"encoding/json"
 	"log"
@@ -35,7 +35,7 @@ func InitDatabase() {
 }
 
 func Start() {
-	if !g.Config().Http.Enable {
+	if !g.Config().Http.Enabled {
 		log.Println("http.Start warning, not enable")
 		return
 	}
