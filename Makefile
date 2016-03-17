@@ -1,4 +1,8 @@
-BIN = agent aggregator graph hbs judge nodata query sender task transfer fe
+TARGET_SOURCE := $(shell find main.go g commands -name '*.go')
+MODULES_SOURCE := $(shell find modules -name '*.go')
+
+CMD = agent aggregator graph hbs judge nodata query sender task transfer fe
+BIN = bin/falcon-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer bin/falcon-fe
 TARGET = open-falcon
 
 GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
@@ -6,11 +10,16 @@ GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
 PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
-all: $(BIN)
+all: $(BIN) $(TARGET)
+
+$(CMD):
+	make bin/falcon-$@
+
+$(TARGET): $(TARGET_SOURCE)
 	go build -o open-falcon
 
-$(BIN):
-	go build -o ./bin/falcon-$@ github.com/Cepave/open-falcon/modules/$@
+$(BIN): $(MODULES_SOURCE)
+	go build -o $@ github.com/Cepave/open-falcon/modules/$(@:bin/falcon-%=%)
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
 dev: format
@@ -38,4 +47,4 @@ clean:
 	rm -rf ./$(TARGET)
 	rm -rf open-falcon-v$(VERSION).tar.gz
 
-.PHONY: agent aggregator graph hbs judge nodata query sender task transfer fe clean all
+.PHONY: clean all # agent aggregator graph hbs judge nodata query sender task transfer fe
