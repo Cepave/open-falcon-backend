@@ -29,7 +29,7 @@
     comment: "Change city, isp, and province name english into chinese"
 }
 - {
-    id: "don-7.sql",
+    id: "don-7",
     filename: "don-7.sql",
     comment: "[OWL-302] add CREATE TABLE tags"
 }
