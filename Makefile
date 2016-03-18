@@ -9,7 +9,7 @@ GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
 PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
-all: $(BIN) $(TARGET)
+all: $(BIN) $(TARGET) bin/falcon-fe
 
 $(CMD):
 	make bin/falcon-$@
@@ -40,8 +40,6 @@ pack: checkbin
 	tar -zcvf open-falcon-v$(VERSION).tar.gz ./bin ./config ./open-falcon ./cfg.json
 
 clean:
-	git clean -f -d ./bin
-	git clean -f -d ./config
 	rm -rf ./bin
 	rm -rf ./$(TARGET)
 	rm -rf open-falcon-v$(VERSION).tar.gz
