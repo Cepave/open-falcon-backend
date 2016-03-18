@@ -1,7 +1,7 @@
-TARGET_SOURCE := $(shell find main.go g commands -name '*.go')
-
+TARGET_SOURCE = $(shell find main.go g commands -name '*.go')
 CMD = agent aggregator graph hbs judge nodata query sender task transfer fe
-BIN = bin/falcon-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer bin/falcon-fe
+BIN = bin/falcon-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer
+# bin/falcon-fe
 TARGET = open-falcon
 
 GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
@@ -59,3 +59,6 @@ bin/falcon-sender : $(shell find modules/sender/ -name '*.go')
 bin/falcon-task : $(shell find modules/task/ -name '*.go')
 bin/falcon-transfer : $(shell find modules/transfer/ -name '*.go')
 bin/falcon-fe: $(shell find modules/fe/ -name '*.go')
+	go build -o $@ github.com/Cepave/open-falcon/modules/$(@:bin/falcon-%=%)
+	cd bin; ln -s ../modules/fe fe
+	cp bin/falcon-fe bin/fe/falcon-fe
