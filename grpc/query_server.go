@@ -87,6 +87,9 @@ func (s *server) Query(ctx context.Context, in *pb.QueryInput) (*pb.QueryReply, 
 	resTmp := rrdQuery(in)
 	if len(resTmp) == 1 {
 		result := resTmp[0]
+		if result.Values == nil {
+			result.Values = []*cmodel.RRDData{}
+		}
 		//genreate json string and send back to client
 		res, _ := json.Marshal(result)
 		return &pb.QueryReply{Result: string(res)}, nil
