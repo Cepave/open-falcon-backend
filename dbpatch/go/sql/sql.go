@@ -3,6 +3,7 @@ package sql
 
 import (
 	dbsql "database/sql"
+	"fmt"
 )
 
 // Represents the connection information to database
@@ -51,19 +52,9 @@ func (databaseConfig *DatabaseConfig) Execute(
 	dbCallback func(db *dbsql.DB) error,
 ) (err error) {
 
-	var db *dbsql.DB = nil
-
-	/**
-	 * Opens the connection to database
-	 */
-	if db, err = dbsql.Open(
-		databaseConfig.driverName,
-		databaseConfig.dsn,
-	)
-		err != nil {
-		return
+	if databaseConfig.db == nil {
+		return fmt.Errorf("Need open connection of database")
 	}
-	// :~)
 
-	return dbCallback(db)
+	return dbCallback(databaseConfig.db)
 }
