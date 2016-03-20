@@ -41,6 +41,7 @@ func (suite *SqlSuite) TestExecute(c *C) {
 			 * Loads the result data
 			 */
 			var rows, _ = db.Query("SELECT COUNT(*) FROM test_execute")
+			defer rows.Close()
 			rows.Next()
 			var result int
 			rows.Scan(&result)
