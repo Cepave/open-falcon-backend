@@ -1,0 +1,114 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start daemon at boot time
+# Description:       Enable service provided by daemon.
+### END INIT INFO
+
+dir="$(pwd)"
+cmd="./open-falcon"
+declare -a commands=("hbs" "transfer" "aggregator" "graph" "judge" "nodata" "nqm" "query" "sender" "task")
+
+
+user="root"
+
+#name=`$2`
+
+get_pid() {
+    cat "$pid_file"
+}
+
+is_running() {
+    pid_file="/var/run/falcon-$1.pid"
+    [ -f "$pid_file" ] && ps `get_pid` > /dev/null 2>&1
+}
+
+case "$1" in
+    start)
+    if is_running; then
+        echo "Already started"
+    else
+        for cmd in "${commands[@]}"
+        do
+            echo "Starting $cmd"
+            pid_file="/var/run/falcon-$cmd.pid"
+            stdout_log="/var/log/falcon-$cmd.log"
+            stderr_log="/var/log/falcon-$cmd.err"
+            cd "$dir"
+            if [ -z "$user" ]; then
+                sudo ./open-falcon $cmd >> "$stdout_log" 2>> "$stderr_log" &
+            else
+                sudo -u "$user" ./open-falcon $cmd >> "$stdout_log" 2>> "$stderr_log" &
+            fi
+            echo $! > "$pid_file"
+            if ! is_running $cmd; then
+                echo "Unable to start, see $stdout_log and $stderr_log"
+                exit 1
+            fi
+        done
+    fi
+    ;;
+    stop)
+    for cmd in "${commands[@]}"
+    do
+        pid_file="/var/run/falcon-$cmd.pid"
+        stdout_log="/var/log/falcon-$cmd.log"
+        stderr_log="/var/log/falcon-$cmd.err"
+        if is_running $cmd; then
+            echo -n "Stopping $cmd"
+            kill `get_pid`
+            kill `pgrep -f $cmd`
+            for i in {1..10}
+            do
+                if ! is_running $cmd; then
+                    break
+                fi
+
+                echo -n "."
+                sleep 1
+            done
+            echo
+
+            if is_running $cmd; then
+                echo "Not stopped; may still be shutting down or shutdown may have failed"
+                exit 1
+            else
+                echo "Stopped"
+                if [ -f "$pid_file" ]; then
+                    rm "$pid_file"
+                fi
+            fi
+        else
+            echo "$cmd Not running"
+        fi
+    done
+    ;;
+    restart)
+    $0 stop
+    if is_running; then
+        echo "Unable to stop, will not attempt to start"
+        exit 1
+    fi
+    $0 start
+    ;;
+    status)
+    pgrep $2
+    if [ "$?" -eq 0 ]; then
+        echo "Running"
+    else
+        echo "Stopped"
+        exit 1
+    fi
+    ;;
+    *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit 0
