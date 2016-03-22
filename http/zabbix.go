@@ -974,20 +974,37 @@ func templateDelete(nodes map[string]interface{}) {
  * @called by:       func templateUpdate(nodes map[string]interface{})
  */
 func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Tpl {
+	o := orm.NewOrm()
 	var template Tpl
-	templateName := ""
-	if val, ok := params["name"]; ok {
+
+	if val, ok := params["templateid"]; ok {
 		if val != nil {
-			templateName = val.(string)
+			templateId := val.(string)
+			templateIdInt, err := strconv.Atoi(templateId)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			err = o.QueryTable("tpl").Filter("id", templateIdInt).One(&template)
+			if err == orm.ErrMultiRows {
+				// Have multiple records
+				log.Println("returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				// No result
+			}
 		}
 	}
-	o := orm.NewOrm()
-	err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
-	if err == orm.ErrMultiRows {
-		// Have multiple records
-		log.Println("returned multiple rows")
-	} else if err == orm.ErrNoRows {
-		// No result
+
+	if val, ok := params["name"]; ok {
+		if val != nil {
+			templateName := val.(string)
+			err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
+			if err == orm.ErrMultiRows {
+				// Have multiple records
+				log.Println("returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				// No result
+			}
+		}
 	}
 	return template
 }
