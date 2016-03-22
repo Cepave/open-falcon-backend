@@ -5,9 +5,9 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/Cepave/query/g"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
-	"github.com/Cepave/query/g"
 	"io"
 	"io/ioutil"
 	"log"
@@ -218,7 +218,7 @@ func bindGroup(hostId int, params map[string]interface{}, args map[string]string
 			if err == orm.ErrNoRows {
 				// No result
 				grp_host := Grp_host{
-					Grp_id: grp_id,
+					Grp_id:  grp_id,
 					Host_id: int(hostId),
 				}
 				log.Println("grp_host =", grp_host)
@@ -265,8 +265,8 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 			err = o.Raw(sqlcmd, grp_id, tpl_id).QueryRow(&grp_tpl)
 			if err == orm.ErrNoRows {
 				grp_tpl := Grp_tpl{
-					Grp_id: grp_id,
-					Tpl_id: tpl_id,
+					Grp_id:    grp_id,
+					Tpl_id:    tpl_id,
 					Bind_user: "zabbix",
 				}
 				log.Println("grp_tpl =", grp_tpl)
@@ -299,19 +299,19 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 func checkInputFormat(params map[string]interface{}, result map[string]interface{}) bool {
 	valid := true
 	if val, ok := params["interfaces"]; ok {
-		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
 			setError("interfaces shall be an array of objects [{}]", result)
 			valid = false
 		}
 	}
 	if val, ok := params["groups"]; ok {
-		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
 			setError("groups shall be an array of objects [{}]", result)
 			valid = false
 		}
 	}
 	if val, ok := params["templates"]; ok {
-		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
 			setError("templates shall be an array of objects [{}]", result)
 			valid = false
 		}
@@ -354,8 +354,8 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 				}
 			}
 			host := Host{
-				Hostname: hostName,
-				Ip: ip,
+				Hostname:  hostName,
+				Ip:        ip,
 				Update_at: getNow(),
 			}
 			log.Println("host =", host)
@@ -396,9 +396,9 @@ func hostCreate(nodes map[string]interface{}) {
 
 	host := checkHostExist(params, result)
 	if host.Id > 0 {
-		setError("host name existed: " + host.Hostname, result)
+		setError("host name existed: "+host.Hostname, result)
 	} else {
-		args := map[string]string {}
+		args := map[string]string{}
 		addHost(params, args, result)
 		if _, ok := params["inventory"]; ok {
 			inventory := params["inventory"].(map[string]interface{})
@@ -477,7 +477,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostDelete(nodes map[string]interface{}) {
-	params := nodes["params"].([]interface {})
+	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -514,7 +514,7 @@ func getGroups(hostId string) []interface{} {
 	o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", hostId).QueryRows(&grp_ids)
 	for _, grp_id := range grp_ids {
 		groupId := strconv.Itoa(grp_id)
-		group := map[string]string {
+		group := map[string]string{
 			"groupid": groupId,
 		}
 		groups = append(groups, group)
@@ -590,7 +590,7 @@ func hostGet(nodes map[string]interface{}) {
 			} else if host.Id > 0 {
 				hostId = strconv.Itoa(host.Id)
 				groups = getGroups(hostId)
-				countOfRows += 1
+				countOfRows++
 			}
 			item["hostid"] = hostId
 			item["hostname"] = hostName
@@ -621,7 +621,7 @@ func hostUpdate(nodes map[string]interface{}) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	args := map[string]string {}
+	args := map[string]string{}
 	host := checkHostExist(params, result)
 	if host.Id > 0 {
 		log.Println("host existed")
@@ -636,8 +636,9 @@ func hostUpdate(nodes map[string]interface{}) {
 			} else {
 				log.Println("update hostId =", hostId)
 				log.Println("mysql row affected nums =", num)
-				bindGroup(host.Id, params, args, result)
 				hostid := strconv.Itoa(host.Id)
+				unbindGroup(hostid, result)
+				bindGroup(host.Id, params, args, result)
 				hostids := [1]string{string(hostid)}
 				result["hostids"] = hostids
 				bindTemplate(params, args, result)
@@ -671,9 +672,9 @@ func hostgroupCreate(nodes map[string]interface{}) {
 
 	o := orm.NewOrm()
 	grp := Grp{
-		Grp_name: hostgroupName,
+		Grp_name:    hostgroupName,
 		Create_user: user,
-		Create_at: now,
+		Create_at:   now,
 	}
 	log.Println("grp =", grp)
 	errors := []string{}
@@ -703,7 +704,7 @@ func hostgroupCreate(nodes map[string]interface{}) {
  */
 func hostgroupDelete(nodes map[string]interface{}) {
 	log.Println("func hostgroupDelete()")
-	params := nodes["params"].([]interface {})
+	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -734,6 +735,25 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	}
 	result["groupids"] = groupids
 	nodes["result"] = result
+}
+
+func getTemplateIdsByGroupId(groupId int, result map[string]interface{}) []string {
+	templateIds := []string{}
+	o := orm.NewOrm()
+	var tpl_ids []int
+	sqlcmd := "SELECT DISTINCT tpl_id FROM falcon_portal.grp_tpl WHERE grp_id=?"
+	_, err := o.Raw(sqlcmd, groupId).QueryRows(&tpl_ids)
+	if err == orm.ErrNoRows {
+		log.Println("No templates for groupId:", groupId)
+	} else if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, tpl_id := range tpl_ids {
+			templateId := strconv.Itoa(tpl_id)
+			templateIds = append(templateIds, templateId)
+		}
+	}
+	return templateIds
 }
 
 /**
@@ -770,23 +790,26 @@ func hostgroupGet(nodes map[string]interface{}) {
 	}
 	groupId := ""
 	o := orm.NewOrm()
+	countOfRows := 0
 	if queryAll {
 		var grps []*Grp
-		_, err := o.QueryTable("grp").All(&grps)
+		num, err := o.QueryTable("grp").All(&grps)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
+			countOfRows = int(num)
 			for _, grp := range grps {
-				item := map[string]string {}
+				item := map[string]interface{}{}
 				item["groupid"] = strconv.Itoa(grp.Id)
 				item["groupname"] = grp.Grp_name
+				item["templateids"] = getTemplateIdsByGroupId(grp.Id, result)
 				items = append(items, item)
 			}
 		}
 	} else {
 		var grp Grp
 		for _, groupName := range groupNames {
-			item := map[string]string {}
+			item := map[string]interface{}{}
 			groupId = ""
 			err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
 			if err == orm.ErrMultiRows {
@@ -795,15 +818,28 @@ func hostgroupGet(nodes map[string]interface{}) {
 				log.Println("host group not found")
 			} else if grp.Id > 0 {
 				groupId = strconv.Itoa(grp.Id)
+				countOfRows++
 			}
 			item["groupid"] = groupId
 			item["groupname"] = groupName
+			item["templateids"] = getTemplateIdsByGroupId(grp.Id, result)
 			items = append(items, item)
 		}
 	}
-	log.Println("result =", result)
 	result["items"] = items
+	result["count"] = countOfRows
 	nodes["result"] = result
+}
+
+func unbindGroupAndTemplates(groupId string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	sql := "DELETE FROM grp_tpl WHERE grp_id = ?"
+	res, err := o.Raw(sql, groupId).Exec()
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	num, _ := res.RowsAffected()
+	log.Println("mysql row affected nums =", num)
 }
 
 /**
@@ -823,27 +859,27 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	hostgroupId, err := strconv.Atoi(params["groupid"].(string))
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	o := orm.NewOrm()
-	if _, ok := params["name"]; ok {
-		hostgroupName := params["name"].(string)
-		log.Println("hostgroupName =", hostgroupName)
 
-		if hostgroupName != "" {
+	if _, ok := params["groupid"]; ok {
+		hostgroupId, err := strconv.Atoi(params["groupid"].(string))
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			o := orm.NewOrm()
 			grp := Grp{Id: hostgroupId}
 			err := o.Read(&grp)
 			if err != nil {
 				setError(err.Error(), result)
-			} else {
-				grp.Grp_name = hostgroupName
-				num, err := o.Update(&grp)
-				if err != nil {
-					setError(err.Error(), result)
-				} else {
-					if num > 0 {
+			}
+
+			if _, ok := params["name"]; ok {
+				hostgroupName := params["name"].(string)
+				if hostgroupName != "" {
+					grp.Grp_name = hostgroupName
+					num, err := o.Update(&grp)
+					if err != nil {
+						setError(err.Error(), result)
+					} else if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
 						result["groupids"] = groupids
 						log.Println("update groupid =", hostgroupId)
@@ -851,7 +887,28 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					}
 				}
 			}
+
+			if _, ok := params["templates"]; ok {
+				groupIds := []int{}
+				templateIds := []int{}
+				groupIds = append(groupIds, hostgroupId)
+				templates := params["templates"].([]interface{})
+				for _, template := range templates {
+					templateId := template.(map[string]interface{})["templateid"].(string)
+					templateIdInt, err := strconv.Atoi(templateId)
+					if err != nil {
+						setError(err.Error(), result)
+					}
+					templateIds = append(templateIds, templateIdInt)
+				}
+				unbindGroupAndTemplates(strconv.Itoa(hostgroupId), result)
+				bindTemplatesAndGroups(groupIds, templateIds, result)
+				groupids := [1]string{strconv.Itoa(hostgroupId)}
+				result["groupids"] = groupids
+			}
 		}
+	} else {
+		setError("params['groupid'] must not be empty", result)
 	}
 	nodes["result"] = result
 }
@@ -879,9 +936,9 @@ func templateCreate(nodes map[string]interface{}) {
 
 	o := orm.NewOrm()
 	tpl := Tpl{
-		Tpl_name: templateName,
+		Tpl_name:    templateName,
 		Create_user: user,
-		Create_at: now,
+		Create_at:   now,
 	}
 	log.Println("tpl =", tpl)
 
@@ -901,8 +958,8 @@ func templateCreate(nodes map[string]interface{}) {
 			setError(err.Error(), result)
 		}
 		grp_tpl := Grp_tpl{
-			Grp_id: groupId,
-			Tpl_id: int(id),
+			Grp_id:    groupId,
+			Tpl_id:    int(id),
 			Bind_user: user,
 		}
 		log.Println("grp_tpl =", grp_tpl)
@@ -928,7 +985,7 @@ func templateCreate(nodes map[string]interface{}) {
  */
 func templateDelete(nodes map[string]interface{}) {
 	log.Println("func templateDelete()")
-	params := nodes["params"].([]interface {})
+	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -973,20 +1030,37 @@ func templateDelete(nodes map[string]interface{}) {
  * @called by:       func templateUpdate(nodes map[string]interface{})
  */
 func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Tpl {
+	o := orm.NewOrm()
 	var template Tpl
-	templateName := ""
-	if val, ok := params["name"]; ok {
+
+	if val, ok := params["templateid"]; ok {
 		if val != nil {
-			templateName = val.(string)
+			templateId := val.(string)
+			templateIdInt, err := strconv.Atoi(templateId)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			err = o.QueryTable("tpl").Filter("id", templateIdInt).One(&template)
+			if err == orm.ErrMultiRows {
+				// Have multiple records
+				log.Println("returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				// No result
+			}
 		}
 	}
-	o := orm.NewOrm()
-	err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
-	if err == orm.ErrMultiRows {
-		// Have multiple records
-		log.Println("returned multiple rows")
-	} else if err == orm.ErrNoRows {
-		// No result
+
+	if val, ok := params["name"]; ok {
+		if val != nil {
+			templateName := val.(string)
+			err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
+			if err == orm.ErrMultiRows {
+				// Have multiple records
+				log.Println("returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				// No result
+			}
+		}
 	}
 	return template
 }
@@ -1004,30 +1078,23 @@ func checkTemplateExist(params map[string]interface{}, result map[string]interfa
  * @last modified:   01/19/2016
  * @called by:       func templateUpdate(nodes map[string]interface{})
  */
-func bindTemplateToGroup(templateId int, params map[string]interface{}, result map[string]interface{}) {
-	if _, ok := params["groups"]; ok {
-		o := orm.NewOrm()
-		var grp_tpl Grp_tpl
-		groups := params["groups"].([]interface{})
-		for _, group := range groups {
-			groupId := group.(map[string]interface{})["groupid"].(string)
-			grp_id, err := strconv.Atoi(groupId)
+func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string]interface{}) {
+	o := orm.NewOrm()
+	var grp_tpl Grp_tpl
+	for _, groupId := range groupIds {
+		for _, templateId := range templateIds {
 			sqlcmd := "SELECT * FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
-			err = o.Raw(sqlcmd, grp_id, templateId).QueryRow(&grp_tpl)
+			err := o.Raw(sqlcmd, groupId, templateId).QueryRow(&grp_tpl)
 			if err == orm.ErrNoRows {
 				grp_tpl := Grp_tpl{
-					Grp_id: grp_id,
-					Tpl_id: templateId,
+					Grp_id:    groupId,
+					Tpl_id:    templateId,
 					Bind_user: "zabbix",
 				}
 				log.Println("grp_tpl =", grp_tpl)
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
 					setError(err.Error(), result)
-				} else {
-					templateid := strconv.Itoa(templateId)
-					templateids := [1]string{string(templateid)}
-					result["templateids"] = templateids
 				}
 			} else if err != nil {
 				setError(err.Error(), result)
@@ -1036,6 +1103,17 @@ func bindTemplateToGroup(templateId int, params map[string]interface{}, result m
 			}
 		}
 	}
+}
+
+func unbindTemplateAndGroups(templateId string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	sql := "DELETE FROM grp_tpl WHERE tpl_id = ?"
+	res, err := o.Raw(sql, templateId).Exec()
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	num, _ := res.RowsAffected()
+	log.Println("mysql row affected nums =", num)
 }
 
 /**
@@ -1056,7 +1134,24 @@ func templateUpdate(nodes map[string]interface{}) {
 	result["error"] = errors
 	template := checkTemplateExist(params, result)
 	if template.Id > 0 {
-		bindTemplateToGroup(template.Id, params, result)
+		groupIds := []int{}
+		templateIds := []int{}
+		groups := params["groups"].([]interface{})
+		for _, group := range groups {
+			groupId := group.(map[string]interface{})["groupid"].(string)
+			groupIdInt, err := strconv.Atoi(groupId)
+			log.Println("groupIdInt =", groupIdInt)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			groupIds = append(groupIds, groupIdInt)
+		}
+		templateIds = append(templateIds, template.Id)
+		templateid := strconv.Itoa(template.Id)
+		unbindTemplateAndGroups(templateid, result)
+		bindTemplatesAndGroups(groupIds, templateIds, result)
+		templateids := [1]string{string(templateid)}
+		result["templateids"] = templateids
 	} else {
 		log.Println("template not existed")
 	}
@@ -1131,18 +1226,18 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	zabbix_level := arr[0]
 	summary := "[OWL] " + metric + "_" + step + "_" + zabbix_level
 
-	args := map[string]interface{} {
-		"summary": summary,
-		"zabbix_status": zabbix_status,		// "PROBLEM",
-		"zabbix_level": "Information",		// "Information" or "High"
-		"trigger_id": trigger_id,
-		"host_ip": "",
-		"hostname": hostname,
-		"event_id": tpl_id,
+	args := map[string]interface{}{
+		"summary":       summary,
+		"zabbix_status": zabbix_status, // "PROBLEM",
+		"zabbix_level":  "Information", // "Information" or "High"
+		"trigger_id":    trigger_id,
+		"host_ip":       "",
+		"hostname":      hostname,
+		"event_id":      tpl_id,
 		"template_name": "Template Server Basic Monitor",
-		"datetime": datetime,
-		"fcname": fcname,
-		"fctoken": fctoken,
+		"datetime":      datetime,
+		"fcname":        fcname,
+		"fctoken":       fctoken,
 	}
 
 	log.Println("args =", args)
@@ -1167,7 +1262,7 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	log.Println("response Status =", resp.Status)	// 200 OK   TypeOf(resp.Status): string
+	log.Println("response Status =", resp.Status) // 200 OK   TypeOf(resp.Status): string
 	log.Println("response Headers =", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
 	log.Println("response Body =", string(body))
