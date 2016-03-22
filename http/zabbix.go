@@ -590,7 +590,7 @@ func hostGet(nodes map[string]interface{}) {
 			} else if host.Id > 0 {
 				hostId = strconv.Itoa(host.Id)
 				groups = getGroups(hostId)
-				countOfRows += 1
+				countOfRows++
 			}
 			item["hostid"] = hostId
 			item["hostname"] = hostName
@@ -818,7 +818,7 @@ func hostgroupGet(nodes map[string]interface{}) {
 				log.Println("host group not found")
 			} else if grp.Id > 0 {
 				groupId = strconv.Itoa(grp.Id)
-				countOfRows += 1
+				countOfRows++
 			}
 			item["groupid"] = groupId
 			item["groupname"] = groupName
