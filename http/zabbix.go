@@ -824,27 +824,27 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	hostgroupId, err := strconv.Atoi(params["groupid"].(string))
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	o := orm.NewOrm()
-	if _, ok := params["name"]; ok {
-		hostgroupName := params["name"].(string)
-		log.Println("hostgroupName =", hostgroupName)
 
-		if hostgroupName != "" {
+	if _, ok := params["groupid"]; ok {
+		hostgroupId, err := strconv.Atoi(params["groupid"].(string))
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			o := orm.NewOrm()
 			grp := Grp{Id: hostgroupId}
 			err := o.Read(&grp)
 			if err != nil {
 				setError(err.Error(), result)
-			} else {
-				grp.Grp_name = hostgroupName
-				num, err := o.Update(&grp)
-				if err != nil {
-					setError(err.Error(), result)
-				} else {
-					if num > 0 {
+			}
+
+			if _, ok := params["name"]; ok {
+				hostgroupName := params["name"].(string)
+				if hostgroupName != "" {
+					grp.Grp_name = hostgroupName
+					num, err := o.Update(&grp)
+					if err != nil {
+						setError(err.Error(), result)
+					} else if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
 						result["groupids"] = groupids
 						log.Println("update groupid =", hostgroupId)
@@ -852,7 +852,27 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					}
 				}
 			}
+
+			if _, ok := params["templates"]; ok {
+				groupIds := []int{}
+				templateIds := []int{}
+				groupIds = append(groupIds, hostgroupId)
+				templates := params["templates"].([]interface{})
+				for _, template := range templates {
+					templateId := template.(map[string]interface{})["templateid"].(string)
+					templateIdInt, err := strconv.Atoi(templateId)
+					if err != nil {
+						setError(err.Error(), result)
+					}
+					templateIds = append(templateIds, templateIdInt)
+				}
+				bindTemplatesAndGroups(groupIds, templateIds, result)
+				groupids := [1]string{strconv.Itoa(hostgroupId)}
+				result["groupids"] = groupids
+			}
 		}
+	} else {
+		setError("params['groupid'] must not be empty", result)
 	}
 	nodes["result"] = result
 }
