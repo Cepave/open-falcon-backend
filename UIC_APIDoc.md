@@ -4,7 +4,7 @@
   * params:
     * `name` string [useraccount]
     * `password` string
-    * `repeat_password` string
+    * `repeatPassword` string
     * `email` string
   * response:
     * ok
