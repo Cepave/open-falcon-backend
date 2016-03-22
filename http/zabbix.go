@@ -1039,6 +1039,17 @@ func bindTemplateToGroup(templateId int, params map[string]interface{}, result m
 	}
 }
 
+func unbindTemplateAndGroups(templateId string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	sql := "DELETE FROM grp_tpl WHERE tpl_id = ?"
+	res, err := o.Raw(sql, templateId).Exec()
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	num, _ := res.RowsAffected()
+	log.Println("mysql row affected nums =", num)
+}
+
 /**
  * @function name:   func templateUpdate(nodes map[string]interface{})
  * @description:     This function updates template data.
