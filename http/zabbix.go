@@ -824,27 +824,27 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	hostgroupId, err := strconv.Atoi(params["groupid"].(string))
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	o := orm.NewOrm()
-	if _, ok := params["name"]; ok {
-		hostgroupName := params["name"].(string)
-		log.Println("hostgroupName =", hostgroupName)
 
-		if hostgroupName != "" {
+	if _, ok := params["groupid"]; ok {
+		hostgroupId, err := strconv.Atoi(params["groupid"].(string))
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			o := orm.NewOrm()
 			grp := Grp{Id: hostgroupId}
 			err := o.Read(&grp)
 			if err != nil {
 				setError(err.Error(), result)
-			} else {
-				grp.Grp_name = hostgroupName
-				num, err := o.Update(&grp)
-				if err != nil {
-					setError(err.Error(), result)
-				} else {
-					if num > 0 {
+			}
+
+			if _, ok := params["name"]; ok {
+				hostgroupName := params["name"].(string)
+				if hostgroupName != "" {
+					grp.Grp_name = hostgroupName
+					num, err := o.Update(&grp)
+					if err != nil {
+						setError(err.Error(), result)
+					} else if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
 						result["groupids"] = groupids
 						log.Println("update groupid =", hostgroupId)
@@ -852,7 +852,27 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					}
 				}
 			}
+
+			if _, ok := params["templates"]; ok {
+				groupIds := []int{}
+				templateIds := []int{}
+				groupIds = append(groupIds, hostgroupId)
+				templates := params["templates"].([]interface{})
+				for _, template := range templates {
+					templateId := template.(map[string]interface{})["templateid"].(string)
+					templateIdInt, err := strconv.Atoi(templateId)
+					if err != nil {
+						setError(err.Error(), result)
+					}
+					templateIds = append(templateIds, templateIdInt)
+				}
+				bindTemplatesAndGroups(groupIds, templateIds, result)
+				groupids := [1]string{strconv.Itoa(hostgroupId)}
+				result["groupids"] = groupids
+			}
 		}
+	} else {
+		setError("params['groupid'] must not be empty", result)
 	}
 	nodes["result"] = result
 }
@@ -974,20 +994,37 @@ func templateDelete(nodes map[string]interface{}) {
  * @called by:       func templateUpdate(nodes map[string]interface{})
  */
 func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Tpl {
+	o := orm.NewOrm()
 	var template Tpl
-	templateName := ""
-	if val, ok := params["name"]; ok {
+
+	if val, ok := params["templateid"]; ok {
 		if val != nil {
-			templateName = val.(string)
+			templateId := val.(string)
+			templateIdInt, err := strconv.Atoi(templateId)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			err = o.QueryTable("tpl").Filter("id", templateIdInt).One(&template)
+			if err == orm.ErrMultiRows {
+				// Have multiple records
+				log.Println("returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				// No result
+			}
 		}
 	}
-	o := orm.NewOrm()
-	err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
-	if err == orm.ErrMultiRows {
-		// Have multiple records
-		log.Println("returned multiple rows")
-	} else if err == orm.ErrNoRows {
-		// No result
+
+	if val, ok := params["name"]; ok {
+		if val != nil {
+			templateName := val.(string)
+			err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
+			if err == orm.ErrMultiRows {
+				// Have multiple records
+				log.Println("returned multiple rows")
+			} else if err == orm.ErrNoRows {
+				// No result
+			}
+		}
 	}
 	return template
 }
@@ -1005,19 +1042,16 @@ func checkTemplateExist(params map[string]interface{}, result map[string]interfa
  * @last modified:   01/19/2016
  * @called by:       func templateUpdate(nodes map[string]interface{})
  */
-func bindTemplateToGroup(templateId int, params map[string]interface{}, result map[string]interface{}) {
-	if _, ok := params["groups"]; ok {
-		o := orm.NewOrm()
-		var grp_tpl Grp_tpl
-		groups := params["groups"].([]interface{})
-		for _, group := range groups {
-			groupId := group.(map[string]interface{})["groupid"].(string)
-			grp_id, err := strconv.Atoi(groupId)
+func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string]interface{}) {
+	o := orm.NewOrm()
+	var grp_tpl Grp_tpl
+	for _, groupId := range groupIds {
+		for _, templateId := range templateIds {
 			sqlcmd := "SELECT * FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
-			err = o.Raw(sqlcmd, grp_id, templateId).QueryRow(&grp_tpl)
+			err := o.Raw(sqlcmd, groupId, templateId).QueryRow(&grp_tpl)
 			if err == orm.ErrNoRows {
 				grp_tpl := Grp_tpl{
-					Grp_id: grp_id,
+					Grp_id: groupId,
 					Tpl_id: templateId,
 					Bind_user: "zabbix",
 				}
@@ -1025,10 +1059,6 @@ func bindTemplateToGroup(templateId int, params map[string]interface{}, result m
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
 					setError(err.Error(), result)
-				} else {
-					templateid := strconv.Itoa(templateId)
-					templateids := [1]string{string(templateid)}
-					result["templateids"] = templateids
 				}
 			} else if err != nil {
 				setError(err.Error(), result)
@@ -1037,6 +1067,17 @@ func bindTemplateToGroup(templateId int, params map[string]interface{}, result m
 			}
 		}
 	}
+}
+
+func unbindTemplateAndGroups(templateId string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	sql := "DELETE FROM grp_tpl WHERE tpl_id = ?"
+	res, err := o.Raw(sql, templateId).Exec()
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	num, _ := res.RowsAffected()
+	log.Println("mysql row affected nums =", num)
 }
 
 /**
@@ -1057,7 +1098,24 @@ func templateUpdate(nodes map[string]interface{}) {
 	result["error"] = errors
 	template := checkTemplateExist(params, result)
 	if template.Id > 0 {
-		bindTemplateToGroup(template.Id, params, result)
+		groupIds := []int{}
+		templateIds := []int{}
+		groups := params["groups"].([]interface{})
+		for _, group := range groups {
+			groupId := group.(map[string]interface{})["groupid"].(string)
+			groupIdInt, err := strconv.Atoi(groupId)
+			log.Println("groupIdInt =", groupIdInt)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			groupIds = append(groupIds, groupIdInt)
+		}
+		templateIds = append(templateIds, template.Id)
+		templateid := strconv.Itoa(template.Id)
+		unbindTemplateAndGroups(templateid, result)
+		bindTemplatesAndGroups(groupIds, templateIds, result)
+		templateids := [1]string{string(templateid)}
+		result["templateids"] = templateids
 	} else {
 		log.Println("template not existed")
 	}
