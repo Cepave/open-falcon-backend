@@ -5,9 +5,9 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/Cepave/query/g"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
-	"github.com/Cepave/query/g"
 	"io"
 	"io/ioutil"
 	"log"
@@ -218,7 +218,7 @@ func bindGroup(hostId int, params map[string]interface{}, args map[string]string
 			if err == orm.ErrNoRows {
 				// No result
 				grp_host := Grp_host{
-					Grp_id: grp_id,
+					Grp_id:  grp_id,
 					Host_id: int(hostId),
 				}
 				log.Println("grp_host =", grp_host)
@@ -265,8 +265,8 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 			err = o.Raw(sqlcmd, grp_id, tpl_id).QueryRow(&grp_tpl)
 			if err == orm.ErrNoRows {
 				grp_tpl := Grp_tpl{
-					Grp_id: grp_id,
-					Tpl_id: tpl_id,
+					Grp_id:    grp_id,
+					Tpl_id:    tpl_id,
 					Bind_user: "zabbix",
 				}
 				log.Println("grp_tpl =", grp_tpl)
@@ -299,19 +299,19 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 func checkInputFormat(params map[string]interface{}, result map[string]interface{}) bool {
 	valid := true
 	if val, ok := params["interfaces"]; ok {
-		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
 			setError("interfaces shall be an array of objects [{}]", result)
 			valid = false
 		}
 	}
 	if val, ok := params["groups"]; ok {
-		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
 			setError("groups shall be an array of objects [{}]", result)
 			valid = false
 		}
 	}
 	if val, ok := params["templates"]; ok {
-		if reflect.TypeOf(val) != reflect.TypeOf([]interface {}{}) {
+		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
 			setError("templates shall be an array of objects [{}]", result)
 			valid = false
 		}
@@ -354,8 +354,8 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 				}
 			}
 			host := Host{
-				Hostname: hostName,
-				Ip: ip,
+				Hostname:  hostName,
+				Ip:        ip,
 				Update_at: getNow(),
 			}
 			log.Println("host =", host)
@@ -396,9 +396,9 @@ func hostCreate(nodes map[string]interface{}) {
 
 	host := checkHostExist(params, result)
 	if host.Id > 0 {
-		setError("host name existed: " + host.Hostname, result)
+		setError("host name existed: "+host.Hostname, result)
 	} else {
-		args := map[string]string {}
+		args := map[string]string{}
 		addHost(params, args, result)
 		if _, ok := params["inventory"]; ok {
 			inventory := params["inventory"].(map[string]interface{})
@@ -477,7 +477,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostDelete(nodes map[string]interface{}) {
-	params := nodes["params"].([]interface {})
+	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -514,7 +514,7 @@ func getGroups(hostId string) []interface{} {
 	o.Raw("SELECT grp_id FROM falcon_portal.grp_host WHERE host_id=?", hostId).QueryRows(&grp_ids)
 	for _, grp_id := range grp_ids {
 		groupId := strconv.Itoa(grp_id)
-		group := map[string]string {
+		group := map[string]string{
 			"groupid": groupId,
 		}
 		groups = append(groups, group)
@@ -621,7 +621,7 @@ func hostUpdate(nodes map[string]interface{}) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	args := map[string]string {}
+	args := map[string]string{}
 	host := checkHostExist(params, result)
 	if host.Id > 0 {
 		log.Println("host existed")
@@ -672,9 +672,9 @@ func hostgroupCreate(nodes map[string]interface{}) {
 
 	o := orm.NewOrm()
 	grp := Grp{
-		Grp_name: hostgroupName,
+		Grp_name:    hostgroupName,
 		Create_user: user,
-		Create_at: now,
+		Create_at:   now,
 	}
 	log.Println("grp =", grp)
 	errors := []string{}
@@ -704,7 +704,7 @@ func hostgroupCreate(nodes map[string]interface{}) {
  */
 func hostgroupDelete(nodes map[string]interface{}) {
 	log.Println("func hostgroupDelete()")
-	params := nodes["params"].([]interface {})
+	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -924,9 +924,9 @@ func templateCreate(nodes map[string]interface{}) {
 
 	o := orm.NewOrm()
 	tpl := Tpl{
-		Tpl_name: templateName,
+		Tpl_name:    templateName,
 		Create_user: user,
-		Create_at: now,
+		Create_at:   now,
 	}
 	log.Println("tpl =", tpl)
 
@@ -946,8 +946,8 @@ func templateCreate(nodes map[string]interface{}) {
 			setError(err.Error(), result)
 		}
 		grp_tpl := Grp_tpl{
-			Grp_id: groupId,
-			Tpl_id: int(id),
+			Grp_id:    groupId,
+			Tpl_id:    int(id),
 			Bind_user: user,
 		}
 		log.Println("grp_tpl =", grp_tpl)
@@ -973,7 +973,7 @@ func templateCreate(nodes map[string]interface{}) {
  */
 func templateDelete(nodes map[string]interface{}) {
 	log.Println("func templateDelete()")
-	params := nodes["params"].([]interface {})
+	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -1075,8 +1075,8 @@ func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string
 			err := o.Raw(sqlcmd, groupId, templateId).QueryRow(&grp_tpl)
 			if err == orm.ErrNoRows {
 				grp_tpl := Grp_tpl{
-					Grp_id: groupId,
-					Tpl_id: templateId,
+					Grp_id:    groupId,
+					Tpl_id:    templateId,
 					Bind_user: "zabbix",
 				}
 				log.Println("grp_tpl =", grp_tpl)
@@ -1214,18 +1214,18 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	zabbix_level := arr[0]
 	summary := "[OWL] " + metric + "_" + step + "_" + zabbix_level
 
-	args := map[string]interface{} {
-		"summary": summary,
-		"zabbix_status": zabbix_status,		// "PROBLEM",
-		"zabbix_level": "Information",		// "Information" or "High"
-		"trigger_id": trigger_id,
-		"host_ip": "",
-		"hostname": hostname,
-		"event_id": tpl_id,
+	args := map[string]interface{}{
+		"summary":       summary,
+		"zabbix_status": zabbix_status, // "PROBLEM",
+		"zabbix_level":  "Information", // "Information" or "High"
+		"trigger_id":    trigger_id,
+		"host_ip":       "",
+		"hostname":      hostname,
+		"event_id":      tpl_id,
 		"template_name": "Template Server Basic Monitor",
-		"datetime": datetime,
-		"fcname": fcname,
-		"fctoken": fctoken,
+		"datetime":      datetime,
+		"fcname":        fcname,
+		"fctoken":       fctoken,
 	}
 
 	log.Println("args =", args)
@@ -1250,7 +1250,7 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	log.Println("response Status =", resp.Status)	// 200 OK   TypeOf(resp.Status): string
+	log.Println("response Status =", resp.Status) // 200 OK   TypeOf(resp.Status): string
 	log.Println("response Headers =", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
 	log.Println("response Body =", string(body))
