@@ -636,8 +636,9 @@ func hostUpdate(nodes map[string]interface{}) {
 			} else {
 				log.Println("update hostId =", hostId)
 				log.Println("mysql row affected nums =", num)
-				bindGroup(host.Id, params, args, result)
 				hostid := strconv.Itoa(host.Id)
+				unbindGroup(hostid, result)
+				bindGroup(host.Id, params, args, result)
 				hostids := [1]string{string(hostid)}
 				result["hostids"] = hostids
 				bindTemplate(params, args, result)
