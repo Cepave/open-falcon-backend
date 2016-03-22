@@ -1005,19 +1005,16 @@ func checkTemplateExist(params map[string]interface{}, result map[string]interfa
  * @last modified:   01/19/2016
  * @called by:       func templateUpdate(nodes map[string]interface{})
  */
-func bindTemplateToGroup(templateId int, params map[string]interface{}, result map[string]interface{}) {
-	if _, ok := params["groups"]; ok {
-		o := orm.NewOrm()
-		var grp_tpl Grp_tpl
-		groups := params["groups"].([]interface{})
-		for _, group := range groups {
-			groupId := group.(map[string]interface{})["groupid"].(string)
-			grp_id, err := strconv.Atoi(groupId)
+func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string]interface{}) {
+	o := orm.NewOrm()
+	var grp_tpl Grp_tpl
+	for _, groupId := range groupIds {
+		for _, templateId := range templateIds {
 			sqlcmd := "SELECT * FROM falcon_portal.grp_tpl WHERE grp_id=? AND tpl_id=?"
-			err = o.Raw(sqlcmd, grp_id, templateId).QueryRow(&grp_tpl)
+			err := o.Raw(sqlcmd, groupId, templateId).QueryRow(&grp_tpl)
 			if err == orm.ErrNoRows {
 				grp_tpl := Grp_tpl{
-					Grp_id: grp_id,
+					Grp_id: groupId,
 					Tpl_id: templateId,
 					Bind_user: "zabbix",
 				}
@@ -1025,10 +1022,6 @@ func bindTemplateToGroup(templateId int, params map[string]interface{}, result m
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
 					setError(err.Error(), result)
-				} else {
-					templateid := strconv.Itoa(templateId)
-					templateids := [1]string{string(templateid)}
-					result["templateids"] = templateids
 				}
 			} else if err != nil {
 				setError(err.Error(), result)
