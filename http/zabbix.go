@@ -1061,7 +1061,24 @@ func templateUpdate(nodes map[string]interface{}) {
 	result["error"] = errors
 	template := checkTemplateExist(params, result)
 	if template.Id > 0 {
-		bindTemplateToGroup(template.Id, params, result)
+		groupIds := []int{}
+		templateIds := []int{}
+		groups := params["groups"].([]interface{})
+		for _, group := range groups {
+			groupId := group.(map[string]interface{})["groupid"].(string)
+			groupIdInt, err := strconv.Atoi(groupId)
+			log.Println("groupIdInt =", groupIdInt)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			groupIds = append(groupIds, groupIdInt)
+		}
+		templateIds = append(templateIds, template.Id)
+		templateid := strconv.Itoa(template.Id)
+		unbindTemplateAndGroups(templateid, result)
+		bindTemplatesAndGroups(groupIds, templateIds, result)
+		templateids := [1]string{string(templateid)}
+		result["templateids"] = templateids
 	} else {
 		log.Println("template not existed")
 	}
