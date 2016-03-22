@@ -85,19 +85,18 @@ func rrdQuery(in *pb.QueryInput) (resp []*cmodel.GraphQueryResponse) {
 
 func (s *server) Query(ctx context.Context, in *pb.QueryInput) (*pb.QueryReply, error) {
 	resTmp := rrdQuery(in)
-	if len(resTmp) == 1 {
-		result := resTmp[0]
+
+	// When Values is empty will generate null in jsonMarshal
+	// This will terms "null" into "[]"
+	for idx, result := range resTmp {
 		if result.Values == nil {
 			result.Values = []*cmodel.RRDData{}
 		}
-		//genreate json string and send back to client
-		res, _ := json.Marshal(result)
-		return &pb.QueryReply{Result: string(res)}, nil
-	} else {
-		//genreate json string and send back to client
-		res, _ := json.Marshal(resTmp)
-		return &pb.QueryReply{Result: string(res)}, nil
+		resTmp[idx] = result
 	}
+
+	res, _ := json.Marshal(resTmp)
+	return &pb.QueryReply{Result: string(res)}, nil
 }
 
 func Start() {
