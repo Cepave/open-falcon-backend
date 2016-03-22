@@ -790,23 +790,26 @@ func hostgroupGet(nodes map[string]interface{}) {
 	}
 	groupId := ""
 	o := orm.NewOrm()
+	countOfRows := 0
 	if queryAll {
 		var grps []*Grp
-		_, err := o.QueryTable("grp").All(&grps)
+		num, err := o.QueryTable("grp").All(&grps)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
+			countOfRows = int(num)
 			for _, grp := range grps {
-				item := map[string]string {}
+				item := map[string]interface{}{}
 				item["groupid"] = strconv.Itoa(grp.Id)
 				item["groupname"] = grp.Grp_name
+				item["templateids"] = getTemplateIdsByGroupId(grp.Id, result)
 				items = append(items, item)
 			}
 		}
 	} else {
 		var grp Grp
 		for _, groupName := range groupNames {
-			item := map[string]string {}
+			item := map[string]interface{}{}
 			groupId = ""
 			err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
 			if err == orm.ErrMultiRows {
@@ -815,14 +818,16 @@ func hostgroupGet(nodes map[string]interface{}) {
 				log.Println("host group not found")
 			} else if grp.Id > 0 {
 				groupId = strconv.Itoa(grp.Id)
+				countOfRows += 1
 			}
 			item["groupid"] = groupId
 			item["groupname"] = groupName
+			item["templateids"] = getTemplateIdsByGroupId(grp.Id, result)
 			items = append(items, item)
 		}
 	}
-	log.Println("result =", result)
 	result["items"] = items
+	result["count"] = countOfRows
 	nodes["result"] = result
 }
 
