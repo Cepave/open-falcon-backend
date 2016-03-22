@@ -106,7 +106,7 @@ func (this *AuthApiController) Register() {
 	name := strings.TrimSpace(this.GetString("name", ""))
 	email := strings.TrimSpace(this.GetString("email", ""))
 	password := strings.TrimSpace(this.GetString("password", ""))
-	repeatPassword := strings.TrimSpace(this.GetString("repeat_password", ""))
+	repeatPassword := strings.TrimSpace(this.GetString("repeatPassword", ""))
 
 	var lastID int64
 	var err error
