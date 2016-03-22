@@ -38,6 +38,11 @@ func GetEvent(startTime int64, endTime int64, priority int, status string) (resu
 	} else {
 		_, err = q.Raw("select * from event").QueryRows(&result)
 	}
+
+	if len(result) == 0 {
+		result = []Event{}
+	}
+
 	return
 }
 
