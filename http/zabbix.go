@@ -831,6 +831,17 @@ func hostgroupGet(nodes map[string]interface{}) {
 	nodes["result"] = result
 }
 
+func unbindGroupAndTemplates(groupId string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	sql := "DELETE FROM grp_tpl WHERE grp_id = ?"
+	res, err := o.Raw(sql, groupId).Exec()
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	num, _ := res.RowsAffected()
+	log.Println("mysql row affected nums =", num)
+}
+
 /**
  * @function name:   func hostgroupUpdate(nodes map[string]interface{})
  * @description:     This function updates hostgroup data.
