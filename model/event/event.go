@@ -2,11 +2,11 @@ package event
 
 import (
 	"fmt"
+	coommonModel "github.com/Cepave/common/model"
+	"github.com/Cepave/common/utils"
+	"github.com/astaxie/beego/orm"
 	"log"
 	"time"
-
-	coommonModel "github.com/Cepave/common/model"
-	"github.com/astaxie/beego/orm"
 )
 
 type Event struct {
@@ -59,7 +59,7 @@ func InsertEvent(eve *coommonModel.Event) {
 			sqltemplete,
 			eve.Id,
 			eve.Endpoint,
-			eve.Metric(),
+			counterGen(eve.Metric(), utils.SortedTags(eve.PushedTags)),
 			eve.Func(),
 			//cond
 			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
@@ -89,4 +89,12 @@ func InsertEvent(eve *coommonModel.Event) {
 		log.Printf("%v, %v", res, err)
 
 	}
+}
+
+func counterGen(metric string, tags string) (mycounter string) {
+	mycounter = metric
+	if tags != "" {
+		mycounter = fmt.Sprintf("%s/%s", metric, tags)
+	}
+	return
 }
