@@ -901,6 +901,7 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					}
 					templateIds = append(templateIds, templateIdInt)
 				}
+				unbindGroupAndTemplates(strconv.Itoa(hostgroupId), result)
 				bindTemplatesAndGroups(groupIds, templateIds, result)
 				groupids := [1]string{strconv.Itoa(hostgroupId)}
 				result["groupids"] = groupids
