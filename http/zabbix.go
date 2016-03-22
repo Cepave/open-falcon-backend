@@ -737,6 +737,25 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	nodes["result"] = result
 }
 
+func getTemplateIdsByGroupId(groupId int, result map[string]interface{}) []string {
+	templateIds := []string{}
+	o := orm.NewOrm()
+	var tpl_ids []int
+	sqlcmd := "SELECT DISTINCT tpl_id FROM falcon_portal.grp_tpl WHERE grp_id=?"
+	_, err := o.Raw(sqlcmd, groupId).QueryRows(&tpl_ids)
+	if err == orm.ErrNoRows {
+		log.Println("No templates for groupId:", groupId)
+	} else if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, tpl_id := range tpl_ids {
+			templateId := strconv.Itoa(tpl_id)
+			templateIds = append(templateIds, templateId)
+		}
+	}
+	return templateIds
+}
+
 /**
  * @function name:   func hostgroupGet(nodes map[string]interface{})
  * @description:     This function gets existed hostgroup data.
