@@ -460,7 +460,7 @@ func getTemplateStrategies(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func configApiRoutes() {
+func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
 	http.HandleFunc("/api/endpoints", dashboardEndpoints)
