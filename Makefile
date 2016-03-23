@@ -34,7 +34,7 @@ format:
 tools:
 	go get -u -v $(GOTOOLS)
 
-checkbin:
+checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
 	rm -rf open-falcon-v$(VERSION).tar.gz
 	tar -zcvf open-falcon-v$(VERSION).tar.gz ./bin ./config ./open-falcon ./cfg.json
