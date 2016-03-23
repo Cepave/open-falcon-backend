@@ -280,13 +280,13 @@ func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, vers
 		if alive > 0 {
 			if diff > 3600 {
 				status = "warm"
-				countOfWarn += 1
+				countOfWarn++
 			} else {
 				status = "normal"
-				countOfNormal += 1
+				countOfNormal++
 			}
 		} else {
-			countOfDead += 1
+			countOfDead++
 		}
 		item := map[string]interface{}{}
 		item["id"] = strconv.Itoa(key + 1)
