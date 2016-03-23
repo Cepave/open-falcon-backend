@@ -37,7 +37,7 @@ type Tag struct {
  * @called by:       func queryInfo(rw http.ResponseWriter, req *http.Request)
  *                   func queryHistory(rw http.ResponseWriter, req *http.Request)
  */
-func postByJson(rw http.ResponseWriter, req *http.Request, url string) {
+func postByJSON(rw http.ResponseWriter, req *http.Request, url string) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
 	s := buf.String()
@@ -73,7 +73,7 @@ func postByJson(rw http.ResponseWriter, req *http.Request, url string) {
  */
 func queryInfo(rw http.ResponseWriter, req *http.Request) {
 	url := g.Config().Api.Query + "/graph/info"
-	postByJson(rw, req, url)
+	postByJSON(rw, req, url)
 }
 
 /**
@@ -90,7 +90,7 @@ func queryInfo(rw http.ResponseWriter, req *http.Request) {
  */
 func queryHistory(rw http.ResponseWriter, req *http.Request) {
 	url := g.Config().Api.Query + "/graph/history"
-	postByJson(rw, req, url)
+	postByJSON(rw, req, url)
 }
 
 /**
