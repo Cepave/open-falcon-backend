@@ -3,10 +3,10 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/astaxie/beego/orm"
-	"github.com/bitly/go-simplejson"
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/g"
+	"github.com/astaxie/beego/orm"
+	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -19,8 +19,8 @@ type Tag struct {
 	StrategyId int
 	Name       string
 	Value      string
-	Create_at  string
-	Update_at  string
+	CreateAt   string
+	UpdateAt   string
 }
 
 /**
