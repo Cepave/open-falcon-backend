@@ -339,12 +339,12 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 
 	var nodes = make(map[string]interface{})
 	nodes, _ = json.Map()
-	strategyId := ""
+	strategyID := ""
 	tagName := ""
 	tagValue := ""
-	if value, ok := nodes["strategyId"]; ok {
-		strategyId = value.(string)
-		delete(nodes, "strategyId")
+	if value, ok := nodes["strategyID"]; ok {
+		strategyID = value.(string)
+		delete(nodes, "strategyID")
 	}
 	if value, ok := nodes["tagName"]; ok {
 		tagName = value.(string)
@@ -355,25 +355,25 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 		delete(nodes, "tagValue")
 	}
 
-	if len(strategyId) > 0 && len(tagName) > 0 && len(tagValue) > 0 {
-		strategyIdint, err := strconv.Atoi(strategyId)
+	if len(strategyID) > 0 && len(tagName) > 0 && len(tagValue) > 0 {
+		strategyIDint, err := strconv.Atoi(strategyID)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
 			o := orm.NewOrm()
 			var tag Tag
 			sqlcmd := "SELECT * FROM falcon_portal.tags WHERE strategy_id=?"
-			err = o.Raw(sqlcmd, strategyIdint).QueryRow(&tag)
+			err = o.Raw(sqlcmd, strategyIDint).QueryRow(&tag)
 			if err == orm.ErrNoRows {
 				log.Println("tag not found")
 				sql := "INSERT INTO tags(strategy_id, name, value, create_at) VALUES(?, ?, ?, ?)"
-				res, err := o.Raw(sql, strategyIdint, tagName, tagValue, getNow()).Exec()
+				res, err := o.Raw(sql, strategyIDint, tagName, tagValue, getNow()).Exec()
 				if err != nil {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
 					log.Println("mysql row affected nums =", num)
-					result["strategyId"] = strategyId
+					result["strategyID"] = strategyID
 					result["action"] = "create"
 				}
 			} else if err != nil {
@@ -381,13 +381,13 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 			} else {
 				log.Println("tag existed =", tag)
 				sql := "UPDATE tags SET name = ?, value = ? WHERE strategy_id = ?"
-				res, err := o.Raw(sql, tagName, tagValue, strategyIdint).Exec()
+				res, err := o.Raw(sql, tagName, tagValue, strategyIDint).Exec()
 				if err != nil {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
 					log.Println("mysql row affected nums =", num)
-					result["strategyId"] = strategyId
+					result["strategyID"] = strategyID
 					result["action"] = "update"
 				}
 			}
