@@ -399,27 +399,33 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getTemplateTags(rw http.ResponseWriter, req *http.Request) {
+func getTemplateStrategies(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	items := []interface{}{}
-	countOfTags := int64(0)
+	countOfStrategies := 0
 	arguments := strings.Split(req.URL.Path, "/")
-	if arguments[len(arguments)-1] == "tags" {
-		templateId, err := strconv.Atoi(arguments[len(arguments)-2])
+	if arguments[len(arguments)-1] == "strategies" {
+		templateID, err := strconv.Atoi(arguments[len(arguments)-2])
 		if err != nil {
 			setError(err.Error(), result)
 		}
 		o := orm.NewOrm()
-		var strategyIds []int64
-		_, err = o.Raw("SELECT id FROM falcon_portal.strategy WHERE tpl_id = ? ORDER BY id ASC", templateId).QueryRows(&strategyIds)
+		var strategyIDs []int64
+		num, err := o.Raw("SELECT id FROM falcon_portal.strategy WHERE tpl_id = ? ORDER BY id ASC", templateID).QueryRows(&strategyIDs)
 		if err != nil {
 			setError(err.Error(), result)
-		} else {
+		} else if num > 0 {
+			countOfStrategies = int(num)
+			var strategies = make(map[string]interface{})
 			sids := ""
-			for key, strategyId := range strategyIds {
-				sid := strconv.Itoa(int(strategyId))
+			for key, strategyID := range strategyIDs {
+				sid := strconv.Itoa(int(strategyID))
+				item := map[string]string{}
+				item["templateID"] = strconv.Itoa(templateID)
+				item["strategyID"] = sid
+				strategies[sid] = item
 				if key == 0 {
 					sids = sid
 				} else {
@@ -430,23 +436,25 @@ func getTemplateTags(rw http.ResponseWriter, req *http.Request) {
 			sqlcmd += sids
 			sqlcmd += ") ORDER BY strategy_id ASC"
 			var tags []*Tag
-			countOfTags, err = o.Raw(sqlcmd).QueryRows(&tags)
+			_, err = o.Raw(sqlcmd).QueryRows(&tags)
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
 				for _, tag := range tags {
-					item := map[string]string{}
-					item["templateId"] = strconv.Itoa(templateId)
-					item["strategyId"] = strconv.Itoa(int(tag.StrategyId))
-					item["tagName"] = tag.Name
-					item["tagValue"] = tag.Value
-					items = append(items, item)
+					strategyID := strconv.Itoa(int(tag.StrategyId))
+					strategy := strategies[strategyID].(map[string]string)
+					strategy["tagName"] = tag.Name
+					strategy["tagValue"] = tag.Value
+					strategies[strategyID] = strategy
 				}
+			}
+			for _, strategy := range strategies {
+				items = append(items, strategy)
 			}
 		}
 	}
 	result["items"] = items
-	result["count"] = countOfTags
+	result["count"] = countOfStrategies
 	var nodes = make(map[string]interface{})
 	nodes["result"] = result
 	setResponse(rw, nodes)
