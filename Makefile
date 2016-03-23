@@ -58,5 +58,6 @@ bin/falcon-task : $(shell find modules/task/ -name '*.go')
 bin/falcon-transfer : $(shell find modules/transfer/ -name '*.go')
 bin/falcon-fe: $(shell find modules/fe/ -name '*.go')
 	go build -o $@ github.com/Cepave/open-falcon/modules/$(@:bin/falcon-%=%)
-	cd bin; ln -s ../modules/fe fe
+	mkdir -p bin/fe
+	cp -r modules/fe/{control,cfg.example.json,conf,static,views,scripts} bin/fe/
 	cp bin/falcon-fe bin/fe/falcon-fe
