@@ -3,10 +3,10 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/astaxie/beego/orm"
-	"github.com/bitly/go-simplejson"
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/g"
+	"github.com/astaxie/beego/orm"
+	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -19,8 +19,8 @@ type Tag struct {
 	StrategyId int
 	Name       string
 	Value      string
-	Create_at  string
-	Update_at  string
+	CreateAt   string
+	UpdateAt   string
 }
 
 /**
@@ -37,7 +37,7 @@ type Tag struct {
  * @called by:       func queryInfo(rw http.ResponseWriter, req *http.Request)
  *                   func queryHistory(rw http.ResponseWriter, req *http.Request)
  */
-func postByJson(rw http.ResponseWriter, req *http.Request, url string) {
+func postByJSON(rw http.ResponseWriter, req *http.Request, url string) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
 	s := buf.String()
@@ -73,7 +73,7 @@ func postByJson(rw http.ResponseWriter, req *http.Request, url string) {
  */
 func queryInfo(rw http.ResponseWriter, req *http.Request) {
 	url := g.Config().Api.Query + "/graph/info"
-	postByJson(rw, req, url)
+	postByJSON(rw, req, url)
 }
 
 /**
@@ -90,7 +90,7 @@ func queryInfo(rw http.ResponseWriter, req *http.Request) {
  */
 func queryHistory(rw http.ResponseWriter, req *http.Request) {
 	url := g.Config().Api.Query + "/graph/history"
-	postByJson(rw, req, url)
+	postByJSON(rw, req, url)
 }
 
 /**
@@ -280,13 +280,13 @@ func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, vers
 		if alive > 0 {
 			if diff > 3600 {
 				status = "warm"
-				countOfWarn += 1
+				countOfWarn++
 			} else {
 				status = "normal"
-				countOfNormal += 1
+				countOfNormal++
 			}
 		} else {
-			countOfDead += 1
+			countOfDead++
 		}
 		item := map[string]interface{}{}
 		item["id"] = strconv.Itoa(key + 1)
@@ -339,12 +339,12 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 
 	var nodes = make(map[string]interface{})
 	nodes, _ = json.Map()
-	strategyId := ""
+	strategyID := ""
 	tagName := ""
 	tagValue := ""
-	if value, ok := nodes["strategyId"]; ok {
-		strategyId = value.(string)
-		delete(nodes, "strategyId")
+	if value, ok := nodes["strategyID"]; ok {
+		strategyID = value.(string)
+		delete(nodes, "strategyID")
 	}
 	if value, ok := nodes["tagName"]; ok {
 		tagName = value.(string)
@@ -355,25 +355,25 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 		delete(nodes, "tagValue")
 	}
 
-	if len(strategyId) > 0 && len(tagName) > 0 && len(tagValue) > 0 {
-		strategyIdint, err := strconv.Atoi(strategyId)
+	if len(strategyID) > 0 && len(tagName) > 0 && len(tagValue) > 0 {
+		strategyIDint, err := strconv.Atoi(strategyID)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
 			o := orm.NewOrm()
 			var tag Tag
 			sqlcmd := "SELECT * FROM falcon_portal.tags WHERE strategy_id=?"
-			err = o.Raw(sqlcmd, strategyIdint).QueryRow(&tag)
+			err = o.Raw(sqlcmd, strategyIDint).QueryRow(&tag)
 			if err == orm.ErrNoRows {
 				log.Println("tag not found")
 				sql := "INSERT INTO tags(strategy_id, name, value, create_at) VALUES(?, ?, ?, ?)"
-				res, err := o.Raw(sql, strategyIdint, tagName, tagValue, getNow()).Exec()
+				res, err := o.Raw(sql, strategyIDint, tagName, tagValue, getNow()).Exec()
 				if err != nil {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
 					log.Println("mysql row affected nums =", num)
-					result["strategyId"] = strategyId
+					result["strategyID"] = strategyID
 					result["action"] = "create"
 				}
 			} else if err != nil {
@@ -381,13 +381,13 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 			} else {
 				log.Println("tag existed =", tag)
 				sql := "UPDATE tags SET name = ?, value = ? WHERE strategy_id = ?"
-				res, err := o.Raw(sql, tagName, tagValue, strategyIdint).Exec()
+				res, err := o.Raw(sql, tagName, tagValue, strategyIDint).Exec()
 				if err != nil {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
 					log.Println("mysql row affected nums =", num)
-					result["strategyId"] = strategyId
+					result["strategyID"] = strategyID
 					result["action"] = "update"
 				}
 			}
@@ -399,27 +399,33 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getTemplateTags(rw http.ResponseWriter, req *http.Request) {
+func getTemplateStrategies(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	items := []interface{}{}
-	countOfTags := int64(0)
+	countOfStrategies := 0
 	arguments := strings.Split(req.URL.Path, "/")
-	if arguments[len(arguments)-1] == "tags" {
-		templateId, err := strconv.Atoi(arguments[len(arguments)-2])
+	if arguments[len(arguments)-1] == "strategies" {
+		templateID, err := strconv.Atoi(arguments[len(arguments)-2])
 		if err != nil {
 			setError(err.Error(), result)
 		}
 		o := orm.NewOrm()
-		var strategyIds []int64
-		_, err = o.Raw("SELECT id FROM falcon_portal.strategy WHERE tpl_id = ? ORDER BY id ASC", templateId).QueryRows(&strategyIds)
+		var strategyIDs []int64
+		num, err := o.Raw("SELECT id FROM falcon_portal.strategy WHERE tpl_id = ? ORDER BY id ASC", templateID).QueryRows(&strategyIDs)
 		if err != nil {
 			setError(err.Error(), result)
-		} else {
+		} else if num > 0 {
+			countOfStrategies = int(num)
+			var strategies = make(map[string]interface{})
 			sids := ""
-			for key, strategyId := range strategyIds {
-				sid := strconv.Itoa(int(strategyId))
+			for key, strategyID := range strategyIDs {
+				sid := strconv.Itoa(int(strategyID))
+				item := map[string]string{}
+				item["templateID"] = strconv.Itoa(templateID)
+				item["strategyID"] = sid
+				strategies[sid] = item
 				if key == 0 {
 					sids = sid
 				} else {
@@ -430,29 +436,31 @@ func getTemplateTags(rw http.ResponseWriter, req *http.Request) {
 			sqlcmd += sids
 			sqlcmd += ") ORDER BY strategy_id ASC"
 			var tags []*Tag
-			countOfTags, err = o.Raw(sqlcmd).QueryRows(&tags)
+			_, err = o.Raw(sqlcmd).QueryRows(&tags)
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
 				for _, tag := range tags {
-					item := map[string]string{}
-					item["templateId"] = strconv.Itoa(templateId)
-					item["strategyId"] = strconv.Itoa(int(tag.StrategyId))
-					item["tagName"] = tag.Name
-					item["tagValue"] = tag.Value
-					items = append(items, item)
+					strategyID := strconv.Itoa(int(tag.StrategyId))
+					strategy := strategies[strategyID].(map[string]string)
+					strategy["tagName"] = tag.Name
+					strategy["tagValue"] = tag.Value
+					strategies[strategyID] = strategy
 				}
+			}
+			for _, strategy := range strategies {
+				items = append(items, strategy)
 			}
 		}
 	}
 	result["items"] = items
-	result["count"] = countOfTags
+	result["count"] = countOfStrategies
 	var nodes = make(map[string]interface{})
 	nodes["result"] = result
 	setResponse(rw, nodes)
 }
 
-func configApiRoutes() {
+func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
 	http.HandleFunc("/api/endpoints", dashboardEndpoints)
@@ -460,5 +468,5 @@ func configApiRoutes() {
 	http.HandleFunc("/api/chart", dashboardChart)
 	http.HandleFunc("/api/alive", getAlive)
 	http.HandleFunc("/api/tags/update", setStrategyTags)
-	http.HandleFunc("/api/templates/", getTemplateTags)
+	http.HandleFunc("/api/templates/", getTemplateStrategies)
 }

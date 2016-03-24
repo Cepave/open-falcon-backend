@@ -44,7 +44,7 @@ func Start() {
 	configCommonRoutes()
 	configProcHttpRoutes()
 	configGraphRoutes()
-	configApiRoutes()
+	configAPIRoutes()
 	configGrafanaRoutes()
 	configZabbixRoutes()
 
