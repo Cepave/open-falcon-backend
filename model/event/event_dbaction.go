@@ -4,11 +4,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 )
 
-func GetEvent(startTime int64, endTime int64, priority int, status string) (result []Event, err error) {
+func GetEvent(startTime int64, endTime int64, priority int, status string, limit int) (result []Event, err error) {
+	config := g.Config()
+	if limit == 0 || limit > config.FalconPortal.Limit {
+		limit = config.FalconPortal.Limit
+	}
+
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	flag := false
@@ -34,7 +40,7 @@ func GetEvent(startTime int64, endTime int64, priority int, status string) (resu
 		}
 	}
 	if query_tmp != "" {
-		_, err = q.Raw(fmt.Sprintf("select * from event where %v", query_tmp)).QueryRows(&result)
+		_, err = q.Raw(fmt.Sprintf("select * from event where %v order by update_at DESC limit %d", query_tmp, limit)).QueryRows(&result)
 	} else {
 		_, err = q.Raw("select * from event").QueryRows(&result)
 	}

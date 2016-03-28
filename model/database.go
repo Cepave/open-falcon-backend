@@ -11,6 +11,7 @@ import (
 
 func InitDatabase() {
 	// set default database
+	// databases_name, sql_derver, db_addr, idle_time, mix_connection
 	config := g.Config()
 	orm.RegisterDataBase("default", "mysql", config.Uic.Addr, config.Uic.Idle, config.Uic.Max)
 	orm.RegisterDataBase("graph", "mysql", config.GraphDB.Addr, config.GraphDB.Idle, config.GraphDB.Max)
