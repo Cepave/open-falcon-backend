@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g commands -name '*.go')
 CMD = agent aggregator graph hbs judge nodata query sender task transfer fe
 BIN = bin/falcon-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer
