@@ -9,7 +9,16 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-func GetEvent(startTime int64, endTime int64, priority int, status string, limit int) (result []Event, err error) {
+func getUserRole(username string) bool {
+	user := uic.ReadUserByName(username)
+	if user.Role == 2 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func GetEvent(startTime int64, endTime int64, priority int, status string, limit int, username string) (result []Event, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.FalconPortal.Limit {
 		limit = config.FalconPortal.Limit
@@ -39,7 +48,10 @@ func GetEvent(startTime int64, endTime int64, priority int, status string, limit
 			query_tmp = fmt.Sprintf("%v status = '%s'", query_tmp, status)
 		}
 	}
-	if query_tmp != "" {
+	isadmin := getUserRole(username)
+	if query_tmp != "" && !isadmin {
+		_, err = q.Raw(fmt.Sprintf("SELECT event.* FROM `event` LEFT JOIN `tpl` on `tpl`.id = `event`.template_id WHERE create_user = '%s' AND %v order by update_at DESC limit %d", username, query_tmp, limit)).QueryRows(&result)
+	} else if isadmin {
 		_, err = q.Raw(fmt.Sprintf("select * from event where %v order by update_at DESC limit %d", query_tmp, limit)).QueryRows(&result)
 	} else {
 		_, err = q.Raw("select * from event").QueryRows(&result)
