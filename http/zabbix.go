@@ -1306,6 +1306,9 @@ func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
 			if val, ok = result["count"]; ok {
 				resp["count"] = val
 			}
+			if val, ok = result["anomalies"]; ok {
+				resp["anomalies"] = val
+			}
 		}
 	}
 	resp["time"] = getNow()
