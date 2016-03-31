@@ -21,7 +21,9 @@ func (this *PortalController) EventGet() {
 	prioprity, _ := this.GetInt("prioprity", -1)
 	status := this.GetString("status", "PROBLEM")
 
-	events, err := event.GetEvent(startTime, endTime, prioprity, status)
+	username := this.GetString("cName", "")
+	limitNum, _ := this.GetInt("limit", 0)
+	events, err := event.GetEvent(startTime, endTime, prioprity, status, limitNum, username)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return

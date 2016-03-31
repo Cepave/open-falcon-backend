@@ -3,14 +3,18 @@ package dashboard
 import (
 	"errors"
 	"fmt"
+	"github.com/Cepave/fe/g"
+	"github.com/astaxie/beego/orm"
 	"regexp"
 	"strings"
-
-	"github.com/astaxie/beego/orm"
 )
 
-func QueryHostGroupByNameRegx(queryStr string) (hostgroup []HostGroup, err error) {
-	hostgroup, err = getHostGroupRegex(queryStr)
+func QueryHostGroupByNameRegx(queryStr string, limit int) (hostgroup []HostGroup, err error) {
+	config := g.Config()
+	if limit == 0 || limit > config.GraphDB.LimitHostGroup {
+		limit = config.GraphDB.LimitHostGroup
+	}
+	hostgroup, err = getHostGroupRegex(queryStr, limit)
 	return
 }
 
@@ -44,9 +48,9 @@ func getOrmObj() (q orm.Ormer) {
 	return
 }
 
-func getHostGroupRegex(queryStr string) (hostgroup []HostGroup, err error) {
+func getHostGroupRegex(queryStr string, limit int) (hostgroup []HostGroup, err error) {
 	q := getOrmObj()
-	_, err = q.Raw("select * from `grp` where grp_name regexp ?", queryStr).QueryRows(&hostgroup)
+	_, err = q.Raw("select * from `grp` where grp_name regexp ? limit ?", queryStr, limit).QueryRows(&hostgroup)
 	return
 }
 

@@ -2,23 +2,27 @@ package dashboard
 
 import (
 	"fmt"
-	"regexp"
-
+	"github.com/Cepave/fe/g"
 	"github.com/astaxie/beego/orm"
+	"regexp"
 )
 
-func QueryEndpointidbyNames(endpoints []string) (enp []Endpoint, err error) {
+func QueryEndpointidbyNames(endpoints []string, limit int) (enp []Endpoint, err error) {
 	q := orm.NewOrm()
 	q.Using("graph")
 	q.QueryTable("endpoint")
 	qb, _ := orm.NewQueryBuilder("mysql")
-	qt := qb.Select("*").From("endpoint").Where("endpoint").In(endpoints...)
+	qt := qb.Select("*").From("endpoint").Where("endpoint").In(endpoints...).Limit(limit)
 	_, err = q.Raw(qt.String()).QueryRows(&enp)
 	return
 }
 
-func QueryCounterByEndpoints(endpoints []string) (counters []string, err error) {
-	enp, aerr := QueryEndpointidbyNames(endpoints)
+func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, err error) {
+	config := g.Config()
+	if limit == 0 || limit > config.GraphDB.Limit {
+		limit = config.GraphDB.Limit
+	}
+	enp, aerr := QueryEndpointidbyNames(endpoints, limit)
 	if aerr != nil {
 		err = aerr
 		return
@@ -30,8 +34,9 @@ func QueryCounterByEndpoints(endpoints []string) (counters []string, err error) 
 	for _, v := range enp {
 		endpoint_ids += fmt.Sprintf("%d,", v.Id)
 	}
+
 	pattn, _ := regexp.Compile("\\s*,\\s*$")
-	queryperfix := fmt.Sprintf("select distinct(counter) from endpoint_counter where endpoint_id IN(%s)", pattn.ReplaceAllString(endpoint_ids, ""))
+	queryperfix := fmt.Sprintf("select distinct(counter) from endpoint_counter where endpoint_id IN(%s) limit %d", pattn.ReplaceAllString(endpoint_ids, ""), limit)
 	var enpc []EndpointCounter
 	_, err = q.Raw(queryperfix).QueryRows(&enpc)
 	for _, v := range enpc {

@@ -36,14 +36,17 @@ type UicConfig struct {
 }
 
 type GraphDBConfig struct {
-	Addr string `json:"addr"`
-	Idle int    `json:"idle"`
-	Max  int    `json:"max"`
+	Addr           string `json:"addr"`
+	Idle           int    `json:"idle"`
+	Max            int    `json:"max"`
+	Limit          int    `json:"limit"`
+	LimitHostGroup int    `json:"limitHostGroup"`
 }
 type FalconPortalConfig struct {
-	Addr string `json:"addr"`
-	Idle int    `json:"idle"`
-	Max  int    `json:"max"`
+	Addr  string `json:"addr"`
+	Idle  int    `json:"idle"`
+	Max   int    `json:"max"`
+	Limit int    `json:"limit"`
 }
 
 type ShortcutConfig struct {

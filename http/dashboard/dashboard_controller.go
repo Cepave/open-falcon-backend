@@ -25,7 +25,8 @@ func (this *DashBoardController) EndpRegxqury() {
 		this.ResposeError(baseResp, "query string is empty, please it")
 		return
 	}
-	enp, err := dashboard.QueryEndpintByNameRegx(queryStr)
+	limitNum, _ := this.GetInt("limit", 0)
+	enp, err := dashboard.QueryEndpintByNameRegx(queryStr, limitNum)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
@@ -55,7 +56,8 @@ func (this *DashBoardController) CounterQuery() {
 	}
 	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
 	endpointsArr := strings.Split(rexstr.ReplaceAllString(endpoints, ""), ",")
-	counters, err := dashboard.QueryCounterByEndpoints(endpointsArr)
+	limitNum, _ := this.GetInt("limit", 0)
+	counters, err := dashboard.QueryCounterByEndpoints(endpointsArr, limitNum)
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
@@ -81,8 +83,8 @@ func (this *DashBoardController) HostGroupQuery() {
 		this.ResposeError(baseResp, "query string is empty, please it")
 		return
 	}
-
-	hostgroupList, err := dashboard.QueryHostGroupByNameRegx(queryStr)
+	limitNum, _ := this.GetInt("limit", 0)
+	hostgroupList, err := dashboard.QueryHostGroupByNameRegx(queryStr, limitNum)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
@@ -150,7 +152,8 @@ func (this *DashBoardController) CounterQueryByHostGroup() {
 		for _, v := range hosts {
 			endpoints = append(endpoints, fmt.Sprintf("\"%v\"", v.Hostname))
 		}
-		counters, err := dashboard.QueryCounterByEndpoints(endpoints)
+		limitNum, _ := this.GetInt("limit", 0)
+		counters, err := dashboard.QueryCounterByEndpoints(endpoints, limitNum)
 		if err != nil {
 			this.ResposeError(baseResp, err.Error())
 			return
