@@ -955,4 +955,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/alive", getAlive)
 	http.HandleFunc("/api/tags/update", setStrategyTags)
 	http.HandleFunc("/api/templates/", getTemplateStrategies)
+	http.HandleFunc("/api/alive/platforms", getPlatforms)
 }
