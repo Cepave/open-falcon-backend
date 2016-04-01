@@ -558,6 +558,44 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 	return data
 }
 
+func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) {
+	name := ""
+	version := ""
+	status := ""
+	alive := 0
+	var diff int64
+	var timestamp int64
+	items := map[string]interface{}{}
+	for key, row := range data {
+		name = row.Endpoint
+		alive = 0
+		diff = 0
+		timestamp = 0
+		status = "error"
+		if name == "" {
+			name = hostnamesExisted[key]
+		} else {
+			alive = int(row.Value.Value)
+			timestamp = row.Value.Timestamp
+			now := time.Now().Unix()
+			diff = now - timestamp
+		}
+		version = versions[name]
+		if alive > 0 {
+			if diff > 3600 {
+				status = "warm"
+			} else {
+				status = "normal"
+			}
+		}
+		item := map[string]interface{}{}
+		item["version"] = version
+		item["status"] = status
+		items[name] = item
+	}
+	result["items"] = items
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
