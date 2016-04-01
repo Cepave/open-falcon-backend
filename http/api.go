@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -663,6 +664,100 @@ func getAnomalies(errorHosts []interface{}, result map[string]interface{}) map[s
 		}
 	}
 	return anomalies
+}
+
+func completeAgentAliveData(groups map[string]interface{}, groupNames []string, result map[string]interface{}) {
+	errorHosts := []interface{}{}
+	platforms := []interface{}{}
+	count := map[string]int{}
+	countOfNormalSum := 0
+	countOfWarnSum := 0
+	countOfErrorSum := 0
+	countOfMissSum := 0
+	countOfDeactivatedSum := 0
+	hostId := 1
+	name := ""
+	activate := ""
+	version := ""
+	pop_id := ""
+	status := ""
+	items := result["items"].(map[string]interface{})
+	for _, groupName := range groupNames {
+		platform := map[string]interface{}{}
+		hosts := []interface{}{}
+		count := map[string]int{}
+		countOfNormal := 0
+		countOfWarn := 0
+		countOfError := 0
+		countOfMiss := 0
+		countOfDeactivated := 0
+		group := groups[groupName].([]interface{})
+		for _, agent := range group {
+			name = agent.(map[string]interface{})["name"].(string)
+			activate = agent.(map[string]interface{})["activate"].(string)
+			pop_id = agent.(map[string]interface{})["pop_id"].(string)
+			status = ""
+			version = ""
+			if activate == "1" {
+				if item, ok := items[name]; ok {
+					status = item.(map[string]interface{})["status"].(string)
+					version = item.(map[string]interface{})["version"].(string)
+				} else {
+					status = "miss"
+					countOfMiss++
+				}
+			} else {
+				status = "deactivated"
+				countOfDeactivated++
+			}
+			if status == "normal" {
+				countOfNormal++
+			} else if status == "warm" {
+				countOfWarn++
+			} else if status == "error" {
+				countOfError++
+			}
+			host := map[string]string{
+				"id":       strconv.Itoa(hostId),
+				"name":     name,
+				"platform": groupName,
+				"pop_id":   pop_id,
+				"status":   status,
+				"version":  version,
+			}
+			if host["status"] == "error" {
+				errorHosts = append(errorHosts, host)
+			} else {
+				delete(host, "pop_id")
+			}
+			hosts = append(hosts, host)
+			hostId++
+		}
+		count["normal"] = countOfNormal
+		count["warn"] = countOfWarn
+		count["error"] = countOfError
+		count["miss"] = countOfMiss
+		count["deactivated"] = countOfDeactivated
+		count["all"] = countOfNormal + countOfWarn + countOfError + countOfMiss + countOfDeactivated
+		platform["platformName"] = groupName
+		platform["platformCount"] = count
+		platform["hosts"] = hosts
+		platforms = append(platforms, platform)
+		countOfNormalSum += countOfNormal
+		countOfWarnSum += countOfWarn
+		countOfErrorSum += countOfError
+		countOfMissSum += countOfMiss
+		countOfDeactivatedSum += countOfDeactivated
+	}
+	count["normal"] = countOfNormalSum
+	count["warn"] = countOfWarnSum
+	count["error"] = countOfErrorSum
+	count["miss"] = countOfMissSum
+	count["deactivated"] = countOfDeactivatedSum
+	count["all"] = countOfNormalSum + countOfWarnSum + countOfErrorSum + countOfMissSum + countOfDeactivatedSum
+	result["count"] = count
+	result["anomalies"] = getAnomalies(errorHosts, result)
+	result["items"] = platforms
 }
 
 func configAPIRoutes() {
