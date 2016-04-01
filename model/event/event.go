@@ -106,11 +106,11 @@ func InsertEvent(eve *coommonModel.Event) {
 			eve.StrategyId(),
 			//template_id
 			eve.TplId()).Exec()
-		log.Debug(fmt.Printf("%v, %v", res1, err))
+		log.Debug(fmt.Sprintf("%v, %v", res1, err))
 
 		//insert case
 		res2, err := insertEvent(q, eve)
-		log.Debug(fmt.Printf("%v, %v", res2, err))
+		log.Debug(fmt.Sprintf("%v, %v", res2, err))
 
 	} else {
 		//update cases
@@ -121,11 +121,10 @@ func InsertEvent(eve *coommonModel.Event) {
 			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 			eve.Status,
 			eve.Id).Exec()
-		log.Debug(fmt.Printf("%v, %v", res1, err))
+		log.Debug(fmt.Sprintf("%v, %v", res1, err))
 		//insert case
 		res2, err := insertEvent(q, eve)
-		log.Debug(fmt.Printf("%v, %v", res2, err))
-		log.Info("Hello")
+		log.Debug(fmt.Sprintf("%v, %v", res2, err))
 	}
 }
 
