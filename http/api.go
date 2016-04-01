@@ -596,6 +596,75 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 	result["items"] = items
 }
 
+func getAnomalies(errorHosts []interface{}, result map[string]interface{}) map[string]interface{} {
+	anomalies := map[string]interface{}{}
+	pop_ids := map[string]string{}
+	for _, errorHost := range errorHosts {
+		pop_id := errorHost.(map[string]string)["pop_id"]
+		pop_ids[pop_id] = pop_id
+	}
+	arr := []string{}
+	for _, pop_id := range pop_ids {
+		arr = append(arr, pop_id)
+	}
+	sort.Strings(arr)
+
+	sqlcmd := "SELECT pop_id, name, province, city FROM grafana.idc WHERE pop_id IN ('"
+	sqlcmd += strings.Join(arr, "','") + "')"
+	idcs := map[string]interface{}{}
+	var rows []orm.Params
+	o := orm.NewOrm()
+	o.Using("grafana")
+	_, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, row := range rows {
+			idc := map[string]string{
+				"idc":      row["name"].(string),
+				"province": row["province"].(string),
+				"city":     row["city"].(string),
+			}
+			idcs[row["pop_id"].(string)] = idc
+		}
+	}
+
+	anomalies2 := map[string]interface{}{}
+	for _, errorHost := range errorHosts {
+		pop_id := errorHost.(map[string]string)["pop_id"]
+		idc := idcs[pop_id]
+		errorHost.(map[string]string)["idc"] = idc.(map[string]string)["idc"]
+		errorHost.(map[string]string)["city"] = idc.(map[string]string)["city"]
+
+		provinceName := idc.(map[string]string)["province"]
+		if provinceName == "特区" {
+			provinceName = idc.(map[string]string)["city"]
+		}
+		errorHost.(map[string]string)["province"] = provinceName
+		delete(errorHost.(map[string]string), "pop_id")
+		delete(errorHost.(map[string]string), "id")
+		delete(errorHost.(map[string]string), "version")
+
+		if province, ok := anomalies2[provinceName]; ok {
+			province = append(province.([]map[string]string), errorHost.(map[string]string))
+			anomalies2[provinceName] = province
+		} else {
+			anomalies2[provinceName] = []map[string]string{
+				errorHost.(map[string]string),
+			}
+		}
+	}
+
+	for provinceName, hosts := range anomalies2 {
+		count := len(hosts.([]map[string]string))
+		anomalies[provinceName] = map[string]interface{}{
+			"count": count,
+			"hosts": hosts,
+		}
+	}
+	return anomalies
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
