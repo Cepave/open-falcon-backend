@@ -816,6 +816,41 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getMetricsByMetricType(metricType string) []string {
+	metrics := []string{}
+	if metricType == "net" {
+		metrics = []string{
+			"net.if.in.bits/iface=bond0",
+			"net.if.out.bits/iface=bond0",
+			"net.if.total.bits/iface=bond0",
+			"net.if.in.bits/iface=eth_all",
+			"net.if.out.bits/iface=eth_all",
+			"net.if.total.bits/iface=eth_all",
+		}
+	} else if metricType == "cpu" {
+		metrics = []string{
+			"cpu.idle",
+			"cpu.system",
+			"cpu.softirq",
+			"cpu.user",
+		}
+	} else if metricType == "all" {
+		metrics = []string{
+			"net.if.in.bits/iface=bond0",
+			"net.if.out.bits/iface=bond0",
+			"net.if.total.bits/iface=bond0",
+			"net.if.in.bits/iface=eth_all",
+			"net.if.out.bits/iface=eth_all",
+			"net.if.total.bits/iface=eth_all",
+			"cpu.idle",
+			"cpu.system",
+			"cpu.softirq",
+			"cpu.user",
+		}
+	}
+	return metrics
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
