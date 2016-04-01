@@ -25,7 +25,7 @@ type EventCases struct {
 	Timestamp    time.Time `json:"start_at"`
 	UpdateAt     time.Time `json:"update_at"`
 	ClosedAt     time.Time `json:"closed_at"`
-	ClosedNote   string    `json:"c;osed_note"`
+	ClosedNote   string    `json:"closed_note"`
 	UserModified int       `json:"user_modified"`
 	TplCreator   string    `json:"tpl_creator"`
 	ExpressionId int       `json:"expression_id"`
