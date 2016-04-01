@@ -10,6 +10,7 @@ import (
 	"github.com/Cepave/alarm/cron"
 	"github.com/Cepave/alarm/g"
 	"github.com/Cepave/alarm/http"
+	"github.com/Cepave/alarm/logger"
 	"github.com/Cepave/alarm/model"
 )
 
@@ -32,6 +33,7 @@ func main() {
 	g.ParseConfig(*cfg)
 	g.InitRedisConnPool()
 	model.InitDatabase()
+	logger.InitLogger()
 
 	go http.Start()
 	go cron.ReadHighEvent()
