@@ -31,7 +31,7 @@ type EventCases struct {
 	ExpressionId int       `json:"expression_id"`
 	StrategyId   int       `json:"strategy_id"`
 	TemplateId   int       `json:"template_id"`
-	Evnets       []*Events `json:"evevnts" orm:"reverse(many)"`
+	Events       []*Events `json:"evevnts" orm:"reverse(many)"`
 }
 
 type Events struct {
