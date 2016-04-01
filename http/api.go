@@ -484,6 +484,31 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	}
 }
 
+func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
+	var queries []*cmodel.GraphLastParam
+	o := orm.NewOrm()
+	var hosts []*Host
+	hostnamesStr := strings.Join(hostnames, "','")
+	sqlcommand := "SELECT hostname, agent_version FROM falcon_portal.host WHERE hostname IN ('"
+	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
+	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, host := range hosts {
+			var query cmodel.GraphLastParam
+			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
+				hostnamesExisted = append(hostnamesExisted, host.Hostname)
+				versions[host.Hostname] = host.Agent_version
+				query.Endpoint = host.Hostname
+				query.Counter = "agent.alive"
+				queries = append(queries, &query)
+			}
+		}
+	}
+	return queries
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
