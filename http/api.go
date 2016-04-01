@@ -888,6 +888,64 @@ func getGraphQueryResponse(metrics []string, duration string, hostname string, r
 	return data
 }
 
+func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	arguments := strings.Split(req.URL.Path, "/")
+	hostname := ""
+	metricType := ""
+	duration := ""
+	if len(arguments) == 6 {
+		hostname = arguments[len(arguments)-3]
+		metricType = arguments[len(arguments)-2]
+		duration = arguments[len(arguments)-1]
+	} else if len(arguments) == 5 {
+		hostname = arguments[len(arguments)-2]
+		metricType = arguments[len(arguments)-1]
+		duration = "3d"
+	}
+	metrics := getMetricsByMetricType(metricType)
+	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
+		data := getGraphQueryResponse(metrics, duration, hostname, result)
+
+		filter := ""
+		if metricType == "net" || metricType == "all" {
+			if len(data[0].Values) > 0 {
+				filter = "eth_all"
+			} else {
+				filter = "bond0"
+			}
+		}
+
+		for _, series := range data {
+			metric := series.Counter
+			if strings.Index(metric, filter) == -1 {
+				values := []interface{}{}
+				for _, rrdObj := range series.Values {
+					value := []interface{}{
+						rrdObj.Timestamp * 1000,
+						rrdObj.Value,
+					}
+					values = append(values, value)
+				}
+				item := map[string]interface{}{
+					"host":   series.Endpoint,
+					"metric": series.Counter,
+					"data":   values,
+				}
+				items = append(items, item)
+			}
+		}
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
