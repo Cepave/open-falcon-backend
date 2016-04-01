@@ -760,6 +760,62 @@ func completeAgentAliveData(groups map[string]interface{}, groupNames []string, 
 	result["items"] = platforms
 }
 
+func getPlatforms(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	countOfDevice := 0
+	countOfDeviceDedu := 0
+	getPlatformJSON(nodes, result)
+	groups := map[string]interface{}{}
+	groupNames := []string{}
+	hostnames := []string{}
+	hostnamesMap := map[string]int{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			groupName := platform.(map[string]interface{})["platform"].(string)
+			groupNames = append(groupNames, groupName)
+			group := []interface{}{}
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+				hostname = device.(map[string]interface{})["hostname"].(string)
+				countOfDevice++
+				if _, ok := hostnamesMap[hostname]; !ok {
+					countOfDeviceDedu++
+					hostnames = append(hostnames, hostname)
+					host := map[string]interface{}{
+						"name":     hostname,
+						"activate": device.(map[string]interface{})["ip_status"].(string),
+						"pop_id":   device.(map[string]interface{})["pop_id"].(string),
+					}
+					group = append(group, host)
+					hostnamesMap[hostname] = 1
+				}
+			}
+			groups[groupName] = group
+		}
+		sort.Strings(hostnames)
+		sort.Strings(groupNames)
+
+		hostnamesExisted := []string{}
+		var versions = make(map[string]string)
+		queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
+		data := queryAgentAlive(queries, req.Host, result)
+		classifyAgentAliveResponse(data, hostnamesExisted, versions, result)
+		completeAgentAliveData(groups, groupNames, result)
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
