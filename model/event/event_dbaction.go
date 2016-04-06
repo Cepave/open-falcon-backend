@@ -18,7 +18,7 @@ func getUserRole(username string) bool {
 	}
 }
 
-func GetEvent(startTime int64, endTime int64, priority int, status string, limit int, username string) (result []Event, err error) {
+func GetEventCases(startTime int64, endTime int64, priority int, status string, limit int, username string) (result []EventCases, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.FalconPortal.Limit {
 		limit = config.FalconPortal.Limit
@@ -27,48 +27,97 @@ func GetEvent(startTime int64, endTime int64, priority int, status string, limit
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	flag := false
-	query_tmp := ""
+	queryTmp := ""
 	if startTime != 0 && endTime != 0 {
 		flag = true
-		query_tmp = fmt.Sprintf(" %v timestamp >= %d and  update_at >= %d", query_tmp, startTime, endTime)
+		queryTmp = fmt.Sprintf(" %v update_at >= %d and  update_at <= %d", queryTmp, startTime, endTime)
 	}
 	if priority != -1 {
 		if flag {
-			query_tmp = fmt.Sprintf("%v and priority = %d", query_tmp, priority)
+			queryTmp = fmt.Sprintf("%v and priority = %d", queryTmp, priority)
 		} else {
 			flag = true
-			query_tmp = fmt.Sprintf("%v priority = %d", query_tmp, priority)
+			queryTmp = fmt.Sprintf("%v priority = %d", queryTmp, priority)
 		}
 	}
 	if status != "ALL" {
 		if flag {
-			query_tmp = fmt.Sprintf("%v and status = '%s'", query_tmp, status)
+			queryTmp = fmt.Sprintf("%v and status = '%s'", queryTmp, status)
 		} else {
 			flag = true
-			query_tmp = fmt.Sprintf("%v status = '%s'", query_tmp, status)
+			queryTmp = fmt.Sprintf("%v status = '%s'", queryTmp, status)
 		}
 	}
 	isadmin := getUserRole(username)
-	if query_tmp != "" && !isadmin {
-		_, err = q.Raw(fmt.Sprintf("SELECT event.* FROM `event` LEFT JOIN `tpl` on `tpl`.id = `event`.template_id WHERE create_user = '%s' AND %v order by update_at DESC limit %d", username, query_tmp, limit)).QueryRows(&result)
+	if queryTmp != "" && !isadmin {
+		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE tpl_creator = '%s' AND %v order by update_at DESC limit %d", username, queryTmp, limit)).QueryRows(&result)
 	} else if isadmin {
-		_, err = q.Raw(fmt.Sprintf("select * from event where %v order by update_at DESC limit %d", query_tmp, limit)).QueryRows(&result)
+		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE %v order by update_at DESC limit %d", queryTmp, limit)).QueryRows(&result)
 	} else {
-		_, err = q.Raw("select * from event").QueryRows(&result)
+		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE tpl_creator = '%s'", username)).QueryRows(&result)
 	}
 
 	if len(result) == 0 {
-		result = []Event{}
+		result = []EventCases{}
+	} else {
+		for indx, event := range result {
+			var eventArr []*Events
+			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s'", event.Id)).QueryRows(&eventArr)
+			fmt.Sprintf("%v", eventArr)
+			event.Events = eventArr
+			result[indx] = event
+		}
 	}
-
 	return
 }
 
-func CloseEvent(username string, id string) (err error) {
+func GetEvents(startTime int64, endTime int64, limit int) (result []EventsRsp, err error) {
+	config := g.Config()
+	if limit == 0 || limit > config.FalconPortal.Limit {
+		limit = config.FalconPortal.Limit
+	}
+
+	q := orm.NewOrm()
+	q.Using("falcon_portal")
+	queryTmp := ""
+	if startTime != 0 && endTime != 0 {
+		queryTmp = fmt.Sprintf(" %v events.timestamp >= %d and  events.timestamp <= %d", queryTmp, startTime, endTime)
+	}
+	if queryTmp != "" {
+		_, err = q.Raw(fmt.Sprintf(`SELECT events.id as id,
+					events.step as step,
+					events.cond as cond,
+					events.timestamp as timestamp,
+					events.event_caseId as eid,
+					event_cases.tpl_creator as tpl_creator,
+					event_cases.metric as metric,
+					event_cases.endpoint as endpoint
+					FROM events LEFT JOIN event_cases on event_cases.id = events.event_caseId  
+					WHERE %v ORDER BY events.timestamp DESC limit %d`, queryTmp, limit)).QueryRows(&result)
+	} else {
+		_, err = q.Raw(fmt.Sprintf(`SELECT 
+					events.id as id,
+					events.step as step,
+					events.cond as cond,
+					events.timestamp as timestamp,
+					events.event_caseId as eid,
+					event_cases.tpl_creator as tpl_creator,
+					event_cases.metric as metric,
+					event_cases.endpoint as endpoint
+					FROM events LEFT JOIN event_cases on event_cases.id = events.event_caseId  
+					ORDER BY events.timestamp DESC limit %d`, limit)).QueryRows(&result)
+	}
+	if len(result) == 0 {
+		result = []EventsRsp{}
+	}
+	return
+}
+
+func CloseEvent(username string, colsed_note string, id string) (err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	userid := uic.ReadUserIdByName(username)
-	_, err = q.Raw("Update event SET user_modified = ?, closed_at = ?, status = ? WHERE id = ?", userid, time.Now(), "SOLVED", id).Exec()
+	_, err = q.Raw("Update event_cases SET user_modified = ?, closed_at = ?, status = ?, closed_note = ? WHERE id = ?", userid, time.Now(), "SOLVED", colsed_note, id).Exec()
 	return
 }
 
