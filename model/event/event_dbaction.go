@@ -54,7 +54,7 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	} else if isadmin {
 		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE %v order by update_at DESC limit %d", queryTmp, limit)).QueryRows(&result)
 	} else {
-		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE tpl_creator = '%s'", username)).QueryRows(&result)
+		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE tpl_creator = '%s' order by update_at DESC", username)).QueryRows(&result)
 	}
 
 	if len(result) == 0 {
@@ -62,7 +62,7 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	} else {
 		for indx, event := range result {
 			var eventArr []*Events
-			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s'", event.Id)).QueryRows(&eventArr)
+			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s' order by timestamp DESC", event.Id)).QueryRows(&eventArr)
 			fmt.Sprintf("%v", eventArr)
 			event.Events = eventArr
 			result[indx] = event
@@ -92,10 +92,10 @@ func GetEvents(startTime int64, endTime int64, limit int) (result []EventsRsp, e
 					event_cases.tpl_creator as tpl_creator,
 					event_cases.metric as metric,
 					event_cases.endpoint as endpoint
-					FROM events LEFT JOIN event_cases on event_cases.id = events.event_caseId  
+					FROM events LEFT JOIN event_cases on event_cases.id = events.event_caseId
 					WHERE %v ORDER BY events.timestamp DESC limit %d`, queryTmp, limit)).QueryRows(&result)
 	} else {
-		_, err = q.Raw(fmt.Sprintf(`SELECT 
+		_, err = q.Raw(fmt.Sprintf(`SELECT
 					events.id as id,
 					events.step as step,
 					events.cond as cond,
@@ -104,7 +104,7 @@ func GetEvents(startTime int64, endTime int64, limit int) (result []EventsRsp, e
 					event_cases.tpl_creator as tpl_creator,
 					event_cases.metric as metric,
 					event_cases.endpoint as endpoint
-					FROM events LEFT JOIN event_cases on event_cases.id = events.event_caseId  
+					FROM events LEFT JOIN event_cases on event_cases.id = events.event_caseId
 					ORDER BY events.timestamp DESC limit %d`, limit)).QueryRows(&result)
 	}
 	if len(result) == 0 {
