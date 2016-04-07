@@ -2,9 +2,9 @@ package restart
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon/commands/start"
-	"github.com/Cepave/open-falcon/commands/stop"
-	"github.com/Cepave/open-falcon/g"
+	"github.com/Cepave/open-falcon-backend/commands/start"
+	"github.com/Cepave/open-falcon-backend/commands/stop"
+	"github.com/Cepave/open-falcon-backend/g"
 	"github.com/mitchellh/cli"
 	"strings"
 )

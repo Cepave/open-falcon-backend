@@ -2,7 +2,7 @@ package status
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon/g"
+	"github.com/Cepave/open-falcon-backend/g"
 	"github.com/mitchellh/cli"
 	"strings"
 )
