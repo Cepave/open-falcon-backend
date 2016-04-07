@@ -50,25 +50,25 @@
                             <ul class="dropdown-menu" role="menu" style="left: 65px">
                                 <!-- ngRepeat: menuItem in orgMenu -->
                                 <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
-                                    <a href="/me/profile" ng-if="menuItem.href" class="ng-binding ng-scope"> 
+                                    <a href="/me/profile" ng-if="menuItem.href" class="ng-binding ng-scope">
                                     <i class="fa fa-fw fa-cog" ng-if="menuItem.icon"></i>Settings</a>
                                 </li>
                                 <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope divider"> </li>
                                 <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
-                                    <a href="/me/teams" ng-if="menuItem.href" class="ng-binding ng-scope"> 
+                                    <a href="/me/teams" ng-if="menuItem.href" class="ng-binding ng-scope">
                                     <i class="fa fa-fw fa-users" ng-if="menuItem.icon"></i>Group</a>
                                 </li>
                                 <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
-                                    <a href="/me/users" ng-if="menuItem.href" class="ng-binding ng-scope"> 
+                                    <a href="/me/users" ng-if="menuItem.href" class="ng-binding ng-scope">
                                     <i class="fa fa-fw fa-book" ng-if="menuItem.icon"></i>Contacts</a>
                                 </li>
                                 <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope divider"> </li>
                                 <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
-                                    <a href="/auth/login" ng-if="menuItem.href" class="ng-binding ng-scope"> 
+                                    <a href="/auth/login" ng-if="menuItem.href" class="ng-binding ng-scope">
                                     <i class="fa fa-fw fa-sign-in" ng-if="menuItem.icon"></i>Sign In</a>
                                 </li>
                                 <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
-                                    <a href="/me/logout" ng-if="menuItem.href" class="ng-binding ng-scope"> 
+                                    <a href="/me/logout" ng-if="menuItem.href" class="ng-binding ng-scope">
                                     <i class="fa fa-fw fa-sign-out" ng-if="menuItem.icon"></i>Sign Out</a>
                                 </li>
                             </ul>
@@ -84,6 +84,10 @@
                         <li>
                         <a href="{{.Shortcut.FalconDashboard}}" class="sidemenu-item pointer">
                                 <span class="icon-circle sidemenu-icon"><i class="fa fa-fw fa-line-chart"></i></span> <span class="sidemenu-item-text ng-binding">Falcon-DBoard</span></a>
+                        </li>
+                        <li>
+                        <a href="/ops/endpoints" class="sidemenu-item pointer">
+                                <span class="icon-circle sidemenu-icon"><i class="fa fa-fw fa-book"></i></span> <span class="sidemenu-item-text ng-binding">Endpints-Query</span></a>
                         </li>
                     </ul>
                     <!-- end ngIf: !systemSection -->

@@ -16,6 +16,13 @@ func QueryEndpintByNameRegx(queryStr string, limit int) (enp []Endpoint, err err
 	return
 }
 
+func QueryEndpintByNameRegxForOps(queryStr string) (enp []Hosts, err error) {
+	q := orm.NewOrm()
+	q.Using("falcon_portal")
+	_, err = q.Raw("select * from `host` where hostname regexp ?", queryStr).QueryRows(&enp)
+	return
+}
+
 func CountNumOfHost() (c int, err error) {
 	var h []Endpoint
 	q := getOrmObj()

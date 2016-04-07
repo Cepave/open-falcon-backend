@@ -185,3 +185,29 @@ func (this *DashBoardController) CountNumOfHostGroup() {
 	this.ServeApiJson(baseResp)
 	return
 }
+
+func (this *DashBoardController) EndpRegxquryForOps() {
+	queryStr := this.GetString("queryStr", "")
+	this.Data["QueryCondstion"] = queryStr
+	if queryStr == "" {
+		this.Data["Init"] = true
+	} else {
+		enp, _ := dashboard.QueryEndpintByNameRegxForOps(queryStr)
+		if len(enp) > 0 {
+			var ips []string
+			this.Data["Endopints"] = enp
+			this.Data["Len"] = len(enp)
+			for _, en := range enp {
+				if en.Ip != "" {
+					ips = append(ips, en.Ip)
+				}
+			}
+			this.Data["IP"] = strings.Join(ips, ",")
+		} else {
+			this.Data["Endopints"] = []string{}
+			this.Data["Len"] = 0
+			this.Data["IP"] = ""
+		}
+	}
+	this.TplName = "dashboard/endpoints.html"
+}
