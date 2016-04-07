@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon/commands/reload"
-	"github.com/Cepave/open-falcon/commands/restart"
-	"github.com/Cepave/open-falcon/commands/start"
-	"github.com/Cepave/open-falcon/commands/status"
-	"github.com/Cepave/open-falcon/commands/stop"
-	"github.com/Cepave/open-falcon/commands/tail"
+	"github.com/Cepave/open-falcon-backend/commands/reload"
+	"github.com/Cepave/open-falcon-backend/commands/restart"
+	"github.com/Cepave/open-falcon-backend/commands/start"
+	"github.com/Cepave/open-falcon-backend/commands/status"
+	"github.com/Cepave/open-falcon-backend/commands/stop"
+	"github.com/Cepave/open-falcon-backend/commands/tail"
 	"github.com/mitchellh/cli"
 	"io/ioutil"
 	"log"

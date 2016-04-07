@@ -7,7 +7,7 @@ TARGET = open-falcon
 
 GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
 	github.com/jteeuwen/go-bindata/... github.com/elazarl/go-bindata-assetfs/...
-PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/')
+PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/vendor/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
 all: $(BIN) $(TARGET) bin/falcon-fe
@@ -19,7 +19,7 @@ $(TARGET): $(TARGET_SOURCE)
 	go build -o open-falcon
 
 $(BIN):
-	go build -o $@ github.com/Cepave/open-falcon/modules/$(@:bin/falcon-%=%)
+	go build -o $@ ./modules/$(@:bin/falcon-%=%)
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
 dev: format
@@ -58,7 +58,7 @@ bin/falcon-sender : $(shell find modules/sender/ -name '*.go')
 bin/falcon-task : $(shell find modules/task/ -name '*.go')
 bin/falcon-transfer : $(shell find modules/transfer/ -name '*.go')
 bin/falcon-fe: $(shell find modules/fe/ -name '*.go')
-	go build -o $@ github.com/Cepave/open-falcon/modules/$(@:bin/falcon-%=%)
+	go build -o $@ ./modules/$(@:bin/falcon-%=%)
 	mkdir -p bin/fe
 	cp -r modules/fe/{control,cfg.example.json,conf,static,views,scripts} bin/fe/
 	cp bin/falcon-fe bin/fe/falcon-fe
