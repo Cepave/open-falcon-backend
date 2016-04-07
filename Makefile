@@ -7,7 +7,7 @@ TARGET = open-falcon
 
 GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
 	github.com/jteeuwen/go-bindata/... github.com/elazarl/go-bindata-assetfs/...
-PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/')
+PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/vendor/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
 all: $(BIN) $(TARGET) bin/falcon-fe
