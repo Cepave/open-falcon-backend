@@ -2,7 +2,8 @@ package cron
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
+	"github.com/Cepave/alarm/logger"
 	"time"
 
 	"github.com/Cepave/alarm/g"
@@ -44,7 +45,7 @@ func ReadLowEvent() {
 }
 
 func popEvent(queues []string) (*model.Event, error) {
-
+	log := logger.Logger()
 	count := len(queues)
 
 	params := make([]interface{}, count+1)
@@ -59,21 +60,18 @@ func popEvent(queues []string) (*model.Event, error) {
 
 	reply, err := redis.Strings(rc.Do("BRPOP", params...))
 	if err != nil {
-		log.Printf("get alarm event from redis fail: %v", err)
+		log.Error(fmt.Sprintf("get alarm event from redis fail: %v", err))
 		return nil, err
 	}
 
 	var event model.Event
 	err = json.Unmarshal([]byte(reply[1]), &event)
 	if err != nil {
-		log.Printf("parse alarm event fail: %v", err)
+		log.Error(fmt.Sprintf("parse alarm event fail: %v", err))
 		return nil, err
 	}
 
-	if g.Config().Debug {
-		log.Println("======>>>>")
-		log.Println(event.String())
-	}
+	log.Debug(event.String())
 	//insert event into database
 	eventmodel.InsertEvent(&event)
 	// save in memory. display in dashboard
