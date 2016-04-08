@@ -2,37 +2,37 @@ package: github.com/Cepave/open-falcon
 
 import:
 - package: github.com/Cepave/common
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/fe
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/graph
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/hbs
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/query
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/scripts
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/sender
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/agent
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/aggregator
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/nodata
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/judge
-  version: origin/develop
+  version: origin/master
 
 - package: github.com/Cepave/transfer
-  version: origin/develop
+  version: origin/master
