@@ -1,8 +1,8 @@
 package funcs
 
 import (
-	"github.com/open-falcon/agent/g"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/sys"
 	"log"
 	"strconv"
@@ -29,7 +29,7 @@ func DuMetrics() (L []*model.MetricValue) {
 			continue
 		}
 
-		L = append(L, GaugeValue("du.bs", size, "path="+path))
+		L = append(L, GaugeValue(g.DU_BS, size, "path="+path))
 	}
 
 	return

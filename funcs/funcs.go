@@ -1,8 +1,8 @@
 package funcs
 
 import (
-	"github.com/open-falcon/agent/g"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/common/model"
 )
 
 type FuncsAndInterval struct {
@@ -47,6 +47,12 @@ func BuildMappers() {
 		FuncsAndInterval{
 			Fs: []func() []*model.MetricValue{
 				DuMetrics,
+			},
+			Interval: interval,
+		},
+		FuncsAndInterval{
+			Fs: []func() []*model.MetricValue{
+				UrlMetrics,
 			},
 			Interval: interval,
 		},

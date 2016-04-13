@@ -2,10 +2,12 @@ package g
 
 import (
 	"encoding/json"
-	"github.com/toolkits/file"
 	"log"
 	"os"
+	"strings"
 	"sync"
+
+	"github.com/toolkits/file"
 )
 
 type PluginConfig struct {
@@ -23,10 +25,10 @@ type HeartbeatConfig struct {
 }
 
 type TransferConfig struct {
-	Enabled  bool   `json:"enabled"`
-	Addr     string `json:"addr"`
-	Interval int    `json:"interval"`
-	Timeout  int    `json:"timeout"`
+	Enabled  bool     `json:"enabled"`
+	Addrs    []string `json:"addrs"`
+	Interval int      `json:"interval"`
+	Timeout  int      `json:"timeout"`
 }
 
 type HttpConfig struct {
@@ -73,6 +75,10 @@ func Hostname() (string, error) {
 	if err != nil {
 		log.Println("ERROR: os.Hostname() fail", err)
 	}
+	// hostname -s
+	// -s, --short
+	// Display the short host name. This is the host name cut at the first dot.
+	hostname = strings.Split(hostname, ".")[0]
 	return hostname, err
 }
 

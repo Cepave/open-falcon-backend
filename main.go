@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/open-falcon/agent/cron"
-	"github.com/open-falcon/agent/funcs"
-	"github.com/open-falcon/agent/g"
-	"github.com/open-falcon/agent/http"
+	"github.com/Cepave/agent/cron"
+	"github.com/Cepave/agent/funcs"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/agent/http"
 	"os"
 )
 

@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/open-falcon/agent/funcs"
+	"github.com/Cepave/agent/funcs"
 	"net/http"
 )
 

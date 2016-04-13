@@ -1,8 +1,8 @@
 package funcs
 
 import (
-	"github.com/open-falcon/agent/g"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/nux"
 	"log"
 	"strings"
@@ -32,7 +32,7 @@ func ProcMetrics() (L []*model.MetricValue) {
 			}
 		}
 
-		L = append(L, GaugeValue("proc.num", cnt, tags))
+		L = append(L, GaugeValue(g.PROC_NUM, cnt, tags))
 	}
 
 	return

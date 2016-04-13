@@ -2,8 +2,8 @@ package funcs
 
 import (
 	"fmt"
-	"github.com/open-falcon/agent/g"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/nux"
 	"github.com/toolkits/slice"
 	"log"
@@ -26,9 +26,9 @@ func PortMetrics() (L []*model.MetricValue) {
 	for i := 0; i < sz; i++ {
 		tags := fmt.Sprintf("port=%d", reportPorts[i])
 		if slice.ContainsInt64(allListeningPorts, reportPorts[i]) {
-			L = append(L, GaugeValue("net.port.listen", 1, tags))
+			L = append(L, GaugeValue(g.NET_PORT_LISTEN, 1, tags))
 		} else {
-			L = append(L, GaugeValue("net.port.listen", 0, tags))
+			L = append(L, GaugeValue(g.NET_PORT_LISTEN, 0, tags))
 		}
 	}
 

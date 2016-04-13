@@ -1,9 +1,9 @@
 package cron
 
 import (
-	"github.com/open-falcon/agent/g"
-	"github.com/open-falcon/agent/plugins"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/agent/g"
+	"github.com/Cepave/agent/plugins"
+	"github.com/Cepave/common/model"
 	"log"
 	"strings"
 	"time"
@@ -35,12 +35,11 @@ func syncMinePlugins() {
 	duration := time.Duration(g.Config().Heartbeat.Interval) * time.Second
 
 	for {
-	REST:
 		time.Sleep(duration)
 
 		hostname, err := g.Hostname()
 		if err != nil {
-			goto REST
+			continue
 		}
 
 		req := model.AgentHeartbeatRequest{
@@ -51,11 +50,11 @@ func syncMinePlugins() {
 		err = g.HbsClient.Call("Agent.MinePlugins", req, &resp)
 		if err != nil {
 			log.Println("ERROR:", err)
-			goto REST
+			continue
 		}
 
 		if resp.Timestamp <= timestamp {
-			goto REST
+			continue
 		}
 
 		pluginDirs = resp.Plugins
