@@ -514,46 +514,48 @@ func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map
 
 func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result map[string]interface{}) []cmodel.GraphLastResp {
 	data := []cmodel.GraphLastResp{}
-	if strings.Index(g.Config().Api.Query, reqHost) >= 0 {
-		proc.LastRequestCnt.Incr()
-		for _, param := range queries {
-			if param == nil {
-				continue
+	if len(queries) > 0 {
+		if strings.Index(g.Config().Api.Query, reqHost) >= 0 {
+			proc.LastRequestCnt.Incr()
+			for _, param := range queries {
+				if param == nil {
+					continue
+				}
+				last, err := graph.Last(*param)
+				if err != nil {
+					log.Printf("graph.last fail, resp: %v, err: %v", last, err)
+				}
+				if last == nil {
+					continue
+				}
+				data = append(data, *last)
 			}
-			last, err := graph.Last(*param)
+			proc.LastRequestItemCnt.IncrBy(int64(len(data)))
+		} else {
+			s, err := json.Marshal(queries)
 			if err != nil {
-				log.Printf("graph.last fail, resp: %v, err: %v", last, err)
+				setError(err.Error(), result)
 			}
-			if last == nil {
-				continue
+			url := g.Config().Api.Query + "/graph/last"
+			reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+			if err != nil {
+				setError(err.Error(), result)
 			}
-			data = append(data, *last)
-		}
-		proc.LastRequestItemCnt.IncrBy(int64(len(data)))
-	} else {
-		s, err := json.Marshal(queries)
-		if err != nil {
-			setError(err.Error(), result)
-		}
-		url := g.Config().Api.Query + "/graph/last"
-		reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
-		if err != nil {
-			setError(err.Error(), result)
-		}
-		reqPost.Header.Set("Content-Type", "application/json")
+			reqPost.Header.Set("Content-Type", "application/json")
 
-		client := &http.Client{}
-		resp, err := client.Do(reqPost)
-		if err != nil {
-			setError(err.Error(), result)
-		}
-		defer resp.Body.Close()
+			client := &http.Client{}
+			resp, err := client.Do(reqPost)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			defer resp.Body.Close()
 
-		body, _ := ioutil.ReadAll(resp.Body)
+			body, _ := ioutil.ReadAll(resp.Body)
 
-		err = json.Unmarshal(body, &data)
-		if err != nil {
-			setError(err.Error(), result)
+			err = json.Unmarshal(body, &data)
+			if err != nil {
+				setError(err.Error(), result)
+			}
 		}
 	}
 	return data
