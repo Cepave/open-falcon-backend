@@ -824,10 +824,8 @@ func getMetricsByMetricType(metricType string) []string {
 		metrics = []string{
 			"net.if.in.bits/iface=bond0",
 			"net.if.out.bits/iface=bond0",
-			"net.if.total.bits/iface=bond0",
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
-			"net.if.total.bits/iface=eth_all",
 		}
 	} else if metricType == "cpu" {
 		metrics = []string{
@@ -836,18 +834,25 @@ func getMetricsByMetricType(metricType string) []string {
 			"cpu.softirq",
 			"cpu.user",
 		}
+	} else if metricType == "status" {
+		metrics = []string{
+			"cpu.idle",
+			"mem.memfree.percent",
+			"mem.swapused.percent",
+			"disk.io.util.max",
+			"load.imin",
+		}
 	} else if metricType == "all" {
 		metrics = []string{
 			"net.if.in.bits/iface=bond0",
 			"net.if.out.bits/iface=bond0",
-			"net.if.total.bits/iface=bond0",
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
-			"net.if.total.bits/iface=eth_all",
 			"cpu.idle",
-			"cpu.system",
-			"cpu.softirq",
-			"cpu.user",
+			"mem.memfree.percent",
+			"mem.swapused.percent",
+			"disk.io.util.max",
+			"load.imin",
 		}
 	}
 	return metrics
