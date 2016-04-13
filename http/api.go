@@ -880,7 +880,7 @@ func getGraphQueryResponse(metrics []string, duration string, hostname string, r
 		}
 		response, err := graph.QueryOne(request)
 		if err != nil {
-			setError("graph.queryOne fail, " + err.Error(), result)
+			setError("graph.queryOne fail, "+err.Error(), result)
 		}
 		if result == nil {
 			continue
