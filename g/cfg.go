@@ -89,8 +89,8 @@ func IP() string {
 		return ip
 	}
 
-	if len(LocalIps) > 0 {
-		ip = LocalIps[0]
+	if len(GlobalIps) > 0 {
+		ip = GlobalIps[0]
 	}
 
 	return ip

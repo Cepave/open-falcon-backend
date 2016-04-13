@@ -2,6 +2,7 @@ package g
 
 import (
 	"github.com/Cepave/common/model"
+	n "github.com/Cepave/common/net"
 	"github.com/toolkits/net"
 	"github.com/toolkits/slice"
 	"log"
@@ -28,6 +29,16 @@ func InitLocalIps() {
 	LocalIps, err = net.IntranetIP()
 	if err != nil {
 		log.Fatalln("get intranet ip fail:", err)
+	}
+}
+
+var GlobalIps []string
+
+func InitGlobalIps() {
+	var err error
+	GlobalIps, err = n.InternetIP()
+	if err != nil {
+		log.Fatalln("get internet ip fail:", err)
 	}
 }
 
