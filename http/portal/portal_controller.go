@@ -51,7 +51,7 @@ func (this *PortalController) ColseCase() {
 		this.ResposeError(baseResp, "You can not skip closed note")
 		return
 	}
-	err = event.CloseEvent(username, id, closedNote)
+	err = event.CloseEvent(username, closedNote, id)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
