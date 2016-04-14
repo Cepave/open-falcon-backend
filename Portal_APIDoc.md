@@ -136,7 +136,7 @@
         "error": {}
       }
       ```
-* `GET` `POST` /api/v1/portal/events/close
+* `GET` `POST` /api/v1/portal/eventcases/close
 * `required login session`
 * params:
   * `id` string
