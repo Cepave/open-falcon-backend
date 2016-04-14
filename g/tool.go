@@ -29,7 +29,7 @@ func ModuleExists(name string) error {
 }
 
 func CheckModulePid(name string) (string, error) {
-	output, err := exec.Command("pgrep", name).Output()
+	output, err := exec.Command("pgrep", "-f", name).Output()
 	if err != nil {
 		return "", err
 	}
