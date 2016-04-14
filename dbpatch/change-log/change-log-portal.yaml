@@ -33,3 +33,8 @@
     filename: "don-7.sql",
     comment: "[OWL-302] add CREATE TABLE tags"
 }
+- {
+    id: "chyeh-8",
+    filename: "chyeh-8.sql",
+    comment: "[OWL-451] Change the schemas for Fastbat"
+}
