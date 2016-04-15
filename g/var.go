@@ -32,11 +32,11 @@ func InitLocalIps() {
 	}
 }
 
-var GlobalIps []string
+var PublicIps []string
 
-func InitGlobalIps() {
+func InitPublicIps() {
 	var err error
-	GlobalIps, err = n.InternetIP()
+	PublicIps, err = n.InternetIP()
 	if err != nil {
 		log.Fatalln("get internet ip fail:", err)
 	}

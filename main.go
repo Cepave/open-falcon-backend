@@ -31,7 +31,7 @@ func main() {
 	g.ParseConfig(*cfg)
 
 	g.InitRootDir()
-	g.InitGlobalIps()
+	g.InitPublicIps()
 	g.InitRpcClients()
 
 	funcs.BuildMappers()
