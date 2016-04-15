@@ -7,6 +7,7 @@ import (
 
 	"github.com/Cepave/fe/http/base"
 	"github.com/Cepave/fe/model/dashboard"
+	"github.com/Cepave/fe/model/uic"
 )
 
 type DashBoardController struct {
@@ -184,4 +185,44 @@ func (this *DashBoardController) CountNumOfHostGroup() {
 	}
 	this.ServeApiJson(baseResp)
 	return
+}
+
+func (this *DashBoardController) EndpRegxquryForOps() {
+	sig := this.Ctx.GetCookie("sig")
+	session := uic.ReadSessionBySig(sig)
+	if sig == "" || session.Uid <= 0 {
+		this.Data["SessionFlag"] = true
+		this.Data["ErrorMsg"] = "Session is not vaild"
+	} else {
+		this.Data["SessionFlag"] = false
+	}
+	username := uic.SelectUserById(session.Uid)
+	if username.Name != "root" {
+		this.Data["SessionFlag"] = true
+		this.Data["ErrorMsg"] = "You don't have permission to access this page"
+	}
+
+	queryStr := this.GetString("queryStr", "")
+	this.Data["QueryCondstion"] = queryStr
+	if queryStr == "" || this.Data["SessionFlag"] == true {
+		this.Data["Init"] = true
+	} else {
+		enp, _ := dashboard.QueryEndpintByNameRegxForOps(queryStr)
+		if len(enp) > 0 {
+			var ips []string
+			this.Data["Endopints"] = enp
+			this.Data["Len"] = len(enp)
+			for _, en := range enp {
+				if en.Ip != "" {
+					ips = append(ips, en.Ip)
+				}
+			}
+			this.Data["IP"] = strings.Join(ips, ",")
+		} else {
+			this.Data["Endopints"] = []string{}
+			this.Data["Len"] = 0
+			this.Data["IP"] = ""
+		}
+	}
+	this.TplName = "dashboard/endpoints.html"
 }

@@ -1,0 +1,47 @@
+{{template "layout/head.html" .}}
+<script src="/static/js/clipboard.min.js"></script>
+<script>
+new Clipboard('#clip');
+</script>
+  {{if .SessionFlag}}
+    <div class="col-sm-9">{{.ErrorMsg}}</div>
+  {{else}}
+    <h3>Endpoints List Query</h3>
+    <form>
+      <input name="queryStr" type="text" placeholder="Please input query string of hosts" value={{.QueryCondstion}}></input>
+      <input class="btn btn-primary" type="submit" value="Query">
+    </form>
+    <div class="row">
+    {{$len := .Len }}
+    {{if .Init}}
+      <div class="col-sm-9">請輸入查詢條件(支援Regex),查詢全部可以使用".+"</div>
+    {{else if gt $len 0}}
+    <div class="col-sm-9">
+    <button id="clip" class="btn btn-warning" data-clipboard-text="{{.IP}}">Get Ip list</button>
+    <span>found {{$len}} host.</span>
+    <table class="table">
+      <thead>
+        <tr>
+        <th>HostName</th>
+        <th>IP</th>
+        <th>AgentVersion</th>
+        <th>PluginVersion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Endopints}}
+          <tr>
+          <td>{{.Hostname}}</td>
+          <td id="ip">{{.Ip}}</td>
+          <td>{{.AgentVersion}}</td>
+          <td>{{.PluginVersion}}</td>
+          </tr>
+        {{end}}
+      </tbody>
+    </table>
+    </div>
+    {{else}}
+      <div class="col-sm-9">無法找到{{.QueryCondstion}}的相關結果</div>
+    {{end}}
+  {{end}} 
+</div>
