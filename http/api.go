@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/query/g"
+	"github.com/Cepave/query/graph"
+	"github.com/Cepave/query/proc"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -460,6 +463,492 @@ func getTemplateStrategies(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}) {
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
+	url += "/show_active/yes/hostname/yes/pop_id/yes.json"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err := json.Unmarshal(body, &nodes); err != nil {
+		setError(err.Error(), result)
+	}
+}
+
+func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
+	var queries []*cmodel.GraphLastParam
+	o := orm.NewOrm()
+	var hosts []*Host
+	hostnamesStr := strings.Join(hostnames, "','")
+	sqlcommand := "SELECT hostname, agent_version FROM falcon_portal.host WHERE hostname IN ('"
+	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
+	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, host := range hosts {
+			var query cmodel.GraphLastParam
+			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
+				hostnamesExisted = append(hostnamesExisted, host.Hostname)
+				versions[host.Hostname] = host.Agent_version
+				query.Endpoint = host.Hostname
+				query.Counter = "agent.alive"
+				queries = append(queries, &query)
+			}
+		}
+	}
+	return queries
+}
+
+func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result map[string]interface{}) []cmodel.GraphLastResp {
+	data := []cmodel.GraphLastResp{}
+	if len(queries) > 0 {
+		if strings.Index(g.Config().Api.Query, reqHost) >= 0 {
+			proc.LastRequestCnt.Incr()
+			for _, param := range queries {
+				if param == nil {
+					continue
+				}
+				last, err := graph.Last(*param)
+				if err != nil {
+					log.Printf("graph.last fail, resp: %v, err: %v", last, err)
+				}
+				if last == nil {
+					continue
+				}
+				data = append(data, *last)
+			}
+			proc.LastRequestItemCnt.IncrBy(int64(len(data)))
+		} else {
+			s, err := json.Marshal(queries)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			url := g.Config().Api.Query + "/graph/last"
+			reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			reqPost.Header.Set("Content-Type", "application/json")
+
+			client := &http.Client{}
+			resp, err := client.Do(reqPost)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+			defer resp.Body.Close()
+
+			body, _ := ioutil.ReadAll(resp.Body)
+
+			err = json.Unmarshal(body, &data)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+		}
+	}
+	return data
+}
+
+func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) {
+	name := ""
+	version := ""
+	status := ""
+	alive := 0
+	var diff int64
+	var timestamp int64
+	items := map[string]interface{}{}
+	for key, row := range data {
+		name = row.Endpoint
+		alive = 0
+		diff = 0
+		timestamp = 0
+		status = "error"
+		if name == "" {
+			name = hostnamesExisted[key]
+		} else {
+			alive = int(row.Value.Value)
+			timestamp = row.Value.Timestamp
+			now := time.Now().Unix()
+			diff = now - timestamp
+		}
+		version = versions[name]
+		if alive > 0 {
+			if diff > 3600 {
+				status = "warm"
+			} else {
+				status = "normal"
+			}
+		}
+		item := map[string]interface{}{}
+		item["version"] = version
+		item["status"] = status
+		items[name] = item
+	}
+	result["items"] = items
+}
+
+func getAnomalies(errorHosts []interface{}, result map[string]interface{}) map[string]interface{} {
+	anomalies := map[string]interface{}{}
+	pop_ids := map[string]string{}
+	for _, errorHost := range errorHosts {
+		pop_id := errorHost.(map[string]string)["pop_id"]
+		pop_ids[pop_id] = pop_id
+	}
+	arr := []string{}
+	for _, pop_id := range pop_ids {
+		arr = append(arr, pop_id)
+	}
+	sort.Strings(arr)
+
+	sqlcmd := "SELECT pop_id, name, province, city FROM grafana.idc WHERE pop_id IN ('"
+	sqlcmd += strings.Join(arr, "','") + "')"
+	idcs := map[string]interface{}{}
+	var rows []orm.Params
+	o := orm.NewOrm()
+	o.Using("grafana")
+	_, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, row := range rows {
+			idc := map[string]string{
+				"idc":      row["name"].(string),
+				"province": row["province"].(string),
+				"city":     row["city"].(string),
+			}
+			idcs[row["pop_id"].(string)] = idc
+		}
+	}
+
+	anomalies2 := map[string]interface{}{}
+	for _, errorHost := range errorHosts {
+		pop_id := errorHost.(map[string]string)["pop_id"]
+		idc := idcs[pop_id]
+		errorHost.(map[string]string)["idc"] = idc.(map[string]string)["idc"]
+		errorHost.(map[string]string)["city"] = idc.(map[string]string)["city"]
+
+		provinceName := idc.(map[string]string)["province"]
+		if provinceName == "特区" {
+			provinceName = idc.(map[string]string)["city"]
+		}
+		errorHost.(map[string]string)["province"] = provinceName
+		delete(errorHost.(map[string]string), "pop_id")
+		delete(errorHost.(map[string]string), "id")
+		delete(errorHost.(map[string]string), "version")
+
+		if province, ok := anomalies2[provinceName]; ok {
+			province = append(province.([]map[string]string), errorHost.(map[string]string))
+			anomalies2[provinceName] = province
+		} else {
+			anomalies2[provinceName] = []map[string]string{
+				errorHost.(map[string]string),
+			}
+		}
+	}
+
+	for provinceName, hosts := range anomalies2 {
+		count := len(hosts.([]map[string]string))
+		anomalies[provinceName] = map[string]interface{}{
+			"count": count,
+			"hosts": hosts,
+		}
+	}
+	return anomalies
+}
+
+func completeAgentAliveData(groups map[string]interface{}, groupNames []string, result map[string]interface{}) {
+	errorHosts := []interface{}{}
+	platforms := []interface{}{}
+	count := map[string]int{}
+	countOfNormalSum := 0
+	countOfWarnSum := 0
+	countOfErrorSum := 0
+	countOfMissSum := 0
+	countOfDeactivatedSum := 0
+	hostId := 1
+	name := ""
+	activate := ""
+	version := ""
+	pop_id := ""
+	status := ""
+	items := result["items"].(map[string]interface{})
+	for _, groupName := range groupNames {
+		platform := map[string]interface{}{}
+		hosts := []interface{}{}
+		count := map[string]int{}
+		countOfNormal := 0
+		countOfWarn := 0
+		countOfError := 0
+		countOfMiss := 0
+		countOfDeactivated := 0
+		group := groups[groupName].([]interface{})
+		for _, agent := range group {
+			name = agent.(map[string]interface{})["name"].(string)
+			activate = agent.(map[string]interface{})["activate"].(string)
+			pop_id = agent.(map[string]interface{})["pop_id"].(string)
+			status = ""
+			version = ""
+			if activate == "1" {
+				if item, ok := items[name]; ok {
+					status = item.(map[string]interface{})["status"].(string)
+					version = item.(map[string]interface{})["version"].(string)
+				} else {
+					status = "miss"
+					countOfMiss++
+				}
+			} else {
+				status = "deactivated"
+				countOfDeactivated++
+			}
+			if status == "normal" {
+				countOfNormal++
+			} else if status == "warm" {
+				countOfWarn++
+			} else if status == "error" {
+				countOfError++
+			}
+			host := map[string]string{
+				"id":       strconv.Itoa(hostId),
+				"name":     name,
+				"platform": groupName,
+				"pop_id":   pop_id,
+				"status":   status,
+				"version":  version,
+			}
+			if host["status"] == "error" {
+				errorHosts = append(errorHosts, host)
+			} else {
+				delete(host, "pop_id")
+			}
+			hosts = append(hosts, host)
+			hostId++
+		}
+		count["normal"] = countOfNormal
+		count["warn"] = countOfWarn
+		count["error"] = countOfError
+		count["miss"] = countOfMiss
+		count["deactivated"] = countOfDeactivated
+		count["all"] = countOfNormal + countOfWarn + countOfError + countOfMiss + countOfDeactivated
+		platform["platformName"] = groupName
+		platform["platformCount"] = count
+		platform["hosts"] = hosts
+		platforms = append(platforms, platform)
+		countOfNormalSum += countOfNormal
+		countOfWarnSum += countOfWarn
+		countOfErrorSum += countOfError
+		countOfMissSum += countOfMiss
+		countOfDeactivatedSum += countOfDeactivated
+	}
+	count["normal"] = countOfNormalSum
+	count["warn"] = countOfWarnSum
+	count["error"] = countOfErrorSum
+	count["miss"] = countOfMissSum
+	count["deactivated"] = countOfDeactivatedSum
+	count["all"] = countOfNormalSum + countOfWarnSum + countOfErrorSum + countOfMissSum + countOfDeactivatedSum
+	result["count"] = count
+	result["anomalies"] = getAnomalies(errorHosts, result)
+	result["items"] = platforms
+}
+
+func getPlatforms(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	getPlatformJSON(nodes, result)
+	groups := map[string]interface{}{}
+	groupNames := []string{}
+	hostnames := []string{}
+	hostnamesMap := map[string]int{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			groupName := platform.(map[string]interface{})["platform"].(string)
+			groupNames = append(groupNames, groupName)
+			group := []interface{}{}
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+				hostname = device.(map[string]interface{})["hostname"].(string)
+				if _, ok := hostnamesMap[hostname]; !ok {
+					hostnames = append(hostnames, hostname)
+					host := map[string]interface{}{
+						"name":     hostname,
+						"activate": device.(map[string]interface{})["ip_status"].(string),
+						"pop_id":   device.(map[string]interface{})["pop_id"].(string),
+					}
+					group = append(group, host)
+					hostnamesMap[hostname] = 1
+				}
+			}
+			groups[groupName] = group
+		}
+		sort.Strings(hostnames)
+		sort.Strings(groupNames)
+
+		hostnamesExisted := []string{}
+		var versions = make(map[string]string)
+		queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
+		data := queryAgentAlive(queries, req.Host, result)
+		classifyAgentAliveResponse(data, hostnamesExisted, versions, result)
+		completeAgentAliveData(groups, groupNames, result)
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
+func getMetricsByMetricType(metricType string) []string {
+	metrics := []string{}
+	if metricType == "net" {
+		metrics = []string{
+			"net.if.in.bits/iface=bond0",
+			"net.if.out.bits/iface=bond0",
+			"net.if.in.bits/iface=eth_all",
+			"net.if.out.bits/iface=eth_all",
+		}
+	} else if metricType == "cpu" {
+		metrics = []string{
+			"cpu.idle",
+			"cpu.system",
+			"cpu.softirq",
+			"cpu.user",
+		}
+	} else if metricType == "status" {
+		metrics = []string{
+			"cpu.idle",
+			"mem.memfree.percent",
+			"mem.swapused.percent",
+			"disk.io.util.max",
+			"load.imin",
+		}
+	} else if metricType == "all" {
+		metrics = []string{
+			"net.if.in.bits/iface=bond0",
+			"net.if.out.bits/iface=bond0",
+			"net.if.in.bits/iface=eth_all",
+			"net.if.out.bits/iface=eth_all",
+			"cpu.idle",
+			"mem.memfree.percent",
+			"mem.swapused.percent",
+			"disk.io.util.max",
+			"load.imin",
+		}
+	}
+	return metrics
+}
+
+func getGraphQueryResponse(metrics []string, duration string, hostname string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+	data := []*cmodel.GraphQueryResponse{}
+	now := time.Now().Unix()
+	unit := int64(86400)
+	multiplier, err := strconv.Atoi(strings.Split(duration, "d")[0])
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	offset := int64(multiplier) * unit
+	start := now - offset
+
+	proc.HistoryRequestCnt.Incr()
+	for _, metric := range metrics {
+		request := cmodel.GraphQueryParam{
+			Start:     start,
+			End:       now,
+			ConsolFun: "AVERAGE",
+			Endpoint:  hostname,
+			Counter:   metric,
+		}
+		response, err := graph.QueryOne(request)
+		if err != nil {
+			setError("graph.queryOne fail, "+err.Error(), result)
+		}
+		if result == nil {
+			continue
+		}
+		data = append(data, response)
+	}
+
+	proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
+	for _, item := range data {
+		proc.HistoryResponseItemCnt.IncrBy(int64(len(item.Values)))
+	}
+	return data
+}
+
+func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	arguments := strings.Split(req.URL.Path, "/")
+	hostname := ""
+	metricType := ""
+	duration := ""
+	if len(arguments) == 6 {
+		hostname = arguments[len(arguments)-3]
+		metricType = arguments[len(arguments)-2]
+		duration = arguments[len(arguments)-1]
+	} else if len(arguments) == 5 {
+		hostname = arguments[len(arguments)-2]
+		metricType = arguments[len(arguments)-1]
+		duration = "3d"
+	}
+	metrics := getMetricsByMetricType(metricType)
+	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
+		data := getGraphQueryResponse(metrics, duration, hostname, result)
+
+		filter := ""
+		if metricType == "net" || metricType == "all" {
+			if len(data[0].Values) > 0 {
+				filter = "eth_all"
+			} else {
+				filter = "bond0"
+			}
+		}
+
+		for _, series := range data {
+			metric := series.Counter
+			if strings.Index(metric, filter) == -1 {
+				values := []interface{}{}
+				for _, rrdObj := range series.Values {
+					value := []interface{}{
+						rrdObj.Timestamp * 1000,
+						rrdObj.Value,
+					}
+					values = append(values, value)
+				}
+				item := map[string]interface{}{
+					"host":   series.Endpoint,
+					"metric": series.Counter,
+					"data":   values,
+				}
+				items = append(items, item)
+			}
+		}
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
@@ -469,4 +958,6 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/alive", getAlive)
 	http.HandleFunc("/api/tags/update", setStrategyTags)
 	http.HandleFunc("/api/templates/", getTemplateStrategies)
+	http.HandleFunc("/api/alive/platforms", getPlatforms)
+	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
 }
