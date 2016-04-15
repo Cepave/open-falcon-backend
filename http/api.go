@@ -767,8 +767,6 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	countOfDevice := 0
-	countOfDeviceDedu := 0
 	getPlatformJSON(nodes, result)
 	groups := map[string]interface{}{}
 	groupNames := []string{}
@@ -782,9 +780,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 			group := []interface{}{}
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
-				countOfDevice++
 				if _, ok := hostnamesMap[hostname]; !ok {
-					countOfDeviceDedu++
 					hostnames = append(hostnames, hostname)
 					host := map[string]interface{}{
 						"name":     hostname,
