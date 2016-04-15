@@ -22,7 +22,7 @@ func (this *DashBoardController) EndpRegxqury() {
 	}
 	queryStr := this.GetString("queryStr", "")
 	if queryStr == "" {
-		this.ResposeError(baseResp, "query string is empty, please it")
+		this.ResposeError(baseResp, "query string is empty, please check it")
 		return
 	}
 	limitNum, _ := this.GetInt("limit", 0)
@@ -51,7 +51,7 @@ func (this *DashBoardController) CounterQuery() {
 	endpoints := this.GetString("endpoints", "")
 	endpointcheck, _ := regexp.Compile("^\\s*\\[\\s*\\]\\s*$")
 	if endpoints == "" || endpointcheck.MatchString(endpoints) {
-		this.ResposeError(baseResp, "query string is empty, please it")
+		this.ResposeError(baseResp, "query string is empty, please check it")
 		return
 	}
 	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
@@ -80,7 +80,7 @@ func (this *DashBoardController) HostGroupQuery() {
 	}
 	queryStr := this.GetString("queryStr", "")
 	if queryStr == "" {
-		this.ResposeError(baseResp, "query string is empty, please it")
+		this.ResposeError(baseResp, "query string is empty, please check it")
 		return
 	}
 	limitNum, _ := this.GetInt("limit", 0)
@@ -109,7 +109,7 @@ func (this *DashBoardController) HostsQueryByHostGroups() {
 	hostgroups := this.GetString("hostgroups", "")
 	hostgroupscheck, _ := regexp.Compile("^\\s*\\[\\s*\\]\\s*$")
 	if hostgroups == "" || hostgroupscheck.MatchString(hostgroups) {
-		this.ResposeError(baseResp, "query string is empty, please it")
+		this.ResposeError(baseResp, "query string is empty, please check it")
 		return
 	}
 	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
@@ -136,7 +136,7 @@ func (this *DashBoardController) CounterQueryByHostGroup() {
 	hostgroups := this.GetString("hostgroups", "")
 	hostgroupscheck, _ := regexp.Compile("^\\s*\\[\\s*\\]\\s*$")
 	if hostgroups == "" || hostgroupscheck.MatchString(hostgroups) {
-		this.ResposeError(baseResp, "query string is empty, please it")
+		this.ResposeError(baseResp, "query string is empty, please check it")
 		return
 	}
 	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")

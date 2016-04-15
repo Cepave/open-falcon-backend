@@ -9,7 +9,7 @@ type PortalController struct {
 	base.BaseController
 }
 
-func (this *PortalController) EventGet() {
+func (this *PortalController) EventCasesGet() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
@@ -23,12 +23,12 @@ func (this *PortalController) EventGet() {
 
 	username := this.GetString("cName", "")
 	limitNum, _ := this.GetInt("limit", 0)
-	events, err := event.GetEvent(startTime, endTime, prioprity, status, limitNum, username)
+	events, err := event.GetEventCases(startTime, endTime, prioprity, status, limitNum, username)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
-	baseResp.Data["events"] = events
+	baseResp.Data["eventCases"] = events
 	this.ServeApiJson(baseResp)
 	return
 }
@@ -41,16 +41,42 @@ func (this *PortalController) ColseCase() {
 		return
 	}
 	username := this.GetString("cName", "")
+	closedNote := this.GetString("closedNote", "")
 	id := this.GetString("id", "xxx")
-	if id == "xxx" {
+	switch {
+	case id == "xxx":
 		this.ResposeError(baseResp, "You dosen't pick any event id")
 		return
+	case closedNote == "":
+		this.ResposeError(baseResp, "You can not skip closed note")
+		return
 	}
-	err = event.CloseEvent(username, id)
+	err = event.CloseEvent(username, closedNote, id)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *PortalController) EventGet() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	startTime, _ := this.GetInt64("startTime", 0)
+	endTime, _ := this.GetInt64("endTime", 0)
+
+	limitNum, _ := this.GetInt("limit", 0)
+	events, err := event.GetEvents(startTime, endTime, limitNum)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	baseResp.Data["events"] = events
 	this.ServeApiJson(baseResp)
 	return
 }

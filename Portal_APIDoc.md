@@ -1,5 +1,72 @@
 # Portal API list
 `Don't forget do URL encoding.. will check session automatically`
+* `GET` `POST` /api/v1/portal/eventcases/get
+* `required login session`
+* params:
+  * `startTime` timestamp
+    * ex: 1457450919
+  * `endTime` timestamp
+  * `priority` int
+    * ex: 0
+    * -1 means no specific any priority level, get all.
+  * `status` string options
+    * ex: "PROBLEM"
+    * "ALL" means no specific any status, get all.
+    * if no specific will get 'PROBLEM' case as default
+  * `cName` options (get from cookie refer)
+    * default will only get case of current user, except admin role (ex. root).
+* response:
+  * ok
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "success",
+      "data": {
+        "eventCases": [
+          {
+            "id": "s_41_b66b973ef551e4e503fad475dfc9e418",
+            "endpoint": "docker-agent",
+            "metric": "cpu.idle",
+            "func": "all(#2)",
+            "cond": "100 != 0",
+            "note": "this is a test case !!",
+            "max_step": 10,
+            "current_step": 2,
+            "priority": 3,
+            "status": "PROBLEM",
+            "start_at": "2016-04-06T14:11:00+08:00",
+            "update_at": "2016-04-06T14:16:00+08:00",
+            "closed_at": "0001-01-01T00:00:00Z",
+            "closed_note": "",
+            "user_modified": 0,
+            "tpl_creator": "root",
+            "expression_id": 0,
+            "strategy_id": 41,
+            "template_id": 6,
+            "evevnts": [
+              {
+                "id": 1,
+                "step": 1,
+                "cond": "100 != 0",
+                "timestamp": "2016-04-06T14:11:00+08:00",
+                "event_caseId": null
+              },
+              {
+                "id": 2,
+                "step": 2,
+                "cond": "100 != 0",
+                "timestamp": "2016-04-06T14:16:00+08:00",
+                "event_caseId": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+
 * `GET` `POST` /api/v1/portal/events/get
   * `required login session`
   * params:
@@ -10,9 +77,11 @@
       * ex: 0
       * -1 means no specific any priority level, get all.
     * `status` string options
-      * ex: "PORBLEM"
+      * ex: "PROBLEM"
       * "ALL" means no specific any status, get all.
-    * `if you keep all params is empty`, will get all event and status matched "PROBLEM".
+      *  if no specific will get 'PROBLEM' case as default
+    * `cName` options (get from cookie refer)
+      * default will only get case of current user, except admin role (ex. root).
   * response:
     * ok
 
@@ -24,42 +93,34 @@
         "data": {
           "events": [
             {
-              "id": "s_1_b66b973ef551e4e503fad475dfc9e418",
-              "endpoint": "docker-agent",
+              "id": 3,
+              "step": 3,
+              "cond": "100 != 0",
+              "timestamp": "2016-04-06T14:21:00+08:00",
+              "event_caseId": "s_41_b66b973ef551e4e503fad475dfc9e418",
+              "tpl_creator": "root",
               "metric": "cpu.idle",
-              "func": "all(#1)",
-              "cond": "97.91666666666667 != 0",
-              "note": "",
-              "max_step": 30000,
-              "current_step": 28,
-              "priority": 0,
-              "status": "PROBLEM",
-              "timestamp": "2016-03-09T21:42:00+08:00",
-              "update_at": "2016-03-09T23:37:00+08:00",
-              "closed_at": "0001-01-01T00:00:00Z",
-              "user_modified": "",
-              "expression_id": 0,
-              "strategy_id": 1,
-              "template_id": 1
+              "endpoint": "docker-agent"
             },
             {
-              "id": "s_2_f0b61e6805e88bd507c6a48ebe43aea6",
-              "endpoint": "docker-agent",
-              "metric": "cpu.nice",
-              "func": "all(#1)",
-              "cond": "0 == 0",
-              "note": "",
-              "max_step": 30000,
-              "current_step": 28,
-              "priority": 0,
-              "status": "PROBLEM",
-              "timestamp": "2016-03-09T21:42:00+08:00",
-              "update_at": "2016-03-09T23:37:00+08:00",
-              "closed_at": "0001-01-01T00:00:00Z",
-              "user_modified": "",
-              "expression_id": 0,
-              "strategy_id": 2,
-              "template_id": 1
+              "id": 2,
+              "step": 2,
+              "cond": "100 != 0",
+              "timestamp": "2016-04-06T14:16:00+08:00",
+              "event_caseId": "s_41_b66b973ef551e4e503fad475dfc9e418",
+              "tpl_creator": "root",
+              "metric": "cpu.idle",
+              "endpoint": "docker-agent"
+            },
+            {
+              "id": 1,
+              "step": 1,
+              "cond": "100 != 0",
+              "timestamp": "2016-04-06T14:11:00+08:00",
+              "event_caseId": "s_41_b66b973ef551e4e503fad475dfc9e418",
+              "tpl_creator": "root",
+              "metric": "cpu.idle",
+              "endpoint": "docker-agent"
             }
           ]
         }
@@ -72,34 +133,33 @@
         "version": "v1",
         "method": "POST",
         "status": "failed",
-        "error": {
-          "message": "query string is empty, please it"
-        }
+        "error": {}
       }
       ```
-* `GET` `POST` /api/v1/portal/events/close
-  * `required login session`
-  * params:
-    * `id` string
-      * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"
-    * ok
+* `GET` `POST` /api/v1/portal/eventcases/close
+* `required login session`
+* params:
+  * `id` string
+    * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"
+  * `closedNote` string
+  * ok
 
-      ```
-      {
-        "version": "v1",
-        "method": "PUT",
-        "status": "success"
-      }
-      ```
-    * failed
+    ```
+    {
+      "version": "v1",
+      "method": "PUT",
+      "status": "success"
+    }
+    ```
+  * failed
 
-      ```
-      {
-        "version": "v1",
-        "method": "POST",
-        "status": "failed",
-        "error": {
-          "message": "query string is empty, please it"
-        }
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "failed",
+      "error": {
+        "message": "You can not skip closed note"
       }
-      ```
+    }
+    ```
