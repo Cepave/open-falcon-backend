@@ -71,6 +71,16 @@ type InfluxdbConfig struct {
 	Address     string `json:"addr"`
 }
 
+type NqmRpcConfig struct {
+	Enabled     bool   `json:"enabled"`
+	Batch       int    `json:"batch"`
+	ConnTimeout int    `json:"connTimeout"`
+	CallTimeout int    `json:"callTimeout"`
+	MaxConns    int    `json:"maxConns"`
+	MaxIdle     int    `json:"maxIdle"`
+	Address     string `json:"addr"`
+}
+
 type GlobalConfig struct {
 	Debug    bool            `json:"debug"`
 	MinStep  int             `json:"minStep"` //最小周期,单位sec
@@ -81,6 +91,7 @@ type GlobalConfig struct {
 	Graph    *GraphConfig    `json:"graph"`
 	Tsdb     *TsdbConfig     `json:"tsdb"`
 	Influxdb *InfluxdbConfig `json:"influxdb"`
+	NqmRpc   *NqmRpcConfig   `json:"nqmRpc"`
 }
 
 var (

@@ -58,6 +58,10 @@ func startSendTasks() {
 	}
 
 	go forward2InfluxdbTask(InfluxdbQueues["default"], influxdbConcurrent)
+
+	if cfg.NqmRpc.Enabled {
+		go forward2NqmRpcTask()
+	}
 }
 
 // Judge定时任务, 将 Judge发送缓存中的数据 通过rpc连接池 发送到Judge
@@ -245,5 +249,50 @@ func forward2InfluxdbTask(Q *list.SafeListLimited, concurrent int) {
 				proc.SendToInfluxdbCnt.IncrBy(int64(count))
 			}
 		}(addr, influxdbItems, count)
+	}
+}
+
+func forward2NqmRpcTask() {
+	batch := g.Config().NqmRpc.Batch // 一次发送,最多batch条数据
+	concurrent := g.Config().NqmRpc.MaxConns
+	sema := nsema.NewSemaphore(concurrent)
+
+	for {
+		items := NqmRpcQueue.PopBackBy(batch)
+		if len(items) == 0 {
+			time.Sleep(DefaultSendTaskSleepInterval)
+			continue
+		}
+
+		nqmRpcItems := make([]*nqmRpcItem, len(items))
+		for i, v := range items {
+			nqmRpcItems[i] = v.(*nqmRpcItem)
+		}
+
+		//  同步Call + 有限并发 进行发送
+		sema.Acquire()
+		go func(itemList []*nqmRpcItem) {
+			defer sema.Release()
+
+			resp := &cmodel.SimpleRpcResponse{}
+			var err error
+			sendOk := false
+			for i := 0; i < 3; i++ { //最多重试3次
+				err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", itemList, resp)
+				if err == nil {
+					sendOk = true
+					break
+				}
+				time.Sleep(time.Millisecond * 10)
+			}
+
+			// statistics
+			if !sendOk {
+				log.Printf("send to NqmRpc fail: %v", err)
+				proc.SendToNqmRpcFailCnt.IncrBy(int64(len(itemList)))
+			} else {
+				proc.SendToNqmRpcCnt.IncrBy(int64(len(itemList)))
+			}
+		}(nqmRpcItems)
 	}
 }

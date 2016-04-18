@@ -8,6 +8,7 @@ import (
 	cmodel "github.com/open-falcon/common/model"
 	nlist "github.com/toolkits/container/list"
 	"log"
+	"strconv"
 )
 
 const (
@@ -33,15 +34,17 @@ var (
 	JudgeQueues    = make(map[string]*nlist.SafeListLimited)
 	GraphQueues    = make(map[string]*nlist.SafeListLimited)
 	InfluxdbQueues = make(map[string]*nlist.SafeListLimited)
+	NqmRpcQueue    *nlist.SafeListLimited
 )
 
 // 连接池
 // node_address -> connection_pool
 var (
-	JudgeConnPools     *cpool.SafeRpcConnPools
-	TsdbConnPoolHelper *cpool.TsdbConnPoolHelper
-	GraphConnPools     *cpool.SafeRpcConnPools
-	InfluxdbConnPools  *cpool.InfluxdbConnPools
+	JudgeConnPools       *cpool.SafeRpcConnPools
+	TsdbConnPoolHelper   *cpool.TsdbConnPoolHelper
+	GraphConnPools       *cpool.SafeRpcConnPools
+	InfluxdbConnPools    *cpool.InfluxdbConnPools
+	NqmRpcConnPoolHelper *cpool.NqmRpcConnPoolHelper
 )
 
 // 初始化数据发送服务, 在main函数中调用
@@ -226,4 +229,167 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 			proc.SendToInfluxdbDropCnt.Incr()
 		}
 	}
+}
+
+// Push network quality metric pkt to the queue for RPC
+func Push2NqmRpcSendQueue(items []*cmodel.MetaData) {
+	for _, item := range items {
+		if item.Metric == "nqm-metrics" {
+			//log.Println("Push2NqmRpcSendQueue: found nqm pkt.", item)
+			nqmitem, err := convert2NqmRpcItem(item)
+			if err != nil {
+				log.Println("NqmRpc converting error:", err)
+				continue
+			}
+			isSuccess := NqmRpcQueue.PushFront(nqmitem)
+
+			if !isSuccess {
+				proc.SendToNqmRpcDropCnt.Incr()
+			}
+		}
+	}
+}
+
+func convert2NqmRpcItem(d *cmodel.MetaData) (*nqmRpcItem, error) {
+	var t nqmRpcItem
+	agent, err := convert2NqmEndpoint(d, "agent")
+	if err != nil {
+		return &t, err
+	}
+	target, err := convert2NqmEndpoint(d, "target")
+	if err != nil {
+		return &t, err
+	}
+	metrics, err := convert2NqmMetrics(d)
+	if err != nil {
+		return &t, err
+	}
+
+	t = nqmRpcItem{
+		Timestamp: d.Timestamp,
+		Agent:     *agent,
+		Target:    *target,
+		Metrics:   *metrics,
+	}
+
+	return &t, nil
+}
+
+func convert2NqmEndpoint(d *cmodel.MetaData, endtype string) (*nqmEndpoint, error) {
+	t := nqmEndpoint{
+		Id:         -1,
+		IspId:      -1,
+		ProvinceId: -1,
+		CityId:     -1,
+		NameTagId:  -1,
+	}
+
+	var ii int64
+	var err error
+	if v, present := d.Tags[endtype+"-id"]; present {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		t.Id = int(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags[endtype+"-isp-id"]; present {
+		ii, err = strconv.ParseInt(v, 10, 16)
+		t.IspId = int16(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags[endtype+"-province-id"]; present {
+		ii, err = strconv.ParseInt(v, 10, 16)
+		t.ProvinceId = int16(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags[endtype+"-city-id"]; present {
+		ii, err = strconv.ParseInt(v, 10, 16)
+		t.CityId = int16(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags[endtype+"-name-tag-id"]; present {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		t.NameTagId = int(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+
+	return &t, nil
+}
+
+// 轉化成 nqmMetrc 格式
+func convert2NqmMetrics(d *cmodel.MetaData) (*nqmMetrics, error) {
+	t := nqmMetrics{
+		Rttmin:      -1,
+		Rttavg:      -1,
+		Rttmax:      -1,
+		Rttmdev:     -1,
+		Rttmedian:   -1,
+		Pkttransmit: -1,
+		Pktreceive:  -1,
+	}
+
+	var f float64
+	var ii int64
+	var err error
+	if v, present := d.Tags["rttmin"]; present {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		t.Rttmin = int32(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags["rttavg"]; present {
+		f, err = strconv.ParseFloat(v, 32)
+		t.Rttavg = float32(f)
+		if err != nil {
+			return &t, err
+		}
+	}
+
+	if v, present := d.Tags["rttmax"]; present {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		t.Rttmax = int32(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags["rttmdev"]; present {
+		f, err = strconv.ParseFloat(v, 32)
+		t.Rttmdev = float32(f)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags["rttmedian"]; present {
+		f, err = strconv.ParseFloat(v, 32)
+		t.Rttmedian = float32(f)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags["pkttransmit"]; present {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		t.Pkttransmit = int32(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+	if v, present := d.Tags["pktreceive"]; present {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		t.Pktreceive = int32(ii)
+		if err != nil {
+			return &t, err
+		}
+	}
+
+	return &t, nil
 }

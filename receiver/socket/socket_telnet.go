@@ -3,10 +3,10 @@ package socket
 import (
 	"bufio"
 	"fmt"
-	cmodel "github.com/open-falcon/common/model"
 	"github.com/Cepave/transfer/g"
 	"github.com/Cepave/transfer/proc"
 	"github.com/Cepave/transfer/sender"
+	cmodel "github.com/open-falcon/common/model"
 	"net"
 	"strconv"
 	"strings"
@@ -72,6 +72,10 @@ func socketTelnetHandle(conn net.Conn) {
 
 	if cfg.Influxdb.Enabled {
 		sender.Push2InfluxdbSendQueue(items)
+	}
+
+	if cfg.NqmRpc.Enabled {
+		sender.Push2NqmRpcSendQueue(items)
 	}
 
 	return

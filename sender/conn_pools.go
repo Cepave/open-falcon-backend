@@ -104,6 +104,10 @@ func initConnPools() {
 		TsdbConnPoolHelper = cpool.NewTsdbConnPoolHelper(cfg.Tsdb.Address, cfg.Tsdb.MaxConns, cfg.Tsdb.MaxIdle, cfg.Tsdb.ConnTimeout, cfg.Tsdb.CallTimeout)
 	}
 
+	// nqmRpc
+	if cfg.NqmRpc.Enabled {
+		NqmRpcConnPoolHelper = cpool.NewNqmRpcConnPoolHelper(cfg.NqmRpc.Address, cfg.NqmRpc.MaxConns, cfg.NqmRpc.MaxIdle, cfg.NqmRpc.ConnTimeout, cfg.NqmRpc.CallTimeout)
+	}
 	// graph
 	graphInstances := nset.NewSafeSet()
 	for _, nitem := range cfg.Graph.ClusterList {
@@ -130,4 +134,5 @@ func DestroyConnPools() {
 	GraphConnPools.Destroy()
 	TsdbConnPoolHelper.Destroy()
 	InfluxdbConnPools.Destroy()
+	NqmRpcConnPoolHelper.Destroy()
 }
