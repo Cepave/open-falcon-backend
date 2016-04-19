@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/http/base"
 	"github.com/Cepave/fe/model/dashboard"
 	"github.com/Cepave/fe/model/uic"
@@ -188,20 +189,21 @@ func (this *DashBoardController) CountNumOfHostGroup() {
 }
 
 func (this *DashBoardController) EndpRegxquryForOps() {
+	this.Data["Shortcut"] = g.Config().Shortcut
 	sig := this.Ctx.GetCookie("sig")
 	session := uic.ReadSessionBySig(sig)
+	var username *uic.User
 	if sig == "" || session.Uid <= 0 {
 		this.Data["SessionFlag"] = true
 		this.Data["ErrorMsg"] = "Session is not vaild"
 	} else {
 		this.Data["SessionFlag"] = false
+		username = uic.SelectUserById(session.Uid)
+		if username.Name != "root" {
+			this.Data["SessionFlag"] = true
+			this.Data["ErrorMsg"] = "You don't have permission to access this page"
+		}
 	}
-	username := uic.SelectUserById(session.Uid)
-	if username.Name != "root" {
-		this.Data["SessionFlag"] = true
-		this.Data["ErrorMsg"] = "You don't have permission to access this page"
-	}
-
 	queryStr := this.GetString("queryStr", "")
 	this.Data["QueryCondstion"] = queryStr
 	if queryStr == "" || this.Data["SessionFlag"] == true {
