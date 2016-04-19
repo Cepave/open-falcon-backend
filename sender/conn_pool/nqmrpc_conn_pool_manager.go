@@ -4,7 +4,6 @@ import (
 	"fmt"
 	jsonrpc2 "github.com/powerman/rpc-codec/jsonrpc2"
 	"log"
-	"net"
 	"time"
 )
 
@@ -47,11 +46,6 @@ func newNqmConnPool(address string, maxConns int, maxIdle int) *ConnPool {
 	pool := NewConnPool("httpRpcClient", address, maxConns, maxIdle)
 
 	pool.New = func(connName string) (NConn, error) {
-		_, err := net.ResolveTCPAddr("tcp", address)
-		if err != nil {
-			return nil, err
-		}
-
 		url := "http://" + address
 		log.Println("Invoke rpcClient2 by url: " + url)
 		return RpcClient2{cli: jsonrpc2.NewHTTPClient(url), name: connName}, nil
