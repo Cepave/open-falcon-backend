@@ -55,7 +55,7 @@ type nqmRpcItem struct {
 
 func (this nqmRpcItem) String() string {
 	return fmt.Sprintf(
-		"<TS:%d, Src:<%v>, Dst:<%v>, Metrcs:<%v>>",
+		"<TS:%d, Src:<%v>, Dst:<%v>, Metrics:<%v>>",
 		this.Timestamp,
 		this.Agent,
 		this.Target,

@@ -234,20 +234,32 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 // Push network quality metric pkt to the queue for RPC
 func Push2NqmRpcSendQueue(items []*cmodel.MetaData) {
 	for _, item := range items {
-		if item.Metric == "nqm-metrics" {
-			//log.Println("Push2NqmRpcSendQueue: found nqm pkt.", item)
-			nqmitem, err := convert2NqmRpcItem(item)
-			if err != nil {
-				log.Println("NqmRpc converting error:", err)
-				continue
-			}
-			isSuccess := NqmRpcQueue.PushFront(nqmitem)
+		nqmitem, err := convert2NqmRpcItem(item)
+		if err != nil {
+			log.Println("NqmRpc converting error:", err)
+			continue
+		}
+		isSuccess := NqmRpcQueue.PushFront(nqmitem)
 
-			if !isSuccess {
-				proc.SendToNqmRpcDropCnt.Incr()
-			}
+		if !isSuccess {
+			proc.SendToNqmRpcDropCnt.Incr()
 		}
 	}
+}
+
+func Demultiplex(items []*cmodel.MetaData) ([]*cmodel.MetaData, []*cmodel.MetaData) {
+	nqms := []*cmodel.MetaData{}
+	generics := []*cmodel.MetaData{}
+
+	for _, item := range items {
+		if item.Metric == "nqm-metrics" {
+			nqms = append(nqms, item)
+		} else {
+			generics = append(generics, item)
+		}
+	}
+
+	return nqms, generics
 }
 
 func convert2NqmRpcItem(d *cmodel.MetaData) (*nqmRpcItem, error) {

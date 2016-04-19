@@ -6,9 +6,49 @@ import (
 	"testing"
 )
 
+func TestDemultiplex(t *testing.T) {
+	const size = 10
+	caseIn := []*cmodel.MetaData{}
+	caseNqmOut := []*cmodel.MetaData{}
+	caseGenOut := []*cmodel.MetaData{}
+
+	for i := 0; i < size; i++ {
+		if i%3 == 0 {
+			fv := &cmodel.MetaData{
+				Metric: "nqm-metrics",
+				Step:   int64(i),
+			}
+			caseIn = append(caseIn, fv)
+			caseNqmOut = append(caseNqmOut, fv)
+		} else {
+			fv := &cmodel.MetaData{
+				Metric: "test.metric.niean.1",
+				Step:   int64(i),
+			}
+			caseIn = append(caseIn, fv)
+			caseGenOut = append(caseGenOut, fv)
+		}
+	}
+
+	nqms, generics := Demultiplex(caseIn)
+	for i, v := range nqms {
+		if v != caseNqmOut[i] {
+			t.Error("Nqm item does not demultiplex properly", v)
+		}
+	}
+
+	for i, v := range generics {
+		if v != caseGenOut[i] {
+			t.Error("Generic item does not demultiplex properly", v)
+		}
+	}
+	t.Log("Nqm cases: ", nqms, caseNqmOut)
+	t.Log("Generic cases: ", generics, caseGenOut)
+}
+
 func createMetaData() *cmodel.MetaData {
 	in := cmodel.MetaData{
-		Metric:      "test.metric.niean.1",
+		Metric:      "nqm-metrics",
 		Timestamp:   1460366463,
 		Step:        60,
 		Value:       0.000000,
