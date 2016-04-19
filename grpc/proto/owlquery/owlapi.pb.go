@@ -100,7 +100,7 @@ func RegisterOwlQueryServer(s *grpc.Server, srv OwlQueryServer) {
 	s.RegisterService(&_OwlQuery_serviceDesc, srv)
 }
 
-func _OwlQuery_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _OwlQuery_Query_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryInput)
 	if err := dec(in); err != nil {
 		return nil, err
