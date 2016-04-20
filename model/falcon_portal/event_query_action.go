@@ -14,6 +14,9 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	}
 
 	isadmin, tplids, err := GetCasePermission(username)
+	if tplids == "" {
+		tplids = "-1"
+	}
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	flag := false
