@@ -1407,6 +1407,8 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 			templateCreate(nodes)
 		} else if method == "template.delete" {
 			templateDelete(nodes)
+		} else if method == "template.get" {
+			templateGet(nodes)
 		} else if method == "template.update" {
 			templateUpdate(nodes)
 		}
