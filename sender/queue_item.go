@@ -5,11 +5,11 @@ import (
 )
 
 type nqmEndpoint struct {
-	Id         int   `json:"id"`
+	Id         int32 `json:"id"`
 	IspId      int16 `json:"isp_id"`
 	ProvinceId int16 `json:"province_id"`
 	CityId     int16 `json:"city_id"`
-	NameTagId  int   `json:"name_tag_id"`
+	NameTagId  int32 `json:"name_tag_id"`
 }
 
 func (end nqmEndpoint) String() string {

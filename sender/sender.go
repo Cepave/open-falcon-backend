@@ -287,7 +287,49 @@ func convert2NqmRpcItem(d *cmodel.MetaData) (*nqmRpcItem, error) {
 	return &t, nil
 }
 
-func convert2NqmEndpoint(d *cmodel.MetaData, endtype string) (*nqmEndpoint, error) {
+func strToFloat32(out *float32, index string, dict *map[string]string) error {
+	var err error
+	var ff float64
+	mapper := *dict
+	if v, ok := mapper[index]; ok {
+		ff, err = strconv.ParseFloat(v, 32)
+		if err != nil {
+			return err
+		}
+		*out = float32(ff)
+	}
+	return nil
+}
+
+func strToInt32(out *int32, index string, dict *map[string]string) error {
+	var err error
+	var ii int64
+	mapper := *dict
+	if v, ok := mapper[index]; ok {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		if err != nil {
+			return err
+		}
+		*out = int32(ii)
+	}
+	return nil
+}
+
+func strToInt16(out *int16, index string, dict *map[string]string) error {
+	var err error
+	var ii int64
+	mapper := *dict
+	if v, ok := mapper[index]; ok {
+		ii, err = strconv.ParseInt(v, 10, 16)
+		if err != nil {
+			return err
+		}
+		*out = int16(ii)
+	}
+	return nil
+}
+
+func convert2NqmEndpoint(d *cmodel.MetaData, endType string) (*nqmEndpoint, error) {
 	t := nqmEndpoint{
 		Id:         -1,
 		IspId:      -1,
@@ -296,42 +338,20 @@ func convert2NqmEndpoint(d *cmodel.MetaData, endtype string) (*nqmEndpoint, erro
 		NameTagId:  -1,
 	}
 
-	var ii int64
-	var err error
-	if v, present := d.Tags[endtype+"-id"]; present {
-		ii, err = strconv.ParseInt(v, 10, 32)
-		t.Id = int(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt32(&t.Id, endType+"-id", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags[endtype+"-isp-id"]; present {
-		ii, err = strconv.ParseInt(v, 10, 16)
-		t.IspId = int16(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt16(&t.IspId, endType+"-isp-id", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags[endtype+"-province-id"]; present {
-		ii, err = strconv.ParseInt(v, 10, 16)
-		t.ProvinceId = int16(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt16(&t.ProvinceId, endType+"-province-id", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags[endtype+"-city-id"]; present {
-		ii, err = strconv.ParseInt(v, 10, 16)
-		t.CityId = int16(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt16(&t.CityId, endType+"-city-id", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags[endtype+"-name-tag-id"]; present {
-		ii, err = strconv.ParseInt(v, 10, 32)
-		t.NameTagId = int(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt32(&t.NameTagId, endType+"-name-tag-id", &d.Tags); err != nil {
+		return nil, err
 	}
 
 	return &t, nil
@@ -349,58 +369,26 @@ func convert2NqmMetrics(d *cmodel.MetaData) (*nqmMetrics, error) {
 		Pktreceive:  -1,
 	}
 
-	var f float64
-	var ii int64
-	var err error
-	if v, present := d.Tags["rttmin"]; present {
-		ii, err = strconv.ParseInt(v, 10, 32)
-		t.Rttmin = int32(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt32(&t.Rttmin, "rttmin", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags["rttavg"]; present {
-		f, err = strconv.ParseFloat(v, 32)
-		t.Rttavg = float32(f)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToFloat32(&t.Rttavg, "rttavg", &d.Tags); err != nil {
+		return nil, err
 	}
-
-	if v, present := d.Tags["rttmax"]; present {
-		ii, err = strconv.ParseInt(v, 10, 32)
-		t.Rttmax = int32(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt32(&t.Rttmax, "rttmax", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags["rttmdev"]; present {
-		f, err = strconv.ParseFloat(v, 32)
-		t.Rttmdev = float32(f)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToFloat32(&t.Rttmdev, "rttmdev", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags["rttmedian"]; present {
-		f, err = strconv.ParseFloat(v, 32)
-		t.Rttmedian = float32(f)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToFloat32(&t.Rttmedian, "rttmedian", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags["pkttransmit"]; present {
-		ii, err = strconv.ParseInt(v, 10, 32)
-		t.Pkttransmit = int32(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt32(&t.Pkttransmit, "pkttransmit", &d.Tags); err != nil {
+		return nil, err
 	}
-	if v, present := d.Tags["pktreceive"]; present {
-		ii, err = strconv.ParseInt(v, 10, 32)
-		t.Pktreceive = int32(ii)
-		if err != nil {
-			return &t, err
-		}
+	if err := strToInt32(&t.Pktreceive, "pktreceive", &d.Tags); err != nil {
+		return nil, err
 	}
 
 	return &t, nil

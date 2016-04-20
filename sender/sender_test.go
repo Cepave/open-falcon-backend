@@ -95,6 +95,12 @@ func TestConvert2NqmMetrics(t *testing.T) {
 		t.Error("Expected output: ", out)
 		t.Error("Real output:     ", *out_ptr)
 	}
+
+	in.Tags["rttmin"] = "qqqq"
+	out_ptr_e, err := convert2NqmMetrics(in)
+	if out_ptr_e != nil {
+		t.Error("Expected parsing error: ", err)
+	}
 }
 
 func TestConvert2NqmEndpoint(t *testing.T) {
@@ -126,6 +132,12 @@ func TestConvert2NqmEndpoint(t *testing.T) {
 	if out != *out_ptr {
 		t.Error("Expected output: ", out)
 		t.Error("Real output:     ", *out_ptr)
+	}
+
+	in.Tags["agent-id"] = "qqqq"
+	out_ptr_e, err := convert2NqmEndpoint(in, "agent")
+	if out_ptr_e != nil {
+		t.Error("Expected parsing error: ", err)
 	}
 }
 
