@@ -1,9 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"log"
-)
+import "log"
 
 type ParamToAgent struct {
 	Metric      string      `json:"metric"`
@@ -27,9 +24,9 @@ func main() {
 		log.Println(err)
 		return
 	}
-	fmt.Println(probingCmd)
+	log.Println("Execution the probing command:", probingCmd[0])
 
 	rawData := Probe(probingCmd)
-	jsonParams := Parse(rawData)
+	jsonParams := MarshalIntoParameters(rawData)
 	Push(jsonParams)
 }

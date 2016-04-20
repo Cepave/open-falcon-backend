@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -23,22 +23,19 @@ func marshalFpingRowIntoJSON(row []string, target model.NqmTarget) []ParamToAgen
 	var params []ParamToAgent
 	xmt, err := strconv.Atoi(row[4])
 	if err != nil {
-		fmt.Println("error occured:")
-		fmt.Printf("%s", err)
+		log.Println("error occured:", err)
 	}
 	params = append(params, marshalJSON(target, "packets-sent", xmt))
 
 	rcv, err := strconv.Atoi(row[5])
 	if err != nil {
-		fmt.Println("error occured:")
-		fmt.Printf("%s", err)
+		log.Println("error occured:", err)
 	}
 	params = append(params, marshalJSON(target, "packets-received", rcv))
 
 	tt, err := strconv.ParseFloat(row[11], 64)
 	if err != nil {
-		fmt.Println("error occured:")
-		fmt.Printf("%s", err)
+		log.Println("error occured:", err)
 	}
 	params = append(params, marshalJSON(target, "transmission-time", tt))
 
@@ -66,12 +63,10 @@ func marshalJSON(target model.NqmTarget, metric string, value interface{}) Param
 	return ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
 }
 
-func Parse(rawData []string) []ParamToAgent {
+func MarshalIntoParameters(rawData []string) []ParamToAgent {
 	var params []ParamToAgent
 	for rowNum, row := range rawData {
 		parsedRow := parseFpingRow(row)
-		fmt.Println(parsedRow)
-
 		if len(parsedRow) != 13 {
 			continue
 		}

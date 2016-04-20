@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -11,7 +10,7 @@ import (
 func Push(params []ParamToAgent) {
 	paramsBody, err := json.Marshal(params)
 	if err != nil {
-		fmt.Println(GetGeneralConfig().AgentPushURL+", format body error,", err)
+		log.Fatalln(GetGeneralConfig().AgentPushURL+", Error on formatting body:,", err)
 	}
 
 	postReq, err := http.NewRequest("POST", GetGeneralConfig().AgentPushURL, bytes.NewBuffer(paramsBody))
@@ -21,8 +20,8 @@ func Push(params []ParamToAgent) {
 	httpClient := &http.Client{}
 	postResp, err := httpClient.Do(postReq)
 	if err != nil {
-		log.Print("Error in pushing to ", GetGeneralConfig().AgentPushURL, ": ", err, "\n")
+		log.Fatalln("Error on pushing to [", GetGeneralConfig().AgentPushURL, "]:", err)
 	}
 	defer postResp.Body.Close()
-	fmt.Println("Body:", string(paramsBody))
+	log.Println("Pushing the HTTP Body...succeeded")
 }
