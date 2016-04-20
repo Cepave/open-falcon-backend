@@ -104,6 +104,7 @@ func getConnectionID() string {
 
 func loadJSONConfig() {
 	cfgFile := *flag.String("c", "cfg.json", "nqm's configuration file")
+	flag.Parse()
 
 	if !file.IsExist(cfgFile) {
 		log.Fatalln("Configuration file [", cfgFile, "] doesn't exist")

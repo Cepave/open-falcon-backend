@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 )
@@ -18,7 +17,6 @@ type ParamToAgent struct {
 
 func init() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-	flag.Parse()
 	InitGeneralConfig()
 	InitRPC()
 }
