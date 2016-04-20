@@ -64,14 +64,17 @@ func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
 	var testedHostName string
 	var testedConnectionId string
 	var testedIpAddress net.IP
+	var testedLenOfIpAddress int
 
 	hbstesting.QueryForRow(
 		func(row *sql.Row) {
-			row.Scan(&testedConnectionId, &testedHostName, &testedIpAddress)
+			row.Scan(&testedConnectionId, &testedHostName, &testedIpAddress, &testedLenOfIpAddress)
 		},
-		"SELECT ag_connection_id, ag_hostname, ag_ip_address FROM nqm_agent WHERE ag_id = ?",
+		"SELECT ag_connection_id, ag_hostname, ag_ip_address, BIT_LENGTH(ag_ip_address) AS len_of_ip_address FROM nqm_agent WHERE ag_id = ?",
 		testedAgent.Id,
 	)
+
+	c.Logf("Ip Address: \"%s\". Length(bits): [%d]", testedIpAddress, testedLenOfIpAddress);
 
 	/**
 	 * Asserts the data on database
@@ -79,6 +82,7 @@ func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
 	c.Assert(testedConnectionId, Equals, testedAgent.ConnectionId())
 	c.Assert(testedHostName, Equals, testedAgent.Hostname())
 	c.Assert(testedIpAddress.Equal(testedAgent.IpAddress), Equals, true)
+	c.Assert(testedLenOfIpAddress, Equals, 32)
 	// :~)
 }
 

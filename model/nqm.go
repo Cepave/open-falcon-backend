@@ -3,6 +3,7 @@ package model
 import (
 	"net"
 	"github.com/Cepave/common/model"
+	"strings"
 )
 
 // Represents the model of NQM agent, which is only used in HBS
@@ -15,9 +16,17 @@ type NqmAgent struct {
 
 // Constructs a new instance of NQM agent
 func NewNqmAgent(rpcNqmAgent *model.NqmPingTaskRequest) *NqmAgent {
+	var ipAddress = net.ParseIP(rpcNqmAgent.IpAddress);
+
+	if strings.IndexAny(rpcNqmAgent.IpAddress, ".") >= 0 {
+		ipAddress = ipAddress.To4()
+	} else {
+		ipAddress = ipAddress.To16()
+	}
+
 	return &NqmAgent{
 		rpcNqmAgent: rpcNqmAgent,
-		IpAddress: net.ParseIP(rpcNqmAgent.IpAddress),
+		IpAddress: ipAddress,
 	}
 }
 
