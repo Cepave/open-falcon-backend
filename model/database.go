@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/model/dashboard"
-	"github.com/Cepave/fe/model/event"
+	event "github.com/Cepave/fe/model/falcon_portal"
 	"github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"

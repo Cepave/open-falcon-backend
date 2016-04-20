@@ -1,4 +1,4 @@
-package event
+package falconPortal
 
 import "time"
 
@@ -53,4 +53,14 @@ type Tpl struct {
 	ActionId   string `json:"action_id"`
 	CreateUser string `json:"create_user"`
 	CreateAt   string `json:"create_at"`
+}
+type Action struct {
+	Id                 int    `json:"id"`
+	Uic                string `json:"uic"`
+	Url                string `json:"url"`
+	Callback           int    `json:"callback"`
+	BeforeCallbackSms  int    `json:"before_callback_sms"`
+	BeforeCallbackMail int    `json:"before_callback_mail"`
+	AfterCallbackSms   int    `json"after_callback_sms"`
+	AfterCallbackMail  int    `json:"after_callback_mail"`
 }
