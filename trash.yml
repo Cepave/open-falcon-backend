@@ -36,3 +36,6 @@ import:
 
 - package: github.com/Cepave/transfer
   version: origin/develop
+
+- package: github.com/Cepave/task
+  version: origin/develop
