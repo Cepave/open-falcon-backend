@@ -1,6 +1,9 @@
 package main
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 type ParamToAgent struct {
 	Metric      string      `json:"metric"`
@@ -10,6 +13,19 @@ type ParamToAgent struct {
 	Tags        string      `json:"tags"`
 	Timestamp   int64       `json:"timestamp"`
 	Step        int64       `json:"step"`
+}
+
+func (p ParamToAgent) String() string {
+	return fmt.Sprintf(
+		" {metric: %v, endpoint: %v, value: %v, counterType:%v, tags:%v, timestamp:%d, step:%d}",
+		p.Metric,
+		p.Endpoint,
+		p.Value,
+		p.CounterType,
+		p.Tags,
+		p.Timestamp,
+		p.Step,
+	)
 }
 
 func init() {
@@ -29,4 +45,5 @@ func main() {
 	rawData := Probe(probingCmd)
 	jsonParams := MarshalIntoParameters(rawData)
 	Push(jsonParams)
+	//	log.Println(jsonParams)
 }
