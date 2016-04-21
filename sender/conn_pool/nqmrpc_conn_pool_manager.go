@@ -7,20 +7,20 @@ import (
 	"time"
 )
 
-type RpcClient2 struct {
+type JsonRpcV2Client struct {
 	cli  *jsonrpc2.Client
 	name string
 }
 
-func (this RpcClient2) Name() string {
+func (this JsonRpcV2Client) Name() string {
 	return this.name
 }
 
-func (this RpcClient2) Closed() bool {
+func (this JsonRpcV2Client) Closed() bool {
 	return this.cli == nil
 }
 
-func (this RpcClient2) Close() error {
+func (this JsonRpcV2Client) Close() error {
 	if this.cli != nil {
 		err := this.cli.Close()
 		this.cli = nil
@@ -29,7 +29,7 @@ func (this RpcClient2) Close() error {
 	return nil
 }
 
-func (this RpcClient2) Call(method string, args interface{}, reply interface{}) error {
+func (this JsonRpcV2Client) Call(method string, args interface{}, reply interface{}) error {
 	return this.cli.Call(method, args, reply)
 }
 
@@ -48,7 +48,7 @@ func newNqmConnPool(address string, maxConns int, maxIdle int) *ConnPool {
 	pool.New = func(connName string) (NConn, error) {
 		url := "http://" + address
 		log.Println("Invoke rpcClient2 by url: " + url)
-		return RpcClient2{cli: jsonrpc2.NewHTTPClient(url), name: connName}, nil
+		return JsonRpcV2Client{cli: jsonrpc2.NewHTTPClient(url), name: connName}, nil
 	}
 
 	return pool
@@ -77,7 +77,7 @@ func (this *NqmRpcConnPoolHelper) Call(method string, args interface{}, resp int
 		return fmt.Errorf("get connection fail: err %v. proc: %s", err, this.p.Proc())
 	}
 
-	rpcClient := conn.(RpcClient2)
+	rpcClient := conn.(JsonRpcV2Client)
 
 	done := make(chan error)
 	go func() {

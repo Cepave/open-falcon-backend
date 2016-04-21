@@ -287,11 +287,10 @@ func convert2NqmRpcItem(d *cmodel.MetaData) (*nqmRpcItem, error) {
 	return &t, nil
 }
 
-func strToFloat32(out *float32, index string, dict *map[string]string) error {
+func strToFloat32(out *float32, index string, dict map[string]string) error {
 	var err error
 	var ff float64
-	mapper := *dict
-	if v, ok := mapper[index]; ok {
+	if v, ok := dict[index]; ok {
 		ff, err = strconv.ParseFloat(v, 32)
 		if err != nil {
 			return err
@@ -301,11 +300,10 @@ func strToFloat32(out *float32, index string, dict *map[string]string) error {
 	return nil
 }
 
-func strToInt32(out *int32, index string, dict *map[string]string) error {
+func strToInt32(out *int32, index string, dict map[string]string) error {
 	var err error
 	var ii int64
-	mapper := *dict
-	if v, ok := mapper[index]; ok {
+	if v, ok := dict[index]; ok {
 		ii, err = strconv.ParseInt(v, 10, 32)
 		if err != nil {
 			return err
@@ -315,11 +313,10 @@ func strToInt32(out *int32, index string, dict *map[string]string) error {
 	return nil
 }
 
-func strToInt16(out *int16, index string, dict *map[string]string) error {
+func strToInt16(out *int16, index string, dict map[string]string) error {
 	var err error
 	var ii int64
-	mapper := *dict
-	if v, ok := mapper[index]; ok {
+	if v, ok := dict[index]; ok {
 		ii, err = strconv.ParseInt(v, 10, 16)
 		if err != nil {
 			return err
@@ -338,19 +335,19 @@ func convert2NqmEndpoint(d *cmodel.MetaData, endType string) (*nqmEndpoint, erro
 		NameTagId:  -1,
 	}
 
-	if err := strToInt32(&t.Id, endType+"-id", &d.Tags); err != nil {
+	if err := strToInt32(&t.Id, endType+"-id", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToInt16(&t.IspId, endType+"-isp-id", &d.Tags); err != nil {
+	if err := strToInt16(&t.IspId, endType+"-isp-id", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToInt16(&t.ProvinceId, endType+"-province-id", &d.Tags); err != nil {
+	if err := strToInt16(&t.ProvinceId, endType+"-province-id", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToInt16(&t.CityId, endType+"-city-id", &d.Tags); err != nil {
+	if err := strToInt16(&t.CityId, endType+"-city-id", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToInt32(&t.NameTagId, endType+"-name-tag-id", &d.Tags); err != nil {
+	if err := strToInt32(&t.NameTagId, endType+"-name-tag-id", d.Tags); err != nil {
 		return nil, err
 	}
 
@@ -369,25 +366,25 @@ func convert2NqmMetrics(d *cmodel.MetaData) (*nqmMetrics, error) {
 		Pktreceive:  -1,
 	}
 
-	if err := strToInt32(&t.Rttmin, "rttmin", &d.Tags); err != nil {
+	if err := strToInt32(&t.Rttmin, "rttmin", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToFloat32(&t.Rttavg, "rttavg", &d.Tags); err != nil {
+	if err := strToFloat32(&t.Rttavg, "rttavg", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToInt32(&t.Rttmax, "rttmax", &d.Tags); err != nil {
+	if err := strToInt32(&t.Rttmax, "rttmax", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToFloat32(&t.Rttmdev, "rttmdev", &d.Tags); err != nil {
+	if err := strToFloat32(&t.Rttmdev, "rttmdev", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToFloat32(&t.Rttmedian, "rttmedian", &d.Tags); err != nil {
+	if err := strToFloat32(&t.Rttmedian, "rttmedian", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToInt32(&t.Pkttransmit, "pkttransmit", &d.Tags); err != nil {
+	if err := strToInt32(&t.Pkttransmit, "pkttransmit", d.Tags); err != nil {
 		return nil, err
 	}
-	if err := strToInt32(&t.Pktreceive, "pktreceive", &d.Tags); err != nil {
+	if err := strToInt32(&t.Pktreceive, "pktreceive", d.Tags); err != nil {
 		return nil, err
 	}
 
