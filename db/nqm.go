@@ -15,15 +15,17 @@ func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
 	 */
 	if _, err = DB.Exec(
 		`
-		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address)
-		VALUES(?, ?, ?)
+		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat)
+		VALUES(?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 			ag_hostname = VALUES(ag_hostname),
-			ag_ip_address = VALUES(ag_ip_address)
+			ag_ip_address = VALUES(ag_ip_address),
+			ag_last_heartbeat = VALUES(ag_last_heartbeat)
 		`,
 		agent.ConnectionId(),
 		agent.Hostname(),
 		[]byte(agent.IpAddress),
+		time.Now(),
 	)
 		err != nil {
 
@@ -240,6 +242,10 @@ func loadAllTargets() (*sql.Rows, error) {
 			INNER JOIN
 			owl_city AS ct
 			ON tg.tg_ct_id = ct.ct_id
+		WHERE
+			tg.tg_status=true
+			AND
+			tg.tg_available=true;
 		`,
 	)
 }
@@ -259,6 +265,8 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 				nqm_pt_target_filter_isp AS tfisp
 				ON tfisp.tfisp_pt_ag_id = ?
 					AND tg.tg_isp_id = tfisp.tfisp_isp_id
+					AND tg.tg_status = true
+					AND tg.tg_available = true
 			/* :~) */
 			UNION
 			/* Matched target by province */
@@ -268,6 +276,8 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 				nqm_pt_target_filter_province AS tfpv
 				ON tfpv.tfpv_pt_ag_id = ?
 					AND tg.tg_pv_id = tfpv.tfpv_pv_id
+					AND tg.tg_status = true
+					AND tg.tg_available = true
 			/* :~) */
 			UNION
 			/* Matched target by city */
@@ -277,6 +287,8 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 				nqm_pt_target_filter_city AS tfct
 				ON tfct.tfct_pt_ag_id = ?
 					AND tg.tg_ct_id = tfct.tfct_ct_id
+					AND tg.tg_status = true
+					AND tg.tg_available = true
 			/* :~) */
 			UNION
 			/* Matched target by name tag */
@@ -286,12 +298,16 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 				nqm_pt_target_filter_name_tag AS tfnt
 				ON tfnt.tfnt_pt_ag_id = ?
 					AND tg.tg_name_tag = tfnt.tfnt_name_tag
+					AND tg.tg_status = true
+					AND tg.tg_available = true
 			/* :~) */
 			UNION
 			/* Matched target which to be probed by all */
 			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
 			FROM nqm_target tg
 			WHERE tg_probed_by_all = true
+				AND tg.tg_status = true
+				AND tg.tg_available = true
 			/* :~) */
 		) AS tg
 		INNER JOIN
