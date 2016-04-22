@@ -119,6 +119,7 @@ func IOStatsMetrics() (L []*model.MetricValue) {
 	dsLock.RLock()
 	defer dsLock.RUnlock()
 
+	ioUtilMax := 0.0
 	for device, _ := range diskStatsMap {
 		if !ShouldHandleDevice(device) {
 			continue
@@ -154,8 +155,12 @@ func IOStatsMetrics() (L []*model.MetricValue) {
 		if tmp > 100.0 {
 			tmp = 100.0
 		}
+		if ioUtilMax < tmp {
+			ioUtilMax = tmp
+		}
 		L = append(L, GaugeValue("disk.io.util", tmp, tags))
 	}
+	L = append(L, GaugeValue("disk.io.util.max", ioUtilMax, ""))
 
 	return
 }
