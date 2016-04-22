@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS event_cases(
 		timestamp Timestamp NOT NULL,
 		update_at Timestamp,
 		closed_at Timestamp,
-		closed_note VARCHAR(200),
+		closed_note VARCHAR(250),
 		user_modified int(10) unsigned,
 		tpl_creator VARCHAR(64),
 		expression_id int(10) unsigned,
