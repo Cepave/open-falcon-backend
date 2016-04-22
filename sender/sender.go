@@ -365,14 +365,17 @@ func convert2NqmMetrics(d *cmodel.MetaData) (*nqmMetrics, error) {
 		Pkttransmit: -1,
 		Pktreceive:  -1,
 	}
+	var ff float32
+	if err := strToFloat32(&ff, "rttmin", d.Tags); err != nil {
+		return nil, err
+	}
+	t.Rttmin = int32(ff)
+	if err := strToFloat32(&ff, "rttmax", d.Tags); err != nil {
+		return nil, err
+	}
+	t.Rttmax = int32(ff)
 
-	if err := strToInt32(&t.Rttmin, "rttmin", d.Tags); err != nil {
-		return nil, err
-	}
 	if err := strToFloat32(&t.Rttavg, "rttavg", d.Tags); err != nil {
-		return nil, err
-	}
-	if err := strToInt32(&t.Rttmax, "rttmax", d.Tags); err != nil {
 		return nil, err
 	}
 	if err := strToFloat32(&t.Rttmdev, "rttmdev", d.Tags); err != nil {

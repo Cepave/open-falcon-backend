@@ -54,11 +54,11 @@ func createMetaData() *cmodel.MetaData {
 		Value:       0.000000,
 		CounterType: "",
 		Tags: map[string]string{
-			"rttmin":             "18611",
-			"rttavg":             "21626.5",
-			"rttmax":             "26951",
+			"rttmin":             "18.64",
+			"rttavg":             "21",
+			"rttmax":             "26.56",
 			"rttmdev":            "234.2",
-			"rttmedian":          "21.522",
+			"rttmedian":          "21.5",
 			"pkttransmit":        "13",
 			"pktreceive":         "12",
 			"dstpoint":           "test.endpoint.niean.2",
@@ -82,11 +82,11 @@ func TestConvert2NqmMetrics(t *testing.T) {
 	in := createMetaData()
 	out_ptr, _ := convert2NqmMetrics(in)
 	out := nqmMetrics{
-		Rttmin:      18611,
-		Rttavg:      21626.5,
-		Rttmax:      26951,
+		Rttmin:      18,
+		Rttavg:      21,
+		Rttmax:      26,
 		Rttmdev:     234.2,
-		Rttmedian:   21.522,
+		Rttmedian:   21.5,
 		Pkttransmit: 13,
 		Pktreceive:  12,
 	}
@@ -196,8 +196,8 @@ func TestJsonMarshal(t *testing.T) {
 	var int_dat map[string]int32
 	json.Unmarshal(check, &int_dat)
 
-	var min int32 = 18611
-	var max int32 = 26951
+	var min int32 = 18
+	var max int32 = 26
 
 	if v, p := int_dat["min"]; p {
 		if v != min {
