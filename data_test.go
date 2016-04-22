@@ -17,8 +17,8 @@ func TestNqmParseFpingRow(t *testing.T) {
 	}
 
 	expecteds := []map[string]string{
-		{"rttmax": "46", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8"},
-		{"rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "99", "rttmin": "5", "rttmax": "35", "rttavg": "10.9"},
+		{"rttmax": "46.5", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8.61"},
+		{"rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "99", "rttmin": "5.42", "rttmax": "35.9", "rttavg": "10.9"},
 	}
 	for i, v := range tests {
 		if !reflect.DeepEqual(expecteds[i], nqmParseFpingRow(v)) {
@@ -52,11 +52,11 @@ func TestNqmTagsAssembler(t *testing.T) {
 		"-2", "-2", "-2", "-2", "-2",
 	}
 	tests := []map[string]string{
-		{"rttmax": "46", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8"},
+		{"rttmax": "46.5", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8.61"},
 	}
 
 	expecteds := []string{
-		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=-2,rttmin=8,rttmax=46,rttavg=14.5,rttmdev=-1,rttmedian=-1,pkttransmit=100,pktreceive=100",
+		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=-2,rttmin=8.61,rttmax=46.5,rttavg=14.5,rttmdev=-1,rttmedian=-1,pkttransmit=100,pktreceive=100",
 	}
 
 	t_out := nqmTagsAssembler(target, agent, tests[0])

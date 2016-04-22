@@ -48,8 +48,8 @@ func nqmParseFpingRow(row []string) map[string]string {
 		                                  4  5  6                  10   11  12
 	*/
 	nqmDataMap := map[string]string{}
-	nqmDataMap["rttmin"] = (strings.Split(row[10], "."))[0]
-	nqmDataMap["rttmax"] = (strings.Split(row[12], "."))[0]
+	nqmDataMap["rttmin"] = row[10]
+	nqmDataMap["rttmax"] = row[12]
 	nqmDataMap["rttavg"] = row[11]
 	nqmDataMap["rttmdev"] = "-1"
 	nqmDataMap["rttmedian"] = "-1"
