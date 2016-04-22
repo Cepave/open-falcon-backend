@@ -38,3 +38,8 @@
     filename: "chyeh-8.sql",
     comment: "[OWL-451] Change the schemas for Fastbat"
 }
+- {
+    id: "masato-9",
+    filename: "masato-9.sql",
+    comment: "[OWL-468] Alarm Case database table script change"
+}
