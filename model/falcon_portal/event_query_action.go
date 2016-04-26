@@ -54,6 +54,11 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 			var eventArr []*Events
 			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s' order by timestamp DESC", event.Id)).QueryRows(&eventArr)
 			fmt.Sprintf("%v", eventArr)
+			if len(eventArr) != 0 {
+				event.Events = eventArr
+			} else {
+				event.Events = []*Events{}
+			}
 			event.Events = eventArr
 			result[indx] = event
 		}
