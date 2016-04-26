@@ -50,7 +50,7 @@ func CoreNetMetrics(ifacePrefix []string) []*model.MetricValue {
 	inTotalBits := int64(0)
 	outTotalBits := int64(0)
 	for _, netIf := range netIfs {
-		if strings.Contains(netIf.Iface, "eth") {
+		if strings.Contains(netIf.Iface, "eth") || strings.Contains(netIf.Iface, "em") || strings.Contains(netIf.Iface, "enp") {
 			inTotalBits += netIf.InBytes * 8
 			outTotalBits += netIf.OutBytes * 8
 		}
