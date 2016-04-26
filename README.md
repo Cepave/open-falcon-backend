@@ -1,3 +1,5 @@
+# (This document is deprecated)
+
 # nqm
 
 The module of network quality measurement

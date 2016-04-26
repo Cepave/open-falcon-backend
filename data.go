@@ -48,7 +48,7 @@ func marshalFpingRowIntoJSON(row []string, target model.NqmTarget) []ParamToAgen
  *     Transmission Time - float64
  */
 func marshalJSON(target model.NqmTarget, metric string, value interface{}) ParamToAgent {
-	endpoint := GetGeneralConfig().ConnectionID
+	endpoint := GetGeneralConfig().Hostname
 	counterType := "GAUGE"
 	tags := "nqm-agent-isp=" + GetGeneralConfig().ISP +
 		",nqm-agent-province=" + GetGeneralConfig().Province +
