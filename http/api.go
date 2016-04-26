@@ -646,7 +646,6 @@ func getAnomalies(errorHosts []interface{}, result map[string]interface{}) map[s
 		errorHost.(map[string]string)["province"] = provinceName
 		delete(errorHost.(map[string]string), "pop_id")
 		delete(errorHost.(map[string]string), "id")
-		delete(errorHost.(map[string]string), "version")
 
 		if province, ok := anomalies2[provinceName]; ok {
 			province = append(province.([]map[string]string), errorHost.(map[string]string))
