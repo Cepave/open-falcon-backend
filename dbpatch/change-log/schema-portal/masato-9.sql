@@ -34,6 +34,10 @@ CREATE TABLE IF NOT EXISTS event_cases(
 	ENGINE =InnoDB
 	DEFAULT CHARSET =utf8;
 
+UPDATE event_cases AS e, tpl AS t
+SET e.tpl_creator = t.create_user
+WHERE e.template_id = t.id;
+
 CREATE TABLE IF NOT EXISTS events (
 		id MEDIUMINT NOT NULL AUTO_INCREMENT,
 		event_caseId VARCHAR(50),
