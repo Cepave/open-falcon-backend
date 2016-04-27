@@ -1014,6 +1014,57 @@ func appendUnique(slice []int, num int) []int {
 	return slice
 }
 
+func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[string]interface{}) map[string]interface{} {
+	hostsExisted := map[string]interface{}{}
+	for key, hostname := range hostnamesExisted {
+		host := map[string]interface{}{
+			"id": key + 1,
+			"name": hostname,
+		}
+		hostsExisted[hostname] = host
+	}
+	for _, host := range hosts {
+		hostname := host.(map[string]interface{})["name"].(string)
+		if _, ok := hostsExisted[hostname]; ok {
+			hostExisted := hostsExisted[hostname]
+			isp := strings.Split(hostname, "-")[0]
+			province := strings.Split(hostname, "-")[1]
+			platform := host.(map[string]interface{})["platform"].(string)
+			if _, ok := hostExisted.(map[string]interface{})["platform"]; ok {
+				hostExisted.(map[string]interface{})["platform"] = appendUniqueString(hostExisted.(map[string]interface{})["platform"].([]string), platform)
+			} else {
+				hostExisted.(map[string]interface{})["platform"] = []string{platform}
+			}
+			hostExisted.(map[string]interface{})["isp"] = isp
+			hostExisted.(map[string]interface{})["province"] = province
+			hostsExisted[hostname] = hostExisted
+		}
+	}
+	return hostsExisted
+}
+
+func getProvinces(popIDs []string, result map[string]interface{}) map[string]string {
+	provinces := map[string]string{}
+	sqlcmd := "SELECT pop_id, province, city FROM grafana.idc WHERE pop_id IN ('"
+	sqlcmd += strings.Join(popIDs, "','") + "') ORDER BY pop_id ASC"
+	var rows []orm.Params
+	o := orm.NewOrm()
+	o.Using("grafana")
+	_, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, row := range rows {
+			provinceName := row["province"].(string)
+			if provinceName == "特区" {
+				provinceName = row["city"].(string)
+			}
+			provinces[row["pop_id"].(string)] = provinceName
+		}
+	}
+	return provinces
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
