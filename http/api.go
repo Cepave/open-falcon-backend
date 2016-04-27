@@ -1000,6 +1000,20 @@ func appendUniqueString(slice []string, s string) []string {
 	return slice
 }
 
+func appendUnique(slice []int, num int) []int {
+	existed := false
+	for _, element := range slice {
+		if element == num {
+			existed = true
+		}
+	}
+	if !existed {
+		slice = append(slice, num)
+		sort.Ints(slice)
+	}
+	return slice
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
