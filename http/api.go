@@ -1079,6 +1079,42 @@ func getHostsWithProvinces(hostsExisted map[string]interface{}, provinces map[st
 	return hostsWithProvinces
 }
 
+func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[string]interface{}) {
+	hosts := map[string]interface{}{}
+	keywords := map[string]interface{}{}
+	for _, host := range hostsExisted {
+		id := host.(map[string]interface{})["id"].(int)
+		platform := host.(map[string]interface{})["platform"].([]string)
+		for _, s := range platform {
+			if _, ok := keywords[s]; ok {
+				keywords[s] = appendUnique(keywords[s].([]int), id)
+			} else {
+				keywords[s] = []int{id}
+			}
+		}
+
+		isp := host.(map[string]interface{})["isp"].(string)
+		if _, ok := keywords[isp]; ok {
+			keywords[isp] = appendUnique(keywords[isp].([]int), id)
+		} else {
+			keywords[isp] = []int{id}
+		}
+
+		province := host.(map[string]interface{})["province"].(string)
+		if _, ok := keywords[province]; ok {
+			keywords[province] = appendUnique(keywords[province].([]int), id)
+		} else {
+			keywords[province] = []int{id}
+		}
+		delete(host.(map[string]interface{}), "id")
+		delete(host.(map[string]interface{}), "isp")
+		delete(host.(map[string]interface{}), "province")
+		hosts[strconv.Itoa(id)] = host
+	}
+	result["hosts"] = hosts
+	result["keywords"] = keywords
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
