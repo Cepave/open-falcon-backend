@@ -850,7 +850,7 @@ func getMetricsByMetricType(metricType string) []string {
 	return metrics
 }
 
-func getGraphQueryResponse(metrics []string, duration string, hostname string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	data := []*cmodel.GraphQueryResponse{}
 	now := time.Now().Unix()
 	unit := int64(86400)
@@ -862,22 +862,24 @@ func getGraphQueryResponse(metrics []string, duration string, hostname string, r
 	start := now - offset
 
 	proc.HistoryRequestCnt.Incr()
-	for _, metric := range metrics {
-		request := cmodel.GraphQueryParam{
-			Start:     start,
-			End:       now,
-			ConsolFun: "AVERAGE",
-			Endpoint:  hostname,
-			Counter:   metric,
+	for _, hostname := range hostnames {
+		for _, metric := range metrics {
+			request := cmodel.GraphQueryParam{
+				Start:     start,
+				End:       now,
+				ConsolFun: "AVERAGE",
+				Endpoint:  hostname,
+				Counter:   metric,
+			}
+			response, err := graph.QueryOne(request)
+			if err != nil {
+				setError("graph.queryOne fail, "+err.Error(), result)
+			}
+			if result == nil {
+				continue
+			}
+			data = append(data, response)
 		}
-		response, err := graph.QueryOne(request)
-		if err != nil {
-			setError("graph.queryOne fail, "+err.Error(), result)
-		}
-		if result == nil {
-			continue
-		}
-		data = append(data, response)
 	}
 
 	proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
@@ -907,7 +909,7 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	}
 	metrics := getMetricsByMetricType(metricType)
 	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
-		data := getGraphQueryResponse(metrics, duration, hostname, result)
+		data := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
 
 		filter := ""
 		if metricType == "net" || metricType == "all" {
