@@ -817,8 +817,6 @@ func getMetricsByMetricType(metricType string) []string {
 	metrics := []string{}
 	if metricType == "net" {
 		metrics = []string{
-			"net.if.in.bits/iface=bond0",
-			"net.if.out.bits/iface=bond0",
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
 		}
@@ -834,13 +832,12 @@ func getMetricsByMetricType(metricType string) []string {
 			"cpu.idle",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
-			"disk.io.util.max",
+			"disk.io.util.gd",
 			"load.imin",
+			"disk.io.util.max",
 		}
 	} else if metricType == "all" {
 		metrics = []string{
-			"net.if.in.bits/iface=bond0",
-			"net.if.out.bits/iface=bond0",
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
 			"cpu.idle",
