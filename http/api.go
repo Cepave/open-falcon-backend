@@ -991,6 +991,15 @@ func getExistedHostnames(hostnames []string, result map[string]interface{}) []st
 	return hostnamesExisted
 }
 
+func appendUniqueString(slice []string, s string) []string {
+	sliceStr := strings.Join(slice, "','")
+	if !strings.Contains(sliceStr, s) {
+		slice = append(slice, s)
+		sort.Strings(slice)
+	}
+	return slice
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
