@@ -971,6 +971,26 @@ func getApolloFiltersJSON(nodes map[string]interface{}, result map[string]interf
 	}
 }
 
+func getExistedHostnames(hostnames []string, result map[string]interface{}) []string {
+	hostnamesExisted := []string{}
+	o := orm.NewOrm()
+	var hosts []*Host
+	hostnamesStr := strings.Join(hostnames, "','")
+	sqlcommand := "SELECT hostname, agent_version FROM falcon_portal.host WHERE hostname IN ('"
+	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
+	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, host := range hosts {
+			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
+				hostnamesExisted = append(hostnamesExisted, host.Hostname)
+			}
+		}
+	}
+	return hostnamesExisted
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
