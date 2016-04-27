@@ -1065,6 +1065,20 @@ func getProvinces(popIDs []string, result map[string]interface{}) map[string]str
 	return provinces
 }
 
+func getHostsWithProvinces(hostsExisted map[string]interface{}, provinces map[string]string, result map[string]interface{}) []interface{} {
+	hostsWithProvinces := []interface{}{}
+	for _, host := range hostsExisted {
+		if _, ok := host.(map[string]interface{})["pop_id"]; ok {
+			popID := host.(map[string]interface{})["pop_id"].(string)
+			province := provinces[popID]
+			host.(map[string]interface{})["province"] = province
+			delete(host.(map[string]interface{}), "pop_id")
+			hostsWithProvinces = append(hostsWithProvinces, host)
+		}
+	}
+	return hostsWithProvinces
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
