@@ -1160,6 +1160,39 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	arguments := strings.Split(req.URL.Path, "/")
+	metricType := arguments[4]
+	hostnames := strings.Split(arguments[5], ",")
+	metrics := getMetricsByMetricType(metricType)
+	data := getGraphQueryResponse(metrics, "1d", hostnames, result)
+	for _, series := range data {
+		values := []interface{}{}
+		for _, rrdObj := range series.Values {
+			value := []interface{}{
+				rrdObj.Timestamp * 1000,
+				rrdObj.Value,
+			}
+			values = append(values, value)
+		}
+		item := map[string]interface{}{
+			"host":   series.Endpoint,
+			"metric": series.Counter,
+			"data":   values,
+		}
+		items = append(items, item)
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
