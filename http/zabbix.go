@@ -1017,6 +1017,45 @@ func templateDelete(nodes map[string]interface{}) {
 	nodes["result"] = result
 }
 
+func templateGet(nodes map[string]interface{}) {
+	params := nodes["params"].(map[string]interface{})
+	items := []interface{}{}
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	queryAll := false
+	if val, ok := params["filter"]; ok {
+		filter := val.(map[string]interface{})
+		if val, ok = filter["name"]; ok {
+			for _, keyword := range val.([]interface{}) {
+				if keyword.(string) == "_all_" {
+					queryAll = true
+				}
+			}
+		}
+	}
+	o := orm.NewOrm()
+	countOfRows := 0
+	if queryAll {
+		var templates []*Tpl
+		num, err := o.Raw("SELECT id, tpl_name FROM falcon_portal.tpl").QueryRows(&templates)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			countOfRows = int(num)
+			for _, template := range templates {
+				item := map[string]interface{}{}
+				item["templateid"] = strconv.Itoa(template.Id)
+				item["name"] = template.Tpl_name
+				items = append(items, item)
+			}
+		}
+	}
+	result["items"] = items
+	result["count"] = countOfRows
+	nodes["result"] = result
+}
+
 /**
  * @function name:   func checkTemplateExist(params map[string]interface{}, result map[string]interface{}) Host
  * @description:     This function checks if a template existed.
@@ -1306,6 +1345,9 @@ func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
 			if val, ok = result["count"]; ok {
 				resp["count"] = val
 			}
+			if val, ok = result["anomalies"]; ok {
+				resp["anomalies"] = val
+			}
 		}
 	}
 	resp["time"] = getNow()
@@ -1365,6 +1407,8 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 			templateCreate(nodes)
 		} else if method == "template.delete" {
 			templateDelete(nodes)
+		} else if method == "template.get" {
+			templateGet(nodes)
 		} else if method == "template.update" {
 			templateUpdate(nodes)
 		}
