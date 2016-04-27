@@ -1115,6 +1115,51 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 	result["keywords"] = keywords
 }
 
+func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	count := 0
+	getApolloFiltersJSON(nodes, result)
+	hosts := []interface{}{}
+	hostnames := []string{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			groupName := platform.(map[string]interface{})["platform"].(string)
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+				hostname = device.(map[string]interface{})["hostname"].(string)
+				if device.(map[string]interface{})["ip_status"].(string) == "1" {
+					hostnames = append(hostnames, hostname)
+					host := map[string]interface{}{
+						"name":     hostname,
+						"platform": groupName,
+					}
+					hosts = append(hosts, host)
+					hostnames = append(hostnames, hostname)
+				}
+			}
+		}
+		sort.Strings(hostnames)
+		hostnamesExisted := getExistedHostnames(hostnames, result)
+		sort.Strings(hostnamesExisted)
+		hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
+		count = len(hostsExisted)
+		completeApolloFiltersData(hostsExisted, result)
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	nodes["count"] = count
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
