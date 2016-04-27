@@ -911,33 +911,21 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
 		data := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
 
-		filter := ""
-		if metricType == "net" || metricType == "all" {
-			if len(data[0].Values) > 0 {
-				filter = "eth_all"
-			} else {
-				filter = "bond0"
-			}
-		}
-
 		for _, series := range data {
-			metric := series.Counter
-			if strings.Index(metric, filter) == -1 {
-				values := []interface{}{}
-				for _, rrdObj := range series.Values {
-					value := []interface{}{
-						rrdObj.Timestamp * 1000,
-						rrdObj.Value,
-					}
-					values = append(values, value)
+			values := []interface{}{}
+			for _, rrdObj := range series.Values {
+				value := []interface{}{
+					rrdObj.Timestamp * 1000,
+					rrdObj.Value,
 				}
-				item := map[string]interface{}{
-					"host":   series.Endpoint,
-					"metric": series.Counter,
-					"data":   values,
-				}
-				items = append(items, item)
+				values = append(values, value)
 			}
+			item := map[string]interface{}{
+				"host":   series.Endpoint,
+				"metric": series.Counter,
+				"data":   values,
+			}
+			items = append(items, item)
 		}
 	}
 	result["items"] = items
