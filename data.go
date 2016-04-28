@@ -1,12 +1,37 @@
 package main
 
 import (
-	"github.com/Cepave/common/model"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Cepave/common/model"
 )
+
+type ParamToAgent struct {
+	Metric      string      `json:"metric"`
+	Endpoint    string      `json:"endpoint"`
+	Value       interface{} `json:"value"`
+	CounterType string      `json:"counterType"`
+	Tags        string      `json:"tags"`
+	Timestamp   int64       `json:"timestamp"`
+	Step        int64       `json:"step"`
+}
+
+func (p *ParamToAgent) String() string {
+	return fmt.Sprintf(
+		" {metric: %v, endpoint: %v, value: %v, counterType:%v, tags:%v, timestamp:%d, step:%d}",
+		p.Metric,
+		p.Endpoint,
+		p.Value,
+		p.CounterType,
+		p.Tags,
+		p.Timestamp,
+		p.Step,
+	)
+}
 
 func parseFpingRow(row string) []string {
 	return strings.FieldsFunc(row, func(r rune) bool {
