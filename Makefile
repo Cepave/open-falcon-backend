@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 SOURCE = $(shell find . -name '*.go')
-VERSION ?= $(shell awk -F\" '/^const Version/ { print $$2; exit }' ./version.go)
+VERSION ?= $(shell awk -F\" '/^var Version/ { print $$2; exit }' ./version.go)
 
 nqm: $(SOURCE)
 	go build -o nqm
