@@ -1,0 +1,7 @@
+{
+	"agentPushURL": "http://127.0.0.1:1988/v1/push",
+	"hbsRPCServer": "127.0.0.1:6030",
+	"hostname": "",
+	"ipAddress": "",
+	"connectionID": ""
+}
