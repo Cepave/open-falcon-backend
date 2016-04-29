@@ -39,13 +39,13 @@ func targetToNqmEndpointData(s *model.NqmTarget) *nqmEndpointData {
 	}
 }
 
-func QueryTask() ([]string, error) {
+func QueryTask() ([]string, []model.NqmTarget, error) {
 	err := rpcClient.Call("NqmAgent.PingTask", req, &resp)
 	if err != nil {
 		log.Fatalln("Call NqmAgent.PingTask error:", err)
 	}
 	if !resp.NeedPing {
-		return []string{}, fmt.Errorf("No tasks assigned.")
+		return []string{}, resp.Targets, fmt.Errorf("No tasks assigned.")
 	}
 	agent := *resp.Agent
 	SetGeneralConfigByAgent(agent)
@@ -57,5 +57,5 @@ func QueryTask() ([]string, error) {
 	}
 
 	probingCmd := append(resp.Command, targetAddressList...)
-	return probingCmd, nil
+	return probingCmd, resp.Targets, nil
 }
