@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -36,6 +37,28 @@ var (
 	generalConfig *GeneralConfig
 	lock          = new(sync.RWMutex)
 )
+
+func getBinAbsPath() string {
+	bin, err := filepath.Abs(os.Args[0])
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return bin
+}
+
+func getWorkingDirAbsPath() string {
+	return filepath.Dir(getBinAbsPath())
+}
+
+func getCfgAbsPath(cfgPath string) string {
+	if cfgPath == "cfg.json" {
+		return filepath.Join(getWorkingDirAbsPath(), cfgPath)
+	}
+
+	wd, _ := os.Getwd()
+	cfgAbsPath := filepath.Join(wd, cfgPath)
+	return cfgAbsPath
+}
 
 func PublicIP() (string, error) {
 	output, err := exec.Command("dig", "+short", "myip.opendns.com", "@resolver1.opendns.com").Output()
@@ -103,14 +126,16 @@ func getConnectionID() string {
 }
 
 func loadJSONConfig() {
-	cfgFile := *flag.String("c", "cfg.json", "nqm's configuration file")
+	parsedPtr := flag.String("c", "cfg.json", "nqm's configuration file")
 	flag.Parse()
+	cfgFile := filepath.Clean(*parsedPtr)
+	cfgPath := getCfgAbsPath(cfgFile)
 
-	if !file.IsExist(cfgFile) {
+	if !file.IsExist(cfgPath) {
 		log.Fatalln("Configuration file [", cfgFile, "] doesn't exist")
 	}
 
-	configContent, err := file.ToTrimString(cfgFile)
+	configContent, err := file.ToTrimString(cfgPath)
 	if err != nil {
 		log.Fatalln("Reading configuration file [", cfgFile, "] failed:", err)
 	}
