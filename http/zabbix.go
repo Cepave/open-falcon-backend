@@ -875,6 +875,31 @@ func unbindGroupAndPlugins(groupId int, result map[string]interface{}) {
 	log.Println("unbindGroupAndPlugins row affected nums =", num)
 }
 
+func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	var plugin_dir Plugin_dir
+	for _, pluginDir := range pluginDirs {
+		sqlcmd := "SELECT * FROM falcon_portal.plugin_dir WHERE grp_id=? AND dir=?"
+		err := o.Raw(sqlcmd, groupId, pluginDir).QueryRow(&plugin_dir)
+		if err == orm.ErrNoRows {
+			plugin_dir := Plugin_dir{
+				Grp_id:      groupId,
+				Dir:         pluginDir,
+				Create_user: "zabbix",
+			}
+			log.Println("plugin_dir =", plugin_dir)
+			_, err = o.Insert(&plugin_dir)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+		} else if err != nil {
+			setError(err.Error(), result)
+		} else {
+			log.Println("plugin_dir existed =", plugin_dir)
+		}
+	}
+}
+
 /**
  * @function name:   func hostgroupUpdate(nodes map[string]interface{})
  * @description:     This function updates hostgroup data.
