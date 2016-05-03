@@ -58,6 +58,13 @@ type Grp_host struct {
 	Host_id int
 }
 
+type Plugin_dir struct {
+	Id          int
+	Grp_id      int
+	Dir         string
+	Create_user string
+}
+
 /**
  * @function name:   func getNow() string
  * @description:     This function gets string of current time.
