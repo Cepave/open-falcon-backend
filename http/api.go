@@ -817,8 +817,6 @@ func getMetricsByMetricType(metricType string) []string {
 	metrics := []string{}
 	if metricType == "net" {
 		metrics = []string{
-			"net.if.in.bits/iface=bond0",
-			"net.if.out.bits/iface=bond0",
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
 		}
@@ -834,13 +832,12 @@ func getMetricsByMetricType(metricType string) []string {
 			"cpu.idle",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
-			"disk.io.util.max",
+			"disk.io.util.gd",
 			"load.imin",
+			"disk.io.util.max",
 		}
 	} else if metricType == "all" {
 		metrics = []string{
-			"net.if.in.bits/iface=bond0",
-			"net.if.out.bits/iface=bond0",
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
 			"cpu.idle",
@@ -853,7 +850,7 @@ func getMetricsByMetricType(metricType string) []string {
 	return metrics
 }
 
-func getGraphQueryResponse(metrics []string, duration string, hostname string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	data := []*cmodel.GraphQueryResponse{}
 	now := time.Now().Unix()
 	unit := int64(86400)
@@ -865,22 +862,24 @@ func getGraphQueryResponse(metrics []string, duration string, hostname string, r
 	start := now - offset
 
 	proc.HistoryRequestCnt.Incr()
-	for _, metric := range metrics {
-		request := cmodel.GraphQueryParam{
-			Start:     start,
-			End:       now,
-			ConsolFun: "AVERAGE",
-			Endpoint:  hostname,
-			Counter:   metric,
+	for _, hostname := range hostnames {
+		for _, metric := range metrics {
+			request := cmodel.GraphQueryParam{
+				Start:     start,
+				End:       now,
+				ConsolFun: "AVERAGE",
+				Endpoint:  hostname,
+				Counter:   metric,
+			}
+			response, err := graph.QueryOne(request)
+			if err != nil {
+				setError("graph.queryOne fail, "+err.Error(), result)
+			}
+			if result == nil {
+				continue
+			}
+			data = append(data, response)
 		}
-		response, err := graph.QueryOne(request)
-		if err != nil {
-			setError("graph.queryOne fail, "+err.Error(), result)
-		}
-		if result == nil {
-			continue
-		}
-		data = append(data, response)
 	}
 
 	proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
@@ -910,36 +909,270 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	}
 	metrics := getMetricsByMetricType(metricType)
 	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
-		data := getGraphQueryResponse(metrics, duration, hostname, result)
-
-		filter := ""
-		if metricType == "net" || metricType == "all" {
-			if len(data[0].Values) > 0 {
-				filter = "eth_all"
-			} else {
-				filter = "bond0"
-			}
-		}
+		data := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
 
 		for _, series := range data {
-			metric := series.Counter
-			if strings.Index(metric, filter) == -1 {
-				values := []interface{}{}
-				for _, rrdObj := range series.Values {
-					value := []interface{}{
-						rrdObj.Timestamp * 1000,
-						rrdObj.Value,
-					}
-					values = append(values, value)
+			values := []interface{}{}
+			for _, rrdObj := range series.Values {
+				value := []interface{}{
+					rrdObj.Timestamp * 1000,
+					rrdObj.Value,
 				}
-				item := map[string]interface{}{
-					"host":   series.Endpoint,
-					"metric": series.Counter,
-					"data":   values,
-				}
-				items = append(items, item)
+				values = append(values, value)
+			}
+			item := map[string]interface{}{
+				"host":   series.Endpoint,
+				"metric": series.Counter,
+				"data":   values,
+			}
+			items = append(items, item)
+		}
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
+func getApolloFiltersJSON(nodes map[string]interface{}, result map[string]interface{}) {
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
+	url += "/show_active/yes/hostname/yes.json"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err := json.Unmarshal(body, &nodes); err != nil {
+		setError(err.Error(), result)
+	}
+}
+
+func getExistedHostnames(hostnames []string, result map[string]interface{}) []string {
+	hostnamesExisted := []string{}
+	o := orm.NewOrm()
+	var hosts []*Host
+	hostnamesStr := strings.Join(hostnames, "','")
+	sqlcommand := "SELECT hostname, agent_version FROM falcon_portal.host WHERE hostname IN ('"
+	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
+	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, host := range hosts {
+			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
+				hostnamesExisted = append(hostnamesExisted, host.Hostname)
 			}
 		}
+	}
+	return hostnamesExisted
+}
+
+func appendUniqueString(slice []string, s string) []string {
+	sliceStr := strings.Join(slice, "','")
+	if !strings.Contains(sliceStr, s) {
+		slice = append(slice, s)
+		sort.Strings(slice)
+	}
+	return slice
+}
+
+func appendUnique(slice []int, num int) []int {
+	existed := false
+	for _, element := range slice {
+		if element == num {
+			existed = true
+		}
+	}
+	if !existed {
+		slice = append(slice, num)
+		sort.Ints(slice)
+	}
+	return slice
+}
+
+func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[string]interface{}) map[string]interface{} {
+	hostsExisted := map[string]interface{}{}
+	for key, hostname := range hostnamesExisted {
+		host := map[string]interface{}{
+			"id": key + 1,
+			"name": hostname,
+		}
+		hostsExisted[hostname] = host
+	}
+	for _, host := range hosts {
+		hostname := host.(map[string]interface{})["name"].(string)
+		if _, ok := hostsExisted[hostname]; ok {
+			hostExisted := hostsExisted[hostname]
+			isp := strings.Split(hostname, "-")[0]
+			province := strings.Split(hostname, "-")[1]
+			platform := host.(map[string]interface{})["platform"].(string)
+			if _, ok := hostExisted.(map[string]interface{})["platform"]; ok {
+				hostExisted.(map[string]interface{})["platform"] = appendUniqueString(hostExisted.(map[string]interface{})["platform"].([]string), platform)
+			} else {
+				hostExisted.(map[string]interface{})["platform"] = []string{platform}
+			}
+			hostExisted.(map[string]interface{})["isp"] = isp
+			hostExisted.(map[string]interface{})["province"] = province
+			hostsExisted[hostname] = hostExisted
+		}
+	}
+	return hostsExisted
+}
+
+func getProvinces(popIDs []string, result map[string]interface{}) map[string]string {
+	provinces := map[string]string{}
+	sqlcmd := "SELECT pop_id, province, city FROM grafana.idc WHERE pop_id IN ('"
+	sqlcmd += strings.Join(popIDs, "','") + "') ORDER BY pop_id ASC"
+	var rows []orm.Params
+	o := orm.NewOrm()
+	o.Using("grafana")
+	_, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, row := range rows {
+			provinceName := row["province"].(string)
+			if provinceName == "特区" {
+				provinceName = row["city"].(string)
+			}
+			provinces[row["pop_id"].(string)] = provinceName
+		}
+	}
+	return provinces
+}
+
+func getHostsWithProvinces(hostsExisted map[string]interface{}, provinces map[string]string, result map[string]interface{}) []interface{} {
+	hostsWithProvinces := []interface{}{}
+	for _, host := range hostsExisted {
+		if _, ok := host.(map[string]interface{})["pop_id"]; ok {
+			popID := host.(map[string]interface{})["pop_id"].(string)
+			province := provinces[popID]
+			host.(map[string]interface{})["province"] = province
+			delete(host.(map[string]interface{}), "pop_id")
+			hostsWithProvinces = append(hostsWithProvinces, host)
+		}
+	}
+	return hostsWithProvinces
+}
+
+func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[string]interface{}) {
+	hosts := map[string]interface{}{}
+	keywords := map[string]interface{}{}
+	for _, host := range hostsExisted {
+		id := host.(map[string]interface{})["id"].(int)
+		platform := host.(map[string]interface{})["platform"].([]string)
+		for _, s := range platform {
+			if _, ok := keywords[s]; ok {
+				keywords[s] = appendUnique(keywords[s].([]int), id)
+			} else {
+				keywords[s] = []int{id}
+			}
+		}
+
+		isp := host.(map[string]interface{})["isp"].(string)
+		if _, ok := keywords[isp]; ok {
+			keywords[isp] = appendUnique(keywords[isp].([]int), id)
+		} else {
+			keywords[isp] = []int{id}
+		}
+
+		province := host.(map[string]interface{})["province"].(string)
+		if _, ok := keywords[province]; ok {
+			keywords[province] = appendUnique(keywords[province].([]int), id)
+		} else {
+			keywords[province] = []int{id}
+		}
+		delete(host.(map[string]interface{}), "id")
+		delete(host.(map[string]interface{}), "isp")
+		delete(host.(map[string]interface{}), "province")
+		hosts[strconv.Itoa(id)] = host
+	}
+	result["hosts"] = hosts
+	result["keywords"] = keywords
+}
+
+func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	count := 0
+	getApolloFiltersJSON(nodes, result)
+	hosts := []interface{}{}
+	hostnames := []string{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			groupName := platform.(map[string]interface{})["platform"].(string)
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+				hostname = device.(map[string]interface{})["hostname"].(string)
+				if device.(map[string]interface{})["ip_status"].(string) == "1" {
+					hostnames = append(hostnames, hostname)
+					host := map[string]interface{}{
+						"name":     hostname,
+						"platform": groupName,
+					}
+					hosts = append(hosts, host)
+					hostnames = append(hostnames, hostname)
+				}
+			}
+		}
+		sort.Strings(hostnames)
+		hostnamesExisted := getExistedHostnames(hostnames, result)
+		sort.Strings(hostnamesExisted)
+		hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
+		count = len(hostsExisted)
+		completeApolloFiltersData(hostsExisted, result)
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	nodes["count"] = count
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
+func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	arguments := strings.Split(req.URL.Path, "/")
+	metricType := arguments[4]
+	hostnames := strings.Split(arguments[5], ",")
+	metrics := getMetricsByMetricType(metricType)
+	data := getGraphQueryResponse(metrics, "1d", hostnames, result)
+	for _, series := range data {
+		values := []interface{}{}
+		for _, rrdObj := range series.Values {
+			value := []interface{}{
+				rrdObj.Timestamp * 1000,
+				rrdObj.Value,
+			}
+			values = append(values, value)
+		}
+		item := map[string]interface{}{
+			"host":   series.Endpoint,
+			"metric": series.Counter,
+			"data":   values,
+		}
+		items = append(items, item)
 	}
 	result["items"] = items
 	var nodes = make(map[string]interface{})
@@ -959,4 +1192,6 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/templates/", getTemplateStrategies)
 	http.HandleFunc("/api/alive/platforms", getPlatforms)
 	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
+	http.HandleFunc("/api/apollo/filters", getApolloFilters)
+	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
 }
