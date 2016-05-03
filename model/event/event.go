@@ -115,9 +115,11 @@ func InsertEvent(eve *coommonModel.Event) {
 	} else {
 		//update cases
 		res1, err := q.Raw(
-			"UPDATE event_cases SET update_at = ?, current_step = ?, cond = ?, status = ? WHERE id = ?",
+			"UPDATE event_cases SET update_at = ?, max_step = ?, current_step = ?, note = ?, cond = ?, status = ? WHERE id = ?",
 			time.Unix(eve.EventTime, 0),
+			eve.MaxStep(),
 			eve.CurrentStep,
+			eve.Strategy.Note,
 			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 			eve.Status,
 			eve.Id).Exec()
