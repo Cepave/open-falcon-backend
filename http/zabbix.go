@@ -964,6 +964,19 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 				groupids := [1]string{strconv.Itoa(hostgroupId)}
 				result["groupids"] = groupids
 			}
+
+			if _, ok := params["plugins"]; ok {
+				pluginDirs := []string{}
+				plugins := params["plugins"].([]interface{})
+				for _, plugin := range plugins {
+					pluginDir := plugin.(map[string]interface{})["plugin"].(string)
+					pluginDirs = append(pluginDirs, pluginDir)
+				}
+				unbindGroupAndPlugins(hostgroupId, result)
+				bindGroupAndPlugins(hostgroupId, pluginDirs, result)
+				groupids := [1]string{strconv.Itoa(hostgroupId)}
+				result["groupids"] = groupids
+			}
 		}
 	} else {
 		setError("params['groupid'] must not be empty", result)
