@@ -5,14 +5,13 @@ import (
 	"testing"
 )
 
-// qq_no_exec.py  qq_no_shebang.py  qq.py
 var in []string
 
 func init() {
 	in = []string{
-		"./test/qq_no_exec.py",
-		"./test/qq_no_shebang.py",
-		"./test/qq.py",
+		"./test/scheduler_test_no_exec.py",
+		"./test/scheduler_test_no_shebang.py",
+		"./test/scheduler_test.py",
 	}
 }
 
@@ -41,7 +40,7 @@ func TestGetInterpreterCmd(t *testing.T) {
 	expect := []string{
 		"/usr/bin/python",
 		"-O",
-		"./test/qq.py",
+		"./test/scheduler_test.py",
 	}
 
 	real := getInterpreterCmd(in[2])
