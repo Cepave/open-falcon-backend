@@ -1,22 +1,11 @@
-package event
+package falconPortal
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Cepave/fe/g"
-	"github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 )
-
-func getUserRole(username string) bool {
-	user := uic.ReadUserByName(username)
-	if user.Role == 2 {
-		return true
-	} else {
-		return false
-	}
-}
 
 func GetEventCases(startTime int64, endTime int64, priority int, status string, limit int, username string) (result []EventCases, err error) {
 	config := g.Config()
@@ -24,6 +13,10 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 		limit = config.FalconPortal.Limit
 	}
 
+	isadmin, tplids, err := GetCasePermission(username)
+	if tplids == "" {
+		tplids = "-1"
+	}
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	flag := false
@@ -48,13 +41,10 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 			queryTmp = fmt.Sprintf("%v status = '%s'", queryTmp, status)
 		}
 	}
-	isadmin := getUserRole(username)
 	if queryTmp != "" && !isadmin {
-		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE tpl_creator = '%s' AND %v order by update_at DESC limit %d", username, queryTmp, limit)).QueryRows(&result)
-	} else if isadmin {
-		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE %v order by update_at DESC limit %d", queryTmp, limit)).QueryRows(&result)
+		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE (tpl_creator = '%s' OR template_id in (%s)) AND %v order by update_at DESC limit %d", username, tplids, queryTmp, limit)).QueryRows(&result)
 	} else {
-		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE tpl_creator = '%s' order by update_at DESC", username)).QueryRows(&result)
+		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE %v order by update_at DESC limit %d", queryTmp, limit)).QueryRows(&result)
 	}
 
 	if len(result) == 0 {
@@ -114,14 +104,6 @@ func GetEvents(startTime int64, endTime int64, limit int) (result []EventsRsp, e
 	if len(result) == 0 {
 		result = []EventsRsp{}
 	}
-	return
-}
-
-func CloseEvent(username string, colsed_note string, id string) (err error) {
-	q := orm.NewOrm()
-	q.Using("falcon_portal")
-	userid := uic.ReadUserIdByName(username)
-	_, err = q.Raw("Update event_cases SET user_modified = ?, closed_at = ?, status = ?, closed_note = ? WHERE id = ?", userid, time.Now(), "SOLVED", colsed_note, id).Exec()
 	return
 }
 

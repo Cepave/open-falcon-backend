@@ -2,7 +2,7 @@ package portal
 
 import (
 	"github.com/Cepave/fe/http/base"
-	"github.com/Cepave/fe/model/event"
+	event "github.com/Cepave/fe/model/falcon_portal"
 )
 
 type PortalController struct {
