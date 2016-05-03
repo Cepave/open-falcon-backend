@@ -816,6 +816,7 @@ func hostgroupGet(nodes map[string]interface{}) {
 				item["groupid"] = strconv.Itoa(grp.Id)
 				item["groupname"] = grp.Grp_name
 				item["templateids"] = getTemplateIdsByGroupId(grp.Id, result)
+				item["plugins"] = getPluginDirsByGroupId(grp.Id, result)
 				items = append(items, item)
 			}
 		}
@@ -836,6 +837,7 @@ func hostgroupGet(nodes map[string]interface{}) {
 			item["groupid"] = groupId
 			item["groupname"] = groupName
 			item["templateids"] = getTemplateIdsByGroupId(grp.Id, result)
+			item["plugins"] = getPluginDirsByGroupId(grp.Id, result)
 			items = append(items, item)
 		}
 	}
