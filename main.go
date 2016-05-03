@@ -5,12 +5,10 @@ import (
 	"time"
 )
 
-//*
 func init() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
-//*/
 func main() {
 	InitGeneralConfig()
 	InitRPC()
