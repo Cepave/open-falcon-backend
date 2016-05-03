@@ -756,6 +756,19 @@ func getTemplateIdsByGroupId(groupId int, result map[string]interface{}) []strin
 	return templateIds
 }
 
+func getPluginDirsByGroupId(groupId int, result map[string]interface{}) []string {
+	pluginDirs := []string{}
+	o := orm.NewOrm()
+	sqlcmd := "SELECT DISTINCT dir FROM falcon_portal.plugin_dir WHERE grp_id=?"
+	_, err := o.Raw(sqlcmd, groupId).QueryRows(&pluginDirs)
+	if err == orm.ErrNoRows {
+		log.Println("No plugin dirs for groupId:", groupId)
+	} else if err != nil {
+		setError(err.Error(), result)
+	}
+	return pluginDirs
+}
+
 /**
  * @function name:   func hostgroupGet(nodes map[string]interface{})
  * @description:     This function gets existed hostgroup data.
