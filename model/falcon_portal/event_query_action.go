@@ -59,7 +59,6 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 			} else {
 				event.Events = []*Events{}
 			}
-			event.Events = eventArr
 			result[indx] = event
 		}
 	}
