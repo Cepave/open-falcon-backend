@@ -827,24 +827,23 @@ func getMetricsByMetricType(metricType string) []string {
 			"cpu.softirq",
 			"cpu.user",
 		}
-	} else if metricType == "status" {
+	} else if metricType == "resources" {
 		metrics = []string{
 			"cpu.idle",
+			"disk.io.util.max",
+			"load.imin",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
-			"disk.io.util.gd",
-			"load.imin",
-			"disk.io.util.max",
 		}
 	} else if metricType == "all" {
 		metrics = []string{
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
 			"cpu.idle",
-			"mem.memfree.percent",
-			"mem.swapused.percent",
 			"disk.io.util.max",
 			"load.imin",
+			"mem.memfree.percent",
+			"mem.swapused.percent",
 		}
 	}
 	return metrics
