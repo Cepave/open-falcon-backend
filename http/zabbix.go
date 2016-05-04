@@ -23,8 +23,8 @@ type Host struct {
 	Ip             string
 	Agent_version  string
 	Plugin_version string
-	Maintain_begin int
-	Maintain_end   int
+	Maintain_begin int64
+	Maintain_end   int64
 	Update_at      string
 }
 
