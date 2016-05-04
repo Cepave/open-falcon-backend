@@ -2,9 +2,9 @@ package rpc
 
 import (
 	commonModel "github.com/Cepave/common/model"
-	"github.com/asaskevich/govalidator"
 	"github.com/Cepave/hbs/db"
 	"github.com/Cepave/hbs/model"
+	"github.com/asaskevich/govalidator"
 	"strings"
 	"time"
 )
@@ -18,8 +18,7 @@ func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *co
 	/**
 	 * Validates data
 	 */
-	if err = validatePingTask(&request)
-		err != nil {
+	if err = validatePingTask(&request); err != nil {
 		return
 	}
 	// :~)
@@ -33,8 +32,7 @@ func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *co
 	 * Refresh the information of agent
 	 */
 	var currentAgent = model.NewNqmAgent(&request)
-	if err = db.RefreshAgentInfo(currentAgent)
-		err != nil {
+	if err = db.RefreshAgentInfo(currentAgent); err != nil {
 		return
 	}
 	// :~)
@@ -45,8 +43,7 @@ func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *co
 	var nqmAgent *commonModel.NqmAgent
 	if nqmAgent, err = db.GetAndRefreshNeedPingAgentForRpc(
 		currentAgent.Id, time.Now(),
-	)
-		err != nil {
+	); err != nil {
 		return
 	}
 
@@ -59,8 +56,7 @@ func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *co
 	 * Loads matched targets
 	 */
 	var targets []commonModel.NqmTarget
-	if targets, err = db.GetTargetsByAgentForRpc(currentAgent.Id)
-		err != nil {
+	if targets, err = db.GetTargetsByAgentForRpc(currentAgent.Id); err != nil {
 
 		return
 	}
@@ -69,7 +65,7 @@ func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *co
 	response.NeedPing = true
 	response.Agent = nqmAgent
 	response.Targets = targets
-	response.Command = []string { "fping", "-p", "20", "-i", "10", "-c", "4", "-q", "-a" }
+	response.Command = []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}
 
 	return
 }
