@@ -661,11 +661,13 @@ func hostUpdate(nodes map[string]interface{}) {
 				log.Println("update hostId =", host.Id)
 				log.Println("mysql row affected nums =", num)
 				hostid := strconv.Itoa(host.Id)
-				unbindGroup(hostid, result)
-				bindGroup(host.Id, params, args, result)
+				if _, ok := params["groups"]; ok {
+					unbindGroup(hostid, result)
+					bindGroup(host.Id, params, args, result)
+				}
+				bindTemplate(params, args, result)
 				hostids := [1]string{string(hostid)}
 				result["hostids"] = hostids
-				bindTemplate(params, args, result)
 			}
 		}
 	} else {
