@@ -23,8 +23,8 @@ type Host struct {
 	Ip             string
 	Agent_version  string
 	Plugin_version string
-	Maintain_begin int
-	Maintain_end   int
+	Maintain_begin int64
+	Maintain_end   int64
 	Update_at      string
 }
 
@@ -56,6 +56,13 @@ type Grp_host struct {
 	Id      int
 	Grp_id  int
 	Host_id int
+}
+
+type Plugin_dir struct {
+	Id          int
+	Grp_id      int
+	Dir         string
+	Create_user string
 }
 
 /**
@@ -604,6 +611,23 @@ func hostGet(nodes map[string]interface{}) {
 	nodes["result"] = result
 }
 
+func muteAlertsOfHost(host Host, params map[string]interface{}, result map[string]interface{}) Host {
+	if val, ok := params["mute"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf("") {
+			setError("value of mute shall be a string of 1 or 0", result)
+		} else {
+			if val == "1" {
+				host.Maintain_begin = int64(946684800) // Sat, 01 Jan 2000 00:00:00 GMT
+				host.Maintain_end = int64(4292329420)  // Thu, 07 Jan 2106 17:43:40 GMT
+			} else if val == "0" {
+				host.Maintain_begin = int64(0)
+				host.Maintain_end = int64(0)
+			}
+		}
+	}
+	return host
+}
+
 /**
  * @function name:   func hostUpdate(nodes map[string]interface{})
  * @description:     This function updates host data.
@@ -627,14 +651,14 @@ func hostUpdate(nodes map[string]interface{}) {
 		log.Println("host existed")
 		valid := checkInputFormat(params, result)
 		if valid {
-			hostId := host.Id
+			host = muteAlertsOfHost(host, params, result)
 			host.Update_at = getNow()
 			o := orm.NewOrm()
 			num, err := o.Update(&host)
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Println("update hostId =", hostId)
+				log.Println("update hostId =", host.Id)
 				log.Println("mysql row affected nums =", num)
 				hostid := strconv.Itoa(host.Id)
 				unbindGroup(hostid, result)
@@ -857,6 +881,42 @@ func unbindGroupAndTemplates(groupId string, result map[string]interface{}) {
 	log.Println("mysql row affected nums =", num)
 }
 
+func unbindGroupAndPlugins(groupId int, result map[string]interface{}) {
+	o := orm.NewOrm()
+	sql := "DELETE FROM plugin_dir WHERE grp_id = ?"
+	res, err := o.Raw(sql, groupId).Exec()
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	num, _ := res.RowsAffected()
+	log.Println("unbindGroupAndPlugins row affected nums =", num)
+}
+
+func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]interface{}) {
+	o := orm.NewOrm()
+	var plugin_dir Plugin_dir
+	for _, pluginDir := range pluginDirs {
+		sqlcmd := "SELECT * FROM falcon_portal.plugin_dir WHERE grp_id=? AND dir=?"
+		err := o.Raw(sqlcmd, groupId, pluginDir).QueryRow(&plugin_dir)
+		if err == orm.ErrNoRows {
+			plugin_dir := Plugin_dir{
+				Grp_id:      groupId,
+				Dir:         pluginDir,
+				Create_user: "zabbix",
+			}
+			log.Println("plugin_dir =", plugin_dir)
+			_, err = o.Insert(&plugin_dir)
+			if err != nil {
+				setError(err.Error(), result)
+			}
+		} else if err != nil {
+			setError(err.Error(), result)
+		} else {
+			log.Println("plugin_dir existed =", plugin_dir)
+		}
+	}
+}
+
 /**
  * @function name:   func hostgroupUpdate(nodes map[string]interface{})
  * @description:     This function updates hostgroup data.
@@ -918,6 +978,19 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 				}
 				unbindGroupAndTemplates(strconv.Itoa(hostgroupId), result)
 				bindTemplatesAndGroups(groupIds, templateIds, result)
+				groupids := [1]string{strconv.Itoa(hostgroupId)}
+				result["groupids"] = groupids
+			}
+
+			if _, ok := params["plugins"]; ok {
+				pluginDirs := []string{}
+				plugins := params["plugins"].([]interface{})
+				for _, plugin := range plugins {
+					pluginDir := plugin.(map[string]interface{})["plugin"].(string)
+					pluginDirs = append(pluginDirs, pluginDir)
+				}
+				unbindGroupAndPlugins(hostgroupId, result)
+				bindGroupAndPlugins(hostgroupId, pluginDirs, result)
 				groupids := [1]string{strconv.Itoa(hostgroupId)}
 				result["groupids"] = groupids
 			}
