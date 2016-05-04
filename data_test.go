@@ -97,18 +97,10 @@ func TestNqmTagsAssembler(t *testing.T) {
 }
 
 func init() {
-	/*var (
-	  agentData *nqmEndpointData
-	  )
-	*/
-	// agentData is initialized for testMarshalIntoParameters.
-	agentData = &nqmEndpointData{
-		Id:         "1000",
-		IspId:      "1001",
-		ProvinceId: "1002",
-		CityId:     "1003",
-		NameTagId:  "1004",
-	}
+	// Hostname is the config dependency which lies in func MarshalIntoParameters
+	var cfg GeneralConfig
+	generalConfig = &cfg
+	cfg.Hostname = "unit-test-hostname"
 }
 
 func TestMarshalIntoParameters(t *testing.T) {
@@ -120,6 +112,7 @@ func TestMarshalIntoParameters(t *testing.T) {
 		"www.google.com : 13.24 38.90 19.62 9.48 13.62",
 		"www.yahoo.com : 6.72 29.08 8.55 7.40 - 6.26",
 	}
+
 	var test_target_list []model.NqmTarget
 	for i, _ := range tests {
 		t := model.NqmTarget{
@@ -136,7 +129,18 @@ func TestMarshalIntoParameters(t *testing.T) {
 		test_target_list = append(test_target_list, t)
 	}
 
-	out := MarshalIntoParameters(tests, test_target_list)
+	var test_agent_ptr = &model.NqmAgent{
+		Id:           1,
+		Name:         "agent_for_test",
+		IspId:        2,
+		IspName:      "IspName_for_test",
+		ProvinceId:   3,
+		ProvinceName: "ProvinceName_for_test",
+		CityId:       4,
+		CityName:     "CityName_for_test",
+	}
+
+	out := MarshalIntoParameters(tests, test_target_list, test_agent_ptr)
 	t.Log(out)
 	//t.Log(test_target_list)
 }

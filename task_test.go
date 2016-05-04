@@ -36,7 +36,7 @@ func (t *NqmAgent) PingTask(request model.NqmPingTaskRequest, response *model.Nq
 	}
 	response.Targets = targets
 
-	response.Command = []string{"fping", "-p", "20", "-i", "10", "-c", "4", "-q", "-a"}
+	response.Command = []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}
 	return nil
 }
 
@@ -64,13 +64,18 @@ func initJsonRpcServer(addr string) {
 
 func initJsonRpcClient(srvAddr string) {
 	rpcClient.RpcServer = srvAddr
+	req = model.NqmPingTaskRequest{
+		Hostname:     "nqm-agent",
+		IpAddress:    "1.2.3.4",
+		ConnectionId: "arg-arg-arg",
+	}
 }
 
 func TestQueryTask(t *testing.T) {
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
 
-	cmd, targetList, err := QueryTask()
+	cmd, targetList, agent, err := QueryTask()
 	if err != nil {
 		t.Error(err)
 	}
@@ -86,5 +91,6 @@ func TestQueryTask(t *testing.T) {
 		}
 	}
 
+	t.Log(agent)
 	t.Log(cmd)
 }

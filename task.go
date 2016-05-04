@@ -4,52 +4,16 @@ import (
 	"fmt"
 	"github.com/Cepave/common/model"
 	"log"
-	"strconv"
 )
 
-type nqmEndpointData struct {
-	Id         string
-	IspId      string
-	ProvinceId string
-	CityId     string
-	NameTagId  string
-}
-
-var (
-	agentData *nqmEndpointData
-)
-
-func agentToNqmEndpointData(s *model.NqmAgent) *nqmEndpointData {
-	return &nqmEndpointData{
-		Id:         strconv.Itoa(s.Id),
-		IspId:      strconv.Itoa(int(s.IspId)),
-		ProvinceId: strconv.Itoa(int(s.ProvinceId)),
-		CityId:     strconv.Itoa(int(s.CityId)),
-		NameTagId:  strconv.Itoa(-1),
-	}
-}
-
-func targetToNqmEndpointData(s *model.NqmTarget) *nqmEndpointData {
-	return &nqmEndpointData{
-		Id:         strconv.Itoa(s.Id),
-		IspId:      strconv.Itoa(int(s.IspId)),
-		ProvinceId: strconv.Itoa(int(s.ProvinceId)),
-		CityId:     strconv.Itoa(int(s.CityId)),
-		NameTagId:  strconv.Itoa(-1),
-	}
-}
-
-func QueryTask() ([]string, []model.NqmTarget, error) {
+func QueryTask() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
 	err := rpcClient.Call("NqmAgent.PingTask", req, &resp)
 	if err != nil {
 		log.Fatalln("Call NqmAgent.PingTask error:", err)
 	}
 	if !resp.NeedPing {
-		return []string{}, resp.Targets, fmt.Errorf("No tasks assigned.")
+		return []string{}, resp.Targets, resp.Agent, fmt.Errorf("No tasks assigned.")
 	}
-	agent := *resp.Agent
-	SetGeneralConfigByAgent(agent)
-	agentData = agentToNqmEndpointData(&agent)
 
 	var targetAddressList []string
 	for _, target := range resp.Targets {
@@ -57,5 +21,5 @@ func QueryTask() ([]string, []model.NqmTarget, error) {
 	}
 
 	probingCmd := append(resp.Command, targetAddressList...)
-	return probingCmd, resp.Targets, nil
+	return probingCmd, resp.Targets, resp.Agent, err
 }

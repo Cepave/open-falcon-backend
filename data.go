@@ -20,7 +20,7 @@ type ParamToAgent struct {
 	Step        int64       `json:"step"`
 }
 
-func (p *ParamToAgent) String() string {
+func (p ParamToAgent) String() string {
 	return fmt.Sprintf(
 		" {metric: %v, endpoint: %v, value: %v, counterType:%v, tags:%v, timestamp:%d, step:%d}",
 		p.Metric,
@@ -43,14 +43,46 @@ func parseFpingRow(row string) []string {
 	})
 }
 
-func marshalFpingRowIntoJSON(row []string, target model.NqmTarget) []ParamToAgent {
+type nqmEndpointData struct {
+	Id         string
+	IspId      string
+	ProvinceId string
+	CityId     string
+	NameTagId  string
+}
+
+func agentToNqmEndpointData(s *model.NqmAgent) *nqmEndpointData {
+	return &nqmEndpointData{
+		Id:         strconv.Itoa(s.Id),
+		IspId:      strconv.Itoa(int(s.IspId)),
+		ProvinceId: strconv.Itoa(int(s.ProvinceId)),
+		CityId:     strconv.Itoa(int(s.CityId)),
+		NameTagId:  strconv.Itoa(-1),
+	}
+}
+
+func targetToNqmEndpointData(s *model.NqmTarget) *nqmEndpointData {
+	return &nqmEndpointData{
+		Id:         strconv.Itoa(s.Id),
+		IspId:      strconv.Itoa(int(s.IspId)),
+		ProvinceId: strconv.Itoa(int(s.ProvinceId)),
+		CityId:     strconv.Itoa(int(s.CityId)),
+		NameTagId:  strconv.Itoa(-1),
+	}
+}
+
+func marshalFpingRowIntoJSON(row []string, target model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
 	var params []ParamToAgent
 
 	nqmStat := nqmFpingStat(row)
-	params = append(params, marshalJSON(target, "packets-sent", nqmStat["pkttransmit"]))
-	params = append(params, marshalJSON(target, "packets-received", nqmStat["pktreceive"]))
-	params = append(params, marshalJSON(target, "transmission-time", nqmStat["rttavg"]))
-	params = append(params, nqmMarshalJSON(target, "nqm-metrics", nqmStat))
+	params = append(params, marshalJSON(target, agentPtr, "packets-sent", nqmStat["pkttransmit"]))
+	params = append(params, marshalJSON(target, agentPtr, "packets-received", nqmStat["pktreceive"]))
+	params = append(params, marshalJSON(target, agentPtr, "transmission-time", nqmStat["rttavg"]))
+
+	t := targetToNqmEndpointData(&target)
+	a := agentToNqmEndpointData(agentPtr)
+	nqmDataGram := nqmTagsAssembler(t, a, nqmStat)
+	params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-metrics"))
 	return params
 }
 
@@ -139,13 +171,12 @@ func nqmTagsAssembler(target *nqmEndpointData, agent *nqmEndpointData, nqmDataMa
 		",pktreceive=" + nqmDataMap["pktreceive"]
 }
 
-func nqmMarshalJSON(target model.NqmTarget, metric string, nqmStat map[string]string) ParamToAgent {
-	t := targetToNqmEndpointData(&target)
+func nqmMarshalJSON(nqmDataGram string, metric string) ParamToAgent {
 	data := ParamToAgent{}
-	data.Tags = nqmTagsAssembler(t, agentData, nqmStat)
+	data.Tags = nqmDataGram
 	data.Metric = metric
 	data.Timestamp = time.Now().Unix()
-	data.Endpoint = "nqm-endpoint"
+	data.Endpoint = GetGeneralConfig().Hostname
 	data.Value = "0"
 	data.CounterType = "nqm"
 	return data
@@ -156,12 +187,13 @@ func nqmMarshalJSON(target model.NqmTarget, metric string, nqmStat map[string]st
  *     Packet Loss - int
  *     Transmission Time - float64
  */
-func marshalJSON(target model.NqmTarget, metric string, value interface{}) ParamToAgent {
+
+func marshalJSON(target model.NqmTarget, agent *model.NqmAgent, metric string, value interface{}) ParamToAgent {
 	endpoint := GetGeneralConfig().Hostname
 	counterType := "GAUGE"
-	tags := "nqm-agent-isp=" + GetGeneralConfig().ISP +
-		",nqm-agent-province=" + GetGeneralConfig().Province +
-		",nqm-agent-city=" + GetGeneralConfig().City +
+	tags := "nqm-agent-isp=" + agent.IspName +
+		",nqm-agent-province=" + agent.ProvinceName +
+		",nqm-agent-city=" + agent.CityName +
 		",target-ip=" + target.Host +
 		",target-isp=" + target.IspName +
 		",target-province=" + target.ProvinceName +
@@ -172,12 +204,12 @@ func marshalJSON(target model.NqmTarget, metric string, value interface{}) Param
 	return ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
 }
 
-func MarshalIntoParameters(rawData []string, targetList []model.NqmTarget) []ParamToAgent {
+func MarshalIntoParameters(rawData []string, targetList []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
 	var params []ParamToAgent
 	for rowNum, row := range rawData {
 		parsedRow := parseFpingRow(row)
 		target := targetList[rowNum]
-		params = append(params, marshalFpingRowIntoJSON(parsedRow, target)...)
+		params = append(params, marshalFpingRowIntoJSON(parsedRow, target, agentPtr)...)
 	}
 	return params
 }

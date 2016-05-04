@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Cepave/common/model"
 	"github.com/toolkits/file"
 )
 
@@ -156,12 +155,6 @@ func loadJSONConfig() {
 
 func GetGeneralConfig() *GeneralConfig {
 	return generalConfig
-}
-
-func SetGeneralConfigByAgent(agent model.NqmAgent) {
-	GetGeneralConfig().ISP = agent.IspName
-	GetGeneralConfig().Province = agent.ProvinceName
-	GetGeneralConfig().City = agent.CityName
 }
 
 func InitGeneralConfig() {
