@@ -651,14 +651,14 @@ func hostUpdate(nodes map[string]interface{}) {
 		log.Println("host existed")
 		valid := checkInputFormat(params, result)
 		if valid {
-			hostId := host.Id
+			host = muteAlertsOfHost(host, params, result)
 			host.Update_at = getNow()
 			o := orm.NewOrm()
 			num, err := o.Update(&host)
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Println("update hostId =", hostId)
+				log.Println("update hostId =", host.Id)
 				log.Println("mysql row affected nums =", num)
 				hostid := strconv.Itoa(host.Id)
 				unbindGroup(hostid, result)
