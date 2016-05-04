@@ -2,7 +2,7 @@ package conn_pool
 
 import (
 	"fmt"
-	jsonrpc2 "github.com/Cepave/transfer/jsonrpc2"
+	jsonrpc2 "github.com/Cepave/rpc-codec/jsonrpc2"
 	"log"
 	"time"
 )
