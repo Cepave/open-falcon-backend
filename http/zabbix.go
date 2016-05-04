@@ -611,6 +611,23 @@ func hostGet(nodes map[string]interface{}) {
 	nodes["result"] = result
 }
 
+func muteAlertsOfHost(host Host, params map[string]interface{}, result map[string]interface{}) Host {
+	if val, ok := params["mute"]; ok {
+		if reflect.TypeOf(val) != reflect.TypeOf("") {
+			setError("value of mute shall be a string of 1 or 0", result)
+		} else {
+			if val == "1" {
+				host.Maintain_begin = int64(946684800) // Sat, 01 Jan 2000 00:00:00 GMT
+				host.Maintain_end = int64(4292329420)  // Thu, 07 Jan 2106 17:43:40 GMT
+			} else if val == "0" {
+				host.Maintain_begin = int64(0)
+				host.Maintain_end = int64(0)
+			}
+		}
+	}
+	return host
+}
+
 /**
  * @function name:   func hostUpdate(nodes map[string]interface{})
  * @description:     This function updates host data.
