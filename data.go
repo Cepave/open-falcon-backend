@@ -178,7 +178,8 @@ func nqmMarshalJSON(nqmDataGram string, metric string) ParamToAgent {
 	data.Timestamp = time.Now().Unix()
 	data.Endpoint = GetGeneralConfig().Hostname
 	data.Value = "0"
-	data.CounterType = "nqm"
+	data.CounterType = "GAUGE"
+	data.Step = int64(60)
 	return data
 }
 
