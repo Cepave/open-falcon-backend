@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Cepave/common/model"
+	"github.com/Cepave/transfer/g"
 	"reflect"
 	"testing"
 )
@@ -142,5 +143,30 @@ func TestMarshalIntoParameters(t *testing.T) {
 
 	out := MarshalIntoParameters(tests, test_target_list, test_agent_ptr)
 	t.Log(out)
-	//t.Log(test_target_list)
+	for _, v := range out {
+		// implement the pkt check in transfer.
+		if v.Metric == "kernel.hostname" {
+			t.Error("Can not pass the pkt check in transfer.", v)
+		}
+
+		if v.Metric == "" || v.Endpoint == "" {
+			t.Error("Can not pass the pkt check in transfer.", v)
+		}
+
+		if v.CounterType != g.COUNTER && v.CounterType != g.GAUGE && v.CounterType != g.DERIVE {
+			t.Error("Can not pass the pkt check in transfer.", v)
+		}
+
+		if v.Value == "" {
+			t.Error("Can not pass the pkt check in transfer.", v)
+		}
+
+		if v.Step <= 0 {
+			t.Error("Can not pass the pkt check in transfer.", v)
+		}
+
+		if len(v.Metric)+len(v.Tags) > 510 {
+			t.Error("Can not pass the pkt check in transfer.", v)
+		}
+	}
 }

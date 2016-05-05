@@ -17,7 +17,7 @@ func main() {
 		log.Println(err)
 		return
 	}
-	log.Println("Execution the probing command:", probingCmd[0])
+	log.Println("Execution the probing command:", probingCmd[0:9])
 
 	rawData := Probe(probingCmd)
 	jsonParams := MarshalIntoParameters(rawData, targets, agentPtr)
