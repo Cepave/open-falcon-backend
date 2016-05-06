@@ -1014,7 +1014,7 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 	hostsExisted := map[string]interface{}{}
 	for key, hostname := range hostnamesExisted {
 		host := map[string]interface{}{
-			"id": key + 1,
+			"id":   key + 1,
 			"name": hostname,
 		}
 		hostsExisted[hostname] = host
