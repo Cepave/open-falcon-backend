@@ -35,7 +35,7 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	}
 	if status != "ALL" {
 		if flag {
-			queryTmp = fmt.Sprintf("%v and status = '%s'", queryTmp, status)
+			queryTmp = fmt.Sprintf("%v and (status = '%s' or status = 'OK')", queryTmp, status)
 		} else {
 			flag = true
 			queryTmp = fmt.Sprintf("%v status = '%s'", queryTmp, status)
