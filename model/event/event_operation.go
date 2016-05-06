@@ -1,4 +1,4 @@
-package evnet
+package event
 
 import (
 	"fmt"
