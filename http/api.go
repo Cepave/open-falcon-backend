@@ -815,7 +815,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 
 func getMetricsByMetricType(metricType string) []string {
 	metrics := []string{}
-	if metricType == "net" {
+	if metricType == "bandwidths" {
 		metrics = []string{
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
@@ -831,9 +831,18 @@ func getMetricsByMetricType(metricType string) []string {
 		metrics = []string{
 			"cpu.idle",
 			"disk.io.util.max",
-			"load.imin",
+			"load.1min",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
+		}
+	} else if metricType == "services" {
+		metrics = []string{
+			"http.response.time",
+			"https.response.time",
+			"ss.close.wait",
+			"ss.established",
+			"ss.syn.recv",
+			"vfcc.squid.response.time",
 		}
 	} else if metricType == "all" {
 		metrics = []string{
@@ -841,7 +850,7 @@ func getMetricsByMetricType(metricType string) []string {
 			"net.if.out.bits/iface=eth_all",
 			"cpu.idle",
 			"disk.io.util.max",
-			"load.imin",
+			"load.1min",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
 		}
