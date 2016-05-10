@@ -87,27 +87,53 @@ func InsertEvent(eve *coommonModel.Event) {
 		log.Debug(fmt.Sprintf("%v, %v", res2, err))
 
 	} else {
-		//update cases
-		res1, err := q.Raw(
-			`UPDATE event_cases SET 
-					update_at = ?,
-					max_step = ?, 
-					current_step = ?, 
-					note = ?, 
-					cond = ?, 
-					status = ? 
-					WHERE id = ?`,
-			time.Unix(eve.EventTime, 0),
-			eve.MaxStep(),
-			eve.CurrentStep,
-			eve.Strategy.Note,
-			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
-			eve.Status,
-			eve.Id).Exec()
-		log.Debug(fmt.Sprintf("%v, %v", res1, err))
-		//insert case
-		res2, err := insertEvent(q, eve)
-		log.Debug(fmt.Sprintf("%v, %v", res2, err))
+
+		if eve.CurrentStep == 1 {
+			//update start time of cases
+			res1, err := q.Raw(
+				`UPDATE event_cases SET 
+						timestamp = ?,
+						update_at = ?,
+						max_step = ?, 
+						current_step = ?, 
+						note = ?, 
+						cond = ?, 
+						status = ? 
+						WHERE id = ?`,
+				time.Unix(eve.EventTime, 0),
+				time.Unix(eve.EventTime, 0),
+				eve.MaxStep(),
+				eve.CurrentStep,
+				eve.Strategy.Note,
+				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
+				eve.Status,
+				eve.Id).Exec()
+			log.Debug(fmt.Sprintf("%v, %v", res1, err))
+			//insert case
+			res2, err := insertEvent(q, eve)
+			log.Debug(fmt.Sprintf("%v, %v", res2, err))
+		} else {
+			res1, err := q.Raw(
+				`UPDATE event_cases SET 
+						update_at = ?,
+						max_step = ?, 
+						current_step = ?, 
+						note = ?, 
+						cond = ?, 
+						status = ? 
+						WHERE id = ?`,
+				time.Unix(eve.EventTime, 0),
+				eve.MaxStep(),
+				eve.CurrentStep,
+				eve.Strategy.Note,
+				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
+				eve.Status,
+				eve.Id).Exec()
+			log.Debug(fmt.Sprintf("%v, %v", res1, err))
+			//insert case
+			res2, err := insertEvent(q, eve)
+			log.Debug(fmt.Sprintf("%v, %v", res2, err))
+		}
 	}
 }
 
