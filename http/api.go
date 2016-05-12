@@ -1094,6 +1094,14 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 				}
 			}
 		}
+
+		idc := host.(map[string]interface{})["idc"].(string)
+		if _, ok := keywords[idc]; ok {
+			keywords[idc] = appendUnique(keywords[idc].([]int), id)
+		} else {
+			keywords[idc] = []int{id}
+		}
+
 		delete(host.(map[string]interface{}), "id")
 		delete(host.(map[string]interface{}), "isp")
 		delete(host.(map[string]interface{}), "province")
