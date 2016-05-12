@@ -1039,28 +1039,6 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 	return hostsExisted
 }
 
-func getProvinces(popIDs []string, result map[string]interface{}) map[string]string {
-	provinces := map[string]string{}
-	sqlcmd := "SELECT pop_id, province, city FROM grafana.idc WHERE pop_id IN ('"
-	sqlcmd += strings.Join(popIDs, "','") + "') ORDER BY pop_id ASC"
-	var rows []orm.Params
-	o := orm.NewOrm()
-	o.Using("grafana")
-	_, err := o.Raw(sqlcmd).Values(&rows)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
-		for _, row := range rows {
-			provinceName := row["province"].(string)
-			if provinceName == "特区" {
-				provinceName = row["city"].(string)
-			}
-			provinces[row["pop_id"].(string)] = provinceName
-		}
-	}
-	return provinces
-}
-
 func getHostsWithProvinces(hostsExisted map[string]interface{}, provinces map[string]string, result map[string]interface{}) []interface{} {
 	hostsWithProvinces := []interface{}{}
 	for _, host := range hostsExisted {
