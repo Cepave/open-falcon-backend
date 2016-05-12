@@ -216,10 +216,13 @@ func (this *AuthController) RegisterPost() {
 
 func (this *AuthController) CreateSession(uid int64, maxAge int) int {
 	sig := utils.GenerateUUID()
+	user := SelectUserById(uid)
 	expired := int(time.Now().Unix()) + maxAge
 	SaveSessionAttrs(uid, sig, expired)
 	this.Ctx.SetCookie("sig", sig, maxAge, "/")
 	this.Ctx.SetCookie("sig", sig, maxAge, "/", g.Config().Http.Cookie)
+	this.Ctx.SetCookie("name", user.Name, maxAge, "/")
+	this.Ctx.SetCookie("name", user.Name, maxAge, "/", g.Config().Http.Cookie)
 	return expired
 }
 
