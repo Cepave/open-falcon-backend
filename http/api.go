@@ -1102,6 +1102,19 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		} else {
 			keywords[province] = []int{id}
 		}
+
+		name := host.(map[string]interface{})["name"].(string)
+		fragments := strings.Split(name, "-")
+		if len(fragments) == 6 {
+			fragments := fragments[2:]
+			for _, fragment := range fragments {
+				if _, ok := keywords[fragment]; ok {
+					keywords[fragment] = appendUnique(keywords[fragment].([]int), id)
+				} else {
+					keywords[fragment] = []int{id}
+				}
+			}
+		}
 		delete(host.(map[string]interface{}), "id")
 		delete(host.(map[string]interface{}), "isp")
 		delete(host.(map[string]interface{}), "province")
