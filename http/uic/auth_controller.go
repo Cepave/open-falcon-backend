@@ -34,6 +34,8 @@ func (this *AuthController) Logout() {
 	RemoveSessionByUid(u.Id)
 	this.Ctx.SetCookie("sig", "", 0, "/")
 	this.Ctx.SetCookie("sig", "", 0, "/", g.Config().Http.Cookie)
+	this.Ctx.SetCookie("name", "", 0, "/")
+	this.Ctx.SetCookie("name", "", 0, "/", g.Config().Http.Cookie)
 	this.Redirect("/auth/login", 302)
 }
 
