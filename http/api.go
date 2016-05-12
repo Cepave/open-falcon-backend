@@ -1132,7 +1132,7 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 					host := map[string]interface{}{
 						"name":     hostname,
 						"platform": groupName,
-						"popID": popID,
+						"popID":    popID,
 					}
 					hosts = append(hosts, host)
 					hostnames = append(hostnames, hostname)
