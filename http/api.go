@@ -1019,12 +1019,26 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 		}
 		hostsExisted[hostname] = host
 	}
+	idcMap := map[string]string{}
+	o := orm.NewOrm()
+	var idcs []*Idc
+	sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
+	_, err := o.Raw(sqlcommand).QueryRows(&idcs)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, idc := range idcs {
+			idcMap[strconv.Itoa(idc.Pop_id)] = idc.Name
+		}
+	}
 	for _, host := range hosts {
 		hostname := host.(map[string]interface{})["name"].(string)
 		if _, ok := hostsExisted[hostname]; ok {
 			hostExisted := hostsExisted[hostname]
 			isp := strings.Split(hostname, "-")[0]
 			province := strings.Split(hostname, "-")[1]
+			popID := host.(map[string]interface{})["popID"].(string)
+			idc := idcMap[popID]
 			platform := host.(map[string]interface{})["platform"].(string)
 			if _, ok := hostExisted.(map[string]interface{})["platform"]; ok {
 				hostExisted.(map[string]interface{})["platform"] = appendUniqueString(hostExisted.(map[string]interface{})["platform"].([]string), platform)
@@ -1033,6 +1047,7 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 			}
 			hostExisted.(map[string]interface{})["isp"] = isp
 			hostExisted.(map[string]interface{})["province"] = province
+			hostExisted.(map[string]interface{})["idc"] = idc
 			hostsExisted[hostname] = hostExisted
 		}
 	}
