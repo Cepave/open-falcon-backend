@@ -61,6 +61,6 @@ type Action struct {
 	Callback           int    `json:"callback"`
 	BeforeCallbackSms  int    `json:"before_callback_sms"`
 	BeforeCallbackMail int    `json:"before_callback_mail"`
-	AfterCallbackSms   int    `json"after_callback_sms"`
+	AfterCallbackSms   int    `json:"after_callback_sms"`
 	AfterCallbackMail  int    `json:"after_callback_mail"`
 }
