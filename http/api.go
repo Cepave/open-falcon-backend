@@ -1205,6 +1205,27 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getIPFromHostname(hostname string, result map[string]interface{}) string {
+	ip := ""
+	fragments := strings.Split(hostname, "-")
+	slice := []string{}
+	if len(fragments) == 6 {
+		fragments := fragments[2:]
+		for _, fragment := range fragments {
+			num, err := strconv.Atoi(fragment)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				slice = append(slice, strconv.Itoa(num))
+			}
+		}
+		if len(slice) == 4 {
+			ip = strings.Join(slice, ".")
+		}
+	}
+	return ip
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
