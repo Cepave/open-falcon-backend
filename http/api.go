@@ -853,6 +853,12 @@ func getMetricsByMetricType(metricType string) []string {
 			"load.1min",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
+			"http.response.time",
+			"https.response.time",
+			"ss.close.wait",
+			"ss.established",
+			"ss.syn.recv",
+			"vfcc.squid.response.time",
 		}
 	}
 	return metrics
