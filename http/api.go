@@ -867,12 +867,20 @@ func getMetricsByMetricType(metricType string) []string {
 func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	data := []*cmodel.GraphQueryResponse{}
 	now := time.Now().Unix()
-	unit := int64(86400)
-	multiplier, err := strconv.Atoi(strings.Split(duration, "d")[0])
+	unit := ""
+	seconds := int64(0)
+	if strings.Index(duration, "d") > -1 {
+		unit = "d"
+		seconds = int64(86400)
+	} else if strings.Index(duration, "min") > -1 {
+		unit = "min"
+		seconds = int64(60)
+	}
+	multiplier, err := strconv.Atoi(strings.Split(duration, unit)[0])
 	if err != nil {
 		setError(err.Error(), result)
 	}
-	offset := int64(multiplier) * unit
+	offset := int64(multiplier) * seconds
 	start := now - offset
 
 	proc.HistoryRequestCnt.Incr()
