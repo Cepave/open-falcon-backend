@@ -947,7 +947,7 @@ func getApolloFiltersJSON(nodes map[string]interface{}, result map[string]interf
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes.json"
+	url += "/show_active/yes/hostname/yes/pop_id/yes.json"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -1019,12 +1019,26 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 		}
 		hostsExisted[hostname] = host
 	}
+	idcMap := map[string]string{}
+	o := orm.NewOrm()
+	var idcs []*Idc
+	sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
+	_, err := o.Raw(sqlcommand).QueryRows(&idcs)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, idc := range idcs {
+			idcMap[strconv.Itoa(idc.Pop_id)] = idc.Name
+		}
+	}
 	for _, host := range hosts {
 		hostname := host.(map[string]interface{})["name"].(string)
 		if _, ok := hostsExisted[hostname]; ok {
 			hostExisted := hostsExisted[hostname]
 			isp := strings.Split(hostname, "-")[0]
 			province := strings.Split(hostname, "-")[1]
+			popID := host.(map[string]interface{})["popID"].(string)
+			idc := idcMap[popID]
 			platform := host.(map[string]interface{})["platform"].(string)
 			if _, ok := hostExisted.(map[string]interface{})["platform"]; ok {
 				hostExisted.(map[string]interface{})["platform"] = appendUniqueString(hostExisted.(map[string]interface{})["platform"].([]string), platform)
@@ -1033,46 +1047,11 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 			}
 			hostExisted.(map[string]interface{})["isp"] = isp
 			hostExisted.(map[string]interface{})["province"] = province
+			hostExisted.(map[string]interface{})["idc"] = idc
 			hostsExisted[hostname] = hostExisted
 		}
 	}
 	return hostsExisted
-}
-
-func getProvinces(popIDs []string, result map[string]interface{}) map[string]string {
-	provinces := map[string]string{}
-	sqlcmd := "SELECT pop_id, province, city FROM grafana.idc WHERE pop_id IN ('"
-	sqlcmd += strings.Join(popIDs, "','") + "') ORDER BY pop_id ASC"
-	var rows []orm.Params
-	o := orm.NewOrm()
-	o.Using("grafana")
-	_, err := o.Raw(sqlcmd).Values(&rows)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
-		for _, row := range rows {
-			provinceName := row["province"].(string)
-			if provinceName == "特区" {
-				provinceName = row["city"].(string)
-			}
-			provinces[row["pop_id"].(string)] = provinceName
-		}
-	}
-	return provinces
-}
-
-func getHostsWithProvinces(hostsExisted map[string]interface{}, provinces map[string]string, result map[string]interface{}) []interface{} {
-	hostsWithProvinces := []interface{}{}
-	for _, host := range hostsExisted {
-		if _, ok := host.(map[string]interface{})["pop_id"]; ok {
-			popID := host.(map[string]interface{})["pop_id"].(string)
-			province := provinces[popID]
-			host.(map[string]interface{})["province"] = province
-			delete(host.(map[string]interface{}), "pop_id")
-			hostsWithProvinces = append(hostsWithProvinces, host)
-		}
-	}
-	return hostsWithProvinces
 }
 
 func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[string]interface{}) {
@@ -1115,6 +1094,14 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 				}
 			}
 		}
+
+		idc := host.(map[string]interface{})["idc"].(string)
+		if _, ok := keywords[idc]; ok {
+			keywords[idc] = appendUnique(keywords[idc].([]int), id)
+		} else {
+			keywords[idc] = []int{id}
+		}
+
 		delete(host.(map[string]interface{}), "id")
 		delete(host.(map[string]interface{}), "isp")
 		delete(host.(map[string]interface{}), "province")
@@ -1139,11 +1126,13 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 			groupName := platform.(map[string]interface{})["platform"].(string)
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
+				popID := device.(map[string]interface{})["pop_id"].(string)
 				if device.(map[string]interface{})["ip_status"].(string) == "1" {
 					hostnames = append(hostnames, hostname)
 					host := map[string]interface{}{
 						"name":     hostname,
 						"platform": groupName,
+						"popID":    popID,
 					}
 					hosts = append(hosts, host)
 					hostnames = append(hostnames, hostname)
