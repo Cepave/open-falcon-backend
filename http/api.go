@@ -11,6 +11,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -1224,6 +1225,102 @@ func getIPFromHostname(hostname string, result map[string]interface{}) string {
 		}
 	}
 	return ip
+}
+
+func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	arguments := strings.Split(req.URL.Path, "/")
+	platformName := ""
+	metricType := ""
+	duration := "6min"
+	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
+		platformName = arguments[len(arguments)-2]
+		metricType = arguments[len(arguments)-1]
+	}
+	var nodes = make(map[string]interface{})
+	getApolloFiltersJSON(nodes, result)
+	hostnames := []string{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			groupName := platform.(map[string]interface{})["platform"].(string)
+			if groupName == platformName {
+				for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+					hostname = device.(map[string]interface{})["hostname"].(string)
+					if device.(map[string]interface{})["ip_status"].(string) == "1" {
+						hostnames = append(hostnames, hostname)
+					}
+				}
+			}
+		}
+		sort.Strings(hostnames)
+	}
+	metrics := getMetricsByMetricType(metricType)
+	hostMap := map[string]interface{}{}
+	if len(metrics) > 0 {
+		data := getGraphQueryResponse(metrics, duration, hostnames, result)
+		for _, series := range data {
+			values := []interface{}{}
+			for _, rrdObj := range series.Values {
+				if !math.IsNaN(float64(rrdObj.Value)) {
+					value := []interface{}{
+						float64(rrdObj.Timestamp),
+						float64(rrdObj.Value),
+					}
+					values = append(values, value)
+				}
+			}
+			average := float64(0)
+			sum := float64(0)
+			divider := float64(0)
+			timestamp := float64(0)
+			for _, value := range values {
+				timestamp = value.([]interface{})[0].(float64)
+				sum += value.([]interface{})[1].(float64)
+				divider++
+			}
+			if divider > 0 {
+				average = sum / divider
+			}
+			item := map[string]interface{}{
+				"host": series.Endpoint,
+				"ip":   getIPFromHostname(series.Endpoint, result),
+				"net.in.bits.5min.avg":  0,
+				"net.out.bits.5min.avg": 0,
+				"time":                  "",
+			}
+			if value, ok := hostMap[series.Endpoint]; ok {
+				item = value.(map[string]interface{})
+			}
+			if series.Counter == "net.if.in.bits/iface=eth_all" {
+				item["net.in.bits.5min.avg"] = int(average)
+			} else if series.Counter == "net.if.out.bits/iface=eth_all" {
+				item["net.out.bits.5min.avg"] = int(average)
+			}
+			if item["time"] == "" && average > 0 {
+				item["time"] = time.Unix(int64(timestamp), 0).Format("2006-01-02 15:04:05")
+			}
+			hostMap[series.Endpoint] = item
+		}
+	}
+	for _, hostname := range hostnames {
+		host := hostMap[hostname]
+		items = append(items, host)
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	nodes["platform"] = platformName
+	setResponse(rw, nodes)
 }
 
 func configAPIRoutes() {
