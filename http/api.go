@@ -11,6 +11,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"sort"
 	"strconv"
@@ -853,6 +854,12 @@ func getMetricsByMetricType(metricType string) []string {
 			"load.1min",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
+			"http.response.time",
+			"https.response.time",
+			"ss.close.wait",
+			"ss.established",
+			"ss.syn.recv",
+			"vfcc.squid.response.time",
 		}
 	}
 	return metrics
@@ -861,12 +868,20 @@ func getMetricsByMetricType(metricType string) []string {
 func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	data := []*cmodel.GraphQueryResponse{}
 	now := time.Now().Unix()
-	unit := int64(86400)
-	multiplier, err := strconv.Atoi(strings.Split(duration, "d")[0])
+	unit := ""
+	seconds := int64(0)
+	if strings.Index(duration, "d") > -1 {
+		unit = "d"
+		seconds = int64(86400)
+	} else if strings.Index(duration, "min") > -1 {
+		unit = "min"
+		seconds = int64(60)
+	}
+	multiplier, err := strconv.Atoi(strings.Split(duration, unit)[0])
 	if err != nil {
 		setError(err.Error(), result)
 	}
-	offset := int64(multiplier) * unit
+	offset := int64(multiplier) * seconds
 	start := now - offset
 
 	proc.HistoryRequestCnt.Incr()
@@ -947,7 +962,7 @@ func getApolloFiltersJSON(nodes map[string]interface{}, result map[string]interf
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes.json"
+	url += "/show_active/yes/hostname/yes/pop_id/yes.json"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -1019,12 +1034,26 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 		}
 		hostsExisted[hostname] = host
 	}
+	idcMap := map[string]string{}
+	o := orm.NewOrm()
+	var idcs []*Idc
+	sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
+	_, err := o.Raw(sqlcommand).QueryRows(&idcs)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, idc := range idcs {
+			idcMap[strconv.Itoa(idc.Pop_id)] = idc.Name
+		}
+	}
 	for _, host := range hosts {
 		hostname := host.(map[string]interface{})["name"].(string)
 		if _, ok := hostsExisted[hostname]; ok {
 			hostExisted := hostsExisted[hostname]
 			isp := strings.Split(hostname, "-")[0]
 			province := strings.Split(hostname, "-")[1]
+			popID := host.(map[string]interface{})["popID"].(string)
+			idc := idcMap[popID]
 			platform := host.(map[string]interface{})["platform"].(string)
 			if _, ok := hostExisted.(map[string]interface{})["platform"]; ok {
 				hostExisted.(map[string]interface{})["platform"] = appendUniqueString(hostExisted.(map[string]interface{})["platform"].([]string), platform)
@@ -1033,46 +1062,11 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 			}
 			hostExisted.(map[string]interface{})["isp"] = isp
 			hostExisted.(map[string]interface{})["province"] = province
+			hostExisted.(map[string]interface{})["idc"] = idc
 			hostsExisted[hostname] = hostExisted
 		}
 	}
 	return hostsExisted
-}
-
-func getProvinces(popIDs []string, result map[string]interface{}) map[string]string {
-	provinces := map[string]string{}
-	sqlcmd := "SELECT pop_id, province, city FROM grafana.idc WHERE pop_id IN ('"
-	sqlcmd += strings.Join(popIDs, "','") + "') ORDER BY pop_id ASC"
-	var rows []orm.Params
-	o := orm.NewOrm()
-	o.Using("grafana")
-	_, err := o.Raw(sqlcmd).Values(&rows)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
-		for _, row := range rows {
-			provinceName := row["province"].(string)
-			if provinceName == "特区" {
-				provinceName = row["city"].(string)
-			}
-			provinces[row["pop_id"].(string)] = provinceName
-		}
-	}
-	return provinces
-}
-
-func getHostsWithProvinces(hostsExisted map[string]interface{}, provinces map[string]string, result map[string]interface{}) []interface{} {
-	hostsWithProvinces := []interface{}{}
-	for _, host := range hostsExisted {
-		if _, ok := host.(map[string]interface{})["pop_id"]; ok {
-			popID := host.(map[string]interface{})["pop_id"].(string)
-			province := provinces[popID]
-			host.(map[string]interface{})["province"] = province
-			delete(host.(map[string]interface{}), "pop_id")
-			hostsWithProvinces = append(hostsWithProvinces, host)
-		}
-	}
-	return hostsWithProvinces
 }
 
 func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[string]interface{}) {
@@ -1102,6 +1096,27 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		} else {
 			keywords[province] = []int{id}
 		}
+
+		name := host.(map[string]interface{})["name"].(string)
+		fragments := strings.Split(name, "-")
+		if len(fragments) == 6 {
+			fragments := fragments[2:]
+			for _, fragment := range fragments {
+				if _, ok := keywords[fragment]; ok {
+					keywords[fragment] = appendUnique(keywords[fragment].([]int), id)
+				} else {
+					keywords[fragment] = []int{id}
+				}
+			}
+		}
+
+		idc := host.(map[string]interface{})["idc"].(string)
+		if _, ok := keywords[idc]; ok {
+			keywords[idc] = appendUnique(keywords[idc].([]int), id)
+		} else {
+			keywords[idc] = []int{id}
+		}
+
 		delete(host.(map[string]interface{}), "id")
 		delete(host.(map[string]interface{}), "isp")
 		delete(host.(map[string]interface{}), "province")
@@ -1126,11 +1141,13 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 			groupName := platform.(map[string]interface{})["platform"].(string)
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
+				popID := device.(map[string]interface{})["pop_id"].(string)
 				if device.(map[string]interface{})["ip_status"].(string) == "1" {
 					hostnames = append(hostnames, hostname)
 					host := map[string]interface{}{
 						"name":     hostname,
 						"platform": groupName,
+						"popID":    popID,
 					}
 					hosts = append(hosts, host)
 					hostnames = append(hostnames, hostname)
@@ -1189,6 +1206,125 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getIPFromHostname(hostname string, result map[string]interface{}) string {
+	ip := ""
+	fragments := strings.Split(hostname, "-")
+	slice := []string{}
+	if len(fragments) == 6 {
+		fragments := fragments[2:]
+		for _, fragment := range fragments {
+			num, err := strconv.Atoi(fragment)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				slice = append(slice, strconv.Itoa(num))
+			}
+		}
+		if len(slice) == 4 {
+			ip = strings.Join(slice, ".")
+		}
+	}
+	return ip
+}
+
+func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	arguments := strings.Split(req.URL.Path, "/")
+	platformName := ""
+	metricType := ""
+	duration := "6min"
+	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
+		platformName = arguments[len(arguments)-2]
+		metricType = arguments[len(arguments)-1]
+	}
+	var nodes = make(map[string]interface{})
+	getApolloFiltersJSON(nodes, result)
+	hostnames := []string{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			groupName := platform.(map[string]interface{})["platform"].(string)
+			if groupName == platformName {
+				for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+					hostname = device.(map[string]interface{})["hostname"].(string)
+					if device.(map[string]interface{})["ip_status"].(string) == "1" {
+						hostnames = append(hostnames, hostname)
+					}
+				}
+			}
+		}
+		sort.Strings(hostnames)
+	}
+	metrics := getMetricsByMetricType(metricType)
+	hostMap := map[string]interface{}{}
+	if len(metrics) > 0 {
+		data := getGraphQueryResponse(metrics, duration, hostnames, result)
+		for _, series := range data {
+			values := []interface{}{}
+			for _, rrdObj := range series.Values {
+				if !math.IsNaN(float64(rrdObj.Value)) {
+					value := []interface{}{
+						float64(rrdObj.Timestamp),
+						float64(rrdObj.Value),
+					}
+					values = append(values, value)
+				}
+			}
+			average := float64(0)
+			sum := float64(0)
+			divider := float64(0)
+			timestamp := float64(0)
+			for _, value := range values {
+				timestamp = value.([]interface{})[0].(float64)
+				sum += value.([]interface{})[1].(float64)
+				divider++
+			}
+			if divider > 0 {
+				average = sum / divider
+			}
+			item := map[string]interface{}{
+				"host": series.Endpoint,
+				"ip":   getIPFromHostname(series.Endpoint, result),
+				"net.in.bits.5min.avg":  0,
+				"net.out.bits.5min.avg": 0,
+				"time":                  "",
+			}
+			if value, ok := hostMap[series.Endpoint]; ok {
+				item = value.(map[string]interface{})
+			}
+			if series.Counter == "net.if.in.bits/iface=eth_all" {
+				item["net.in.bits.5min.avg"] = int(average)
+			} else if series.Counter == "net.if.out.bits/iface=eth_all" {
+				item["net.out.bits.5min.avg"] = int(average)
+			}
+			if item["time"] == "" && average > 0 {
+				item["time"] = time.Unix(int64(timestamp), 0).Format("2006-01-02 15:04:05")
+			}
+			hostMap[series.Endpoint] = item
+		}
+	}
+	for _, hostname := range hostnames {
+		host := hostMap[hostname]
+		if host.(map[string]interface{})["host"].(string) != "" {
+			items = append(items, host)
+		}
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	nodes["platform"] = platformName
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
@@ -1202,4 +1338,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
+	http.HandleFunc("/api/platforms/", getPlatformBandwidthsFiveMinutesAverage)
 }
