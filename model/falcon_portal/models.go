@@ -31,6 +31,7 @@ type Events struct {
 	Id          int         `json:"id" orm:"pk"`
 	Step        int         `json:"step"`
 	Cond        string      `json:"cond"`
+	Status      int         `json:"status"`
 	Timestamp   time.Time   `json:"timestamp"`
 	EventCaseId *EventCases `json:"event_caseId" orm:"rel(fk)"`
 }

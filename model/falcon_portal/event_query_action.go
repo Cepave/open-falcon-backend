@@ -7,7 +7,7 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-func GetEventCases(startTime int64, endTime int64, priority int, status string, limit int, username string) (result []EventCases, err error) {
+func GetEventCases(startTime int64, endTime int64, priority int, status string, limit int, elimit int, username string) (result []EventCases, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.FalconPortal.Limit {
 		limit = config.FalconPortal.Limit
@@ -35,10 +35,10 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	}
 	if status != "ALL" {
 		if flag {
-			queryTmp = fmt.Sprintf("%v and status = '%s'", queryTmp, status)
+			queryTmp = fmt.Sprintf("%v and (status = '%s' or status = 'OK')", queryTmp, status)
 		} else {
 			flag = true
-			queryTmp = fmt.Sprintf("%v status = '%s'", queryTmp, status)
+			queryTmp = fmt.Sprintf("%v (status = '%s' or status = 'OK')", queryTmp, status)
 		}
 	}
 	if queryTmp != "" && !isadmin {
@@ -50,9 +50,13 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	if len(result) == 0 {
 		result = []EventCases{}
 	} else {
+		var eventLimit int
+		if eventLimit = elimit; elimit == 0 {
+			eventLimit = 10
+		}
 		for indx, event := range result {
 			var eventArr []*Events
-			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s' order by timestamp DESC", event.Id)).QueryRows(&eventArr)
+			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s' order by timestamp DESC Limit %d", event.Id, eventLimit)).QueryRows(&eventArr)
 			fmt.Sprintf("%v", eventArr)
 			if len(eventArr) != 0 {
 				event.Events = eventArr

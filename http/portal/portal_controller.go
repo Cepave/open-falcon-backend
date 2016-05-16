@@ -23,7 +23,8 @@ func (this *PortalController) EventCasesGet() {
 
 	username := this.GetString("cName", "")
 	limitNum, _ := this.GetInt("limit", 0)
-	events, err := event.GetEventCases(startTime, endTime, prioprity, status, limitNum, username)
+	elimit, _ := this.GetInt("elimit", 0)
+	events, err := event.GetEventCases(startTime, endTime, prioprity, status, limitNum, elimit, username)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return

@@ -15,6 +15,10 @@
     * if no specific will get 'PROBLEM' case as default
   * `cName` options (get from cookie refer)
     * default will only get case of current user, except admin role (ex. root).
+  * `limit` int
+    * set the return limit of eventCases
+  * `elimit` int
+    * set the return limit of events
 * response:
   * ok
 
@@ -82,6 +86,8 @@
       *  if no specific will get 'PROBLEM' case as default
     * `cName` options (get from cookie refer)
       * default will only get case of current user, except admin role (ex. root).
+    * `elimit` int
+      * set the return limit of events
   * response:
     * ok
 
