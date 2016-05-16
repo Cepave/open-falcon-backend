@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"github.com/Cepave/agent/g"
@@ -8,8 +9,10 @@ import (
 	"github.com/toolkits/file"
 	"github.com/toolkits/sys"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -44,6 +47,58 @@ func (this *PluginScheduler) Stop() {
 	close(this.Quit)
 }
 
+func noOwnerExecPerm(fpath string) bool {
+	info, err := os.Stat(fpath)
+	if err != nil {
+		log.Println("[Error] cannot stat file", err)
+	}
+
+	perm := info.Mode().Perm()
+	if (perm & 0100) != 0100 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func hasShebang(fpath string) bool {
+	// examine if it has shebang in file's first two characters.
+	file, err := os.Open(fpath)
+	if err != nil {
+		log.Println("cannot open plugin script file", err)
+	}
+	defer file.Close()
+
+	var line []string
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		line = strings.Split(scanner.Text(), " ")
+	}
+	if strings.HasPrefix(line[0], "#!") {
+		return true
+	} else {
+		return false
+	}
+}
+
+func getInterpreterCmd(fpath string) []string {
+	file, err := os.Open(fpath)
+	if err != nil {
+		log.Println("cannot open plugin script file", err)
+	}
+	defer file.Close()
+
+	var itpr []string
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		itpr = strings.Split(strings.Trim(scanner.Text(), " "), " ")
+		itpr[0] = strings.TrimPrefix(itpr[0], "#!")
+	}
+	itpr = append(itpr, fpath)
+
+	return itpr
+}
+
 func PluginRun(plugin *Plugin) {
 
 	timeout := plugin.Cycle*1000 - 500
@@ -59,7 +114,16 @@ func PluginRun(plugin *Plugin) {
 		log.Println(fpath, "running...")
 	}
 
-	cmd := exec.Command(fpath)
+	var cmd *exec.Cmd
+	if noOwnerExecPerm(fpath) && hasShebang(fpath) {
+		itprcmd := getInterpreterCmd(fpath)
+		cmd = exec.Command(itprcmd[0], itprcmd[1:]...)
+		if debug {
+			log.Println("[INFO]", fpath, "has shebang but no owner exec perm.")
+		}
+	} else {
+		cmd = exec.Command(fpath)
+	}
 	var stdout bytes.Buffer
 	cmd.Stdout = &stdout
 	var stderr bytes.Buffer
@@ -110,20 +174,19 @@ func PluginRun(plugin *Plugin) {
 		return
 	}
 
+	// fill in fields
+	sec := plugin.Cycle
+	now := time.Now().Unix()
+	hostname, err := g.Hostname()
+	if err != nil {
+		hostname = ""
+	}
 
-    // fill in fields
-    sec := plugin.Cycle
-    now := time.Now().Unix()
-    hostname, err := g.Hostname()
-    if err != nil {
-        hostname = ""
-    }
-
-    for j := 0; j < len(metrics); j++ {
-        metrics[j].Step = int64(sec)
-        metrics[j].Endpoint = hostname
-        metrics[j].Timestamp = now
-    }
+	for j := 0; j < len(metrics); j++ {
+		metrics[j].Step = int64(sec)
+		metrics[j].Endpoint = hostname
+		metrics[j].Timestamp = now
+	}
 
 	g.SendToTransfer(metrics)
 }
