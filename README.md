@@ -58,6 +58,7 @@ CREATE TABLE events (
   event_caseId VARCHAR(50),
   step int(10) unsigned,
   cond VARCHAR(200) NOT NULL,
+  status  int(3) unsigned DEFAULT 0,
   timestamp Timestamp,
   PRIMARY KEY (id),
   INDEX(event_caseId),
