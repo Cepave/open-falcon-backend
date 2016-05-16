@@ -34,6 +34,8 @@ func (this *AuthController) Logout() {
 	RemoveSessionByUid(u.Id)
 	this.Ctx.SetCookie("sig", "", 0, "/")
 	this.Ctx.SetCookie("sig", "", 0, "/", g.Config().Http.Cookie)
+	this.Ctx.SetCookie("name", "", 0, "/")
+	this.Ctx.SetCookie("name", "", 0, "/", g.Config().Http.Cookie)
 	this.Redirect("/auth/login", 302)
 }
 
@@ -216,10 +218,13 @@ func (this *AuthController) RegisterPost() {
 
 func (this *AuthController) CreateSession(uid int64, maxAge int) int {
 	sig := utils.GenerateUUID()
+	user := SelectUserById(uid)
 	expired := int(time.Now().Unix()) + maxAge
 	SaveSessionAttrs(uid, sig, expired)
 	this.Ctx.SetCookie("sig", sig, maxAge, "/")
 	this.Ctx.SetCookie("sig", sig, maxAge, "/", g.Config().Http.Cookie)
+	this.Ctx.SetCookie("name", user.Name, maxAge, "/")
+	this.Ctx.SetCookie("name", user.Name, maxAge, "/", g.Config().Http.Cookie)
 	return expired
 }
 
