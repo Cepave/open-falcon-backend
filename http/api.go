@@ -1308,7 +1308,9 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 	}
 	for _, hostname := range hostnames {
 		host := hostMap[hostname]
-		items = append(items, host)
+		if host.(map[string]interface{})["host"].(string) != "" {
+			items = append(items, host)
+		}
 	}
 	if _, ok := nodes["info"]; ok {
 		delete(nodes, "info")
