@@ -22,5 +22,4 @@ func main() {
 	rawData := Probe(probingCmd)
 	jsonParams := MarshalIntoParameters(rawData, targets, agentPtr)
 	Push(jsonParams)
-	//	log.Println(jsonParams)
 }

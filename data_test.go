@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/Cepave/common/model"
-	"github.com/Cepave/transfer/g"
 	"reflect"
 	"testing"
+
+	"github.com/Cepave/common/model"
+	"github.com/Cepave/transfer/g"
 )
 
 /*

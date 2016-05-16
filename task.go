@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/Cepave/common/model"
 	"log"
+
+	"github.com/Cepave/common/model"
 )
 
 func QueryTask() ([]string, []model.NqmTarget, *model.NqmAgent, error) {

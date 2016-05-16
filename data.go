@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/Cepave/common/model"
-	stats "github.com/montanaflynn/stats"
 	"log"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Cepave/common/model"
+	stats "github.com/montanaflynn/stats"
 )
 
 type ParamToAgent struct {
