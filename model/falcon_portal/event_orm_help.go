@@ -2,14 +2,16 @@ package falconPortal
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
-	"log"
 )
 
 func getUserRole(username string) (int64, bool) {
 	user := uic.ReadUserByName(username)
-	if user.Role == 2 {
+	// Role of root is 2. Role of admin assigned by root is 1.
+	if user.Role == 2 || user.Role == 1 {
 		return user.Id, true
 	} else {
 		return user.Id, false
