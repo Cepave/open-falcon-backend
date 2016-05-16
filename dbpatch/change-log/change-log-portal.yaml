@@ -43,3 +43,8 @@
     filename: "masato-9.sql",
     comment: "[OWL-468] Alarm Case database table script change"
 }
+- {
+    id: "masato-10",
+    filename: "masato-10.sql",
+    comment: "add status column for alarm"
+}
