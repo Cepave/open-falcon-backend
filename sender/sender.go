@@ -8,6 +8,7 @@ import (
 	cmodel "github.com/open-falcon/common/model"
 	nlist "github.com/toolkits/container/list"
 	"log"
+	"strconv"
 )
 
 const (
@@ -33,15 +34,17 @@ var (
 	JudgeQueues    = make(map[string]*nlist.SafeListLimited)
 	GraphQueues    = make(map[string]*nlist.SafeListLimited)
 	InfluxdbQueues = make(map[string]*nlist.SafeListLimited)
+	NqmRpcQueue    *nlist.SafeListLimited
 )
 
 // 连接池
 // node_address -> connection_pool
 var (
-	JudgeConnPools     *cpool.SafeRpcConnPools
-	TsdbConnPoolHelper *cpool.TsdbConnPoolHelper
-	GraphConnPools     *cpool.SafeRpcConnPools
-	InfluxdbConnPools  *cpool.InfluxdbConnPools
+	JudgeConnPools       *cpool.SafeRpcConnPools
+	TsdbConnPoolHelper   *cpool.TsdbConnPoolHelper
+	GraphConnPools       *cpool.SafeRpcConnPools
+	InfluxdbConnPools    *cpool.InfluxdbConnPools
+	NqmRpcConnPoolHelper *cpool.NqmRpcConnPoolHelper
 )
 
 // 初始化数据发送服务, 在main函数中调用
@@ -226,4 +229,167 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 			proc.SendToInfluxdbDropCnt.Incr()
 		}
 	}
+}
+
+// Push network quality metric pkt to the queue for RPC
+func Push2NqmRpcSendQueue(items []*cmodel.MetaData) {
+	for _, item := range items {
+		nqmitem, err := convert2NqmRpcItem(item)
+		if err != nil {
+			log.Println("NqmRpc converting error:", err)
+			continue
+		}
+		isSuccess := NqmRpcQueue.PushFront(nqmitem)
+
+		if !isSuccess {
+			proc.SendToNqmRpcDropCnt.Incr()
+		}
+	}
+}
+
+func Demultiplex(items []*cmodel.MetaData) ([]*cmodel.MetaData, []*cmodel.MetaData) {
+	nqms := []*cmodel.MetaData{}
+	generics := []*cmodel.MetaData{}
+
+	for _, item := range items {
+		if item.Metric == "nqm-metrics" {
+			nqms = append(nqms, item)
+		} else {
+			generics = append(generics, item)
+		}
+	}
+
+	return nqms, generics
+}
+
+func convert2NqmRpcItem(d *cmodel.MetaData) (*nqmRpcItem, error) {
+	var t nqmRpcItem
+	agent, err := convert2NqmEndpoint(d, "agent")
+	if err != nil {
+		return &t, err
+	}
+	target, err := convert2NqmEndpoint(d, "target")
+	if err != nil {
+		return &t, err
+	}
+	metrics, err := convert2NqmMetrics(d)
+	if err != nil {
+		return &t, err
+	}
+
+	t = nqmRpcItem{
+		Timestamp: d.Timestamp,
+		Agent:     *agent,
+		Target:    *target,
+		Metrics:   *metrics,
+	}
+
+	return &t, nil
+}
+
+func strToFloat32(out *float32, index string, dict map[string]string) error {
+	var err error
+	var ff float64
+	if v, ok := dict[index]; ok {
+		ff, err = strconv.ParseFloat(v, 32)
+		if err != nil {
+			return err
+		}
+		*out = float32(ff)
+	}
+	return nil
+}
+
+func strToInt32(out *int32, index string, dict map[string]string) error {
+	var err error
+	var ii int64
+	if v, ok := dict[index]; ok {
+		ii, err = strconv.ParseInt(v, 10, 32)
+		if err != nil {
+			return err
+		}
+		*out = int32(ii)
+	}
+	return nil
+}
+
+func strToInt16(out *int16, index string, dict map[string]string) error {
+	var err error
+	var ii int64
+	if v, ok := dict[index]; ok {
+		ii, err = strconv.ParseInt(v, 10, 16)
+		if err != nil {
+			return err
+		}
+		*out = int16(ii)
+	}
+	return nil
+}
+
+func convert2NqmEndpoint(d *cmodel.MetaData, endType string) (*nqmEndpoint, error) {
+	t := nqmEndpoint{
+		Id:         -1,
+		IspId:      -1,
+		ProvinceId: -1,
+		CityId:     -1,
+		NameTagId:  -1,
+	}
+
+	if err := strToInt32(&t.Id, endType+"-id", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt16(&t.IspId, endType+"-isp-id", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt16(&t.ProvinceId, endType+"-province-id", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt16(&t.CityId, endType+"-city-id", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt32(&t.NameTagId, endType+"-name-tag-id", d.Tags); err != nil {
+		return nil, err
+	}
+
+	return &t, nil
+}
+
+// 轉化成 nqmMetrc 格式
+func convert2NqmMetrics(d *cmodel.MetaData) (*nqmMetrics, error) {
+	t := nqmMetrics{
+		Rttmin:      -1,
+		Rttavg:      -1,
+		Rttmax:      -1,
+		Rttmdev:     -1,
+		Rttmedian:   -1,
+		Pkttransmit: -1,
+		Pktreceive:  -1,
+	}
+	var ff float32
+	if err := strToFloat32(&ff, "rttmin", d.Tags); err != nil {
+		return nil, err
+	}
+	t.Rttmin = int32(ff)
+	if err := strToFloat32(&ff, "rttmax", d.Tags); err != nil {
+		return nil, err
+	}
+	t.Rttmax = int32(ff)
+
+	if err := strToFloat32(&t.Rttavg, "rttavg", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToFloat32(&t.Rttmdev, "rttmdev", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToFloat32(&t.Rttmedian, "rttmedian", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt32(&t.Pkttransmit, "pkttransmit", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt32(&t.Pktreceive, "pktreceive", d.Tags); err != nil {
+		return nil, err
+	}
+
+	return &t, nil
 }

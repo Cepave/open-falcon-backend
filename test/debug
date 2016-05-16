@@ -70,6 +70,14 @@ function http_post(){
     curl -s -X POST -d "[{\"metric\":\"$m\", \"endpoint\":\"$e\", \"timestamp\":$ts,\"step\":60, \"value\":$val, \"counterType\":\"GAUGE\",\"tags\":\"$t\"}]" "$httpprex/api/push" | python -m json.tool
 }
 
+function nqm(){
+    e="test.endpoint.niean.2"
+    m="nqm-metrics"
+    t="rttmin=18.64, rttavg=21.5, rttmax=26.9, rttmdev=4.7, pkttransmit=13, pktreceive=11, agent-id=1334, agent-isp-id=12, agent-province-id=13, agent-city-id=14, agent-name-tag-id=123, target-id=2334, target-isp-id=22, target-province-id=23, target-city-id=24, target-name-tag-id=223"
+    ts=`date +%s`
+    val=`expr $ts / 60 % 10`
+    curl -s -X POST -d "[{\"metric\":\"$m\", \"endpoint\":\"$e\", \"timestamp\":$ts,\"step\":60, \"value\":$val, \"counterType\":\"GAUGE\",\"tags\":\"$t\"}]" "$httpprex/api/push" | python -m json.tool
+}
 
 ## telnet 
 function telnet_send(){
@@ -185,6 +193,9 @@ case $action in
         ;;
     "post")
         http_post 
+        ;;
+    "nqm")
+        nqm
         ;;
     "send")
         telnet_send

@@ -3,10 +3,10 @@ package socket
 import (
 	"bufio"
 	"fmt"
-	cmodel "github.com/open-falcon/common/model"
 	"github.com/Cepave/transfer/g"
 	"github.com/Cepave/transfer/proc"
 	"github.com/Cepave/transfer/sender"
+	cmodel "github.com/open-falcon/common/model"
 	"net"
 	"strconv"
 	"strings"
@@ -62,16 +62,23 @@ func socketTelnetHandle(conn net.Conn) {
 	proc.SocketRecvCnt.IncrBy(int64(len(items)))
 	proc.RecvCnt.IncrBy(int64(len(items)))
 
+	// demultiplexing
+	nqmItems, genericItems := sender.Demultiplex(items)
+
 	if cfg.Graph.Enabled {
-		sender.Push2GraphSendQueue(items)
+		sender.Push2GraphSendQueue(genericItems)
 	}
 
 	if cfg.Judge.Enabled {
-		sender.Push2JudgeSendQueue(items)
+		sender.Push2JudgeSendQueue(genericItems)
 	}
 
 	if cfg.Influxdb.Enabled {
-		sender.Push2InfluxdbSendQueue(items)
+		sender.Push2InfluxdbSendQueue(genericItems)
+	}
+
+	if cfg.NqmRpc.Enabled {
+		sender.Push2NqmRpcSendQueue(nqmItems)
 	}
 
 	return

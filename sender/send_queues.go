@@ -25,4 +25,8 @@ func initSendQueues() {
 
 	Q := nlist.NewSafeListLimited(DefaultSendQueueMaxSize)
 	InfluxdbQueues["default"] = Q
+
+	if cfg.NqmRpc.Enabled {
+		NqmRpcQueue = nlist.NewSafeListLimited(DefaultSendQueueMaxSize)
+	}
 }

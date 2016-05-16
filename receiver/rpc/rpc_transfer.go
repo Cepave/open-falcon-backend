@@ -132,22 +132,29 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 		proc.HttpRecvCnt.IncrBy(cnt)
 	}
 
+	// demultiplexing
+	nqmItems, genericItems := sender.Demultiplex(items)
+
 	cfg := g.Config()
 
 	if cfg.Graph.Enabled {
-		sender.Push2GraphSendQueue(items)
+		sender.Push2GraphSendQueue(genericItems)
 	}
 
 	if cfg.Judge.Enabled {
-		sender.Push2JudgeSendQueue(items)
+		sender.Push2JudgeSendQueue(genericItems)
 	}
 
 	if cfg.Tsdb.Enabled {
-		sender.Push2TsdbSendQueue(items)
+		sender.Push2TsdbSendQueue(genericItems)
 	}
 
 	if cfg.Influxdb.Enabled {
-		sender.Push2InfluxdbSendQueue(items)
+		sender.Push2InfluxdbSendQueue(genericItems)
+	}
+
+	if cfg.NqmRpc.Enabled {
+		sender.Push2NqmRpcSendQueue(nqmItems)
 	}
 
 	reply.Message = "ok"
