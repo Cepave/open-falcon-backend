@@ -1336,4 +1336,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
+	http.HandleFunc("/api/platforms/", getPlatformBandwidthsFiveMinutesAverage)
 }
