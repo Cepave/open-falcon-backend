@@ -1,5 +1,5 @@
 {
-    "debug": "false",
+    "debug": false,
     "http": {
         "enabled":  true,
         "listen":   "0.0.0.0:9966"
@@ -15,8 +15,18 @@
         }
     },
     "api": {
-        "query": "http://127.0.0.1:9966",
-        "dashboard": "http://127.0.0.1:8081",
+        "name": "apiName",
+        "token": "apiToken",
+        "event": "https://example.com/api_event_path",
+        "map": "https://example.com/api_map_path",
+        "geo": "https://example.com/api_geo_path",
+        "query": "http://example.com:port",
+        "dashboard": "http://example.com",
         "max": 500
+    },
+    "db": {
+        "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
     }
 }
