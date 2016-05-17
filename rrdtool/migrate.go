@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Cepave/consistent"
 	pfc "github.com/niean/goperfcounter"
-	"stathat.com/c/consistent"
 
 	cmodel "github.com/Cepave/common/model"
 	"github.com/Cepave/graph/g"
