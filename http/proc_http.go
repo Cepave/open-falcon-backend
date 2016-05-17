@@ -3,7 +3,7 @@ package http
 import (
 	"github.com/Cepave/transfer/proc"
 	cutils "github.com/open-falcon/common/utils"
-	"github.com/open-falcon/transfer/sender"
+	"github.com/Cepave/transfer/sender"
 	"net/http"
 	"strconv"
 	"strings"
