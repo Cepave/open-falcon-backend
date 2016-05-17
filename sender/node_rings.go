@@ -1,8 +1,8 @@
 package sender
 
 import (
+	"github.com/Cepave/consistent"
 	"github.com/Cepave/transfer/g"
-	"stathat.com/c/consistent"
 )
 
 func initNodeRings() {
