@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -126,7 +127,12 @@ func getConnectionID() string {
 
 func loadJSONConfig() {
 	parsedPtr := flag.String("c", "cfg.json", "nqm's configuration file")
+	version := flag.Bool("v", false, "show version")
 	flag.Parse()
+	if *version {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
 	cfgFile := filepath.Clean(*parsedPtr)
 	cfgPath := getCfgAbsPath(cfgFile)
 
