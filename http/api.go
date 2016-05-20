@@ -845,7 +845,7 @@ func getMetricsByMetricType(metricType string) []string {
 			"ss.syn.recv",
 			"vfcc.squid.response.time",
 		}
-	} else if metricType == "all" {
+	} else if metricType == "all" || metricType == "aggregate" {
 		metrics = []string{
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
