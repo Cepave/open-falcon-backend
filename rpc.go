@@ -91,7 +91,7 @@ func (this *SingleConnRpcClient) Call(method string, args interface{}, reply int
 }
 
 func InitRPC() {
-	rpcClient.RpcServer = GetGeneralConfig().HbsRPCServer
+	rpcClient.RpcServer = GetGeneralConfig().Hbs.RPCServer
 	req = model.NqmPingTaskRequest{
 		Hostname:     GetGeneralConfig().Hostname,
 		IpAddress:    GetGeneralConfig().IPAddress,

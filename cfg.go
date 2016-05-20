@@ -14,12 +14,24 @@ import (
 	"github.com/toolkits/file"
 )
 
+type AgentConfig struct {
+	PushURL         string `json:"pushURL"`
+	FpingInterval   int    `json:"fpingInterval"`
+	TcppingInterval int    `json:"tcppingInterval"`
+	TcpconnInterval int    `json:"tcpconnInterval"`
+}
+
+type HbsConfig struct {
+	RPCServer string `json:"RPCServer"`
+	Interval  int    `json:"interval"`
+}
+
 type JSONConfigFile struct {
-	AgentPushURL string `json:"agentPushURL"`
-	HbsRPCServer string `json:"hbsRPCServer"`
-	Hostname     string `json:"hostname"`
-	IPAddress    string `json:"ipAddress"`
-	ConnectionID string `json:"connectionID"`
+	Agent        *AgentConfig `json:"agent"`
+	Hbs          *HbsConfig   `json:"hbs"`
+	Hostname     string       `json:"hostname"`
+	IPAddress    string       `json:"ipAddress"`
+	ConnectionID string       `json:"connectionID"`
 }
 
 type GeneralConfig struct {
@@ -167,8 +179,8 @@ func InitGeneralConfig() {
 	var cfg GeneralConfig
 	generalConfig = &cfg
 	loadJSONConfig()
-	cfg.AgentPushURL = getJSONConfig().AgentPushURL
-	cfg.HbsRPCServer = getJSONConfig().HbsRPCServer
+	cfg.Agent = getJSONConfig().Agent
+	cfg.Hbs = getJSONConfig().Hbs
 	cfg.Hostname = getHostname()
 	cfg.IPAddress = getIP()
 	cfg.ConnectionID = getConnectionID()

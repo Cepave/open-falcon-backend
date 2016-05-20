@@ -34,8 +34,16 @@ You can modify `cfg.example.json` for creating your own configuration file:
 
 ```json
 {
-	"agentPushURL": "http://127.0.0.1:1988/v1/push",
-	"hbsRPCServer": "127.0.0.1:6030",
+	"agent": {
+		"agentPushURL": "http://127.0.0.1:1988/v1/push",
+		"fpingInterval": 60,
+		"tcppingInterval": 60,
+		"tcpconnInterval": 60
+	},
+	"hbs": {
+		"RPCServer": "127.0.0.1:6030",
+		"interval": 60
+	},
 	"hostname": "",
 	"ipAddress": "",
 	"connectionID": ""
@@ -44,27 +52,54 @@ You can modify `cfg.example.json` for creating your own configuration file:
 
 Here are the explanations of the fields:
 
-*  *agentPushURL*
+*  *agent* [**Required**]
 
-  **Required**. The RESTful API URL where NQM agent pushes data to.
+   *  *PushURL*
+
+      The RESTful API URL where NQM agent pushes data to.
+
+   *  *fpingInterval*
+
+      The time interval (seconds) between two calls of fping probes.
 
 
-* *hbsRPCServer*
+   *  *tcppingInterval*
 
-  **Required**. The RPC server where NQM agent gets configurations and probing commands.
+      The time interval (seconds) between two calls of tcpping probes.
+
+   *  *tcpconnInterval*
+
+      The time interval (seconds) between two calls of tcpconn probes.
+
+      ​
 
 
-* *hostname*
 
-  **Optional**. If not set, NQM agent will use the system's hostname.
 
-* *ipAddress*
+* *hbs* [**Required**]
 
-  **Optional**. If not set, NQM agent will try to get the public IP address of the network interface. If failed, this field will be "UNKNOWN".
+  * *RPCServer*
 
-* *connectionID*
+    The RPC server where NQM agent gets configurations and probing commands.
 
-  **Optional**. If not set, NQM agent will generate a string combined by the hostname and the IP address.  
+  * *Interval*
+
+    The time interval (seconds) between two queries to *RPCServer*.
+
+
+
+
+* *hostname* [**Optional**]
+
+  If not set, NQM agent will use the system's hostname.
+
+* *ipAddress* [**Optional**]
+
+  If not set, NQM agent will try to get the public IP address of the network interface. If failed, this field will be "UNKNOWN".
+
+* *connectionID* [**Optional**]
+
+  If not set, NQM agent will generate a string combined by the hostname and the IP address.
 
 
 
