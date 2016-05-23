@@ -31,7 +31,6 @@ func fping() {
 				log.Println(err)
 				return
 			}
-			probingCmd = []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a", "127.0.0.1"}
 			log.Println("Execution of the probing command:", probingCmd[0:9])
 
 			rawData := Probe(probingCmd)
