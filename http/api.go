@@ -1370,4 +1370,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
 	http.HandleFunc("/api/platforms/", getPlatformBandwidthsFiveMinutesAverage)
+	http.HandleFunc("/api/hosts/", getHostsBandwidthsFiveMinutesAverage)
 }
