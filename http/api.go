@@ -1291,7 +1291,6 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	items := []interface{}{}
 	arguments := strings.Split(req.URL.Path, "/")
 	platformName := ""
 	metricType := ""
@@ -1316,62 +1315,8 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 				}
 			}
 		}
-		sort.Strings(hostnames)
 	}
-	metrics := getMetricsByMetricType(metricType)
-	hostMap := map[string]interface{}{}
-	if len(metrics) > 0 {
-		data := getGraphQueryResponse(metrics, duration, hostnames, result)
-		for _, series := range data {
-			values := []interface{}{}
-			for _, rrdObj := range series.Values {
-				if !math.IsNaN(float64(rrdObj.Value)) {
-					value := []interface{}{
-						float64(rrdObj.Timestamp),
-						float64(rrdObj.Value),
-					}
-					values = append(values, value)
-				}
-			}
-			average := float64(0)
-			sum := float64(0)
-			divider := float64(0)
-			timestamp := float64(0)
-			for _, value := range values {
-				timestamp = value.([]interface{})[0].(float64)
-				sum += value.([]interface{})[1].(float64)
-				divider++
-			}
-			if divider > 0 {
-				average = sum / divider
-			}
-			item := map[string]interface{}{
-				"host": series.Endpoint,
-				"ip":   getIPFromHostname(series.Endpoint, result),
-				"net.in.bits.5min.avg":  0,
-				"net.out.bits.5min.avg": 0,
-				"time":                  "",
-			}
-			if value, ok := hostMap[series.Endpoint]; ok {
-				item = value.(map[string]interface{})
-			}
-			if series.Counter == "net.if.in.bits/iface=eth_all" {
-				item["net.in.bits.5min.avg"] = int(average)
-			} else if series.Counter == "net.if.out.bits/iface=eth_all" {
-				item["net.out.bits.5min.avg"] = int(average)
-			}
-			if item["time"] == "" && average > 0 {
-				item["time"] = time.Unix(int64(timestamp), 0).Format("2006-01-02 15:04:05")
-			}
-			hostMap[series.Endpoint] = item
-		}
-	}
-	for _, hostname := range hostnames {
-		host := hostMap[hostname]
-		if host.(map[string]interface{})["host"].(string) != "" {
-			items = append(items, host)
-		}
-	}
+	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
 	if _, ok := nodes["info"]; ok {
 		delete(nodes, "info")
 	}
