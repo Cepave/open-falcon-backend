@@ -107,6 +107,17 @@ func Start() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	//recovery panic error
+	defer func() {
+		if r := recover(); r != nil {
+			var ok bool
+			err, ok = r.(error)
+			if !ok {
+				err = fmt.Errorf("grpc service got error: %v", r)
+			}
+		}
+	}()
 	s := grpc.NewServer()
 	pb.RegisterOwlQueryServer(s, &server{})
 	s.Serve(lis)
