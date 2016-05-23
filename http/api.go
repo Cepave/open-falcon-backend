@@ -1330,6 +1330,32 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 	setResponse(rw, nodes)
 }
 
+func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	arguments := strings.Split(req.URL.Path, "/")
+	hostnames := []string{}
+	metricType := ""
+	duration := "6min"
+	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
+		hostnames = strings.Split(arguments[len(arguments)-2], ",")
+		metricType = arguments[len(arguments)-1]
+	}
+	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
