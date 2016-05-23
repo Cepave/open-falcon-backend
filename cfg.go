@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/file"
 )
 
@@ -36,12 +37,10 @@ type JSONConfigFile struct {
 
 type GeneralConfig struct {
 	JSONConfigFile
+	hbsResp      model.NqmPingTaskResponse
 	Hostname     string
 	IPAddress    string
 	ConnectionID string
-	ISP          string
-	Province     string
-	City         string
 }
 
 var (
@@ -177,11 +176,12 @@ func GetGeneralConfig() *GeneralConfig {
 
 func InitGeneralConfig() {
 	var cfg GeneralConfig
-	generalConfig = &cfg
 	loadJSONConfig()
 	cfg.Agent = getJSONConfig().Agent
 	cfg.Hbs = getJSONConfig().Hbs
+	cfg.hbsResp = model.NqmPingTaskResponse{}
 	cfg.Hostname = getHostname()
 	cfg.IPAddress = getIP()
 	cfg.ConnectionID = getConnectionID()
+	generalConfig = &cfg
 }

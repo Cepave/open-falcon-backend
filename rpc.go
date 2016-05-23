@@ -20,7 +20,6 @@ type SingleConnRpcClient struct {
 
 var (
 	req       model.NqmPingTaskRequest
-	resp      model.NqmPingTaskResponse
 	rpcClient SingleConnRpcClient
 )
 
