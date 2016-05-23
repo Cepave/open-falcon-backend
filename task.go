@@ -31,9 +31,13 @@ func query() {
 }
 
 func makeTasks() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
-	// Only 2 possible responses come from hbs:
-	//     1. NeedPing==ture, which means NqmAgent, NQMTargets, Command are not nil
-	//     2. NeedPing==false, which means NqmAgent, NQMTargets, Command are nil
+	/**
+	 * Only 2 possible responses come from hbs:
+	 *     1. NeedPing==false (default condition)
+	 *         NqmAgent, NQMTargets, Command are nil
+	 *     2. NeedPing==ture
+	 *         NqmAgent, NQMTargets, Command are not nil
+	 */
 	if !GetGeneralConfig().hbsResp.NeedPing {
 		return nil, nil, nil, fmt.Errorf("No tasks assigned.")
 	}
