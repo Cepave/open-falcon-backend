@@ -29,7 +29,7 @@ _testmain.go
 # .idea
 .DS_Store
 /var
-/nqm
+/nqm-agent
 /cfg.json
 #/test/build
 
