@@ -1,16 +1,14 @@
 package http
 
 import (
+	"encoding/json"
+	"github.com/Cepave/query/g"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-	"strings"
-
-	"encoding/json"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-
-	"github.com/Cepave/query/g"
+	"strings"
 )
 
 type Dto struct {
@@ -28,6 +26,9 @@ func InitDatabase() {
 	strConn := strings.Replace(config.Db.Addr, "falcon_portal", "grafana", 1)
 	orm.RegisterDataBase("grafana", "mysql", strConn, config.Db.Idle, config.Db.Max)
 	orm.RegisterModel(new(Province), new(City), new(Idc))
+
+	orm.RegisterDataBase("gz_nqm", "mysql", config.Nqm.Addr, config.Nqm.Idle, config.Nqm.Max)
+	orm.RegisterModel(new(Nqm_node))
 
 	if config.Debug == true {
 		orm.Debug = true
@@ -47,6 +48,7 @@ func Start() {
 	configAPIRoutes()
 	configGrafanaRoutes()
 	configZabbixRoutes()
+	configNQMRoutes()
 
 	// start mysql database
 	InitDatabase()

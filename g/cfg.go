@@ -2,10 +2,9 @@ package g
 
 import (
 	"encoding/json"
+	"github.com/toolkits/file"
 	"log"
 	"sync"
-
-	"github.com/toolkits/file"
 )
 
 type HttpConfig struct {
@@ -39,12 +38,19 @@ type DbConfig struct {
 	Max  int    `json:"max"`
 }
 
+type NqmConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
+}
+
 type GlobalConfig struct {
 	Debug bool         `json:"debug"`
 	Http  *HttpConfig  `json:"http"`
 	Graph *GraphConfig `json:"graph"`
 	Api   *ApiConfig   `json:"api"`
 	Db    *DbConfig    `json:"db"`
+	Nqm   *NqmConfig   `json:"nqm"`
 }
 
 var (
