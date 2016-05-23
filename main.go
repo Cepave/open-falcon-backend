@@ -1,34 +1,31 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
-	"time"
+	"os"
 )
 
-//*
 func init() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
-//*/
 func main() {
-	InitGeneralConfig()
+	cfgFilePtr := flag.String("c", "cfg.json", "nqm's configuration file")
+	version := flag.Bool("v", false, "show version")
+	flag.Parse()
+
+	if *version {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
+
+	InitGeneralConfig(*cfgFilePtr)
 	InitRPC()
 
-	for {
-		go func() {
-			probingCmd, targets, agentPtr, err := QueryTask()
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			log.Println("Execution the probing command:", probingCmd[0:9])
+	go QueryHbs()
+	Measure()
 
-			rawData := Probe(probingCmd)
-			jsonParams := MarshalIntoParameters(rawData, targets, agentPtr)
-			Push(jsonParams)
-		}()
-		time.Sleep(time.Minute)
-	}
 	select {}
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -11,25 +9,36 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Cepave/common/model"
 	"github.com/toolkits/file"
 )
 
+type AgentConfig struct {
+	PushURL         string `json:"pushURL"`
+	FpingInterval   int    `json:"fpingInterval"`
+	TcppingInterval int    `json:"tcppingInterval"`
+	TcpconnInterval int    `json:"tcpconnInterval"`
+}
+
+type HbsConfig struct {
+	RPCServer string `json:"RPCServer"`
+	Interval  int    `json:"interval"`
+}
+
 type JSONConfigFile struct {
-	AgentPushURL string `json:"agentPushURL"`
-	HbsRPCServer string `json:"hbsRPCServer"`
-	Hostname     string `json:"hostname"`
-	IPAddress    string `json:"ipAddress"`
-	ConnectionID string `json:"connectionID"`
+	Agent        *AgentConfig `json:"agent"`
+	Hbs          *HbsConfig   `json:"hbs"`
+	Hostname     string       `json:"hostname"`
+	IPAddress    string       `json:"ipAddress"`
+	ConnectionID string       `json:"connectionID"`
 }
 
 type GeneralConfig struct {
 	JSONConfigFile
+	hbsResp      model.NqmPingTaskResponse
 	Hostname     string
 	IPAddress    string
 	ConnectionID string
-	ISP          string
-	Province     string
-	City         string
 }
 
 var (
@@ -125,15 +134,8 @@ func getConnectionID() string {
 	return connectionID
 }
 
-func loadJSONConfig() {
-	parsedPtr := flag.String("c", "cfg.json", "nqm's configuration file")
-	version := flag.Bool("v", false, "show version")
-	flag.Parse()
-	if *version {
-		fmt.Println(VERSION)
-		os.Exit(0)
-	}
-	cfgFile := filepath.Clean(*parsedPtr)
+func loadJSONConfig(cfgFile string) {
+	cfgFile = filepath.Clean(cfgFile)
 	cfgPath := getCfgAbsPath(cfgFile)
 
 	if !file.IsExist(cfgPath) {
@@ -163,12 +165,14 @@ func GetGeneralConfig() *GeneralConfig {
 	return generalConfig
 }
 
-func InitGeneralConfig() {
+func InitGeneralConfig(cfgFilePath string) {
 	var cfg GeneralConfig
 	generalConfig = &cfg
-	loadJSONConfig()
-	cfg.AgentPushURL = getJSONConfig().AgentPushURL
-	cfg.HbsRPCServer = getJSONConfig().HbsRPCServer
+
+	loadJSONConfig(cfgFilePath)
+	cfg.Agent = getJSONConfig().Agent
+	cfg.Hbs = getJSONConfig().Hbs
+	cfg.hbsResp = model.NqmPingTaskResponse{}
 	cfg.Hostname = getHostname()
 	cfg.IPAddress = getIP()
 	cfg.ConnectionID = getConnectionID()

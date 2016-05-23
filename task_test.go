@@ -71,11 +71,12 @@ func initJsonRpcClient(srvAddr string) {
 	}
 }
 
-func TestQueryTask(t *testing.T) {
+func TestMakeTasks(t *testing.T) {
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
 
-	cmd, targetList, agent, err := QueryTask()
+	query()
+	cmd, targetList, agent, err := makeTasks()
 	if err != nil {
 		t.Error(err)
 	}
