@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -136,15 +134,8 @@ func getConnectionID() string {
 	return connectionID
 }
 
-func loadJSONConfig() {
-	parsedPtr := flag.String("c", "cfg.json", "nqm's configuration file")
-	version := flag.Bool("v", false, "show version")
-	flag.Parse()
-	if *version {
-		fmt.Println(VERSION)
-		os.Exit(0)
-	}
-	cfgFile := filepath.Clean(*parsedPtr)
+func loadJSONConfig(cfgFile string) {
+	cfgFile = filepath.Clean(cfgFile)
 	cfgPath := getCfgAbsPath(cfgFile)
 
 	if !file.IsExist(cfgPath) {
@@ -174,14 +165,15 @@ func GetGeneralConfig() *GeneralConfig {
 	return generalConfig
 }
 
-func InitGeneralConfig() {
+func InitGeneralConfig(cfgFilePath string) {
 	var cfg GeneralConfig
-	loadJSONConfig()
+	generalConfig = &cfg
+
+	loadJSONConfig(cfgFilePath)
 	cfg.Agent = getJSONConfig().Agent
 	cfg.Hbs = getJSONConfig().Hbs
 	cfg.hbsResp = model.NqmPingTaskResponse{}
 	cfg.Hostname = getHostname()
 	cfg.IPAddress = getIP()
 	cfg.ConnectionID = getConnectionID()
-	generalConfig = &cfg
 }
