@@ -1353,6 +1353,7 @@ func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Requ
 	result["items"] = items
 	nodes["result"] = result
 	nodes["count"] = len(items)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	setResponse(rw, nodes)
 }
 
