@@ -72,18 +72,22 @@ func targetToNqmEndpointData(s *model.NqmTarget) *nqmEndpointData {
 	}
 }
 
-func marshalFpingRowIntoJSON(row []string, target model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+func marshalFpingRowIntoJSON(row []string, target model.NqmTarget, agentPtr *model.NqmAgent, util string) []ParamToAgent {
 	var params []ParamToAgent
 
-	nqmStat := nqmFpingStat(row)
-	params = append(params, marshalJSON(target, agentPtr, "packets-sent", nqmStat["pkttransmit"]))
-	params = append(params, marshalJSON(target, agentPtr, "packets-received", nqmStat["pktreceive"]))
-	params = append(params, marshalJSON(target, agentPtr, "transmission-time", nqmStat["rttavg"]))
-
+	nqmStat := nqmFpingStat(row, util)
+	if util == "fping" {
+		params = append(params, marshalJSON(target, agentPtr, "packets-sent", nqmStat["pkttransmit"]))
+		params = append(params, marshalJSON(target, agentPtr, "packets-received", nqmStat["pktreceive"]))
+		params = append(params, marshalJSON(target, agentPtr, "transmission-time", nqmStat["rttavg"]))
+	}
+	if util == "tcpconn" {
+		params = append(params, marshalJSON(target, agentPtr, "tcpconntime", nqmStat["tcpconntime"]))
+	}
 	t := targetToNqmEndpointData(&target)
 	a := agentToNqmEndpointData(agentPtr)
 	nqmDataGram := nqmTagsAssembler(t, a, nqmStat)
-	params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-metrics"))
+	params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-"+util))
 	return params
 }
 
@@ -103,7 +107,7 @@ func nqmParseFpingRow(row []string) map[string]string {
 	return nqmDataMap
 }
 
-func nqmFpingStat(row []string) map[string]string {
+func nqmFpingStat(row []string, util string) map[string]string {
 	/*
 		    assume fping command looks like:
 		        fping -p 20 -i 10 -C 5 -a www.google.com www.yahoo.com
@@ -124,31 +128,41 @@ func nqmFpingStat(row []string) map[string]string {
 		}
 	}
 
-	pktxmt := len(row) - 1
-	pktrcv := len(data)
-	var d stats.Float64Data = data
-	median, _ := d.Median()
-	max, _ := d.Max()
-	min, _ := d.Min()
-	mean, _ := d.Mean()
-	dev, _ := d.StandardDeviation()
-
 	nqmDataMap := map[string]string{
-		"rttmin":    "-1",
-		"rttmax":    "-1",
-		"rttavg":    "-1",
-		"rttmdev":   "-1",
-		"rttmedian": "-1",
+		"rttmin":      "-1",
+		"rttmax":      "-1",
+		"rttavg":      "-1",
+		"rttmdev":     "-1",
+		"rttmedian":   "-1",
+		"tcpconntime": "-1",
 	}
-	if len(data) > 0 {
-		nqmDataMap["rttmin"] = strconv.FormatFloat(min, 'f', 2, 64)
-		nqmDataMap["rttmax"] = strconv.FormatFloat(max, 'f', 2, 64)
-		nqmDataMap["rttavg"] = strconv.FormatFloat(mean, 'f', 2, 64)
-		nqmDataMap["rttmdev"] = strconv.FormatFloat(dev, 'f', 2, 64)
-		nqmDataMap["rttmedian"] = strconv.FormatFloat(median, 'f', 2, 64)
+
+	if util == "fping" {
+		pktxmt := len(row) - 1
+		pktrcv := len(data)
+		var d stats.Float64Data = data
+		median, _ := d.Median()
+		max, _ := d.Max()
+		min, _ := d.Min()
+		mean, _ := d.Mean()
+		dev, _ := d.StandardDeviation()
+
+		if len(data) > 0 {
+			nqmDataMap["rttmin"] = strconv.FormatFloat(min, 'f', 2, 64)
+			nqmDataMap["rttmax"] = strconv.FormatFloat(max, 'f', 2, 64)
+			nqmDataMap["rttavg"] = strconv.FormatFloat(mean, 'f', 2, 64)
+			nqmDataMap["rttmdev"] = strconv.FormatFloat(dev, 'f', 2, 64)
+			nqmDataMap["rttmedian"] = strconv.FormatFloat(median, 'f', 2, 64)
+		}
+		nqmDataMap["pkttransmit"] = strconv.Itoa(pktxmt)
+		nqmDataMap["pktreceive"] = strconv.Itoa(pktrcv)
 	}
-	nqmDataMap["pkttransmit"] = strconv.Itoa(pktxmt)
-	nqmDataMap["pktreceive"] = strconv.Itoa(pktrcv)
+	if util == "tcpconn" {
+		if len(data) == 1 {
+			connTime := data[0]
+			nqmDataMap["tcpconntime"] = strconv.FormatFloat(connTime, 'f', 2, 64)
+		}
+	}
 	return nqmDataMap
 }
 
@@ -169,7 +183,8 @@ func nqmTagsAssembler(target *nqmEndpointData, agent *nqmEndpointData, nqmDataMa
 		",rttmdev=" + nqmDataMap["rttmdev"] +
 		",rttmedian=" + nqmDataMap["rttmedian"] +
 		",pkttransmit=" + nqmDataMap["pkttransmit"] +
-		",pktreceive=" + nqmDataMap["pktreceive"]
+		",pktreceive=" + nqmDataMap["pktreceive"] +
+		",tcpconntime=" + nqmDataMap["tcpconntime"]
 }
 
 func nqmMarshalJSON(nqmDataGram string, metric string) ParamToAgent {
@@ -206,12 +221,12 @@ func marshalJSON(target model.NqmTarget, agent *model.NqmAgent, metric string, v
 	return ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
 }
 
-func MarshalIntoParameters(rawData []string, targetList []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+func MarshalIntoParameters(rawData []string, targetList []model.NqmTarget, agentPtr *model.NqmAgent, util string) []ParamToAgent {
 	var params []ParamToAgent
 	for rowNum, row := range rawData {
 		parsedRow := parseFpingRow(row)
 		target := targetList[rowNum]
-		params = append(params, marshalFpingRowIntoJSON(parsedRow, target, agentPtr)...)
+		params = append(params, marshalFpingRowIntoJSON(parsedRow, target, agentPtr, util)...)
 	}
 	return params
 }

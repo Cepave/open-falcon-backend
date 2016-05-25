@@ -7,7 +7,28 @@ import (
 
 func tcpconn() {
 	for {
-		log.Println("Execution of tcpcpnn")
+		func() {
+			probingCmd, targets, agentPtr, err := makeTasks("tcpconn")
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			log.Println("Execution of the probing command:", probingCmd)
+
+			rawData := Probe(probingCmd, "tcpconn")
+			/*for _, row := range rawData {
+				fmt.Println(row)
+			}*/
+
+			jsonParams := MarshalIntoParameters(rawData, targets, agentPtr, "tcpconn")
+			/*
+				for i, _ := range jsonParams {
+					println(jsonParams[i].String())
+					println("===")
+				}
+			*/
+			Push(jsonParams)
+		}()
 
 		dur := time.Second * time.Duration(GetGeneralConfig().Agent.TcpconnInterval)
 		time.Sleep(dur)
@@ -26,15 +47,15 @@ func tcpping() {
 func fping() {
 	for {
 		func() {
-			probingCmd, targets, agentPtr, err := makeTasks()
+			probingCmd, targets, agentPtr, err := makeTasks("fping")
 			if err != nil {
 				log.Println(err)
 				return
 			}
 			log.Println("Execution of the probing command:", probingCmd[0:9])
 
-			rawData := Probe(probingCmd)
-			jsonParams := MarshalIntoParameters(rawData, targets, agentPtr)
+			rawData := Probe(probingCmd, "fping")
+			jsonParams := MarshalIntoParameters(rawData, targets, agentPtr, "fping")
 			Push(jsonParams)
 		}()
 

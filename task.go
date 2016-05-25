@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/Cepave/common/model"
@@ -30,7 +31,7 @@ func query() {
 	}
 }
 
-func makeTasks() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
+func makeTasks(util string) ([]string, []model.NqmTarget, *model.NqmAgent, error) {
 	/**
 	 * Only 2 possible responses come from hbs:
 	 *     1. NeedPing==false (default condition)
@@ -48,6 +49,11 @@ func makeTasks() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
 	}
 
 	probingCmd := append(GetGeneralConfig().hbsResp.Command, targetAddressList...)
+	if util == "tcpconn" {
+		probingCmd = append([]string{"/home/vagrant/workspace/shell/nqm/tcpconn/tcpconn"}, targetAddressList...)
+		probingCmd = append(probingCmd, "| awk '$5{print $2\" : \"$5} !$5{print $2\" : -\"}'")
+		probingCmd = []string{"/bin/sh", "-c", strings.Join(probingCmd, " ")}
+	}
 	return probingCmd, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent, nil
 }
 

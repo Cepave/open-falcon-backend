@@ -17,12 +17,12 @@ func trimFpingResults(fpingResults []string) []string {
 	return trimmedData
 }
 
-func Probe(probingCmd []string) []string {
+func Probe(probingCmd []string, util string) []string {
 	cmdOutput, err := exec.Command(probingCmd[0], probingCmd[1:]...).CombinedOutput()
 	if err != nil {
 		// 'exit status 1' happens when there is at least
 		// one target with 100% packet loss.
-		log.Println("An error occured:", err)
+		log.Println("[", util, "] An error occured:", err)
 	}
 	fpingResults := strings.Split(string(cmdOutput), "\n")
 	fpingResults = fpingResults[:len(fpingResults)-1]
