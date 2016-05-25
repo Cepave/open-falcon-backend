@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func trimFpingResults(fpingResults []string) []string {
+func trimResults(fpingResults []string) []string {
 	var trimmedData []string
 	for _, result := range fpingResults {
 		if strings.HasPrefix(result, "ICMP Time Exceeded from") {
@@ -26,6 +26,6 @@ func Probe(probingCmd []string, util string) []string {
 	}
 	fpingResults := strings.Split(string(cmdOutput), "\n")
 	fpingResults = fpingResults[:len(fpingResults)-1]
-	rawData := trimFpingResults(fpingResults)
+	rawData := trimResults(fpingResults)
 	return rawData
 }

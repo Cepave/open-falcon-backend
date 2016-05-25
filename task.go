@@ -23,11 +23,11 @@ func query() {
 	if err != nil {
 		log.Fatalln("Call NqmAgent.PingTask error:", err)
 	}
-	log.Println("A response from hbs.")
+	log.Println("[ hbs ] Response received")
 
 	if configFromHbsUpdated(resp) {
 		GetGeneralConfig().hbsResp = resp
-		log.Println("The configuration was updated by hbs.")
+		log.Println("[ hbs ] Configuration updated")
 	}
 }
 
