@@ -185,6 +185,7 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	result["items"] = items
 	nodes["result"] = result
 	nodes["count"] = len(items)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	setResponse(rw, nodes)
 }
 
