@@ -76,7 +76,7 @@ func TestMakeTasks(t *testing.T) {
 	initJsonRpcClient("127.0.0.1:65534")
 
 	query()
-	cmd, targetList, agent, err := makeTasks()
+	cmd, targetList, agent, err := makeTasks("fping")
 	if err != nil {
 		t.Error(err)
 	}

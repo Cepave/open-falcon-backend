@@ -42,16 +42,16 @@ func TestNqmFpingStat(t *testing.T) {
 	   data_test.go:37: map[rttmedian:7.40 pkttransmit:6 pktreceive:5 rttmin:6.26 rttmax:29.08 rttavg:11.60 rttmdev:8.77]
 	*/
 	expecteds := []map[string]string{
-		{"rttmax": "38.90", "rttavg": "18.97", "rttmdev": "10.48", "rttmedian": "13.62", "pkttransmit": "5", "pktreceive": "5", "rttmin": "9.48"},
-		{"rttmdev": "8.77", "rttmedian": "7.40", "pkttransmit": "6", "pktreceive": "5", "rttmin": "6.26", "rttmax": "29.08", "rttavg": "11.60"},
-		{"rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "3", "pktreceive": "0", "rttmin": "-1", "rttmax": "-1", "rttavg": "-1"},
+		{"rttmax": "38.90", "rttavg": "18.97", "rttmdev": "10.48", "rttmedian": "13.62", "pkttransmit": "5", "pktreceive": "5", "rttmin": "9.48", "tcpconntime": "-1"},
+		{"rttmdev": "8.77", "rttmedian": "7.40", "pkttransmit": "6", "pktreceive": "5", "rttmin": "6.26", "rttmax": "29.08", "rttavg": "11.60", "tcpconntime": "-1"},
+		{"rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "3", "pktreceive": "0", "rttmin": "-1", "rttmax": "-1", "rttavg": "-1", "tcpconntime": "-1"},
 	}
 
 	for i, v := range tests {
-		if !reflect.DeepEqual(expecteds[i], nqmFpingStat(v)) {
-			t.Error(expecteds[i], nqmFpingStat(v))
+		if !reflect.DeepEqual(expecteds[i], nqmFpingStat(v, "fping")) {
+			t.Error(expecteds[i], nqmFpingStat(v, "fping"))
 		}
-		t.Log(nqmFpingStat(v))
+		t.Log(nqmFpingStat(v, "fping"))
 	}
 }
 
@@ -85,11 +85,11 @@ func TestNqmTagsAssembler(t *testing.T) {
 		"-2", "-2", "-2", "-2", "-2",
 	}
 	tests := []map[string]string{
-		{"rttmax": "46.5", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8.61"},
+		{"rttmax": "46.5", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8.61", "tcpconntime": "-1"},
 	}
 
 	expecteds := []string{
-		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=-2,rttmin=8.61,rttmax=46.5,rttavg=14.5,rttmdev=-1,rttmedian=-1,pkttransmit=100,pktreceive=100",
+		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=-2,rttmin=8.61,rttmax=46.5,rttavg=14.5,rttmdev=-1,rttmedian=-1,pkttransmit=100,pktreceive=100,tcpconntime=-1",
 	}
 
 	t_out := nqmTagsAssembler(target, agent, tests[0])
@@ -142,7 +142,7 @@ func TestMarshalIntoParameters(t *testing.T) {
 		CityName:     "CityName_for_test",
 	}
 
-	out := MarshalIntoParameters(tests, test_target_list, test_agent_ptr)
+	out := MarshalIntoParameters(tests, test_target_list, test_agent_ptr, "fping")
 	t.Log(out)
 	for _, v := range out {
 		// implement the pkt check in transfer.
