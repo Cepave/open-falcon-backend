@@ -4,6 +4,7 @@ package nqm_parser
 
 Query = allParams:QueryParam* EOF {
 	var queryParams QueryParams
+	queryParams.ProvinceRelation = UNKNOWN_RELATION
 
 	setParamsError := setParams(&queryParams, allParams)
 	if setParamsError != nil {

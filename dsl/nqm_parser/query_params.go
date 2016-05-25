@@ -5,12 +5,27 @@ import (
 	"time"
 )
 
+// Defines the IR for relation of hosts(between agent and target)
+type HostRelation int8
+
+const (
+	// The relation is unknown
+	UNKNOWN_RELATION HostRelation = -1
+	// Means a property of agent and target must be same
+	SAME_VALUE HostRelation = 1
+	// Means a property of agent and target may not be same
+	NOT_SAME_VALUE HostRelation = 2
+)
+
 // The parameters for query
 type QueryParams struct {
 	StartTime time.Time
 	EndTime time.Time
 	AgentFilter NodeFilter
 	TargetFilter NodeFilter
+	AgentFilterById NodeFilterById
+	TargetFilterById NodeFilterById
+	ProvinceRelation HostRelation
 }
 
 // The filter of node
@@ -18,6 +33,13 @@ type NodeFilter struct {
 	MatchProvinces []string
 	MatchCities []string
 	MatchIsps []string
+}
+
+// The filter of node
+type NodeFilterById struct {
+	MatchProvinces []int16
+	MatchCities []int16
+	MatchIsps []int16
 }
 
 // Checks the paramters
@@ -50,6 +72,21 @@ func (p* QueryParams) checkParams() (err error) {
 	p.TargetFilter.MatchIsps = eliminateDuplicatedValues(p.TargetFilter.MatchIsps)
 
 	return
+}
+
+/**
+ * Checks:
+ * 1. The end time must be after or equals the start time
+ */
+func (p *QueryParams) CheckRationalOfParameters() error {
+	if !p.EndTime.After(p.StartTime) {
+		return fmt.Errorf(
+			"Start time is not valid. Start Time: [%s]. End Time: [%s]",
+			p.StartTime.Format(time.RFC3339), p.EndTime.Format(time.RFC3339),
+		)
+	}
+
+	return nil
 }
 
 func (p *QueryParams) addIspOfAgent(values ...string) {

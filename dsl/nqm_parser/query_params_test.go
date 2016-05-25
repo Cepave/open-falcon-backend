@@ -3,6 +3,7 @@ package nqm_parser
 import (
 	. "gopkg.in/check.v1"
 	"sort"
+	"time"
 )
 
 type TestQueryParamsSuite struct{}
@@ -100,4 +101,46 @@ func (suite *TestQueryParamsSuite) TestCheckParamsWithDuplicatedValue(c *C) {
 	c.Assert(testedParams_1.TargetFilter.MatchProvinces, DeepEquals, []string{ "p3", "p4" })
 	c.Assert(testedParams_2.TargetFilter.MatchCities, DeepEquals, []string{ "c3", "c4" })
 	c.Assert(testedParams_1.TargetFilter.MatchIsps, DeepEquals, []string{ "i3", "i4" })
+}
+
+type checkRationalOfParametersTestCase struct {
+	startTime time.Time
+	endTime time.Time
+	assertion func(error)
+}
+// Tests the rational meaning of query parameters
+func (suite *TestQueryParamsSuite) TestCheckRationalOfParameters(c *C) {
+	testCases := []checkRationalOfParametersTestCase {
+		/**
+		 * Nothing failed
+		 */
+		checkRationalOfParametersTestCase {
+			startTime: time.Now(),
+			endTime: time.Now().Add(1 * time.Minute),
+			assertion: func(err error) {
+				c.Assert(err, IsNil)
+			},
+		},
+		// :~)
+		/**
+		 * The time range is meaningless
+		 */
+		checkRationalOfParametersTestCase {
+			startTime: time.Now(),
+			endTime: time.Now().Add(-1 * time.Minute),
+			assertion: func(err error) {
+				c.Assert(err, ErrorMatches, "Start time is not valid.*")
+			},
+		},
+		// :~)
+	}
+
+	for _, testCase := range testCases {
+		testedParams := &QueryParams{
+			StartTime: testCase.startTime,
+			EndTime: testCase.endTime,
+		}
+
+		testCase.assertion(testedParams.CheckRationalOfParameters())
+	}
 }

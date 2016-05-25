@@ -43,7 +43,10 @@ func (service *JsonRpcService) CallMethod(method string, params interface{}, rep
 		map[string][]string { "Content-Type": []string { "application/json" } },
 		strings.NewReader(string(jsonrpcRequest)),
 	)
-	defer body.Close()
+
+	if body != nil {
+		defer body.Close()
+	}
 
 	/**
 	 * Binds the information of HTTP response
