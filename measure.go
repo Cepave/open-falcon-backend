@@ -10,8 +10,8 @@ import (
 )
 
 type Utility interface {
-	marshalStatsIntoJSON([]map[string]string, []model.NqmTarget, *model.NqmAgent) []ParamToAgent
-	task() ([]string, []model.NqmTarget, *model.NqmAgent, error)
+	marshalStatsIntoJsonParams(stats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent
+	ProbingCommand(targetAddressList []string) []string
 	utilName() string
 }
 
@@ -19,7 +19,7 @@ type Fping struct {
 	Utility
 }
 
-func (fping *Fping) marshalStatsIntoJSON(fpingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+func (fping *Fping) marshalStatsIntoJsonParams(fpingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
 	var params []ParamToAgent
 
 	for rowNum, fpingStat := range fpingStats {
@@ -35,71 +35,37 @@ func (fping *Fping) marshalStatsIntoJSON(fpingStats []map[string]string, targets
 	return params
 }
 
-func (fping *Fping) task() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
-	/**
-	 * Only 2 possible responses come from hbs:
-	 *     1. NeedPing==false (default condition)
-	 *         NqmAgent, NQMTargets, Command are nil
-	 *     2. NeedPing==ture
-	 *         NqmAgent, NQMTargets, Command are not nil
-	 */
-	if !GetGeneralConfig().hbsResp.NeedPing {
-		return nil, nil, nil, fmt.Errorf("[ " + fping.utilName() + " ] No tasks assigned.")
-	}
-
-	var targetAddressList []string
-	for _, target := range GetGeneralConfig().hbsResp.Targets {
-		targetAddressList = append(targetAddressList, target.Host)
-	}
-
+func (fping *Fping) ProbingCommand(targetAddressList []string) []string {
 	probingCmd := append(GetGeneralConfig().hbsResp.Command, targetAddressList...)
-	return probingCmd, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent, nil
+	return probingCmd
 }
 
 func (fping *Fping) utilName() string {
 	return "fping"
 }
 
-/*
-type tcppingMeasure struct {
-	measure
+type Tcpping struct {
+	Utility
 }
 
-func (tcpping *tcppingMeasure) probe(probingCmd []string) []string {
-	cmdOutput, err := exec.Command(probingCmd[0], probingCmd[1:]...).CombinedOutput()
-	if err != nil {
-		// 'exit status 1' happens when there is at least
-		// one target with 100% packet loss.
-		log.Println("[ tcpping ] An error occured:", err)
-	}
-	tcppingResults := strings.Split(string(cmdOutput), "\n")
-	tcppingResults = tcppingResults[:len(tcppingResults)-1]
-	rawData := trimResults(tcppingResults)
-	return rawData
+func (tcpping *Tcpping) marshalStatsIntoJsonParams(tcppingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+	return nil
 }
 
-func (tcpping *tcppingMeasure) marshalStatsIntoJSON(tcppingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
-	var params []ParamToAgent
-
-	for rowNum, tcppingStat := range tcppingStats {
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "packets-sent", tcppingStat["pkttransmit"]))
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "packets-received", tcppingStat["pktreceive"]))
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "transmission-time", tcppingStat["rttavg"]))
-
-		t := targetToNqmEndpointData(&targets[rowNum])
-		a := agentToNqmEndpointData(agentPtr)
-		nqmDataGram := nqmTagsAssembler(t, a, tcppingStat)
-		params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-tcpping"))
-	}
-	return params
+func (tcpping *Tcpping) ProbingCommand(targetAddressList []string) []string {
+	probingCmd := append([]string{"tcpping"}, targetAddressList...)
+	return probingCmd
 }
-*/
+
+func (tcpping *Tcpping) utilName() string {
+	return "tcpping"
+}
 
 type Tcpconn struct {
 	Utility
 }
 
-func (tcpconn *Tcpconn) marshalStatsIntoJSON(tcpconnStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+func (tcpconn *Tcpconn) marshalStatsIntoJsonParams(tcpconnStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
 	var params []ParamToAgent
 
 	for rowNum, tcpconnStat := range tcpconnStats {
@@ -112,31 +78,23 @@ func (tcpconn *Tcpconn) marshalStatsIntoJSON(tcpconnStats []map[string]string, t
 	return params
 }
 
-func (tcpconn *Tcpconn) task() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
-	/**
-	 * Only 2 possible responses come from hbs:
-	 *     1. NeedPing==false (default condition)
-	 *         NqmAgent, NQMTargets, Command are nil
-	 *     2. NeedPing==ture
-	 *         NqmAgent, NQMTargets, Command are not nil
-	 */
-	if !GetGeneralConfig().hbsResp.NeedPing {
-		return nil, nil, nil, fmt.Errorf("[ " + tcpconn.utilName() + " ] No tasks assigned.")
-	}
-
-	var targetAddressList []string
-	for _, target := range GetGeneralConfig().hbsResp.Targets {
-		targetAddressList = append(targetAddressList, target.Host)
-	}
-
-	probingCmd := append([]string{"/home/vagrant/workspace/shell/nqm/tcpconn/tcpconn"}, targetAddressList...)
+func (tcpconn *Tcpconn) ProbingCommand(targetAddressList []string) []string {
+	probingCmd := append([]string{"tcpconn"}, targetAddressList...)
 	probingCmd = append(probingCmd, "| awk '$5{print $2\" : \"$5} !$5{print $2\" : -\"}'")
 	probingCmd = []string{"/bin/sh", "-c", strings.Join(probingCmd, " ")}
-	return probingCmd, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent, nil
+	return probingCmd
 }
 
 func (tcpconn *Tcpconn) utilName() string {
 	return "tcpconn"
+}
+
+func getTargetAddressList() []string {
+	var targetAddressList []string
+	for _, target := range GetGeneralConfig().hbsResp.Targets {
+		targetAddressList = append(targetAddressList, target.Host)
+	}
+	return targetAddressList
 }
 
 func statsCalc(parsedData [][]string) []map[string]string {
@@ -160,7 +118,7 @@ func parse(rawData []string) [][]string {
 func measureBy(u Utility) {
 	for {
 		func() {
-			probingCmd, targets, agentPtr, err := u.task()
+			probingCmd, targets, agentPtr, err := Task(u)
 			if err != nil {
 				log.Println(err)
 				return
@@ -173,7 +131,7 @@ func measureBy(u Utility) {
 			}
 			parsedData := parse(rawData)
 			fpingStats := statsCalc(parsedData)
-			jsonParams := u.marshalStatsIntoJSON(fpingStats, targets, agentPtr)
+			jsonParams := u.marshalStatsIntoJsonParams(fpingStats, targets, agentPtr)
 
 			for i, _ := range jsonParams {
 				println(jsonParams[i].String())
@@ -189,10 +147,7 @@ func measureBy(u Utility) {
 }
 
 func Measure() {
-	//go fping()
-	//go tcpping()
-	//go tcpconn()
-	//go fpingRefactor()
 	go measureBy(new(Fping))
+	//go measureBy(new(Tcpping))
 	go measureBy(new(Tcpconn))
 }
