@@ -118,7 +118,7 @@ func parse(rawData []string) [][]string {
 func measureBy(u Utility) {
 	for {
 		func() {
-			probingCmd, targets, agentPtr, err := Task(u)
+			probingCmd, err := Task(u)
 			if err != nil {
 				log.Println(err)
 				return
@@ -130,8 +130,8 @@ func measureBy(u Utility) {
 				fmt.Println(row)
 			}
 			parsedData := parse(rawData)
-			fpingStats := statsCalc(parsedData)
-			jsonParams := u.marshalStatsIntoJsonParams(fpingStats, targets, agentPtr)
+			stats := statsCalc(parsedData)
+			jsonParams := u.marshalStatsIntoJsonParams(stats, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent)
 
 			for i, _ := range jsonParams {
 				println(jsonParams[i].String())

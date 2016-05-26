@@ -1,12 +1,8 @@
 package main
 
-import (
-	"fmt"
+import "fmt"
 
-	"github.com/Cepave/common/model"
-)
-
-func Task(u Utility) ([]string, []model.NqmTarget, *model.NqmAgent, error) {
+func Task(u Utility) ([]string, error) {
 	/**
 	 * Only 2 possible responses come from hbs:
 	 *     1. NeedPing==false (default condition)
@@ -15,10 +11,10 @@ func Task(u Utility) ([]string, []model.NqmTarget, *model.NqmAgent, error) {
 	 *         NqmAgent, NQMTargets, Command are not nil
 	 */
 	if !GetGeneralConfig().hbsResp.NeedPing {
-		return nil, nil, nil, fmt.Errorf("[ " + u.utilName() + " ] No tasks assigned.")
+		return nil, fmt.Errorf("[ " + u.utilName() + " ] No tasks assigned.")
 	}
 
 	targetAddressList := getTargetAddressList()
 	probingCmd := u.ProbingCommand(targetAddressList)
-	return probingCmd, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent, nil
+	return probingCmd, nil
 }
