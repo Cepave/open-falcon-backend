@@ -28,5 +28,10 @@
         "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
+    },
+    "nqm": {
+        "addr": "root:@tcp(127.0.0.1:3306)/db_name?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
     }
 }
