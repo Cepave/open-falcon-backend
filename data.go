@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Cepave/common/model"
@@ -32,16 +31,6 @@ func (p ParamToAgent) String() string {
 		p.Timestamp,
 		p.Step,
 	)
-}
-
-func parseFpingRow(row string) []string {
-	return strings.FieldsFunc(row, func(r rune) bool {
-		switch r {
-		case ' ', '\n', ':', '/', '%', '=', ',':
-			return true
-		}
-		return false
-	})
 }
 
 type nqmEndpointData struct {
@@ -219,14 +208,4 @@ func marshalJSON(target model.NqmTarget, agent *model.NqmAgent, metric string, v
 	timestamp := time.Now().Unix()
 	step := int64(60)
 	return ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
-}
-
-func MarshalIntoParameters(rawData []string, targetList []model.NqmTarget, agentPtr *model.NqmAgent, util string) []ParamToAgent {
-	var params []ParamToAgent
-	for rowNum, row := range rawData {
-		parsedRow := parseFpingRow(row)
-		target := targetList[rowNum]
-		params = append(params, marshalFpingRowIntoJSON(parsedRow, target, agentPtr, util)...)
-	}
-	return params
 }

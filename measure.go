@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -106,16 +105,7 @@ func statsCalc(parsedData [][]string) []map[string]string {
 	return stats
 }
 
-func parse(rawData []string) [][]string {
-	var parsedRows [][]string
-	for _, row := range rawData {
-		parsedRow := parseFpingRow(row)
-		parsedRows = append(parsedRows, parsedRow)
-	}
-	return parsedRows
-}
-
-func measureBy(u Utility) {
+func measureByUtil(u Utility) {
 	for {
 		func() {
 			probingCmd, err := Task(u)
@@ -126,10 +116,7 @@ func measureBy(u Utility) {
 			log.Println("[", u.utilName(), "] Measuring...")
 
 			rawData := Probe(probingCmd, u.utilName())
-			for _, row := range rawData {
-				fmt.Println(row)
-			}
-			parsedData := parse(rawData)
+			parsedData := Parse(rawData)
 			stats := statsCalc(parsedData)
 			jsonParams := u.marshalStatsIntoJsonParams(stats, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent)
 
@@ -147,7 +134,7 @@ func measureBy(u Utility) {
 }
 
 func Measure() {
-	go measureBy(new(Fping))
-	//go measureBy(new(Tcpping))
-	go measureBy(new(Tcpconn))
+	go measureByUtil(new(Fping))
+	//go measureByUtil(new(Tcpping))
+	go measureByUtil(new(Tcpconn))
 }
