@@ -6,8 +6,6 @@ import (
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
-	"reflect"
-	"testing"
 
 	"github.com/Cepave/common/model"
 )
@@ -71,6 +69,7 @@ func initJsonRpcClient(srvAddr string) {
 	}
 }
 
+/*
 func TestMakeTasks(t *testing.T) {
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
@@ -95,3 +94,4 @@ func TestMakeTasks(t *testing.T) {
 	t.Log(agent)
 	t.Log(cmd)
 }
+*/

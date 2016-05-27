@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
 	"github.com/Cepave/common/model"
-	stats "github.com/montanaflynn/stats"
 )
 
 type ParamToAgent struct {
@@ -61,101 +59,7 @@ func targetToNqmEndpointData(s *model.NqmTarget) *nqmEndpointData {
 	}
 }
 
-func marshalFpingRowIntoJSON(row []string, target model.NqmTarget, agentPtr *model.NqmAgent, util string) []ParamToAgent {
-	var params []ParamToAgent
-
-	nqmStat := nqmFpingStat(row, util)
-	if util == "fping" {
-		params = append(params, marshalJSON(target, agentPtr, "packets-sent", nqmStat["pkttransmit"]))
-		params = append(params, marshalJSON(target, agentPtr, "packets-received", nqmStat["pktreceive"]))
-		params = append(params, marshalJSON(target, agentPtr, "transmission-time", nqmStat["rttavg"]))
-	}
-	if util == "tcpconn" {
-		params = append(params, marshalJSON(target, agentPtr, "tcpconntime", nqmStat["tcpconntime"]))
-	}
-	t := targetToNqmEndpointData(&target)
-	a := agentToNqmEndpointData(agentPtr)
-	nqmDataGram := nqmTagsAssembler(t, a, nqmStat)
-	params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-"+util))
-	return params
-}
-
-func nqmParseFpingRow(row []string) map[string]string {
-	/*
-		www.yahoo.com  : xmt/rcv/%loss = 100/99/1%, min/avg/max = 5.42/10.9/35.9
-		 0                1   2   3       4  5  6                  10   11  12
-	*/
-	nqmDataMap := map[string]string{}
-	nqmDataMap["rttmin"] = row[10]
-	nqmDataMap["rttmax"] = row[12]
-	nqmDataMap["rttavg"] = row[11]
-	nqmDataMap["rttmdev"] = "-1"
-	nqmDataMap["rttmedian"] = "-1"
-	nqmDataMap["pkttransmit"] = row[4]
-	nqmDataMap["pktreceive"] = row[5]
-	return nqmDataMap
-}
-
-func nqmFpingStat(row []string, util string) map[string]string {
-	/*
-		    assume fping command looks like:
-		        fping -p 20 -i 10 -C 5 -a www.google.com www.yahoo.com
-		    input argument row looks like:
-				www.yahoo.com  6.72 29.08 8.55 7.40 - 6.26
-				0                1   2     3     4  5   6   ....  n
-	*/
-	var data []float64
-
-	for i := 1; i < len(row); i++ {
-		if row[i] != "-" {
-			rtt, err := strconv.ParseFloat(row[i], 64)
-			if err != nil {
-				log.Println("error occured:", err)
-			} else {
-				data = append(data, rtt)
-			}
-		}
-	}
-
-	nqmDataMap := map[string]string{
-		"rttmin":      "-1",
-		"rttmax":      "-1",
-		"rttavg":      "-1",
-		"rttmdev":     "-1",
-		"rttmedian":   "-1",
-		"tcpconntime": "-1",
-	}
-
-	if util == "fping" {
-		pktxmt := len(row) - 1
-		pktrcv := len(data)
-		var d stats.Float64Data = data
-		median, _ := d.Median()
-		max, _ := d.Max()
-		min, _ := d.Min()
-		mean, _ := d.Mean()
-		dev, _ := d.StandardDeviation()
-
-		if len(data) > 0 {
-			nqmDataMap["rttmin"] = strconv.FormatFloat(min, 'f', 2, 64)
-			nqmDataMap["rttmax"] = strconv.FormatFloat(max, 'f', 2, 64)
-			nqmDataMap["rttavg"] = strconv.FormatFloat(mean, 'f', 2, 64)
-			nqmDataMap["rttmdev"] = strconv.FormatFloat(dev, 'f', 2, 64)
-			nqmDataMap["rttmedian"] = strconv.FormatFloat(median, 'f', 2, 64)
-		}
-		nqmDataMap["pkttransmit"] = strconv.Itoa(pktxmt)
-		nqmDataMap["pktreceive"] = strconv.Itoa(pktrcv)
-	}
-	if util == "tcpconn" {
-		if len(data) == 1 {
-			connTime := data[0]
-			nqmDataMap["tcpconntime"] = strconv.FormatFloat(connTime, 'f', 2, 64)
-		}
-	}
-	return nqmDataMap
-}
-
-func nqmTagsAssembler(target *nqmEndpointData, agent *nqmEndpointData, nqmDataMap map[string]string) string {
+func TagsAssembler(target *nqmEndpointData, agent *nqmEndpointData, nqmDataMap map[string]string) string {
 	return "agent-id=" + agent.Id +
 		",agent-isp-id=" + agent.IspId +
 		",agent-province-id=" + agent.ProvinceId +
@@ -173,7 +77,7 @@ func nqmTagsAssembler(target *nqmEndpointData, agent *nqmEndpointData, nqmDataMa
 		",rttmedian=" + nqmDataMap["rttmedian"] +
 		",pkttransmit=" + nqmDataMap["pkttransmit"] +
 		",pktreceive=" + nqmDataMap["pktreceive"] +
-		",tcpconntime=" + nqmDataMap["tcpconntime"]
+		",time=" + nqmDataMap["time"]
 }
 
 func nqmMarshalJSON(nqmDataGram string, metric string) ParamToAgent {

@@ -2,13 +2,16 @@ package main
 
 import (
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Cepave/common/model"
+	"github.com/montanaflynn/stats"
 )
 
 type Utility interface {
+	CalcStats(row []float64, length int) map[string]string
 	marshalStatsIntoJsonParams(stats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent
 	ProbingCommand(targetAddressList []string) []string
 	utilName() string
@@ -22,13 +25,15 @@ func (fping *Fping) marshalStatsIntoJsonParams(fpingStats []map[string]string, t
 	var params []ParamToAgent
 
 	for rowNum, fpingStat := range fpingStats {
+		// To graph
 		params = append(params, marshalJSON(targets[rowNum], agentPtr, "packets-sent", fpingStat["pkttransmit"]))
 		params = append(params, marshalJSON(targets[rowNum], agentPtr, "packets-received", fpingStat["pktreceive"]))
 		params = append(params, marshalJSON(targets[rowNum], agentPtr, "transmission-time", fpingStat["rttavg"]))
 
+		// To Cassandra
 		t := targetToNqmEndpointData(&targets[rowNum])
 		a := agentToNqmEndpointData(agentPtr)
-		nqmDataGram := nqmTagsAssembler(t, a, fpingStat)
+		nqmDataGram := TagsAssembler(t, a, fpingStat)
 		params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-fping"))
 	}
 	return params
@@ -41,6 +46,37 @@ func (fping *Fping) ProbingCommand(targetAddressList []string) []string {
 
 func (fping *Fping) utilName() string {
 	return "fping"
+}
+
+func (fping *Fping) CalcStats(row []float64, length int) map[string]string {
+	dataMap := map[string]string{
+		"rttmin":    "-1",
+		"rttmax":    "-1",
+		"rttavg":    "-1",
+		"rttmdev":   "-1",
+		"rttmedian": "-1",
+	}
+
+	pktxmt := length
+	pktrcv := len(row)
+	var d stats.Float64Data = row
+	median, _ := d.Median()
+	max, _ := d.Max()
+	min, _ := d.Min()
+	mean, _ := d.Mean()
+	dev, _ := d.StandardDeviation()
+
+	if len(row) > 0 {
+		dataMap["rttmin"] = strconv.FormatFloat(min, 'f', 2, 64)
+		dataMap["rttmax"] = strconv.FormatFloat(max, 'f', 2, 64)
+		dataMap["rttavg"] = strconv.FormatFloat(mean, 'f', 2, 64)
+		dataMap["rttmdev"] = strconv.FormatFloat(dev, 'f', 2, 64)
+		dataMap["rttmedian"] = strconv.FormatFloat(median, 'f', 2, 64)
+	}
+	dataMap["pkttransmit"] = strconv.Itoa(pktxmt)
+	dataMap["pktreceive"] = strconv.Itoa(pktrcv)
+
+	return dataMap
 }
 
 type Tcpping struct {
@@ -68,10 +104,13 @@ func (tcpconn *Tcpconn) marshalStatsIntoJsonParams(tcpconnStats []map[string]str
 	var params []ParamToAgent
 
 	for rowNum, tcpconnStat := range tcpconnStats {
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "tcpconntime", tcpconnStat["tcpconntime"]))
+		// To graph
+		params = append(params, marshalJSON(targets[rowNum], agentPtr, "time", tcpconnStat["time"]))
+
+		// To Cassandra
 		t := targetToNqmEndpointData(&targets[rowNum])
 		a := agentToNqmEndpointData(agentPtr)
-		nqmDataGram := nqmTagsAssembler(t, a, tcpconnStat)
+		nqmDataGram := TagsAssembler(t, a, tcpconnStat)
 		params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-tcpconn"))
 	}
 	return params
@@ -96,13 +135,18 @@ func getTargetAddressList() []string {
 	return targetAddressList
 }
 
-func statsCalc(parsedData [][]string) []map[string]string {
-	var stats []map[string]string
-	for _, row := range parsedData {
-		stat := nqmFpingStat(row, "fping")
-		stats = append(stats, stat)
+func (tcpconn *Tcpconn) CalcStats(row []float64, length int) map[string]string {
+	dataMap := map[string]string{
+		"time": "-1",
 	}
-	return stats
+	if length != 1 {
+		log.Fatalln("Calculate statistic of tcpconn error")
+	}
+	if len(row) > 0 {
+		time := row[0]
+		dataMap["time"] = strconv.FormatFloat(time, 'f', 2, 64)
+	}
+	return dataMap
 }
 
 func measureByUtil(u Utility) {
@@ -117,8 +161,8 @@ func measureByUtil(u Utility) {
 
 			rawData := Probe(probingCmd, u.utilName())
 			parsedData := Parse(rawData)
-			stats := statsCalc(parsedData)
-			jsonParams := u.marshalStatsIntoJsonParams(stats, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent)
+			statsData := Calc(parsedData, u)
+			jsonParams := u.marshalStatsIntoJsonParams(statsData, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent)
 
 			for i, _ := range jsonParams {
 				println(jsonParams[i].String())

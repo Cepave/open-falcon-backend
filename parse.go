@@ -2,7 +2,7 @@ package main
 
 import "strings"
 
-func parseOneRow(row string) []string {
+func parseRow(row string) []string {
 	return strings.FieldsFunc(row, func(r rune) bool {
 		switch r {
 		case ' ', '\n', ':', '/', '%', '=', ',':
@@ -15,7 +15,7 @@ func parseOneRow(row string) []string {
 func Parse(rawData []string) [][]string {
 	var parsedRows [][]string
 	for _, row := range rawData {
-		parsedRow := parseOneRow(row)
+		parsedRow := parseRow(row)
 		parsedRows = append(parsedRows, parsedRow)
 	}
 	return parsedRows
