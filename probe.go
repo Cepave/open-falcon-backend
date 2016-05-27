@@ -20,7 +20,7 @@ func trimResults(fpingResults []string) []string {
 func Probe(probingCmd []string, util string) []string {
 	cmdOutput, err := exec.Command(probingCmd[0], probingCmd[1:]...).CombinedOutput()
 	if err != nil {
-		// 'exit status 1' happens when there is at least
+		// fping output 'exit status 1' when there is at least
 		// one target with 100% packet loss.
 		log.Println("[", util, "] An error occured:", err)
 	}
