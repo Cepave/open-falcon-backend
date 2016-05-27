@@ -21,11 +21,13 @@ type Dto struct {
 func InitDatabase() {
 	config := g.Config()
 	// set default database
+	//
 	orm.RegisterDataBase("default", "mysql", config.Db.Addr, config.Db.Idle, config.Db.Max)
 	// register model
 	orm.RegisterModel(new(Host), new(Grp), new(Grp_host), new(Grp_tpl), new(Plugin_dir), new(Tpl))
 	// set grafana database
 	strConn := strings.Replace(config.Db.Addr, "falcon_portal", "grafana", 1)
+
 	orm.RegisterDataBase("grafana", "mysql", strConn, config.Db.Idle, config.Db.Max)
 	orm.RegisterModel(new(Province), new(City), new(Idc))
 
@@ -47,6 +49,7 @@ func Start() {
 	configAPIRoutes()
 	configGrafanaRoutes()
 	configZabbixRoutes()
+	configNqmRoutes()
 
 	// start mysql database
 	InitDatabase()

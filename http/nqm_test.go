@@ -2,7 +2,11 @@ package http
 
 import (
 	dsl "github.com/Cepave/query/dsl/nqm_parser"
+	"net/http"
+	"github.com/astaxie/beego"
+	"net/http/httptest"
 	"testing"
+	"encoding/json"
 	. "gopkg.in/check.v1"
 	"time"
 )
@@ -17,6 +21,7 @@ type processDslTestCase struct {
 	sampleDsl string
 	assertion func(*dsl.QueryParams, error)
 }
+
 // Tests:
 // 1. default value of time
 // 2. default value of start time(end time provided)
@@ -86,4 +91,37 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 	for _, testCase := range testCases {
 		testCase.assertion(processDsl(testCase.sampleDsl))
 	}
+}
+
+// Tests the error message rendered as JSON
+func (suite *TestNqmSuite) TestErrorMessage(c *C) {
+	testedService := beego.NewControllerRegister()
+	setupUrlMappingAndHandler(testedService)
+
+	/**
+	 * Sets-up HTTP request and response
+	 */
+	sampleRequest, err := http.NewRequest(http.MethodGet, "/nqm/icmp/list/by-provinces?dsl=v1%3D10", nil)
+	c.Assert(err, IsNil)
+	respRecorder := httptest.NewRecorder()
+	// :~)
+
+	testedService.ServeHTTP(respRecorder, sampleRequest)
+	c.Logf("Response: %v", respRecorder)
+
+	/**
+	 * Asserts the status code of HTTP
+	 */
+	c.Assert(respRecorder.Code, Equals, 400)
+	// :~)
+
+	testedJsonBody := jsonDslError{}
+	json.Unmarshal(respRecorder.Body.Bytes(), &testedJsonBody)
+
+	/**
+	 * Asserts the JSON body for error message
+	 */
+	c.Assert(testedJsonBody.Code, Equals, 1)
+	c.Assert(testedJsonBody.Message, Matches, ".+Unknown parameter.+")
+	// :~)
 }
