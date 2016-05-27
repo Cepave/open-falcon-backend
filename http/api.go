@@ -3,12 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/query/g"
-	"github.com/Cepave/query/graph"
-	"github.com/Cepave/query/proc"
-	"github.com/astaxie/beego/orm"
-	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
 	"math"
@@ -17,6 +11,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	cmodel "github.com/Cepave/common/model"
+	"github.com/Cepave/query/g"
+	"github.com/Cepave/query/graph"
+	"github.com/Cepave/query/proc"
+	"github.com/astaxie/beego/orm"
+	"github.com/bitly/go-simplejson"
 )
 
 type Tag struct {
@@ -1182,7 +1183,11 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	metricType := arguments[4]
 	hostnames := strings.Split(arguments[5], ",")
 	metrics := getMetricsByMetricType(metricType)
-	data := getGraphQueryResponse(metrics, "1d", hostnames, result)
+	duration := "1d"
+	if len(arguments) > 6 {
+		duration = arguments[6]
+	}
+	data := getGraphQueryResponse(metrics, duration, hostnames, result)
 	for _, series := range data {
 		values := []interface{}{}
 		for _, rrdObj := range series.Values {
