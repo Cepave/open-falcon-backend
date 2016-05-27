@@ -79,6 +79,26 @@ function nqm(){
     curl -s -X POST -d "[{\"metric\":\"$m\", \"endpoint\":\"$e\", \"timestamp\":$ts,\"step\":60, \"value\":$val, \"counterType\":\"GAUGE\",\"tags\":\"$t\"}]" "$httpprex/api/push" | python -m json.tool
 }
 
+
+function nqm_copy(){
+    e="test.endpoint.niean.2"
+    m="nqm-metrics"
+    ts=`date +%s`
+    val=`expr $ts / 60 % 10`
+    rand=$RANDOM
+    t="rttmin=18.64, rttavg=21.5, rttmax=26.9, rttmdev=4.7, pkttransmit=13, pktreceive=11, agent-id=1334$rand, agent-isp-id=12, agent-province-id=13, agent-city-id=14, agent-name-tag-id=123, target-id=6969, target-isp-id=22, target-province-id=23, target-city-id=24, target-name-tag-id=223"
+    curl -s -X POST -d "[{\"metric\":\"$m\", \"endpoint\":\"$e\", \"timestamp\":$ts,\"step\":60, \"value\":$val, \"counterType\":\"GAUGE\",\"tags\":\"$t\"}]" "$httpprex/api/push" | python -m json.tool
+}
+
+function nqmbatch(){
+    count=0
+    while [ $count -lt 30 ]
+    do
+        nqm_copy  &
+        count=`expr $count + 1`
+    done
+}
+
 ## telnet 
 function telnet_send(){
     cnt=$1
@@ -196,6 +216,9 @@ case $action in
         ;;
     "nqm")
         nqm
+        ;;
+    "nqmbatch")
+        nqmbatch
         ;;
     "send")
         telnet_send

@@ -2,13 +2,14 @@ package sender
 
 import (
 	"bytes"
+	"log"
+	"time"
+
 	"github.com/Cepave/transfer/g"
 	"github.com/Cepave/transfer/proc"
 	cmodel "github.com/open-falcon/common/model"
 	nsema "github.com/toolkits/concurrent/semaphore"
 	"github.com/toolkits/container/list"
-	"log"
-	"time"
 )
 
 // send
@@ -274,24 +275,26 @@ func forward2NqmRpcTask() {
 		go func(itemList []*nqmRpcItem) {
 			defer sema.Release()
 
-			resp := &cmodel.SimpleRpcResponse{}
-			var err error
-			sendOk := false
-			for i := 0; i < 3; i++ { //最多重试3次
-				err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", itemList, resp)
-				if err == nil {
-					sendOk = true
-					break
+			for _, v := range itemList {
+				resp := &cmodel.SimpleRpcResponse{}
+				var err error
+				sendOk := false
+				for i := 0; i < 3; i++ { //最多重试3次
+					err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
+					if err == nil {
+						sendOk = true
+						break
+					}
+					time.Sleep(time.Millisecond * 10)
 				}
-				time.Sleep(time.Millisecond * 10)
-			}
 
-			// statistics
-			if !sendOk {
-				log.Printf("send to NqmRpc fail: %v", err)
-				proc.SendToNqmRpcFailCnt.IncrBy(int64(len(itemList)))
-			} else {
-				proc.SendToNqmRpcCnt.IncrBy(int64(len(itemList)))
+				// statistics
+				if !sendOk {
+					log.Printf("send to NqmRpc fail: %v", err)
+					proc.SendToNqmRpcFailCnt.IncrBy(1)
+				} else {
+					proc.SendToNqmRpcCnt.IncrBy(1)
+				}
 			}
 		}(nqmRpcItems)
 	}
