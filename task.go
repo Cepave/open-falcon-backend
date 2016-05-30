@@ -2,6 +2,14 @@ package main
 
 import "fmt"
 
+func getTargetAddressList() []string {
+	var targetAddressList []string
+	for _, target := range GetGeneralConfig().hbsResp.Targets {
+		targetAddressList = append(targetAddressList, target.Host)
+	}
+	return targetAddressList
+}
+
 func Task(u Utility) ([]string, error) {
 	/**
 	 * Only 2 possible responses come from hbs:

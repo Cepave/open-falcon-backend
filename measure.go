@@ -12,7 +12,7 @@ import (
 
 type Utility interface {
 	CalcStats(row []float64, length int) map[string]string
-	marshalStatsIntoJsonParams(stats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent
+	MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent
 	ProbingCommand(targetAddressList []string) []string
 	utilName() string
 }
@@ -21,34 +21,26 @@ type Fping struct {
 	Utility
 }
 
-func (fping *Fping) marshalStatsIntoJsonParams(fpingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+func (u *Fping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent {
 	var params []ParamToAgent
 
-	for rowNum, fpingStat := range fpingStats {
-		// To graph
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "packets-sent", fpingStat["pkttransmit"]))
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "packets-received", fpingStat["pktreceive"]))
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "transmission-time", fpingStat["rttavg"]))
+	params = append(params, marshalJSONToGraph(target, agent, "packets-sent", row["pkttransmit"]))
+	params = append(params, marshalJSONToGraph(target, agent, "packets-received", row["pktreceive"]))
+	params = append(params, marshalJSONToGraph(target, agent, "transmission-time", row["rttavg"]))
 
-		// To Cassandra
-		t := targetToNqmEndpointData(&targets[rowNum])
-		a := agentToNqmEndpointData(agentPtr)
-		nqmDataGram := TagsAssembler(t, a, fpingStat)
-		params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-fping"))
-	}
 	return params
 }
 
-func (fping *Fping) ProbingCommand(targetAddressList []string) []string {
+func (u *Fping) ProbingCommand(targetAddressList []string) []string {
 	probingCmd := append(GetGeneralConfig().hbsResp.Command, targetAddressList...)
 	return probingCmd
 }
 
-func (fping *Fping) utilName() string {
+func (u *Fping) utilName() string {
 	return "fping"
 }
 
-func (fping *Fping) CalcStats(row []float64, length int) map[string]string {
+func (u *Fping) CalcStats(row []float64, length int) map[string]string {
 	dataMap := map[string]string{
 		"rttmin":    "-1",
 		"rttmax":    "-1",
@@ -83,16 +75,16 @@ type Tcpping struct {
 	Utility
 }
 
-func (tcpping *Tcpping) marshalStatsIntoJsonParams(tcppingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+func (u *Tcpping) marshalStatsIntoJsonParams(tcppingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
 	return nil
 }
 
-func (tcpping *Tcpping) ProbingCommand(targetAddressList []string) []string {
+func (u *Tcpping) ProbingCommand(targetAddressList []string) []string {
 	probingCmd := append([]string{"tcpping"}, targetAddressList...)
 	return probingCmd
 }
 
-func (tcpping *Tcpping) utilName() string {
+func (u *Tcpping) utilName() string {
 	return "tcpping"
 }
 
@@ -100,42 +92,24 @@ type Tcpconn struct {
 	Utility
 }
 
-func (tcpconn *Tcpconn) marshalStatsIntoJsonParams(tcpconnStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
+func (u *Tcpconn) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent {
 	var params []ParamToAgent
-
-	for rowNum, tcpconnStat := range tcpconnStats {
-		// To graph
-		params = append(params, marshalJSON(targets[rowNum], agentPtr, "time", tcpconnStat["time"]))
-
-		// To Cassandra
-		t := targetToNqmEndpointData(&targets[rowNum])
-		a := agentToNqmEndpointData(agentPtr)
-		nqmDataGram := TagsAssembler(t, a, tcpconnStat)
-		params = append(params, nqmMarshalJSON(nqmDataGram, "nqm-tcpconn"))
-	}
+	params = append(params, marshalJSONToGraph(target, agent, "tcpconn", row["time"]))
 	return params
 }
 
-func (tcpconn *Tcpconn) ProbingCommand(targetAddressList []string) []string {
+func (u *Tcpconn) ProbingCommand(targetAddressList []string) []string {
 	probingCmd := append([]string{"tcpconn"}, targetAddressList...)
 	probingCmd = append(probingCmd, "| awk '$5{print $2\" : \"$5} !$5{print $2\" : -\"}'")
 	probingCmd = []string{"/bin/sh", "-c", strings.Join(probingCmd, " ")}
 	return probingCmd
 }
 
-func (tcpconn *Tcpconn) utilName() string {
+func (u *Tcpconn) utilName() string {
 	return "tcpconn"
 }
 
-func getTargetAddressList() []string {
-	var targetAddressList []string
-	for _, target := range GetGeneralConfig().hbsResp.Targets {
-		targetAddressList = append(targetAddressList, target.Host)
-	}
-	return targetAddressList
-}
-
-func (tcpconn *Tcpconn) CalcStats(row []float64, length int) map[string]string {
+func (u *Tcpconn) CalcStats(row []float64, length int) map[string]string {
 	dataMap := map[string]string{
 		"time": "-1",
 	}
@@ -162,7 +136,7 @@ func measureByUtil(u Utility) {
 			rawData := Probe(probingCmd, u.utilName())
 			parsedData := Parse(rawData)
 			statsData := Calc(parsedData, u)
-			jsonParams := u.marshalStatsIntoJsonParams(statsData, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent)
+			jsonParams := Marshal(statsData, u)
 
 			for i, _ := range jsonParams {
 				println(jsonParams[i].String())
