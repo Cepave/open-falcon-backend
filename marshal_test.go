@@ -3,6 +3,9 @@ package main
 import (
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/Cepave/common/model"
 )
 
 func TestConvToKeyValueString(t *testing.T) {
@@ -62,4 +65,66 @@ func TestAssembleTags(t *testing.T) {
 		}
 		t.Log(assembleTags(target, agent, v))
 	}
+}
+
+func TestMarshalStatsRow(t *testing.T) {
+	nqmAgent := model.NqmAgent{
+		Id: -1, IspId: -1, ProvinceId: -1, CityId: -1,
+	}
+	nqmTarget := model.NqmTarget{
+		Id: -2, IspId: -2, ProvinceId: -2, CityId: -2,
+	}
+	agent := nqmNodeData{
+		"-1", "-1", "-1", "-1", "-1",
+	}
+	target := nqmNodeData{
+		"-2", "-2", "-2", "-2", "-1",
+	}
+
+	// fping, 4 JSON parameters, only test the 4th which is for Cassandra
+	tests := []map[string]string{
+		{"rttmax": "45.08", "rttavg": "44.63", "rttmdev": "0.31", "rttmedian": "44.58", "pkttransmit": "4", "pktreceive": "4", "rttmin": "44.28"},
+		{"rttmax": "-1", "rttavg": "-1", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "4", "pktreceive": "0", "rttmin": "-1"},
+	}
+	expecteds := [][]ParamToAgent{
+		{{}, {}, {}, {Metric: "nqm-fping", Endpoint: "unit-test-hostname", Value: 0, CounterType: "GAUGE", Tags: "", Timestamp: time.Now().Unix(), Step: 60}},
+		{{}, {}, {}, {Metric: "nqm-fping", Endpoint: "unit-test-hostname", Value: 0, CounterType: "GAUGE", Tags: "", Timestamp: time.Now().Unix(), Step: 60}},
+	}
+	for i, v := range tests {
+		params := marshalStatsRow(v, nqmTarget, nqmAgent, new(Fping))
+		testTags := assembleTags(target, agent, tests[0])
+		expecteds[i][3].Tags = testTags
+		params[3].Tags = testTags
+		//if !reflect.DeepEqual(expecteds[i][3], params[3]) {
+		if expecteds[i][3].String() != params[3].String() {
+			t.Error(expecteds[i][3], params[3])
+		}
+	}
+
+	// tcpconn, 2 JSON parameters, only test the 2nd which is for Cassandra
+	tests = []map[string]string{
+		{"time": "13.6"},
+		{"time": "-1"},
+	}
+	expecteds = [][]ParamToAgent{
+		{{}, {Metric: "nqm-tcpconn", Endpoint: "unit-test-hostname", Value: 0, CounterType: "GAUGE", Tags: "", Timestamp: time.Now().Unix(), Step: 60}},
+		{{}, {Metric: "nqm-tcpconn", Endpoint: "unit-test-hostname", Value: 0, CounterType: "GAUGE", Tags: "", Timestamp: time.Now().Unix(), Step: 60}},
+	}
+	for i, v := range tests {
+		params := marshalStatsRow(v, nqmTarget, nqmAgent, new(Tcpconn))
+		testTags := assembleTags(target, agent, tests[0])
+		expecteds[i][1].Tags = testTags
+		params[1].Tags = testTags
+		//if !reflect.DeepEqual(expecteds[i][1], params[1]) {
+		if expecteds[i][1].String() != params[1].String() {
+			t.Error(expecteds[i][1], params[1])
+		}
+	}
+}
+
+func init() {
+	// Hostname is the config dependency which lies in func MarshalIntoParameters
+	var cfg GeneralConfig
+	generalConfig = &cfg
+	cfg.Hostname = "unit-test-hostname"
 }

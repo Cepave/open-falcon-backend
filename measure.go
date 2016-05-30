@@ -137,12 +137,6 @@ func measureByUtil(u Utility) {
 			parsedData := Parse(rawData)
 			statsData := Calc(parsedData, u)
 			jsonParams := Marshal(statsData, u)
-
-			for i, _ := range jsonParams {
-				println(jsonParams[i].String())
-				println("===")
-			}
-
 			Push(jsonParams)
 		}()
 
