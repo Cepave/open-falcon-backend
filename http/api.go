@@ -836,6 +836,8 @@ func getMetricsByMetricType(metricType string) []string {
 			"load.1min",
 			"mem.memfree.percent",
 			"mem.swapused.percent",
+			"vmstat.procs.b",
+			"vmstat.procs.r",
 		}
 	} else if metricType == "services" {
 		metrics = []string{
@@ -861,6 +863,8 @@ func getMetricsByMetricType(metricType string) []string {
 			"ss.established",
 			"ss.syn.recv",
 			"vfcc.squid.response.time",
+			"vmstat.procs.b",
+			"vmstat.procs.r",
 		}
 	}
 	return metrics
