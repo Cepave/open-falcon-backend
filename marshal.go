@@ -51,11 +51,15 @@ func marshalJSONParamsToCassandra(nqmDataGram string, metric string) ParamToAgen
 	return data
 }
 
-func assembleTags(target nqmNodeData, agent nqmNodeData, dataMap map[string]string) string {
-	kvsStr := ""
-	for key, value := range dataMap {
-		kvsStr = kvsStr + "," + key + "=" + value
+func convToKeyValueString(arg map[string]string) string {
+	Str := ""
+	for key, value := range arg {
+		Str = Str + "," + key + "=" + value
 	}
+	return Str
+}
+
+func assembleTags(target nqmNodeData, agent nqmNodeData, dataMap map[string]string) string {
 	return "agent-id=" + agent.Id +
 		",agent-isp-id=" + agent.IspId +
 		",agent-province-id=" + agent.ProvinceId +
@@ -66,7 +70,7 @@ func assembleTags(target nqmNodeData, agent nqmNodeData, dataMap map[string]stri
 		",target-province-id=" + target.ProvinceId +
 		",target-city-id=" + target.CityId +
 		",target-name-tag-id=" + target.NameTagId +
-		kvsStr
+		convToKeyValueString(dataMap)
 }
 
 func convToNqmAgent(s model.NqmAgent) nqmNodeData {
