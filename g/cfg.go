@@ -2,10 +2,9 @@ package g
 
 import (
 	"encoding/json"
+	"github.com/toolkits/file"
 	"log"
 	"sync"
-
-	"github.com/toolkits/file"
 )
 
 type HttpConfig struct {
@@ -43,6 +42,12 @@ type NqmLogConfig struct {
 	JsonrpcUrl string `json:"jsonrpcUrl"`
 }
 
+type NqmConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
+}
+
 type GlobalConfig struct {
 	Debug bool         `json:"debug"`
 	Http  *HttpConfig  `json:"http"`
@@ -50,6 +55,7 @@ type GlobalConfig struct {
 	Api   *ApiConfig   `json:"api"`
 	Db    *DbConfig    `json:"db"`
 	NqmLog *NqmLogConfig `json:nqmlog`
+	Nqm   *NqmConfig   `json:"nqm"`
 }
 
 var (

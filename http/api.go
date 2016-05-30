@@ -845,7 +845,7 @@ func getMetricsByMetricType(metricType string) []string {
 			"ss.syn.recv",
 			"vfcc.squid.response.time",
 		}
-	} else if metricType == "all" {
+	} else if metricType == "all" || metricType == "aggregate" {
 		metrics = []string{
 			"net.if.in.bits/iface=eth_all",
 			"net.if.out.bits/iface=eth_all",
@@ -1227,40 +1227,12 @@ func getIPFromHostname(hostname string, result map[string]interface{}) string {
 	return ip
 }
 
-func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
-	errors := []string{}
-	var result = make(map[string]interface{})
-	result["error"] = errors
+func getBandwidthsFiveMinutesAverage(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
-	arguments := strings.Split(req.URL.Path, "/")
-	platformName := ""
-	metricType := ""
-	duration := "6min"
-	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
-		platformName = arguments[len(arguments)-2]
-		metricType = arguments[len(arguments)-1]
-	}
-	var nodes = make(map[string]interface{})
-	getApolloFiltersJSON(nodes, result)
-	hostnames := []string{}
-	if int(nodes["status"].(float64)) == 1 {
-		hostname := ""
-		for _, platform := range nodes["result"].([]interface{}) {
-			groupName := platform.(map[string]interface{})["platform"].(string)
-			if groupName == platformName {
-				for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
-					hostname = device.(map[string]interface{})["hostname"].(string)
-					if device.(map[string]interface{})["ip_status"].(string) == "1" {
-						hostnames = append(hostnames, hostname)
-					}
-				}
-			}
-		}
-		sort.Strings(hostnames)
-	}
+	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
 	hostMap := map[string]interface{}{}
-	if len(metrics) > 0 {
+	if len(metrics) > 0 && len(hostnames) > 0 {
 		data := getGraphQueryResponse(metrics, duration, hostnames, result)
 		for _, series := range data {
 			values := []interface{}{}
@@ -1312,6 +1284,39 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 			items = append(items, host)
 		}
 	}
+	return items
+}
+
+func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	arguments := strings.Split(req.URL.Path, "/")
+	platformName := ""
+	metricType := ""
+	duration := "6min"
+	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
+		platformName = arguments[len(arguments)-2]
+		metricType = arguments[len(arguments)-1]
+	}
+	var nodes = make(map[string]interface{})
+	getApolloFiltersJSON(nodes, result)
+	hostnames := []string{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			groupName := platform.(map[string]interface{})["platform"].(string)
+			if groupName == platformName {
+				for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+					hostname = device.(map[string]interface{})["hostname"].(string)
+					if device.(map[string]interface{})["ip_status"].(string) == "1" {
+						hostnames = append(hostnames, hostname)
+					}
+				}
+			}
+		}
+	}
+	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
 	if _, ok := nodes["info"]; ok {
 		delete(nodes, "info")
 	}
@@ -1322,6 +1327,33 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 	nodes["result"] = result
 	nodes["count"] = len(items)
 	nodes["platform"] = platformName
+	setResponse(rw, nodes)
+}
+
+func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	arguments := strings.Split(req.URL.Path, "/")
+	hostnames := []string{}
+	metricType := ""
+	duration := "6min"
+	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
+		hostnames = strings.Split(arguments[len(arguments)-2], ",")
+		metricType = arguments[len(arguments)-1]
+	}
+	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	setResponse(rw, nodes)
 }
 
@@ -1339,4 +1371,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
 	http.HandleFunc("/api/platforms/", getPlatformBandwidthsFiveMinutesAverage)
+	http.HandleFunc("/api/hosts/", getHostsBandwidthsFiveMinutesAverage)
 }
