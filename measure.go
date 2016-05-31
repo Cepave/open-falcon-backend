@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Cepave/common/model"
@@ -75,17 +74,21 @@ type Tcpping struct {
 	Utility
 }
 
-func (u *Tcpping) marshalStatsIntoJsonParams(tcppingStats []map[string]string, targets []model.NqmTarget, agentPtr *model.NqmAgent) []ParamToAgent {
-	return nil
+func (u *Tcpping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent {
+	return new(Fping).MarshalJSONParamsToGraph(target, agent, row)
 }
 
 func (u *Tcpping) ProbingCommand(targetAddressList []string) []string {
-	probingCmd := append([]string{"tcpping"}, targetAddressList...)
+	probingCmd := append([]string{"./tcpping.sh"}, targetAddressList...)
 	return probingCmd
 }
 
 func (u *Tcpping) utilName() string {
 	return "tcpping"
+}
+
+func (u *Tcpping) CalcStats(row []float64, length int) map[string]string {
+	return new(Fping).CalcStats(row, length)
 }
 
 type Tcpconn struct {
@@ -99,9 +102,7 @@ func (u *Tcpconn) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.N
 }
 
 func (u *Tcpconn) ProbingCommand(targetAddressList []string) []string {
-	probingCmd := append([]string{"tcpconn"}, targetAddressList...)
-	probingCmd = append(probingCmd, "| awk '$5{print $2\" : \"$5} !$5{print $2\" : -\"}'")
-	probingCmd = []string{"/bin/sh", "-c", strings.Join(probingCmd, " ")}
+	probingCmd := append([]string{"./tcpconn.sh"}, targetAddressList...)
 	return probingCmd
 }
 
@@ -147,6 +148,6 @@ func measureByUtil(u Utility) {
 
 func Measure() {
 	go measureByUtil(new(Fping))
-	//go measureByUtil(new(Tcpping))
+	go measureByUtil(new(Tcpping))
 	go measureByUtil(new(Tcpconn))
 }
