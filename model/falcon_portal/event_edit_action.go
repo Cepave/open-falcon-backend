@@ -20,7 +20,7 @@ func AddNote(username string, note string, id string, status string, caseId stri
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	userid := uic.ReadUserIdByName(username)
-	sqlbase := fmt.Sprintf("SET event_caseId = %s , user_id = %d, timestamp = %v", id, userid, time.Now())
+	sqlbase := fmt.Sprintf("SET event_caseId = '%s' , user_id = %d", id, userid)
 	if note != "" {
 		sqlbase = fmt.Sprintf("%s , note = '%s'", sqlbase, note)
 	}
@@ -34,6 +34,6 @@ func AddNote(username string, note string, id string, status string, caseId stri
 	if caseId != "" {
 		sqlbase = fmt.Sprintf("%s, case_id = '%s'", sqlbase, caseId)
 	}
-	_, err = q.Raw(fmt.Sprintf("Insert INTO event_note %s", sqlbase)).Exec()
+	_, err = q.Raw(fmt.Sprintf("Insert INTO event_note %s, timestamp = ?", sqlbase), time.Now()).Exec()
 	return
 }

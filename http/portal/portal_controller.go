@@ -69,7 +69,7 @@ func (this *PortalController) AddNote() {
 		return
 	}
 	username := this.GetString("cName", "")
-	note := this.GetString("Note", "")
+	note := this.GetString("note", "")
 	id := this.GetString("id", "xxx")
 	status := this.GetString("status", "")
 	caseId := this.GetString("caseId", "")
@@ -109,6 +109,7 @@ func (this *PortalController) NotesGet() {
 		return
 	}
 	baseResp.Data["notes"] = notes
+	this.ServeApiJson(baseResp)
 	return
 }
 
