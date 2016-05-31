@@ -144,6 +144,15 @@ func GetNotes(event_caseId string, limit int) (enotes []EventNote, err error) {
 	}
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
-	_, err = q.Raw(fmt.Sprintf("select * from event_note where event_caseId = '%s' ORDER BY timestamp DESC limit %d", event_caseId, limit)).QueryRows(&enotes)
+	_, err = q.Raw(fmt.Sprintf(`SELECT event_note.id as id,
+				event_note.event_caseId as event_caseId,
+				event_note.note as note,
+				event_note.case_id as case_id,
+				event_note.event_caseId as eid,
+				event_note.status as status,
+				event_note.timestamp as timestamp,
+				user.name as user_name
+				FROM falcon_portal.event_note as event_note LEFT JOIN uic.user as user on event_note.user_id = user.id
+				WHERE event_note.event_caseId = '%s' ORDER BY event_note.timestamp DESC limit %d`, event_caseId, limit)).QueryRows(&enotes)
 	return
 }

@@ -41,7 +41,7 @@ type EventsRsp struct {
 	Step       int       `json:"step"`
 	Cond       string    `json:"cond"`
 	Timestamp  time.Time `json:"timestamp"`
-	Eid        string    `json:"event_caseId" orm:"eid"`
+	Eid        string    `json:"event_caseId" orm:"column(eid)"`
 	TplCreator string    `json:"tpl_creator"`
 	Metric     string    `json:"metric"`
 	Endpoint   string    `json:"endpoint"`
@@ -68,11 +68,12 @@ type Action struct {
 }
 
 type EventNote struct {
-	Id          int         `json:"id" orm:"pk"`
-	EventCaseId *EventCases `json:"event_caseId" orm:"rel(fk)"`
-	Note        string      `json:"note"`
-	CaseId      string      `json:"case_id"`
-	Status      string      `json:"status"`
-	Timestamp   time.Time   `json:"timestamp"`
-	UserId      int         `json:"user_id"`
+	Id          int       `json:"id" orm:"pk"`
+	EventCaseId string    `json:"event_caseId" orm:"column(event_caseId);rel(fk)"`
+	Note        string    `json:"note"`
+	CaseId      string    `json:"case_id"`
+	Status      string    `json:"status"`
+	Timestamp   time.Time `json:"timestamp"`
+	UserId      int       `json:"-"`
+	UserName    string    `json:"user_name" orm:"-"`
 }
