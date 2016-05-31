@@ -3,6 +3,8 @@ package falconPortal
 import (
 	"fmt"
 
+	"strings"
+
 	"github.com/Cepave/fe/g"
 	"github.com/astaxie/beego/orm"
 )
@@ -33,13 +35,30 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 			queryTmp = fmt.Sprintf("%v priority = %d", queryTmp, priority)
 		}
 	}
-	if status != "ALL" {
+	if status == "DEFAULT" {
 		if flag {
 			queryTmp = fmt.Sprintf("%v and (status = '%s' or status = 'OK')", queryTmp, status)
 		} else {
 			flag = true
 			queryTmp = fmt.Sprintf("%v (status = '%s' or status = 'OK')", queryTmp, status)
 		}
+	} else if status != "ALL" {
+		//support mutiple status qeuery.
+		if flag {
+			queryTmp = fmt.Sprintf("%v and ", queryTmp)
+		}
+		flag = true
+		queryTmp = fmt.Sprintf("%v (", queryTmp)
+		flag = true
+		status_list := strings.Split(status, ",")
+		for idx, s := range status_list {
+			if idx == len(status_list)-1 {
+				queryTmp = fmt.Sprintf("%v status = '%s'", queryTmp, s)
+			} else {
+				queryTmp = fmt.Sprintf("%v status = '%s' or", queryTmp, s)
+			}
+		}
+		queryTmp = fmt.Sprintf("%v )", queryTmp)
 	}
 	if queryTmp != "" && !isadmin {
 		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE (tpl_creator = '%s' OR template_id in (%s)) AND %v order by update_at DESC limit %d", username, tplids, queryTmp, limit)).QueryRows(&result)
