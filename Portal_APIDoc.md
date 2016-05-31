@@ -5,14 +5,20 @@
 * params:
   * `startTime` timestamp
     * ex: 1457450919
+    * if not specific, means get all
   * `endTime` timestamp
+    * ex: 1477450919
+    * if not specific, means get all
   * `priority` int
     * ex: 0
     * -1 means no specific any priority level, get all.
+    * default: -1
   * `status` string options
     * ex: "PROBLEM"
     * "ALL" means no specific any status, get all.
-    * if no specific will get 'PROBLEM' case as default
+    * if no specific will get 'PROBLEM' & 'OK' case as default
+    * support mutiple status query. ex: "PRBOEM,OK"
+    * 'OK' means 'Recovery', this wording is from open-falcon[judge], so I didn't change it.
   * `cName` options (get from cookie refer)
     * default will only get case of current user, except admin role (ex. root).
   * `limit` int
@@ -148,6 +154,39 @@
   * `id` string
     * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"
   * `closedNote` string
+  * ok
+
+    ```
+    {
+      "version": "v1",
+      "method": "PUT",
+      "status": "success"
+    }
+    ```
+  * failed
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "failed",
+      "error": {
+        "message": "You can not skip closed note"
+      }
+    }
+    ```
+
+* `GET` `POST` /api/v1/portal/eventcases/addnote
+* `required login session`
+* params:
+  * `id` string
+    * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"
+  * `note` string
+    * max 300 varchar
+  * `status` string options
+    * ex: "in processing"
+  * `eventId` string options
+    * boss case id
   * ok
 
     ```
