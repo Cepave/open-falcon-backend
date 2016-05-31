@@ -138,7 +138,7 @@ func measureByUtil(u Utility) {
 			parsedData := Parse(rawData)
 			statsData := Calc(parsedData, u)
 			jsonParams := Marshal(statsData, u)
-			Push(jsonParams)
+			Push(jsonParams, u.utilName())
 		}()
 
 		dur := time.Second * time.Duration(GetGeneralConfig().Agent.FpingInterval)
