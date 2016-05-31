@@ -61,6 +61,53 @@ func (this *PortalController) ColseCase() {
 	return
 }
 
+func (this *PortalController) AddNote() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	username := this.GetString("cName", "")
+	note := this.GetString("Note", "")
+	id := this.GetString("id", "xxx")
+	status := this.GetString("status", "")
+	caseId := this.GetString("caseId", "")
+	switch {
+	case id == "xxx":
+		this.ResposeError(baseResp, "You dosen't pick any event id")
+		return
+	case note == "":
+		this.ResposeError(baseResp, "You can not skip closed note")
+		return
+	}
+	err = event.AddNote(username, note, id, status, caseId)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *PortalController) NotesGet() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	id := this.GetString("id", "xxx")
+	limitNum, _ := this.GetInt("limit", 0)
+	if id == "xxx" {
+		this.ResposeError(baseResp, "You dosen't pick any event id")
+		return
+	}
+	notes := event.GetNotes(id)
+	baseResp.Data["notes"] = events
+	return
+}
+
 func (this *PortalController) EventGet() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()

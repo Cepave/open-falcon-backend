@@ -57,7 +57,6 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 		for indx, event := range result {
 			var eventArr []*Events
 			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s' order by timestamp DESC Limit %d", event.Id, eventLimit)).QueryRows(&eventArr)
-			fmt.Sprintf("%v", eventArr)
 			if len(eventArr) != 0 {
 				event.Events = eventArr
 			} else {
@@ -117,5 +116,15 @@ func CountNumOfTlp() (c int, err error) {
 	q.Using("falcon_portal")
 	_, err = q.Raw("select * from `tpl`").QueryRows(&h)
 	c = len(h)
+	return
+}
+
+func GetNotes(event_caseId string, limit int) (enotes []EventNote, err error) {
+	if limit == 0 {
+		limit = 10
+	}
+	q := orm.NewOrm()
+	q.Using("falcon_portal")
+	_, err = q.Raw(fmt.Sprintf("select * from event_note where event_caseId = '%s' ORDER BY timestamp DESC limit %d", event_caseId, limit)).QueryRows(&enotes)
 	return
 }

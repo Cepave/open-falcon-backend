@@ -55,6 +55,7 @@ type Tpl struct {
 	CreateUser string `json:"create_user"`
 	CreateAt   string `json:"create_at"`
 }
+
 type Action struct {
 	Id                 int    `json:"id"`
 	Uic                string `json:"uic"`
@@ -64,4 +65,14 @@ type Action struct {
 	BeforeCallbackMail int    `json:"before_callback_mail"`
 	AfterCallbackSms   int    `json:"after_callback_sms"`
 	AfterCallbackMail  int    `json:"after_callback_mail"`
+}
+
+type EventNote struct {
+	Id          int         `json:"id" orm:"pk"`
+	EventCaseId *EventCases `json:"event_caseId" orm:"rel(fk)"`
+	Note        string      `json:"note"`
+	CaseId      string      `json:"case_id"`
+	Status      string      `json:"status"`
+	Timestamp   time.Time   `json:"timestamp"`
+	UserId      int         `json:"user_id"`
 }
