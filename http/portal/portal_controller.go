@@ -103,7 +103,11 @@ func (this *PortalController) NotesGet() {
 		this.ResposeError(baseResp, "You dosen't pick any event id")
 		return
 	}
-	notes := event.GetNotes(id, limitNum)
+	notes, err := event.GetNotes(id, limitNum)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
 	baseResp.Data["notes"] = notes
 	return
 }
