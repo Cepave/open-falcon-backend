@@ -48,3 +48,8 @@
     filename: "masato-10.sql",
     comment: "add status column for alarm"
 }
+- {
+    id: "masato-11",
+    filename: "masato-11.sql",
+    comment: "note feture support"
+}
