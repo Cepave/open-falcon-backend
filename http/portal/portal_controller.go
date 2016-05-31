@@ -19,7 +19,7 @@ func (this *PortalController) EventCasesGet() {
 	startTime, _ := this.GetInt64("startTime", 0)
 	endTime, _ := this.GetInt64("endTime", 0)
 	prioprity, _ := this.GetInt("prioprity", -1)
-	status := this.GetString("status", "PROBLEM")
+	status := this.GetString("status", "DEFAULT")
 
 	username := this.GetString("cName", "")
 	limitNum, _ := this.GetInt("limit", 0)
