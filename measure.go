@@ -115,7 +115,7 @@ func (u *Tcpconn) CalcStats(row []float64, length int) map[string]string {
 		"time": "-1",
 	}
 	if length != 1 {
-		log.Fatalln("Calculate statistic of tcpconn error")
+		log.Fatalln("[", u.utilName(), "] Error on Calculation  of statistics")
 	}
 	if len(row) > 0 {
 		time := row[0]
