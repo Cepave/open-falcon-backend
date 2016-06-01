@@ -27,6 +27,7 @@ type ApiConfig struct {
 	Event     string `json:"event"`
 	Map       string `json:"map"`
 	Geo       string `json:"geo"`
+	Uplink    string `json:"uplink"`
 	Query     string `json:"query"`
 	Dashboard string `json:"dashboard"`
 	Max       int    `json:"max"`
