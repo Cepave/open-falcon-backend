@@ -31,7 +31,7 @@ func query() {
 
 func Query() {
 	for {
-		query()
+		go query()
 
 		dur := time.Second * time.Duration(GetGeneralConfig().Hbs.Interval)
 		time.Sleep(dur)

@@ -79,7 +79,7 @@ func (u *Tcpping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.N
 }
 
 func (u *Tcpping) ProbingCommand(targetAddressList []string) []string {
-	probingCmd := append([]string{"./tcpping.sh"}, targetAddressList...)
+	probingCmd := append([]string{"tcpping.sh"}, targetAddressList...)
 	return probingCmd
 }
 
@@ -102,7 +102,7 @@ func (u *Tcpconn) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.N
 }
 
 func (u *Tcpconn) ProbingCommand(targetAddressList []string) []string {
-	probingCmd := append([]string{"./tcpconn.sh"}, targetAddressList...)
+	probingCmd := append([]string{"tcpconn.sh"}, targetAddressList...)
 	return probingCmd
 }
 
@@ -115,7 +115,7 @@ func (u *Tcpconn) CalcStats(row []float64, length int) map[string]string {
 		"time": "-1",
 	}
 	if length != 1 {
-		log.Fatalln("[", u.utilName(), "] Error on Calculation  of statistics")
+		log.Fatalln("[", u.utilName(), "] Error on Calculation of statistics")
 	}
 	if len(row) > 0 {
 		time := row[0]
@@ -125,29 +125,40 @@ func (u *Tcpconn) CalcStats(row []float64, length int) map[string]string {
 }
 
 func measureByUtil(u Utility) {
-	for {
-		func() {
-			probingCmd, err := Task(u)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			log.Println("[", u.utilName(), "] Measuring...")
-
-			rawData := Probe(probingCmd, u.utilName())
-			parsedData := Parse(rawData)
-			statsData := Calc(parsedData, u)
-			jsonParams := Marshal(statsData, u)
-			Push(jsonParams, u.utilName())
-		}()
-
-		dur := time.Second * time.Duration(GetGeneralConfig().Agent.FpingInterval)
-		time.Sleep(dur)
+	probingCmd, err := Task(u)
+	if err != nil {
+		log.Println(err)
+		return
 	}
+	log.Println("[", u.utilName(), "] Measuring...")
+
+	rawData := Probe(probingCmd, u.utilName())
+	parsedData := Parse(rawData)
+	statsData := Calc(parsedData, u)
+	jsonParams := Marshal(statsData, u)
+	Push(jsonParams, u.utilName())
 }
 
 func Measure() {
-	go measureByUtil(new(Fping))
-	go measureByUtil(new(Tcpping))
-	go measureByUtil(new(Tcpconn))
+	go func() {
+		for {
+			go measureByUtil(new(Fping))
+			dur := time.Second * time.Duration(GetGeneralConfig().Agent.FpingInterval)
+			time.Sleep(dur)
+		}
+	}()
+	go func() {
+		for {
+			go measureByUtil(new(Tcpping))
+			dur := time.Second * time.Duration(GetGeneralConfig().Agent.TcppingInterval)
+			time.Sleep(dur)
+		}
+	}()
+	go func() {
+		for {
+			go measureByUtil(new(Tcpconn))
+			dur := time.Second * time.Duration(GetGeneralConfig().Agent.TcpconnInterval)
+			time.Sleep(dur)
+		}
+	}()
 }
