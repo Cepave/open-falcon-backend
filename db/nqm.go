@@ -353,36 +353,42 @@ func getPingTaskState(agentId int) (result int, err error) {
 	var hasFilter int
 	if err = DB.QueryRow(
 		`
-		SELECT COUNT(*)
-		FROM (
-			/* Get any condition of name tag filter  */
-			SELECT tfnt.tfnt_pt_ag_id
-			FROM nqm_pt_target_filter_name_tag AS tfnt
-			WHERE tfnt.tfnt_pt_ag_id = ?
-			LIMIT 1
+		SELECT
+		 	/* Get any condition of name tag filter  */
+			(
+				SELECT COUNT(tfnt.tfnt_pt_ag_id)
+				FROM nqm_pt_target_filter_name_tag AS tfnt
+				WHERE tfnt.tfnt_pt_ag_id = ?
+				LIMIT 1
+			)
 			/* :~) */
-			UNION
+			+
 			/* Get any condition of ISP filter  */
-			SELECT tfisp.tfisp_pt_ag_id
-			FROM nqm_pt_target_filter_isp AS tfisp
-			WHERE tfisp.tfisp_pt_ag_id = ?
-			LIMIT 1
+			(
+				SELECT COUNT(tfisp.tfisp_pt_ag_id)
+				FROM nqm_pt_target_filter_isp AS tfisp
+				WHERE tfisp.tfisp_pt_ag_id = ?
+				LIMIT 1
+			)
 			/* :~) */
-			UNION
+			+
 			/* Get any condition of province filter  */
-			SELECT tfpv.tfpv_pt_ag_id
-			FROM nqm_pt_target_filter_province AS tfpv
-			WHERE tfpv.tfpv_pt_ag_id = ?
-			LIMIT 1
+			(
+				SELECT COUNT(tfpv.tfpv_pt_ag_id)
+				FROM nqm_pt_target_filter_province AS tfpv
+				WHERE tfpv.tfpv_pt_ag_id = ?
+				LIMIT 1
+			)
 			/* :~) */
-			UNION
+			+
 			/* Get any condition of city filter  */
-			SELECT tfct.tfct_pt_ag_id
-			FROM nqm_pt_target_filter_city AS tfct
-			WHERE tfct.tfct_pt_ag_id = ?
-			LIMIT 1
+			(
+				SELECT COUNT(tfct.tfct_pt_ag_id)
+				FROM nqm_pt_target_filter_city AS tfct
+				WHERE tfct.tfct_pt_ag_id = ?
+				LIMIT 1
+			)
 			/* :~) */
-		) AS filter
 		`,
 		agentId, agentId, agentId, agentId,
 	).Scan(&hasFilter)
@@ -391,7 +397,7 @@ func getPingTaskState(agentId int) (result int, err error) {
 	}
 	// :~)
 
-	if hasFilter == 1 {
+	if hasFilter >= 1 {
 		result = HAS_PING_TASK_WITH_FILTER
 	} else {
 		result = HAS_PING_TASK_ALL_MATCHING

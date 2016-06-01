@@ -308,14 +308,15 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO nqm_target(
 				tg_id, tg_name, tg_host,
-				tg_isp_id, tg_pv_id, tg_ct_id, tg_probed_by_all, tg_name_tag
+				tg_isp_id, tg_pv_id, tg_ct_id, tg_probed_by_all, tg_name_tag,
+				tg_status, tg_available
 			)
 			VALUES
-				(4021, 'tgn-1', '1.2.3.4', -1, -1, -1, true, null),
-				(4022, 'tgn-2', '1.2.3.5', 5, -1, -1, false, null),
-				(4023, 'tgn-3', '1.2.3.6', -1, 5, -1, false, null),
-				(4024, 'tgn-4', '1.2.3.7', -1, 20, 20, false, null),
-				(4025, 'tgn-5', '1.2.3.8', -1, -1, -1, false, 'tag-1')
+				(4021, 'tgn-1', '1.2.3.4', -1, -1, -1, true, null, true, true),
+				(4022, 'tgn-2', '1.2.3.5', 5, -1, -1, false, null, true, true),
+				(4023, 'tgn-3', '1.2.3.6', -1, 5, -1, false, null, true, true),
+				(4024, 'tgn-4', '1.2.3.7', -1, 20, 20, false, null, true, true),
+				(4025, 'tgn-5', '1.2.3.8', -1, -1, -1, false, 'tag-1', true, true)
 			`,
 			`
 			INSERT INTO nqm_ping_task(
