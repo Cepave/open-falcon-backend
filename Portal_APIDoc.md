@@ -177,6 +177,7 @@
     ```
 
 * `GET` `POST` /api/v1/portal/eventcases/addnote
+* add note for one event case
 * `required login session`
 * params:
   * `id` string
@@ -205,6 +206,65 @@
       "status": "failed",
       "error": {
         "message": "You can not skip closed note"
+      }
+    }
+    ```
+
+* `GET` `POST` /api/v1/portal/eventcases/notes
+* get notes of one event case.
+* `required login session`
+* params:
+  * `id` string
+    * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"
+  * ok
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "success",
+      "data": {
+        "notes": [
+          {
+            "id": 3,
+            "event_caseId": "s_116_b66b973ef551e4e503fad475dfc9e418",
+            "note": "測試結果",
+            "case_id": "99667",
+            "status": "inprocess",
+            "timestamp": "2016-06-01T11:15:50+08:00",
+            "user_name": "root"
+          },
+          {
+            "id": 2,
+            "event_caseId": "s_116_b66b973ef551e4e503fad475dfc9e418",
+            "note": "測試結果",
+            "case_id": "99667",
+            "status": "inprocess",
+            "timestamp": "2016-06-01T11:15:38+08:00",
+            "user_name": "root"
+          },
+          {
+            "id": 1,
+            "event_caseId": "s_116_b66b973ef551e4e503fad475dfc9e418",
+            "note": "測試結果",
+            "case_id": "99667",
+            "status": "inprocess",
+            "timestamp": "2016-06-01T11:15:29+08:00",
+            "user_name": "root"
+          }
+        ]
+      }
+    }
+    ```
+  * failed
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "failed",
+      "error": {
+        "message": "You dosen't pick any event id"
       }
     }
     ```
