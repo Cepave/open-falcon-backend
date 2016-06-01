@@ -1361,6 +1361,90 @@ func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Requ
 	setResponse(rw, nodes)
 }
 
+func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	idcsMap := map[string]interface{}{}
+	idcIDs := []string{}
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	getPlatformJSON(nodes, result)
+	hosts := map[string]interface{}{}
+	hostnames := []string{}
+	hostnamesMap := map[string]int{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+				hostname = device.(map[string]interface{})["hostname"].(string)
+				if _, ok := hostnamesMap[hostname]; !ok {
+					ip := device.(map[string]interface{})["ip"].(string)
+					if ip == getIPFromHostname(hostname, result) {
+						hostnames = append(hostnames, hostname)
+						idcID := device.(map[string]interface{})["pop_id"].(string)
+						host := map[string]interface{}{
+							"activate": device.(map[string]interface{})["ip_status"].(string),
+							"idcID":    idcID,
+							"idcName":  hostname,
+							"ip":       ip,
+						}
+						hostnamesMap[hostname] = 1
+						hosts[hostname] = host
+						idcIDs = appendUniqueString(idcIDs, idcID)
+					}
+				}
+			}
+		}
+		sort.Strings(hostnames)
+		sort.Strings(idcIDs)
+		for _, hostname := range hostnames {
+			host := hosts[hostname].(map[string]interface{})
+			idcID := host["idcID"].(string)
+			if _, ok := idcsMap[idcID]; ok {
+				idcsMap[idcID] = append(idcsMap[idcID].([]map[string]interface{}), host)
+			} else {
+				idcsMap[idcID] = []map[string]interface{}{
+					host,
+				}
+			}
+		}
+		idcNamesMap := map[string]string{}
+		idcNames := []string{}
+		o := orm.NewOrm()
+		var idcs []*Idc
+		sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
+		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			for _, idc := range idcs {
+				idcNamesMap[idc.Name] = strconv.Itoa(idc.Pop_id)
+				idcNames = appendUniqueString(idcNames, idc.Name)
+			}
+		}
+		sort.Strings(idcNames)
+		for _, idcName := range idcNames {
+			idcID := idcNamesMap[idcName]
+			if _, ok := idcsMap[idcID]; ok {
+				idc := idcsMap[idcID]
+				idcsMap[idcName] = idc
+				delete(idcsMap, idcID)
+			}
+		}
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = idcsMap
+	nodes["result"] = result
+	nodes["count"] = len(idcIDs)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
