@@ -30,12 +30,12 @@
         "idle": 10,
         "max": 100
     },
-	"nqmlog" : {
-		"jsonrpcUrl" : "http://127.0.0.1:6171/jsonrpc"
-	},
     "nqm": {
         "addr": "root:@tcp(127.0.0.1:3306)/db_name?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
+    },
+    "nqmlog": {
+        "jsonrpcUrl": "http://127.0.0.1:6171/jsonrpc"
     }
 }
