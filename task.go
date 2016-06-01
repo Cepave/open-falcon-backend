@@ -19,7 +19,7 @@ func Task(u Utility) ([]string, error) {
 	 *         NqmAgent, NQMTargets, Command are not nil
 	 */
 	if !GetGeneralConfig().hbsResp.NeedPing {
-		return nil, fmt.Errorf("[ " + u.utilName() + " ] No tasks assigned.")
+		return nil, fmt.Errorf("[ " + u.UtilName() + " ] No tasks assigned.")
 	}
 
 	targetAddressList := getTargetAddressList()

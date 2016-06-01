@@ -122,7 +122,7 @@ func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.
 	t := convToNqmTarget(target)
 	a := convToNqmAgent(agent)
 	cassandraDataGram := assembleTags(t, a, row)
-	params = append(params, marshalJSONParamsToCassandra(cassandraDataGram, "nqm-"+u.utilName()))
+	params = append(params, marshalJSONParamsToCassandra(cassandraDataGram, "nqm-"+u.UtilName()))
 
 	return params
 }
