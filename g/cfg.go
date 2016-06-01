@@ -38,6 +38,10 @@ type DbConfig struct {
 	Max  int    `json:"max"`
 }
 
+type NqmLogConfig struct {
+	JsonrpcUrl string `json:"jsonrpcUrl"`
+}
+
 type NqmConfig struct {
 	Addr string `json:"addr"`
 	Idle int    `json:"idle"`
@@ -50,6 +54,7 @@ type GlobalConfig struct {
 	Graph *GraphConfig `json:"graph"`
 	Api   *ApiConfig   `json:"api"`
 	Db    *DbConfig    `json:"db"`
+	NqmLog *NqmLogConfig `json:nqmlog`
 	Nqm   *NqmConfig   `json:"nqm"`
 }
 
@@ -59,10 +64,18 @@ var (
 	configLock = new(sync.RWMutex)
 )
 
+// Gets the configuration
 func Config() *GlobalConfig {
 	configLock.RLock()
 	defer configLock.RUnlock()
 	return config
+}
+
+// Sets the config directly
+func SetConfig(newConfig *GlobalConfig) {
+	configLock.RLock()
+	defer configLock.RUnlock()
+	config = newConfig
 }
 
 func ParseConfig(cfg string) {
@@ -87,10 +100,7 @@ func ParseConfig(cfg string) {
 		log.Fatalln("parse config file", cfg, "error:", err.Error())
 	}
 
-	// set config
-	configLock.Lock()
-	defer configLock.Unlock()
-	config = &c
+	SetConfig(&c)
 
 	log.Println("g.ParseConfig ok, file", cfg)
 }
