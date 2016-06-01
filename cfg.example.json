@@ -20,6 +20,7 @@
         "event": "https://example.com/api_event_path",
         "map": "https://example.com/api_map_path",
         "geo": "https://example.com/api_geo_path",
+        "uplink": "https://example.com/api_uplink_path",
         "query": "http://example.com:port",
         "dashboard": "http://example.com",
         "max": 500
