@@ -19,7 +19,8 @@ func query() {
 	var resp model.NqmPingTaskResponse
 	err := rpcClient.Call("NqmAgent.PingTask", req, &resp)
 	if err != nil {
-		log.Fatalln("Call NqmAgent.PingTask error:", err)
+		log.Println("[ hbs ] Error on RPC call:", err)
+		return
 	}
 	log.Println("[ hbs ] Response received")
 

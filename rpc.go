@@ -48,7 +48,7 @@ func (this *SingleConnRpcClient) insureConn() {
 			return
 		}
 
-		log.Printf("dial %s fail: %v", this.RpcServer, err)
+		log.Println("[ hbs ] Error on query:", err)
 
 		if retry > 6 {
 			retry = 1

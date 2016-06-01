@@ -20,7 +20,8 @@ func Push(params []ParamToAgent, util string) {
 	httpClient := &http.Client{}
 	postResp, err := httpClient.Do(postReq)
 	if err != nil {
-		log.Fatalln("[", util, "] Error on pushing to [", GetGeneralConfig().Agent.PushURL, "]:", err)
+		log.Println("[", util, "] Error on push:", err)
+		return
 	}
 	defer postResp.Body.Close()
 	log.Println("[", util, "] Pushing the HTTP Body...succeeded")
