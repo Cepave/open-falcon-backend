@@ -8,10 +8,16 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Cepave/common/model"
 	"github.com/toolkits/file"
 )
+
+type MeasurementsProperty struct {
+	interval time.Duration
+	enabled  bool
+}
 
 type AgentConfig struct {
 	PushURL         string `json:"pushURL"`
@@ -39,6 +45,7 @@ type GeneralConfig struct {
 	Hostname     string
 	IPAddress    string
 	ConnectionID string
+	Measurements map[string]MeasurementsProperty
 }
 
 var (
@@ -46,6 +53,14 @@ var (
 	generalConfig *GeneralConfig
 	lock          = new(sync.RWMutex)
 )
+
+func NewMeasurements() map[string]MeasurementsProperty {
+	return map[string]MeasurementsProperty{
+		"fping":   {time.Duration(GetGeneralConfig().Agent.FpingInterval), false},
+		"tcpping": {time.Duration(GetGeneralConfig().Agent.TcppingInterval), false},
+		"tcpconn": {time.Duration(GetGeneralConfig().Agent.TcpconnInterval), false},
+	}
+}
 
 func getBinAbsPath() string {
 	bin, err := filepath.Abs(os.Args[0])
@@ -176,4 +191,5 @@ func InitGeneralConfig(cfgFilePath string) {
 	cfg.Hostname = getHostname()
 	cfg.IPAddress = getIP()
 	cfg.ConnectionID = getConnectionID()
+	cfg.Measurements = NewMeasurements()
 }

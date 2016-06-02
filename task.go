@@ -21,7 +21,10 @@ func Task(u Utility) ([]string, error) {
 	if !GetGeneralConfig().hbsResp.NeedPing {
 		return nil, fmt.Errorf("[ " + u.UtilName() + " ] No tasks assigned.")
 	}
+	if !GetGeneralConfig().Measurements[u.UtilName()].enabled {
+		return nil, fmt.Errorf("[ " + u.UtilName() + " ] Not enabled.")
 
+	}
 	targetAddressList := getTargetAddressList()
 	probingCmd := u.ProbingCommand(targetAddressList)
 	return probingCmd, nil
