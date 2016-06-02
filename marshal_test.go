@@ -68,6 +68,11 @@ func TestAssembleTags(t *testing.T) {
 }
 
 func TestMarshalStatsRow(t *testing.T) {
+	// Hostname is the config dependency which lies in func MarshalIntoParameters
+	var cfg GeneralConfig
+	generalConfig = &cfg
+	cfg.Hostname = "unit-test-hostname"
+
 	nqmAgent := model.NqmAgent{
 		Id: -1, IspId: -1, ProvinceId: -1, CityId: -1,
 	}
@@ -120,11 +125,4 @@ func TestMarshalStatsRow(t *testing.T) {
 			t.Error(expecteds[i][1], params[1])
 		}
 	}
-}
-
-func init() {
-	// Hostname is the config dependency which lies in func MarshalIntoParameters
-	var cfg GeneralConfig
-	generalConfig = &cfg
-	cfg.Hostname = "unit-test-hostname"
 }
