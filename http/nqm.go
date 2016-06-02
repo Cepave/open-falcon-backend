@@ -7,6 +7,7 @@ import (
 	"github.com/Cepave/query/g"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
+	"github.com/bitly/go-simplejson"
 	"log"
 	"net/http"
 	"strings"
@@ -46,6 +47,21 @@ func setupUrlMappingAndHandler(serviceRegister *beego.ControllerRegister) {
 	)
 }
 
+type resultWithDsl struct {
+	queryParams *dsl.QueryParams
+	resultData interface{}
+}
+
+func (result *resultWithDsl) MarshalJSON() ([]byte, error) {
+	jsonObject := simplejson.New()
+
+	jsonObject.SetPath([]string{ "dsl", "start_time" }, result.queryParams.StartTime.Unix())
+	jsonObject.SetPath([]string{ "dsl", "end_time" }, result.queryParams.EndTime.Unix())
+	jsonObject.Set("result", result.resultData)
+
+	return jsonObject.MarshalJSON()
+}
+
 // Lists statistics data of ICMP, which would be grouped by provinces
 func listIcmpByProvinces(ctx *context.Context) {
 	defer outputJsonForPanic(ctx)
@@ -56,7 +72,8 @@ func listIcmpByProvinces(ctx *context.Context) {
 	}
 
 	listResult := nqmService.ListByProvinces(dslParams)
-	ctx.Output.JSON(listResult, jsonIndent, jsonCoding)
+
+	ctx.Output.JSON(&resultWithDsl{ queryParams: dslParams, resultData: listResult }, jsonIndent, jsonCoding)
 }
 
 // Lists data of targets, which would be grouped by cities
@@ -73,7 +90,7 @@ func listIcmpByTargetsForAProvince(ctx *context.Context) {
 	dslParams.AgentFilter.MatchProvinces = make([]string, 0) // Ignores the province of agent
 	dslParams.AgentFilterById.MatchProvinces = []int16 { int16(provinceId) } // Use the id as the filter of agent
 	listResult := nqmService.ListTargetsWithCityDetail(dslParams)
-	ctx.Output.JSON(listResult, jsonIndent, jsonCoding)
+	ctx.Output.JSON(&resultWithDsl{ queryParams: dslParams, resultData: listResult }, jsonIndent, jsonCoding)
 }
 
 type jsonDslError struct {

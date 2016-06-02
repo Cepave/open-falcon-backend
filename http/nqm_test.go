@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"encoding/json"
+	"github.com/bitly/go-simplejson"
 	. "gopkg.in/check.v1"
 	"time"
 )
@@ -124,4 +125,36 @@ func (suite *TestNqmSuite) TestErrorMessage(c *C) {
 	c.Assert(testedJsonBody.Code, Equals, 1)
 	c.Assert(testedJsonBody.Message, Matches, ".+Unknown parameter.+")
 	// :~)
+}
+
+type sampleJsonData struct {
+	Age int `json:"age"`
+	Name string `json:"name"`
+}
+
+// Tests the JSON for result with DSL
+func (suite *TestNqmSuite) TestJsonForResultWithDsl(c *C) {
+	sampleStartTime, sampleEndTime := time.Now(), time.Now().Add(3 * time.Hour)
+
+	testedResultWithDsl := &resultWithDsl {
+		queryParams: &dsl.QueryParams {
+			StartTime: sampleStartTime,
+			EndTime: sampleEndTime,
+		},
+		resultData : []sampleJsonData {
+			sampleJsonData { 20, "Bob" },
+			sampleJsonData { 30, "Joe" },
+		},
+	}
+
+	jsonResult, err := testedResultWithDsl.MarshalJSON()
+
+	c.Assert(err, IsNil)
+	c.Logf("JSON: %v", string(jsonResult))
+
+	jsonObject, _ := simplejson.NewJson(jsonResult)
+
+	c.Assert(jsonObject.GetPath("dsl", "start_time").MustInt64(), Equals, sampleStartTime.Unix())
+	c.Assert(jsonObject.GetPath("dsl", "end_time").MustInt64(), Equals, sampleEndTime.Unix())
+	c.Assert(jsonObject.Get("result").MustArray(), HasLen, 2)
 }
