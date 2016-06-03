@@ -268,3 +268,41 @@
       }
     }
     ```
+* `GET` `POST` /api/v1/portal/eventcases/note
+* get one note
+* `required login session`
+* params:
+  * `id` int
+    * ex: 18
+  * ok
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "success",
+      "data": {
+        "note": {
+          "id": 18,
+          "event_caseId": "s_2_3275011ce6ce8603f5f3917d3d060ea7",
+          "note": "測試結果",
+          "case_id": "99667",
+          "status": "resolved",
+          "timestamp": "2016-06-03T15:41:21+08:00",
+          "user_name": "root"
+        }
+      }
+    }
+    ```
+  * failed
+
+    ```
+    {
+      "version": "v1",
+      "method": "POST",
+      "status": "failed",
+      "error": {
+        "message": "You dosen't pick any note id"
+      }
+    }
+    ```
