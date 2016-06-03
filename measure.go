@@ -138,7 +138,7 @@ func (u *Tcpconn) Interval() time.Duration {
 }
 
 func measureByUtil(u Utility) {
-	probingCmd, err := Task(u)
+	probingCmd, targets, agent, err := Task(u)
 	if err != nil {
 		log.Println(err)
 		return
@@ -148,7 +148,7 @@ func measureByUtil(u Utility) {
 	rawData := Probe(probingCmd, u.UtilName())
 	parsedData := Parse(rawData)
 	statsData := Calc(parsedData, u)
-	jsonParams := Marshal(statsData, u)
+	jsonParams := Marshal(statsData, u, targets, agent)
 	Push(jsonParams, u.UtilName())
 }
 

@@ -127,15 +127,11 @@ func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.
 	return params
 }
 
-func Marshal(statsData []map[string]string, u Utility) []ParamToAgent {
+func Marshal(statsData []map[string]string, u Utility, targets []model.NqmTarget, agent model.NqmAgent) []ParamToAgent {
 	var params []ParamToAgent
-
-	targets := GetGeneralConfig().hbsResp.Targets
-	agentPtr := GetGeneralConfig().hbsResp.Agent
 
 	for rowIdx, statsRow := range statsData {
 		target := targets[rowIdx]
-		agent := *agentPtr
 		params = append(params, marshalStatsRow(statsRow, target, agent, u)...)
 	}
 	return params
