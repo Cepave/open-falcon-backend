@@ -41,7 +41,7 @@ func AddNote(username string, note string, id string, status string, caseId stri
 	var eventNote EventNote
 	q.Raw(fmt.Sprintf("Insert INTO event_note %s", sqlbase)).QueryRow(&eventNote)
 
-	if eventNote.Status == "Sovled" || eventNote.Status == "In Process" {
+	if eventNote.Status == "resolved" || eventNote.Status == "In progress" {
 		err = UpdateProcess(eventNote.Id, eventNote.Status, id)
 	}
 	return
