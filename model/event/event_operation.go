@@ -96,7 +96,7 @@ func InsertEvent(eve *coommonModel.Event) {
 				cond = ?,
 				status = ?`
 		//reopen case
-		if event[0].ProcessStatus == "resovled" || event[0].ProcessStatus == "ignored" {
+		if event[0].ProcessStatus == "resolved" || event[0].ProcessStatus == "ignored" {
 			sqltemplete = fmt.Sprintf("%v ,process_status = '%s', process_note = %d", sqltemplete, "unresolved", 0)
 		}
 		if eve.CurrentStep == 1 {
