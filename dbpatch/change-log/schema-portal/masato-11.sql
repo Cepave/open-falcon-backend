@@ -17,3 +17,12 @@ CREATE TABLE IF NOT EXISTS event_note (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
+
+ALTER TABLE falcon_portal.event_cases
+  DROP COLUMN closed_at,
+  DROP COLUMN closed_note,
+  DROP COLUMN user_modified;
+
+ALTER TABLE falcon_portal.event_cases
+  ADD COLUMN process_note MEDIUMINT,
+  ADD COLUMN process_status VARCHAR(20)
