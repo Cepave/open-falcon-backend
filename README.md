@@ -43,9 +43,8 @@ CREATE TABLE event_cases (
         status VARCHAR(20) NOT NULL,
         timestamp Timestamp NOT NULL,
         update_at Timestamp,
-        closed_at Timestamp,
-        closed_note VARCHAR(200),
-        user_modified int(10) unsigned,
+        process_note MEDIUMINT,
+        process_status VARCHAR(20),
         tpl_creator VARCHAR(64),
         expression_id int(10) unsigned,
         strategy_id int(10) unsigned,
@@ -53,6 +52,7 @@ CREATE TABLE event_cases (
         PRIMARY KEY (id),
         INDEX (endpoint, strategy_id, template_id)
 );
+
 CREATE TABLE events (
   id MEDIUMINT NOT NULL AUTO_INCREMENT,
   event_caseId VARCHAR(50),
@@ -63,6 +63,24 @@ CREATE TABLE events (
   PRIMARY KEY (id),
   INDEX(event_caseId),
   FOREIGN KEY (event_caseId) REFERENCES event_cases(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+CREATE TABLE event_note (
+  id MEDIUMINT NOT NULL AUTO_INCREMENT,
+  event_caseId VARCHAR(50),
+  note    VARCHAR(300),
+  case_id VARCHAR(20),
+  status VARCHAR(15),
+  timestamp Timestamp,
+  user_id int(10) unsigned,
+  PRIMARY KEY (id),
+  INDEX (event_caseId),
+  FOREIGN KEY (event_caseId) REFERENCES event_cases(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES uic.user(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
