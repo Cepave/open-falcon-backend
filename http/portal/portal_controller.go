@@ -113,6 +113,28 @@ func (this *PortalController) NotesGet() {
 	return
 }
 
+func (this *PortalController) GetNote() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	id, _ := this.GetInt64("id", 0)
+	if id == 0 {
+		this.ResposeError(baseResp, "You dosen't pick any note id")
+		return
+	}
+	note, err := event.GetNote(id)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	baseResp.Data["note"] = note
+	this.ServeApiJson(baseResp)
+	return
+}
+
 func (this *PortalController) EventGet() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()

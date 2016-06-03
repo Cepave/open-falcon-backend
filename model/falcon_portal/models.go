@@ -68,11 +68,11 @@ type Action struct {
 
 type EventNote struct {
 	Id          int       `json:"id" orm:"pk"`
-	EventCaseId string    `json:"event_caseId" orm:"column(event_caseId);rel(fk)"`
+	EventCaseId string    `json:"event_caseId" orm:"column(event_caseId)"`
 	Note        string    `json:"note"`
 	CaseId      string    `json:"case_id"`
 	Status      string    `json:"status"`
 	Timestamp   time.Time `json:"timestamp"`
-	UserId      int       `json:"-"`
-	UserName    string    `json:"user_name" orm:"-"`
+	UserId      int64     `json:"-"`
+	UserName    string    `json:"user_name" orm:"user_name"`
 }

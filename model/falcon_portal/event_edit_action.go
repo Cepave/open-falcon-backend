@@ -16,33 +16,33 @@ func CloseEvent(username string, colsed_note string, id string) (err error) {
 	return
 }
 
-func UpdateProcess(processNoteID int, processStatus string, id string) (err error) {
+func UpdateCaseStatus(eventcaseid string, processNoteID int, processStatus string) (err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
-	_, err = q.Raw("Update event_cases SET process_note = ?, process_status = ? WHERE id = ?", processNoteID, processStatus, id).Exec()
+	_, err = q.Raw("Update event_cases SET process_note = ?, process_status = ? WHERE id = ?", processNoteID, processStatus, eventcaseid).Exec()
 	return
 }
 
-func AddNote(username string, note string, id string, status string, caseId string) (err error) {
+func AddNote(username string, processNote string, eventcaseid string, processStatus string, bossId string) (err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	userid := uic.ReadUserIdByName(username)
-	sqlbase := fmt.Sprintf("SET event_caseId = %s , user_id = %d, timestamp = %v", id, userid, time.Now())
-	if note != "" {
-		sqlbase = fmt.Sprintf("%s , note = '%s'", sqlbase, note)
-	}
-	if status != "" {
-		sqlbase = fmt.Sprintf("%s, status = '%s'", sqlbase, status)
+	sqlbase := fmt.Sprintf("SET event_caseId = '%s' , user_id = %d", eventcaseid, userid)
+	if processNote != "" {
+		sqlbase = fmt.Sprintf("%s , note = '%s'", sqlbase, processNote)
 	}
 	//for set boss case id
-	if caseId != "" {
-		sqlbase = fmt.Sprintf("%s, case_id = '%s'", sqlbase, caseId)
+	if bossId != "" {
+		sqlbase = fmt.Sprintf("%s, case_id = '%s'", sqlbase, bossId)
 	}
-	var eventNote EventNote
-	q.Raw(fmt.Sprintf("Insert INTO event_note %s", sqlbase)).QueryRow(&eventNote)
-
-	if eventNote.Status == "resolved" || eventNote.Status == "In progress" {
-		err = UpdateProcess(eventNote.Id, eventNote.Status, id)
+	if processStatus != "" {
+		sqlbase = fmt.Sprintf("%s, status = '%s'", sqlbase, processStatus)
+	}
+	var processNoteID int
+	q.Raw(fmt.Sprintf("Insert INTO event_note %s, timestamp = ? ;", sqlbase), time.Now()).Exec()
+	err = q.Raw("SELECT LAST_INSERT_ID()").QueryRow(&processNoteID)
+	if processNoteID != 0 && (processStatus == "resolved" || processStatus == "in progress") && err == nil {
+		err = UpdateCaseStatus(eventcaseid, processNoteID, processStatus)
 	}
 	return
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Cepave/fe/g"
+	"github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -155,4 +156,16 @@ func GetNotes(event_caseId string, limit int) (enotes []EventNote, err error) {
 				FROM falcon_portal.event_note as event_note LEFT JOIN uic.user as user on event_note.user_id = user.id
 				WHERE event_note.event_caseId = '%s' ORDER BY event_note.timestamp DESC limit %d`, event_caseId, limit)).QueryRows(&enotes)
 	return
+}
+
+func GetNote(noteId int64) (EventNote, error) {
+	q := orm.NewOrm()
+	q.Using("falcon_portal")
+	var eventNote EventNote
+	err := q.Raw(`SELECT * from event_note WHERE event_note.id = ?`, noteId).QueryRow(&eventNote)
+	if err == nil {
+		user := uic.ReadUserById(eventNote.UserId)
+		eventNote.UserName = user.Name
+	}
+	return eventNote, err
 }
