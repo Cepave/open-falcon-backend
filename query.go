@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 	"time"
@@ -8,22 +9,26 @@ import (
 	"github.com/Cepave/common/model"
 )
 
-func updateMeasurements(curr map[string]MeasurementsProperty, command []string) map[string]MeasurementsProperty {
+func updatedMsg(old map[string]MeasurementsProperty, updated map[string]MeasurementsProperty) string {
+	msg := ""
+	for k, _ := range updated {
+		if !old[k].enabled && updated[k].enabled {
+			msg = msg + fmt.Sprint("<", k, " Enabled> ")
+		}
+		if old[k].enabled && !updated[k].enabled {
+			msg = msg + fmt.Sprint("<", k, " Disabled> ")
+		}
+	}
+	return msg
+}
+
+func updateMeasurements(command []string) map[string]MeasurementsProperty {
 	updated := NewMeasurements()
 
 	for _, cmd := range command {
 		if m, ok := updated[cmd]; ok {
 			m.enabled = true
 			updated[cmd] = m
-		}
-	}
-
-	for k, _ := range updated {
-		if !curr[k].enabled && updated[k].enabled {
-			log.Println("[ hbs ] Enable <", k, ">")
-		}
-		if curr[k].enabled && !updated[k].enabled {
-			log.Println("[ hbs ] Disable <", k, ">")
 		}
 	}
 	return updated
@@ -48,13 +53,17 @@ func query() {
 	if !configFromHbsUpdated(resp) {
 		return
 	}
-
 	GetGeneralConfig().hbsResp = resp
-	curMeasurements := GetGeneralConfig().Measurements
-	cmd := GetGeneralConfig().hbsResp.Command
-	GetGeneralConfig().Measurements = updateMeasurements(curMeasurements, cmd)
-	log.Println("[ hbs ] Configuration updated")
 
+	old := GetGeneralConfig().Measurements
+	cmd := GetGeneralConfig().hbsResp.Command
+	updated := updateMeasurements(cmd)
+	if msg := updatedMsg(old, updated); msg != "" {
+		log.Println("[ hbs ]", msg)
+	}
+	GetGeneralConfig().Measurements = updated
+
+	log.Println("[ hbs ] Configuration updated")
 }
 
 func Query() {
