@@ -25,4 +25,4 @@ ALTER TABLE falcon_portal.event_cases
 
 ALTER TABLE falcon_portal.event_cases
   ADD COLUMN process_note MEDIUMINT,
-  ADD COLUMN process_status VARCHAR(20)
+  ADD COLUMN process_status VARCHAR(20) DEFAULT 'unresolved'
