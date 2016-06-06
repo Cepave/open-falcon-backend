@@ -48,21 +48,21 @@ func query() {
 		log.Println("[ hbs ] Error on RPC call:", err)
 		return
 	}
-
 	log.Println("[ hbs ] Response received")
 	if !configFromHbsUpdated(resp) {
 		return
 	}
+
 	GetGeneralConfig().hbsResp = resp
 
 	old := GetGeneralConfig().Measurements
 	cmd := GetGeneralConfig().hbsResp.Command
 	updated := updateMeasurements(cmd)
+	GetGeneralConfig().Measurements = updated
+
 	if msg := updatedMsg(old, updated); msg != "" {
 		log.Println("[ hbs ]", msg)
 	}
-	GetGeneralConfig().Measurements = updated
-
 	log.Println("[ hbs ] Configuration updated")
 }
 
