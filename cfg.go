@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Cepave/common/model"
@@ -41,7 +42,7 @@ type JSONConfigFile struct {
 
 type GeneralConfig struct {
 	JSONConfigFile
-	hbsResp      model.NqmPingTaskResponse
+	hbsResp      atomic.Value // for receiving model.NqmPingTaskResponse
 	Hostname     string
 	IPAddress    string
 	ConnectionID string
@@ -187,7 +188,7 @@ func InitGeneralConfig(cfgFilePath string) {
 	loadJSONConfig(cfgFilePath)
 	cfg.Agent = getJSONConfig().Agent
 	cfg.Hbs = getJSONConfig().Hbs
-	cfg.hbsResp = model.NqmPingTaskResponse{}
+	cfg.hbsResp.Store(model.NqmPingTaskResponse{})
 	cfg.Hostname = getHostname()
 	cfg.IPAddress = getIP()
 	cfg.ConnectionID = getConnectionID()

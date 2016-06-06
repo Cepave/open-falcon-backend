@@ -35,7 +35,7 @@ func updateMeasurements(command []string) map[string]MeasurementsProperty {
 }
 
 func configFromHbsUpdated(newResp model.NqmPingTaskResponse) bool {
-	if !reflect.DeepEqual(GetGeneralConfig().hbsResp, newResp) {
+	if !reflect.DeepEqual(GetGeneralConfig().hbsResp.Load().(model.NqmPingTaskResponse), newResp) {
 		return true
 	}
 	return false
@@ -53,11 +53,10 @@ func query() {
 		return
 	}
 
-	GetGeneralConfig().hbsResp = resp
+	GetGeneralConfig().hbsResp.Store(resp)
 
 	old := GetGeneralConfig().Measurements
-	cmd := GetGeneralConfig().hbsResp.Command
-	updated := updateMeasurements(cmd)
+	updated := updateMeasurements(resp.Command)
 	GetGeneralConfig().Measurements = updated
 
 	if msg := updatedMsg(old, updated); msg != "" {

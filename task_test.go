@@ -72,6 +72,7 @@ func initJsonRpcClient(srvAddr string) {
 }
 
 func TestTask(t *testing.T) {
+	GetGeneralConfig().hbsResp.Store(model.NqmPingTaskResponse{})
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
 
@@ -86,7 +87,9 @@ func TestTask(t *testing.T) {
 		{Id: 21, Host: "22.22.22.22", IspId: 22, ProvinceId: 23, CityId: 24},
 		{Id: 31, Host: "33.33.33.33", IspId: 32, ProvinceId: 33, CityId: 34},
 	}
-	expectedAgent := *GetGeneralConfig().hbsResp.Agent
+
+	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmPingTaskResponse)
+	expectedAgent := *hbsResp.Agent
 	expectedCommand := []string{
 		"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a",
 		"11.11.11.11", "22.22.22.22", "33.33.33.33",

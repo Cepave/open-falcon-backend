@@ -22,20 +22,21 @@ func Task(u Utility) ([]string, []model.NqmTarget, model.NqmAgent, error) {
 	 *     2. NeedPing==ture
 	 *         NqmAgent, NQMTargets, Command are not nil
 	 */
-	if !GetGeneralConfig().hbsResp.NeedPing {
+	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmPingTaskResponse)
+	if !hbsResp.NeedPing {
 		return nil, nil, model.NqmAgent{}, fmt.Errorf("[ " + u.UtilName() + " ] No tasks assigned.")
 	}
 	if !GetGeneralConfig().Measurements[u.UtilName()].enabled {
 		return nil, nil, model.NqmAgent{}, fmt.Errorf("[ " + u.UtilName() + " ] Not enabled.")
 
 	}
-	targets := make([]model.NqmTarget, len(GetGeneralConfig().hbsResp.Targets))
-	copy(targets, GetGeneralConfig().hbsResp.Targets)
+	targets := make([]model.NqmTarget, len(hbsResp.Targets))
+	copy(targets, hbsResp.Targets)
 
-	agent := *GetGeneralConfig().hbsResp.Agent
+	agent := *hbsResp.Agent
 
-	command := make([]string, len(GetGeneralConfig().hbsResp.Command))
-	copy(command, GetGeneralConfig().hbsResp.Command)
+	command := make([]string, len(hbsResp.Command))
+	copy(command, hbsResp.Command)
 
 	targetAddressList := getTargetAddressList(targets)
 	probingCmd := u.ProbingCommand(command, targetAddressList)
