@@ -51,7 +51,7 @@ type GeneralConfig struct {
 var (
 	jsonConfig    *JSONConfigFile
 	generalConfig *GeneralConfig
-	lock          = new(sync.RWMutex)
+	jsonCfgLock   = new(sync.RWMutex)
 )
 
 func NewMeasurements() map[string]MeasurementsProperty {
@@ -94,8 +94,8 @@ func PublicIP() (string, error) {
 }
 
 func getJSONConfig() *JSONConfigFile {
-	lock.RLock()
-	defer lock.RUnlock()
+	jsonCfgLock.RLock()
+	defer jsonCfgLock.RUnlock()
 	return jsonConfig
 }
 
@@ -168,8 +168,8 @@ func loadJSONConfig(cfgFile string) {
 		log.Fatalln("Parsing configuration file [", cfgFile, "] failed:", err)
 	}
 
-	lock.Lock()
-	defer lock.Unlock()
+	jsonCfgLock.Lock()
+	defer jsonCfgLock.Unlock()
 
 	jsonConfig = &c
 
