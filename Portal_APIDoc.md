@@ -14,11 +14,13 @@
     * -1 means no specific any priority level, get all.
     * default: -1
   * `status` string options
-    * ex: "PROBLEM"
+    * ex: "PROBLEM", "OK"
     * "ALL" means no specific any status, get all.
-    * if no specific will get 'PROBLEM' & 'OK' case as default
     * support mutiple status query. ex: "PRBOEM,OK"
     * 'OK' means 'Recovery', this wording is from open-falcon[judge], so I didn't change it.
+  * `process_status` string options
+    * ex: "PROBLEM", "in process", "unresolved", "resolved", "ignored"
+    * support mutiple status query. ex: "resolved,ignored"
   * `cName` options (get from cookie refer)
     * default will only get case of current user, except admin role (ex. root).
   * `limit` int
@@ -36,26 +38,25 @@
       "data": {
         "eventCases": [
           {
-            "id": "s_41_b66b973ef551e4e503fad475dfc9e418",
+            "id": "s_2_3275011ce6ce8603f5f3917d3d060ea7",
             "endpoint": "docker-agent",
-            "metric": "cpu.idle",
+            "metric": "test.alarm",
             "func": "all(#2)",
-            "cond": "100 != 0",
-            "note": "this is a test case !!",
-            "max_step": 10,
-            "current_step": 2,
-            "priority": 3,
+            "cond": "1 != 0",
+            "note": "test.alarm",
+            "max_step": 3000,
+            "current_step": 182,
+            "priority": 0,
             "status": "PROBLEM",
-            "start_at": "2016-04-06T14:11:00+08:00",
-            "update_at": "2016-04-06T14:16:00+08:00",
-            "closed_at": "0001-01-01T00:00:00Z",
-            "closed_note": "",
-            "user_modified": 0,
+            "start_at": "2016-06-03T12:51:00+08:00",
+            "update_at": "2016-06-06T13:32:00+08:00",
+            "process_note": 0,
+            "process_status": "unresolved",
             "tpl_creator": "root",
             "expression_id": 0,
-            "strategy_id": 41,
-            "template_id": 6,
-            "evevnts": [
+            "strategy_id": 2,
+            "template_id": 1,
+            "evevnts" [
               {
                 "id": 1,
                 "step": 1,
@@ -89,7 +90,7 @@
     * `status` string options
       * ex: "PROBLEM"
       * "ALL" means no specific any status, get all.
-      *  if no specific will get 'PROBLEM' case as default
+      *  if no specific will get 'ALL' case as default
     * `cName` options (get from cookie refer)
       * default will only get case of current user, except admin role (ex. root).
     * `elimit` int

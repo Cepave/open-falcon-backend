@@ -19,12 +19,13 @@ func (this *PortalController) EventCasesGet() {
 	startTime, _ := this.GetInt64("startTime", 0)
 	endTime, _ := this.GetInt64("endTime", 0)
 	prioprity, _ := this.GetInt("prioprity", -1)
-	status := this.GetString("status", "DEFAULT")
+	status := this.GetString("status", "ALL")
+	processStatus := this.GetString("process_status", "ALL")
 
 	username := this.GetString("cName", "")
 	limitNum, _ := this.GetInt("limit", 0)
 	elimit, _ := this.GetInt("elimit", 0)
-	events, err := event.GetEventCases(startTime, endTime, prioprity, status, limitNum, elimit, username)
+	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
@@ -34,6 +35,7 @@ func (this *PortalController) EventCasesGet() {
 	return
 }
 
+//will deprecated
 func (this *PortalController) ColseCase() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
@@ -144,9 +146,9 @@ func (this *PortalController) EventGet() {
 	}
 	startTime, _ := this.GetInt64("startTime", 0)
 	endTime, _ := this.GetInt64("endTime", 0)
-
+	status := this.GetString("status", "ALL")
 	limitNum, _ := this.GetInt("limit", 0)
-	events, err := event.GetEvents(startTime, endTime, limitNum)
+	events, err := event.GetEvents(startTime, endTime, status, limitNum)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
