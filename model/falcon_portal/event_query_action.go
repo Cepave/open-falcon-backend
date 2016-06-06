@@ -10,7 +10,25 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-func GetEventCases(startTime int64, endTime int64, priority int, status string, limit int, elimit int, username string) (result []EventCases, err error) {
+//generate status filter SQL templete
+func genStatusQueryTemplete(status string, feildsName string, flag bool) (filterTemplete string, vflag bool) {
+	if flag {
+		filterTemplete = fmt.Sprintf(" AND %v ", filterTemplete)
+	}
+	vflag = true
+	filterTemplete = fmt.Sprintf("%v (", filterTemplete)
+	status_list := strings.Split(status, ",")
+	for idx, s := range status_list {
+		if idx == len(status_list)-1 {
+			filterTemplete = fmt.Sprintf("%v %s = '%s')", filterTemplete, feildsName, s)
+		} else {
+			filterTemplete = fmt.Sprintf("%v %s = '%s' or ", filterTemplete, feildsName, s)
+		}
+	}
+	return filterTemplete, vflag
+}
+
+func GetEventCases(startTime int64, endTime int64, priority int, status string, progressStatus string, limit int, elimit int, username string) (result []EventCases, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.FalconPortal.Limit {
 		limit = config.FalconPortal.Limit
@@ -26,7 +44,7 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	queryTmp := ""
 	if startTime != 0 && endTime != 0 {
 		flag = true
-		queryTmp = fmt.Sprintf(" %v update_at >= %d and  update_at <= %d", queryTmp, startTime, endTime)
+		queryTmp = fmt.Sprintf(" %v update_at >= %d AND  update_at <= %d", queryTmp, startTime, endTime)
 	}
 	if priority != -1 {
 		if flag {
@@ -36,35 +54,23 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 			queryTmp = fmt.Sprintf("%v priority = %d", queryTmp, priority)
 		}
 	}
-	if status == "DEFAULT" {
-		if flag {
-			queryTmp = fmt.Sprintf("%v and (status = '%s' or status = 'OK')", queryTmp, "PROBLEM")
-		} else {
-			flag = true
-			queryTmp = fmt.Sprintf("%v (status = '%s' or status = 'OK')", queryTmp, "PROBLEM")
-		}
-	} else if status != "ALL" {
-		//support mutiple status qeuery.
-		if flag {
-			queryTmp = fmt.Sprintf("%v and ", queryTmp)
-		}
-		flag = true
-		queryTmp = fmt.Sprintf("%v (", queryTmp)
-		flag = true
-		status_list := strings.Split(status, ",")
-		for idx, s := range status_list {
-			if idx == len(status_list)-1 {
-				queryTmp = fmt.Sprintf("%v status = '%s'", queryTmp, s)
-			} else {
-				queryTmp = fmt.Sprintf("%v status = '%s' or", queryTmp, s)
-			}
-		}
-		queryTmp = fmt.Sprintf("%v )", queryTmp)
+	if status != "ALL" {
+		var statusFilterTmp string
+		statusFilterTmp, flag = genStatusQueryTemplete(status, "status", flag)
+		queryTmp = fmt.Sprintf("%v %s", queryTmp, statusFilterTmp)
+	}
+	if progressStatus != "ALL" {
+		var progressFilterTmp string
+		progressFilterTmp, flag = genStatusQueryTemplete(progressStatus, "process_status", flag)
+		queryTmp = fmt.Sprintf("%v %s", queryTmp, progressFilterTmp)
 	}
 	if queryTmp != "" && !isadmin {
 		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE (tpl_creator = '%s' OR template_id in (%s)) AND %v order by update_at DESC limit %d", username, tplids, queryTmp, limit)).QueryRows(&result)
 	} else {
-		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE %v order by update_at DESC limit %d", queryTmp, limit)).QueryRows(&result)
+		if queryTmp != "" {
+			queryTmp = fmt.Sprintf("WHERE %v", queryTmp)
+		}
+		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` %v order by update_at DESC limit %d", queryTmp, limit)).QueryRows(&result)
 	}
 
 	if len(result) == 0 {
@@ -88,7 +94,7 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	return
 }
 
-func GetEvents(startTime int64, endTime int64, limit int) (result []EventsRsp, err error) {
+func GetEvents(startTime int64, endTime int64, status string, limit int) (result []EventsRsp, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.FalconPortal.Limit {
 		limit = config.FalconPortal.Limit
@@ -97,8 +103,11 @@ func GetEvents(startTime int64, endTime int64, limit int) (result []EventsRsp, e
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	queryTmp := ""
+	if status != "ALL" {
+		queryTmp = fmt.Sprintf(" %v status = '%s' and ", queryTmp, status)
+	}
 	if startTime != 0 && endTime != 0 {
-		queryTmp = fmt.Sprintf(" %v events.timestamp >= %d and  events.timestamp <= %d", queryTmp, startTime, endTime)
+		queryTmp = fmt.Sprintf(" %v events.timestamp >= %d and events.timestamp <= %d", queryTmp, startTime, endTime)
 	}
 	if queryTmp != "" {
 		_, err = q.Raw(fmt.Sprintf(`SELECT events.id as id,

@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
+//will deprecated
 func CloseEvent(username string, colsed_note string, id string) (err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
