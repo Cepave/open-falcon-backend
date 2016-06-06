@@ -12,7 +12,7 @@ import (
 type Utility interface {
 	CalcStats(row []float64, length int) map[string]string
 	MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent
-	ProbingCommand(targetAddressList []string) []string
+	ProbingCommand(command []string, targetAddressList []string) []string
 	UtilName() string
 	Interval() time.Duration
 }
@@ -31,8 +31,8 @@ func (u *Fping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.Nqm
 	return params
 }
 
-func (u *Fping) ProbingCommand(targetAddressList []string) []string {
-	probingCmd := append(GetGeneralConfig().hbsResp.Command, targetAddressList...)
+func (u *Fping) ProbingCommand(command []string, targetAddressList []string) []string {
+	probingCmd := append(command, targetAddressList...)
 	return probingCmd
 }
 
@@ -83,7 +83,7 @@ func (u *Tcpping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.N
 	return new(Fping).MarshalJSONParamsToGraph(target, agent, row)
 }
 
-func (u *Tcpping) ProbingCommand(targetAddressList []string) []string {
+func (u *Tcpping) ProbingCommand(command []string, targetAddressList []string) []string {
 	probingCmd := append([]string{"tcpping.sh"}, targetAddressList...)
 	return probingCmd
 }
@@ -110,7 +110,7 @@ func (u *Tcpconn) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.N
 	return params
 }
 
-func (u *Tcpconn) ProbingCommand(targetAddressList []string) []string {
+func (u *Tcpconn) ProbingCommand(command []string, targetAddressList []string) []string {
 	probingCmd := append([]string{"tcpconn.sh"}, targetAddressList...)
 	return probingCmd
 }

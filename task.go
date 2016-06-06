@@ -38,6 +38,6 @@ func Task(u Utility) ([]string, []model.NqmTarget, model.NqmAgent, error) {
 	copy(command, GetGeneralConfig().hbsResp.Command)
 
 	targetAddressList := getTargetAddressList(targets)
-	probingCmd := u.ProbingCommand(targetAddressList)
+	probingCmd := u.ProbingCommand(command, targetAddressList)
 	return probingCmd, targets, agent, nil
 }
