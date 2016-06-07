@@ -56,6 +56,7 @@ type GraphQueryParam struct {
 	ConsolFun string `json:"consolFuc"`
 	Endpoint  string `json:"endpoint"`
 	Counter   string `json:"counter"`
+	Step      int    `json:"step"`
 }
 
 type GraphQueryResponse struct {
