@@ -48,3 +48,8 @@
     filename: "masato-10.sql",
     comment: "add status column for alarm"
 }
+- {
+    id: "chyeh-11",
+    filename: "chyeh-11.sql",
+    comment: "utf8_unicode_ci -> utf8_general_ci"
+}

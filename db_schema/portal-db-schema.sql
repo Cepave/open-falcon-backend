@@ -24,7 +24,7 @@ CREATE TABLE host
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 /**
@@ -43,7 +43,7 @@ CREATE TABLE `grp` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 DROP TABLE IF EXISTS grp_host;
@@ -56,7 +56,7 @@ CREATE TABLE grp_host
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 /**
@@ -78,7 +78,7 @@ CREATE TABLE tpl
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 DROP TABLE IF EXISTS strategy;
@@ -100,7 +100,7 @@ CREATE TABLE `strategy` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 DROP TABLE IF EXISTS expression;
@@ -120,7 +120,7 @@ CREATE TABLE `expression` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 DROP TABLE IF EXISTS grp_tpl;
@@ -133,7 +133,7 @@ CREATE TABLE `grp_tpl` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE `plugin_dir` (
   `id`          INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -146,7 +146,7 @@ CREATE TABLE `plugin_dir` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 DROP TABLE IF EXISTS action;
@@ -163,7 +163,7 @@ CREATE TABLE `action` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 /**
  * tags table for setting template variables
@@ -176,7 +176,7 @@ CREATE TABLE `tags` (
   `create_at` DATETIME NOT NULL COMMENT 'create time',
   `update_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modify time',
   PRIMARY KEY (`strategy_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 /**
  * nodata mock config
@@ -197,7 +197,7 @@ CREATE TABLE `mockcfg` (
   `t_modify` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modify time',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 DROP TABLE IF EXISTS cluster;
 CREATE TABLE cluster
@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS owl_isp(
 		(isp_name ASC)
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS owl_province(
 	pv_id SMALLINT PRIMARY KEY,
@@ -291,7 +291,7 @@ CREATE TABLE IF NOT EXISTS owl_province(
 		(pv_name ASC)
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS owl_city(
 	ct_id SMALLINT PRIMARY KEY,
@@ -308,7 +308,7 @@ CREATE TABLE IF NOT EXISTS owl_city(
 		(ct_post_code)
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_agent(
 	ag_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -338,7 +338,7 @@ CREATE TABLE IF NOT EXISTS nqm_agent(
 	INDEX ix_nqm_agent__ag_name(ag_name)
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_target_class(
 	tc_id SMALLINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -348,7 +348,7 @@ CREATE TABLE IF NOT EXISTS nqm_target_class(
 		(tc_weight)
 )
 	DEFAULT CHARSET =utf8
-	COLLATE =utf8_unicode_ci;
+	COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_target(
 	tg_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -389,7 +389,7 @@ CREATE TABLE IF NOT EXISTS nqm_target(
 			ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_ping_task(
 	pt_ag_id INT PRIMARY KEY,
@@ -401,7 +401,7 @@ CREATE TABLE IF NOT EXISTS nqm_ping_task(
 			ON UPDATE CASCADE
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_name_tag(
 	tfnt_pt_ag_id INT,
@@ -413,7 +413,7 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_name_tag(
 			ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_isp(
 	tfisp_pt_ag_id INT,
@@ -429,7 +429,7 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_isp(
 			ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_province(
 	tfpv_pt_ag_id INT,
@@ -445,7 +445,7 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_province(
 			ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_city(
 	tfct_pt_ag_id INT,
@@ -461,7 +461,7 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_city(
 			ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 INSERT INTO owl_isp(isp_id, isp_name, isp_acronym)
 VALUES
