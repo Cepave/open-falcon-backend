@@ -21,11 +21,12 @@ func (this *PortalController) EventCasesGet() {
 	prioprity, _ := this.GetInt("prioprity", -1)
 	status := this.GetString("status", "ALL")
 	processStatus := this.GetString("process_status", "ALL")
+	metrics := this.GetString("metrics", "ALL")
 
 	username := this.GetString("cName", "")
 	limitNum, _ := this.GetInt("limit", 0)
 	elimit, _ := this.GetInt("elimit", 0)
-	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username)
+	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return

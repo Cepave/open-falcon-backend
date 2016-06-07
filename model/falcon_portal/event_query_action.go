@@ -28,7 +28,7 @@ func genStatusQueryTemplete(status string, feildsName string, flag bool) (filter
 	return filterTemplete, vflag
 }
 
-func GetEventCases(startTime int64, endTime int64, priority int, status string, progressStatus string, limit int, elimit int, username string) (result []EventCases, err error) {
+func GetEventCases(startTime int64, endTime int64, priority int, status string, progressStatus string, limit int, elimit int, username string, metrics string) (result []EventCases, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.FalconPortal.Limit {
 		limit = config.FalconPortal.Limit
@@ -64,6 +64,13 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 		progressFilterTmp, flag = genStatusQueryTemplete(progressStatus, "process_status", flag)
 		queryTmp = fmt.Sprintf("%v %s", queryTmp, progressFilterTmp)
 	}
+
+	if metrics != "ALL" {
+		var metricFilterTmp string
+		metricFilterTmp, flag = genStatusQueryTemplete(metrics, "metric", flag)
+		queryTmp = fmt.Sprintf("%v %s", queryTmp, metricFilterTmp)
+	}
+
 	if queryTmp != "" && !isadmin {
 		_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` WHERE (tpl_creator = '%s' OR template_id in (%s)) AND %v order by update_at DESC limit %d", username, tplids, queryTmp, limit)).QueryRows(&result)
 	} else {

@@ -21,6 +21,9 @@
   * `process_status` string options
     * ex: "PROBLEM", "in process", "unresolved", "resolved", "ignored"
     * support mutiple status query. ex: "resolved,ignored"
+  * `metrics` string options
+    * ex: "cpu.idle", "df.statistics.total"
+    * support mutiple status query. ex: "cpu.idle,df.statistics.total,net.if.in.bits/iface=eth0"
   * `cName` options (get from cookie refer)
     * default will only get case of current user, except admin role (ex. root).
   * `limit` int
