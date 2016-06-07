@@ -17,5 +17,5 @@ CREATE TABLE alert
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 

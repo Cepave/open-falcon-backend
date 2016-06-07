@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS host
 )
   ENGINE =InnoDB
   DEFAULT CHARSET = utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `grp` (
   id          INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `grp` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS grp_host
 (
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS grp_host
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS tpl
 (
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS tpl
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `strategy` (
   `id`          INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `strategy` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `expression` (
   `id`          INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `expression` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 CREATE TABLE IF NOT EXISTS `grp_tpl` (
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS `grp_tpl` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS `plugin_dir` (
   `id`          INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS `plugin_dir` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 
 CREATE TABLE IF NOT EXISTS `action` (
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS `action` (
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 /**
  * nodata mock config
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `mockcfg` (
   `t_modify` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'last modify time',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS cluster
 (
