@@ -24,7 +24,7 @@ func main() {
 	InitGeneralConfig(*cfgFilePtr)
 	InitRPC()
 
-	go QueryHbs()
+	go Query()
 	Measure()
 
 	select {}

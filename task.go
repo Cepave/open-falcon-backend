@@ -2,35 +2,19 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"reflect"
-	"time"
 
 	"github.com/Cepave/common/model"
 )
 
-func configFromHbsUpdated(newResp model.NqmPingTaskResponse) bool {
-	if !reflect.DeepEqual(GetGeneralConfig().hbsResp, newResp) {
-		return true
+func getTargetAddressList(targets []model.NqmTarget) []string {
+	var targetAddressList []string
+	for _, target := range targets {
+		targetAddressList = append(targetAddressList, target.Host)
 	}
-	return false
+	return targetAddressList
 }
 
-func query() {
-	var resp model.NqmPingTaskResponse
-	err := rpcClient.Call("NqmAgent.PingTask", req, &resp)
-	if err != nil {
-		log.Fatalln("Call NqmAgent.PingTask error:", err)
-	}
-	log.Println("A response from hbs.")
-
-	if configFromHbsUpdated(resp) {
-		GetGeneralConfig().hbsResp = resp
-		log.Println("The configuration was updated by hbs.")
-	}
-}
-
-func makeTasks() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
+func Task(u Utility) ([]string, []model.NqmTarget, model.NqmAgent, error) {
 	/**
 	 * Only 2 possible responses come from hbs:
 	 *     1. NeedPing==false (default condition)
@@ -38,24 +22,23 @@ func makeTasks() ([]string, []model.NqmTarget, *model.NqmAgent, error) {
 	 *     2. NeedPing==ture
 	 *         NqmAgent, NQMTargets, Command are not nil
 	 */
-	if !GetGeneralConfig().hbsResp.NeedPing {
-		return nil, nil, nil, fmt.Errorf("No tasks assigned.")
+	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmPingTaskResponse)
+	if !hbsResp.NeedPing {
+		return nil, nil, model.NqmAgent{}, fmt.Errorf("[ " + u.UtilName() + " ] No tasks assigned.")
 	}
+	if !GetGeneralConfig().Measurements[u.UtilName()].enabled {
+		return nil, nil, model.NqmAgent{}, fmt.Errorf("[ " + u.UtilName() + " ] Not enabled.")
 
-	var targetAddressList []string
-	for _, target := range GetGeneralConfig().hbsResp.Targets {
-		targetAddressList = append(targetAddressList, target.Host)
 	}
+	targets := make([]model.NqmTarget, len(hbsResp.Targets))
+	copy(targets, hbsResp.Targets)
 
-	probingCmd := append(GetGeneralConfig().hbsResp.Command, targetAddressList...)
-	return probingCmd, GetGeneralConfig().hbsResp.Targets, GetGeneralConfig().hbsResp.Agent, nil
-}
+	agent := *hbsResp.Agent
 
-func QueryHbs() {
-	for {
-		query()
+	command := make([]string, len(hbsResp.Command))
+	copy(command, hbsResp.Command)
 
-		dur := time.Second * time.Duration(GetGeneralConfig().Hbs.Interval)
-		time.Sleep(dur)
-	}
+	targetAddressList := getTargetAddressList(targets)
+	probingCmd := u.ProbingCommand(command, targetAddressList)
+	return probingCmd, targets, agent, nil
 }

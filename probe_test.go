@@ -13,7 +13,7 @@ func TestProbe(t *testing.T) {
 	}
 
 	t.Log("input cmd is:", tests)
-	expected := Probe(tests)
+	expected := Probe(tests, "fping")
 	for _, v := range expected {
 		t.Log(v)
 	}

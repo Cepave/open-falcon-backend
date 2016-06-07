@@ -30,9 +30,9 @@ func (t *NqmAgent) PingTask(request model.NqmPingTaskRequest, response *model.Nq
 	response.Agent = nqmAgent
 
 	targets := []model.NqmTarget{
-		{Id: 11, IspId: 12, ProvinceId: 13, CityId: 14},
-		{Id: 21, IspId: 22, ProvinceId: 23, CityId: 24},
-		{Id: 31, IspId: 32, ProvinceId: 33, CityId: 34},
+		{Id: 11, Host: "11.11.11.11", IspId: 12, ProvinceId: 13, CityId: 14},
+		{Id: 21, Host: "22.22.22.22", IspId: 22, ProvinceId: 23, CityId: 24},
+		{Id: 31, Host: "33.33.33.33", IspId: 32, ProvinceId: 33, CityId: 34},
 	}
 	response.Targets = targets
 
@@ -71,27 +71,48 @@ func initJsonRpcClient(srvAddr string) {
 	}
 }
 
-func TestMakeTasks(t *testing.T) {
+func TestTask(t *testing.T) {
+	GetGeneralConfig().hbsResp.Store(model.NqmPingTaskResponse{})
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
 
 	query()
-	cmd, targetList, agent, err := makeTasks()
+	cmd, targets, agent, err := Task(new(Fping))
 	if err != nil {
 		t.Error(err)
 	}
 
 	expecteds := []model.NqmTarget{
-		{Id: 11, IspId: 12, ProvinceId: 13, CityId: 14},
-		{Id: 21, IspId: 22, ProvinceId: 23, CityId: 24},
-		{Id: 31, IspId: 32, ProvinceId: 33, CityId: 34},
-	}
-	for i, v := range targetList {
-		if !reflect.DeepEqual(expecteds[i], v) {
-			t.Error(v)
-		}
+		{Id: 11, Host: "11.11.11.11", IspId: 12, ProvinceId: 13, CityId: 14},
+		{Id: 21, Host: "22.22.22.22", IspId: 22, ProvinceId: 23, CityId: 24},
+		{Id: 31, Host: "33.33.33.33", IspId: 32, ProvinceId: 33, CityId: 34},
 	}
 
+	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmPingTaskResponse)
+	expectedAgent := *hbsResp.Agent
+	expectedCommand := []string{
+		"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a",
+		"11.11.11.11", "22.22.22.22", "33.33.33.33",
+	}
+
+	for i, v := range targets {
+		if !reflect.DeepEqual(expecteds[i], v) {
+			t.Error(expecteds[i], v)
+		}
+		t.Log(expecteds[i], v)
+	}
+	if !reflect.DeepEqual(expectedAgent, agent) {
+		t.Error(expectedAgent, agent)
+	}
 	t.Log(agent)
+
+	if &expectedAgent == &agent {
+		t.Errorf("%p == %p", &expectedAgent, &agent)
+	}
+	t.Logf("%p != %p", &agent, &expectedAgent)
+
+	if !reflect.DeepEqual(expectedCommand, cmd) {
+		t.Error(expectedCommand, cmd)
+	}
 	t.Log(cmd)
 }
