@@ -111,6 +111,10 @@ func getHostname() string {
 	if err != nil {
 		log.Fatalln("os.Hostname() ERROR:", err)
 	}
+	// hostname -s
+	// -s, --short
+	// Display the short host name. This is the host name cut at the first dot.
+	hostname = strings.Split(hostname, ".")[0]
 	log.Println("Hostname not set in config, using system's hostname...succeeded: [", hostname, "]")
 
 	return hostname
