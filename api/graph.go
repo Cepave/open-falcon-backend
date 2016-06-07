@@ -102,6 +102,9 @@ func (this *Graph) Query(param cmodel.GraphQueryParam, resp *cmodel.GraphQueryRe
 	resp.Endpoint = param.Endpoint
 	resp.Counter = param.Counter
 	dsType, step, exists := index.GetTypeAndStep(param.Endpoint, param.Counter) // complete dsType and step
+	if param.Step != 0 {
+		step = param.Step
+	}
 	if !exists {
 		return nil
 	}
