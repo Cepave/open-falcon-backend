@@ -246,6 +246,11 @@ func getMetricValues(req *http.Request, host string, metrics []string, result []
 	if len(endpointCounters) > 0 {
 		from, err := strconv.ParseInt(req.PostForm["from"][0], 10, 64)
 		until, err := strconv.ParseInt(req.PostForm["until"][0], 10, 64)
+		step, _ := strconv.ParseInt(req.PostForm["step"][0], 10, 64)
+		cf := req.PostForm["cf"][0]
+		if cf == "" {
+			cf = "AVERAGE"
+		}
 		url := "/graph/history"
 		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
 			url = "http://localhost:9966" + url
@@ -257,7 +262,8 @@ func getMetricValues(req *http.Request, host string, metrics []string, result []
 		args := map[string]interface{}{
 			"start":             from,
 			"end":               until,
-			"cf":                "AVERAGE",
+			"cf":                cf,
+			"step":              step,
 			"endpoint_counters": endpointCounters,
 		}
 		bs, err := json.Marshal(args)

@@ -18,6 +18,7 @@ type GraphHistoryParam struct {
 	Start            int                     `json:"start"`
 	End              int                     `json:"end"`
 	CF               string                  `json:"cf"`
+	Step             int                     `json:"step"`
 	EndpointCounters []cmodel.GraphInfoParam `json:"endpoint_counters"`
 }
 
@@ -32,6 +33,7 @@ func graphQueryOne(ec cmodel.GraphInfoParam, body GraphHistoryParam, endpoint st
 		Start:     int64(body.Start),
 		End:       int64(body.End),
 		ConsolFun: body.CF,
+		Step:      body.Step,
 		Endpoint:  endpoint,
 		Counter:   counter,
 	}
