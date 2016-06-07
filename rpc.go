@@ -4,7 +4,6 @@ import (
 	"log"
 	"math"
 	"net/rpc"
-	"sync"
 	"time"
 
 	"github.com/Cepave/common/model"
@@ -12,7 +11,6 @@ import (
 )
 
 type SingleConnRpcClient struct {
-	sync.Mutex
 	rpcClient *rpc.Client
 	RpcServer string
 	Timeout   time.Duration
@@ -61,10 +59,6 @@ func (this *SingleConnRpcClient) insureConn() {
 }
 
 func (this *SingleConnRpcClient) Call(method string, args interface{}, reply interface{}) error {
-
-	this.Lock()
-	defer this.Unlock()
-
 	this.insureConn()
 
 	timeout := time.Duration(50 * time.Second)
