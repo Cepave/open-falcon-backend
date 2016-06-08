@@ -28,6 +28,11 @@ func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, 
 		err = aerr
 		return
 	}
+	if len(enp) == 0 {
+		err = errors.New("The endpoints doesn't exist.")
+		return
+	}
+
 	q := orm.NewOrm()
 	q.Using("graph")
 	q.QueryTable("endpoint_counter")
@@ -39,13 +44,9 @@ func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, 
 	pattn, _ := regexp.Compile("\\s*,\\s*$")
 	queryperfix := fmt.Sprintf("select distinct(counter) from endpoint_counter where endpoint_id IN(%s) limit %d", pattn.ReplaceAllString(endpoint_ids, ""), limit)
 	var enpc []EndpointCounter
-	if len(enp) != 0 {
-		_, err = q.Raw(queryperfix).QueryRows(&enpc)
-		for _, v := range enpc {
-			counters = append(counters, v.Counter)
-		}
-	} else {
-		err = errors.New("The endpoints doesn't exist.")
+	_, err = q.Raw(queryperfix).QueryRows(&enpc)
+	for _, v := range enpc {
+		counters = append(counters, v.Counter)
 	}
 
 	return
