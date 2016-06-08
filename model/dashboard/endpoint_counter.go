@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Cepave/fe/g"
 	"github.com/astaxie/beego/orm"
@@ -38,9 +39,14 @@ func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, 
 	pattn, _ := regexp.Compile("\\s*,\\s*$")
 	queryperfix := fmt.Sprintf("select distinct(counter) from endpoint_counter where endpoint_id IN(%s) limit %d", pattn.ReplaceAllString(endpoint_ids, ""), limit)
 	var enpc []EndpointCounter
-	_, err = q.Raw(queryperfix).QueryRows(&enpc)
-	for _, v := range enpc {
-		counters = append(counters, v.Counter)
+	if len(enp) != 0 {
+		_, err = q.Raw(queryperfix).QueryRows(&enpc)
+		for _, v := range enpc {
+			counters = append(counters, v.Counter)
+		}
+	} else {
+		err = errors.New("The endpoints doesn't exist.")
 	}
+
 	return
 }
