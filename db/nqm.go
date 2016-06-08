@@ -97,7 +97,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 						/* :~) */
 				) AS pt
 				ON ag.ag_id = pt.pt_ag_id
-					AND ag.ag_status & b'00000001' = b'00000001'
+					AND ag.ag_status = true
 				INNER JOIN
 				owl_isp AS isp
 				ON ag.ag_isp_id = isp.isp_id
