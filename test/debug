@@ -72,7 +72,7 @@ function http_post(){
 
 function nqm(){
     e="test.endpoint.niean.2"
-    m="nqm-metrics"
+    m="nqm-fping"
     t="rttmin=18.64, rttavg=21.5, rttmax=26.9, rttmdev=4.7, pkttransmit=13, pktreceive=11, agent-id=1334, agent-isp-id=12, agent-province-id=13, agent-city-id=14, agent-name-tag-id=123, target-id=2334, target-isp-id=22, target-province-id=23, target-city-id=24, target-name-tag-id=223"
     ts=`date +%s`
     val=`expr $ts / 60 % 10`
@@ -82,7 +82,7 @@ function nqm(){
 
 function nqm_copy(){
     e="test.endpoint.niean.2"
-    m="nqm-metrics"
+    m="nqm-fping"
     ts=`date +%s`
     val=`expr $ts / 60 % 10`
     rand=$RANDOM
