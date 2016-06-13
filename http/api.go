@@ -3,12 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/query/g"
-	"github.com/Cepave/query/graph"
-	"github.com/Cepave/query/proc"
-	"github.com/astaxie/beego/orm"
-	"github.com/bitly/go-simplejson"
 	"io/ioutil"
 	"log"
 	"math"
@@ -17,6 +11,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	cmodel "github.com/Cepave/common/model"
+	"github.com/Cepave/query/g"
+	"github.com/Cepave/query/graph"
+	"github.com/Cepave/query/proc"
+	"github.com/astaxie/beego/orm"
+	"github.com/bitly/go-simplejson"
 )
 
 type Tag struct {
@@ -869,31 +870,55 @@ func getMetricsByMetricType(metricType string) []string {
 	return metrics
 }
 
+func convertDurationToPoint(duration string, result map[string]interface{}) (timestampFrom int64, timestampTo int64) {
+	if strings.Index(duration, ",") > -1 {
+		var e error
+		timestampFrom, e = strconv.ParseInt(strings.Split(duration, ",")[0], 10, 64)
+		if e != nil {
+			setError(e.Error(), result)
+		}
+		timestampTo, e = strconv.ParseInt(strings.Split(duration, ",")[1], 10, 64)
+		if e != nil {
+			setError(e.Error(), result)
+		}
+		if timestampFrom >= timestampTo {
+			setError("Value of timestampFrom should be less than value of timestampTo.", result)
+		}
+		if timestampTo > time.Now().Unix() {
+			setError("Value of timestampTo should be equal to or less than value of now.", result)
+		}
+	} else if strings.Index(duration, "d") > -1 || strings.Index(duration, "min") > -1 {
+		unit := ""
+		seconds := int64(0)
+		if strings.Index(duration, "d") > -1 {
+			unit = "d"
+			seconds = int64(86400)
+		} else {
+			unit = "min"
+			seconds = int64(60)
+		}
+		multiplier, err := strconv.Atoi(strings.Split(duration, unit)[0])
+		if err != nil {
+			setError(err.Error(), result)
+		}
+		offset := int64(multiplier) * seconds
+		now := time.Now().Unix()
+		timestampFrom = now - offset
+		timestampTo = now
+	}
+	return
+}
+
 func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	data := []*cmodel.GraphQueryResponse{}
-	now := time.Now().Unix()
-	unit := ""
-	seconds := int64(0)
-	if strings.Index(duration, "d") > -1 {
-		unit = "d"
-		seconds = int64(86400)
-	} else if strings.Index(duration, "min") > -1 {
-		unit = "min"
-		seconds = int64(60)
-	}
-	multiplier, err := strconv.Atoi(strings.Split(duration, unit)[0])
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	offset := int64(multiplier) * seconds
-	start := now - offset
+	start, end := convertDurationToPoint(duration, result)
 
 	proc.HistoryRequestCnt.Incr()
 	for _, hostname := range hostnames {
 		for _, metric := range metrics {
 			request := cmodel.GraphQueryParam{
 				Start:     start,
-				End:       now,
+				End:       end,
 				ConsolFun: "AVERAGE",
 				Endpoint:  hostname,
 				Counter:   metric,
@@ -1186,7 +1211,11 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	metricType := arguments[4]
 	hostnames := strings.Split(arguments[5], ",")
 	metrics := getMetricsByMetricType(metricType)
-	data := getGraphQueryResponse(metrics, "1d", hostnames, result)
+	duration := "1d"
+	if len(arguments) > 6 {
+		duration = arguments[6]
+	}
+	data := getGraphQueryResponse(metrics, duration, hostnames, result)
 	for _, series := range data {
 		values := []interface{}{}
 		for _, rrdObj := range series.Values {
