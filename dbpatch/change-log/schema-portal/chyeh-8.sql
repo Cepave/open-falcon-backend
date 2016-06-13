@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS nqm_target_class(
 		(tc_weight)
 )
 	DEFAULT CHARSET =utf8
-	COLLATE =utf8_unicode_ci;
+	COLLATE =utf8_general_ci;
 
 INSERT INTO owl_isp(isp_id, isp_name, isp_acronym)
 VALUES
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS nqm_agent(
 	INDEX ix_nqm_agent__ag_name(ag_name)
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_target(
 	tg_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS nqm_target(
 			ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
-  COLLATE =utf8_unicode_ci;
+  COLLATE =utf8_general_ci;
 
 ALTER TABLE nqm_ping_task ADD
 CONSTRAINT fk_nqm_ping_task__nqm_agent FOREIGN KEY

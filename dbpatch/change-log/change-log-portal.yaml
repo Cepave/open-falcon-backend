@@ -49,7 +49,12 @@
     comment: "add status column for alarm"
 }
 - {
-    id: "masato-11",
-    filename: "masato-11.sql",
+    id: "chyeh-11",
+    filename: "chyeh-11.sql",
+    comment: "utf8_unicode_ci -> utf8_general_ci"
+}
+- {
+    id: "masato-12",
+    filename: "masato-12.sql",
     comment: "note feture support"
 }
