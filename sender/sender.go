@@ -2,13 +2,15 @@ package sender
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/Cepave/transfer/g"
 	"github.com/Cepave/transfer/proc"
 	cpool "github.com/Cepave/transfer/sender/conn_pool"
 	cmodel "github.com/open-falcon/common/model"
 	nlist "github.com/toolkits/container/list"
-	"log"
-	"strconv"
 )
 
 const (
@@ -252,7 +254,7 @@ func Demultiplex(items []*cmodel.MetaData) ([]*cmodel.MetaData, []*cmodel.MetaDa
 	generics := []*cmodel.MetaData{}
 
 	for _, item := range items {
-		if item.Metric == "nqm-metrics" {
+		if strings.HasPrefix(item.Metric, "nqm-") {
 			nqms = append(nqms, item)
 		} else {
 			generics = append(generics, item)
