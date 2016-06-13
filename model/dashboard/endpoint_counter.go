@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Cepave/fe/g"
 	"github.com/astaxie/beego/orm"
@@ -27,6 +28,11 @@ func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, 
 		err = aerr
 		return
 	}
+	if len(enp) == 0 {
+		err = errors.New("The endpoints doesn't exist.")
+		return
+	}
+
 	q := orm.NewOrm()
 	q.Using("graph")
 	q.QueryTable("endpoint_counter")
@@ -42,5 +48,6 @@ func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, 
 	for _, v := range enpc {
 		counters = append(counters, v.Counter)
 	}
+
 	return
 }
