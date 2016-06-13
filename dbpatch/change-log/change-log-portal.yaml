@@ -53,3 +53,8 @@
     filename: "chyeh-11.sql",
     comment: "utf8_unicode_ci -> utf8_general_ci"
 }
+- {
+    id: "masato-12",
+    filename: "masato-12.sql",
+    comment: "note feture support"
+}
