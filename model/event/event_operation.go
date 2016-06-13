@@ -2,11 +2,12 @@ package event
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Cepave/alarm/logger"
 	coommonModel "github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
 	"github.com/astaxie/beego/orm"
-	"time"
 )
 
 func insertEvent(q orm.Ormer, eve *coommonModel.Event) (res interface{}, err error) {
@@ -87,41 +88,39 @@ func InsertEvent(eve *coommonModel.Event) {
 		log.Debug(fmt.Sprintf("%v, %v", res2, err))
 
 	} else {
-
+		sqltemplete := `UPDATE event_cases SET
+				update_at = ?,
+				max_step = ?,
+				current_step = ?,
+				note = ?,
+				cond = ?,
+				status = ?`
+		//reopen case
+		if event[0].ProcessStatus == "resolved" || event[0].ProcessStatus == "ignored" {
+			sqltemplete = fmt.Sprintf("%v ,process_status = '%s', process_note = %d", sqltemplete, "unresolved", 0)
+		}
 		if eve.CurrentStep == 1 {
+
+			sqltemplete = fmt.Sprintf("%v ,timestamp = ? WHERE id = ?", sqltemplete)
 			//update start time of cases
 			res1, err := q.Raw(
-				`UPDATE event_cases SET 
-						timestamp = ?,
-						update_at = ?,
-						max_step = ?, 
-						current_step = ?, 
-						note = ?, 
-						cond = ?, 
-						status = ? 
-						WHERE id = ?`,
-				time.Unix(eve.EventTime, 0),
+				sqltemplete,
 				time.Unix(eve.EventTime, 0),
 				eve.MaxStep(),
 				eve.CurrentStep,
 				eve.Strategy.Note,
 				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 				eve.Status,
+				time.Unix(eve.EventTime, 0),
 				eve.Id).Exec()
 			log.Debug(fmt.Sprintf("%v, %v", res1, err))
 			//insert case
 			res2, err := insertEvent(q, eve)
 			log.Debug(fmt.Sprintf("%v, %v", res2, err))
 		} else {
+			sqltemplete = fmt.Sprintf("%v WHERE id = ?", sqltemplete)
 			res1, err := q.Raw(
-				`UPDATE event_cases SET 
-						update_at = ?,
-						max_step = ?, 
-						current_step = ?, 
-						note = ?, 
-						cond = ?, 
-						status = ? 
-						WHERE id = ?`,
+				sqltemplete,
 				time.Unix(eve.EventTime, 0),
 				eve.MaxStep(),
 				eve.CurrentStep,
