@@ -9,6 +9,7 @@ import (
 	"github.com/Cepave/fe/grpc"
 	"github.com/Cepave/fe/http"
 	"github.com/Cepave/fe/model"
+	"github.com/Cepave/fe/mq"
 	"github.com/toolkits/logger"
 	"log"
 	"os"
@@ -36,6 +37,8 @@ func main() {
 
 	graph.Start()
 	go grpc.Start()
+	go mq.Start()
+	go http.Start()
 
-	http.Start()
+	select {}
 }

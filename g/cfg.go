@@ -88,6 +88,11 @@ type GrpcConfig struct {
 	Port int `json:"port"`
 }
 
+type MqConfig struct {
+	Queue    string `json:"queue"`
+	Consumer string `json:"consumer"`
+}
+
 type GlobalConfig struct {
 	Log          string              `json:"log"`
 	Company      string              `json:"company"`
@@ -103,6 +108,7 @@ type GlobalConfig struct {
 	Api          *ApiConfig          `json:"api"`
 	Graph        *GraphConfig        `json:"graph"`
 	Grpc         *GrpcConfig         `json:"grpc"`
+	Mq           *MqConfig           `json:"mq"`
 }
 
 var (
