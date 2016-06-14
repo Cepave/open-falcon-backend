@@ -43,8 +43,8 @@ func graphQueryOne(ec cmodel.GraphInfoParam, body GraphHistoryParam, endpoint st
 
 func makeOneFakeResult(body GraphHistoryParam) *cmodel.GraphQueryResponse {
 	for _, ec := range body.EndpointCounters {
-		if !strings.Contains(ec.Counter,"packet-loss-rate") && !strings.Contains(ec.Counter,"average") {
-			fakeResult := graphQueryOne(ec, body,"" , "")
+		if !strings.Contains(ec.Counter, "packet-loss-rate") && !strings.Contains(ec.Counter, "average") {
+			fakeResult := graphQueryOne(ec, body, "", "")
 			for i := range fakeResult.Values {
 				fakeResult.Values[i].Value = cmodel.JsonFloat(0.0)
 			}
@@ -55,10 +55,10 @@ func makeOneFakeResult(body GraphHistoryParam) *cmodel.GraphQueryResponse {
 }
 
 func detectCounter(counter string, body GraphHistoryParam) bool {
-	for _, ec := range body.EndpointCounters {		
-		if strings.Contains(ec.Counter, counter) {		
-			return true		
-		}		
+	for _, ec := range body.EndpointCounters {
+		if strings.Contains(ec.Counter, counter) {
+			return true
+		}
 	}
 	return false
 }
@@ -139,13 +139,13 @@ func configGraphRoutes() {
 
 		isPacketLossRate := detectCounter("packet-loss-rate", body)
 		isAverage := detectCounter("average", body)
-		
+
 		if isPacketLossRate || isAverage {
 			// NQM Case
 			if isPacketLossRate {
-				data = append(data, nqmData(body, "packet-loss-rate", "packets-sent")... )
+				data = append(data, nqmData(body, "packet-loss-rate", "packets-sent")...)
 			} else if isAverage {
-				data = append(data, nqmData(body, "average", "transmission-time")... )
+				data = append(data, nqmData(body, "average", "transmission-time")...)
 			}
 		} else {
 			for _, ec := range body.EndpointCounters {
@@ -159,7 +159,6 @@ func configGraphRoutes() {
 				data = append(data, result)
 			}
 		}
-		log.Println("got length of data: ", len(data))
 
 		// statistics
 		proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))

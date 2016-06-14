@@ -50,7 +50,6 @@ func getHosts(reqHost string, hostKeyword string) []interface{} {
 	} else {
 		url = g.Config().Api.Query + url
 	}
-	log.Println("url =", url)
 	nodes := doHTTPQuery(url)
 	result := []interface{}{}
 	chart := map[string]interface{}{
