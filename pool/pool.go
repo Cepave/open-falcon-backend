@@ -2,14 +2,15 @@ package pool
 
 import (
 	"fmt"
-	"github.com/Cepave/common/model"
-	"github.com/toolkits/pool"
 	"io"
 	"log"
 	"net"
 	"net/rpc"
 	"sync"
 	"time"
+
+	"github.com/Cepave/common/model"
+	"github.com/toolkits/pool"
 )
 
 type RpcClient struct {
