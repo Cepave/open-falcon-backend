@@ -47,7 +47,7 @@ func marshalJSONParamsToCassandra(nqmDataGram string, metric string) ParamToAgen
 	data.Endpoint = GetGeneralConfig().Hostname
 	data.Value = "0"
 	data.CounterType = "GAUGE"
-	data.Step = int64(60)
+	data.Step = int64(60) // a useless field in Cassandra
 	return data
 }
 
@@ -98,7 +98,7 @@ func convToNqmTarget(s model.NqmTarget) nqmNodeData {
  *     Packet Loss - int
  *     Transmission Time - float64
  */
-func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric string, value interface{}) ParamToAgent {
+func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric string, value interface{}, step int64) ParamToAgent {
 	endpoint := GetGeneralConfig().Hostname
 	counterType := "GAUGE"
 	tags := "nqm-agent-isp=" + agent.IspName +
@@ -110,14 +110,14 @@ func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric str
 		",target-city=" + target.CityName +
 		",target-name-tag=" + target.NameTag
 	timestamp := time.Now().Unix()
-	step := int64(60)
 	return ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
 }
 
 func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.NqmAgent, u Utility) []ParamToAgent {
 	var params []ParamToAgent
 
-	params = append(params, u.MarshalJSONParamsToGraph(target, agent, row)...)
+	step := int64(GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse).Measurements[u.UtilName()].Interval)
+	params = append(params, u.MarshalJSONParamsToGraph(target, agent, row, step)...)
 
 	t := convToNqmTarget(target)
 	a := convToNqmAgent(agent)

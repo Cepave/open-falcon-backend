@@ -11,7 +11,7 @@ import (
 
 type Utility interface {
 	CalcStats(row []float64, length int) map[string]string
-	MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent
+	MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string, step int64) []ParamToAgent
 	ProbingCommand(command []string, targetAddressList []string) []string
 	UtilName() string
 	Interval() time.Duration
@@ -21,12 +21,12 @@ type Fping struct {
 	Utility
 }
 
-func (u *Fping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent {
+func (u *Fping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string, step int64) []ParamToAgent {
 	var params []ParamToAgent
 
-	params = append(params, marshalJSONToGraph(target, agent, "packets-sent", row["pkttransmit"]))
-	params = append(params, marshalJSONToGraph(target, agent, "packets-received", row["pktreceive"]))
-	params = append(params, marshalJSONToGraph(target, agent, "transmission-time", row["rttavg"]))
+	params = append(params, marshalJSONToGraph(target, agent, "packets-sent", row["pkttransmit"], step))
+	params = append(params, marshalJSONToGraph(target, agent, "packets-received", row["pktreceive"], step))
+	params = append(params, marshalJSONToGraph(target, agent, "transmission-time", row["rttavg"], step))
 
 	return params
 }
@@ -79,8 +79,8 @@ type Tcpping struct {
 	Utility
 }
 
-func (u *Tcpping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent {
-	return new(Fping).MarshalJSONParamsToGraph(target, agent, row)
+func (u *Tcpping) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string, step int64) []ParamToAgent {
+	return new(Fping).MarshalJSONParamsToGraph(target, agent, row, step)
 }
 
 func (u *Tcpping) ProbingCommand(command []string, targetAddressList []string) []string {
@@ -104,9 +104,9 @@ type Tcpconn struct {
 	Utility
 }
 
-func (u *Tcpconn) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string) []ParamToAgent {
+func (u *Tcpconn) MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string, step int64) []ParamToAgent {
 	var params []ParamToAgent
-	params = append(params, marshalJSONToGraph(target, agent, "tcpconn", row["time"]))
+	params = append(params, marshalJSONToGraph(target, agent, "tcpconn", row["time"], step))
 	return params
 }
 
