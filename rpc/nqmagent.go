@@ -1,12 +1,13 @@
 package rpc
 
 import (
+	"strings"
+	"time"
+
 	commonModel "github.com/Cepave/common/model"
 	"github.com/Cepave/hbs/db"
 	"github.com/Cepave/hbs/model"
 	"github.com/asaskevich/govalidator"
-	"strings"
-	"time"
 )
 
 // Retrieve the configuration of ping task for certain client

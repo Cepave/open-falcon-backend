@@ -1,10 +1,11 @@
 package rpc
 
 import (
+	"sort"
+
 	"github.com/Cepave/common/model"
 	hbstesting "github.com/Cepave/hbs/testing"
 	. "gopkg.in/check.v1"
-	"sort"
 )
 
 type TestRpcNqmAgentSuite struct{}
@@ -17,22 +18,22 @@ var _ = Suite(&TestRpcNqmAgentSuite{})
 func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
 	var testeCases = []struct {
 		connectionId string
-		hostname string
-		ipAddress string
-		checker Checker
-	} {
-		{ "120.49.58.19", "localhost.localdomain", "120.49.58.19", IsNil },
-		{ "", "localhost.localdomain", "120.49.58.19", NotNil },
-		{ "120.49.58.19", "", "120.49.58.19", NotNil },
-		{ "120.49.58.19", "localhost.localdomain", "", NotNil },
+		hostname     string
+		ipAddress    string
+		checker      Checker
+	}{
+		{"120.49.58.19", "localhost.localdomain", "120.49.58.19", IsNil},
+		{"", "localhost.localdomain", "120.49.58.19", NotNil},
+		{"120.49.58.19", "", "120.49.58.19", NotNil},
+		{"120.49.58.19", "localhost.localdomain", "", NotNil},
 	}
 
 	for _, v := range testeCases {
 		err := validatePingTask(
 			&model.NqmPingTaskRequest{
 				ConnectionId: v.connectionId,
-				Hostname: v.hostname,
-				IpAddress: v.ipAddress,
+				Hostname:     v.hostname,
+				IpAddress:    v.ipAddress,
 			},
 		)
 
@@ -44,14 +45,15 @@ func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
  * Tests the data content of ping task
  */
 type byId []model.NqmTarget
+
 func (targets byId) Len() int           { return len(targets) }
 func (targets byId) Swap(i, j int)      { targets[i], targets[j] = targets[j], targets[i] }
 func (targets byId) Less(i, j int) bool { return targets[i].Id < targets[j].Id }
 func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
-	var req = model.NqmPingTaskRequest {
+	var req = model.NqmPingTaskRequest{
 		ConnectionId: "ag-rpc-1",
-		Hostname: "rpc-1.org",
-		IpAddress: "45.65.0.1",
+		Hostname:     "rpc-1.org",
+		IpAddress:    "45.65.0.1",
 	}
 	var resp model.NqmPingTaskResponse
 
@@ -91,7 +93,7 @@ func (suite *TestRpcNqmAgentSuite) TestPingTask(c *C) {
 			}
 
 			sort.Sort(byId(resp.Targets))
-			var expectedTargets = model.NqmTarget {
+			var expectedTargets = model.NqmTarget{
 				Id: 6301, Host: "1.2.3.4", NameTag: model.UNDEFINED_STRING,
 				IspId: 1, IspName: "北京三信时代",
 				ProvinceId: 4, ProvinceName: "北京",

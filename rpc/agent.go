@@ -2,13 +2,14 @@ package rpc
 
 import (
 	"bytes"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
 	"github.com/Cepave/hbs/cache"
 	"github.com/Cepave/hbs/g"
-	"sort"
-	"strings"
-	"time"
 )
 
 func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.AgentPluginsResponse) error {

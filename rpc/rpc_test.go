@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"testing"
+
 	"github.com/Cepave/hbs/db"
 	hbstesting "github.com/Cepave/hbs/testing"
 	. "gopkg.in/check.v1"
