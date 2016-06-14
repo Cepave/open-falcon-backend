@@ -251,7 +251,6 @@ func getMetricValues(req *http.Request, host string, metrics []string, result []
 		} else {
 			url = g.Config().Api.Query + url
 		}
-		log.Println("url =", url)
 
 		args := map[string]interface{}{
 			"start":             from,
