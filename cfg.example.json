@@ -1,9 +1,6 @@
 {
 	"agent": {
-		"pushURL": "http://127.0.0.1:1988/v1/push",
-		"fpingInterval": 60,
-		"tcppingInterval": 60,
-		"tcpconnInterval": 60
+		"pushURL": "http://127.0.0.1:1988/v1/push"
 	},
 	"hbs": {
 		"RPCServer": "127.0.0.1:6030",

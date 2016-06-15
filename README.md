@@ -8,15 +8,15 @@ NQM is a module for [Open-Falcon](https://github.com/open-falcon/). It enables t
 
 *  `make`
 
-   Build the binary
+    Build the binary
 
 *  `make pack`
 
-   Pack the necessary files into a tarball for deployment
+    Pack the necessary files into a tarball for deployment
 
 *  `make clean`
 
-   Remove the tarball and the excutable binary file
+    Remove the tarball and the excutable binary file
 
 
 
@@ -52,27 +52,11 @@ You can modify `cfg.example.json` for creating your own configuration file:
 
 Here are the explanations of the fields:
 
-*  *agent* [**Required**]
+*   *agent* [**Required**]
 
-   *  *PushURL*
+    *  *PushURL*
 
-      The RESTful API URL where NQM agent pushes data to.
-
-   *  *fpingInterval*
-
-      The time interval (seconds) between two calls of fping probes.
-
-
-   *  *tcppingInterval*
-
-      The time interval (seconds) between two calls of tcpping probes.
-
-   *  *tcpconnInterval*
-
-      The time interval (seconds) between two calls of tcpconn probes.
-
-      ​
-
+       The RESTful API URL where NQM agent pushes data to.
 
 
 
@@ -85,8 +69,6 @@ Here are the explanations of the fields:
   * *Interval*
 
     The time interval (seconds) between two queries to *RPCServer*.
-
-
 
 
 * *hostname* [**Optional**]
