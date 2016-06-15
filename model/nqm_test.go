@@ -26,7 +26,7 @@ func (suite *TestNqmAgentSuite) TestIpAddress(c *C) {
 	}
 
 	for _, v := range testedCases {
-		testedAgent := NewNqmAgent(&model.NqmPingTaskRequest{
+		testedAgent := NewNqmAgent(&model.NqmTaskRequest{
 			IpAddress: v.sampleIpAddress,
 		})
 

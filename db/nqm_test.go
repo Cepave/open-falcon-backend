@@ -2,16 +2,17 @@ package db
 
 import (
 	"database/sql"
-	"github.com/Cepave/hbs/model"
-	hbstesting "github.com/Cepave/hbs/testing"
-	commonModel "github.com/Cepave/common/model"
-	. "gopkg.in/check.v1"
 	"net"
 	"sort"
 	"time"
+
+	commonModel "github.com/Cepave/common/model"
+	"github.com/Cepave/hbs/model"
+	hbstesting "github.com/Cepave/hbs/testing"
+	. "gopkg.in/check.v1"
 )
 
-type TestDbNqmSuite struct {}
+type TestDbNqmSuite struct{}
 
 var _ = Suite(&TestDbNqmSuite{})
 
@@ -28,13 +29,14 @@ func (s *TestDbNqmSuite) TearDownSuite(c *C) {
  */
 type refreshAgentTestCase struct {
 	connectionId string
-	hostName string
-	ipAddress string
+	hostName     string
+	ipAddress    string
 }
+
 func (suite *TestDbNqmSuite) TestRefreshAgentInfo(c *C) {
-	var testedCases = []refreshAgentTestCase {
-		{ "refresh-1", "refresh1.com", "100.20.44.12" }, // First time creation of data
-		{ "refresh-1", "refresh2.com", "100.20.44.13" }, // Refresh of data
+	var testedCases = []refreshAgentTestCase{
+		{"refresh-1", "refresh1.com", "100.20.44.12"}, // First time creation of data
+		{"refresh-1", "refresh2.com", "100.20.44.13"}, // Refresh of data
 	}
 
 	for _, v := range testedCases {
@@ -44,10 +46,10 @@ func (suite *TestDbNqmSuite) TestRefreshAgentInfo(c *C) {
 
 func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
 	var testedAgent = model.NewNqmAgent(
-		&commonModel.NqmPingTaskRequest {
+		&commonModel.NqmTaskRequest{
 			ConnectionId: args.connectionId,
-			Hostname: args.hostName,
-			IpAddress: args.ipAddress,
+			Hostname:     args.hostName,
+			IpAddress:    args.ipAddress,
 		},
 	)
 
@@ -74,7 +76,7 @@ func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
 		testedAgent.Id,
 	)
 
-	c.Logf("Ip Address: \"%s\". Length(bits): [%d]", testedIpAddress, testedLenOfIpAddress);
+	c.Logf("Ip Address: \"%s\". Length(bits): [%d]", testedIpAddress, testedLenOfIpAddress)
 
 	/**
 	 * Asserts the data on database
@@ -90,21 +92,22 @@ func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
  * Tests getting targets by filter
  */
 type byId []commonModel.NqmTarget
+
 func (targets byId) Len() int           { return len(targets) }
 func (targets byId) Swap(i, j int)      { targets[i], targets[j] = targets[j], targets[i] }
 func (targets byId) Less(i, j int) bool { return targets[i].Id < targets[j].Id }
 
 func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 	testedCases := []struct {
-		agentId int
+		agentId             int
 		expectedIdOfTargets []int
-	} {
-		{ 2301, []int{ 4021, 4022, 4023, 4024, 4025 } }, // All of the targets
-		{ 2302, []int{ 4021, 4022 } }, // Targets are matched by ISP
-		{ 2303, []int{ 4021, 4023 } }, // Targets are matched by province
-		{ 2304, []int{ 4021, 4024 } }, // Targets are matched by city
-		{ 2305, []int{ 4021, 4025 } }, // Targets are matched by name tag
-		{ 2306, []int{ 4021 } }, // Nothing matched except probed by all
+	}{
+		{230001, []int{402001, 402002, 402003, 402004, 402005}}, // All of the targets
+		{230002, []int{402001, 402002}},                         // Targets are matched by ISP
+		{230003, []int{402001, 402003}},                         // Targets are matched by province
+		{230004, []int{402001, 402004}},                         // Targets are matched by city
+		{230005, []int{402001, 402005}},                         // Targets are matched by name tag
+		{230006, []int{402001}},                                 // Nothing matched except probed by all
 	}
 
 	for _, v := range testedCases {
@@ -130,17 +133,18 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
  * Tests getting data of agent for RPC
  */
 type getAndRefreshNeedPingAgentTestCase struct {
-	agentId int
+	agentId   int
 	checkTime string
-	checker Checker
+	checker   Checker
 }
+
 func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
-	testedCases := []getAndRefreshNeedPingAgentTestCase {
-		{ 1301, "2115-08-08T00:00:00+00:00", IsNil }, // No ping task setting
-		{ 1302, "2010-05-05T10:59:00+08:00", IsNil }, // The period is not elapsed yet
-		{ 1303, "2013-10-01T00:00:00+08:00", NotNil }, // Never executed
-		{ 1304, "2012-06-10T09:00:00+08:00", NotNil }, // The period is elapsed
-		{ 1305, "2012-06-10T09:00:00+08:00", IsNil }, // Disabled agent
+	testedCases := []getAndRefreshNeedPingAgentTestCase{
+		{130001, "2115-08-08T00:00:00+00:00", IsNil},  // No ping task setting
+		{130002, "2010-05-05T10:59:00+08:00", IsNil},  // The period is not elapsed yet
+		{130003, "2013-10-01T00:00:00+08:00", NotNil}, // Never executed
+		{130004, "2012-06-10T09:00:00+08:00", NotNil}, // The period is elapsed
+		{130005, "2012-06-10T09:00:00+08:00", IsNil},  // Disabled agent
 	}
 
 	for _, v := range testedCases {
@@ -203,15 +207,15 @@ func testNeedPingAgent(c *C, testCase getAndRefreshNeedPingAgentTestCase) {
  */
 func (suite *TestDbNqmSuite) TestGetPingTaskState(c *C) {
 	testedCases := []struct {
-		agentId int
+		agentId        int
 		expectedStatus int
-	} {
-		{ 2001, NO_PING_TASK }, // The agent has no ping task
-		{ 2002, HAS_PING_TASK_ALL_MATCHING }, // The agent has ping task with all of the targets
-		{ 2003, HAS_PING_TASK_WITH_FILTER }, // The agent has ping task with ISP filter
-		{ 2004, HAS_PING_TASK_WITH_FILTER }, // The agent has ping task with province filter
-		{ 2005, HAS_PING_TASK_WITH_FILTER }, // The agent has ping task with city filter
-		{ 2006, HAS_PING_TASK_WITH_FILTER }, // The agent has ping task with name tag
+	}{
+		{2001, NO_PING_TASK},               // The agent has no ping task
+		{2002, HAS_PING_TASK_ALL_MATCHING}, // The agent has ping task with all of the targets
+		{2003, HAS_PING_TASK_WITH_FILTER},  // The agent has ping task with ISP filter
+		{2004, HAS_PING_TASK_WITH_FILTER},  // The agent has ping task with province filter
+		{2005, HAS_PING_TASK_WITH_FILTER},  // The agent has ping task with city filter
+		{2006, HAS_PING_TASK_WITH_FILTER},  // The agent has ping task with name tag
 	}
 
 	for _, v := range testedCases {
@@ -234,19 +238,19 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
 			VALUES
-				(1301, 'gc-1', 'tt1.org', 0x12345678, 3, DEFAULT),
-				(1302, 'gc-2', 'tt2.org', 0x13345678, 3, DEFAULT),
-				(1303, 'gc-3', 'tt3.org', 0x14345678, 3, DEFAULT),
-				(1304, 'gc-4', 'tt4.org', 0x15345678, 3, DEFAULT),
-				(1305, 'gc-5', 'tt5.org', 0x15345678, 3, b'00000000')
+				(130001, 'gc-1', 'tt1.org', 0x12345678, 3, DEFAULT),
+				(130002, 'gc-2', 'tt2.org', 0x13345678, 3, DEFAULT),
+				(130003, 'gc-3', 'tt3.org', 0x14345678, 3, DEFAULT),
+				(130004, 'gc-4', 'tt4.org', 0x15345678, 3, DEFAULT),
+				(130005, 'gc-5', 'tt5.org', 0x15345678, 3, b'00000000')
 			`,
 			`
 			INSERT INTO nqm_ping_task(pt_ag_id, pt_period, pt_time_last_execute)
 			VALUES
-				(1302, 60, '2010-05-05 10:00:00'),
-				(1303, 60, NULL),
-				(1304, 60, '2012-06-10 08:00:00'),
-				(1305, 60, NULL)
+				(130002, 60, '2010-05-05 10:00:00'),
+				(130003, 60, NULL),
+				(130004, 60, '2012-06-10 08:00:00'),
+				(130005, 60, NULL)
 			`,
 		)
 	case "TestDbNqmSuite.TestGetPingTaskState":
@@ -298,12 +302,12 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address)
 			VALUES
-				(2301, 'tl-01', 'ccb1.ccc', 0x12345678),
-				(2302, 'tl-02', 'ccb2.ccc', 0x22345678),
-				(2303, 'tl-03', 'ccb3.ccc', 0x32345678),
-				(2304, 'tl-04', 'ccb4.ccc', 0x42345678),
-				(2305, 'tl-05', 'ccb5.ccc', 0x52345678),
-				(2306, 'tl-06', 'ccb6.ccc', 0x62345678)
+				(230001, 'tl-01', 'ccb1.ccc', 0x12345678),
+				(230002, 'tl-02', 'ccb2.ccc', 0x22345678),
+				(230003, 'tl-03', 'ccb3.ccc', 0x32345678),
+				(230004, 'tl-04', 'ccb4.ccc', 0x42345678),
+				(230005, 'tl-05', 'ccb5.ccc', 0x52345678),
+				(230006, 'tl-06', 'ccb6.ccc', 0x62345678)
 			`,
 			`
 			INSERT INTO nqm_target(
@@ -312,48 +316,48 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 				tg_status, tg_available
 			)
 			VALUES
-				(4021, 'tgn-1', '1.2.3.4', -1, -1, -1, true, null, true, true),
-				(4022, 'tgn-2', '1.2.3.5', 5, -1, -1, false, null, true, true),
-				(4023, 'tgn-3', '1.2.3.6', -1, 5, -1, false, null, true, true),
-				(4024, 'tgn-4', '1.2.3.7', -1, 20, 20, false, null, true, true),
-				(4025, 'tgn-5', '1.2.3.8', -1, -1, -1, false, 'tag-1', true, true)
+				(402001, 'tgn-1', '1.2.3.4', -1, -1, -1, true, null, true, true),
+				(402002, 'tgn-2', '1.2.3.5', 5, -1, -1, false, null, true, true),
+				(402003, 'tgn-3', '1.2.3.6', -1, 5, -1, false, null, true, true),
+				(402004, 'tgn-4', '1.2.3.7', -1, 20, 20, false, null, true, true),
+				(402005, 'tgn-5', '1.2.3.8', -1, -1, -1, false, 'tag-1', true, true)
 			`,
 			`
 			INSERT INTO nqm_ping_task(
 				pt_ag_id, pt_period
 			)
 			VALUES
-				(2301, 20),
-				(2302, 20),
-				(2303, 20),
-				(2304, 20),
-				(2305, 20),
-				(2306, 20)
+				(230001, 20),
+				(230002, 20),
+				(230003, 20),
+				(230004, 20),
+				(230005, 20),
+				(230006, 20)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_isp(
 				tfisp_pt_ag_id, tfisp_isp_id
 			)
-			VALUES (2302, 5)
+			VALUES (230002, 5)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_province(
 				tfpv_pt_ag_id, tfpv_pv_id
 			)
-			VALUES (2303, 5)
+			VALUES (230003, 5)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_city(
 				tfct_pt_ag_id, tfct_ct_id
 			)
-			VALUES (2304, 20)
+			VALUES (230004, 20)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_name_tag(
 				tfnt_pt_ag_id, tfnt_name_tag
 			)
-			VALUES (2305, 'tag-1'),
-				(2306, 'tag-nothing-matched')
+			VALUES (230005, 'tag-1'),
+				(230006, 'tag-nothing-matched')
 			`,
 		)
 	}
@@ -362,23 +366,30 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 func (s *TestDbNqmSuite) TearDownTest(c *C) {
 	switch c.TestName() {
 	case "TestDbNqmSuite.TestRefreshAgentInfo":
-		hbstesting.ExecuteOrFail("DELETE FROM nqm_agent WHERE ag_connection_id = 'refresh-1'")
+		hbstesting.ExecuteOrFail(
+			"DELETE FROM nqm_agent WHERE ag_connection_id = 'refresh-1'",
+		)
 	case "TestDbNqmSuite.TestGetAndRefreshNeedPingAgentForRpc":
 		hbstesting.ExecuteQueriesOrFailInTx(
+			"SET FOREIGN_KEY_CHECKS=0",
 			"DELETE FROM nqm_ping_task",
 			"DELETE FROM nqm_agent",
+			"SET FOREIGN_KEY_CHECKS=1",
 		)
 	case "TestDbNqmSuite.TestGetPingTaskState":
 		hbstesting.ExecuteQueriesOrFailInTx(
+			"SET FOREIGN_KEY_CHECKS=0",
 			"DELETE FROM nqm_pt_target_filter_isp",
 			"DELETE FROM nqm_pt_target_filter_province",
 			"DELETE FROM nqm_pt_target_filter_city",
 			"DELETE FROM nqm_pt_target_filter_name_tag",
 			"DELETE FROM nqm_ping_task",
 			"DELETE FROM nqm_agent",
+			"SET FOREIGN_KEY_CHECKS=1",
 		)
 	case "TestDbNqmSuite.TestGetTargetsByAgentForRpc":
 		hbstesting.ExecuteQueriesOrFailInTx(
+			"SET FOREIGN_KEY_CHECKS=0",
 			"DELETE FROM nqm_pt_target_filter_isp",
 			"DELETE FROM nqm_pt_target_filter_province",
 			"DELETE FROM nqm_pt_target_filter_city",
@@ -386,6 +397,7 @@ func (s *TestDbNqmSuite) TearDownTest(c *C) {
 			"DELETE FROM nqm_ping_task",
 			"DELETE FROM nqm_target",
 			"DELETE FROM nqm_agent",
+			"SET FOREIGN_KEY_CHECKS=1",
 		)
 	}
 }
