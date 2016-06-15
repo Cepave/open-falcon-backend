@@ -14,7 +14,6 @@ type Utility interface {
 	MarshalJSONParamsToGraph(target model.NqmTarget, agent model.NqmAgent, row map[string]string, step int64) []ParamToAgent
 	ProbingCommand(command []string, targetAddressList []string) []string
 	UtilName() string
-	Interval() time.Duration
 }
 
 type Fping struct {
@@ -71,10 +70,6 @@ func (u *Fping) CalcStats(row []float64, length int) map[string]string {
 	return dataMap
 }
 
-func (u *Fping) Interval() time.Duration {
-	return time.Second * time.Duration(GetGeneralConfig().Agent.FpingInterval)
-}
-
 type Tcpping struct {
 	Utility
 }
@@ -94,10 +89,6 @@ func (u *Tcpping) UtilName() string {
 
 func (u *Tcpping) CalcStats(row []float64, length int) map[string]string {
 	return new(Fping).CalcStats(row, length)
-}
-
-func (u *Tcpping) Interval() time.Duration {
-	return time.Second * time.Duration(GetGeneralConfig().Agent.TcppingInterval)
 }
 
 type Tcpconn struct {
@@ -133,12 +124,9 @@ func (u *Tcpconn) CalcStats(row []float64, length int) map[string]string {
 	return dataMap
 }
 
-func (u *Tcpconn) Interval() time.Duration {
-	return time.Second * time.Duration(GetGeneralConfig().Agent.TcpconnInterval)
-}
-
-func measureByUtil(u Utility) {
-	probingCmd, targets, agent, err := Task(u)
+func measureByUtil(u Utility, dur chan time.Duration) {
+	probingCmd, targets, agent, interval, err := Task(u)
+	dur <- interval
 	if err != nil {
 		log.Println(err)
 		return
@@ -148,14 +136,15 @@ func measureByUtil(u Utility) {
 	rawData := Probe(probingCmd, u.UtilName())
 	parsedData := Parse(rawData)
 	statsData := Calc(parsedData, u)
-	jsonParams := Marshal(statsData, u, targets, agent)
+	jsonParams := Marshal(statsData, u, targets, agent, int64(interval))
 	Push(jsonParams, u.UtilName())
 }
 
 func measure(u Utility) {
 	for {
-		go measureByUtil(u)
-		time.Sleep(u.Interval())
+		dur := make(chan time.Duration)
+		go measureByUtil(u, dur)
+		time.Sleep(time.Second * <-dur)
 	}
 }
 

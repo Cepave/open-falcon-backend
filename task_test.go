@@ -14,7 +14,7 @@ import (
 
 type NqmAgent int
 
-func (t *NqmAgent) PingTask(request model.NqmPingTaskRequest, response *model.NqmPingTaskResponse) (err error) {
+func (t *NqmAgent) Task(request model.NqmTaskRequest, response *model.NqmTaskResponse) (err error) {
 	response.NeedPing = true
 
 	nqmAgent := &model.NqmAgent{
@@ -36,7 +36,11 @@ func (t *NqmAgent) PingTask(request model.NqmPingTaskRequest, response *model.Nq
 	}
 	response.Targets = targets
 
-	response.Command = []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}
+	response.Measurements = map[string]model.MeasurementsProperty{
+		"fping":   {true, []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}, 300},
+		"tcpping": {false, []string{"tcpping", "-i", "0.01", "-c", "4"}, 300},
+		"tcpconn": {false, []string{"tcpconn"}, 300},
+	}
 	return nil
 }
 
@@ -64,7 +68,7 @@ func initJsonRpcServer(addr string) {
 
 func initJsonRpcClient(srvAddr string) {
 	rpcClient.RpcServer = srvAddr
-	req = model.NqmPingTaskRequest{
+	req = model.NqmTaskRequest{
 		Hostname:     "nqm-agent",
 		IpAddress:    "1.2.3.4",
 		ConnectionId: "arg-arg-arg",
@@ -72,12 +76,13 @@ func initJsonRpcClient(srvAddr string) {
 }
 
 func TestTask(t *testing.T) {
-	GetGeneralConfig().hbsResp.Store(model.NqmPingTaskResponse{})
+	GetGeneralConfig().hbsResp.Store(model.NqmTaskResponse{})
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
 
 	query()
-	cmd, targets, agent, err := Task(new(Fping))
+	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse)
+	cmd, targets, agent, _, err := Task(new(Fping))
 	if err != nil {
 		t.Error(err)
 	}
@@ -88,7 +93,6 @@ func TestTask(t *testing.T) {
 		{Id: 31, Host: "33.33.33.33", IspId: 32, ProvinceId: 33, CityId: 34},
 	}
 
-	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmPingTaskResponse)
 	expectedAgent := *hbsResp.Agent
 	expectedCommand := []string{
 		"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a",

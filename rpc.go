@@ -17,7 +17,7 @@ type SingleConnRpcClient struct {
 }
 
 var (
-	req       model.NqmPingTaskRequest
+	req       model.NqmTaskRequest
 	rpcClient SingleConnRpcClient
 )
 
@@ -85,7 +85,7 @@ func (this *SingleConnRpcClient) Call(method string, args interface{}, reply int
 
 func InitRPC() {
 	rpcClient.RpcServer = GetGeneralConfig().Hbs.RPCServer
-	req = model.NqmPingTaskRequest{
+	req = model.NqmTaskRequest{
 		Hostname:     GetGeneralConfig().Hostname,
 		IpAddress:    GetGeneralConfig().IPAddress,
 		ConnectionId: GetGeneralConfig().ConnectionID,

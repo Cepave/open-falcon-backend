@@ -113,10 +113,9 @@ func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric str
 	return ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
 }
 
-func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.NqmAgent, u Utility) []ParamToAgent {
+func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.NqmAgent, step int64, u Utility) []ParamToAgent {
 	var params []ParamToAgent
 
-	step := int64(GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse).Measurements[u.UtilName()].Interval)
 	params = append(params, u.MarshalJSONParamsToGraph(target, agent, row, step)...)
 
 	t := convToNqmTarget(target)
@@ -127,12 +126,12 @@ func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.
 	return params
 }
 
-func Marshal(statsData []map[string]string, u Utility, targets []model.NqmTarget, agent model.NqmAgent) []ParamToAgent {
+func Marshal(statsData []map[string]string, u Utility, targets []model.NqmTarget, agent model.NqmAgent, step int64) []ParamToAgent {
 	var params []ParamToAgent
 
 	for rowIdx, statsRow := range statsData {
 		target := targets[rowIdx]
-		params = append(params, marshalStatsRow(statsRow, target, agent, u)...)
+		params = append(params, marshalStatsRow(statsRow, target, agent, step, u)...)
 	}
 	return params
 }
