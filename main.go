@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Cepave/query/conf"
+	"github.com/Cepave/query/database"
 	"github.com/Cepave/query/g"
+	ginHttp "github.com/Cepave/query/gin_http"
 	"github.com/Cepave/query/graph"
 	"github.com/Cepave/query/grpc"
 	"github.com/Cepave/query/http"
@@ -41,5 +44,9 @@ func main() {
 	// grpc
 	go grpc.Start()
 
+	//lambdaSetup
+	database.Init()
+	conf.ReadConf("./conf/lambdaSetup.json")
+	go ginHttp.StartWeb()
 	select {}
 }
