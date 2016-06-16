@@ -162,7 +162,6 @@ func configGraphRoutes() {
 				data = append(data, result)
 			}
 		}
-		log.Println("got length of data: ", len(data))
 
 		// statistics
 		proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))

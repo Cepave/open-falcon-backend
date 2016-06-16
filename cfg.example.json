@@ -14,6 +14,9 @@
             "graph-00": "127.0.0.1:6070"
         }
     },
+    "grpc": {
+      "port": 1235
+    },
     "api": {
         "name": "apiName",
         "token": "apiToken",
