@@ -9,67 +9,64 @@ import (
 	"github.com/Cepave/common/model"
 )
 
-func updatedMsg(old map[string]MeasurementsProperty, updated map[string]MeasurementsProperty) string {
+func updatedMsg(old map[string]model.MeasurementsProperty, updated map[string]model.MeasurementsProperty) string {
 	msg := ""
+	if updated == nil { // Reset all enabled measurements
+		for k, v := range old {
+			if v.Enabled {
+				msg = msg + fmt.Sprint("<", k, " Disabled> ")
+			}
+		}
+		return msg
+	}
 	for k, _ := range updated {
-		if !old[k].enabled && updated[k].enabled {
+		if !old[k].Enabled && updated[k].Enabled {
 			msg = msg + fmt.Sprint("<", k, " Enabled> ")
 		}
-		if old[k].enabled && !updated[k].enabled {
+		if old[k].Enabled && !updated[k].Enabled {
 			msg = msg + fmt.Sprint("<", k, " Disabled> ")
 		}
 	}
 	return msg
 }
 
-func updateMeasurements(command []string) map[string]MeasurementsProperty {
-	updated := NewMeasurements()
-
-	for _, cmd := range command {
-		if m, ok := updated[cmd]; ok {
-			m.enabled = true
-			updated[cmd] = m
-		}
-	}
-	return updated
-}
-
-func configFromHbsUpdated(newResp model.NqmPingTaskResponse) bool {
-	if !reflect.DeepEqual(GetGeneralConfig().hbsResp.Load().(model.NqmPingTaskResponse), newResp) {
+func configFromHbsUpdated(newResp model.NqmTaskResponse, oldResp model.NqmTaskResponse) bool {
+	if !reflect.DeepEqual(newResp, oldResp) {
 		return true
 	}
 	return false
 }
 
 func query() {
-	var resp model.NqmPingTaskResponse
-	err := rpcClient.Call("NqmAgent.PingTask", req, &resp)
+	var resp model.NqmTaskResponse
+	err := rpcClient.Call("NqmAgent.Task", req, &resp)
 	if err != nil {
 		log.Println("[ hbs ] Error on RPC call:", err)
 		return
 	}
 	log.Println("[ hbs ] Response received")
-	if !configFromHbsUpdated(resp) {
+
+	oldResp := GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse)
+	if !configFromHbsUpdated(resp, oldResp) {
 		return
+	}
+	msg := "[ hbs ] Configuration updated"
+
+	oldMeas := oldResp.Measurements
+	updatedMeas := resp.Measurements
+	if measMsg := updatedMsg(oldMeas, updatedMeas); measMsg != "" {
+		msg = msg + " - " + measMsg
 	}
 
 	GetGeneralConfig().hbsResp.Store(resp)
-
-	old := GetGeneralConfig().Measurements
-	updated := updateMeasurements(resp.Command)
-	GetGeneralConfig().Measurements = updated
-
-	if msg := updatedMsg(old, updated); msg != "" {
-		log.Println("[ hbs ]", msg)
-	}
-	log.Println("[ hbs ] Configuration updated")
+	log.Println(msg)
 }
 
 func Query() {
 	for {
 		query()
 
-		dur := time.Second * time.Duration(GetGeneralConfig().Hbs.Interval)
+		dur := time.Second * GetGeneralConfig().Hbs.Interval
 		time.Sleep(dur)
 	}
 }

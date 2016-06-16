@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-func trimResults(fpingResults []string) []string {
+func trimResults(results []string) []string {
 	var trimmedData []string
-	for _, result := range fpingResults {
+	for _, result := range results {
 		if strings.HasPrefix(result, "ICMP Time Exceeded from") {
 			continue
 		}
@@ -24,8 +24,8 @@ func Probe(probingCmd []string, util string) []string {
 		// one target with 100% packet loss.
 		log.Println("[", util, "] An error occured:", err)
 	}
-	fpingResults := strings.Split(string(cmdOutput), "\n")
-	fpingResults = fpingResults[:len(fpingResults)-1]
-	rawData := trimResults(fpingResults)
+	results := strings.Split(string(cmdOutput), "\n")
+	results = results[:len(results)-1]
+	rawData := trimResults(results)
 	return rawData
 }

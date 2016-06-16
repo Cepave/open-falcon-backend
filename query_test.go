@@ -4,63 +4,29 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/Cepave/common/model"
 )
 
-func TestUpdateMeasurements(t *testing.T) {
-	var cfg GeneralConfig
-	generalConfig = &cfg
-	cfg.Agent = new(AgentConfig)
-	cfg.Agent.FpingInterval = 60
-	cfg.Agent.TcppingInterval = 60
-	cfg.Agent.TcpconnInterval = 60
-
-	tests := [][]string{
-		{"", "", ""},
-		{"", "", "tcpconn"},
-		{"", "tcpping", ""},
-		{"", "tcpping", "tcpconn"},
-		{"fping", "", ""},
-		{"fping", "", "tcpconn"},
-		{"fping", "tcpping", ""},
-		{"fping", "tcpping", "tcpconn"},
-	}
-
-	expecteds := []map[string]MeasurementsProperty{
-		{"fping": {60, false}, "tcpping": {60, false}, "tcpconn": {60, false}},
-		{"fping": {60, false}, "tcpping": {60, false}, "tcpconn": {60, true}},
-		{"fping": {60, false}, "tcpping": {60, true}, "tcpconn": {60, false}},
-		{"fping": {60, false}, "tcpping": {60, true}, "tcpconn": {60, true}},
-		{"fping": {60, true}, "tcpping": {60, false}, "tcpconn": {60, false}},
-		{"fping": {60, true}, "tcpping": {60, false}, "tcpconn": {60, true}},
-		{"fping": {60, true}, "tcpping": {60, true}, "tcpconn": {60, false}},
-		{"fping": {60, true}, "tcpping": {60, true}, "tcpconn": {60, true}},
-	}
-
-	for j, c := range tests {
-		d := updateMeasurements(c)
-		if !reflect.DeepEqual(expecteds[j], d) {
-			t.Error(expecteds[j], d)
-		}
-		t.Log(expecteds[j], d)
-
-	}
-}
-
 func TestUpdatedMsg(t *testing.T) {
-	testsOld := []map[string]MeasurementsProperty{
-		{"fping": {60, true}, "tcpping": {60, true}, "tcpconn": {60, true}},
-		{"fping": {60, false}, "tcpping": {60, false}, "tcpconn": {60, false}},
-		{"fping": {60, true}, "tcpping": {60, false}, "tcpconn": {60, true}},
-		{"fping": {60, true}, "tcpping": {60, false}, "tcpconn": {60, false}},
-		{"fping": {60, false}, "tcpping": {60, true}, "tcpconn": {60, false}},
+	testsOld := []map[string]model.MeasurementsProperty{
+		{"fping": {true, []string{""}, 60}, "tcpping": {true, []string{""}, 60}, "tcpconn": {true, []string{""}, 60}},
+		{"fping": {false, []string{""}, 60}, "tcpping": {false, []string{""}, 60}, "tcpconn": {false, []string{""}, 60}},
+		{"fping": {true, []string{""}, 60}, "tcpping": {false, []string{""}, 60}, "tcpconn": {true, []string{""}, 60}},
+		{"fping": {true, []string{""}, 60}, "tcpping": {false, []string{""}, 60}, "tcpconn": {false, []string{""}, 60}},
+		{"fping": {false, []string{""}, 60}, "tcpping": {true, []string{""}, 60}, "tcpconn": {false, []string{""}, 60}},
+		{"fping": {false, []string{""}, 60}, "tcpping": {true, []string{""}, 60}, "tcpconn": {true, []string{""}, 60}},
+		nil,
 	}
 
-	testsUpdated := []map[string]MeasurementsProperty{
-		{"fping": {60, false}, "tcpping": {60, false}, "tcpconn": {60, false}},
-		{"fping": {60, true}, "tcpping": {60, true}, "tcpconn": {60, true}},
-		{"fping": {60, false}, "tcpping": {60, false}, "tcpconn": {60, true}},
-		{"fping": {60, false}, "tcpping": {60, false}, "tcpconn": {60, true}},
-		{"fping": {60, false}, "tcpping": {60, true}, "tcpconn": {60, false}},
+	testsUpdated := []map[string]model.MeasurementsProperty{
+		{"fping": {false, []string{""}, 60}, "tcpping": {false, []string{""}, 60}, "tcpconn": {false, []string{""}, 60}},
+		{"fping": {true, []string{""}, 60}, "tcpping": {true, []string{""}, 60}, "tcpconn": {true, []string{""}, 60}},
+		{"fping": {false, []string{""}, 60}, "tcpping": {false, []string{""}, 60}, "tcpconn": {true, []string{""}, 60}},
+		{"fping": {false, []string{""}, 60}, "tcpping": {false, []string{""}, 60}, "tcpconn": {true, []string{""}, 60}},
+		{"fping": {false, []string{""}, 60}, "tcpping": {true, []string{""}, 60}, "tcpconn": {false, []string{""}, 60}},
+		nil,
+		{"fping": {true, []string{""}, 60}, "tcpping": {true, []string{""}, 60}, "tcpconn": {false, []string{""}, 60}},
 	}
 
 	expecteds := []string{
@@ -69,6 +35,8 @@ func TestUpdatedMsg(t *testing.T) {
 		"<fping Disabled> ",
 		"<fping Disabled> <tcpconn Enabled> ",
 		"",
+		"<tcpping Disabled> <tcpconn Disabled> ",
+		"<fping Enabled> <tcpping Enabled> ",
 	}
 
 	for i, _ := range testsOld {

@@ -47,7 +47,7 @@ func marshalJSONParamsToCassandra(nqmDataGram string, metric string) ParamToAgen
 	data.Endpoint = GetGeneralConfig().Hostname
 	data.Value = "0"
 	data.CounterType = "GAUGE"
-	data.Step = int64(60)
+	data.Step = int64(60) // a useless field in Cassandra
 	return data
 }
 
@@ -98,7 +98,7 @@ func convToNqmTarget(s model.NqmTarget) nqmNodeData {
  *     Packet Loss - int
  *     Transmission Time - float64
  */
-func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric string, value interface{}) ParamToAgent {
+func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric string, value interface{}, step int64) ParamToAgent {
 	endpoint := GetGeneralConfig().Hostname
 	counterType := "GAUGE"
 	tags := "nqm-agent-isp=" + agent.IspName +
@@ -110,14 +110,13 @@ func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric str
 		",target-city=" + target.CityName +
 		",target-name-tag=" + target.NameTag
 	timestamp := time.Now().Unix()
-	step := int64(60)
 	return ParamToAgent{metric, endpoint, value, counterType, tags, timestamp, step}
 }
 
-func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.NqmAgent, u Utility) []ParamToAgent {
+func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.NqmAgent, step int64, u Utility) []ParamToAgent {
 	var params []ParamToAgent
 
-	params = append(params, u.MarshalJSONParamsToGraph(target, agent, row)...)
+	params = append(params, u.MarshalJSONParamsToGraph(target, agent, row, step)...)
 
 	t := convToNqmTarget(target)
 	a := convToNqmAgent(agent)
@@ -127,12 +126,12 @@ func marshalStatsRow(row map[string]string, target model.NqmTarget, agent model.
 	return params
 }
 
-func Marshal(statsData []map[string]string, u Utility, targets []model.NqmTarget, agent model.NqmAgent) []ParamToAgent {
+func Marshal(statsData []map[string]string, u Utility, targets []model.NqmTarget, agent model.NqmAgent, step int64) []ParamToAgent {
 	var params []ParamToAgent
 
 	for rowIdx, statsRow := range statsData {
 		target := targets[rowIdx]
-		params = append(params, marshalStatsRow(statsRow, target, agent, u)...)
+		params = append(params, marshalStatsRow(statsRow, target, agent, step, u)...)
 	}
 	return params
 }

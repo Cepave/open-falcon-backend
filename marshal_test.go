@@ -79,6 +79,18 @@ func TestMarshalStatsRow(t *testing.T) {
 	nqmTarget := model.NqmTarget{
 		Id: -2, IspId: -2, ProvinceId: -2, CityId: -2,
 	}
+
+	var resp model.NqmTaskResponse
+	resp.NeedPing = true
+	resp.Agent = &nqmAgent
+	resp.Targets = []model.NqmTarget{nqmTarget}
+	resp.Measurements = map[string]model.MeasurementsProperty{
+		"fping":   {true, []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}, 300},
+		"tcpping": {false, []string{"tcpping", "-i", "0.01", "-c", "4"}, 300},
+		"tcpconn": {false, []string{"tcpconn"}, 300},
+	}
+	GetGeneralConfig().hbsResp.Store(resp)
+
 	agent := nqmNodeData{
 		"-1", "-1", "-1", "-1", "-1",
 	}
@@ -96,7 +108,7 @@ func TestMarshalStatsRow(t *testing.T) {
 		{{}, {}, {}, {Metric: "nqm-fping", Endpoint: "unit-test-hostname", Value: 0, CounterType: "GAUGE", Tags: "", Timestamp: time.Now().Unix(), Step: 60}},
 	}
 	for i, v := range tests {
-		params := marshalStatsRow(v, nqmTarget, nqmAgent, new(Fping))
+		params := marshalStatsRow(v, nqmTarget, nqmAgent, 300, new(Fping))
 		testTags := assembleTags(target, agent, tests[0])
 		expecteds[i][3].Tags = testTags
 		params[3].Tags = testTags
@@ -104,6 +116,7 @@ func TestMarshalStatsRow(t *testing.T) {
 		if expecteds[i][3].String() != params[3].String() {
 			t.Error(expecteds[i][3], params[3])
 		}
+		t.Log(expecteds[i][3], params[3])
 	}
 
 	// tcpconn, 2 JSON parameters, only test the 2nd which is for Cassandra
@@ -116,7 +129,7 @@ func TestMarshalStatsRow(t *testing.T) {
 		{{}, {Metric: "nqm-tcpconn", Endpoint: "unit-test-hostname", Value: 0, CounterType: "GAUGE", Tags: "", Timestamp: time.Now().Unix(), Step: 60}},
 	}
 	for i, v := range tests {
-		params := marshalStatsRow(v, nqmTarget, nqmAgent, new(Tcpconn))
+		params := marshalStatsRow(v, nqmTarget, nqmAgent, 300, new(Tcpconn))
 		testTags := assembleTags(target, agent, tests[0])
 		expecteds[i][1].Tags = testTags
 		params[1].Tags = testTags
@@ -124,5 +137,6 @@ func TestMarshalStatsRow(t *testing.T) {
 		if expecteds[i][1].String() != params[1].String() {
 			t.Error(expecteds[i][1], params[1])
 		}
+		t.Log(expecteds[i][1], params[1])
 	}
 }
