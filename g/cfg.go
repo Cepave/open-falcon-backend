@@ -13,6 +13,11 @@ type HttpConfig struct {
 	Listen  string `json:"listen"`
 }
 
+type GinHttpConfig struct {
+	Enabled bool   `json:"enabled"`
+	Listen  string `json:"listen"`
+}
+
 type GraphConfig struct {
 	ConnTimeout int32             `json:"connTimeout"`
 	CallTimeout int32             `json:"callTimeout"`
@@ -52,6 +57,10 @@ type NqmConfig struct {
 
 type GrpcConfig struct {
 	Port int `json:"port"`
+type GraphDB struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
 }
 
 type GlobalConfig struct {
@@ -63,6 +72,8 @@ type GlobalConfig struct {
 	NqmLog *NqmLogConfig `json:"nqmlog"`
 	Nqm    *NqmConfig    `json:"nqm"`
 	Grpc   *GrpcConfig   `json:"grpc"`
+	GinHttp *GinHttpConfig `json:"gin_http"`
+	GraphDB *GraphDB       `json:"graphdb"`
 }
 
 var (

@@ -4,6 +4,10 @@
         "enabled":  true,
         "listen":   "0.0.0.0:9966"
     },
+    "gin_http": {
+        "enabled":  true,
+        "listen":   "0.0.0.0:9967"
+    },
     "graph": {
         "connTimeout": 1000,
         "callTimeout": 5000,
@@ -30,6 +34,11 @@
     },
     "db": {
         "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
+    "graphdb": {
+        "addr": "root:password@tcp(10.20.30.40:3306)/graph?charset=utf8&parseTime=True&loc=Local",
         "idle": 10,
         "max": 100
     },
