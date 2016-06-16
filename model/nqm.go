@@ -2,39 +2,41 @@ package model
 
 import (
 	"net"
-	"github.com/Cepave/common/model"
 	"strings"
+
+	"github.com/Cepave/common/model"
 )
 
 // Represents the model of NQM agent, which is only used in HBS
 type NqmAgent struct {
-	Id int
+	Id        int
 	IpAddress net.IP
 
-	rpcNqmAgent *model.NqmPingTaskRequest
+	rpcNqmAgentReq *model.NqmTaskRequest
 }
 
 // Constructs a new instance of NQM agent
-func NewNqmAgent(rpcNqmAgent *model.NqmPingTaskRequest) *NqmAgent {
-	var ipAddress = net.ParseIP(rpcNqmAgent.IpAddress);
+func NewNqmAgent(rpcNqmAgentReq *model.NqmTaskRequest) *NqmAgent {
+	var ipAddress = net.ParseIP(rpcNqmAgentReq.IpAddress)
 
-	if strings.IndexAny(rpcNqmAgent.IpAddress, ".") >= 0 {
+	if strings.IndexAny(rpcNqmAgentReq.IpAddress, ".") >= 0 {
 		ipAddress = ipAddress.To4()
 	} else {
 		ipAddress = ipAddress.To16()
 	}
 
 	return &NqmAgent{
-		rpcNqmAgent: rpcNqmAgent,
-		IpAddress: ipAddress,
+		rpcNqmAgentReq: rpcNqmAgentReq,
+		IpAddress:      ipAddress,
 	}
 }
 
 // Gets the value of connection id
 func (agent *NqmAgent) ConnectionId() string {
-	return agent.rpcNqmAgent.ConnectionId
+	return agent.rpcNqmAgentReq.ConnectionId
 }
+
 // Gets the value of hostname
 func (agent *NqmAgent) Hostname() string {
-	return agent.rpcNqmAgent.Hostname
+	return agent.rpcNqmAgentReq.Hostname
 }

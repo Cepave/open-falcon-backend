@@ -1,19 +1,20 @@
 package rpc
 
 import (
+	"strings"
+	"time"
+
 	commonModel "github.com/Cepave/common/model"
 	"github.com/Cepave/hbs/db"
 	"github.com/Cepave/hbs/model"
 	"github.com/asaskevich/govalidator"
-	"strings"
-	"time"
 )
 
-// Retrieve the configuration of ping task for certain client
+// Task retrieves the configuration of measurement tasks for certain client
 //
-// If the NqmPingTaskRequest.ConnectionId is not existing in database,
-// this function would create one, but the NqmPingTiskResponse.NeedPing would be value of false.
-func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *commonModel.NqmPingTaskResponse) (err error) {
+// If the NqmTaskRequest.ConnectionId is not existing in database,
+// this function would create one, but the NqmTiskResponse.NeedPing would be value of false.
+func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonModel.NqmTaskResponse) (err error) {
 
 	/**
 	 * Validates data
@@ -26,7 +27,7 @@ func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *co
 	response.NeedPing = false
 	response.Agent = nil
 	response.Targets = nil
-	response.Command = nil
+	response.Measurements = nil
 
 	/**
 	 * Refresh the information of agent
@@ -65,12 +66,16 @@ func (t *NqmAgent) PingTask(request commonModel.NqmPingTaskRequest, response *co
 	response.NeedPing = true
 	response.Agent = nqmAgent
 	response.Targets = targets
-	response.Command = []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}
+	response.Measurements = map[string]commonModel.MeasurementsProperty{
+		"fping":   {true, []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}, 300},
+		"tcpping": {false, []string{"tcpping", "-i", "0.01", "-c", "4"}, 300},
+		"tcpconn": {false, []string{"tcpconn"}, 300},
+	}
 
 	return
 }
 
-func validatePingTask(request *commonModel.NqmPingTaskRequest) (err error) {
+func validatePingTask(request *commonModel.NqmTaskRequest) (err error) {
 	request.ConnectionId = strings.TrimSpace(request.ConnectionId)
 	request.Hostname = strings.TrimSpace(request.Hostname)
 	request.IpAddress = strings.TrimSpace(request.IpAddress)
