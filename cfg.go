@@ -113,9 +113,9 @@ func getIP() string {
 	ip, err := PublicIP()
 	if err != nil {
 		log.Println("IP not set in config, getting public IP...failed:", err)
+	} else {
+		log.Println("IP not set in config, getting public IP...succeeded: [", ip, "]")
 	}
-
-	log.Println("IP not set in config, getting public IP...succeeded: [", ip, "]")
 	return ip
 }
 
@@ -177,6 +177,8 @@ func InitGeneralConfig(cfgFilePath string) {
 	cfg.Hbs = getJSONConfig().Hbs
 	cfg.hbsResp.Store(model.NqmTaskResponse{})
 	cfg.Hostname = getHostname()
-	cfg.IPAddress = getIP()
+	if cfg.IPAddress = getIP(); cfg.IPAddress == "UNKNOWN" {
+		log.Fatalln("IP can't be \"UNKNOWN\"")
+	}
 	cfg.ConnectionID = getConnectionID()
 }
