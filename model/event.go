@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+
 	"github.com/Cepave/common/utils"
 )
 

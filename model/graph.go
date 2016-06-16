@@ -2,8 +2,9 @@ package model
 
 import (
 	"fmt"
-	MUtils "github.com/Cepave/common/utils"
 	"math"
+
+	MUtils "github.com/Cepave/common/utils"
 )
 
 // DsType 即RRD中的Datasource的类型：GAUGE|COUNTER|DERIVE

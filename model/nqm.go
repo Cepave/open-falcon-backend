@@ -2,22 +2,23 @@ package model
 
 import (
 	"fmt"
+	"time"
 )
 
 const (
 	// Value of undefined id
 	UNDEFINED_ID = -1
 
-	UNDEFINED_ISP_ID = int16(UNDEFINED_ID)
+	UNDEFINED_ISP_ID      = int16(UNDEFINED_ID)
 	UNDEFINED_PROVINCE_ID = int16(UNDEFINED_ID)
-	UNDEFINED_CITY_ID = int16(UNDEFINED_ID)
+	UNDEFINED_CITY_ID     = int16(UNDEFINED_ID)
 
 	// Value of undefined string
 	UNDEFINED_STRING = "<UNDEFINED>"
 )
 
-// Represents the request for ping task by NQM agent
-type NqmPingTaskRequest struct {
+// NqmTaskRequest represents the request for ping task by NQM agent
+type NqmTaskRequest struct {
 	// The connection id of agent(used to identify task configruation)
 	ConnectionId string `valid:"required"`
 	// The hostname of agent
@@ -27,10 +28,16 @@ type NqmPingTaskRequest struct {
 	IpAddress string `valid:"required"`
 }
 
-// Represents the response for ping task requested from NQM agent
+type MeasurementsProperty struct {
+	Enabled  bool
+	Command  []string
+	Interval time.Duration
+}
+
+// NqmTaskResponse represents the response for ping task requested from NQM agent
 //
 // If NeedPing is false, Targets and Command would be empty array
-type NqmPingTaskResponse struct {
+type NqmTaskResponse struct {
 	// Whether or not the task should be performed
 	NeedPing bool
 
@@ -44,7 +51,7 @@ type NqmPingTaskResponse struct {
 
 	// The command/arguments of command to be executed
 	// nil if there is no need for ping
-	Command []string
+	Measurements map[string]MeasurementsProperty
 }
 
 // Represents the data of agent
