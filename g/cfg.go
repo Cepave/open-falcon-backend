@@ -120,5 +120,6 @@ func ParseConfig(cfg string) {
 
 	SetConfig(&c)
 
+	InitLogger(c.Debug)
 	log.Println("g.ParseConfig ok, file", cfg)
 }
