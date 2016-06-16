@@ -102,11 +102,15 @@ func (this *Graph) Query(param cmodel.GraphQueryParam, resp *cmodel.GraphQueryRe
 	resp.Endpoint = param.Endpoint
 	resp.Counter = param.Counter
 	dsType, step, exists := index.GetTypeAndStep(param.Endpoint, param.Counter) // complete dsType and step
+	qstep := step
+	if param.Step != 0 {
+		qstep = param.Step
+	}
 	if !exists {
 		return nil
 	}
 	resp.DsType = dsType
-	resp.Step = step
+	resp.Step = qstep
 
 	start_ts := param.Start - param.Start%int64(step)
 	end_ts := param.End - param.End%int64(step) + int64(step)
@@ -138,7 +142,7 @@ func (this *Graph) Query(param cmodel.GraphQueryParam, resp *cmodel.GraphQueryRe
 		datas_size = len(datas)
 	} else {
 		// read data from rrd file
-		datas, _ = rrdtool.Fetch(filename, param.ConsolFun, start_ts, end_ts, step)
+		datas, _ = rrdtool.Fetch(filename, param.ConsolFun, start_ts, end_ts, qstep)
 		datas_size = len(datas)
 	}
 
