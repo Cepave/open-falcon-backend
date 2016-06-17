@@ -40,9 +40,12 @@ func main() {
 
 	// http
 	http.Start()
+	grpcMsg := make(chan string)
+	if gconf.Grpc.Enabled {
+		// grpc
+		go grpc.Start(grpcMsg)
+	}
 
-	// grpc
-	go grpc.Start()
 
 	//lambdaSetup
 	database.Init()
