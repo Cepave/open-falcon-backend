@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/Cepave/query/conf"
@@ -32,6 +33,7 @@ func main() {
 
 	// config
 	g.ParseConfig(*cfg)
+	gconf := g.Config()
 	// proc
 	proc.Start()
 
@@ -58,5 +60,14 @@ func main() {
 	if gconf.Http.Enabled {
 		// http
 		go http.Start(httpMsg)
+	}
+
+	select {
+	case <-grpcMsg:
+		log.Printf("%v is crashed", grpcMsg)
+	case <-ginMsg:
+		log.Printf("%v is crashed", ginMsg)
+	case <-httpMsg:
+		log.Printf("%v is crashed", ginMsg)
 	}
 }
