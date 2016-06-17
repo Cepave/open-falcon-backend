@@ -1427,6 +1427,20 @@ func getPlatformContact(platformName string, rw http.ResponseWriter, nodes map[s
 	nodes["platform"] = platformName
 }
 
+func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	arguments := strings.Split(req.URL.Path, "/")
+	if len(arguments) == 6 && arguments[len(arguments)-2] == "bandwidths" && arguments[len(arguments)-1] == "average" {
+		platformName := arguments[len(arguments)-3]
+		metricType := arguments[len(arguments)-2]
+		nodes = getPlatformBandwidthsFiveMinutesAverage(platformName, metricType, rw)
+	} else if len(arguments) == 5 && arguments[len(arguments)-1] == "contact" {
+		platformName := arguments[len(arguments)-2]
+		getPlatformContact(platformName, rw, nodes)
+	}
+	setResponse(rw, nodes)
+}
+
 func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
