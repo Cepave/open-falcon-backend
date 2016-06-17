@@ -85,12 +85,10 @@ func parsePlatformJSON(result map[string]interface{}) map[string]interface{} {
 func getSeverity(priority string) string {
 	severity := "Lower"
 	if priority == "0" {
-		severity = "Highest"
-	} else if priority == "1" {
 		severity = "High"
-	} else if priority == "2" {
+	} else if priority == "1" {
 		severity = "Medium"
-	} else if priority == "3" {
+	} else if priority == "2" || priority == "3" {
 		severity = "Low"
 	}
 	return severity
@@ -476,7 +474,6 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 func getAlertCount(items []interface{}) map[string]int {
 	count := map[string]int{
 		"all":     len(items),
-		"highest": 0,
 		"high":    0,
 		"medium":  0,
 		"low":     0,
@@ -484,9 +481,7 @@ func getAlertCount(items []interface{}) map[string]int {
 	}
 	for _, item := range items {
 		severity := item.(map[string]interface{})["severity"].(string)
-		if severity == "Highest" {
-			count["highest"]++
-		} else if severity == "High" {
+		if severity == "High" {
 			count["high"]++
 		} else if severity == "Medium" {
 			count["medium"]++
