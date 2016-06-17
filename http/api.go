@@ -1363,6 +1363,70 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 	setResponse(rw, nodes)
 }
 
+func getPlatformContact(platformName string, rw http.ResponseWriter, nodes map[string]interface{}) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	var platformMap = make(map[string]interface{})
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Contact
+	params := map[string]string{
+		"fcname":       fcname,
+		"fctoken":      fctoken,
+		"platform_key": platformName,
+	}
+	s, err := json.Marshal(params)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqPost)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		err = json.Unmarshal(body, &nodes)
+		if err != nil {
+			setError(err.Error(), result)
+		} else if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
+			for _, name := range strings.Split(platformName, ",") {
+				if platform, ok := nodes["result"].(map[string]interface{})[name].([]interface{}); ok {
+					items := []interface{}{}
+					for _, contact := range platform {
+						item := map[string]interface{}{
+							"name":  contact.(map[string]interface{})["realname"].(string),
+							"phone": contact.(map[string]interface{})["cell"].(string),
+							"email": contact.(map[string]interface{})["email"].(string),
+						}
+						items = append(items, item)
+					}
+					platformMap[name] = items
+				} else {
+					platformMap[name] = "BOSS 沒有平台負責人資訊"
+				}
+			}
+		}
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = platformMap
+	nodes["result"] = result
+	nodes["count"] = len(platformMap)
+	nodes["platform"] = platformName
+}
+
 func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
