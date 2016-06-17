@@ -44,12 +44,15 @@ func main() {
 		go grpc.Start(grpcMsg)
 	}
 
+	ginMsg := make(chan string)
 
-	//lambdaSetup
-	database.Init()
-	conf.ReadConf("./conf/lambdaSetup.json")
-	go ginHttp.StartWeb()
-	select {}
+	if gconf.GinHttp.Enabled {
+		//lambdaSetup
+		database.Init()
+		conf.ReadConf("./conf/lambdaSetup.json")
+		go ginHttp.StartWeb(ginMsg)
+	}
+
 	httpMsg := make(chan string)
 
 	if gconf.Http.Enabled {
