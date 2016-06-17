@@ -38,8 +38,6 @@ func main() {
 	// graph
 	graph.Start()
 
-	// http
-	http.Start()
 	grpcMsg := make(chan string)
 	if gconf.Grpc.Enabled {
 		// grpc
@@ -52,4 +50,10 @@ func main() {
 	conf.ReadConf("./conf/lambdaSetup.json")
 	go ginHttp.StartWeb()
 	select {}
+	httpMsg := make(chan string)
+
+	if gconf.Http.Enabled {
+		// http
+		go http.Start(httpMsg)
+	}
 }
