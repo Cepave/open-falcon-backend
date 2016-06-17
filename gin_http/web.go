@@ -50,7 +50,12 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-func StartWeb() {
+func StartWeb(ginMsg chan<- string) {
+
+	defer func() {
+		ginMsg <- "gin"
+	}()
+
 	handler := gin.Default()
 	handler.Use(CORSMiddleware())
 	compute := handler.Group("/func")
