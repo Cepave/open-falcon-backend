@@ -43,7 +43,7 @@ $(function() {
 					<div class="u">
 						{{if $.IamRoot}}
 						<div class="pull-right">
-							{{if gt .Role 0}}
+							{{if eq .Role 1 2}}
 							<input type="checkbox" checked="checked" onclick="set_role('{{.Id}}', this);">
 							{{else}}
 							<input type="checkbox" onclick="set_role('{{.Id}}', this);">
