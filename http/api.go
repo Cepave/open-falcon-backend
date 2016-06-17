@@ -773,7 +773,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	groupNames := []string{}
 	hostnames := []string{}
 	hostnamesMap := map[string]int{}
-	if int(nodes["status"].(float64)) == 1 {
+	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 		hostname := ""
 		for _, platform := range nodes["result"].([]interface{}) {
 			groupName := platform.(map[string]interface{})["platform"].(string)
@@ -1164,7 +1164,7 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	getApolloFiltersJSON(nodes, result)
 	hosts := []interface{}{}
 	hostnames := []string{}
-	if int(nodes["status"].(float64)) == 1 {
+	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 		hostname := ""
 		for _, platform := range nodes["result"].([]interface{}) {
 			groupName := platform.(map[string]interface{})["platform"].(string)
@@ -1320,22 +1320,15 @@ func getBandwidthsFiveMinutesAverage(metricType string, duration string, hostnam
 	return items
 }
 
-func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
+func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType string, rw http.ResponseWriter) map[string]interface{} {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	arguments := strings.Split(req.URL.Path, "/")
-	platformName := ""
-	metricType := ""
 	duration := "6min"
-	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
-		platformName = arguments[len(arguments)-2]
-		metricType = arguments[len(arguments)-1]
-	}
 	var nodes = make(map[string]interface{})
 	getApolloFiltersJSON(nodes, result)
 	hostnames := []string{}
-	if int(nodes["status"].(float64)) == 1 {
+	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 		hostname := ""
 		for _, platform := range nodes["result"].([]interface{}) {
 			groupName := platform.(map[string]interface{})["platform"].(string)
@@ -1360,6 +1353,84 @@ func getPlatformBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.R
 	nodes["result"] = result
 	nodes["count"] = len(items)
 	nodes["platform"] = platformName
+	return nodes
+}
+
+func getPlatformContact(platformName string, rw http.ResponseWriter, nodes map[string]interface{}) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	var platformMap = make(map[string]interface{})
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Contact
+	params := map[string]string{
+		"fcname":       fcname,
+		"fctoken":      fctoken,
+		"platform_key": platformName,
+	}
+	s, err := json.Marshal(params)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqPost)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		err = json.Unmarshal(body, &nodes)
+		if err != nil {
+			setError(err.Error(), result)
+		} else if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
+			for _, name := range strings.Split(platformName, ",") {
+				if platform, ok := nodes["result"].(map[string]interface{})[name].([]interface{}); ok {
+					items := []interface{}{}
+					for _, contact := range platform {
+						item := map[string]interface{}{
+							"name":  contact.(map[string]interface{})["realname"].(string),
+							"phone": contact.(map[string]interface{})["cell"].(string),
+							"email": contact.(map[string]interface{})["email"].(string),
+						}
+						items = append(items, item)
+					}
+					platformMap[name] = items
+				} else {
+					platformMap[name] = "BOSS 沒有平台負責人資訊"
+				}
+			}
+		}
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = platformMap
+	nodes["result"] = result
+	nodes["count"] = len(platformMap)
+	nodes["platform"] = platformName
+}
+
+func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	arguments := strings.Split(req.URL.Path, "/")
+	if len(arguments) == 6 && arguments[len(arguments)-2] == "bandwidths" && arguments[len(arguments)-1] == "average" {
+		platformName := arguments[len(arguments)-3]
+		metricType := arguments[len(arguments)-2]
+		nodes = getPlatformBandwidthsFiveMinutesAverage(platformName, metricType, rw)
+	} else if len(arguments) == 5 && arguments[len(arguments)-1] == "contact" {
+		platformName := arguments[len(arguments)-2]
+		getPlatformContact(platformName, rw, nodes)
+	}
 	setResponse(rw, nodes)
 }
 
@@ -1401,7 +1472,7 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 	hosts := map[string]interface{}{}
 	hostnames := []string{}
 	hostnamesMap := map[string]int{}
-	if int(nodes["status"].(float64)) == 1 {
+	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 		hostname := ""
 		for _, platform := range nodes["result"].([]interface{}) {
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
@@ -1413,8 +1484,8 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 						idcID := device.(map[string]interface{})["pop_id"].(string)
 						host := map[string]interface{}{
 							"activate": device.(map[string]interface{})["ip_status"].(string),
+							"hostname": hostname,
 							"idcID":    idcID,
-							"idcName":  hostname,
 							"ip":       ip,
 						}
 						hostnamesMap[hostname] = 1
@@ -1489,8 +1560,8 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 	fctoken := getFctoken()
 	url := g.Config().Api.Uplink
 	params := map[string]string{
-		"fcname": fcname,
-		"fctoken": fctoken,
+		"fcname":   fcname,
+		"fctoken":  fctoken,
 		"pop_name": idcName,
 	}
 	s, err := json.Marshal(params)
@@ -1515,7 +1586,7 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 			setError(err.Error(), result)
 		}
 
-		if int(nodes["status"].(float64)) == 1 {
+		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			for _, uplink := range nodes["result"].([]interface{}) {
 				upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
 				upperLimitSum += upperLimit
@@ -1523,7 +1594,7 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	items := map[string]interface{}{
-		"idcName": idcName,
+		"idcName":      idcName,
 		"upperLimitMB": upperLimitSum,
 	}
 
@@ -1551,7 +1622,7 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
-	http.HandleFunc("/api/platforms/", getPlatformBandwidthsFiveMinutesAverage)
+	http.HandleFunc("/api/platforms/", parsePlatformArguments)
 	http.HandleFunc("/api/hosts/", getHostsBandwidthsFiveMinutesAverage)
 	http.HandleFunc("/api/idcs/hosts", getIDCsHosts)
 	http.HandleFunc("/api/idcs/", getIDCsBandwidthsUpperLimit)

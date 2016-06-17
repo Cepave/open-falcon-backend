@@ -31,6 +31,7 @@ type GraphConfig struct {
 type ApiConfig struct {
 	Name      string `json:"name"`
 	Token     string `json:"token"`
+	Contact   string `json:"contact"`
 	Event     string `json:"event"`
 	Map       string `json:"map"`
 	Geo       string `json:"geo"`
@@ -73,7 +74,7 @@ type GlobalConfig struct {
 	Graph   *GraphConfig   `json:"graph"`
 	Api     *ApiConfig     `json:"api"`
 	Db      *DbConfig      `json:"db"`
-	NqmLog  *NqmLogConfig  `json:"nqmlog"`
+	NqmLog  *NqmLogConfig  `json:nqmlog`
 	Nqm     *NqmConfig     `json:"nqm"`
 	Grpc    *GrpcConfig    `json:"grpc"`
 	GinHttp *GinHttpConfig `json:"gin_http"`

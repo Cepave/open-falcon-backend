@@ -54,6 +54,7 @@ func Start(httpMsg chan<- string) {
 	configProcHttpRoutes()
 	configGraphRoutes()
 	configAPIRoutes()
+	configAlertRoutes()
 	configGrafanaRoutes()
 	configZabbixRoutes()
 	configNqmRoutes()
