@@ -25,6 +25,7 @@
     "api": {
         "name": "apiName",
         "token": "apiToken",
+        "contact": "https://example.com/api_contact_path",
         "event": "https://example.com/api_event_path",
         "map": "https://example.com/api_map_path",
         "geo": "https://example.com/api_geo_path",
