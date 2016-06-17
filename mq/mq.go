@@ -3,7 +3,6 @@ package mq
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"github.com/Cepave/fe/g"
 	"github.com/streadway/amqp"
 	"io/ioutil"
@@ -45,7 +44,7 @@ func Start() {
 	// Retry RetriedLimit times if there is some problem during connecting
 	var ch *amqp.Channel
 	var conn *amqp.Connection
-	var err error = errors.New("Init error.")
+	var err error
 	for i := 0; i < RetriedLimit; i++ {
 		if conn, ch, err = setup(mq.Queue); err != nil {
 			time.Sleep(time.Second * SleepTimePeriod)
