@@ -10,14 +10,18 @@ t2 = _.map(input, function(res){
     return res
   }else{
     diffvalues = []
+    flag = 0
     _.reduce(res.Values, function(lastVal,v){
       value = (isNaN(v.Value)? 0 : v.Value)
-      if(lastVal === 0){
+      if(flag === 0){
         lastVal = value
       }else{
-        diffvalues.push(lastVal - value)
+        restmp = lastVal - value
+        diffvalues.push(restmp)
         lastVal = value
       }
+      flag++
+      return lastVal
     },0)
     mean = _.reduce(diffvalues, function(sum,v){
       return (sum+v)
