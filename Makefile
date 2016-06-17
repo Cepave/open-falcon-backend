@@ -60,6 +60,10 @@ bin/falcon-hbs : $(shell find modules/hbs/ -name '*.go')
 bin/falcon-judge : $(shell find modules/judge/ -name '*.go')
 bin/falcon-nodata : $(shell find modules/nodata/ -name '*.go')
 bin/falcon-query : $(shell find modules/query/ -name '*.go')
+	go build -o $@ ./modules/query
+	cp -r modules/query/js bin/js
+	mkdir -p bin/conf
+	cp modules/query/conf/lambdaSetup.json bin/conf
 bin/falcon-sender : $(shell find modules/sender/ -name '*.go')
 bin/falcon-task : $(shell find modules/task/ -name '*.go')
 bin/falcon-transfer : $(shell find modules/transfer/ -name '*.go')
