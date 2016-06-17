@@ -71,9 +71,9 @@ func QueryStrategies(tpls map[int]*model.Template) (map[int]*model.Strategy, err
 						log.Println("ERROR:", err.Error())
 						continue
 					}
-					log.Println("templateId =", tid)
-					log.Println("strategyId =", strategyId)
-					log.Println(kv[1] + " =", value)
+					// log.Println("templateId =", tid)
+					// log.Println("strategyId =", strategyId)
+					// log.Println(kv[1] + " =", value)
 					kv[1] = value
 				}
 				tt[kv[0]] = kv[1]
