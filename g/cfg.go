@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/Cepave/query/logger"
 	"github.com/toolkits/file"
 )
 
@@ -122,6 +123,6 @@ func ParseConfig(cfg string) {
 
 	SetConfig(&c)
 
-	InitLogger(c.Debug)
+	logger.InitLogger(c.Debug)
 	log.Println("g.ParseConfig ok, file", cfg)
 }

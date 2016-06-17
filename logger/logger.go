@@ -1,4 +1,4 @@
-package g
+package logger
 
 import (
 	"os"
@@ -16,6 +16,12 @@ func Logger() *logrus.Entry {
 	Locker.RLock()
 	defer Locker.RUnlock()
 	return logger
+}
+
+func SetFields(feilds logrus.Fields) {
+	Locker.RLock()
+	defer Locker.RUnlock()
+	logger = logrus.WithFields(feilds)
 }
 
 func InitLogger(debugLevel bool) {
