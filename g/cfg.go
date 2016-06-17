@@ -57,6 +57,7 @@ type NqmConfig struct {
 
 type GrpcConfig struct {
 	Port int `json:"port"`
+}
 type GraphDB struct {
 	Addr string `json:"addr"`
 	Idle int    `json:"idle"`
