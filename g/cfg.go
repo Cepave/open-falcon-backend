@@ -61,20 +61,21 @@ type GrpcConfig struct {
 	Port    int  `json:"port"`
 }
 type GraphDB struct {
-	Addr string `json:"addr"`
-	Idle int    `json:"idle"`
-	Max  int    `json:"max"`
+	Addr  string `json:"addr"`
+	Idle  int    `json:"idle"`
+	Max   int    `json:"max"`
+	Limit int    `json:"limit"`
 }
 
 type GlobalConfig struct {
-	Debug  bool          `json:"debug"`
-	Http   *HttpConfig   `json:"http"`
-	Graph  *GraphConfig  `json:"graph"`
-	Api    *ApiConfig    `json:"api"`
-	Db     *DbConfig     `json:"db"`
-	NqmLog *NqmLogConfig `json:"nqmlog"`
-	Nqm    *NqmConfig    `json:"nqm"`
-	Grpc   *GrpcConfig   `json:"grpc"`
+	Debug   bool           `json:"debug"`
+	Http    *HttpConfig    `json:"http"`
+	Graph   *GraphConfig   `json:"graph"`
+	Api     *ApiConfig     `json:"api"`
+	Db      *DbConfig      `json:"db"`
+	NqmLog  *NqmLogConfig  `json:"nqmlog"`
+	Nqm     *NqmConfig     `json:"nqm"`
+	Grpc    *GrpcConfig    `json:"grpc"`
 	GinHttp *GinHttpConfig `json:"gin_http"`
 	GraphDB *GraphDB       `json:"graphdb"`
 }
