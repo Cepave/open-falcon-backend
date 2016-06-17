@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/query/g"
 	"github.com/Cepave/query/graph"
+	"github.com/Cepave/query/logger"
 	"github.com/Cepave/query/model"
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +25,7 @@ func GetEndpoints(c *gin.Context) {
 }
 
 func QDataGet(c *gin.Context) []*cmodel.GraphQueryResponse {
-	log := g.Logger()
+	log := logger.Logger()
 	startTmp := c.DefaultQuery("startTs", string(time.Now().Unix()-(86400)))
 	startTmp2, _ := strconv.Atoi(startTmp)
 	startTs := int64(startTmp2)

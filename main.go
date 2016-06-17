@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/Cepave/query/conf"
@@ -32,21 +33,41 @@ func main() {
 
 	// config
 	g.ParseConfig(*cfg)
+	gconf := g.Config()
 	// proc
 	proc.Start()
 
 	// graph
 	graph.Start()
 
-	// http
-	http.Start()
+	grpcMsg := make(chan string)
+	if gconf.Grpc.Enabled {
+		// grpc
+		go grpc.Start(grpcMsg)
+	}
 
-	// grpc
-	go grpc.Start()
+	ginMsg := make(chan string)
 
-	//lambdaSetup
-	database.Init()
-	conf.ReadConf("./conf/lambdaSetup.json")
-	go ginHttp.StartWeb()
-	select {}
+	if gconf.GinHttp.Enabled {
+		//lambdaSetup
+		database.Init()
+		conf.ReadConf("./conf/lambdaSetup.json")
+		go ginHttp.StartWeb(ginMsg)
+	}
+
+	httpMsg := make(chan string)
+
+	if gconf.Http.Enabled {
+		// http
+		go http.Start(httpMsg)
+	}
+
+	select {
+	case <-grpcMsg:
+		log.Printf("%v is crashed", grpcMsg)
+	case <-ginMsg:
+		log.Printf("%v is crashed", ginMsg)
+	case <-httpMsg:
+		log.Printf("%v is crashed", ginMsg)
+	}
 }

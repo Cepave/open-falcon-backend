@@ -3,9 +3,9 @@ package ginHttp
 import (
 	"time"
 
-	cmodel "github.com/Cepave/common/model"
-	// "github.com/fvbock/endless"
 	"log"
+
+	cmodel "github.com/Cepave/common/model"
 
 	"github.com/Cepave/query/g"
 	"github.com/Cepave/query/gin_http/computeFunc"
@@ -50,7 +50,12 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-func StartWeb() {
+func StartWeb(ginMsg chan<- string) {
+
+	defer func() {
+		ginMsg <- "gin"
+	}()
+
 	handler := gin.Default()
 	handler.Use(CORSMiddleware())
 	compute := handler.Group("/func")
@@ -61,7 +66,6 @@ func StartWeb() {
 	openfalcon := handler.Group("/owl")
 	openfalcon.GET("/endpoints", openFalcon.GetEndpoints)
 	openfalcon.GET("/queryrrd", openFalcon.QueryData)
-	// endless.ListenAndServe(":8888", handler)
 	log.Println("open gin port on:", conf.GinHttp.Listen)
 	handler.Run(conf.GinHttp.Listen)
 }

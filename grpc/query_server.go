@@ -99,7 +99,12 @@ func (s *server) Query(ctx context.Context, in *pb.QueryInput) (*pb.QueryReply, 
 	return &pb.QueryReply{Result: string(res)}, nil
 }
 
-func Start() {
+func Start(grpcMsg chan<- string) {
+
+	defer func() {
+		grpcMsg <- "grpc"
+	}()
+
 	port := fmt.Sprintf(":%v", g.Config().Grpc.Port)
 	log.Printf("start grpc in port %v ..", port)
 	//queryrrd(1452806153, 1452827753, "AVERAGE", "docker-agent", "cpu.idle")
@@ -108,16 +113,6 @@ func Start() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	//recovery panic error
-	defer func() {
-		if r := recover(); r != nil {
-			var ok bool
-			err, ok = r.(error)
-			if !ok {
-				err = fmt.Errorf("grpc service got error: %v", r)
-			}
-		}
-	}()
 	s := grpc.NewServer()
 	pb.RegisterOwlQueryServer(s, &server{})
 	s.Serve(lis)

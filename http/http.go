@@ -2,13 +2,14 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/Cepave/query/g"
-	"github.com/astaxie/beego/orm"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"strings"
+
+	"github.com/Cepave/query/g"
+	"github.com/astaxie/beego/orm"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Dto struct {
@@ -37,7 +38,12 @@ func InitDatabase() {
 	}
 }
 
-func Start() {
+func Start(httpMsg chan<- string) {
+
+	defer func() {
+		httpMsg <- "http"
+	}()
+
 	if !g.Config().Http.Enabled {
 		log.Println("http.Start warning, not enable")
 		return

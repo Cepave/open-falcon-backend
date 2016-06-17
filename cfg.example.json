@@ -19,6 +19,7 @@
         }
     },
     "grpc": {
+      "enabled":  true,
       "port": 1235
     },
     "api": {
@@ -40,7 +41,8 @@
     "graphdb": {
         "addr": "root:password@tcp(10.20.30.40:3306)/graph?charset=utf8&parseTime=True&loc=Local",
         "idle": 10,
-        "max": 100
+        "max": 100,
+        "limit": -1
     },
     "nqm": {
         "addr": "root:@tcp(127.0.0.1:3306)/db_name?charset=utf8&loc=Asia%2FTaipei",
