@@ -78,6 +78,7 @@ func QueryOne(para cmodel.GraphQueryParam) (resp *cmodel.GraphQueryResponse, err
 			pool.Release(conn)
 
 			if len(r.Resp.Values) < 1 {
+				r.Resp.Values = []*cmodel.RRDData{}
 				return r.Resp, nil
 			}
 
