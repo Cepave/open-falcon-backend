@@ -71,9 +71,11 @@
         }
     },
     "grpc":{
+        "enabled": true,
         "port": 8080
     },
     "mq":{
+        "enabled": true,
         "queue": "amqp://username:password@example.com:5672/",
         "consumer": "http://example.com/consumer_path"
     }

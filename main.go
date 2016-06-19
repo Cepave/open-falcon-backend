@@ -19,7 +19,7 @@ func main() {
 	cfg := flag.String("c", "cfg.json", "configuration file")
 	version := flag.Bool("v", false, "show version")
 	flag.Parse()
-
+	conf := g.Config()
 	if *version {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
@@ -35,10 +35,16 @@ func main() {
 	model.InitDatabase()
 	cache.InitCache()
 
-	graph.Start()
-	go grpc.Start()
-	go mq.Start()
-	go http.Start()
+	if conf.Grpc.Enabled {
+		graph.Start()
+		go grpc.Start()
+	}
+	if conf.Mq.Enabled {
+		go mq.Start()
+	}
+	if conf.Http.Enabled {
+		go http.Start()
+	}
 
 	select {}
 }
