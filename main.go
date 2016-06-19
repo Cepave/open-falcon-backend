@@ -19,7 +19,6 @@ func main() {
 	cfg := flag.String("c", "cfg.json", "configuration file")
 	version := flag.Bool("v", false, "show version")
 	flag.Parse()
-	conf := g.Config()
 	if *version {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
@@ -30,6 +29,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	conf := g.Config()
 	logger.SetLevelWithDefault(g.Config().Log, "info")
 
 	model.InitDatabase()
