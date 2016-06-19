@@ -245,10 +245,14 @@ func getMetricValues(req *http.Request, host string, metrics []string, result []
 	if len(endpointCounters) > 0 {
 		from, err := strconv.ParseInt(req.PostForm["from"][0], 10, 64)
 		until, err := strconv.ParseInt(req.PostForm["until"][0], 10, 64)
-		step, _ := strconv.ParseInt(req.PostForm["step"][0], 10, 64)
-		cf := req.PostForm["cf"][0]
-		if cf == "" {
-			cf = "AVERAGE"
+		var step int64 = 60
+		postmap := req.Form
+		if postmap.Get("step") != "" {
+			step, _ = strconv.ParseInt(req.PostForm["step"][0], 10, 64)
+		}
+		cf := "AVERAGE"
+		if postmap.Get("cf") != "" {
+			cf = req.PostForm["cf"][0]
 		}
 		url := "/graph/history"
 		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
