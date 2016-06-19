@@ -46,7 +46,7 @@ func generatePostData(endpoints []string, counter string, sts int64, ets int64) 
 
 func DoPost() {
 	conf := g.Config()
-	url := fmt.Sprintf("%s%s", conf.Http.Listen(), "/graph/history")
+	url := fmt.Sprintf("%s%s", conf.Http.Listen, "/graph/history")
 	// host := []string{"endpointA", "endpointB"}
 	host := gethost()
 	dd := generatePostData(host, "cpu.idle", 1464761471, 1464847858)
