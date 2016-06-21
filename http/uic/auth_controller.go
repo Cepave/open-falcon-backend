@@ -315,6 +315,9 @@ func getUserRole(access_key string) int {
 			role = 3
 		}
 	}
+
+	// TODO: The role should be able to be changed on BOSS in the future.
+	role = 1
 	return role
 }
 
