@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"github.com/Cepave/query/logger"
 	"github.com/astaxie/beego/orm"
 	"log"
 	"net/http"
@@ -336,6 +337,7 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 }
 
 func queryAlerts(templateIDs string, result map[string]interface{}) []interface{} {
+	mylog := logger.Logger()
 	alerts := []interface{}{}
 	if templateIDs == "" {
 		return alerts
@@ -369,7 +371,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
 				process = row["process_status"].(string)
-				log.Printf("process: %v")
+				mylog.Debug(fmt.Sprintf("process: %v", process))
 				process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			}
 			templateID := row["template_id"].(string)
