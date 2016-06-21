@@ -12,7 +12,7 @@
 
 dir="$(pwd)"
 cmd="./open-falcon"
-declare -a commands=("hbs" "transfer" "aggregator" "graph" "judge" "nodata" "nqm" "query" "sender" "task")
+declare -a commands=("hbs" "transfer" "aggregator" "graph" "judge" "nodata" "query" "sender" "task")
 
 
 user="root"
