@@ -343,7 +343,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 	notes := getNotes(result)
 	o := orm.NewOrm()
 	var rows []orm.Params
-	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, template_id, tpl_creator "
+	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, template_id, tpl_creator, process_status "
 	sqlcmd += "FROM falcon_portal.event_cases "
 	if templateIDs != "*" {
 		sqlcmd += "WHERE template_id IN ("
@@ -369,6 +369,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
 				process = row["process_status"].(string)
+				log.Printf("process: %v")
 				process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			}
 			templateID := row["template_id"].(string)
@@ -424,6 +425,19 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 				log.Println("host deactivated:", hostname)
 			}
 		} else {
+			item.(map[string]interface{})["ip"] = "-"
+			item.(map[string]interface{})["platform"] = "-"
+			item.(map[string]interface{})["idc"] = "-"
+			contact := map[string]string{
+				"email": "-",
+				"name":  "-",
+				"phone": "-",
+			}
+			contacts := []interface{}{
+				contact,
+			}
+			item.(map[string]interface{})["contact"] = contacts
+			items = append(items, item)
 			log.Println("hostname not found:", hostname)
 		}
 	}
