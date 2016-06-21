@@ -368,7 +368,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 			note := []map[string]string{}
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
-				process = note[0]["status"]
+				process = note[0]["process_status"]
 				process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			}
 			templateID := row["template_id"].(string)
@@ -473,11 +473,11 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 
 func getAlertCount(items []interface{}) map[string]int {
 	count := map[string]int{
-		"all":     len(items),
-		"high":    0,
-		"medium":  0,
-		"low":     0,
-		"lower":   0,
+		"all":    len(items),
+		"high":   0,
+		"medium": 0,
+		"low":    0,
+		"lower":  0,
 	}
 	for _, item := range items {
 		severity := item.(map[string]interface{})["severity"].(string)
