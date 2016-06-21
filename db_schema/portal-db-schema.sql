@@ -218,9 +218,6 @@ CREATE TABLE cluster
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
-
-DROP TABLE IF EXISTS event;
-
 DROP TABLE IF EXISTS event_cases;
 CREATE TABLE event_cases (
   id VARCHAR(50),
@@ -235,6 +232,8 @@ CREATE TABLE event_cases (
   status VARCHAR(20) NOT NULL,
   timestamp Timestamp NOT NULL,
   update_at Timestamp,
+  process_note mediumint(9),
+  process_status  varchar(20) DEFAULT 'unresolved',
   closed_at Timestamp,
   closed_note VARCHAR(200),
   user_modified int(10) unsigned,
@@ -248,6 +247,28 @@ CREATE TABLE event_cases (
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
+
+DROP TABLE IF EXISTS event_note;
+CREATE TABLE IF NOT EXISTS event_note (
+  id MEDIUMINT NOT NULL AUTO_INCREMENT,
+  event_caseId VARCHAR(50),
+  note    VARCHAR(300),
+  case_id VARCHAR(20),
+  status VARCHAR(15),
+  timestamp Timestamp,
+  user_id int(10) unsigned,
+  PRIMARY KEY (id),
+  INDEX (event_caseId),
+  FOREIGN KEY (event_caseId) REFERENCES event_cases(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES uic.user(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+)
+ ENGINE =InnoDB
+ DEFAULT CHARSET =utf8;
+
 DROP TABLE IF EXISTS events;
 CREATE TABLE events (
   id MEDIUMINT NOT NULL AUTO_INCREMENT,
@@ -255,6 +276,7 @@ CREATE TABLE events (
   step int(10) unsigned,
   cond VARCHAR(200) NOT NULL,
   timestamp Timestamp,
+  status int(3) unsigned DEFAULT 0,
   PRIMARY KEY (id),
   INDEX(event_caseId),
   FOREIGN KEY (event_caseId) REFERENCES event_cases(id)
