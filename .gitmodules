@@ -88,9 +88,6 @@
 [submodule "modules/nodata"]
 	path = modules/nodata
 	url = https://github.com/cepave/nodata
-[submodule "modules/nqm"]
-	path = modules/nqm
-	url = https://github.com/cepave/nqm
 [submodule "modules/query"]
 	path = modules/query
 	url = https://github.com/cepave/query
