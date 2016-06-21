@@ -368,7 +368,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 			note := []map[string]string{}
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
-				process = note[0]["process_status"]
+				process = row["process_status"].(string)
 				process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			}
 			templateID := row["template_id"].(string)
