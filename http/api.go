@@ -467,7 +467,7 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes/pop_id/yes.json"
+	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes.json"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
