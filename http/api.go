@@ -1472,6 +1472,37 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, re
 	return items
 }
 
+func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	items := []interface{}{}
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	arguments := strings.Split(req.URL.Path, "/")
+	hostnames := []string{}
+	metricType := ""
+	method := ""
+	duration := ""
+	if len(arguments) == 7 && arguments[len(arguments)-3] == "bandwidths" {
+		hostnames = strings.Split(arguments[len(arguments)-4], ",")
+		metricType = arguments[len(arguments)-3]
+		method = arguments[len(arguments)-2]
+		duration = arguments[len(arguments)-1]
+	}
+
+	if method == "average" {
+		items = getBandwidthsAverage(metricType, duration, hostnames, result)
+	} else if method == "sum" {
+		items = getBandwidthsSum(metricType, duration, hostnames, result)
+	}
+
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
