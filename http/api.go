@@ -988,30 +988,6 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getApolloFiltersJSON(nodes map[string]interface{}, result map[string]interface{}) {
-	fcname := g.Config().Api.Name
-	fctoken := getFctoken()
-	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes/pop_id/yes.json"
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		setError(err.Error(), result)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	if err := json.Unmarshal(body, &nodes); err != nil {
-		setError(err.Error(), result)
-	}
-}
-
 func getExistedHostnames(hostnames []string, result map[string]interface{}) []string {
 	hostnamesExisted := []string{}
 	o := orm.NewOrm()
@@ -1105,7 +1081,9 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 	for _, host := range hostsExisted {
 		id := host.(map[string]interface{})["id"].(int)
 		platform := host.(map[string]interface{})["platform"].([]string)
+		tags := []string{}
 		for _, s := range platform {
+			tags = appendUniqueString(tags, s)
 			if _, ok := keywords[s]; ok {
 				keywords[s] = appendUnique(keywords[s].([]int), id)
 			} else {
@@ -1114,6 +1092,7 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		}
 
 		isp := host.(map[string]interface{})["isp"].(string)
+		tags = appendUniqueString(tags, isp)
 		if _, ok := keywords[isp]; ok {
 			keywords[isp] = appendUnique(keywords[isp].([]int), id)
 		} else {
@@ -1121,6 +1100,7 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		}
 
 		province := host.(map[string]interface{})["province"].(string)
+		tags = appendUniqueString(tags, province)
 		if _, ok := keywords[province]; ok {
 			keywords[province] = appendUnique(keywords[province].([]int), id)
 		} else {
@@ -1132,6 +1112,7 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		if len(fragments) == 6 {
 			fragments := fragments[2:]
 			for _, fragment := range fragments {
+				tags = appendUniqueString(tags, fragment)
 				if _, ok := keywords[fragment]; ok {
 					keywords[fragment] = appendUnique(keywords[fragment].([]int), id)
 				} else {
@@ -1139,14 +1120,18 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 				}
 			}
 		}
+		ip := getIPFromHostname(name, result)
+		keywords[ip] = []int{id}
+		tags = appendUniqueString(tags, ip)
 
 		idc := host.(map[string]interface{})["idc"].(string)
+		tags = appendUniqueString(tags, idc)
 		if _, ok := keywords[idc]; ok {
 			keywords[idc] = appendUnique(keywords[idc].([]int), id)
 		} else {
 			keywords[idc] = []int{id}
 		}
-
+		host.(map[string]interface{})["tag"] = strings.Join(tags, ",")
 		delete(host.(map[string]interface{}), "id")
 		delete(host.(map[string]interface{}), "isp")
 		delete(host.(map[string]interface{}), "province")
@@ -1162,7 +1147,7 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	count := 0
-	getApolloFiltersJSON(nodes, result)
+	getPlatformJSON(nodes, result)
 	hosts := []interface{}{}
 	hostnames := []string{}
 	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
@@ -1327,7 +1312,7 @@ func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType str
 	result["error"] = errors
 	duration := "6min"
 	var nodes = make(map[string]interface{})
-	getApolloFiltersJSON(nodes, result)
+	getPlatformJSON(nodes, result)
 	hostnames := []string{}
 	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 		hostname := ""
