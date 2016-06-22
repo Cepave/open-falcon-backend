@@ -1420,6 +1420,58 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getBandwidthsSum(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
+	items := []interface{}{}
+	sort.Strings(hostnames)
+	metrics := getMetricsByMetricType(metricType)
+	metricMap := map[string]interface{}{}
+	timestamps := []float64{}
+	if len(metrics) > 0 && len(hostnames) > 0 {
+		data := getGraphQueryResponse(metrics, duration, hostnames, result)
+		for _, rrdObj := range data[0].Values {
+			timestamps = append(timestamps, float64(rrdObj.Timestamp))
+		}
+		if len(timestamps) > 0 {
+			for _, metric := range metrics {
+				values := []float64{}
+				for _, _ = range timestamps {
+					values = append(values, float64(0))
+				}
+				metricMap[metric] = values
+			}
+			for _, series := range data {
+				values := metricMap[series.Counter].([]float64)
+				for key, rrdObj := range series.Values {
+					if !math.IsNaN(float64(rrdObj.Value)) {
+						values[key] += float64(rrdObj.Value)
+					}
+				}
+				metricMap[series.Counter] = values
+			}
+		}
+	}
+	if len(timestamps) > 0 {
+		for _, metric := range metrics {
+			slice := metricMap[metric].([]float64)
+			data := []interface{}{}
+			for key, value := range slice {
+				datum := []interface{}{
+					timestamps[key] * 1000,
+					value,
+				}
+				data = append(data, datum)
+			}
+			item := map[string]interface{}{
+				"host":   strings.Join(hostnames, ","),
+				"metric": metric,
+				"data":   data,
+			}
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
 func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
