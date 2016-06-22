@@ -370,7 +370,6 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 			sqlcmd := "SELECT * FROM falcon_portal.tags WHERE strategy_id=?"
 			err = o.Raw(sqlcmd, strategyIDint).QueryRow(&tag)
 			if err == orm.ErrNoRows {
-				log.Println("tag not found")
 				sql := "INSERT INTO tags(strategy_id, name, value, create_at) VALUES(?, ?, ?, ?)"
 				res, err := o.Raw(sql, strategyIDint, tagName, tagValue, getNow()).Exec()
 				if err != nil {
@@ -384,7 +383,6 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Println("tag existed =", tag)
 				sql := "UPDATE tags SET name = ?, value = ? WHERE strategy_id = ?"
 				res, err := o.Raw(sql, tagName, tagValue, strategyIDint).Exec()
 				if err != nil {
@@ -637,25 +635,28 @@ func getAnomalies(errorHosts []interface{}, result map[string]interface{}) map[s
 	anomalies2 := map[string]interface{}{}
 	for _, errorHost := range errorHosts {
 		pop_id := errorHost.(map[string]string)["pop_id"]
-		idc := idcs[pop_id]
-		errorHost.(map[string]string)["idc"] = idc.(map[string]string)["idc"]
-		errorHost.(map[string]string)["city"] = idc.(map[string]string)["city"]
-
-		provinceName := idc.(map[string]string)["province"]
-		if provinceName == "特区" {
-			provinceName = idc.(map[string]string)["city"]
-		}
-		errorHost.(map[string]string)["province"] = provinceName
-		delete(errorHost.(map[string]string), "pop_id")
-		delete(errorHost.(map[string]string), "id")
-
-		if province, ok := anomalies2[provinceName]; ok {
-			province = append(province.([]map[string]string), errorHost.(map[string]string))
-			anomalies2[provinceName] = province
-		} else {
-			anomalies2[provinceName] = []map[string]string{
-				errorHost.(map[string]string),
+		if idc, ok := idcs[pop_id]; ok {
+			errorHost.(map[string]string)["idc"] = idc.(map[string]string)["idc"]
+			errorHost.(map[string]string)["city"] = idc.(map[string]string)["city"]
+			provinceName := idc.(map[string]string)["province"]
+			if provinceName == "特区" {
+				provinceName = idc.(map[string]string)["city"]
 			}
+			errorHost.(map[string]string)["province"] = provinceName
+			delete(errorHost.(map[string]string), "pop_id")
+
+			if province, ok := anomalies2[provinceName]; ok {
+				province = append(province.([]map[string]string), errorHost.(map[string]string))
+				anomalies2[provinceName] = province
+			} else {
+				anomalies2[provinceName] = []map[string]string{
+					errorHost.(map[string]string),
+				}
+			}
+		} else {
+			errorHost.(map[string]string)["idc"] = ""
+			errorHost.(map[string]string)["city"] = ""
+			errorHost.(map[string]string)["province"] = ""
 		}
 	}
 
