@@ -988,30 +988,6 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getApolloFiltersJSON(nodes map[string]interface{}, result map[string]interface{}) {
-	fcname := g.Config().Api.Name
-	fctoken := getFctoken()
-	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes/pop_id/yes.json"
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		setError(err.Error(), result)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	defer resp.Body.Close()
-
-	body, _ := ioutil.ReadAll(resp.Body)
-	if err := json.Unmarshal(body, &nodes); err != nil {
-		setError(err.Error(), result)
-	}
-}
-
 func getExistedHostnames(hostnames []string, result map[string]interface{}) []string {
 	hostnamesExisted := []string{}
 	o := orm.NewOrm()
