@@ -1081,7 +1081,9 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 	for _, host := range hostsExisted {
 		id := host.(map[string]interface{})["id"].(int)
 		platform := host.(map[string]interface{})["platform"].([]string)
+		tags := []string{}
 		for _, s := range platform {
+			tags = appendUniqueString(tags, s)
 			if _, ok := keywords[s]; ok {
 				keywords[s] = appendUnique(keywords[s].([]int), id)
 			} else {
@@ -1090,6 +1092,7 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		}
 
 		isp := host.(map[string]interface{})["isp"].(string)
+		tags = appendUniqueString(tags, isp)
 		if _, ok := keywords[isp]; ok {
 			keywords[isp] = appendUnique(keywords[isp].([]int), id)
 		} else {
@@ -1097,6 +1100,7 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		}
 
 		province := host.(map[string]interface{})["province"].(string)
+		tags = appendUniqueString(tags, province)
 		if _, ok := keywords[province]; ok {
 			keywords[province] = appendUnique(keywords[province].([]int), id)
 		} else {
@@ -1108,6 +1112,7 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		if len(fragments) == 6 {
 			fragments := fragments[2:]
 			for _, fragment := range fragments {
+				tags = appendUniqueString(tags, fragment)
 				if _, ok := keywords[fragment]; ok {
 					keywords[fragment] = appendUnique(keywords[fragment].([]int), id)
 				} else {
@@ -1115,14 +1120,18 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 				}
 			}
 		}
+		ip := getIPFromHostname(name, result)
+		keywords[ip] = []int{id}
+		tags = appendUniqueString(tags, ip)
 
 		idc := host.(map[string]interface{})["idc"].(string)
+		tags = appendUniqueString(tags, idc)
 		if _, ok := keywords[idc]; ok {
 			keywords[idc] = appendUnique(keywords[idc].([]int), id)
 		} else {
 			keywords[idc] = []int{id}
 		}
-
+		host.(map[string]interface{})["tag"] = strings.Join(tags, ",")
 		delete(host.(map[string]interface{}), "id")
 		delete(host.(map[string]interface{}), "isp")
 		delete(host.(map[string]interface{}), "province")
