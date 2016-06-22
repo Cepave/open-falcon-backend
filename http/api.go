@@ -1162,7 +1162,7 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	count := 0
-	getApolloFiltersJSON(nodes, result)
+	getPlatformJSON(nodes, result)
 	hosts := []interface{}{}
 	hostnames := []string{}
 	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
@@ -1327,7 +1327,7 @@ func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType str
 	result["error"] = errors
 	duration := "6min"
 	var nodes = make(map[string]interface{})
-	getApolloFiltersJSON(nodes, result)
+	getPlatformJSON(nodes, result)
 	hostnames := []string{}
 	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 		hostname := ""
