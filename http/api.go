@@ -1246,7 +1246,7 @@ func getIPFromHostname(hostname string, result map[string]interface{}) string {
 	return ip
 }
 
-func getBandwidthsFiveMinutesAverage(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
+func getBandwidthsAverage(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
@@ -1328,7 +1328,7 @@ func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType str
 			}
 		}
 	}
-	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
+	items := getBandwidthsAverage(metricType, duration, hostnames, result)
 	if _, ok := nodes["info"]; ok {
 		delete(nodes, "info")
 	}
@@ -1485,7 +1485,7 @@ func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Requ
 		hostnames = strings.Split(arguments[len(arguments)-2], ",")
 		metricType = arguments[len(arguments)-1]
 	}
-	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
+	items := getBandwidthsAverage(metricType, duration, hostnames, result)
 	if _, ok := nodes["info"]; ok {
 		delete(nodes, "info")
 	}
