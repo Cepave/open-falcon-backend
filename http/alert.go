@@ -346,13 +346,13 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 	notes := getNotes(result)
 	o := orm.NewOrm()
 	var rows []orm.Params
-	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, template_id, tpl_creator, process_status "
+	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, update_at, template_id, tpl_creator, process_status "
 	sqlcmd += "FROM falcon_portal.event_cases "
 	if templateIDs != "*" {
 		sqlcmd += "WHERE template_id IN ("
 		sqlcmd += templateIDs + ") "
 	}
-	sqlcmd += "ORDER BY timestamp DESC LIMIT 600"
+	sqlcmd += "ORDER BY update_at DESC LIMIT 600"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
@@ -365,7 +365,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 			content := row["note"].(string)
 			priority := row["priority"].(string)
 			statusRaw := row["status"].(string)
-			time := row["timestamp"].(string)
+			time := row["update_at"].(string)
 			time = time[:len(time)-3]
 			process := getProcess(getStatus(statusRaw))
 			note := []map[string]string{}
