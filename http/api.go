@@ -1279,17 +1279,17 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 			item := map[string]interface{}{
 				"host": series.Endpoint,
 				"ip":   getIPFromHostname(series.Endpoint, result),
-				"net.in.bits.5min.avg":  0,
-				"net.out.bits.5min.avg": 0,
+				"net.in.bits.avg":  0,
+				"net.out.bits.avg": 0,
 				"time":                  "",
 			}
 			if value, ok := hostMap[series.Endpoint]; ok {
 				item = value.(map[string]interface{})
 			}
 			if series.Counter == "net.if.in.bits/iface=eth_all" {
-				item["net.in.bits.5min.avg"] = int(average)
+				item["net.in.bits.avg"] = int(average)
 			} else if series.Counter == "net.if.out.bits/iface=eth_all" {
-				item["net.out.bits.5min.avg"] = int(average)
+				item["net.out.bits.avg"] = int(average)
 			}
 			if item["time"] == "" && average > 0 {
 				item["time"] = time.Unix(int64(timestamp), 0).Format("2006-01-02 15:04:05")
