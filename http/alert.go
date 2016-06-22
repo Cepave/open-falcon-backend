@@ -2,14 +2,15 @@ package http
 
 import (
 	"fmt"
-	"github.com/Cepave/query/logger"
-	"github.com/astaxie/beego/orm"
 	"log"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Cepave/query/logger"
+	"github.com/astaxie/beego/orm"
 )
 
 func parsePlatformJSON(result map[string]interface{}) map[string]interface{} {
@@ -511,13 +512,15 @@ func getAlertCount(items []interface{}) map[string]int {
 }
 
 func getAlerts(rw http.ResponseWriter, req *http.Request) {
+	mylog := logger.Logger()
 	var nodes = make(map[string]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	alerts := []interface{}{}
-	username := req.URL.Query()["user"][0]
-	sig := req.URL.Query()["sig"][0]
+	username := req.URL.Query().Get("user")
+	sig := req.URL.Query().Get("sig")
+	mylog.Debug(fmt.Sprintf("user: %v, sig: %v", username, sig))
 	templateIDs := getTemplateIDs(username, sig, result)
 	if templateIDs == "" {
 		nodes["result"] = result
