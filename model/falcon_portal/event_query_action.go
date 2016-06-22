@@ -171,6 +171,9 @@ func GetNotes(event_caseId string, limit int) (enotes []EventNote, err error) {
 				user.name as user_name
 				FROM falcon_portal.event_note as event_note LEFT JOIN uic.user as user on event_note.user_id = user.id
 				WHERE event_note.event_caseId = '%s' ORDER BY event_note.timestamp DESC limit %d`, event_caseId, limit)).QueryRows(&enotes)
+	if len(enotes) == 0 {
+		enotes = []EventNote{}
+	}
 	return
 }
 
