@@ -516,19 +516,25 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	alerts := []interface{}{}
-	items := []interface{}{}
 	username := req.URL.Query()["user"][0]
 	sig := req.URL.Query()["sig"][0]
 	templateIDs := getTemplateIDs(username, sig, result)
-	alerts = queryAlerts(templateIDs, result)
-	items, hostToPlatform := addPlatformToAlerts(alerts, result, nodes, rw)
-	count := getAlertCount(items)
-	result["items"] = items
-	nodes["result"] = result
-	nodes["count"] = count
-	nodes["hosts"] = hostToPlatform
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
-	setResponse(rw, nodes)
+	if templateIDs == "" {
+		nodes["result"] = result
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		setResponse(rw, nodes)
+	} else {
+		items := []interface{}{}
+		alerts = queryAlerts(templateIDs, result)
+		items, hostToPlatform := addPlatformToAlerts(alerts, result, nodes, rw)
+		count := getAlertCount(items)
+		result["items"] = items
+		nodes["result"] = result
+		nodes["count"] = count
+		nodes["hosts"] = hostToPlatform
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
+		setResponse(rw, nodes)
+	}
 }
 
 func configAlertRoutes() {
