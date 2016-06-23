@@ -8,6 +8,7 @@ import (
 	"github.com/Cepave/fe/g"
 	"github.com/Cepave/fe/model/uic"
 	"github.com/astaxie/beego/orm"
+	"time"
 )
 
 //generate status filter SQL templete
@@ -44,7 +45,9 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 	queryTmp := ""
 	if startTime != 0 && endTime != 0 {
 		flag = true
-		queryTmp = fmt.Sprintf(" %v update_at >= %d AND  update_at <= %d", queryTmp, startTime, endTime)
+		stime := time.Unix(startTime, 0).Format("2016-06-23 00:00:00")
+		etime := time.Unix(endTime, 0).Format("2016-06-23 00:00:00")
+		queryTmp = fmt.Sprintf(" %v update_at >= '%s' AND  update_at <= '%s'", queryTmp, stime, etime)
 	}
 	if priority != -1 {
 		if flag {
