@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Cepave/query/logger"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -251,7 +250,7 @@ func getTemplateIDs(username string, sig string, result map[string]interface{}) 
 		setError("Please log in first", result)
 		return ""
 	}
-	if userRole == "2" || userRole == "1" { // admin user
+	if userRole == "1" || userRole == "2" { // admin user
 		return "*"
 	}
 	receiverTeamIDs := getReceiverTeamIDs(userID, result)
@@ -338,7 +337,6 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 }
 
 func queryAlerts(templateIDs string, result map[string]interface{}) []interface{} {
-	mylog := logger.Logger()
 	alerts := []interface{}{}
 	if templateIDs == "" {
 		return alerts
@@ -352,7 +350,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 		sqlcmd += "WHERE template_id IN ("
 		sqlcmd += templateIDs + ") "
 	}
-	sqlcmd += "ORDER BY update_at DESC LIMIT 600"
+	sqlcmd += "ORDER BY update_at DESC LIMIT 500"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
@@ -372,7 +370,6 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
 				process = row["process_status"].(string)
-				mylog.Debug(fmt.Sprintf("process: %v", process))
 				process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			}
 			templateID := row["template_id"].(string)
@@ -425,6 +422,19 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 				item.(map[string]interface{})["contact"] = contacts
 				items = append(items, item)
 			} else {
+				item.(map[string]interface{})["ip"] = "-"
+				item.(map[string]interface{})["platform"] = "-"
+				item.(map[string]interface{})["idc"] = "-"
+				contact := map[string]string{
+					"email": "-",
+					"name":  "-",
+					"phone": "-",
+				}
+				contacts := []interface{}{
+					contact,
+				}
+				item.(map[string]interface{})["contact"] = contacts
+				items = append(items, item)
 				log.Println("host deactivated:", hostname)
 			}
 		} else {
@@ -512,7 +522,6 @@ func getAlertCount(items []interface{}) map[string]int {
 }
 
 func getAlerts(rw http.ResponseWriter, req *http.Request) {
-	mylog := logger.Logger()
 	var nodes = make(map[string]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -520,7 +529,6 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 	alerts := []interface{}{}
 	username := req.URL.Query().Get("user")
 	sig := req.URL.Query().Get("sig")
-	mylog.Debug(fmt.Sprintf("user: %v, sig: %v", username, sig))
 	templateIDs := getTemplateIDs(username, sig, result)
 	if templateIDs == "" {
 		nodes["result"] = result
