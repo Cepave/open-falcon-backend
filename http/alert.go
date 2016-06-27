@@ -336,6 +336,65 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 	return notes
 }
 
+func setSQLQuery(templateIDs string, req *http.Request, result map[string]interface{}) string {
+	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, update_at, template_id, tpl_creator, process_status "
+	sqlcmd += "FROM falcon_portal.event_cases "
+	whereConditions := []string{}
+	query := req.URL.Query()
+	if query.Get("start") != "" && query.Get("end") != "" {
+		start := query.Get("start")
+		end := query.Get("end")
+		if start != "" && end != "" {
+			timeCondition := "`update_at` BETWEEN FROM_UNIXTIME(" + start + ") AND FROM_UNIXTIME(" + end + ")"
+			whereConditions = append(whereConditions, timeCondition)
+		}
+	}
+	if query.Get("priority") != "" {
+		priority := query.Get("priority")
+		whereConditions = append(whereConditions, "`priority` = "+priority)
+	}
+	if query.Get("status") != "" && strings.Index(query.Get("status"), "ALL") == -1 {
+		status := query.Get("status") // "PROBLEM", "OK"
+		if strings.Index(status, ",") > -1 {
+			status = strings.Replace(status, ",", "','", -1)
+			whereConditions = append(whereConditions, "`status` IN ('"+status+"')")
+		} else {
+			whereConditions = append(whereConditions, "`status` = '"+status+"'")
+		}
+	}
+	if query.Get("process") != "" {
+		process := query.Get("process") //  "unresolved", "in progress", "resolved", "ignored"
+		if strings.Index(process, ",") > -1 {
+			process = strings.Replace(process, ",", "','", -1)
+			whereConditions = append(whereConditions, "`process_status` IN ('"+process+"')")
+		} else {
+			whereConditions = append(whereConditions, "`process_status` = '"+process+"'")
+		}
+	}
+	if query.Get("metric") != "" {
+		metric := query.Get("metric") // "http.get.time", "net.port.listen/port=80"
+		if strings.Index(metric, ",") > -1 {
+			metric = strings.Replace(metric, ",", "','", -1)
+			whereConditions = append(whereConditions, "`metric` IN ('"+metric+"')")
+		} else {
+			whereConditions = append(whereConditions, "`metric` = '"+metric+"'")
+		}
+	}
+	limit := "500"
+	if query.Get("limit") != "" {
+		limit = query.Get("limit")
+	}
+	if templateIDs != "*" {
+		whereConditions = append(whereConditions, "template_id IN ('"+templateIDs+"')")
+	}
+	if len(whereConditions) > 0 {
+		conditions := strings.Join(whereConditions, " AND ")
+		sqlcmd += "WHERE " + conditions
+	}
+	sqlcmd += " ORDER BY update_at DESC LIMIT " + limit
+	return sqlcmd
+}
+
 func queryAlerts(templateIDs string, result map[string]interface{}) []interface{} {
 	alerts := []interface{}{}
 	if templateIDs == "" {
