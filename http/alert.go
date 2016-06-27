@@ -395,6 +395,31 @@ func setSQLQuery(templateIDs string, req *http.Request, result map[string]interf
 	return sqlcmd
 }
 
+func getEvents(hash string, eventsLimit string, result map[string]interface{}) []interface{} {
+	events := []interface{}{}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	sqlcmd := "SELECT * "
+	sqlcmd += "FROM falcon_portal.events "
+	sqlcmd += "WHERE event_caseId = '" + hash + "' ORDER BY timestamp DESC LIMIT " + eventsLimit
+	num, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			event := map[string]interface{}{
+				"id":        row["id"].(string),
+				"condition": row["cond"].(string),
+				"status":    row["status"].(string),
+				"step":      row["step"].(string),
+				"timestamp": row["timestamp"].(string),
+			}
+			events = append(events, event)
+		}
+	}
+	return events
+}
+
 func queryAlerts(templateIDs string, result map[string]interface{}) []interface{} {
 	alerts := []interface{}{}
 	if templateIDs == "" {
