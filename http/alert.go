@@ -614,6 +614,7 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 	alerts := []interface{}{}
 	username := req.URL.Query().Get("user")
 	sig := req.URL.Query().Get("sig")
+
 	templateIDs := getTemplateIDs(username, sig, result)
 	if templateIDs == "" {
 		nodes["result"] = result
@@ -621,7 +622,8 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 		setResponse(rw, nodes)
 	} else {
 		items := []interface{}{}
-		alerts = queryAlerts(templateIDs, result)
+		sqlcmd := setSQLQuery(templateIDs, req, result)
+		alerts = queryAlerts(sqlcmd, req, result)
 		items, hostToPlatform := addPlatformToAlerts(alerts, result, nodes, rw)
 		count := getAlertCount(items)
 		result["items"] = items
