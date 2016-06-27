@@ -420,21 +420,21 @@ func getEvents(hash string, eventsLimit string, result map[string]interface{}) [
 	return events
 }
 
-func queryAlerts(templateIDs string, result map[string]interface{}) []interface{} {
+func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}) []interface{} {
 	alerts := []interface{}{}
-	if templateIDs == "" {
+	if sqlcmd == "" {
 		return alerts
 	}
+
+	query := req.URL.Query()
+	eventsLimit := "10"
+	if query.Get("elimit") != "" {
+		eventsLimit = query.Get("elimit")
+	}
+
 	notes := getNotes(result)
 	o := orm.NewOrm()
 	var rows []orm.Params
-	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, update_at, template_id, tpl_creator, process_status "
-	sqlcmd += "FROM falcon_portal.event_cases "
-	if templateIDs != "*" {
-		sqlcmd += "WHERE template_id IN ("
-		sqlcmd += templateIDs + ") "
-	}
-	sqlcmd += "ORDER BY update_at DESC LIMIT 500"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
@@ -473,6 +473,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 				"time":       time,
 				"duration":   getDuration(time, result),
 				"note":       note,
+				"events":     getEvents(hash, eventsLimit, result),
 				"process":    process,
 			}
 			alerts = append(alerts, alert)
