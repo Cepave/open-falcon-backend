@@ -94,13 +94,18 @@ func InsertEvent(eve *coommonModel.Event) {
 				current_step = ?,
 				note = ?,
 				cond = ?,
-				status = ?`
+				status = ?,
+				func = ?,
+				priority = ?,
+				tpl_creator = ?,
+				express_id = ?,
+				strategy_id = ?,
+				template_id = ?`
 		//reopen case
 		if event[0].ProcessStatus == "resolved" || event[0].ProcessStatus == "ignored" {
 			sqltemplete = fmt.Sprintf("%v ,process_status = '%s', process_note = %d", sqltemplete, "unresolved", 0)
 		}
 		if eve.CurrentStep == 1 {
-
 			sqltemplete = fmt.Sprintf("%v ,timestamp = ? WHERE id = ?", sqltemplete)
 			//update start time of cases
 			res1, err := q.Raw(
@@ -111,6 +116,12 @@ func InsertEvent(eve *coommonModel.Event) {
 				eve.Strategy.Note,
 				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 				eve.Status,
+				eve.Func,
+				eve.Priority,
+				eve.Strategy.Tpl.Creator,
+				eve.ExpressionId(),
+				eve.StrategyId(),
+				eve.TplId(),
 				time.Unix(eve.EventTime, 0),
 				eve.Id).Exec()
 			log.Debug(fmt.Sprintf("%v, %v", res1, err))
@@ -127,6 +138,12 @@ func InsertEvent(eve *coommonModel.Event) {
 				eve.Strategy.Note,
 				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 				eve.Status,
+				eve.Func,
+				eve.Priority,
+				eve.Strategy.Tpl.Creator,
+				eve.ExpressionId(),
+				eve.StrategyId(),
+				eve.TplId(),
 				eve.Id).Exec()
 			log.Debug(fmt.Sprintf("%v, %v", res1, err))
 			//insert case
