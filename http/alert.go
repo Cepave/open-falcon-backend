@@ -336,21 +336,105 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 	return notes
 }
 
-func queryAlerts(templateIDs string, result map[string]interface{}) []interface{} {
+func setSQLQuery(templateIDs string, req *http.Request, result map[string]interface{}) string {
+	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, update_at, template_id, tpl_creator, process_status "
+	sqlcmd += "FROM falcon_portal.event_cases "
+	whereConditions := []string{}
+	query := req.URL.Query()
+	if query.Get("start") != "" && query.Get("end") != "" {
+		start := query.Get("start")
+		end := query.Get("end")
+		if start != "" && end != "" {
+			timeCondition := "`update_at` BETWEEN FROM_UNIXTIME(" + start + ") AND FROM_UNIXTIME(" + end + ")"
+			whereConditions = append(whereConditions, timeCondition)
+		}
+	}
+	if query.Get("priority") != "" {
+		priority := query.Get("priority")
+		whereConditions = append(whereConditions, "`priority` = "+priority)
+	}
+	if query.Get("status") != "" && strings.Index(query.Get("status"), "ALL") == -1 {
+		status := query.Get("status") // "PROBLEM", "OK"
+		if strings.Index(status, ",") > -1 {
+			status = strings.Replace(status, ",", "','", -1)
+			whereConditions = append(whereConditions, "`status` IN ('"+status+"')")
+		} else {
+			whereConditions = append(whereConditions, "`status` = '"+status+"'")
+		}
+	}
+	if query.Get("process") != "" {
+		process := query.Get("process") //  "unresolved", "in progress", "resolved", "ignored"
+		if strings.Index(process, ",") > -1 {
+			process = strings.Replace(process, ",", "','", -1)
+			whereConditions = append(whereConditions, "`process_status` IN ('"+process+"')")
+		} else {
+			whereConditions = append(whereConditions, "`process_status` = '"+process+"'")
+		}
+	}
+	if query.Get("metric") != "" {
+		metric := query.Get("metric") // "http.get.time", "net.port.listen/port=80"
+		if strings.Index(metric, ",") > -1 {
+			metric = strings.Replace(metric, ",", "','", -1)
+			whereConditions = append(whereConditions, "`metric` IN ('"+metric+"')")
+		} else {
+			whereConditions = append(whereConditions, "`metric` = '"+metric+"'")
+		}
+	}
+	limit := "500"
+	if query.Get("limit") != "" {
+		limit = query.Get("limit")
+	}
+	if templateIDs != "*" {
+		whereConditions = append(whereConditions, "template_id IN ('"+templateIDs+"')")
+	}
+	if len(whereConditions) > 0 {
+		conditions := strings.Join(whereConditions, " AND ")
+		sqlcmd += "WHERE " + conditions
+	}
+	sqlcmd += " ORDER BY update_at DESC LIMIT " + limit
+	return sqlcmd
+}
+
+func getEvents(hash string, eventsLimit string, result map[string]interface{}) []interface{} {
+	events := []interface{}{}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	sqlcmd := "SELECT * "
+	sqlcmd += "FROM falcon_portal.events "
+	sqlcmd += "WHERE event_caseId = '" + hash + "' ORDER BY timestamp DESC LIMIT " + eventsLimit
+	num, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			event := map[string]interface{}{
+				"id":        row["id"].(string),
+				"condition": row["cond"].(string),
+				"status":    row["status"].(string),
+				"step":      row["step"].(string),
+				"timestamp": row["timestamp"].(string),
+			}
+			events = append(events, event)
+		}
+	}
+	return events
+}
+
+func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}) []interface{} {
 	alerts := []interface{}{}
-	if templateIDs == "" {
+	if sqlcmd == "" {
 		return alerts
 	}
+
+	query := req.URL.Query()
+	eventsLimit := "10"
+	if query.Get("elimit") != "" {
+		eventsLimit = query.Get("elimit")
+	}
+
 	notes := getNotes(result)
 	o := orm.NewOrm()
 	var rows []orm.Params
-	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, update_at, template_id, tpl_creator, process_status "
-	sqlcmd += "FROM falcon_portal.event_cases "
-	if templateIDs != "*" {
-		sqlcmd += "WHERE template_id IN ("
-		sqlcmd += templateIDs + ") "
-	}
-	sqlcmd += "ORDER BY update_at DESC LIMIT 500"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
@@ -365,7 +449,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 			statusRaw := row["status"].(string)
 			time := row["update_at"].(string)
 			time = time[:len(time)-3]
-			process := getProcess(getStatus(statusRaw))
+			process := row["process_status"].(string)
 			note := []map[string]string{}
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
@@ -389,6 +473,7 @@ func queryAlerts(templateIDs string, result map[string]interface{}) []interface{
 				"time":       time,
 				"duration":   getDuration(time, result),
 				"note":       note,
+				"events":     getEvents(hash, eventsLimit, result),
 				"process":    process,
 			}
 			alerts = append(alerts, alert)
@@ -529,6 +614,7 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 	alerts := []interface{}{}
 	username := req.URL.Query().Get("user")
 	sig := req.URL.Query().Get("sig")
+
 	templateIDs := getTemplateIDs(username, sig, result)
 	if templateIDs == "" {
 		nodes["result"] = result
@@ -536,7 +622,8 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 		setResponse(rw, nodes)
 	} else {
 		items := []interface{}{}
-		alerts = queryAlerts(templateIDs, result)
+		sqlcmd := setSQLQuery(templateIDs, req, result)
+		alerts = queryAlerts(sqlcmd, req, result)
 		items, hostToPlatform := addPlatformToAlerts(alerts, result, nodes, rw)
 		count := getAlertCount(items)
 		result["items"] = items
