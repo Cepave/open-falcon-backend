@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"database/sql"
+
 	"github.com/Cepave/alarm/logger"
 	coommonModel "github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
@@ -39,6 +41,8 @@ func InsertEvent(eve *coommonModel.Event) {
 	q.Using("falcon_portal")
 	var event []EventCases
 	q.Raw("select * from event_cases where id = ?", eve.Id).QueryRows(&event)
+	var sqlLog sql.Result
+	var errRes error
 	if len(event) == 0 {
 		//create cases
 		sqltemplete := `INSERT INTO event_cases (
@@ -59,7 +63,7 @@ func InsertEvent(eve *coommonModel.Event) {
 					strategy_id,
 					template_id
 					) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-		res1, err := q.Raw(
+		sqlLog, errRes = q.Raw(
 			sqltemplete,
 			eve.Id,
 			eve.Endpoint,
@@ -81,11 +85,6 @@ func InsertEvent(eve *coommonModel.Event) {
 			eve.StrategyId(),
 			//template_id
 			eve.TplId()).Exec()
-		log.Debug(fmt.Sprintf("%v, %v", res1, err))
-
-		//insert case
-		res2, err := insertEvent(q, eve)
-		log.Debug(fmt.Sprintf("%v, %v", res2, err))
 
 	} else {
 		sqltemplete := `UPDATE event_cases SET
@@ -94,46 +93,43 @@ func InsertEvent(eve *coommonModel.Event) {
 				current_step = ?,
 				note = ?,
 				cond = ?,
-				status = ?`
+				status = ?,
+				func = ?,
+				priority = ?,
+				tpl_creator = ?,
+			  expression_id = ?,
+				strategy_id = ?,
+				template_id = ?`
 		//reopen case
 		if event[0].ProcessStatus == "resolved" || event[0].ProcessStatus == "ignored" {
 			sqltemplete = fmt.Sprintf("%v ,process_status = '%s', process_note = %d", sqltemplete, "unresolved", 0)
 		}
 		if eve.CurrentStep == 1 {
-
-			sqltemplete = fmt.Sprintf("%v ,timestamp = ? WHERE id = ?", sqltemplete)
-			//update start time of cases
-			res1, err := q.Raw(
-				sqltemplete,
-				time.Unix(eve.EventTime, 0),
-				eve.MaxStep(),
-				eve.CurrentStep,
-				eve.Strategy.Note,
-				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
-				eve.Status,
-				time.Unix(eve.EventTime, 0),
-				eve.Id).Exec()
-			log.Debug(fmt.Sprintf("%v, %v", res1, err))
-			//insert case
-			res2, err := insertEvent(q, eve)
-			log.Debug(fmt.Sprintf("%v, %v", res2, err))
+			currentTime := time.Unix(eve.EventTime, 0).Format(time.RFC3339)
+			sqltemplete = fmt.Sprintf("%v ,timestamp = '%s' WHERE id = '%s'", sqltemplete, currentTime, eve.Id)
 		} else {
-			sqltemplete = fmt.Sprintf("%v WHERE id = ?", sqltemplete)
-			res1, err := q.Raw(
-				sqltemplete,
-				time.Unix(eve.EventTime, 0),
-				eve.MaxStep(),
-				eve.CurrentStep,
-				eve.Strategy.Note,
-				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
-				eve.Status,
-				eve.Id).Exec()
-			log.Debug(fmt.Sprintf("%v, %v", res1, err))
-			//insert case
-			res2, err := insertEvent(q, eve)
-			log.Debug(fmt.Sprintf("%v, %v", res2, err))
+			sqltemplete = fmt.Sprintf("%v WHERE id = '%s'", sqltemplete, eve.Id)
 		}
+		//update start time of cases
+		sqlLog, errRes = q.Raw(
+			sqltemplete,
+			time.Unix(eve.EventTime, 0),
+			eve.MaxStep(),
+			eve.CurrentStep,
+			eve.Strategy.Note,
+			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
+			eve.Status,
+			eve.Func(),
+			eve.Priority(),
+			eve.Strategy.Tpl.Creator,
+			eve.ExpressionId(),
+			eve.StrategyId(),
+			eve.TplId()).Exec()
 	}
+	log.Debug(fmt.Sprintf("%v, %v", sqlLog, errRes))
+	//insert case
+	res2, err := insertEvent(q, eve)
+	log.Debug(fmt.Sprintf("%v, %v", res2, err))
 }
 
 func counterGen(metric string, tags string) (mycounter string) {
