@@ -449,7 +449,7 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 			statusRaw := row["status"].(string)
 			time := row["update_at"].(string)
 			time = time[:len(time)-3]
-			process := getProcess(getStatus(statusRaw))
+			process := row["process_status"].(string)
 			note := []map[string]string{}
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
