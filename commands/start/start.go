@@ -64,7 +64,7 @@ func (c *Command) Run(args []string) int {
 				os.Chdir("../../")
 				continue
 			}
-			logPath := g.LogDir + "/" + moduleName + ".log"
+			logPath := "./" + moduleName + "/" + g.LogDir + "/" + moduleName + ".log"
 			LogOutput, err := os.OpenFile(logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 			if err != nil {
 				fmt.Println("Error in opening file:", err)

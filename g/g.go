@@ -31,31 +31,31 @@ func init() {
 	}
 
 	ModuleBins = map[string]string{
-		"agent":      "./bin/falcon-agent",
-		"aggregator": "./bin/falcon-aggregator",
-		"fe":         "./bin/falcon-fe",
-		"graph":      "./bin/falcon-graph",
-		"hbs":        "./bin/falcon-hbs",
-		"judge":      "./bin/falcon-judge",
-		"nodata":     "./bin/falcon-nodata",
-		"query":      "./bin/falcon-query",
-		"sender":     "./bin/falcon-sender",
-		"task":       "./bin/falcon-task",
-		"transfer":   "./bin/falcon-transfer",
+		"agent":      "./agent/bin/falcon-agent",
+		"aggregator": "./aggregator/bin/falcon-aggregator",
+		"fe":         "./fe/bin/falcon-fe",
+		"graph":      "./graph/bin/falcon-graph",
+		"hbs":        "./hbs/bin/falcon-hbs",
+		"judge":      "./judge/bin/falcon-judge",
+		"nodata":     "./nodata/bin/falcon-nodata",
+		"query":      "./query/bin/falcon-query",
+		"sender":     "./sender/bin/falcon-sender",
+		"task":       "./task/bin/falcon-task",
+		"transfer":   "./transfer/bin/falcon-transfer",
 	}
 
 	ModuleConfs = map[string]string{
-		"agent":      "./config/agent.json",
-		"aggregator": "./config/aggregator.json",
-		"fe":         "./config/api.json",
-		"graph":      "./config/graph.json",
-		"hbs":        "./config/hbs.json",
-		"judge":      "./config/judge.json",
-		"nodata":     "./config/nodata.json",
-		"query":      "./config/query.json",
-		"sender":     "./config/sender.json",
-		"task":       "./config/task.json",
-		"transfer":   "./config/transfer.json",
+		"agent":      "./agent/config/cfg.json",
+		"aggregator": "./aggregator/config/cfg.json",
+		"fe":         "./fe/config/cfg.json",
+		"graph":      "./graph/config/cfg.json",
+		"hbs":        "./hbs/config/cfg.json",
+		"judge":      "./judge/config/cfg.json",
+		"nodata":     "./nodata/config/cfg.json",
+		"query":      "./query/config/cfg.json",
+		"sender":     "./sender/config/cfg.json",
+		"task":       "./task/config/cfg.json",
+		"transfer":   "./transfer/config/cfg.json",
 	}
 
 	ModuleApps = map[string]string{
