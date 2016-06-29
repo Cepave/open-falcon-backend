@@ -467,7 +467,7 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes/pop_id/yes.json"
+	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes.json"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -1246,7 +1246,7 @@ func getIPFromHostname(hostname string, result map[string]interface{}) string {
 	return ip
 }
 
-func getBandwidthsFiveMinutesAverage(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
+func getBandwidthsAverage(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
@@ -1279,17 +1279,17 @@ func getBandwidthsFiveMinutesAverage(metricType string, duration string, hostnam
 			item := map[string]interface{}{
 				"host": series.Endpoint,
 				"ip":   getIPFromHostname(series.Endpoint, result),
-				"net.in.bits.5min.avg":  0,
-				"net.out.bits.5min.avg": 0,
+				"net.in.bits.avg":  0,
+				"net.out.bits.avg": 0,
 				"time":                  "",
 			}
 			if value, ok := hostMap[series.Endpoint]; ok {
 				item = value.(map[string]interface{})
 			}
 			if series.Counter == "net.if.in.bits/iface=eth_all" {
-				item["net.in.bits.5min.avg"] = int(average)
+				item["net.in.bits.avg"] = int(average)
 			} else if series.Counter == "net.if.out.bits/iface=eth_all" {
-				item["net.out.bits.5min.avg"] = int(average)
+				item["net.out.bits.avg"] = int(average)
 			}
 			if item["time"] == "" && average > 0 {
 				item["time"] = time.Unix(int64(timestamp), 0).Format("2006-01-02 15:04:05")
@@ -1328,7 +1328,7 @@ func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType str
 			}
 		}
 	}
-	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
+	items := getBandwidthsAverage(metricType, duration, hostnames, result)
 	if _, ok := nodes["info"]; ok {
 		delete(nodes, "info")
 	}
@@ -1420,26 +1420,82 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getHostsBandwidthsFiveMinutesAverage(rw http.ResponseWriter, req *http.Request) {
+func getBandwidthsSum(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
+	items := []interface{}{}
+	sort.Strings(hostnames)
+	metrics := getMetricsByMetricType(metricType)
+	metricMap := map[string]interface{}{}
+	timestamps := []float64{}
+	if len(metrics) > 0 && len(hostnames) > 0 {
+		data := getGraphQueryResponse(metrics, duration, hostnames, result)
+		for _, rrdObj := range data[0].Values {
+			timestamps = append(timestamps, float64(rrdObj.Timestamp))
+		}
+		if len(timestamps) > 0 {
+			for _, metric := range metrics {
+				values := []float64{}
+				for _, _ = range timestamps {
+					values = append(values, float64(0))
+				}
+				metricMap[metric] = values
+			}
+			for _, series := range data {
+				values := metricMap[series.Counter].([]float64)
+				for key, rrdObj := range series.Values {
+					if !math.IsNaN(float64(rrdObj.Value)) {
+						values[key] += float64(rrdObj.Value)
+					}
+				}
+				metricMap[series.Counter] = values
+			}
+		}
+	}
+	if len(timestamps) > 0 {
+		for _, metric := range metrics {
+			slice := metricMap[metric].([]float64)
+			data := []interface{}{}
+			for key, value := range slice {
+				datum := []interface{}{
+					timestamps[key] * 1000,
+					value,
+				}
+				data = append(data, datum)
+			}
+			item := map[string]interface{}{
+				"host":   strings.Join(hostnames, ","),
+				"metric": metric,
+				"data":   data,
+			}
+			items = append(items, item)
+		}
+	}
+	return items
+}
+
+func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
+	items := []interface{}{}
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	arguments := strings.Split(req.URL.Path, "/")
 	hostnames := []string{}
 	metricType := ""
-	duration := "6min"
-	if len(arguments) == 5 && arguments[len(arguments)-1] == "bandwidths" {
-		hostnames = strings.Split(arguments[len(arguments)-2], ",")
-		metricType = arguments[len(arguments)-1]
+	method := ""
+	duration := ""
+	if len(arguments) == 7 && arguments[len(arguments)-3] == "bandwidths" {
+		hostnames = strings.Split(arguments[len(arguments)-4], ",")
+		metricType = arguments[len(arguments)-3]
+		method = arguments[len(arguments)-2]
+		duration = arguments[len(arguments)-1]
 	}
-	items := getBandwidthsFiveMinutesAverage(metricType, duration, hostnames, result)
-	if _, ok := nodes["info"]; ok {
-		delete(nodes, "info")
+
+	if method == "average" {
+		items = getBandwidthsAverage(metricType, duration, hostnames, result)
+	} else if method == "sum" {
+		items = getBandwidthsSum(metricType, duration, hostnames, result)
 	}
-	if _, ok := nodes["status"]; ok {
-		delete(nodes, "status")
-	}
+
 	result["items"] = items
 	nodes["result"] = result
 	nodes["count"] = len(items)
@@ -1609,7 +1665,7 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
 	http.HandleFunc("/api/platforms/", parsePlatformArguments)
-	http.HandleFunc("/api/hosts/", getHostsBandwidthsFiveMinutesAverage)
+	http.HandleFunc("/api/hosts/", getHostsBandwidths)
 	http.HandleFunc("/api/idcs/hosts", getIDCsHosts)
 	http.HandleFunc("/api/idcs/", getIDCsBandwidthsUpperLimit)
 }
