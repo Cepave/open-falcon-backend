@@ -1,0 +1,9 @@
+[submodule "doc/book"]
+	path = doc/book
+	url = https://github.com/Cepave/book.git
+[submodule "doc/apidoc"]
+	path = doc/apidoc
+	url = https://github.com/Cepave/apidoc.git
+[submodule "scripts/mysql"]
+	path = scripts/mysql
+	url = https://github.com/Cepave/scripts.git
