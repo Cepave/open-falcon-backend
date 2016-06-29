@@ -1,3 +1,0 @@
-[submodule "modules/fe"]
-	path = modules/fe
-	url = https://github.com/cepave/fe
