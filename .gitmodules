@@ -7,3 +7,6 @@
 [submodule "scripts/mysql"]
 	path = scripts/mysql
 	url = https://github.com/Cepave/scripts.git
+[submodule "common"]
+	path = common
+	url = https://github.com/Cepave/common.git
