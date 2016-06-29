@@ -1,0 +1,12 @@
+{
+	"agent": {
+		"pushURL": "http://127.0.0.1:1988/v1/push"
+	},
+	"hbs": {
+		"RPCServer": "127.0.0.1:6030",
+		"interval": 60
+	},
+	"hostname": "",
+	"ipAddress": "",
+	"connectionID": ""
+}
