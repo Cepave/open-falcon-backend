@@ -1,10 +1,12 @@
 package g
 
 import (
+	"os"
 	"fmt"
 	"github.com/toolkits/file"
 	"os/exec"
 	"strings"
+	"regexp"
 )
 
 func configExists(cfg string) bool {
@@ -14,11 +16,18 @@ func configExists(cfg string) bool {
 	return true
 }
 
+var regexpReplaceCurrentFolder, _ = regexp.Compile("^\\.")
+
 func GetConfFileArgs(cfg string) ([]string, error) {
 	if !configExists(cfg) {
 		return nil, fmt.Errorf("expect config file: %s\n", cfg)
 	}
-	return []string{"-c", cfg}, nil
+
+	// Builds the absolute path of config file by os.Getwd(current folder)
+	pwd, _ := os.Getwd()
+	absoluteCfgPath := regexpReplaceCurrentFolder.ReplaceAllString(cfg, pwd)
+
+	return []string{"-c", absoluteCfgPath}, nil
 }
 
 func ModuleExists(name string) error {
@@ -29,7 +38,7 @@ func ModuleExists(name string) error {
 }
 
 func CheckModulePid(name string) (string, error) {
-	output, err := exec.Command("pgrep", name).Output()
+	output, err := exec.Command("pgrep", "-f", name).Output()
 	if err != nil {
 		return "", err
 	}

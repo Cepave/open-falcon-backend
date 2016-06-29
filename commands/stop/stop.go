@@ -2,7 +2,7 @@ package stop
 
 import (
 	"fmt"
-	"github.com/open-falcon/open-falcon/g"
+	"github.com/Cepave/open-falcon-backend/g"
 	"github.com/mitchellh/cli"
 	"os"
 	"os/exec"

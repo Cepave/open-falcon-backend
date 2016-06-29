@@ -1,41 +1,41 @@
-package: github.com/open-falcon/open-falcon
+package: github.com/Cepave/open-falcon
 
 import:
-- package: github.com/open-falcon/common
-  version: origin/master
+- package: github.com/Cepave/common
+  version: origin/develop
 
-- package: github.com/open-falcon/fe
-  version: origin/master
+- package: github.com/Cepave/fe
+  version: origin/develop
 
-- package: github.com/open-falcon/graph
-  version: origin/master
+- package: github.com/Cepave/graph
+  version: origin/develop
 
-- package: github.com/open-falcon/hbs
-  version: origin/master
+- package: github.com/Cepave/hbs
+  version: origin/develop
 
-- package: github.com/open-falcon/query
-  version: origin/master
+- package: github.com/Cepave/query
+  version: origin/develop
 
-- package: github.com/open-falcon/scripts
-  version: origin/master
+- package: github.com/Cepave/scripts
+  version: origin/develop
 
-- package: github.com/open-falcon/sender
-  version: origin/master
+- package: github.com/Cepave/sender
+  version: origin/develop
 
-- package: github.com/open-falcon/agent
-  version: origin/master
+- package: github.com/Cepave/agent
+  version: origin/develop
 
-- package: github.com/open-falcon/aggregator
-  version: origin/master
+- package: github.com/Cepave/aggregator
+  version: origin/develop
 
-- package: github.com/open-falcon/nodata
-  version: origin/master
+- package: github.com/Cepave/nodata
+  version: origin/develop
 
-- package: github.com/open-falcon/judge
-  version: origin/master
+- package: github.com/Cepave/judge
+  version: origin/develop
 
-- package: github.com/open-falcon/transfer
-  version: origin/master
+- package: github.com/Cepave/transfer
+  version: origin/develop
 
-- package: github.com/open-falcon/gateway
-  version: origin/master
+- package: github.com/Cepave/task
+  version: origin/develop
