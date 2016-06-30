@@ -97,34 +97,53 @@ func InsertEvent(eve *coommonModel.Event) {
 				func = ?,
 				priority = ?,
 				tpl_creator = ?,
-			  expression_id = ?,
+				expression_id = ?,
 				strategy_id = ?,
 				template_id = ?`
 		//reopen case
 		if event[0].ProcessStatus == "resolved" || event[0].ProcessStatus == "ignored" {
 			sqltemplete = fmt.Sprintf("%v ,process_status = '%s', process_note = %d", sqltemplete, "unresolved", 0)
 		}
+
 		if eve.CurrentStep == 1 {
-			currentTime := time.Unix(eve.EventTime, 0).Format(time.RFC3339)
-			sqltemplete = fmt.Sprintf("%v ,timestamp = '%s' WHERE id = '%s'", sqltemplete, currentTime, eve.Id)
+			//update start time of cases
+			sqltemplete = fmt.Sprintf("%v ,timestamp = ? WHERE id = ?", sqltemplete)
+			sqlLog, errRes = q.Raw(
+				sqltemplete,
+				time.Unix(eve.EventTime, 0),
+				eve.MaxStep(),
+				eve.CurrentStep,
+				eve.Strategy.Note,
+				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
+				eve.Status,
+				eve.Func(),
+				eve.Priority(),
+				eve.Strategy.Tpl.Creator,
+				eve.ExpressionId(),
+				eve.StrategyId(),
+				eve.TplId(),
+				time.Unix(eve.EventTime, 0),
+				eve.Id,
+			).Exec()
 		} else {
-			sqltemplete = fmt.Sprintf("%v WHERE id = '%s'", sqltemplete, eve.Id)
+			sqltemplete = fmt.Sprintf("%v WHERE id = ?", sqltemplete)
+			sqlLog, errRes = q.Raw(
+				sqltemplete,
+				time.Unix(eve.EventTime, 0),
+				eve.MaxStep(),
+				eve.CurrentStep,
+				eve.Strategy.Note,
+				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
+				eve.Status,
+				eve.Func(),
+				eve.Priority(),
+				eve.Strategy.Tpl.Creator,
+				eve.ExpressionId(),
+				eve.StrategyId(),
+				eve.TplId(),
+				eve.Id,
+			).Exec()
 		}
-		//update start time of cases
-		sqlLog, errRes = q.Raw(
-			sqltemplete,
-			time.Unix(eve.EventTime, 0),
-			eve.MaxStep(),
-			eve.CurrentStep,
-			eve.Strategy.Note,
-			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
-			eve.Status,
-			eve.Func(),
-			eve.Priority(),
-			eve.Strategy.Tpl.Creator,
-			eve.ExpressionId(),
-			eve.StrategyId(),
-			eve.TplId()).Exec()
 	}
 	log.Debug(fmt.Sprintf("%v, %v", sqlLog, errRes))
 	//insert case
