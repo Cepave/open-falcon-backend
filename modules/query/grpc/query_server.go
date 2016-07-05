@@ -3,7 +3,6 @@ package grpc
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"regexp"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/Cepave/query/g"
 	"github.com/Cepave/query/graph"
 	pb "github.com/Cepave/query/grpc/proto/owlquery"
+	log "github.com/Sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -45,7 +45,7 @@ func getEndPoints(endpointVal string) (endpointList []string, err error) {
 	if check, _ := regexp.Match("^\\s*\\[[\\w\\W]+\\]\\s*$", []byte(endpointVal)); check {
 		endpointList, err = stringToarry(endpointVal)
 		if err != nil {
-			log.Printf("%v", err.Error())
+			log.Error(err.Error())
 		}
 	} else {
 		endpointList = append(endpointList, endpointVal)
@@ -57,7 +57,7 @@ func getCounter(counterVal string) (counterList []string, err error) {
 	if check, _ := regexp.Match("^\\s*\\[[\\w\\W]+\\]\\s*$", []byte(counterVal)); check {
 		counterList, err = stringToarry(counterVal)
 		if err != nil {
-			log.Printf("%v", err.Error())
+			log.Error(err.Error())
 		}
 	} else {
 		counterList = append(counterList, counterVal)
@@ -75,7 +75,7 @@ func rrdQuery(in *pb.QueryInput) (resp []*cmodel.GraphQueryResponse) {
 			queryParams.Counter = con
 			res, err := graph.QueryOne(queryParams)
 			if err != nil {
-				log.Printf("%v", err.Error())
+				log.Error(err.Error())
 			}
 			resp = append(resp, res)
 		}
@@ -99,14 +99,17 @@ func (s *server) Query(ctx context.Context, in *pb.QueryInput) (*pb.QueryReply, 
 	return &pb.QueryReply{Result: string(res)}, nil
 }
 
-func Start(grpcMsg chan<- string) {
-
+func Start() {
 	defer func() {
-		grpcMsg <- "grpc"
+		if r := recover(); r != nil {
+			log.Error("grpc got painc")
+			log.Error(fmt.Sprintf("%s", r))
+			Start()
+		}
 	}()
 
 	port := fmt.Sprintf(":%v", g.Config().Grpc.Port)
-	log.Printf("start grpc in port %v ..", port)
+	log.Info("start grpc in port %v ..", port)
 	//queryrrd(1452806153, 1452827753, "AVERAGE", "docker-agent", "cpu.idle")
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

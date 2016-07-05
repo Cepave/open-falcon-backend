@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
+	"os/signal"
 
 	"github.com/Cepave/query/conf"
 	"github.com/Cepave/query/database"
@@ -40,34 +40,30 @@ func main() {
 	// graph
 	graph.Start()
 
-	grpcMsg := make(chan string)
 	if gconf.Grpc.Enabled {
 		// grpc
-		go grpc.Start(grpcMsg)
+		go grpc.Start()
 	}
-
-	ginMsg := make(chan string)
 
 	if gconf.GinHttp.Enabled {
 		//lambdaSetup
 		database.Init()
 		conf.ReadConf("./conf/lambdaSetup.json")
-		go ginHttp.StartWeb(ginMsg)
+		go ginHttp.StartWeb()
 	}
-
-	httpMsg := make(chan string)
 
 	if gconf.Http.Enabled {
 		// http
-		go http.Start(httpMsg)
+		go http.Start()
 	}
 
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
 	select {
-	case <-grpcMsg:
-		log.Printf("%v is crashed", grpcMsg)
-	case <-ginMsg:
-		log.Printf("%v is crashed", ginMsg)
-	case <-httpMsg:
-		log.Printf("%v is crashed", ginMsg)
+	case sig := <-c:
+		if sig.String() == "^C" {
+			os.Exit(3)
+		}
 	}
 }

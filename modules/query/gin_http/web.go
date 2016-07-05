@@ -3,7 +3,7 @@ package ginHttp
 import (
 	"time"
 
-	"log"
+	log "github.com/Sirupsen/logrus"
 
 	cmodel "github.com/Cepave/common/model"
 
@@ -50,12 +50,7 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-func StartWeb(ginMsg chan<- string) {
-
-	defer func() {
-		ginMsg <- "gin"
-	}()
-
+func StartWeb() {
 	handler := gin.Default()
 	handler.Use(CORSMiddleware())
 	compute := handler.Group("/func")

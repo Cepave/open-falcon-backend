@@ -3,9 +3,10 @@ package computeFunc
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"strconv"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/query/conf"
 	"github.com/Cepave/query/model"
