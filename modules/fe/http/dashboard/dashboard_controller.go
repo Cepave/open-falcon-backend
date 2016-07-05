@@ -59,7 +59,8 @@ func (this *DashBoardController) CounterQuery() {
 	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
 	endpointsArr := strings.Split(rexstr.ReplaceAllString(endpoints, ""), ",")
 	limitNum, _ := this.GetInt("limit", 0)
-	counters, err := dashboard.QueryCounterByEndpoints(endpointsArr, limitNum)
+	metricQuery := this.GetString("metricQuery", "")
+	counters, err := dashboard.QueryCounterByEndpoints(endpointsArr, limitNum, metricQuery)
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
@@ -155,7 +156,8 @@ func (this *DashBoardController) CounterQueryByHostGroup() {
 			endpoints = append(endpoints, fmt.Sprintf("\"%v\"", v.Hostname))
 		}
 		limitNum, _ := this.GetInt("limit", 0)
-		counters, err := dashboard.QueryCounterByEndpoints(endpoints, limitNum)
+		metricQuery := this.GetString("metricQuery", "")
+		counters, err := dashboard.QueryCounterByEndpoints(endpoints, limitNum, metricQuery)
 		if err != nil {
 			this.ResposeError(baseResp, err.Error())
 			return

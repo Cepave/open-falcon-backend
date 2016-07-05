@@ -51,6 +51,8 @@
   * params:
     * `endpoints` []string (list of host name)
       * ex. ["docker-agent","testmachine"]
+    * `metricQuery` string (Regex Query)
+      * ex. "net.+"
   * response:
     * ok
 
@@ -187,6 +189,8 @@
   * params:
     * `hostgroups` list of hostgroup
       * ex. ["docker-agent","testmachine"]
+    * `metricQuery` string (Regex Query)
+      * ex. "net.+"
 
   * response:
     * ok

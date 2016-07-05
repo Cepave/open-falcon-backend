@@ -18,7 +18,7 @@ func QueryEndpointidbyNames(endpoints []string, limit int) (enp []Endpoint, err 
 	return
 }
 
-func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, err error) {
+func QueryCounterByEndpoints(endpoints []string, limit int, metricQuery string) (counters []string, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.GraphDB.Limit {
 		limit = config.GraphDB.Limit
@@ -32,7 +32,6 @@ func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, 
 		err = errors.New("The endpoints doesn't exist.")
 		return
 	}
-
 	q := orm.NewOrm()
 	q.Using("graph")
 	q.QueryTable("endpoint_counter")
@@ -42,7 +41,12 @@ func QueryCounterByEndpoints(endpoints []string, limit int) (counters []string, 
 	}
 
 	pattn, _ := regexp.Compile("\\s*,\\s*$")
-	queryperfix := fmt.Sprintf("select distinct(counter) from endpoint_counter where endpoint_id IN(%s) limit %d", pattn.ReplaceAllString(endpoint_ids, ""), limit)
+	var queryperfix string
+	if metricQuery == "" {
+		queryperfix = fmt.Sprintf("select distinct(counter) from endpoint_counter where endpoint_id IN(%s) limit %d", pattn.ReplaceAllString(endpoint_ids, ""), limit)
+	} else {
+		queryperfix = fmt.Sprintf("select distinct(counter) from endpoint_counter where endpoint_id IN(%s) and counter regexp '%s' limit %d", pattn.ReplaceAllString(endpoint_ids, ""), metricQuery, limit)
+	}
 	var enpc []EndpointCounter
 	_, err = q.Raw(queryperfix).QueryRows(&enpc)
 	for _, v := range enpc {
