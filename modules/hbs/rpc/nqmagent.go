@@ -5,8 +5,8 @@ import (
 	"time"
 
 	commonModel "github.com/Cepave/common/model"
-	"github.com/Cepave/hbs/db"
-	"github.com/Cepave/hbs/model"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
 	"github.com/asaskevich/govalidator"
 )
 

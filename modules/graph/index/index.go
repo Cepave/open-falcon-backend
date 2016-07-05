@@ -5,7 +5,7 @@ import (
 	"log"
 
 	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/graph/g"
+	"github.com/Cepave/open-falcon-backend/modules/graph/g"
 )
 
 // 初始化索引功能模块

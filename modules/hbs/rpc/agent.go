@@ -8,8 +8,8 @@ import (
 
 	"github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
-	"github.com/Cepave/hbs/cache"
-	"github.com/Cepave/hbs/g"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 )
 
 func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.AgentPluginsResponse) error {

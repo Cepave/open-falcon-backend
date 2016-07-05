@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Cepave/transfer/g"
-	"github.com/Cepave/transfer/proc"
-	cpool "github.com/Cepave/transfer/sender/conn_pool"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
+	cpool "github.com/Cepave/open-falcon-backend/modules/transfer/sender/conn_pool"
 	cmodel "github.com/open-falcon/common/model"
 	nlist "github.com/toolkits/container/list"
 )

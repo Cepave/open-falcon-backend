@@ -3,7 +3,7 @@ package mq
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/Cepave/fe/g"
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/streadway/amqp"
 	"io/ioutil"
 	"log"

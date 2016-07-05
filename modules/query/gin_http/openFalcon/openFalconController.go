@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/query/graph"
-	"github.com/Cepave/query/model"
+	"github.com/Cepave/open-falcon-backend/modules/query/graph"
+	"github.com/Cepave/open-falcon-backend/modules/query/model"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 )

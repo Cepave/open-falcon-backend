@@ -13,7 +13,7 @@ import (
 	nset "github.com/toolkits/container/set"
 	spool "github.com/toolkits/pool/simple_conn_pool"
 
-	"github.com/Cepave/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 )
 
 // 连接池

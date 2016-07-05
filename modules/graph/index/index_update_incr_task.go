@@ -11,8 +11,8 @@ import (
 
 	cmodel "github.com/Cepave/common/model"
 	cutils "github.com/Cepave/common/utils"
-	"github.com/Cepave/graph/g"
-	proc "github.com/Cepave/graph/proc"
+	"github.com/Cepave/open-falcon-backend/modules/graph/g"
+	proc "github.com/Cepave/open-falcon-backend/modules/graph/proc"
 )
 
 const (

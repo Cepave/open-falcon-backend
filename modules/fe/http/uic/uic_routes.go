@@ -1,7 +1,7 @@
 package uic
 
 import (
-	"github.com/Cepave/fe/http/base"
+	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 )

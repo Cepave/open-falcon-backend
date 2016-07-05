@@ -7,8 +7,8 @@ import (
 	"time"
 
 	commonModel "github.com/Cepave/common/model"
-	"github.com/Cepave/hbs/model"
-	hbstesting "github.com/Cepave/hbs/testing"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
+	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
 	. "gopkg.in/check.v1"
 )
 

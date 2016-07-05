@@ -3,9 +3,9 @@ package nqm
 import (
 	"net/http"
     "github.com/gorilla/rpc/v2"
-	"github.com/Cepave/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/bitly/go-simplejson"
-	rpctest "github.com/Cepave/query/test"
+	rpctest "github.com/Cepave/open-falcon-backend/modules/query/test"
 	. "gopkg.in/check.v1"
 )
 

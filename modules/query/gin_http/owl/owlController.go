@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Cepave/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 )
 
 type EndpointCounters struct {

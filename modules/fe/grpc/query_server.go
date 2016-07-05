@@ -8,9 +8,9 @@ import (
 	"regexp"
 
 	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/fe/g"
-	"github.com/Cepave/fe/graph"
-	pb "github.com/Cepave/fe/grpc/proto/owlquery"
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
+	"github.com/Cepave/open-falcon-backend/modules/fe/graph"
+	pb "github.com/Cepave/open-falcon-backend/modules/fe/grpc/proto/owlquery"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

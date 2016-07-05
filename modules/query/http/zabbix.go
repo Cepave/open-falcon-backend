@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/Cepave/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
 	"io"

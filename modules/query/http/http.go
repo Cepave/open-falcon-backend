@@ -7,7 +7,7 @@ import (
 	_ "net/http/pprof"
 	"strings"
 
-	"github.com/Cepave/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 )

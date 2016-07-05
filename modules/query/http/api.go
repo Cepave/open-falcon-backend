@@ -13,9 +13,9 @@ import (
 	"time"
 
 	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/query/g"
-	"github.com/Cepave/query/graph"
-	"github.com/Cepave/query/proc"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/graph"
+	"github.com/Cepave/open-falcon-backend/modules/query/proc"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
 )

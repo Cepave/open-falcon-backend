@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/Cepave/query/utils"
+	"github.com/Cepave/open-falcon-backend/modules/query/utils"
 )
 
 type Gconfig struct {

@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Cepave/query/logger"
+	"github.com/Cepave/open-falcon-backend/modules/query/logger"
 	"github.com/toolkits/file"
 )
 

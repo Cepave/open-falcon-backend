@@ -5,7 +5,7 @@ import (
 
 	"github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
-	"github.com/Cepave/hbs/cache"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 )
 
 func (t *Hbs) GetExpressions(req model.NullRpcRequest, reply *model.ExpressionResponse) error {

@@ -1,8 +1,8 @@
 package receiver
 
 import (
-	"github.com/Cepave/transfer/receiver/rpc"
-	"github.com/Cepave/transfer/receiver/socket"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/receiver/rpc"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/receiver/socket"
 )
 
 func Start() {

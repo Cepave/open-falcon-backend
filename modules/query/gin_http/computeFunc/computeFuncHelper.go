@@ -8,8 +8,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/Cepave/query/conf"
-	"github.com/Cepave/query/model"
+	"github.com/Cepave/open-falcon-backend/modules/query/conf"
+	"github.com/Cepave/open-falcon-backend/modules/query/model"
 	"github.com/robertkrimen/otto"
 )
 

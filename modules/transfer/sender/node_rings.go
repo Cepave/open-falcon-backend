@@ -2,7 +2,7 @@ package sender
 
 import (
 	"github.com/Cepave/consistent"
-	"github.com/Cepave/transfer/g"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 )
 
 func initNodeRings() {

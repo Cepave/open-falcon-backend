@@ -4,7 +4,7 @@ import (
 	"sort"
 
 	"github.com/Cepave/common/model"
-	hbstesting "github.com/Cepave/hbs/testing"
+	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
 	. "gopkg.in/check.v1"
 )
 

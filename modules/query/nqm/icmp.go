@@ -3,8 +3,8 @@ package nqm
 import (
 	"fmt"
 	"encoding/json"
-	"github.com/Cepave/query/g"
-	"github.com/Cepave/query/jsonrpc"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/jsonrpc"
 	"github.com/bitly/go-simplejson"
 )
 

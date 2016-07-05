@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/Cepave/agent/g"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/common/model"
 	"net/http"
 )

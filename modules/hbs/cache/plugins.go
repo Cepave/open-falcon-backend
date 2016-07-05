@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/Cepave/hbs/db"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	"sort"
 	"sync"
 )

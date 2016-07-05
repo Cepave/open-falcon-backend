@@ -2,7 +2,7 @@ package base
 
 import (
 	"errors"
-	"github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"regexp"
 )
 

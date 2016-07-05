@@ -7,7 +7,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/Cepave/agent/g"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/common/model"
 	"github.com/toolkits/file"
 	"github.com/toolkits/sys"

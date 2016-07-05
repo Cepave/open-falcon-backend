@@ -9,9 +9,9 @@ import (
 
 	cmodel "github.com/Cepave/common/model"
 	cutils "github.com/Cepave/common/utils"
-	"github.com/Cepave/graph/api"
-	"github.com/Cepave/graph/g"
-	"github.com/Cepave/graph/store"
+	"github.com/Cepave/open-falcon-backend/modules/graph/api"
+	"github.com/Cepave/open-falcon-backend/modules/graph/g"
+	"github.com/Cepave/open-falcon-backend/modules/graph/store"
 )
 
 func configDebugRoutes() {

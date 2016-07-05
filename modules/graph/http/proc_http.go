@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	cutils "github.com/Cepave/common/utils"
-	"github.com/Cepave/graph/proc"
-	"github.com/Cepave/graph/store"
+	"github.com/Cepave/open-falcon-backend/modules/graph/proc"
+	"github.com/Cepave/open-falcon-backend/modules/graph/store"
 )
 
 func configProcRoutes() {

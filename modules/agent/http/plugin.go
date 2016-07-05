@@ -2,8 +2,8 @@ package http
 
 import (
 	"fmt"
-	"github.com/Cepave/agent/g"
-	"github.com/Cepave/agent/plugins"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
+	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	"github.com/toolkits/file"
 	"net/http"
 	"os/exec"

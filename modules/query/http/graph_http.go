@@ -10,8 +10,8 @@ import (
 	"regexp"
 
 	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/query/graph"
-	"github.com/Cepave/query/proc"
+	"github.com/Cepave/open-falcon-backend/modules/query/graph"
+	"github.com/Cepave/open-falcon-backend/modules/query/proc"
 )
 
 type GraphHistoryParam struct {

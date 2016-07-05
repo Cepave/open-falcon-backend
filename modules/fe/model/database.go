@@ -1,10 +1,10 @@
 package model
 
 import (
-	"github.com/Cepave/fe/g"
-	"github.com/Cepave/fe/model/dashboard"
-	event "github.com/Cepave/fe/model/falcon_portal"
-	"github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/dashboard"
+	event "github.com/Cepave/open-falcon-backend/modules/fe/model/falcon_portal"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 )

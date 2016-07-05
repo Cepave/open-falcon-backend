@@ -14,8 +14,8 @@ import (
 	pfc "github.com/niean/goperfcounter"
 
 	cmodel "github.com/Cepave/common/model"
-	"github.com/Cepave/graph/g"
-	"github.com/Cepave/graph/store"
+	"github.com/Cepave/open-falcon-backend/modules/graph/g"
+	"github.com/Cepave/open-falcon-backend/modules/graph/store"
 )
 
 const (

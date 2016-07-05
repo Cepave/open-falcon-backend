@@ -1,7 +1,7 @@
 package plugins
 
 import (
-	"github.com/Cepave/agent/g"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/toolkits/file"
 	"io/ioutil"
 	"log"

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
     "github.com/gorilla/rpc/v2"
     "github.com/gorilla/rpc/v2/json2"
-    "github.com/Cepave/query/jsonrpc"
+    "github.com/Cepave/open-falcon-backend/modules/query/jsonrpc"
 	rpchttp "github.com/gorilla/http"
 	. "gopkg.in/check.v1"
 	"net"

@@ -3,8 +3,8 @@ package computeFunc
 import (
 	"strings"
 
-	"github.com/Cepave/query/conf"
-	"github.com/Cepave/query/gin_http/openFalcon"
+	"github.com/Cepave/open-falcon-backend/modules/query/conf"
+	"github.com/Cepave/open-falcon-backend/modules/query/gin_http/openFalcon"
 	"github.com/gin-gonic/gin"
 	_ "github.com/robertkrimen/otto/underscore"
 )

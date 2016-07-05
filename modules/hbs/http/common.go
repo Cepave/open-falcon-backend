@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/Cepave/hbs/g"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/toolkits/file"
 	"net/http"
 	"strings"

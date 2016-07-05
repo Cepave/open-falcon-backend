@@ -1,7 +1,7 @@
 package nqm
 
 import (
-	qtest "github.com/Cepave/query/test"
+	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
 	. "gopkg.in/check.v1"
 )
 

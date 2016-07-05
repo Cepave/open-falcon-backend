@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Cepave/graph/index"
+	"github.com/Cepave/open-falcon-backend/modules/graph/index"
 )
 
 func configIndexRoutes() {

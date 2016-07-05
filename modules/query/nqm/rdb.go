@@ -7,7 +7,7 @@ import (
 	"github.com/astaxie/beego/orm"
 	"time"
 	"log"
-	qcache "github.com/Cepave/query/cache"
+	qcache "github.com/Cepave/open-falcon-backend/modules/query/cache"
 	"strconv"
 )
 

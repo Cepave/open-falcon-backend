@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/Cepave/agent/g"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/toolkits/nux"
 	"github.com/toolkits/sys"
 	"net/http"

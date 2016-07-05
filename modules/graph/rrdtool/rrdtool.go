@@ -11,8 +11,8 @@ import (
 	"github.com/open-falcon/rrdlite"
 	"github.com/toolkits/file"
 
-	"github.com/Cepave/graph/g"
-	"github.com/Cepave/graph/store"
+	"github.com/Cepave/open-falcon-backend/modules/graph/g"
+	"github.com/Cepave/open-falcon-backend/modules/graph/store"
 )
 
 var (

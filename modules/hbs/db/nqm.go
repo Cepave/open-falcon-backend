@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"github.com/Cepave/hbs/model"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
 	commonModel "github.com/Cepave/common/model"
 	"log"
 	"time"

@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Cepave/transfer/g"
-	"github.com/Cepave/transfer/http"
-	"github.com/Cepave/transfer/proc"
-	"github.com/Cepave/transfer/receiver"
-	"github.com/Cepave/transfer/sender"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/http"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/receiver"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
 	"os"
 )
 

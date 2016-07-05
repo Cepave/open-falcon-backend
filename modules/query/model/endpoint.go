@@ -5,8 +5,8 @@ import (
 
 	"fmt"
 
-	"github.com/Cepave/query/database"
-	"github.com/Cepave/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/database"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 )
 
 type Endpoint struct {

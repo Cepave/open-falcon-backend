@@ -8,11 +8,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Cepave/graph/api"
-	"github.com/Cepave/graph/g"
-	"github.com/Cepave/graph/http"
-	"github.com/Cepave/graph/index"
-	"github.com/Cepave/graph/rrdtool"
+	"github.com/Cepave/open-falcon-backend/modules/graph/api"
+	"github.com/Cepave/open-falcon-backend/modules/graph/g"
+	"github.com/Cepave/open-falcon-backend/modules/graph/http"
+	"github.com/Cepave/open-falcon-backend/modules/graph/index"
+	"github.com/Cepave/open-falcon-backend/modules/graph/rrdtool"
 )
 
 func start_signal(pid int, cfg *g.GlobalConfig) {

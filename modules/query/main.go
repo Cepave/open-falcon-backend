@@ -6,14 +6,14 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/Cepave/query/conf"
-	"github.com/Cepave/query/database"
-	"github.com/Cepave/query/g"
-	ginHttp "github.com/Cepave/query/gin_http"
-	"github.com/Cepave/query/graph"
-	"github.com/Cepave/query/grpc"
-	"github.com/Cepave/query/http"
-	"github.com/Cepave/query/proc"
+	"github.com/Cepave/open-falcon-backend/modules/query/conf"
+	"github.com/Cepave/open-falcon-backend/modules/query/database"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	ginHttp "github.com/Cepave/open-falcon-backend/modules/query/gin_http"
+	"github.com/Cepave/open-falcon-backend/modules/query/graph"
+	"github.com/Cepave/open-falcon-backend/modules/query/grpc"
+	"github.com/Cepave/open-falcon-backend/modules/query/http"
+	"github.com/Cepave/open-falcon-backend/modules/query/proc"
 )
 
 func main() {

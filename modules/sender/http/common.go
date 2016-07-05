@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/Cepave/sender/g"
+	"github.com/Cepave/open-falcon-backend/modules/sender/g"
 	"github.com/toolkits/file"
 	"net/http"
 	"strings"

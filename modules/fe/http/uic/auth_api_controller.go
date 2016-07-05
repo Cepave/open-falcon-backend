@@ -4,10 +4,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Cepave/fe/g"
-	"github.com/Cepave/fe/http/base"
-	. "github.com/Cepave/fe/model/uic"
-	"github.com/Cepave/fe/utils"
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
+	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
+	. "github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
+	"github.com/Cepave/open-falcon-backend/modules/fe/utils"
 	"github.com/toolkits/str"
 )
 

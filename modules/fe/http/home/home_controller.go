@@ -2,7 +2,7 @@ package home
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/Cepave/fe/g"
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 )
 
 type HomeController struct {

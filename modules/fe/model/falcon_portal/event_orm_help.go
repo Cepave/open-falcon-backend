@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 )
 

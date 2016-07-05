@@ -9,7 +9,7 @@ import (
 
 	cmodel "github.com/Cepave/common/model"
 
-	"github.com/Cepave/graph/g"
+	"github.com/Cepave/open-falcon-backend/modules/graph/g"
 )
 
 var GraphItems *GraphItemMap

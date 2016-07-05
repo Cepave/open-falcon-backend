@@ -2,8 +2,8 @@ package sender
 
 import (
 	"errors"
-	"github.com/Cepave/transfer/g"
-	cpool "github.com/Cepave/transfer/sender/conn_pool"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
+	cpool "github.com/Cepave/open-falcon-backend/modules/transfer/sender/conn_pool"
 	nset "github.com/toolkits/container/set"
 	"log"
 	"strings"

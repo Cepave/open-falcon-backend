@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/Cepave/common/model"
-	"github.com/Cepave/hbs/g"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"log"
 )
 

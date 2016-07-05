@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/Cepave/hbs/cache"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"net/http"
 )
 

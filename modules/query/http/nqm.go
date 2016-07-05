@@ -2,9 +2,9 @@ package http
 
 import (
 	"fmt"
-	dsl "github.com/Cepave/query/dsl/nqm_parser"
-	"github.com/Cepave/query/nqm"
-	"github.com/Cepave/query/g"
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
+	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/bitly/go-simplejson"

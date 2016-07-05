@@ -5,8 +5,8 @@ import (
 
 	"strings"
 
-	"github.com/Cepave/fe/g"
-	"github.com/Cepave/fe/model/uic"
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"github.com/astaxie/beego/orm"
 	"time"
 )

@@ -1,7 +1,7 @@
 package http
 
 import (
-	dsl "github.com/Cepave/query/dsl/nqm_parser"
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
 	"net/http"
 	"github.com/astaxie/beego"
 	"net/http/httptest"
