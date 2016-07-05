@@ -7,7 +7,7 @@ import (
 
 	"fmt"
 
-	cmodel "github.com/Cepave/common/model"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	"github.com/Cepave/open-falcon-backend/modules/query/model"
 	log "github.com/Sirupsen/logrus"

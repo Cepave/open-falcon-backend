@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Cepave/common/model"
-	"github.com/Cepave/common/utils"
+	"github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 )

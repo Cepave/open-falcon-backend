@@ -4,7 +4,7 @@ import (
 	tlist "github.com/toolkits/container/list"
 	tmap "github.com/toolkits/container/nmap"
 
-	cmodel "github.com/Cepave/common/model"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 )
 
 const (

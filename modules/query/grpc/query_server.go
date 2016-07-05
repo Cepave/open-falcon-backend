@@ -6,7 +6,7 @@ import (
 	"net"
 	"regexp"
 
-	cmodel "github.com/Cepave/common/model"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	pb "github.com/Cepave/open-falcon-backend/modules/query/grpc/proto/owlquery"

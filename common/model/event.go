@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 
-	"github.com/Cepave/common/utils"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 // 机器监控和实例监控都会产生Event，共用这么一个struct

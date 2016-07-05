@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	cmodel "github.com/Cepave/common/model"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/graph/g"
 )
 

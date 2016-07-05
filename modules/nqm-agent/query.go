@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
 func updatedMsg(old map[string]model.MeasurementsProperty, updated map[string]model.MeasurementsProperty) string {

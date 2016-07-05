@@ -4,7 +4,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
 // Represents the model of NQM agent, which is only used in HBS

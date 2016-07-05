@@ -6,7 +6,7 @@ import (
 	"sort"
 	"time"
 
-	commonModel "github.com/Cepave/common/model"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
 	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
 	. "gopkg.in/check.v1"

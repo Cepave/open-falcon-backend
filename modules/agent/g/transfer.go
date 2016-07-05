@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	MUtils "github.com/Cepave/common/utils"
+	MUtils "github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 // DsType 即RRD中的Datasource的类型：GAUGE|COUNTER|DERIVE

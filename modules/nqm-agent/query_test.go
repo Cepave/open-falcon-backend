@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
 func TestUpdatedMsg(t *testing.T) {

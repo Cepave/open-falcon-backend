@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
 type NqmAgent int

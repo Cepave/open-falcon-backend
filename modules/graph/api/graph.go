@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	cmodel "github.com/Cepave/common/model"
-	cutils "github.com/Cepave/common/utils"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/graph/g"
 	"github.com/Cepave/open-falcon-backend/modules/graph/index"
 	"github.com/Cepave/open-falcon-backend/modules/graph/proc"

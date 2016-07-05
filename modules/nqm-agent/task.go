@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
 func getTargetAddressList(targets []model.NqmTarget) []string {

@@ -7,8 +7,8 @@ import (
 	"math"
 	"time"
 
-	cmodel "github.com/Cepave/common/model"
-	cutils "github.com/Cepave/common/utils"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	rings "github.com/toolkits/consistent/rings"
 	nset "github.com/toolkits/container/set"
 	spool "github.com/toolkits/pool/simple_conn_pool"

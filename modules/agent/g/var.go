@@ -1,8 +1,8 @@
 package g
 
 import (
-	"github.com/Cepave/common/model"
-	n "github.com/Cepave/common/net"
+	"github.com/Cepave/open-falcon-backend/common/model"
+	n "github.com/Cepave/open-falcon-backend/common/net"
 	"github.com/toolkits/net"
 	"github.com/toolkits/slice"
 	"log"

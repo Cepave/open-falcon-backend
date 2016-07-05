@@ -1,7 +1,7 @@
 package funcs
 
 import (
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"strings"
 )
 

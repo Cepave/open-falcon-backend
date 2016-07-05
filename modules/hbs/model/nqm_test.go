@@ -3,7 +3,7 @@ package model
 import (
 	"testing"
 
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	. "gopkg.in/check.v1"
 )
 

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	cutils "github.com/Cepave/common/utils"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/graph/proc"
 	"github.com/Cepave/open-falcon-backend/modules/graph/store"
 )

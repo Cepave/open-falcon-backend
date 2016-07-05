@@ -9,8 +9,8 @@ import (
 	nsema "github.com/toolkits/concurrent/semaphore"
 	ntime "github.com/toolkits/time"
 
-	cmodel "github.com/Cepave/common/model"
-	cutils "github.com/Cepave/common/utils"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/graph/g"
 	proc "github.com/Cepave/open-falcon-backend/modules/graph/proc"
 )

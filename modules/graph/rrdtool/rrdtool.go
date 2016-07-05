@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	cmodel "github.com/Cepave/common/model"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/open-falcon/rrdlite"
 	"github.com/toolkits/file"
 
