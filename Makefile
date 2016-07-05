@@ -17,11 +17,6 @@ $(TARGET): $(TARGET_SOURCE)
 	go build -o open-falcon
 
 $(BIN):
-	@cd modules/$(@:bin/falcon-%=%);\
-	echo vendor/github.com/Cepave/$(@:bin/falcon-%=%);\
-	export commit=`git log -1 --pretty=%h`;\
-	-@cd vendor/github.com/Cepave/$(@:bin/falcon-%=%);\
-	export commit=`git log -1 --pretty=%h`;\
 	go build -o $@ ./modules/$(@:bin/falcon-%=%)
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
