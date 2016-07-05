@@ -8,6 +8,7 @@ import (
 	"time"
 	"log"
 	qcache "github.com/Cepave/query/cache"
+	"strconv"
 )
 
 /**
@@ -52,6 +53,78 @@ func init() {
 	 */
 	targetCache.Cache = cache.New(4 * time.Hour, 20 * time.Minute)
 	// :~)
+}
+
+// Lists agents in city by id of province
+func ListAgentsInCityByProvinceId(provinceId int32) []*AgentsInCity {
+	var rawResult []orm.Params
+
+	/**
+	 * Query data from database
+	 */
+	_, err := getOrmDb().Raw(
+		`
+		SELECT ag.ag_id, ag.ag_name, ag.ag_hostname, INET_NTOA(CONV(HEX(ag.ag_ip_address), 16, 10)) AS ag_ip_address,
+			ct.ct_id, ct.ct_name, ct.ct_post_code
+		FROM nqm_agent AS ag
+			INNER JOIN
+			nqm_ping_task AS pt
+			ON ag.ag_id = pt.pt_ag_id
+				AND ag.ag_status = 1
+			INNER JOIN
+			owl_city AS ct
+			ON ag.ag_ct_id = ct.ct_id
+		WHERE ag.ag_pv_id = ?
+		`,
+		provinceId,
+	).Values(&rawResult)
+	if err != nil {
+		log.Panicf("Query NQM agents by province[%v] has error: [%v]", provinceId, err)
+	}
+	// :~)
+
+	/**
+	 * Collects and grouping agents by city
+	 */
+	cityGrouping := make(map[int16]*AgentsInCity)
+
+	for _, row := range rawResult {
+		cityIdAsInt, _ := strconv.Atoi(row["ct_id"].(string))
+		cityId := int16(cityIdAsInt)
+
+		if _, hasCityId := cityGrouping[cityId]
+			!hasCityId {
+			cityGrouping[cityId] = &AgentsInCity {
+				City: &City{
+					Id: cityId,
+					Name: row["ct_name"].(string),
+					PostCode: row["ct_post_code"].(string),
+				},
+				Agents: make([]Agent, 0),
+			}
+		}
+
+		currentAgentsInCity := cityGrouping[cityId]
+
+		agentIdAsInt, _ := strconv.Atoi(row["ag_id"].(string))
+		currentAgentsInCity.Agents = append(
+			currentAgentsInCity.Agents,
+			Agent {
+				Id: int32(agentIdAsInt),
+				Name: row["ag_name"].(string),
+				Hostname: row["ag_hostname"].(string),
+				IpAddress: row["ag_ip_address"].(string),
+			},
+		)
+	}
+	// :~)
+
+	result := make([]*AgentsInCity, 0)
+	for _, agentsInCity := range cityGrouping {
+		result = append(result, agentsInCity)
+	}
+
+	return result
 }
 
 /**
@@ -347,6 +420,7 @@ func loadCityFromDbById(cityId int16) (*City, error) {
 		func() interface{} {
 			city.Id = cityId
 			city.Name = UNKNOWN_NAME_FOR_QUERY
+			city.PostCode = UNKNOWN_NAME_FOR_QUERY
 			return &city
 		},
 		nilCity,
@@ -365,6 +439,7 @@ func loadCityFromDbByName(cityName string) (*City, error) {
 		func() interface{} {
 			city.Id = UNKNOWN_ID_FOR_QUERY
 			city.Name = cityName
+			city.PostCode = UNKNOWN_NAME_FOR_QUERY
 			return &city
 		},
 		nilCity,

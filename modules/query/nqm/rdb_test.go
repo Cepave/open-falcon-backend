@@ -18,6 +18,32 @@ func (s *TestNqmRdbSuite) TearDownSuite(c *C) {
 	qtest.ReleaseDb()
 }
 
+/**
+ * Tests the listing for agents in city by id of province
+ */
+func (suite *TestNqmRdbSuite) TestListAgentsInCityByProvinceId(c *C) {
+	testedResult := ListAgentsInCityByProvinceId(3)
+
+	c.Assert(testedResult, HasLen, 2)
+
+	for _, agentsInCity := range testedResult {
+		c.Logf("Data for city[%v]: [%v]", agentsInCity.City, agentsInCity.Agents)
+
+		switch agentsInCity.City.Id {
+		case 2:
+			c.Assert(agentsInCity.Agents, HasLen, 2)
+			c.Assert(agentsInCity.Agents[0].Id, Equals, int32(14301))
+			c.Assert(agentsInCity.Agents[1].Id, Equals, int32(14302))
+		case 3:
+			c.Assert(agentsInCity.Agents, HasLen, 2)
+			c.Assert(agentsInCity.Agents[0].Id, Equals, int32(14303))
+			c.Assert(agentsInCity.Agents[1].Id, Equals, int32(14304))
+		default:
+			c.Fatalf("Unexcepted city id: [%v]", agentsInCity.City.Id)
+		}
+	}
+}
+
 // Tests the getting of data for province by name
 type getProvinceByNameTestCase struct {
 	searchText string
@@ -125,13 +151,14 @@ type getCityByNameTestCase struct {
 	searchText string
 	expectedId int32
 	expectedName string
+	expectedPostCode string
 }
 func (suite *TestNqmRdbSuite) TestGetCityByName(c *C) {
 	testCases := []getCityByNameTestCase {
-		{ "茂名", 20, "茂名市" },
-		{ "株洲市", 32, "株洲市" },
-		{ "無此city", UNKNOWN_ID_FOR_QUERY, "無此city" },
-		{ "無此city2", UNKNOWN_ID_FOR_QUERY, "無此city2" },
+		{ "茂名", 20, "茂名市", "525000" },
+		{ "株洲市", 32, "株洲市", "412000" },
+		{ "無此city", UNKNOWN_ID_FOR_QUERY, "無此city", UNKNOWN_NAME_FOR_QUERY },
+		{ "無此city2", UNKNOWN_ID_FOR_QUERY, "無此city2", UNKNOWN_NAME_FOR_QUERY },
 	}
 
 	for _, testCase := range testCases {
@@ -142,6 +169,7 @@ func (suite *TestNqmRdbSuite) TestGetCityByName(c *C) {
 		c.Assert(testedCity, NotNil)
 		c.Assert(testedCity.Id, Equals, int16(testCase.expectedId))
 		c.Assert(testedCity.Name, Equals, testCase.expectedName)
+		c.Assert(testedCity.PostCode, Equals, testCase.expectedPostCode)
 	}
 }
 
@@ -150,13 +178,14 @@ type getCityByIdTestCase struct {
 	searchId int16
 	expectedId int16
 	expectedName string
+	expectedPostCode string
 }
 func (suite *TestNqmRdbSuite) TestGetCityById(c *C) {
 	testCases := []getCityByIdTestCase {
-		{ 48, 48, "荆州市" },
-		{ 33, 33, "娄底市"},
-		{ -1, -1, "<UNDEFINED>" },
-		{ -919, -919, UNKNOWN_NAME_FOR_QUERY},
+		{ 48, 48, "荆州市", "434100" },
+		{ 33, 33, "娄底市", "417000"},
+		{ -1, -1, "<UNDEFINED>", "<UNDEFINED>" },
+		{ -919, -919, UNKNOWN_NAME_FOR_QUERY, UNKNOWN_NAME_FOR_QUERY},
 	}
 
 	for _, testCase := range testCases {
@@ -166,7 +195,8 @@ func (suite *TestNqmRdbSuite) TestGetCityById(c *C) {
 
 		c.Assert(testedCity, NotNil)
 		c.Assert(testedCity.Id, Equals, int16(testCase.expectedId))
-		c.Assert(testedCity.Id, Equals, testCase.expectedId)
+		c.Assert(testedCity.Name, Equals, testCase.expectedName)
+		c.Assert(testedCity.PostCode, Equals, testCase.expectedPostCode)
 	}
 }
 
@@ -234,6 +264,35 @@ func (s *TestNqmRdbSuite) SetUpTest(c *C) {
 			(19203, 'target-3', '100.20.50.3')
 			`,
 		)
+	case "TestNqmRdbSuite.TestListAgentsInCityByProvinceId":
+		qtest.ExecuteQueriesOrFailInTx(
+			// 14305 - Disabled agent
+			// 14311 - Agent without ping task
+			// 14312 - Not the matched province
+			`
+			INSERT INTO nqm_agent(
+				ag_id, ag_name, ag_connection_id,
+				ag_hostname, ag_ip_address,
+				ag_isp_id, ag_pv_id, ag_ct_id, ag_status
+			) VALUES
+			(14301, 'agent-1', '92.20.50.1', 'ag-1-host', 0x5A143201, -1, 3, 2, true),
+			(14302, 'agent-2', '92.20.50.2', 'ag-2-host', 0x5A143202, -1, 3, 2, true),
+			(14303, 'agent-3', '92.20.50.3', 'ag-3-host', 0x5A143203, -1, 3, 3, true),
+			(14304, 'agent-4', '92.20.50.4', 'ag-4-host', 0x5A143204, -1, 3, 3, true),
+			(14305, 'agent-5', '92.20.50.5', 'ag-5-host', 0x5A143205, -1, 3, 3, false),
+			(14311, 'agent-11', '92.20.50.11', 'ag-11-host', 0x5A14320B, -1, 3, 3, true),
+			(14312, 'agent-12', '92.20.50.12', 'ag-12-host', 0x5A14320C, -1, 4, 3, true)
+			`,
+			`
+			INSERT INTO nqm_ping_task(pt_ag_id, pt_period)
+			VALUES
+			(14301, 100),
+			(14302, 100),
+			(14303, 100),
+			(14304, 100),
+			(14305, 100)
+			`,
+		)
 	}
 }
 
@@ -247,6 +306,11 @@ func (s *TestNqmRdbSuite) TearDownTest(c *C) {
 		"TestNqmRdbSuite.TestGetTargetById":
 		qtest.ExecuteQueriesOrFailInTx(
 			`DELETE FROM nqm_target WHERE tg_id IN (19201, 19202, 19203)`,
+		)
+	case "TestNqmRdbSuite.TestListAgentsInCityByProvinceId":
+		qtest.ExecuteQueriesOrFailInTx(
+			`DELETE FROM nqm_ping_task WHERE pt_ag_id >= 14301 AND pt_ag_id <= 14320`,
+			`DELETE FROM nqm_agent WHERE ag_id >= 14301 AND ag_id <= 14320`,
 		)
 	}
 }

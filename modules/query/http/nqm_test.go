@@ -50,12 +50,13 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				now := time.Now()
 				beforeNow := now.Add(before7Days)
+				expectedEndTime := now.Add(24 * time.Hour)
 
 				c.Assert(testedError, IsNil)
 				c.Assert(testedDsl.StartTime.Year(), Equals, beforeNow.Year())
 				c.Assert(testedDsl.StartTime.Day(), Equals, beforeNow.Day())
-				c.Assert(testedDsl.EndTime.Year(), Equals, now.Year())
-				c.Assert(testedDsl.EndTime.Day(), Equals, now.Day())
+				c.Assert(testedDsl.EndTime.Year(), Equals, expectedEndTime.Year())
+				c.Assert(testedDsl.EndTime.Day(), Equals, expectedEndTime.Day())
 			},
 		},
 		// :~)
@@ -84,6 +85,20 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 				c.Assert(testedDsl.StartTime.Day(), Equals, 15 - defaultDaysForTimeRange)
 				c.Assert(testedDsl.EndTime.Year(), Equals, 2012)
 				c.Assert(testedDsl.EndTime.Day(), Equals, 15)
+			},
+		},
+		// :~)
+		/**
+		 * DSL only has same value of start/end time
+		 */
+		processDslTestCase {
+			sampleDsl: "starttime=2012-03-03 endtime=2012-03-03",
+			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
+				c.Assert(testedError, IsNil)
+				c.Assert(testedDsl.StartTime.Year(), Equals, 2012)
+				c.Assert(testedDsl.StartTime.Day(), Equals, 3)
+				c.Assert(testedDsl.EndTime.Year(), Equals, 2012)
+				c.Assert(testedDsl.EndTime.Day(), Equals, 4)
 			},
 		},
 		// :~)

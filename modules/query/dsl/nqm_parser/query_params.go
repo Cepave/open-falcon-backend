@@ -37,6 +37,7 @@ type NodeFilter struct {
 
 // The filter of node
 type NodeFilterById struct {
+	MatchIds []int32
 	MatchProvinces []int16
 	MatchCities []int16
 	MatchIsps []int16

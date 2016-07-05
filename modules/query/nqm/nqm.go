@@ -3,6 +3,7 @@ package nqm
 import (
 	"fmt"
 	dsl "github.com/Cepave/query/dsl/nqm_parser" // As NQM intermediate representation
+	"log"
 )
 
 /**
@@ -26,8 +27,12 @@ type NqmDsl struct {
 
 	IdsOfAgentProvinces []Id2Bytes `json:"ids_of_agent_provinces"`
 	IdsOfAgentIsps []Id2Bytes `json:"ids_of_agent_isps"`
+	IdsOfAgentCities []Id2Bytes `json:"ids_of_agent_cities"`
 	IdsOfTargetProvinces []Id2Bytes `json:"ids_of_target_provinces"`
 	IdsOfTargetIsps []Id2Bytes `json:"ids_of_target_isps"`
+	IdsOfTargetCities []Id2Bytes `json:"ids_of_target_cities"`
+	IdsOfAgents []int32 `json:"ids_of_agents"`
+	IdsOfTargets []int32 `json:"ids_of_targets"`
 
 	ProvinceRelation dsl.HostRelation `json:"province_relation"`
 }
@@ -97,7 +102,7 @@ func (srv ServiceController) ListByProvinces(dslParams *dsl.QueryParams) []Provi
 	 * 2. Only for inter-province
 	 */
 	nqmDsl := toNqmDsl(dslParams)
-	nqmDsl.GroupingColumns = []string { "ib_ag_pv_id" }
+	nqmDsl.GroupingColumns = []string { "ag_pv_id" }
 	nqmDsl.ProvinceRelation = dsl.SAME_VALUE
 	// :~)
 
@@ -135,7 +140,7 @@ func (srv ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryParam
 	 * Loads data with grouping by id of cities
 	 */
 	dslGroupByCity := toNqmDsl(dslParams)
-	dslGroupByCity.GroupingColumns = []string { "ib_tg_ct_id" }
+	dslGroupByCity.GroupingColumns = []string { "tg_ct_id" }
 	dslGroupByCity.ProvinceRelation = dsl.SAME_VALUE
 	rawIcmpGroupByCity, errForCityReport := srv.GetStatisticsOfIcmpByDsl(dslGroupByCity)
 	if errForCityReport != nil {
@@ -169,7 +174,7 @@ func (srv ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryParam
 	 * Loads data with grouping by id of targets
 	 */
 	dslGroupByTarget := toNqmDsl(dslParams)
-	dslGroupByTarget.GroupingColumns = []string { "ib_tg_id", "ib_tg_ct_id", "ib_tg_isp_id" }
+	dslGroupByTarget.GroupingColumns = []string { "tg_id", "tg_ct_id", "tg_isp_id" }
 	rawIcmpGroupByTarget, errForTargetReport := srv.GetStatisticsOfIcmpByDsl(dslGroupByTarget)
 	if errForTargetReport != nil {
 		panic(errForTargetReport)
@@ -216,12 +221,24 @@ func toNqmDsl(queryParams *dsl.QueryParams) *NqmDsl {
 	return &NqmDsl{
 		IdsOfAgentProvinces: loadIds(queryParams.AgentFilter.MatchProvinces, getIdOfProvinceByName, queryParams.AgentFilterById.MatchProvinces),
 		IdsOfAgentIsps: loadIds(queryParams.AgentFilter.MatchIsps, getIdOfIspByName, queryParams.AgentFilterById.MatchIsps),
+		IdsOfAgentCities: loadIds(queryParams.AgentFilter.MatchCities, getIdOfCityByName, queryParams.AgentFilterById.MatchCities),
 		IdsOfTargetProvinces: loadIds(queryParams.TargetFilter.MatchProvinces, getIdOfProvinceByName, queryParams.TargetFilterById.MatchProvinces),
 		IdsOfTargetIsps: loadIds(queryParams.TargetFilter.MatchIsps, getIdOfIspByName, queryParams.TargetFilterById.MatchIsps),
+		IdsOfTargetCities: loadIds(queryParams.TargetFilter.MatchCities, getIdOfCityByName, queryParams.TargetFilterById.MatchCities),
+		IdsOfAgents: safeIds(queryParams.AgentFilterById.MatchIds),
+		IdsOfTargets: safeIds(queryParams.TargetFilterById.MatchIds),
 		StartTime: EpochTime(queryParams.StartTime.Unix()),
 		EndTime: EpochTime(queryParams.EndTime.Unix()),
 		ProvinceRelation: queryParams.ProvinceRelation,
 	}
+}
+
+func safeIds(ids []int32) []int32 {
+	if ids == nil {
+		return make([]int32, 0)
+	}
+
+	return ids
 }
 
 func loadIds(
@@ -268,5 +285,9 @@ func getIdOfProvinceByName(name string) Id2Bytes {
 }
 func getIdOfIspByName(name string) Id2Bytes {
 	return Id2Bytes(getIspByName(name).Id)
+}
+func getIdOfCityByName(name string) Id2Bytes {
+	log.Panicf("Unsupplied function: getIdOfCityByName() : %v", name)
+	return 0
 }
 // :~)
