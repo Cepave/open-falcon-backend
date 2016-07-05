@@ -1,14 +1,13 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g commands -name '*.go')
-CMD = agent nqm-agent aggregator graph hbs judge nodata query sender task transfer fe
-BIN = bin/falcon-agent bin/falcon-nqm-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer
-# bin/falcon-fe
+CMD = aggregator graph hbs judge nodata query sender task transfer fe
+BIN = bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-sender bin/falcon-task bin/falcon-transfer
 TARGET = open-falcon
 
 PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/vendor/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
-all: $(BIN) $(TARGET) bin/falcon-fe
+all: $(BIN) $(TARGET) bin/falcon-fe bin/falcon-query
 
 $(CMD):
 	make bin/falcon-$@
@@ -51,7 +50,7 @@ clean:
 	rm -rf ./$(TARGET)
 	rm -rf open-falcon-v$(VERSION).tar.gz
 
-.PHONY: clean all agent nqm-agent aggregator graph hbs judge nodata query sender task transfer fe
+.PHONY: clean all aggregator graph hbs judge nodata query sender task transfer fe
 
 bin/falcon-agent : $(shell find modules/agent/ -name '*.go')
 bin/falcon-nqm-agent : $(shell find modules/nqm-agent/ -name '*.go')
