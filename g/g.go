@@ -18,6 +18,7 @@ func init() {
 	//	}
 	Modules = map[string]bool{
 		"agent":      true,
+		"nqm-agent":  true,
 		"aggregator": true,
 		"fe":         true,
 		"graph":      true,
@@ -32,6 +33,7 @@ func init() {
 
 	ModuleBins = map[string]string{
 		"agent":      "./agent/bin/falcon-agent",
+		"nqm-agent":  "./agent/bin/falcon-nqm-agent",
 		"aggregator": "./aggregator/bin/falcon-aggregator",
 		"fe":         "./fe/bin/falcon-fe",
 		"graph":      "./graph/bin/falcon-graph",
@@ -46,6 +48,7 @@ func init() {
 
 	ModuleConfs = map[string]string{
 		"agent":      "./agent/config/cfg.json",
+		"nqm-agent":  "./nqm-agent/config/cfg.json",
 		"aggregator": "./aggregator/config/cfg.json",
 		"fe":         "./fe/config/cfg.json",
 		"graph":      "./graph/config/cfg.json",
@@ -60,6 +63,7 @@ func init() {
 
 	ModuleApps = map[string]string{
 		"agent":      "falcon-agent",
+		"nqm-agent":  "falcon-nqm-agent",
 		"aggregator": "falcon-aggregator",
 		"graph":      "falcon-graph",
 		"fe":         "falcon-fe",

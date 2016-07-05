@@ -1,12 +1,10 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g commands -name '*.go')
-CMD = agent aggregator graph hbs judge nodata query sender task transfer fe
-BIN = bin/falcon-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer
+CMD = agent nqm-agent aggregator graph hbs judge nodata query sender task transfer fe
+BIN = bin/falcon-agent bin/falcon-nqm-agent bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-query bin/falcon-sender bin/falcon-task bin/falcon-transfer
 # bin/falcon-fe
 TARGET = open-falcon
 
-GOTOOLS = github.com/mitchellh/gox golang.org/x/tools/cmd/stringer \
-	github.com/jteeuwen/go-bindata/... github.com/elazarl/go-bindata-assetfs/...
 PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/vendor/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
@@ -20,11 +18,10 @@ $(TARGET): $(TARGET_SOURCE)
 
 $(BIN):
 	@cd modules/$(@:bin/falcon-%=%);\
+	echo vendor/github.com/Cepave/$(@:bin/falcon-%=%);\
 	export commit=`git log -1 --pretty=%h`;\
-	echo -e "package g\nconst (\n  COMMIT = \"$$commit\"\n)" > g/git.go
 	-@cd vendor/github.com/Cepave/$(@:bin/falcon-%=%);\
 	export commit=`git log -1 --pretty=%h`;\
-	echo -e "package g\nconst (\n  COMMIT = \"$$commit\"\n)" > g/git.go
 	go build -o $@ ./modules/$(@:bin/falcon-%=%)
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
@@ -37,10 +34,6 @@ test: format
 format:
 	@echo "--> Running go fmt"
 	@go fmt $(PACKAGES)
-
-tools:
-	go get -u -v $(GOTOOLS)
-
 
 checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
@@ -63,9 +56,10 @@ clean:
 	rm -rf ./$(TARGET)
 	rm -rf open-falcon-v$(VERSION).tar.gz
 
-.PHONY: clean all agent aggregator graph hbs judge nodata query sender task transfer fe
+.PHONY: clean all agent nqm-agent aggregator graph hbs judge nodata query sender task transfer fe
 
 bin/falcon-agent : $(shell find modules/agent/ -name '*.go')
+bin/falcon-nqm-agent : $(shell find modules/nqm-agent/ -name '*.go')
 bin/falcon-aggregator : $(shell find modules/aggregator/ -name '*.go')
 bin/falcon-graph : $(shell find modules/graph/ -name '*.go')
 bin/falcon-hbs : $(shell find modules/hbs/ -name '*.go')
