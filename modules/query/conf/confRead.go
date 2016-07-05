@@ -2,8 +2,10 @@ package conf
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"reflect"
 	"sync"
 
@@ -36,17 +38,32 @@ func Config() map[string]*FunConfig {
 }
 
 func functionMapGen() {
+	f := "./"
+	currentPath, _ := os.Getwd()
+	if _, err := os.Stat(fmt.Sprintf("%s/../js", currentPath)); err == nil {
+		f = fmt.Sprintf("%s/../js", currentPath)
+	} else if _, err := os.Stat(fmt.Sprintf("%s/../conf/js", currentPath)); err == nil {
+		f = fmt.Sprintf("%s/../conf/js", currentPath)
+	} else {
+		log.Fatalf("load js files got error, currentPaht: %s , please check your code tree and make is correct!", currentPath)
+	}
 	FunctionMap = map[string]*FunConfig{}
 	for _, v := range gconfig {
-		contain := jsFileReader(v.FilePath)
+		contain := jsFileReader(fmt.Sprintf("%s/%s", f, v.FilePath))
 		v.Codes = contain
 		FunctionMap[v.FuncationName] = v
 	}
 }
 
-func ReadConf(f string) {
-	if f == "" {
-		f = "./lambdaSetup.json"
+func ReadConf() {
+	var f string
+	currentPath, _ := os.Getwd()
+	if _, err := os.Stat(fmt.Sprintf("%s/conf/lambdaSetup.json", currentPath)); err == nil {
+		f = fmt.Sprintf("%s/conf/lambdaSetup.json", currentPath)
+	} else if _, err := os.Stat(fmt.Sprintf("%s/../conf/lambdaSetup.json", currentPath)); err == nil {
+		f = fmt.Sprintf("%s/../conf/lambdaSetup.json", currentPath)
+	} else {
+		log.Fatalf("lambdaStup.json not found, currentPaht: %s", currentPath)
 	}
 	confpath = &f
 	dat, err := ioutil.ReadFile(f)
@@ -64,7 +81,7 @@ func ReadConf(f string) {
 
 func Reload() {
 	configLock.RLock()
-	ReadConf(*confpath)
+	ReadConf()
 	defer configLock.RUnlock()
 }
 
