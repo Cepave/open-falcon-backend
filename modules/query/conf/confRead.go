@@ -40,7 +40,9 @@ func Config() map[string]*FunConfig {
 func functionMapGen() {
 	f := "./"
 	currentPath, _ := os.Getwd()
-	if _, err := os.Stat(fmt.Sprintf("%s/../js", currentPath)); err == nil {
+	if _, err := os.Stat(fmt.Sprintf("%s/js", currentPath)); err == nil {
+		f = fmt.Sprintf("%s/js", currentPath)
+	} else if _, err := os.Stat(fmt.Sprintf("%s/../js", currentPath)); err == nil {
 		f = fmt.Sprintf("%s/../js", currentPath)
 	} else if _, err := os.Stat(fmt.Sprintf("%s/../conf/js", currentPath)); err == nil {
 		f = fmt.Sprintf("%s/../conf/js", currentPath)
