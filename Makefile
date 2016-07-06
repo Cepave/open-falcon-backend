@@ -10,7 +10,7 @@ VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 all: $(BIN) $(TARGET) bin/falcon-fe bin/falcon-query
 
 $(CMD):
-	make bin/falcon-$@
+	@make bin/falcon-$@
 
 $(TARGET): $(TARGET_SOURCE)
 	go build -o open-falcon
@@ -31,22 +31,22 @@ format:
 
 checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
-	mkdir out
-	$(foreach var,$(CMD),mkdir -p ./out/$(var)/bin;)
-	$(foreach var,$(CMD),mkdir -p ./out/$(var)/config;)
-	$(foreach var,$(CMD),mkdir -p ./out/$(var)/logs;)
-	$(foreach var,$(CMD),cp ./config/$(var).json ./out/$(var)/config/cfg.json;)
-	$(foreach var,$(CMD),cp ./bin/falcon-$(var) ./out/$(var)/bin;)
-	cp cfg.json ./out/cfg.json
-	cp $(TARGET) ./out/$(TARGET)
+	@mkdir out
+	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/bin;)
+	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/config;)
+	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/logs;)
+	@$(foreach var,$(CMD),cp ./config/$(var).json ./out/$(var)/config/cfg.json;)
+	@$(foreach var,$(CMD),cp ./bin/falcon-$(var) ./out/$(var)/bin;)
+	@cp cfg.json ./out/cfg.json
+	@cp $(TARGET) ./out/$(TARGET)
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
-	rm -rf out
+	@rm -rf out
 
 clean:
-	rm -rf ./bin
-	rm -rf ./out
-	rm -rf ./$(TARGET)
-	rm -rf open-falcon-v$(VERSION).tar.gz
+	@rm -rf ./bin
+	@rm -rf ./out
+	@rm -rf ./$(TARGET)
+	@rm -rf open-falcon-v$(VERSION).tar.gz
 
 .PHONY: clean all aggregator graph hbs judge nodata query sender task transfer fe
 
