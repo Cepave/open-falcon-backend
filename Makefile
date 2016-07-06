@@ -51,22 +51,13 @@ clean:
 
 .PHONY: clean all aggregator graph hbs judge nodata query sender task transfer fe
 
-bin/falcon-agent : $(shell find modules/agent/ -name '*.go')
-bin/falcon-nqm-agent : $(shell find modules/nqm-agent/ -name '*.go')
-bin/falcon-aggregator : $(shell find modules/aggregator/ -name '*.go')
-bin/falcon-graph : $(shell find modules/graph/ -name '*.go')
-bin/falcon-hbs : $(shell find modules/hbs/ -name '*.go')
-bin/falcon-judge : $(shell find modules/judge/ -name '*.go')
-bin/falcon-nodata : $(shell find modules/nodata/ -name '*.go')
-bin/falcon-query : $(shell find modules/query/ -name '*.go')
+bin/falcon-query:
 	go build -o $@ ./modules/query
 	cp -r modules/query/js bin/js
 	mkdir -p bin/conf
 	cp modules/query/conf/lambdaSetup.json bin/conf
-bin/falcon-sender : $(shell find modules/sender/ -name '*.go')
-bin/falcon-task : $(shell find modules/task/ -name '*.go')
-bin/falcon-transfer : $(shell find modules/transfer/ -name '*.go')
-bin/falcon-fe: $(shell find modules/fe/ -name '*.go')
+
+bin/falcon-fe:
 	go build -o $@ ./modules/$(@:bin/falcon-%=%)
 	mkdir -p bin/fe
 	cp -r modules/fe/{control,cfg.example.json,conf,static,views,scripts} bin/fe/
