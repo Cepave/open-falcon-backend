@@ -31,6 +31,7 @@ format:
 
 checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
+	@if [ -e out ] ; then rm -rf out; fi
 	@mkdir out
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/bin;)
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/config;)
