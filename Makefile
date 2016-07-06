@@ -39,9 +39,7 @@ pack: checkbin
 	$(foreach var,$(CMD),cp ./bin/falcon-$(var) ./out/$(var)/bin;)
 	cp cfg.json ./out/cfg.json
 	cp $(TARGET) ./out/$(TARGET)
-	cd out && tar -zcvf open-falcon-v$(VERSION).tar.gz ./*
-	cd ..
-	mv ./out/open-falcon-v$(VERSION).tar.gz .
+	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
 	rm -rf out
 
 clean:
