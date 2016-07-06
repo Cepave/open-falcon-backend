@@ -44,8 +44,8 @@ func functionMapGen() {
 		f = fmt.Sprintf("%s/js", currentPath)
 	} else if _, err := os.Stat(fmt.Sprintf("%s/../js", currentPath)); err == nil {
 		f = fmt.Sprintf("%s/../js", currentPath)
-	} else if _, err := os.Stat(fmt.Sprintf("%s/../conf/js", currentPath)); err == nil {
-		f = fmt.Sprintf("%s/../conf/js", currentPath)
+	} else if _, err := os.Stat(fmt.Sprintf("%s/../config/js", currentPath)); err == nil {
+		f = fmt.Sprintf("%s/../config/js", currentPath)
 	} else {
 		log.Fatalf("load js files got error, currentPaht: %s , please check your code tree and make is correct!", currentPath)
 	}
@@ -62,10 +62,10 @@ func ReadConf() {
 	currentPath, _ := os.Getwd()
 	if _, err := os.Stat(fmt.Sprintf("%s/conf/lambdaSetup.json", currentPath)); err == nil {
 		f = fmt.Sprintf("%s/conf/lambdaSetup.json", currentPath)
-	} else if _, err := os.Stat(fmt.Sprintf("%s/../conf/lambdaSetup.json", currentPath)); err == nil {
-		f = fmt.Sprintf("%s/../conf/lambdaSetup.json", currentPath)
+	} else if _, err := os.Stat(fmt.Sprintf("%s/../config/lambdaSetup.json", currentPath)); err == nil {
+		f = fmt.Sprintf("%s/../config/lambdaSetup.json", currentPath)
 	} else {
-		log.Fatalf("lambdaStup.json not found, currentPaht: %s", currentPath)
+		log.Fatalf("lambdaSetup.json not found, currentPaht: %s", currentPath)
 	}
 	confpath = &f
 	dat, err := ioutil.ReadFile(f)
