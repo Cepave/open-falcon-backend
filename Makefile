@@ -4,7 +4,6 @@ CMD = aggregator graph hbs judge nodata query sender task transfer fe
 BIN = bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-sender bin/falcon-task bin/falcon-transfer
 TARGET = open-falcon
 
-PACKAGES=$(shell go list ./... | grep -v '^github.com/Cepave/open-falcon/vendor/')
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
 all: $(BIN) $(TARGET) bin/falcon-fe bin/falcon-query
@@ -27,7 +26,7 @@ test: format
 
 format:
 	@echo "--> Running go fmt"
-	@go fmt $(PACKAGES)
+	@go fmt `go list ./...`
 
 checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
