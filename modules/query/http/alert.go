@@ -449,12 +449,11 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 			statusRaw := row["status"].(string)
 			time := row["update_at"].(string)
 			time = time[:len(time)-3]
-			process := row["process_status"].(string)
+			process := strings.ToLower(row["process_status"].(string))
+			process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			note := []map[string]string{}
 			if _, ok := notes[hash]; ok {
 				note = notes[hash].([]map[string]string)
-				process = row["process_status"].(string)
-				process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			}
 			templateID := row["template_id"].(string)
 			author := row["tpl_creator"].(string)
@@ -507,9 +506,9 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 				item.(map[string]interface{})["contact"] = contacts
 				items = append(items, item)
 			} else {
-				item.(map[string]interface{})["ip"] = "-"
-				item.(map[string]interface{})["platform"] = "-"
-				item.(map[string]interface{})["idc"] = "-"
+				item.(map[string]interface{})["ip"] = host["ip"].(string) + " (deactivated)"
+				item.(map[string]interface{})["platform"] = host["platform"].(string)
+				item.(map[string]interface{})["idc"] = host["idc"].(string)
 				contact := map[string]string{
 					"email": "-",
 					"name":  "-",
@@ -523,9 +522,9 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 				log.Println("host deactivated:", hostname)
 			}
 		} else {
-			item.(map[string]interface{})["ip"] = "-"
-			item.(map[string]interface{})["platform"] = "-"
-			item.(map[string]interface{})["idc"] = "-"
+			item.(map[string]interface{})["ip"] = "not found"
+			item.(map[string]interface{})["platform"] = "not found"
+			item.(map[string]interface{})["idc"] = "not found"
 			contact := map[string]string{
 				"email": "-",
 				"name":  "-",
