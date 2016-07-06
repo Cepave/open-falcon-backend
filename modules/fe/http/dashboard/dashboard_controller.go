@@ -192,6 +192,40 @@ func (this *DashBoardController) CountNumOfHostGroup() {
 	return
 }
 
+func (this *DashBoardController) EndpRegxquryForPlugin() {
+	baseResp := this.BasicRespGen()
+	session, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	var username *uic.User
+	if session.Uid <= 0 {
+		baseResp.Data["SessionFlag"] = true
+		baseResp.Data["ErrorMsg"] = "Session is not vaild"
+	} else {
+		baseResp.Data["SessionFlag"] = false
+		username = uic.SelectUserById(session.Uid)
+		if username.Name != "root" {
+			baseResp.Data["SessionFlag"] = true
+			baseResp.Data["ErrorMsg"] = "You don't have permission to access this page"
+		}
+	}
+	queryStr := ".+"
+	if baseResp.Data["SessionFlag"] == false {
+		enpRow, _ := dashboard.QueryEndpintByNameRegxForOps(queryStr)
+		enp := gitInfoAdapter(enpRow)
+		if len(enp) > 0 {
+			baseResp.Data["Endpoints"] = enp
+		} else {
+			baseResp.Data["Endpoints"] = []string{}
+		}
+	}
+	log.Println(baseResp)
+	this.ServeApiJson(baseResp)
+	return
+}
+
 func (this *DashBoardController) EndpRegxquryForOps() {
 	this.Data["Shortcut"] = g.Config().Shortcut
 	sig := this.Ctx.GetCookie("sig")
