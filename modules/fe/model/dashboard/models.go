@@ -47,3 +47,13 @@ type HostGroupMapping struct {
 	GrpId  int64 `json:"grp_id"`
 	HostId int64 `json:"host_id"`
 }
+
+type GitInfo struct {
+	Hostname      string    `json:"hostname"`
+	Ip            string    `json:"ip"`
+	AgentVersion  string    `json:"agent_version"`
+	PluginVersion string    `json:"plugin_version"`
+	Title         string    `json:"title"`
+	Date          time.Time `json:"commit_at"`
+	Valid         bool      `json:"valid"`
+}

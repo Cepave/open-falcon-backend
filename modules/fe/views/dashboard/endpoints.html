@@ -26,15 +26,19 @@ new Clipboard('#clip');
         <th>IP</th>
         <th>AgentVersion</th>
         <th>PluginVersion</th>
+        <th>Date</th>
+        <th>Title</th>
         </tr>
       </thead>
       <tbody>
-        {{range .Endopints}}
+        {{range .Endpoints}}
           <tr>
           <td>{{.Hostname}}</td>
           <td id="ip">{{.Ip}}</td>
           <td>{{.AgentVersion}}</td>
           <td>{{.PluginVersion}}</td>
+          <td>{{.Date}}</td>
+          <td>{{.Title}}</td>
           </tr>
         {{end}}
       </tbody>
