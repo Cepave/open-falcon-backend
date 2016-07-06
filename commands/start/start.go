@@ -48,22 +48,7 @@ func (c *Command) Run(args []string) int {
 				fmt.Println(err)
 				return g.Command_EX_ERR
 			}
-			// fe workaround
-			if moduleName == "fe" {
-				os.Chdir("bin/fe")
-				cmd := exec.Command("./control", "start")
-				dir, _ := os.Getwd()
-				cmd.Dir = dir
-				cmd.Start()
-				fmt.Println("successfully!!")
-				time.Sleep(1 * time.Second)
-				moduleStatus = g.CheckModuleStatus(moduleName)
-				if moduleStatus == g.ModuleExistentNotRunning {
-					return g.Command_EX_ERR
-				}
-				os.Chdir("../../")
-				continue
-			}
+
 			logPath := "./" + moduleName + "/" + g.LogDir + "/" + moduleName + ".log"
 			LogOutput, err := os.OpenFile(logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 			if err != nil {

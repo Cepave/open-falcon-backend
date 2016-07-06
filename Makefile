@@ -1,21 +1,17 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g commands -name '*.go')
 CMD = aggregator graph hbs judge nodata query sender task transfer fe
-BIN = bin/falcon-aggregator bin/falcon-graph bin/falcon-hbs bin/falcon-judge bin/falcon-nodata bin/falcon-sender bin/falcon-task bin/falcon-transfer
 TARGET = open-falcon
 
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
 
-all: $(BIN) $(TARGET) bin/falcon-fe bin/falcon-query
+all: $(CMD) $(TARGET)
 
 $(CMD):
-	@make bin/falcon-$@
+	go build -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
 	go build -o open-falcon
-
-$(BIN):
-	go build -o $@ ./modules/$(@:bin/falcon-%=%)
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
 dev: format
@@ -36,7 +32,9 @@ pack: checkbin
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/config;)
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/logs;)
 	@$(foreach var,$(CMD),cp ./config/$(var).json ./out/$(var)/config/cfg.json;)
-	@$(foreach var,$(CMD),cp ./bin/falcon-$(var) ./out/$(var)/bin;)
+	@$(foreach var,$(CMD),cp ./bin/$(var)/falcon-$(var) ./out/$(var)/bin;)
+	@cp -r ./modules/query/js ./modules/query/conf/lambdaSetup.json ./out/query/config
+	@cp -r ./modules/fe/{static,views,scripts} ./out/fe/bin
 	@cp cfg.json ./out/cfg.json
 	@cp $(TARGET) ./out/$(TARGET)
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
@@ -50,14 +48,3 @@ clean:
 
 .PHONY: clean all aggregator graph hbs judge nodata query sender task transfer fe
 
-bin/falcon-query:
-	go build -o $@ ./modules/query
-	cp -r modules/query/js bin/js
-	mkdir -p bin/conf
-	cp modules/query/conf/lambdaSetup.json bin/conf
-
-bin/falcon-fe:
-	go build -o $@ ./modules/$(@:bin/falcon-%=%)
-	mkdir -p bin/fe
-	cp -r modules/fe/{control,cfg.example.json,conf,static,views,scripts} bin/fe/
-	cp bin/falcon-fe bin/fe/falcon-fe
