@@ -43,7 +43,7 @@ func main() {
 	if gconf.GinHttp.Enabled {
 		//lambdaSetup
 		database.Init()
-		conf.ReadConf("./conf/lambdaSetup.json")
+		conf.ReadConf()
 		go ginHttp.StartWeb()
 	}
 
