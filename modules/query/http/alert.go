@@ -483,7 +483,7 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 	return alerts
 }
 
-func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, nodes map[string]interface{}, rw http.ResponseWriter) ([]interface{}, map[string]string) {
+func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, nodes map[string]interface{}, rw http.ResponseWriter) []interface{} {
 	items := []interface{}{}
 	hostnames := []string{}
 	platformNames := []string{}
@@ -545,22 +545,6 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 		hostnames = appendUniqueString(hostnames, hostname)
 	}
 	sort.Strings(hostnames)
-
-	hostsTriggeredMap := map[string]string{}
-	for _, hostname := range hostnames {
-		if _, ok := hostsMap[hostname]; ok {
-			host := hostsMap[hostname].(map[string]interface{})
-			platformName := host["platform"].(string)
-			if strings.Index(platformName, ", ") > -1 {
-				for _, name := range strings.Split(platformName, ", ") {
-					platformNames = appendUniqueString(platformNames, name)
-				}
-			} else {
-				platformNames = appendUniqueString(platformNames, platformName)
-			}
-			hostsTriggeredMap[hostname] = platformName
-		}
-	}
 	sort.Strings(platformNames)
 	getPlatformContact(strings.Join(platformNames, ","), rw, nodes)
 	platforms := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})
@@ -581,7 +565,7 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 			}
 		}
 	}
-	return items, hostsTriggeredMap
+	return items
 }
 
 func getAlertCount(items []interface{}) map[string]int {
@@ -710,12 +694,11 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 		items := []interface{}{}
 		sqlcmd := setSQLQuery(templateIDs, req, result)
 		alerts = queryAlerts(sqlcmd, req, result)
-		items, hostToPlatform := addPlatformToAlerts(alerts, result, nodes, rw)
+		items = addPlatformToAlerts(alerts, result, nodes, rw)
 		count := getAlertCount(items)
 		result["items"] = items
 		nodes["result"] = result
 		nodes["count"] = count
-		nodes["hosts"] = hostToPlatform
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		setResponse(rw, nodes)
 	}
