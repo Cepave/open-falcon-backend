@@ -32,18 +32,6 @@ func (c *Command) Run(args []string) int {
 		return g.Command_EX_ERR
 	}
 
-	// fe workaround
-	if moduleName == "fe" {
-		os.Chdir("bin/fe")
-		cmd := exec.Command("./control", "tail")
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		dir, _ := os.Getwd()
-		cmd.Dir = dir
-		cmd.Run()
-		return 0
-	}
-
 	logPath := "./" + moduleName + "/" + g.LogDir + "/" + moduleName + ".log"
 	cmd := exec.Command("tail", "-f", logPath)
 	cmd.Stdout = os.Stdout
