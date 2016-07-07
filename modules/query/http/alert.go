@@ -627,6 +627,69 @@ func getAlertProcessCounts(items []interface{}) map[string]int {
 	return count
 }
 
+func getAlertMetricTypeCounts(items []interface{}) map[string]int {
+	count := map[string]int{
+		"cpu":          0,
+		"disk":         0,
+		"memory":       0,
+		"net":          0,
+		"others":       0,
+		"agent":        0,
+		"check":        0,
+		"chk":          0,
+		"dev":          0,
+		"fcd":          0,
+		"file":         0,
+		"fm":           0,
+		"http":         0,
+		"nic":          0,
+		"proc":         0,
+		"tags":         0,
+		"zabbix-agent": 0,
+	}
+	for _, item := range items {
+		metric := item.(map[string]interface{})["metric"].(string)
+		metricType := strings.ToLower(strings.Split(metric, ".")[0])
+		if metricType == "cpu" {
+			count["cpu"]++
+		} else if metricType == "disk" {
+			count["disk"]++
+		} else if metricType == "memory" {
+			count["memory"]++
+		} else if metricType == "net" {
+			count["net"]++
+		} else {
+			count["others"]++
+			if metricType == "agent" {
+				count["agent"]++
+			} else if metricType == "check" {
+				count["check"]++
+			} else if metricType == "chk" {
+				count["chk"]++
+			} else if metricType == "dev" {
+				count["dev"]++
+			} else if metricType == "fcd" {
+				count["fcd"]++
+			} else if metricType == "file" {
+				count["file"]++
+			} else if metricType == "fm" {
+				count["fm"]++
+			} else if metricType == "http" {
+				count["http"]++
+			} else if metricType == "nic" {
+				count["nic"]++
+			} else if metricType == "proc" {
+				count["proc"]++
+			} else if metricType == "zabbix-agent" {
+				count["zabbix-agent"]++
+			} else if strings.Index(metricType, "tags") > -1 {
+				count["tags"]++
+			}
+		}
+	}
+	return count
+}
+
 func getAlerts(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
