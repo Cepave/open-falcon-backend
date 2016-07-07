@@ -338,7 +338,8 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 }
 
 func setSQLQuery(templateIDs string, req *http.Request, result map[string]interface{}) string {
-	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, update_at, template_id, tpl_creator, process_status "
+	sqlcmd := "SELECT id, endpoint, metric, func, cond, note, max_step, current_step, priority, status, "
+	sqlcmd += "timestamp, update_at, template_id, tpl_creator, process_status "
 	sqlcmd += "FROM falcon_portal.event_cases "
 	whereConditions := []string{}
 	query := req.URL.Query()
