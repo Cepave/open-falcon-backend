@@ -605,6 +605,28 @@ func getAlertCount(items []interface{}) map[string]int {
 	return count
 }
 
+func getAlertProcessCounts(items []interface{}) map[string]int {
+	count := map[string]int{
+		"unresolved":  0,
+		"in progress": 0,
+		"resolved":    0,
+		"ignored":     0,
+	}
+	for _, item := range items {
+		process := strings.ToLower(item.(map[string]interface{})["process"].(string))
+		if process == "unresolved" {
+			count["unresolved"]++
+		} else if process == "in progress" {
+			count["in progress"]++
+		} else if process == "resolved" {
+			count["resolved"]++
+		} else if process == "ignored" {
+			count["ignored"]++
+		}
+	}
+	return count
+}
+
 func getAlerts(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
