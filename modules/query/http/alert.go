@@ -568,7 +568,7 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 	return items
 }
 
-func getAlertCount(items []interface{}) map[string]int {
+func getAlertSeverityCounts(items []interface{}) map[string]int {
 	count := map[string]int{
 		"all":    len(items),
 		"high":   0,
