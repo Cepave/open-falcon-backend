@@ -321,6 +321,7 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 				"note":   row["note"].(string),
 				"status": row["status"].(string),
 				"user":   users[userID],
+				"hash":   hash,
 				"time":   time,
 			}
 			if slice, ok := notes[hash]; ok {
