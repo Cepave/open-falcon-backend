@@ -449,8 +449,10 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 			content := row["note"].(string)
 			priority := row["priority"].(string)
 			statusRaw := row["status"].(string)
-			time := row["update_at"].(string)
-			time = time[:len(time)-3]
+			timeStart := row["timestamp"].(string)
+			timeStart = timeStart[:len(timeStart)-3]
+			timeUpdate := row["update_at"].(string)
+			timeUpdate = timeUpdate[:len(timeUpdate)-3]
 			process := strings.ToLower(row["process_status"].(string))
 			process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			note := []map[string]string{}
@@ -471,11 +473,16 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 				"statusRaw":  statusRaw,
 				"type":       metricType,
 				"content":    content,
-				"time":       time,
-				"duration":   getDuration(time, result),
-				"note":       note,
+				"timeStart":  timeStart,
+				"timeUpdate": timeUpdate,
+				"duration":   getDuration(timeUpdate, result),
+				"notes":      note,
 				"events":     getEvents(hash, eventsLimit, result),
 				"process":    process,
+				"function":   row["func"].(string),
+				"condition":  row["cond"].(string),
+				"stepLimit":  row["max_step"].(string),
+				"step":       row["current_step"].(string),
 			}
 			alerts = append(alerts, alert)
 		}
@@ -695,10 +702,15 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 		sqlcmd := setSQLQuery(templateIDs, req, result)
 		alerts = queryAlerts(sqlcmd, req, result)
 		items = addPlatformToAlerts(alerts, result, nodes, rw)
-		count := getAlertCount(items)
+		countOfSeverity := getAlertSeverityCounts(items)
+		countOfProcess := getAlertProcessCounts(items)
+		countOfMetricType := getAlertMetricTypeCounts(items)
 		result["items"] = items
 		nodes["result"] = result
-		nodes["count"] = count
+		nodes["count"] = countOfSeverity
+		nodes["countOfSeverity"] = countOfSeverity
+		nodes["countOfProcess"] = countOfProcess
+		nodes["countOfMetricType"] = countOfMetricType
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		setResponse(rw, nodes)
 	}
