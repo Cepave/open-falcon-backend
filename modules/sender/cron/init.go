@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	SmsWorkerChan  chan int
-	MailWorkerChan chan int
-	QQWorkerChan   chan int
+	SmsWorkerChan        chan int
+	MailWorkerChan       chan int
+	QQWorkerChan         chan int
 	ServerchanWorkerChan chan int
 )
 
