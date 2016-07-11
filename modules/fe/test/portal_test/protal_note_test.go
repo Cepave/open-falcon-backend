@@ -46,5 +46,19 @@ func TestPortalNote(t *testing.T) {
 			So(len(notes), ShouldEqual, 1)
 			So(strings.Index(resp.Body, "success"), ShouldBeGreaterThan, 0)
 		})
+
+		Convey("add note with batch", func() {
+			caseIds := "s_97_b66b973ef551e4e503fad475dfc9e418,s_96_b66b973ef551e4e503fad475dfc9e418"
+			postData := fmt.Sprintf("cName=%s;cSig=%s;id=%s;note=%s;status=%s", name, session, caseIds, note, processStatus)
+			resp := DoPost("/api/v1/portal/eventcases/addnote", postData)
+			So(strings.Index(resp.Body, "success"), ShouldBeGreaterThan, 0)
+			//check event case should update after note added
+			resp = DoPost("/api/v1/portal/eventcases/get", fmt.Sprintf("cName=%s;cSig=%s;caseId=%s", name, session, caseId))
+			jsParsed, _ := gabs.ParseJSON([]byte(resp.Body))
+			ACaseIds, _ := jsParsed.Search("data", "eventCases").Children()
+			apiStatus := jsParsed.Search("status").Data().(string)
+			So(ACaseIds[0].Search("process_status").Data().(string), ShouldEqual, processStatus)
+			So(apiStatus, ShouldEqual, "success")
+		})
 	})
 }
