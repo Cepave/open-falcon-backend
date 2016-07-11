@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/open-falcon/judge/g"
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
