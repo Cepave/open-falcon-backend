@@ -9,7 +9,7 @@ type PortalController struct {
 	base.BaseController
 }
 
-func (this *PortalController) EventCasesGet() {
+func (this *PortalController) GetEventCases() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
@@ -26,12 +26,35 @@ func (this *PortalController) EventCasesGet() {
 	username := this.GetString("cName", "")
 	limitNum, _ := this.GetInt("limit", 0)
 	elimit, _ := this.GetInt("elimit", 0)
-	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics)
+	caseId := this.GetString("caseId", "")
+	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
 	baseResp.Data["eventCases"] = events
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *PortalController) GetEvent() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	startTime, _ := this.GetInt64("startTime", 0)
+	endTime, _ := this.GetInt64("endTime", 0)
+	status := this.GetString("status", "ALL")
+	limit, _ := this.GetInt("limit", 0)
+	caseId := this.GetString("caseId", "")
+	events, err := event.GetEvents(startTime, endTime, status, limit, caseId)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	baseResp.Data["events"] = events
 	this.ServeApiJson(baseResp)
 	return
 }
@@ -93,7 +116,7 @@ func (this *PortalController) AddNote() {
 	return
 }
 
-func (this *PortalController) NotesGet() {
+func (this *PortalController) GetNotes() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
@@ -102,11 +125,14 @@ func (this *PortalController) NotesGet() {
 	}
 	id := this.GetString("id", "xxx")
 	limitNum, _ := this.GetInt("limit", 0)
+	startTime, _ := this.GetInt64("startTime", 0)
+	endTime, _ := this.GetInt64("endTime", 0)
+	filterIgnored, _ := this.GetBool("filterIgnored", true)
 	if id == "xxx" {
 		this.ResposeError(baseResp, "You dosen't pick any event id")
 		return
 	}
-	notes, err := event.GetNotes(id, limitNum)
+	notes, err := event.GetNotes(id, limitNum, startTime, endTime, filterIgnored)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
@@ -134,27 +160,6 @@ func (this *PortalController) GetNote() {
 		return
 	}
 	baseResp.Data["note"] = note
-	this.ServeApiJson(baseResp)
-	return
-}
-
-func (this *PortalController) EventGet() {
-	baseResp := this.BasicRespGen()
-	_, err := this.SessionCheck()
-	if err != nil {
-		this.ResposeError(baseResp, err.Error())
-		return
-	}
-	startTime, _ := this.GetInt64("startTime", 0)
-	endTime, _ := this.GetInt64("endTime", 0)
-	status := this.GetString("status", "ALL")
-	limitNum, _ := this.GetInt("limit", 0)
-	events, err := event.GetEvents(startTime, endTime, status, limitNum)
-	if err != nil {
-		this.ResposeError(baseResp, err.Error())
-		return
-	}
-	baseResp.Data["events"] = events
 	this.ServeApiJson(baseResp)
 	return
 }

@@ -3,10 +3,10 @@
 * `GET` `POST` /api/v1/portal/eventcases/get
 * `required login session`
 * params:
-  * `startTime` timestamp
+  * `startTime` timestamp [if set then can't skip endTime]
     * ex: 1457450919
     * if not specific, means get all
-  * `endTime` timestamp
+  * `endTime` timestamp [if set then can't skip startTime]
     * ex: 1477450919
     * if not specific, means get all
   * `priority` int
@@ -19,7 +19,7 @@
     * support mutiple status query. ex: "PRBOEM,OK"
     * 'OK' means 'Recovery', this wording is from open-falcon[judge], so I didn't change it.
   * `process_status` string options
-    * ex: "PROBLEM", "in process", "unresolved", "resolved", "ignored"
+    * ex: "in progress", "unresolved", "resolved", "ignored"
     * support mutiple status query. ex: "resolved,ignored"
   * `metrics` string options
     * ex: "cpu.idle", "df.statistics.total"
@@ -30,6 +30,8 @@
     * set the return limit of eventCases
   * `elimit` int
     * set the return limit of events
+  * `caseId` string
+    * return specific alarm_case
 * response:
   * ok
 
@@ -87,16 +89,14 @@
     * `startTime` timestamp
       * ex: 1457450919
     * `endTime` timestamp
-    * `priority` int
-      * ex: 0
-      * -1 means no specific any priority level, get all.
+      * ex: 1457450919
     * `status` string options
-      * ex: "PROBLEM"
-      * "ALL" means no specific any status, get all.
-      *  if no specific will get 'ALL' case as default
+      * ex. "OK", "PROBLEM"
     * `cName` options (get from cookie refer)
-      * default will only get case of current user, except admin role (ex. root).
-    * `elimit` int
+      * no permission control, will get top 500 events as default
+    * `caseId` string
+      * session control
+    * `limit` int
       * set the return limit of events
   * response:
     * ok
@@ -153,6 +153,7 @@
       }
       ```
 * `GET` `POST` /api/v1/portal/eventcases/close
+* !! this is deprecated now !!
 * `required login session`
 * params:
   * `id` string
@@ -189,7 +190,7 @@
   * `note` string
     * max 300 varchar
   * `status` string options
-    * ex: "in processing"
+    * ex: "in progress", "unresolved", "resolved", "ignored"
   * `eventId` string options
     * boss case id
   * ok
@@ -220,6 +221,13 @@
 * params:
   * `id` string
     * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"
+  * `status` string options
+    * in events status means process_status
+    * "ALL" means no specific any status, get all.
+    * ex: "in progress", "unresolved", "resolved", "ignored"
+    * support mutiple status query. ex: "resolved,ignored"
+  * `filterIgnored` bool
+    * default: true
   * ok
 
     ```
