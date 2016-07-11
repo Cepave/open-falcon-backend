@@ -3,12 +3,13 @@ package mq
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/Cepave/open-falcon-backend/modules/fe/g"
-	"github.com/streadway/amqp"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
+	"github.com/streadway/amqp"
 )
 
 var RetriedLimit = 10
@@ -25,6 +26,7 @@ func setup(url string) (*amqp.Connection, *amqp.Channel, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		log.Printf(LogStringFormat, "Failed to connect to RabbitMQ", err)
+		defer conn.Close()
 		return nil, nil, err
 	}
 
@@ -34,10 +36,12 @@ func setup(url string) (*amqp.Connection, *amqp.Channel, error) {
 		defer conn.Close()
 		return nil, nil, err
 	}
+	log.Println("mq: consumer succcessfully opens a channel and setup return err as nil.")
 	return conn, ch, nil
 }
 
 func Start() {
+	log.Println("mq: start mq consumer.")
 	mq := g.Config().Mq
 	nodes := map[string]interface{}{}
 
@@ -48,6 +52,8 @@ func Start() {
 	for i := 0; i < RetriedLimit; i++ {
 		if conn, ch, err = setup(mq.Queue); err != nil {
 			time.Sleep(time.Second * SleepTimePeriod)
+		} else {
+			break
 		}
 	}
 	if err != nil {
