@@ -19,11 +19,11 @@ const (
 
 // The parameters for query
 type QueryParams struct {
-	StartTime time.Time
-	EndTime time.Time
-	AgentFilter NodeFilter
-	TargetFilter NodeFilter
-	AgentFilterById NodeFilterById
+	StartTime        time.Time
+	EndTime          time.Time
+	AgentFilter      NodeFilter
+	TargetFilter     NodeFilter
+	AgentFilterById  NodeFilterById
 	TargetFilterById NodeFilterById
 	ProvinceRelation HostRelation
 }
@@ -31,16 +31,16 @@ type QueryParams struct {
 // The filter of node
 type NodeFilter struct {
 	MatchProvinces []string
-	MatchCities []string
-	MatchIsps []string
+	MatchCities    []string
+	MatchIsps      []string
 }
 
 // The filter of node
 type NodeFilterById struct {
-	MatchIds []int32
+	MatchIds       []int32
 	MatchProvinces []int16
-	MatchCities []int16
-	MatchIsps []int16
+	MatchCities    []int16
+	MatchIsps      []int16
 }
 
 // Checks the paramters
@@ -48,7 +48,8 @@ type NodeFilterById struct {
 // 1. provinces and cities cannot be assigned at the same time
 // 2. duplicated value would be eliminated
 const FORMAT_ERROR_LOCATION_FILTER = "%v filter for provinces:%v and cities:%v are both set"
-func (p* QueryParams) checkParams() (err error) {
+
+func (p *QueryParams) checkParams() (err error) {
 	err = nil
 
 	if err = buildErrorIfBothAreSet(

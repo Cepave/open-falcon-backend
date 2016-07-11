@@ -11,6 +11,7 @@ import (
  */
 type Id2Bytes int16
 type EpochTime int64
+
 // :~)
 
 // This value is used to indicate the non-existing id for data(province, city, or ISP)
@@ -22,17 +23,17 @@ const UNKNOWN_NAME_FOR_QUERY = "<UNKNOWN>"
 type NqmDsl struct {
 	GroupingColumns []string `json:"grouping_columns"`
 
-    StartTime EpochTime `json:"start_time"`
-	EndTime EpochTime `json:"end_time"`
+	StartTime EpochTime `json:"start_time"`
+	EndTime   EpochTime `json:"end_time"`
 
-	IdsOfAgentProvinces []Id2Bytes `json:"ids_of_agent_provinces"`
-	IdsOfAgentIsps []Id2Bytes `json:"ids_of_agent_isps"`
-	IdsOfAgentCities []Id2Bytes `json:"ids_of_agent_cities"`
+	IdsOfAgentProvinces  []Id2Bytes `json:"ids_of_agent_provinces"`
+	IdsOfAgentIsps       []Id2Bytes `json:"ids_of_agent_isps"`
+	IdsOfAgentCities     []Id2Bytes `json:"ids_of_agent_cities"`
 	IdsOfTargetProvinces []Id2Bytes `json:"ids_of_target_provinces"`
-	IdsOfTargetIsps []Id2Bytes `json:"ids_of_target_isps"`
-	IdsOfTargetCities []Id2Bytes `json:"ids_of_target_cities"`
-	IdsOfAgents []int32 `json:"ids_of_agents"`
-	IdsOfTargets []int32 `json:"ids_of_targets"`
+	IdsOfTargetIsps      []Id2Bytes `json:"ids_of_target_isps"`
+	IdsOfTargetCities    []Id2Bytes `json:"ids_of_target_cities"`
+	IdsOfAgents          []int32    `json:"ids_of_agents"`
+	IdsOfTargets         []int32    `json:"ids_of_targets"`
 
 	ProvinceRelation dsl.HostRelation `json:"province_relation"`
 }
@@ -40,21 +41,21 @@ type NqmDsl struct {
 // The data used for reporting of ICMP statistics(grouping by provinces of agents)
 type ProvinceMetric struct {
 	Province *Province `json:"province"`
-	Metrics *Metrics `json:"metrics"`
+	Metrics  *Metrics  `json:"metrics"`
 }
 
 // The data used for reporting of ICMP statistics, which contains detail of target node(grouping by city)
 type CityMetric struct {
-	City *City `json:"city"`
-	Metrics *Metrics `json:"metrics"`
+	City    *City          `json:"city"`
+	Metrics *Metrics       `json:"metrics"`
 	Targets []TargetMetric `json:"targets"`
 }
 
 // The data used for reporting of ICMP statistics target node
 type TargetMetric struct {
-	Id int32 `json:"id"`
-	Host string `json:"host"`
-	Isp *Isp `json:"isp"`
+	Id      int32    `json:"id"`
+	Host    string   `json:"host"`
+	Isp     *Isp     `json:"isp"`
 	Metrics *Metrics `json:"metrics"`
 }
 
@@ -64,30 +65,32 @@ type TargetMetric struct {
  */
 type ServiceController struct {
 	GetStatisticsOfIcmpByDsl func(*NqmDsl) ([]IcmpResult, error)
-	GetProvinceById func(int16) *Province
-	GetProvinceByName func(string) *Province
-	GetIspById func(int16) *Isp
-	GetIspByName func(string) *Isp
-	GetCityById func(int16) *City
-	GetCityByName func(string) *City
-	GetTargetById func(int32) *Target
-	GetTargetByHost func(string) *Target
+	GetProvinceById          func(int16) *Province
+	GetProvinceByName        func(string) *Province
+	GetIspById               func(int16) *Isp
+	GetIspByName             func(string) *Isp
+	GetCityById              func(int16) *City
+	GetCityByName            func(string) *City
+	GetTargetById            func(int32) *Target
+	GetTargetByHost          func(string) *Target
 }
 
 var defaultServiceController = ServiceController{
 	GetStatisticsOfIcmpByDsl: getStatisticsOfIcmpByDsl,
-	GetProvinceById: getProvinceById,
-	GetProvinceByName: getProvinceByName,
-	GetIspById: getIspById,
-	GetIspByName: getIspByName,
-	GetCityById: getCityById,
-	GetCityByName: getCityByName,
-	GetTargetById: getTargetById,
-	GetTargetByHost: getTargetByHost,
+	GetProvinceById:          getProvinceById,
+	GetProvinceByName:        getProvinceByName,
+	GetIspById:               getIspById,
+	GetIspByName:             getIspByName,
+	GetCityById:              getCityById,
+	GetCityByName:            getCityByName,
+	GetTargetById:            getTargetById,
+	GetTargetByHost:          getTargetByHost,
 }
+
 func GetDefaultServiceController() ServiceController {
 	return defaultServiceController
 }
+
 // :~)
 
 // Initilaize the service
@@ -102,7 +105,7 @@ func (srv ServiceController) ListByProvinces(dslParams *dsl.QueryParams) []Provi
 	 * 2. Only for inter-province
 	 */
 	nqmDsl := toNqmDsl(dslParams)
-	nqmDsl.GroupingColumns = []string { "ag_pv_id" }
+	nqmDsl.GroupingColumns = []string{"ag_pv_id"}
 	nqmDsl.ProvinceRelation = dsl.SAME_VALUE
 	// :~)
 
@@ -140,7 +143,7 @@ func (srv ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryParam
 	 * Loads data with grouping by id of cities
 	 */
 	dslGroupByCity := toNqmDsl(dslParams)
-	dslGroupByCity.GroupingColumns = []string { "tg_ct_id" }
+	dslGroupByCity.GroupingColumns = []string{"tg_ct_id"}
 	dslGroupByCity.ProvinceRelation = dsl.SAME_VALUE
 	rawIcmpGroupByCity, errForCityReport := srv.GetStatisticsOfIcmpByDsl(dslGroupByCity)
 	if errForCityReport != nil {
@@ -161,7 +164,7 @@ func (srv ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryParam
 		result = append(
 			result,
 			CityMetric{
-				City: srv.GetCityById(cityId),
+				City:    srv.GetCityById(cityId),
 				Metrics: rowByCity.metrics,
 				Targets: make([]TargetMetric, 0),
 			},
@@ -174,7 +177,7 @@ func (srv ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryParam
 	 * Loads data with grouping by id of targets
 	 */
 	dslGroupByTarget := toNqmDsl(dslParams)
-	dslGroupByTarget.GroupingColumns = []string { "tg_id", "tg_ct_id", "tg_isp_id" }
+	dslGroupByTarget.GroupingColumns = []string{"tg_id", "tg_ct_id", "tg_isp_id"}
 	rawIcmpGroupByTarget, errForTargetReport := srv.GetStatisticsOfIcmpByDsl(dslGroupByTarget)
 	if errForTargetReport != nil {
 		panic(errForTargetReport)
@@ -202,10 +205,10 @@ func (srv ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryParam
 		 */
 		cityRow.Targets = append(
 			cityRow.Targets,
-			TargetMetric {
-				Id: targetNode.Id,
-				Host: targetNode.Host,
-				Isp: srv.GetIspById(ispId),
+			TargetMetric{
+				Id:      targetNode.Id,
+				Host:    targetNode.Host,
+				Isp:     srv.GetIspById(ispId),
 				Metrics: rowByTarget.metrics,
 			},
 		)
@@ -219,17 +222,17 @@ func (srv ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryParam
 // Converts the IR of DSL to specific data for query on Cassandra
 func toNqmDsl(queryParams *dsl.QueryParams) *NqmDsl {
 	return &NqmDsl{
-		IdsOfAgentProvinces: loadIds(queryParams.AgentFilter.MatchProvinces, getIdOfProvinceByName, queryParams.AgentFilterById.MatchProvinces),
-		IdsOfAgentIsps: loadIds(queryParams.AgentFilter.MatchIsps, getIdOfIspByName, queryParams.AgentFilterById.MatchIsps),
-		IdsOfAgentCities: loadIds(queryParams.AgentFilter.MatchCities, getIdOfCityByName, queryParams.AgentFilterById.MatchCities),
+		IdsOfAgentProvinces:  loadIds(queryParams.AgentFilter.MatchProvinces, getIdOfProvinceByName, queryParams.AgentFilterById.MatchProvinces),
+		IdsOfAgentIsps:       loadIds(queryParams.AgentFilter.MatchIsps, getIdOfIspByName, queryParams.AgentFilterById.MatchIsps),
+		IdsOfAgentCities:     loadIds(queryParams.AgentFilter.MatchCities, getIdOfCityByName, queryParams.AgentFilterById.MatchCities),
 		IdsOfTargetProvinces: loadIds(queryParams.TargetFilter.MatchProvinces, getIdOfProvinceByName, queryParams.TargetFilterById.MatchProvinces),
-		IdsOfTargetIsps: loadIds(queryParams.TargetFilter.MatchIsps, getIdOfIspByName, queryParams.TargetFilterById.MatchIsps),
-		IdsOfTargetCities: loadIds(queryParams.TargetFilter.MatchCities, getIdOfCityByName, queryParams.TargetFilterById.MatchCities),
-		IdsOfAgents: safeIds(queryParams.AgentFilterById.MatchIds),
-		IdsOfTargets: safeIds(queryParams.TargetFilterById.MatchIds),
-		StartTime: EpochTime(queryParams.StartTime.Unix()),
-		EndTime: EpochTime(queryParams.EndTime.Unix()),
-		ProvinceRelation: queryParams.ProvinceRelation,
+		IdsOfTargetIsps:      loadIds(queryParams.TargetFilter.MatchIsps, getIdOfIspByName, queryParams.TargetFilterById.MatchIsps),
+		IdsOfTargetCities:    loadIds(queryParams.TargetFilter.MatchCities, getIdOfCityByName, queryParams.TargetFilterById.MatchCities),
+		IdsOfAgents:          safeIds(queryParams.AgentFilterById.MatchIds),
+		IdsOfTargets:         safeIds(queryParams.TargetFilterById.MatchIds),
+		StartTime:            EpochTime(queryParams.StartTime.Unix()),
+		EndTime:              EpochTime(queryParams.EndTime.Unix()),
+		ProvinceRelation:     queryParams.ProvinceRelation,
 	}
 }
 
@@ -290,4 +293,5 @@ func getIdOfCityByName(name string) Id2Bytes {
 	log.Panicf("Unsupplied function: getIdOfCityByName() : %v", name)
 	return 0
 }
+
 // :~)

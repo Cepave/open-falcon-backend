@@ -1277,11 +1277,11 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 				average = sum / divider
 			}
 			item := map[string]interface{}{
-				"host": series.Endpoint,
-				"ip":   getIPFromHostname(series.Endpoint, result),
+				"host":             series.Endpoint,
+				"ip":               getIPFromHostname(series.Endpoint, result),
 				"net.in.bits.avg":  0,
 				"net.out.bits.avg": 0,
-				"time":                  "",
+				"time":             "",
 			}
 			if value, ok := hostMap[series.Endpoint]; ok {
 				item = value.(map[string]interface{})

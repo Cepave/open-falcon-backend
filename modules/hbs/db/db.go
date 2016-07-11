@@ -3,8 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	_ "github.com/go-sql-driver/mysql"
 	"log"
 )
 
@@ -21,13 +21,11 @@ func Init() {
 }
 
 func dbInit(dsn string) (err error) {
-	if DB, err = sql.Open("mysql", dsn)
-		err != nil {
+	if DB, err = sql.Open("mysql", dsn); err != nil {
 		return fmt.Errorf("Open DB error: %v", err)
 	}
 
-	if err = DB.Ping()
-		err != nil {
+	if err = DB.Ping(); err != nil {
 		return fmt.Errorf("Ping DB error: %v", err)
 	}
 
@@ -38,8 +36,7 @@ func dbInit(dsn string) (err error) {
 func inTx(txCallback func(tx *sql.Tx) error) (err error) {
 	var tx *sql.Tx
 
-	if tx, err = DB.Begin()
-		err != nil {
+	if tx, err = DB.Begin(); err != nil {
 		return
 	}
 
