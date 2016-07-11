@@ -2,13 +2,13 @@ package nqm
 
 import (
 	"fmt"
+	qcache "github.com/Cepave/open-falcon-backend/modules/query/cache"
+	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/patrickmn/go-cache"
-	"github.com/astaxie/beego/orm"
-	"time"
 	"log"
-	qcache "github.com/Cepave/open-falcon-backend/modules/query/cache"
 	"strconv"
+	"time"
 )
 
 /**
@@ -16,9 +16,9 @@ import (
  */
 var (
 	provinceCache qcache.CachePool
-	ispCache qcache.CachePool
-	cityCache qcache.CachePool
-	targetCache qcache.CachePool
+	ispCache      qcache.CachePool
+	cityCache     qcache.CachePool
+	targetCache   qcache.CachePool
 )
 
 /**
@@ -33,25 +33,25 @@ func init() {
 	/**
 	 * Caches data of provinces for 2 hours(10 minutes of interval for checking)
 	 */
-	provinceCache.Cache = cache.New(2 * time.Hour, 10 * time.Minute)
+	provinceCache.Cache = cache.New(2*time.Hour, 10*time.Minute)
 	// :~)
 
 	/**
 	 * Caches data of isps for 2 hours(10 minutes of interval for checking)
 	 */
-	ispCache.Cache = cache.New(2 * time.Hour, 10 * time.Minute)
+	ispCache.Cache = cache.New(2*time.Hour, 10*time.Minute)
 	// :~)
 
 	/**
 	 * Caches data of isps for 4 hours(20 minutes of interval for checking)
 	 */
-	cityCache.Cache = cache.New(4 * time.Hour, 20 * time.Minute)
+	cityCache.Cache = cache.New(4*time.Hour, 20*time.Minute)
 	// :~)
 
 	/**
 	 * Caches data of targets for 4 hours(20 minutes of interval for checking)
 	 */
-	targetCache.Cache = cache.New(4 * time.Hour, 20 * time.Minute)
+	targetCache.Cache = cache.New(4*time.Hour, 20*time.Minute)
 	// :~)
 }
 
@@ -92,12 +92,11 @@ func ListAgentsInCityByProvinceId(provinceId int32) []*AgentsInCity {
 		cityIdAsInt, _ := strconv.Atoi(row["ct_id"].(string))
 		cityId := int16(cityIdAsInt)
 
-		if _, hasCityId := cityGrouping[cityId]
-			!hasCityId {
-			cityGrouping[cityId] = &AgentsInCity {
+		if _, hasCityId := cityGrouping[cityId]; !hasCityId {
+			cityGrouping[cityId] = &AgentsInCity{
 				City: &City{
-					Id: cityId,
-					Name: row["ct_name"].(string),
+					Id:       cityId,
+					Name:     row["ct_name"].(string),
 					PostCode: row["ct_post_code"].(string),
 				},
 				Agents: make([]Agent, 0),
@@ -109,10 +108,10 @@ func ListAgentsInCityByProvinceId(provinceId int32) []*AgentsInCity {
 		agentIdAsInt, _ := strconv.Atoi(row["ag_id"].(string))
 		currentAgentsInCity.Agents = append(
 			currentAgentsInCity.Agents,
-			Agent {
-				Id: int32(agentIdAsInt),
-				Name: row["ag_name"].(string),
-				Hostname: row["ag_hostname"].(string),
+			Agent{
+				Id:        int32(agentIdAsInt),
+				Name:      row["ag_name"].(string),
+				Hostname:  row["ag_hostname"].(string),
 				IpAddress: row["ag_ip_address"].(string),
 			},
 		)
@@ -132,7 +131,7 @@ func ListAgentsInCityByProvinceId(provinceId int32) []*AgentsInCity {
  */
 type delegateCacheWorker struct {
 	loadSourceData func() (interface{}, error)
-	setCache func(*cache.Cache, interface{})
+	setCache       func(*cache.Cache, interface{})
 }
 
 func (worker delegateCacheWorker) LoadSourceData() (interface{}, error) {
@@ -141,11 +140,12 @@ func (worker delegateCacheWorker) LoadSourceData() (interface{}, error) {
 func (worker delegateCacheWorker) SetCache(cache *cache.Cache, object interface{}) {
 	worker.setCache(cache, object)
 }
+
 // :~)
 
 // Gets province by id
 func getProvinceById(provinceId int16) *Province {
-	cacheKey := (&Province{ Id: provinceId }).getCacheKeyWithId()
+	cacheKey := (&Province{Id: provinceId}).getCacheKeyWithId()
 
 	province, err := provinceCache.Get(
 		cacheKey,
@@ -165,6 +165,7 @@ func getProvinceById(provinceId int16) *Province {
 
 	return province.(*Province)
 }
+
 // Gets province by name(prefix)
 func getProvinceByName(provinceName string) *Province {
 	cacheKey := fmt.Sprintf("!name!%s", provinceName)
@@ -193,7 +194,7 @@ func getProvinceByName(provinceName string) *Province {
 
 // Gets ISP by id
 func getIspById(ispId int16) *Isp {
-	cacheKey := (&Isp{ Id: ispId }).getCacheKeyWithId()
+	cacheKey := (&Isp{Id: ispId}).getCacheKeyWithId()
 
 	isp, err := ispCache.Get(
 		cacheKey,
@@ -214,6 +215,7 @@ func getIspById(ispId int16) *Isp {
 
 	return isp.(*Isp)
 }
+
 // Gets ISP by name(prefix)
 func getIspByName(ispName string) *Isp {
 	cacheKey := fmt.Sprintf("!name!$s", ispName)
@@ -241,7 +243,7 @@ func getIspByName(ispName string) *Isp {
 
 // Gets city by id
 func getCityById(cityId int16) *City {
-	cacheKey := (&City{ Id: cityId }).getCacheKeyWithId()
+	cacheKey := (&City{Id: cityId}).getCacheKeyWithId()
 
 	city, err := cityCache.Get(
 		cacheKey,
@@ -262,6 +264,7 @@ func getCityById(cityId int16) *City {
 
 	return city.(*City)
 }
+
 // Gets city by name(prefix)
 func getCityByName(cityName string) *City {
 	cacheKey := fmt.Sprintf("!name!$s", cityName)
@@ -289,7 +292,7 @@ func getCityByName(cityName string) *City {
 
 // Gets target by id
 func getTargetById(targetId int32) *Target {
-	cacheKey := (&Target{ Id: targetId }).getCacheKeyWithId()
+	cacheKey := (&Target{Id: targetId}).getCacheKeyWithId()
 
 	target, err := targetCache.Get(
 		cacheKey,
@@ -310,6 +313,7 @@ func getTargetById(targetId int32) *Target {
 
 	return target.(*Target)
 }
+
 // Gets target by host
 func getTargetByHost(targetHost string) *Target {
 	cacheKey := fmt.Sprintf("!host!$s", targetHost)
@@ -505,6 +509,7 @@ func queryOneOrGetDefault(
 }
 
 var ormDb orm.Ormer = nil
+
 func getOrmDb() orm.Ormer {
 	if ormDb == nil {
 		ormDb = orm.NewOrm()

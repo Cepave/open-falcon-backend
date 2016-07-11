@@ -11,14 +11,14 @@ const unknown_type = -1
 const (
 	_ = iota
 
-	param_start_time = iota
-	param_end_time = iota
-	param_agent_isp = iota
-	param_agent_province = iota
-	param_agent_city = iota
-	param_target_isp = iota
+	param_start_time      = iota
+	param_end_time        = iota
+	param_agent_isp       = iota
+	param_agent_province  = iota
+	param_agent_city      = iota
+	param_target_isp      = iota
 	param_target_province = iota
-	param_target_city = iota
+	param_target_city     = iota
 
 	parse_iso8601_minute = "2006-01-02T15:04Z07:00"
 )
@@ -26,16 +26,16 @@ const (
 var currentTimeZone = time.Now().Format("Z07:00")
 
 type paramContent struct {
-	paramType int
-	paramValue interface{}
-	setQueryParams func (*QueryParams, interface{})
+	paramType      int
+	paramValue     interface{}
+	setQueryParams func(*QueryParams, interface{})
 }
 
-var emptyParamContent = &paramContent{ unknown_type, nil, func(p *QueryParams, v interface{}) {} }
+var emptyParamContent = &paramContent{unknown_type, nil, func(p *QueryParams, v interface{}) {}}
 
 func parseValidPramName(paramName interface{}, assignedValue interface{}) (*paramContent, error) {
 	if assignedValue == nil {
-		return emptyParamContent, fmt.Errorf("\"%v\" missed \"=<value>\" ?", paramName);
+		return emptyParamContent, fmt.Errorf("\"%v\" missed \"=<value>\" ?", paramName)
 	}
 
 	if assignedValue != nil {
@@ -54,54 +54,54 @@ func parseValidPramName(paramName interface{}, assignedValue interface{}) (*para
 // Builds paramContent by name of param
 func buildParamContent(paramName interface{}, srcParamValue interface{}) *paramContent {
 	var resultParamType int = unknown_type
-	var implSetParam func (*QueryParams, interface{})
+	var implSetParam func(*QueryParams, interface{})
 
 	switch paramName.(string) {
 	case "starttime":
 		resultParamType = param_start_time
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.StartTime = v.(time.Time)
 		}
 	case "endtime":
 		resultParamType = param_end_time
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.EndTime = v.(time.Time)
 		}
 	case "agent.isp":
 		resultParamType = param_agent_isp
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.addIspOfAgent(v.([]string)...)
 		}
 	case "agent.province":
 		resultParamType = param_agent_province
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.addProvinceOfAgent(v.([]string)...)
 		}
 	case "agent.city":
 		resultParamType = param_agent_city
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.addCityOfAgent(v.([]string)...)
 		}
 	case "target.isp":
 		resultParamType = param_target_isp
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.addIspOfTarget(v.([]string)...)
 		}
 	case "target.province":
 		resultParamType = param_target_province
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.addProvinceOfTarget(v.([]string)...)
 		}
 	case "target.city":
 		resultParamType = param_target_city
-		implSetParam = func (p *QueryParams, v interface{}) {
+		implSetParam = func(p *QueryParams, v interface{}) {
 			p.addCityOfTarget(v.([]string)...)
 		}
 	}
 
-	return &paramContent {
-		paramType: resultParamType,
-		paramValue: srcParamValue,
+	return &paramContent{
+		paramType:      resultParamType,
+		paramValue:     srcParamValue,
 		setQueryParams: implSetParam,
 	}
 }
@@ -115,13 +115,13 @@ func setParams(queryParams *QueryParams, params interface{}) error {
 		paramContent.setQueryParams(queryParams, paramContent.paramValue)
 	}
 
-	return nil;
+	return nil
 }
 
 func combineStringLiterals(first interface{}, rest interface{}) []string {
 	allRests := rest.([]interface{})
 
-	result := make([]string, 0, len(allRests) + 1)
+	result := make([]string, 0, len(allRests)+1)
 	result = append(result, first.(string))
 
 	for _, v := range allRests {
@@ -153,7 +153,7 @@ func parseUnixTime(c *current) (time.Time, error) {
 func parseIso8601(c *current) (time.Time, error) {
 	timeStr := string(c.text)
 
-	switch (len(timeStr)) {
+	switch len(timeStr) {
 	case 10:
 		timeStr = fmt.Sprintf("%sT00:00%s", timeStr, currentTimeZone)
 	case 13:

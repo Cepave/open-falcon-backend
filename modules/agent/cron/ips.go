@@ -1,8 +1,8 @@
 package cron
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"log"
 	"time"
 )
