@@ -46,3 +46,12 @@ import:
 # Package Release
 
 	make clean all pack
+
+## 自動偵測模板改變重製告警step
+當使用者改變模改內的告警條件 ex. `cpu.idle > 10` -> `cpu.idle > 50`, 告警的step counter將會被重製.
+
+## 新增兩個api
+* /api/judges/list
+  * 拿到judge內部所有現存告警列表
+* /api/judges/delete
+  * 使用特定的hash將該告警從judge內部移除
