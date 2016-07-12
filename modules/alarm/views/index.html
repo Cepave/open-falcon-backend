@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>alarm dashboard</title>
+
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/g.css" />
+    <link rel="shortcut icon" href="/static/img/logo.png">
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/layer/layer.min.js"></script>
+    <script src="/static/js/g.js"></script>
+
+    <link rel="stylesheet" href="/static/grafana_statics/grafana.light.min.92672c38.css">
+    <link rel="icon" type="image/png" href="/static/grafana_statics/fav32.png">
+    <script type="text/javascript" src="/static/grafana_statics/jquery-2.1.4.min.js"
+    />
+    <script src="/static/grafana_statics/app.6903da0e.js"></script>
+</head>
+
+<body ng-controller="GrafanaCtrl" ng-class="{&#39;sidemenu-open&#39;: contextSrv.sidemenu}"
+data-feedly-mini="yes" class="ng-scope sidemenu-open">
+    <script src="/static/grafana_statics/jQueryRotate.js"></script>
+    <script src="/static/grafana_statics/jquery.easing.1.3.js"></script>
+    <script src="/static/grafana_statics/owl-rotate.js"></script>
+
+    <!--============================ SideMenu Bar ============================-->
+
+    <div class="sidemenu-canvas">
+        <!-- ngIf: contextSrv.sidemenu -->
+        <aside class="sidemenu-wrapper ng-scope" ng-if="contextSrv.sidemenu">
+            <!-- ngInclude: 'app/partials/sidemenu.html' -->
+            <div ng-include="&#39;app/partials/sidemenu.html&#39;" class="ng-scope">
+                <div ng-controller="SideMenuCtrl" ng-init="init()" class="ng-scope">
+                    <ul class="sidemenu sidemenu-main">
+                        <li style="margin-bottom: 15px">
+                            <a class="pointer sidemenu-top-btn" ng-click="contextSrv.toggleSideMenu()" style="height:52px">
+                            </a>
+                        </li>
+                        <!-- ngIf: systemSection -->
+                        <!-- ngRepeat: item in mainLinks -->
+                        <li ng-repeat="item in mainLinks" class="ng-scope"><a href="{{.GrafanaDashboard}}" class="sidemenu-item"
+                            target=""><span class="icon-circle sidemenu-icon"><i class="fa fa-fw fa-th-large"></i></span> <span class="sidemenu-item-text ng-binding">Dashboards</span></a>
+                        </li>
+                    </ul>
+                    <!-- ngIf: !systemSection -->
+                    <ul class="sidemenu sidemenu-small ng-scope" style="margin-top:101px" id="sidemenu-user"
+                    ng-if="!systemSection">
+                        <li ng-if="contextSrv.user.isSignedIn" class="dropdown" id="sidemenu-user">
+                            <a href="#" class="sidemenu-item" id="sidemenu-user">
+                                <img ng-src="https://secure.gravatar.com/avatar/46d229b033af06a191ff2267bca9ae56?s=90&amp;default=mm"
+                                src="/static/grafana_statics/46d229b033af06a191ff2267bca9ae56"> <span class="sidemenu-item-text ng-binding">User</span>
+                                <i class="fa fa-caret-down small"></i>
+                            </a>
+                            <ul class="dropdown-menu" role="menu" style="left: 65px">
+                                <!-- ngRepeat: menuItem in orgMenu -->
+                                <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
+                                    <a href="{{.FalconUIC}}/me/profile" ng-if="menuItem.href" class="ng-binding ng-scope">
+                                        <i class="fa fa-fw fa-cog" ng-if="menuItem.icon"></i>Settings</a>
+                                </li>
+                                <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope divider"></li>
+                                <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
+                                    <a href="{{.FalconUIC}}/me/teams" ng-if="menuItem.href" class="ng-binding ng-scope">
+                                        <i class="fa fa-fw fa-users" ng-if="menuItem.icon"></i>Group</a>
+                                </li>
+                                <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
+                                    <a href="{{.FalconUIC}}/me/users" ng-if="menuItem.href" class="ng-binding ng-scope">
+                                        <i class="fa fa-fw fa-book" ng-if="menuItem.icon"></i>Contacts</a>
+                                </li>
+                                <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope divider"></li>
+                                <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
+                                    <a href="{{.FalconUIC}}/auth/login" ng-if="menuItem.href" class="ng-binding ng-scope">
+                                        <i class="fa fa-fw fa-sign-in" ng-if="menuItem.icon"></i>Sign
+                                        In</a>
+                                </li>
+                                <li ng-repeat="menuItem in orgMenu" ng-class="menuItem.cssClass" class="ng-scope">
+                                    <a href="{{.FalconUIC}}/me/logout" ng-if="menuItem.href" class="ng-binding ng-scope">
+                                        <i class="fa fa-fw fa-sign-out" ng-if="menuItem.icon"></i>Sign
+                                        Out</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                        <a href="{{.FalconAlarm}}" class="sidemenu-item pointer">
+                                <span class="icon-circle sidemenu-icon"><i class="fa fa-fw fa-exclamation-triangle"></i></span> 
+                                <span
+                                class="sidemenu-item-text ng-binding">Alert</span>
+                            </a>
+                        </li>
+                        <li>
+                        <a href="{{.FalconPortal}}" class="sidemenu-item pointer">
+                                <span class="icon-circle sidemenu-icon"><i class="fa fa-fw fa-book"></i></span> 
+                                <span
+                                class="sidemenu-item-text ng-binding">Scheme Portal</span>
+                            </a>
+                        </li>
+                        <li>
+                        <a href="{{.FalconDashboard}}" class="sidemenu-item pointer">
+                                <span class="icon-circle sidemenu-icon"><i class="fa fa-fw fa-line-chart"></i></span> 
+                                <span
+                                class="sidemenu-item-text ng-binding">Falcon-DBoard</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <!-- end ngIf: !systemSection -->
+                    <!-- ngIf: systemSection -->
+                </div>
+            </div>
+        </aside>
+        <div class="page-alert-list">
+        </div>
+        <div ng-view="" class="main-view ng-scope">
+
+            <!--============================ Top Navigation Bar ============================-->
+
+            <div ng-include="" src="topNavPartial" class="ng-scope">
+                <div class="navbar navbar-static-top ng-scope" ng-controller="DashboardNavCtrl"
+                ng-init="init()">
+                    <div class="navbar-inner">
+                        <div class="container-fluid">
+                            <div class="top-nav" style="position:fixed;width:100%;z-index:9999;left:0px;background-color:#f8f8f8;box-shadow:0 2px 5px rgba(0,0,0,.3);">
+                                <a href="#" class="sidemenu-top-btn" style="float:left">
+                                    <img class="logo-icon" src="/static/grafana_statics/fav32.png"><i class="pull-right fa fa-angle-left" style="margin-left:115px"></i>
+                                </a>
+                            </div>
+
+                            <!--============================ Content Container ============================-->
+
+                            <div class="main-view-container">
+                                <div class="panels-wrapper ng-scope" ng-if="!row.collapse">
+                                    <panel-loader type="panel.type" class="panel-margin">
+                                        <grafana-panel-text class="ng-scope">
+                                            <grafana-panel>
+                                                <div class="panel-container" ng-class="{'panel-transparent': panel.transparent}"
+                                                style="min-height: 100px; display: block;">
+                                                    <div style="padding: 10px;">
+                                                        <div class="panel panel-danger">
+                                                            <div class="panel-heading">
+                                                                <h3 class="panel-title">未恢复的报警</h3>
+                                                            </div>
+                                                            <div class="panel-body">
+                                                                <div class="alarms">
+                                                                    {{range .Events}}
+                                                                    <div class="alarm">
+                                                                        <input type="checkbox" alarm="{{.Id}}">[P{{.Priority}}
+                                                                        #{{.CurrentStep}}/{{.MaxStep}}]
+                                                                        {{.Counter}}
+                                                                        <br>
+                                                                        <span style="padding-left:17px;">{{.Func}} {{.LeftValue}}{{.Operator}}{{.RightValue}} {{.Note}}</span>
+                                                                        <span class="orange">{{duration $.Now .Timestamp}}</span>
+                                                                        <span class="gray">[</span>
+                                                                        <a href="{{.Link}}" target="_blank">config</a>
+                                                                        <span class="cut-line">¦</span>
+                                                                        <a href="javascript:solve('{{.Id}}');">solved</a>
+                                                                        <span class="gray">]</span>
+                                                                    </div>
+                                                                    <hr>{{end}}
+                                                                    <a href="javascript:all_select();">全选</a>/
+                                                                    <a href="javascript:reverse_select();">反选</a>
+                                                                    <button class="btn btn-warning btn-sm" onclick="batch_solve();">标记选中部分为已解决</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </grafana-panel>
+                                        </grafana-panel-text>
+                                    </panel-loader>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+</body>
+
+</html>
