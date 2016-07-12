@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
-	"log"
 )
 
 var DB *sql.DB

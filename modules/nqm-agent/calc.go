@@ -1,8 +1,9 @@
 package main
 
 import (
-	"log"
 	"strconv"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 func convToFloat(samples []string) []float64 {

@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 func Push(params []ParamToAgent, util string) {

@@ -1,12 +1,14 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/sender/cron"
 	"github.com/Cepave/open-falcon-backend/modules/sender/g"
 	"github.com/Cepave/open-falcon-backend/modules/sender/http"
 	"github.com/Cepave/open-falcon-backend/modules/sender/redis"
+	flag "github.com/spf13/pflag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -28,7 +30,9 @@ func main() {
 		os.Exit(0)
 	}
 
+	vipercfg.Load()
 	g.ParseConfig(*cfg)
+	logruslog.Init()
 	cron.InitWorker()
 	redis.InitConnPool()
 

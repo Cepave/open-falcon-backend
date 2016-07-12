@@ -2,7 +2,7 @@ package g
 
 import (
 	"encoding/json"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"sync"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/logger"

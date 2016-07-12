@@ -3,9 +3,9 @@ package store
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/open-falcon/common/model"
 	"github.com/open-falcon/judge/g"
-	"log"
 )
 
 func Judge(L *SafeLinkedList, firstItem *model.JudgeItem, now int64) {

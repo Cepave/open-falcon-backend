@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
