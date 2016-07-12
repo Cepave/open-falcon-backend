@@ -46,7 +46,7 @@ func getHosts(reqHost string, hostKeyword string) []interface{} {
 	maxQuery := g.Config().Api.Max
 	url := fmt.Sprintf("/api/endpoints?q=%s&tags&limit=%d&_r=%s&regex_query=1", hostKeyword, maxQuery, _r)
 	if strings.Index(g.Config().Api.Query, reqHost) >= 0 {
-		url = "http://localhost:9966" + url
+		url = g.Config().Local + url
 	} else {
 		url = g.Config().Api.Query + url
 	}
@@ -163,11 +163,10 @@ func getMetrics(reqHost string, query string) []interface{} {
 		_r := strconv.FormatFloat(random64, 'f', -1, 32)
 		target := "/api/counters"
 		if strings.Index(g.Config().Api.Query, reqHost) >= 0 {
-			target = "http://localhost:9966" + target
+			target = g.Config().Local + target
 		} else {
 			target = g.Config().Api.Query + target
 		}
-		log.Println("target =", target)
 		nodes := doHTTPPost(target, endpoints, metric, maxQuery, _r)
 		var segmentPool = make(map[string]bool)
 		for _, data := range nodes["data"].([]interface{}) {
@@ -256,11 +255,10 @@ func getMetricValues(req *http.Request, host string, metrics []string, result []
 		}
 		url := "/graph/history"
 		if strings.Index(g.Config().Api.Query, req.Host) >= 0 {
-			url = "http://localhost:9966" + url
+			url = g.Config().Local + url
 		} else {
 			url = g.Config().Api.Query + url
 		}
-
 		args := map[string]interface{}{
 			"start":             from,
 			"end":               until,
