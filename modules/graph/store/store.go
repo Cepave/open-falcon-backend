@@ -3,8 +3,8 @@ package store
 import (
 	"container/list"
 	"errors"
+	log "github.com/Sirupsen/logrus"
 	"hash/crc32"
-	"log"
 	"sync"
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"

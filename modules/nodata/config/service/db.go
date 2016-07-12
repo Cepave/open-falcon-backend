@@ -2,8 +2,8 @@ package service
 
 import (
 	"database/sql"
+	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
-	"log"
 	"sync"
 
 	"github.com/open-falcon/nodata/g"

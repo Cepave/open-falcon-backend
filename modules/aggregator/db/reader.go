@@ -2,8 +2,8 @@ package db
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/open-falcon/aggregator/g"
-	"log"
 )
 
 func ReadClusterMonitorItems() (M map[string]*g.Cluster, err error) {

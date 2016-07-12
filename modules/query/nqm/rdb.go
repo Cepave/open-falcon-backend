@@ -3,10 +3,10 @@ package nqm
 import (
 	"fmt"
 	qcache "github.com/Cepave/open-falcon-backend/modules/query/cache"
+	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/patrickmn/go-cache"
-	"log"
 	"strconv"
 	"time"
 )

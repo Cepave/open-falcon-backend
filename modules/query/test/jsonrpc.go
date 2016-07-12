@@ -2,13 +2,13 @@ package test
 
 import (
 	"errors"
-	"flag"
 	"github.com/Cepave/open-falcon-backend/modules/query/jsonrpc"
+	log "github.com/Sirupsen/logrus"
 	rpchttp "github.com/gorilla/http"
 	"github.com/gorilla/rpc/v2"
 	"github.com/gorilla/rpc/v2/json2"
+	flag "github.com/spf13/pflag"
 	. "gopkg.in/check.v1"
-	"log"
 	"net"
 	"net/http/httptest"
 )

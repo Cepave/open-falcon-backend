@@ -3,7 +3,7 @@ package nqm
 import (
 	"fmt"
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
-	"log"
+	log "github.com/Sirupsen/logrus"
 )
 
 /**

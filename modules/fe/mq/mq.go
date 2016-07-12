@@ -3,8 +3,8 @@ package mq
 import (
 	"bytes"
 	"encoding/json"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
