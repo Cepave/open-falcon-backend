@@ -2,8 +2,8 @@ package nqm_parser
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	. "gopkg.in/check.v1"
-	"log"
 	"strings"
 	"testing"
 	"time"

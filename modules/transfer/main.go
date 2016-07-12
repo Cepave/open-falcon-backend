@@ -1,13 +1,15 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/http"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/receiver"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
+	flag "github.com/spf13/pflag"
 	"os"
 )
 
@@ -27,7 +29,9 @@ func main() {
 	}
 
 	// global config
+	vipercfg.Load()
 	g.ParseConfig(*cfg)
+	logruslog.Init()
 	// proc
 	proc.Start()
 

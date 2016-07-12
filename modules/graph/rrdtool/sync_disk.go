@@ -1,9 +1,9 @@
 package rrdtool
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"time"
 

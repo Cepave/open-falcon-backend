@@ -2,7 +2,7 @@ package dashboard
 
 import (
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"regexp"
 	"strings"
 

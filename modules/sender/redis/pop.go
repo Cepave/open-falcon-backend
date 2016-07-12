@@ -3,8 +3,8 @@ package redis
 import (
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/sender/model"
+	log "github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
-	"log"
 )
 
 func PopAllSms(queue string) []*model.Sms {

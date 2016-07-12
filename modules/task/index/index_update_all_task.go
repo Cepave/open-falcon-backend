@@ -3,8 +3,8 @@ package index
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 

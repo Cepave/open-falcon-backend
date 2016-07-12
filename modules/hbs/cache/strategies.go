@@ -3,8 +3,8 @@ package cache
 import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/container/set"
-	"log"
 	"strconv"
 	"strings"
 	"sync"

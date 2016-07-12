@@ -1,8 +1,8 @@
 package g
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/net"
-	"log"
 	"math"
 	"net/rpc"
 	"sync"

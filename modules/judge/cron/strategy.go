@@ -3,9 +3,9 @@ package cron
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/open-falcon/common/model"
 	"github.com/open-falcon/judge/g"
-	"log"
 	"time"
 )
 

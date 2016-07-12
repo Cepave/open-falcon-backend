@@ -1,8 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
+	flag "github.com/spf13/pflag"
 	"os"
 
 	"github.com/open-falcon/nodata/collector"
@@ -29,7 +31,9 @@ func main() {
 	}
 
 	// global config
+	vipercfg.Load()
 	g.ParseConfig(*cfg)
+	logruslog.Init()
 	// proc
 	g.StartProc()
 

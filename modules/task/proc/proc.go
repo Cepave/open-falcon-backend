@@ -1,8 +1,8 @@
 package proc
 
 import (
+	log "github.com/Sirupsen/logrus"
 	nproc "github.com/toolkits/proc"
-	"log"
 )
 
 // 索引更新

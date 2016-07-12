@@ -3,7 +3,7 @@ package index
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"time"
 
 	nsema "github.com/toolkits/concurrent/semaphore"

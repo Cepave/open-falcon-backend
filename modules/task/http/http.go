@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net/http"
 
 	"github.com/open-falcon/task/g"

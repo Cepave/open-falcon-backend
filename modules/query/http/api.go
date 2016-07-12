@@ -3,8 +3,8 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"math"
 	"net/http"
 	"sort"

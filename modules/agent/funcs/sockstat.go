@@ -2,8 +2,8 @@ package funcs
 
 import (
 	"github.com/Cepave/open-falcon-backend/common/model"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/nux"
-	"log"
 )
 
 func SocketStatSummaryMetrics() (L []*model.MetricValue) {
