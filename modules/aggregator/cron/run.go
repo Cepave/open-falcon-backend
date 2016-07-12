@@ -2,10 +2,10 @@ package cron
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/open-falcon/aggregator/g"
 	"github.com/open-falcon/sdk/portal"
 	"github.com/open-falcon/sdk/sender"
-	"log"
 	"strconv"
 	"strings"
 	"time"

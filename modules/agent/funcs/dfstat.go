@@ -3,8 +3,8 @@ package funcs
 import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/model"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/nux"
-	"log"
 )
 
 func DeviceMetrics() (L []*model.MetricValue) {

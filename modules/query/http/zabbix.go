@@ -6,11 +6,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -1421,22 +1421,24 @@ func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
 	if _, ok := resp["params"]; ok {
 		delete(resp, "params")
 	}
-	result := resp["result"].(map[string]interface{})
-	if val, ok := result["error"]; ok {
-		errors := val.([]string)
-		if len(errors) > 0 {
-			delete(resp, "result")
-			resp["error"] = errors
-		} else {
-			delete(resp["result"].(map[string]interface{}), "error")
-			if val, ok = result["items"]; ok {
-				resp["result"] = val
-			}
-			if val, ok = result["count"]; ok {
-				resp["count"] = val
-			}
-			if val, ok = result["anomalies"]; ok {
-				resp["anomalies"] = val
+	if _, ok := resp["result"]; ok {
+		result := resp["result"].(map[string]interface{})
+		if val, ok := result["error"]; ok {
+			errors := val.([]string)
+			if len(errors) > 0 {
+				delete(resp, "result")
+				resp["error"] = errors
+			} else {
+				delete(resp["result"].(map[string]interface{}), "error")
+				if val, ok = result["items"]; ok {
+					resp["result"] = val
+				}
+				if val, ok = result["count"]; ok {
+					resp["count"] = val
+				}
+				if val, ok = result["anomalies"]; ok {
+					resp["anomalies"] = val
+				}
 			}
 		}
 	}

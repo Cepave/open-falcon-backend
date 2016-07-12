@@ -1,8 +1,8 @@
 package cron
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"github.com/open-falcon/aggregator/g"
-	"log"
 	"time"
 )
 

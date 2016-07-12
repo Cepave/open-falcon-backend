@@ -1,10 +1,10 @@
 package cron
 
 import (
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
-	"github.com/Cepave/open-falcon-backend/common/model"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"strings"
 	"time"
 )

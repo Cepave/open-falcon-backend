@@ -32,8 +32,7 @@ func (cachePool CachePool) Get(key string, cacheWorker CacheWorker) (interface{}
 	if !hasCache {
 		var err error
 
-		if cachedObject, err = cacheWorker.LoadSourceData()
-			err != nil {
+		if cachedObject, err = cacheWorker.LoadSourceData(); err != nil {
 			return nil, err
 		}
 

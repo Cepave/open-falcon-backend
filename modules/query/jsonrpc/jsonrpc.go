@@ -3,27 +3,27 @@ package jsonrpc
 import (
 	"fmt"
 	rpchttp "github.com/gorilla/http"
-	"github.com/gorilla/rpc/v2/json2"
 	"github.com/gorilla/http/client"
+	"github.com/gorilla/rpc/v2/json2"
 	"strings"
 )
 
 // Represents the service information of JSONRPC(2.0)
 type JsonRpcService struct {
-	url string
+	url        string
 	httpClient *rpchttp.Client
 }
 
 // Represents the information of HTTP responsed on JSONRPC service
 type JsonRpcHttpInfo struct {
-	Status client.Status
+	Status  client.Status
 	Headers map[string][]string
 }
 
 // Initialize a service for JSONRPC(2.0)
 func NewService(url string) *JsonRpcService {
-	return &JsonRpcService {
-		url: url,
+	return &JsonRpcService{
+		url:        url,
 		httpClient: &rpchttp.DefaultClient,
 	}
 }
@@ -40,7 +40,7 @@ func (service *JsonRpcService) CallMethod(method string, params interface{}, rep
 	 */
 	status, headers, body, err := service.httpClient.Post(
 		service.url,
-		map[string][]string { "Content-Type": []string { "application/json" } },
+		map[string][]string{"Content-Type": []string{"application/json"}},
 		strings.NewReader(string(jsonrpcRequest)),
 	)
 
@@ -51,8 +51,8 @@ func (service *JsonRpcService) CallMethod(method string, params interface{}, rep
 	/**
 	 * Binds the information of HTTP response
 	 */
-	httpInfo := JsonRpcHttpInfo {
-		Status: status,
+	httpInfo := JsonRpcHttpInfo{
+		Status:  status,
 		Headers: headers,
 	}
 	// :~)

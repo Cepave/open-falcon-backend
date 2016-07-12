@@ -3,8 +3,8 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"math"
 	"net/http"
 	"sort"
@@ -1277,11 +1277,11 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 				average = sum / divider
 			}
 			item := map[string]interface{}{
-				"host": series.Endpoint,
-				"ip":   getIPFromHostname(series.Endpoint, result),
+				"host":             series.Endpoint,
+				"ip":               getIPFromHostname(series.Endpoint, result),
 				"net.in.bits.avg":  0,
 				"net.out.bits.avg": 0,
-				"time":                  "",
+				"time":             "",
 			}
 			if value, ok := hostMap[series.Endpoint]; ok {
 				item = value.(map[string]interface{})
@@ -1416,6 +1416,18 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	} else if len(arguments) == 5 && arguments[len(arguments)-1] == "contact" {
 		platformName := arguments[len(arguments)-2]
 		getPlatformContact(platformName, rw, nodes)
+	} else {
+		errors := []string{}
+		var result = make(map[string]interface{})
+		result["error"] = errors
+		errorMessage := "Error: wrong URL path."
+		if strings.Index(req.URL.Path, "/bandwidths/") > -1 {
+			errorMessage += " Example: /api/platforms/{platformName}/bandwidths/average"
+		} else if strings.Index(req.URL.Path, "/contact") > -1 {
+			errorMessage += " Example: /api/platforms/{platformName}/contact"
+		}
+		setError(errorMessage, result)
+		nodes["result"] = result
 	}
 	setResponse(rw, nodes)
 }

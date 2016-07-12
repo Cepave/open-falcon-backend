@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
-	"log"
+	log "github.com/Sirupsen/logrus"
 )
 
 func UpdateAgent(agentInfo *model.AgentUpdateInfo) {

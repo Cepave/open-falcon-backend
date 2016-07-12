@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"sort"
 	"strconv"
@@ -321,6 +321,7 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 				"note":   row["note"].(string),
 				"status": row["status"].(string),
 				"user":   users[userID],
+				"hash":   hash,
 				"time":   time,
 			}
 			if slice, ok := notes[hash]; ok {
@@ -337,7 +338,8 @@ func getNotes(result map[string]interface{}) map[string]interface{} {
 }
 
 func setSQLQuery(templateIDs string, req *http.Request, result map[string]interface{}) string {
-	sqlcmd := "SELECT id, endpoint, metric, note, priority, status, timestamp, update_at, template_id, tpl_creator, process_status "
+	sqlcmd := "SELECT id, endpoint, metric, func, cond, note, max_step, current_step, priority, status, "
+	sqlcmd += "timestamp, update_at, template_id, tpl_creator, process_status "
 	sqlcmd += "FROM falcon_portal.event_cases "
 	whereConditions := []string{}
 	query := req.URL.Query()
@@ -447,8 +449,10 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 			content := row["note"].(string)
 			priority := row["priority"].(string)
 			statusRaw := row["status"].(string)
-			time := row["update_at"].(string)
-			time = time[:len(time)-3]
+			timeStart := row["timestamp"].(string)
+			timeStart = timeStart[:len(timeStart)-3]
+			timeUpdate := row["update_at"].(string)
+			timeUpdate = timeUpdate[:len(timeUpdate)-3]
 			process := strings.ToLower(row["process_status"].(string))
 			process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			note := []map[string]string{}
@@ -469,11 +473,16 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 				"statusRaw":  statusRaw,
 				"type":       metricType,
 				"content":    content,
-				"time":       time,
-				"duration":   getDuration(time, result),
-				"note":       note,
+				"timeStart":  timeStart,
+				"timeUpdate": timeUpdate,
+				"duration":   getDuration(timeUpdate, result),
+				"notes":      note,
 				"events":     getEvents(hash, eventsLimit, result),
 				"process":    process,
+				"function":   row["func"].(string),
+				"condition":  row["cond"].(string),
+				"stepLimit":  row["max_step"].(string),
+				"step":       row["current_step"].(string),
 			}
 			alerts = append(alerts, alert)
 		}
@@ -481,7 +490,7 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 	return alerts
 }
 
-func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, nodes map[string]interface{}, rw http.ResponseWriter) ([]interface{}, map[string]string) {
+func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, nodes map[string]interface{}, rw http.ResponseWriter) []interface{} {
 	items := []interface{}{}
 	hostnames := []string{}
 	platformNames := []string{}
@@ -543,22 +552,6 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 		hostnames = appendUniqueString(hostnames, hostname)
 	}
 	sort.Strings(hostnames)
-
-	hostsTriggeredMap := map[string]string{}
-	for _, hostname := range hostnames {
-		if _, ok := hostsMap[hostname]; ok {
-			host := hostsMap[hostname].(map[string]interface{})
-			platformName := host["platform"].(string)
-			if strings.Index(platformName, ", ") > -1 {
-				for _, name := range strings.Split(platformName, ", ") {
-					platformNames = appendUniqueString(platformNames, name)
-				}
-			} else {
-				platformNames = appendUniqueString(platformNames, platformName)
-			}
-			hostsTriggeredMap[hostname] = platformName
-		}
-	}
 	sort.Strings(platformNames)
 	getPlatformContact(strings.Join(platformNames, ","), rw, nodes)
 	platforms := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})
@@ -579,10 +572,10 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 			}
 		}
 	}
-	return items, hostsTriggeredMap
+	return items
 }
 
-func getAlertCount(items []interface{}) map[string]int {
+func getAlertSeverityCounts(items []interface{}) map[string]int {
 	count := map[string]int{
 		"all":    len(items),
 		"high":   0,
@@ -600,6 +593,91 @@ func getAlertCount(items []interface{}) map[string]int {
 			count["low"]++
 		} else if severity == "Lower" {
 			count["lower"]++
+		}
+	}
+	return count
+}
+
+func getAlertProcessCounts(items []interface{}) map[string]int {
+	count := map[string]int{
+		"unresolved":  0,
+		"in progress": 0,
+		"resolved":    0,
+		"ignored":     0,
+	}
+	for _, item := range items {
+		process := strings.ToLower(item.(map[string]interface{})["process"].(string))
+		if process == "unresolved" {
+			count["unresolved"]++
+		} else if process == "in progress" {
+			count["in progress"]++
+		} else if process == "resolved" {
+			count["resolved"]++
+		} else if process == "ignored" {
+			count["ignored"]++
+		}
+	}
+	return count
+}
+
+func getAlertMetricTypeCounts(items []interface{}) map[string]int {
+	count := map[string]int{
+		"cpu":          0,
+		"disk":         0,
+		"memory":       0,
+		"net":          0,
+		"others":       0,
+		"agent":        0,
+		"check":        0,
+		"chk":          0,
+		"dev":          0,
+		"fcd":          0,
+		"file":         0,
+		"fm":           0,
+		"http":         0,
+		"nic":          0,
+		"proc":         0,
+		"tags":         0,
+		"zabbix-agent": 0,
+	}
+	for _, item := range items {
+		metric := item.(map[string]interface{})["metric"].(string)
+		metricType := strings.ToLower(strings.Split(metric, ".")[0])
+		if metricType == "cpu" {
+			count["cpu"]++
+		} else if metricType == "disk" {
+			count["disk"]++
+		} else if metricType == "memory" {
+			count["memory"]++
+		} else if metricType == "net" {
+			count["net"]++
+		} else {
+			count["others"]++
+			if metricType == "agent" {
+				count["agent"]++
+			} else if metricType == "check" {
+				count["check"]++
+			} else if metricType == "chk" {
+				count["chk"]++
+			} else if metricType == "dev" {
+				count["dev"]++
+			} else if metricType == "fcd" {
+				count["fcd"]++
+			} else if metricType == "file" {
+				count["file"]++
+			} else if metricType == "fm" {
+				count["fm"]++
+			} else if metricType == "http" {
+				count["http"]++
+			} else if metricType == "nic" {
+				count["nic"]++
+			} else if metricType == "proc" {
+				count["proc"]++
+			} else if metricType == "zabbix-agent" {
+				count["zabbix-agent"]++
+			} else if strings.Index(metricType, "tags") > -1 {
+				count["tags"]++
+			}
 		}
 	}
 	return count
@@ -623,12 +701,16 @@ func getAlerts(rw http.ResponseWriter, req *http.Request) {
 		items := []interface{}{}
 		sqlcmd := setSQLQuery(templateIDs, req, result)
 		alerts = queryAlerts(sqlcmd, req, result)
-		items, hostToPlatform := addPlatformToAlerts(alerts, result, nodes, rw)
-		count := getAlertCount(items)
+		items = addPlatformToAlerts(alerts, result, nodes, rw)
+		countOfSeverity := getAlertSeverityCounts(items)
+		countOfProcess := getAlertProcessCounts(items)
+		countOfMetricType := getAlertMetricTypeCounts(items)
 		result["items"] = items
 		nodes["result"] = result
-		nodes["count"] = count
-		nodes["hosts"] = hostToPlatform
+		nodes["count"] = countOfSeverity
+		nodes["countOfSeverity"] = countOfSeverity
+		nodes["countOfProcess"] = countOfProcess
+		nodes["countOfMetricType"] = countOfMetricType
 		rw.Header().Set("Access-Control-Allow-Origin", "*")
 		setResponse(rw, nodes)
 	}

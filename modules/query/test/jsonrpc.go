@@ -2,15 +2,15 @@ package test
 
 import (
 	"errors"
-	"flag"
-	"log"
-	"net/http/httptest"
-    "github.com/gorilla/rpc/v2"
-    "github.com/gorilla/rpc/v2/json2"
-    "github.com/Cepave/open-falcon-backend/modules/query/jsonrpc"
+	"github.com/Cepave/open-falcon-backend/modules/query/jsonrpc"
+	log "github.com/Sirupsen/logrus"
 	rpchttp "github.com/gorilla/http"
+	"github.com/gorilla/rpc/v2"
+	"github.com/gorilla/rpc/v2/json2"
+	flag "github.com/spf13/pflag"
 	. "gopkg.in/check.v1"
 	"net"
+	"net/http/httptest"
 )
 
 var mockRpcPort = flag.String("test.mockrpc.port", "6173", "HTTP port for mock JSONRPC of NQM log")
@@ -34,7 +34,7 @@ func StartMockJsonRpcServer(c *C, jsonrpcServiceSetupFunc func(*rpc.Server)) {
 	 * Set-up HTTP server for testing
 	 */
 	testHttpServer = httptest.NewUnstartedServer(jsonrpcService)
-	listener, err := net.Listen("tcp", "127.0.0.1:" + *mockRpcPort)
+	listener, err := net.Listen("tcp", "127.0.0.1:"+*mockRpcPort)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +44,7 @@ func StartMockJsonRpcServer(c *C, jsonrpcServiceSetupFunc func(*rpc.Server)) {
 
 	rpcServiceCaller = jsonrpc.NewService(testHttpServer.URL)
 
-	c.Logf("Test HTTP Server: \"%v\"", testHttpServer.URL);
+	c.Logf("Test HTTP Server: \"%v\"", testHttpServer.URL)
 }
 
 var httpClient = &rpchttp.DefaultClient

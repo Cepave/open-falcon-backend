@@ -3,7 +3,7 @@ package g
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"sync"
 
 	"github.com/toolkits/file"
@@ -60,10 +60,10 @@ type LdapConfig struct {
 	Enabled    bool     `json:"enabled"`
 	Addr       string   `json:"addr"`
 	BindDN     string   `json:"bindDN"`
-	BaseDN     string   `json:"baseDN`
+	BaseDN     string   `json:"baseDN"`
 	BindPasswd string   `json:"bindPasswd"`
 	UserField  string   `json:"userField"`
-	Attributes []string `json:attributes`
+	Attributes []string `json:"attributes"`
 }
 
 type ApiConfig struct {

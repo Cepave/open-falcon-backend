@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"testing"
 )
 

@@ -5,8 +5,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/sender/model"
 	"github.com/Cepave/open-falcon-backend/modules/sender/proc"
 	"github.com/Cepave/open-falcon-backend/modules/sender/redis"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/net/httplib"
-	"log"
 	"time"
 )
 

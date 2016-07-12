@@ -46,17 +46,18 @@ func (suite *TestNqmRdbSuite) TestListAgentsInCityByProvinceId(c *C) {
 
 // Tests the getting of data for province by name
 type getProvinceByNameTestCase struct {
-	searchText string
-	expectedId int32
+	searchText   string
+	expectedId   int32
 	expectedName string
 }
+
 func (suite *TestNqmRdbSuite) TestGetProvinceByName(c *C) {
-	testCases := []getProvinceByNameTestCase {
-		{ "天津", 12, "天津" },
-		{ "天", 12, "天津" },
-		{ "無此省份", UNKNOWN_ID_FOR_QUERY, "無此省份" },
-		{ "無此省份2", UNKNOWN_ID_FOR_QUERY, "無此省份2" },
-		{ "贵州", 22, "贵州" },
+	testCases := []getProvinceByNameTestCase{
+		{"天津", 12, "天津"},
+		{"天", 12, "天津"},
+		{"無此省份", UNKNOWN_ID_FOR_QUERY, "無此省份"},
+		{"無此省份2", UNKNOWN_ID_FOR_QUERY, "無此省份2"},
+		{"贵州", 22, "贵州"},
 	}
 
 	for _, testCase := range testCases {
@@ -72,16 +73,17 @@ func (suite *TestNqmRdbSuite) TestGetProvinceByName(c *C) {
 
 // Tests the getting of data for province by id
 type getProvinceByIdTestCase struct {
-	searchId int16
-	expectedId int16
+	searchId     int16
+	expectedId   int16
 	expectedName string
 }
+
 func (suite *TestNqmRdbSuite) TestGetProvinceById(c *C) {
-	testCases := []getProvinceByIdTestCase {
-		{ 12, 12, "天津" },
-		{ 23, 23, "海南" },
-		{ -1, -1, "<UNDEFINED>" },
-		{ -919, -919, UNKNOWN_NAME_FOR_QUERY },
+	testCases := []getProvinceByIdTestCase{
+		{12, 12, "天津"},
+		{23, 23, "海南"},
+		{-1, -1, "<UNDEFINED>"},
+		{-919, -919, UNKNOWN_NAME_FOR_QUERY},
 	}
 
 	for _, testCase := range testCases {
@@ -97,17 +99,18 @@ func (suite *TestNqmRdbSuite) TestGetProvinceById(c *C) {
 
 // Tests the getting of data for ISP by name
 type getIspByNameTestCase struct {
-	searchText string
-	expectedId int32
+	searchText   string
+	expectedId   int32
 	expectedName string
 }
+
 func (suite *TestNqmRdbSuite) TestGetIspByName(c *C) {
-	testCases := []getIspByNameTestCase {
-		{ "方正", 8, "方正宽带" },
-		{ "方正宽带", 8, "方正宽带" },
-		{ "無此ISP", UNKNOWN_ID_FOR_QUERY, "無此ISP" },
-		{ "無此ISP2", UNKNOWN_ID_FOR_QUERY, "無此ISP2" },
-		{ "中信网络", 21, "中信网络" },
+	testCases := []getIspByNameTestCase{
+		{"方正", 8, "方正宽带"},
+		{"方正宽带", 8, "方正宽带"},
+		{"無此ISP", UNKNOWN_ID_FOR_QUERY, "無此ISP"},
+		{"無此ISP2", UNKNOWN_ID_FOR_QUERY, "無此ISP2"},
+		{"中信网络", 21, "中信网络"},
 	}
 
 	for _, testCase := range testCases {
@@ -123,16 +126,17 @@ func (suite *TestNqmRdbSuite) TestGetIspByName(c *C) {
 
 // Tests the getting of data for ISP by id
 type getIspByIdTestCase struct {
-	searchId int16
-	expectedId int16
+	searchId     int16
+	expectedId   int16
 	expectedName string
 }
+
 func (suite *TestNqmRdbSuite) TestGetIspById(c *C) {
-	testCases := []getIspByIdTestCase {
-		{ 8, 8, "方正宽带" },
-		{ 11, 11, "长城宽带"},
-		{ -1, -1, "<UNDEFINED>" },
-		{ -919, -919, UNKNOWN_NAME_FOR_QUERY},
+	testCases := []getIspByIdTestCase{
+		{8, 8, "方正宽带"},
+		{11, 11, "长城宽带"},
+		{-1, -1, "<UNDEFINED>"},
+		{-919, -919, UNKNOWN_NAME_FOR_QUERY},
 	}
 
 	for _, testCase := range testCases {
@@ -148,17 +152,18 @@ func (suite *TestNqmRdbSuite) TestGetIspById(c *C) {
 
 // Tests the getting of data for city by name
 type getCityByNameTestCase struct {
-	searchText string
-	expectedId int32
-	expectedName string
+	searchText       string
+	expectedId       int32
+	expectedName     string
 	expectedPostCode string
 }
+
 func (suite *TestNqmRdbSuite) TestGetCityByName(c *C) {
-	testCases := []getCityByNameTestCase {
-		{ "茂名", 20, "茂名市", "525000" },
-		{ "株洲市", 32, "株洲市", "412000" },
-		{ "無此city", UNKNOWN_ID_FOR_QUERY, "無此city", UNKNOWN_NAME_FOR_QUERY },
-		{ "無此city2", UNKNOWN_ID_FOR_QUERY, "無此city2", UNKNOWN_NAME_FOR_QUERY },
+	testCases := []getCityByNameTestCase{
+		{"茂名", 20, "茂名市", "525000"},
+		{"株洲市", 32, "株洲市", "412000"},
+		{"無此city", UNKNOWN_ID_FOR_QUERY, "無此city", UNKNOWN_NAME_FOR_QUERY},
+		{"無此city2", UNKNOWN_ID_FOR_QUERY, "無此city2", UNKNOWN_NAME_FOR_QUERY},
 	}
 
 	for _, testCase := range testCases {
@@ -175,17 +180,18 @@ func (suite *TestNqmRdbSuite) TestGetCityByName(c *C) {
 
 // Tests the getting of data for city by id
 type getCityByIdTestCase struct {
-	searchId int16
-	expectedId int16
-	expectedName string
+	searchId         int16
+	expectedId       int16
+	expectedName     string
 	expectedPostCode string
 }
+
 func (suite *TestNqmRdbSuite) TestGetCityById(c *C) {
-	testCases := []getCityByIdTestCase {
-		{ 48, 48, "荆州市", "434100" },
-		{ 33, 33, "娄底市", "417000"},
-		{ -1, -1, "<UNDEFINED>", "<UNDEFINED>" },
-		{ -919, -919, UNKNOWN_NAME_FOR_QUERY, UNKNOWN_NAME_FOR_QUERY},
+	testCases := []getCityByIdTestCase{
+		{48, 48, "荆州市", "434100"},
+		{33, 33, "娄底市", "417000"},
+		{-1, -1, "<UNDEFINED>", "<UNDEFINED>"},
+		{-919, -919, UNKNOWN_NAME_FOR_QUERY, UNKNOWN_NAME_FOR_QUERY},
 	}
 
 	for _, testCase := range testCases {
@@ -202,15 +208,16 @@ func (suite *TestNqmRdbSuite) TestGetCityById(c *C) {
 
 // Tests the getting of data for target by id
 type getTargetByIdTestCase struct {
-	searchId int32
-	expectedId int32
+	searchId     int32
+	expectedId   int32
 	expectedHost string
 }
+
 func (suite *TestNqmRdbSuite) TestGetTargetById(c *C) {
-	testCases := []getTargetByIdTestCase {
-		{ 19203, 19203, "100.20.50.3" },
-		{ 19202, 19202, "100.20.50.2" },
-		{ 28001, 28001, UNKNOWN_NAME_FOR_QUERY},
+	testCases := []getTargetByIdTestCase{
+		{19203, 19203, "100.20.50.3"},
+		{19202, 19202, "100.20.50.2"},
+		{28001, 28001, UNKNOWN_NAME_FOR_QUERY},
 	}
 
 	for _, testCase := range testCases {
@@ -226,15 +233,16 @@ func (suite *TestNqmRdbSuite) TestGetTargetById(c *C) {
 
 // Tests the getting of data for target by host
 type getTargetByHostTestCase struct {
-	searchText string
-	expectedId int32
+	searchText   string
+	expectedId   int32
 	expectedHost string
 }
+
 func (suite *TestNqmRdbSuite) TestGetTargetByHost(c *C) {
-	testCases := []getTargetByHostTestCase {
-		{ "100.20.50.1", 19201, "100.20.50.1" },
-		{ "100.20.50.2", 19202, "100.20.50.2" },
-		{ "無此target", UNKNOWN_ID_FOR_QUERY, "無此target" },
+	testCases := []getTargetByHostTestCase{
+		{"100.20.50.1", 19201, "100.20.50.1"},
+		{"100.20.50.2", 19202, "100.20.50.2"},
+		{"無此target", UNKNOWN_ID_FOR_QUERY, "無此target"},
 	}
 
 	for _, testCase := range testCases {
