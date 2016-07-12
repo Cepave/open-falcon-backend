@@ -60,10 +60,10 @@ type LdapConfig struct {
 	Enabled    bool     `json:"enabled"`
 	Addr       string   `json:"addr"`
 	BindDN     string   `json:"bindDN"`
-	BaseDN     string   `json:"baseDN`
+	BaseDN     string   `json:"baseDN"`
 	BindPasswd string   `json:"bindPasswd"`
 	UserField  string   `json:"userField"`
-	Attributes []string `json:attributes`
+	Attributes []string `json:"attributes"`
 }
 
 type ApiConfig struct {
