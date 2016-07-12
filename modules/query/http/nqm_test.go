@@ -1,14 +1,14 @@
 package http
 
 import (
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
-	"net/http"
-	"github.com/astaxie/beego"
-	"net/http/httptest"
-	"testing"
 	"encoding/json"
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
+	"github.com/astaxie/beego"
 	"github.com/bitly/go-simplejson"
 	. "gopkg.in/check.v1"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 	"time"
 )
 
@@ -27,11 +27,11 @@ type processDslTestCase struct {
 // 1. default value of time
 // 2. default value of start time(end time provided)
 func (suite *TestNqmSuite) TestProcessDsl(c *C) {
-	testCases := []processDslTestCase {
+	testCases := []processDslTestCase{
 		/**
 		 * Normal situation
 		 */
-		processDslTestCase {
+		processDslTestCase{
 			sampleDsl: "starttime=2010-05-01 endtime=2010-05-02",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
@@ -45,7 +45,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * DSL is empty
 		 */
-		processDslTestCase {
+		processDslTestCase{
 			sampleDsl: "     ",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				now := time.Now()
@@ -63,26 +63,26 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * DSL only has start time
 		 */
-		processDslTestCase {
+		processDslTestCase{
 			sampleDsl: "starttime=2013-11-12",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
 				c.Assert(testedDsl.StartTime.Year(), Equals, 2013)
 				c.Assert(testedDsl.StartTime.Day(), Equals, 12)
 				c.Assert(testedDsl.EndTime.Year(), Equals, 2013)
-				c.Assert(testedDsl.EndTime.Day(), Equals, 12 + defaultDaysForTimeRange)
+				c.Assert(testedDsl.EndTime.Day(), Equals, 12+defaultDaysForTimeRange)
 			},
 		},
 		// :~)
 		/**
 		 * DSL only has end time
 		 */
-		processDslTestCase {
+		processDslTestCase{
 			sampleDsl: "endtime=2012-07-15",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
 				c.Assert(testedDsl.StartTime.Year(), Equals, 2012)
-				c.Assert(testedDsl.StartTime.Day(), Equals, 15 - defaultDaysForTimeRange)
+				c.Assert(testedDsl.StartTime.Day(), Equals, 15-defaultDaysForTimeRange)
 				c.Assert(testedDsl.EndTime.Year(), Equals, 2012)
 				c.Assert(testedDsl.EndTime.Day(), Equals, 15)
 			},
@@ -91,7 +91,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * DSL only has same value of start/end time
 		 */
-		processDslTestCase {
+		processDslTestCase{
 			sampleDsl: "starttime=2012-03-03 endtime=2012-03-03",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
@@ -143,22 +143,22 @@ func (suite *TestNqmSuite) TestErrorMessage(c *C) {
 }
 
 type sampleJsonData struct {
-	Age int `json:"age"`
+	Age  int    `json:"age"`
 	Name string `json:"name"`
 }
 
 // Tests the JSON for result with DSL
 func (suite *TestNqmSuite) TestJsonForResultWithDsl(c *C) {
-	sampleStartTime, sampleEndTime := time.Now(), time.Now().Add(3 * time.Hour)
+	sampleStartTime, sampleEndTime := time.Now(), time.Now().Add(3*time.Hour)
 
-	testedResultWithDsl := &resultWithDsl {
-		queryParams: &dsl.QueryParams {
+	testedResultWithDsl := &resultWithDsl{
+		queryParams: &dsl.QueryParams{
 			StartTime: sampleStartTime,
-			EndTime: sampleEndTime,
+			EndTime:   sampleEndTime,
 		},
-		resultData : []sampleJsonData {
-			sampleJsonData { 20, "Bob" },
-			sampleJsonData { 30, "Joe" },
+		resultData: []sampleJsonData{
+			sampleJsonData{20, "Bob"},
+			sampleJsonData{30, "Joe"},
 		},
 	}
 

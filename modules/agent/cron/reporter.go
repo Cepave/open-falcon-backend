@@ -2,9 +2,9 @@ package cron
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/common/model"
-	"log"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
+	log "github.com/Sirupsen/logrus"
 	"time"
 )
 

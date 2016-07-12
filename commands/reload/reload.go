@@ -1,11 +1,8 @@
 package reload
 
 import (
-	"fmt"
 	"github.com/Cepave/open-falcon-backend/g"
 	"github.com/mitchellh/cli"
-	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -21,21 +18,8 @@ type Command struct {
 }
 
 func (c *Command) Run(args []string) int {
-	if len(args) != 1 || args[0] != "fe" {
+	if len(args) != 1 {
 		return cli.RunResultHelp
-	}
-	// fe workaround
-	// check if the input module strings exist in the future
-	os.Chdir("bin/fe")
-	cmd := exec.Command("./control", "reload")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	dir, _ := os.Getwd()
-	cmd.Dir = dir
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println("** reload failed **")
-		return g.Command_EX_ERR
 	}
 	return g.Command_EX_OK
 }
@@ -53,6 +37,6 @@ Usage: open-falcon reload [Module]
 
 Modules:
 
-  ` + "fe" //strings.Join(g.AllModulesInOrder, " ")
+  `
 	return strings.TrimSpace(helpText)
 }

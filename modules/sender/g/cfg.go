@@ -2,8 +2,8 @@ package g
 
 import (
 	"encoding/json"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
-	"log"
 	"sync"
 )
 
@@ -18,23 +18,23 @@ type RedisConfig struct {
 }
 
 type QueueConfig struct {
-	Sms  string `json:"sms"`
-	Mail string `json:"mail"`
-	QQ   string `json:"qq"`
-	Serverchan   string `json:"serverchan"`
+	Sms        string `json:"sms"`
+	Mail       string `json:"mail"`
+	QQ         string `json:"qq"`
+	Serverchan string `json:"serverchan"`
 }
 
 type WorkerConfig struct {
-	Sms  int `json:"sms"`
-	Mail int `json:"mail"`
-	QQ   int `json:"qq"`
+	Sms        int `json:"sms"`
+	Mail       int `json:"mail"`
+	QQ         int `json:"qq"`
 	Serverchan int `json:"serverchan"`
 }
 
 type ApiConfig struct {
-	Sms  string `json:"sms"`
-	Mail string `json:"mail"`
-	QQ   string `json:"qq"`
+	Sms        string `json:"sms"`
+	Mail       string `json:"mail"`
+	QQ         string `json:"qq"`
 	Serverchan string `json:"serverchan"`
 }
 

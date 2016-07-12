@@ -2,29 +2,29 @@ package test
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
+	"github.com/astaxie/beego/orm"
+	flag "github.com/spf13/pflag"
+	tknet "github.com/toolkits/net"
+	. "gopkg.in/check.v1"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
-	"github.com/astaxie/beego/orm"
-	tknet "github.com/toolkits/net"
-	. "gopkg.in/check.v1"
 	"time"
 )
 
 var dsnMysql = flag.String("dsn_mysql", "", "Dsn of Mysql")
 
 var DbForTest *sql.DB
+
 func InitDb() {
 	if *dsnMysql == "" {
 		return
 	}
 
 	var err error
-	if DbForTest, err = sql.Open("mysql", *dsnMysql)
-		err != nil {
+	if DbForTest, err = sql.Open("mysql", *dsnMysql); err != nil {
 
 		log.Fatalf("Cannot connect to database: %v", err)
 	}
@@ -38,6 +38,7 @@ func ReleaseDb() {
 }
 
 var hasInitOrm = false
+
 func InitOrm() {
 	if hasInitOrm {
 		return
@@ -101,8 +102,7 @@ func ExecuteInTx(txCallback func(*sql.Tx)) {
 	var tx *sql.Tx
 	var err error
 
-	if tx, err = DbForTest.Begin()
-		err != nil {
+	if tx, err = DbForTest.Begin(); err != nil {
 		log.Fatalf("Cannot create transaction: %v", err)
 	}
 
@@ -120,13 +120,13 @@ func ExecuteOrFail(query string, args ...interface{}) sql.Result {
 
 	return result
 }
+
 // IoC execution(in transaction)
 func ExecuteQueriesOrFailInTx(queries ...string) {
 	ExecuteInTx(
 		func(tx *sql.Tx) {
 			for _, v := range queries {
-				if _, err := tx.Exec(v)
-					err != nil {
+				if _, err := tx.Exec(v); err != nil {
 					log.Fatalf("Execute SQL error. %v. SQL:\n%v\n", err, v)
 				}
 			}
@@ -135,7 +135,7 @@ func ExecuteQueriesOrFailInTx(queries ...string) {
 }
 
 type RpcTestEnv struct {
-	Port int
+	Port      int
 	RpcClient *rpc.Client
 
 	stop bool
@@ -194,7 +194,7 @@ func (rpcTestEnvInstance *RpcTestEnv) ListenAndExecute(
 	/**
 	 * Initialize RPC client
 	 */
-	rpcTestEnvInstance.RpcClient, err = tknet.JsonRpcClient("tcp", address, time.Second * 3)
+	rpcTestEnvInstance.RpcClient, err = tknet.JsonRpcClient("tcp", address, time.Second*3)
 	if err != nil {
 		panic(fmt.Errorf("Initialize RPC client error: %v", err))
 	}
@@ -205,9 +205,8 @@ func (rpcTestEnvInstance *RpcTestEnv) ListenAndExecute(
 		rpcTestEnvInstance.RpcClient.Close()
 		rpcTestEnvInstance.stop = true
 		listener.Close()
-		<- rpcTestEnvInstance.wait
+		<-rpcTestEnvInstance.wait
 	}()
 
 	rpcCallback(rpcTestEnvInstance)
 }
-

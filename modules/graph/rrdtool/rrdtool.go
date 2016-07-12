@@ -2,7 +2,7 @@ package rrdtool
 
 import (
 	"errors"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"math"
 	"sync/atomic"
 	"time"

@@ -3,9 +3,9 @@ package cron
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/common/model"
+	log "github.com/Sirupsen/logrus"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
-	"log"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"time"
 )
 

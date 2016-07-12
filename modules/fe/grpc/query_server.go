@@ -3,7 +3,7 @@ package grpc
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net"
 	"regexp"
 

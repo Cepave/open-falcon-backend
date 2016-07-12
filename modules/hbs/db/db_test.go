@@ -1,9 +1,9 @@
 package db
 
 import (
-	"testing"
 	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
 	. "gopkg.in/check.v1"
+	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"strconv"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/montanaflynn/stats"

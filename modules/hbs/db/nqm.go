@@ -2,9 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	"log"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
+	log "github.com/Sirupsen/logrus"
 	"time"
 )
 
@@ -26,8 +26,7 @@ func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
 		agent.Hostname(),
 		[]byte(agent.IpAddress),
 		time.Now(),
-	)
-		err != nil {
+	); err != nil {
 
 		log.Printf("Cannot refresh agent: [%v]. Error: %v", agent.ConnectionId(), err)
 		return
@@ -44,8 +43,7 @@ func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
 		WHERE ag_connection_id = ?
 		`,
 		agent.ConnectionId(),
-	).Scan(&agent.Id)
-		err != nil {
+	).Scan(&agent.Id); err != nil {
 		return
 	}
 	// :~)
@@ -61,7 +59,7 @@ func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
 // 1) No ping task configuration
 // 2) The period is overed yet
 func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (result *commonModel.NqmAgent, err error) {
-	result = &commonModel.NqmAgent {
+	result = &commonModel.NqmAgent{
 		Id: agentId,
 	}
 
@@ -115,8 +113,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			&result.IspId, &result.IspName,
 			&result.ProvinceId, &result.ProvinceName,
 			&result.CityId, &result.CityName,
-		)
-			err != nil {
+		); err != nil {
 
 			/**
 			 * There is no need to perform ping task
@@ -150,8 +147,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			WHERE pt_ag_id = ?
 			`,
 			checkedTime.Unix(), agentId,
-		)
-			err != nil {
+		); err != nil {
 
 			result = nil
 		}
@@ -164,8 +160,8 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 }
 
 const (
-	NO_PING_TASK = 0
-	HAS_PING_TASK_WITH_FILTER = 1
+	NO_PING_TASK               = 0
+	HAS_PING_TASK_WITH_FILTER  = 1
 	HAS_PING_TASK_ALL_MATCHING = 2
 )
 
@@ -173,8 +169,7 @@ const (
 func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err error) {
 	var taskState int
 
-	if taskState, err = getPingTaskState(agentId)
-		err != nil {
+	if taskState, err = getPingTaskState(agentId); err != nil {
 		return
 	}
 
@@ -190,7 +185,9 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 		rows, err = loadAllTargets()
 	}
 
-	if err != nil { return }
+	if err != nil {
+		return
+	}
 
 	/**
 	 * Converts the data to NQM targets for RPC
@@ -199,7 +196,7 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 	targets = make([]commonModel.NqmTarget, 0, 4)
 	for rows.Next() {
 		targets = append(targets, commonModel.NqmTarget{})
-		var currentTarget *commonModel.NqmTarget = &targets[len(targets) - 1]
+		var currentTarget *commonModel.NqmTarget = &targets[len(targets)-1]
 		currentTarget.NameTag = commonModel.UNDEFINED_STRING
 
 		var nameTag sql.NullString
@@ -334,8 +331,7 @@ func getPingTaskState(agentId int) (result int, err error) {
 		WHERE pt_ag_id = ?
 		`,
 		agentId,
-	).Scan(&result)
-		err != nil {
+	).Scan(&result); err != nil {
 		return
 	}
 
@@ -391,8 +387,7 @@ func getPingTaskState(agentId int) (result int, err error) {
 			/* :~) */
 		`,
 		agentId, agentId, agentId, agentId,
-	).Scan(&hasFilter)
-		err != nil {
+	).Scan(&hasFilter); err != nil {
 		return
 	}
 	// :~)

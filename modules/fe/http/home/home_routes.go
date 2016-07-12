@@ -1,9 +1,9 @@
 package home
 
 import (
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 )
 
 func ConfigRoutes() {

@@ -2,8 +2,8 @@ package http
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
-	cutils "github.com/open-falcon/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
+	cutils "github.com/open-falcon/common/utils"
 	"net/http"
 	"strconv"
 	"strings"

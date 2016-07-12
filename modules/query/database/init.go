@@ -1,7 +1,7 @@
 package database
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/jinzhu/gorm"

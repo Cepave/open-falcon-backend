@@ -3,8 +3,7 @@ package store
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-
+	log "github.com/Sirupsen/logrus"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
 )
