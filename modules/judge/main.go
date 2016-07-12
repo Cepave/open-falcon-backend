@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	"github.com/open-falcon/judge/cron"
-	"github.com/open-falcon/judge/g"
-	"github.com/open-falcon/judge/http"
-	"github.com/open-falcon/judge/rpc"
-	"github.com/open-falcon/judge/store"
+	"github.com/Cepave/open-falcon-backend/modules/judge/cron"
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	"github.com/Cepave/open-falcon-backend/modules/judge/http"
+	"github.com/Cepave/open-falcon-backend/modules/judge/rpc"
+	"github.com/Cepave/open-falcon-backend/modules/judge/store"
 	"os"
 )
 

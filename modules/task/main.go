@@ -6,11 +6,11 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"os"
 
-	"github.com/open-falcon/task/collector"
-	"github.com/open-falcon/task/g"
-	"github.com/open-falcon/task/http"
-	"github.com/open-falcon/task/index"
-	"github.com/open-falcon/task/proc"
+	"github.com/Cepave/open-falcon-backend/modules/task/collector"
+	"github.com/Cepave/open-falcon-backend/modules/task/g"
+	"github.com/Cepave/open-falcon-backend/modules/task/http"
+	"github.com/Cepave/open-falcon-backend/modules/task/index"
+	"github.com/Cepave/open-falcon-backend/modules/task/proc"
 )
 
 func main() {

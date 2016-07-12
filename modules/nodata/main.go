@@ -6,12 +6,12 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"os"
 
-	"github.com/open-falcon/nodata/collector"
-	"github.com/open-falcon/nodata/config"
-	"github.com/open-falcon/nodata/g"
-	"github.com/open-falcon/nodata/http"
-	"github.com/open-falcon/nodata/judge"
-	"github.com/open-falcon/nodata/sender"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/collector"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/config"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/g"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/http"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/judge"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/sender"
 )
 
 func main() {
