@@ -74,6 +74,7 @@ type GlobalConfig struct {
 	Graph   *GraphConfig   `json:"graph"`
 	Api     *ApiConfig     `json:"api"`
 	Db      *DbConfig      `json:"db"`
+	Local   string         `json:"local"`
 	NqmLog  *NqmLogConfig  `json:nqmlog`
 	Nqm     *NqmConfig     `json:"nqm"`
 	Grpc    *GrpcConfig    `json:"grpc"`
