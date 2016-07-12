@@ -9,22 +9,20 @@ import (
 	"github.com/open-falcon/judge/http"
 	"github.com/open-falcon/judge/rpc"
 	"github.com/open-falcon/judge/store"
-	flag "github.com/spf13/pflag"
 	"os"
 )
 
 func main() {
-	cfg := flag.String("c", "cfg.json", "configuration file")
-	version := flag.Bool("v", false, "show version")
-	flag.Parse()
+	vipercfg.Parse()
+	vipercfg.Bind()
 
-	if *version {
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
 	vipercfg.Load()
-	g.ParseConfig(*cfg)
+	g.ParseConfig(vipercfg.Config().GetString("config"))
 	logruslog.Init()
 
 	g.InitRedisConnPool()

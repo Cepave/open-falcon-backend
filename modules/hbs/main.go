@@ -9,24 +9,22 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/http"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
-	flag "github.com/spf13/pflag"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
-	cfg := flag.String("c", "cfg.json", "configuration file")
-	version := flag.Bool("v", false, "show version")
-	flag.Parse()
+	vipercfg.Parse()
+	vipercfg.Bind()
 
-	if *version {
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
 	vipercfg.Load()
-	g.ParseConfig(*cfg)
+	g.ParseConfig(vipercfg.Config().GetString("config"))
 	logruslog.Init()
 
 	db.Init()
