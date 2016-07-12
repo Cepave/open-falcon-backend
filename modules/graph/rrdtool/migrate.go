@@ -3,7 +3,7 @@ package rrdtool
 import (
 	"errors"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net"
 	"net/rpc"
 	"os"

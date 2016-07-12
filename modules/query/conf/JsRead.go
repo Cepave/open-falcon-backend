@@ -1,8 +1,8 @@
 package conf
 
 import (
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	"log"
 )
 
 func jsFileReader(f string) (contain string) {

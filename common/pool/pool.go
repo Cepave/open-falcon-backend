@@ -2,8 +2,8 @@ package pool
 
 import (
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io"
-	"log"
 	"net"
 	"net/rpc"
 	"sync"

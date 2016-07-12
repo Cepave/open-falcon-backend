@@ -3,8 +3,8 @@ package conf
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"os"
 	"reflect"
 	"sync"

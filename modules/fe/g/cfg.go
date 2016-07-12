@@ -3,7 +3,7 @@ package g
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"sync"
 
 	"github.com/toolkits/file"
@@ -96,7 +96,7 @@ type MqConfig struct {
 }
 
 type GlobalConfig struct {
-	Log          string              `json:"log"`
+	Log          string              `json:log "github.com/Sirupsen/logrus"`
 	Company      string              `json:"company"`
 	Cache        *CacheConfig        `json:"cache"`
 	Http         *HttpConfig         `json:"http"`

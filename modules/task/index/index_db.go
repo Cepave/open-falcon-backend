@@ -2,8 +2,8 @@ package index
 
 import (
 	"database/sql"
+	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
-	"log"
 
 	"github.com/open-falcon/task/g"
 )

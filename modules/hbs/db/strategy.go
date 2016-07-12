@@ -3,8 +3,8 @@ package db
 import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/model"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/container/set"
-	"log"
 	"strings"
 	"time"
 )

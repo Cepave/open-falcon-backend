@@ -3,7 +3,7 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"strings"
 

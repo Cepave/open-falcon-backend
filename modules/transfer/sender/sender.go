@@ -2,7 +2,7 @@ package sender
 
 import (
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"strconv"
 	"strings"
 

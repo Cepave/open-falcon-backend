@@ -2,11 +2,11 @@ package testing
 
 import (
 	"database/sql"
-	"flag"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
+	flag "github.com/spf13/pflag"
 	tknet "github.com/toolkits/net"
 	. "gopkg.in/check.v1"
-	"log"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"

@@ -2,9 +2,9 @@ package plugins
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"strconv"
 	"strings"

@@ -2,7 +2,7 @@ package falconPortal
 
 import (
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"github.com/astaxie/beego/orm"

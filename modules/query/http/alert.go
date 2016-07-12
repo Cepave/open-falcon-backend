@@ -2,7 +2,7 @@ package http
 
 import (
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"sort"
 	"strconv"
