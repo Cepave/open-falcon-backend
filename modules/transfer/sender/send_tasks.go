@@ -2,7 +2,7 @@ package sender
 
 import (
 	"bytes"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"

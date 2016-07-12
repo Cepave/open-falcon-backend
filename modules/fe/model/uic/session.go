@@ -3,10 +3,10 @@ package uic
 import (
 	"errors"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/toolkits/cache"
 	"github.com/toolkits/logger"
-	"log"
 	"time"
 )
 

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/fe/cache"
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/graph"
@@ -10,8 +11,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/http"
 	"github.com/Cepave/open-falcon-backend/modules/fe/model"
 	"github.com/Cepave/open-falcon-backend/modules/fe/mq"
+	log "github.com/Sirupsen/logrus"
+	flag "github.com/spf13/pflag"
 	"github.com/toolkits/logger"
-	"log"
 	"os"
 )
 
@@ -25,9 +27,11 @@ func main() {
 	}
 
 	// parse config
+	vipercfg.Load()
 	if err := g.ParseConfig(*cfg); err != nil {
 		log.Fatalln(err)
 	}
+	logruslog.Init()
 
 	conf := g.Config()
 	logger.SetLevelWithDefault(g.Config().Log, "info")

@@ -1,7 +1,7 @@
 package index
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/open-falcon/task/g"
 )

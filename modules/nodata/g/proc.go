@@ -1,8 +1,8 @@
 package g
 
 import (
+	log "github.com/Sirupsen/logrus"
 	nproc "github.com/toolkits/proc"
-	"log"
 )
 
 // counter

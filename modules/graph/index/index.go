@@ -2,7 +2,7 @@ package index
 
 import (
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/graph/g"

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"time"
 )
 

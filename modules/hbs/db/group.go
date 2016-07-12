@@ -1,7 +1,7 @@
 package db
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 )
 
 func QueryHostGroups() (map[int][]int, error) {

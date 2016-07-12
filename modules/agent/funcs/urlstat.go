@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"strings"
 
 	"github.com/Cepave/open-falcon-backend/common/model"

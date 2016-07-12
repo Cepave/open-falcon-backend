@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"os/exec"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 func trimResults(results []string) []string {

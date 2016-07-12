@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 )

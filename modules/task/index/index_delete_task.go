@@ -1,7 +1,7 @@
 package index
 
 import (
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"time"
 
 	Mdb "github.com/open-falcon/common/db"

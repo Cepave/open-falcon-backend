@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,6 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/toolkits/file"

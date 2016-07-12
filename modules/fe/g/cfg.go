@@ -3,7 +3,7 @@ package g
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"sync"
 
 	"github.com/toolkits/file"

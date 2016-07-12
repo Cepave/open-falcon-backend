@@ -3,7 +3,7 @@ package graph
 import (
 	"errors"
 	"fmt"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"math"
 	"time"
 

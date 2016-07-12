@@ -2,7 +2,7 @@ package http
 
 import (
 	"encoding/json"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"net"
 	"net/http"
 	_ "net/http/pprof"

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"log"
 	"math"
 	"net/rpc"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/toolkits/net"

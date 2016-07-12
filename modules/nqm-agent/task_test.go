@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"reflect"
 	"testing"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 )
