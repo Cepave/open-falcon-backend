@@ -3,9 +3,10 @@ package store
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
-	"log"
 )
 
 func Judge(L *SafeLinkedList, firstItem *model.JudgeItem, now int64) {
@@ -190,9 +191,14 @@ func judgeItemWithExpression(L *SafeLinkedList, expression *model.Expression, fi
 
 func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int64, event *model.Event, maxStep int) {
 	lastEvent, exists := g.LastEvents.Get(event.Id)
+	needSet := false
+	if exists {
+		//if strategy is changed will reset currentStep to "1"
+		needSet = fmt.Sprintf("%s %v", lastEvent.Strategy.Operator, lastEvent.Strategy.RightValue) != fmt.Sprintf("%s %v", event.Strategy.Operator, event.Strategy.RightValue)
+	}
 	if isTriggered {
 		event.Status = "PROBLEM"
-		if !exists || lastEvent.Status[0] == 'O' {
+		if !exists || lastEvent.Status[0] == 'O' || needSet {
 			// 本次触发了阈值，之前又没报过警，得产生一个报警Event
 			event.CurrentStep = 1
 
