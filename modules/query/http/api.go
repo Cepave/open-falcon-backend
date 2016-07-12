@@ -1416,6 +1416,18 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	} else if len(arguments) == 5 && arguments[len(arguments)-1] == "contact" {
 		platformName := arguments[len(arguments)-2]
 		getPlatformContact(platformName, rw, nodes)
+	} else {
+		errors := []string{}
+		var result = make(map[string]interface{})
+		result["error"] = errors
+		errorMessage := "Error: wrong URL path."
+		if strings.Index(req.URL.Path, "/bandwidths/") > -1 {
+			errorMessage += " Example: /api/platforms/{platformName}/bandwidths/average"
+		} else if strings.Index(req.URL.Path, "/contact") > -1 {
+			errorMessage += " Example: /api/platforms/{platformName}/contact"
+		}
+		setError(errorMessage, result)
+		nodes["result"] = result
 	}
 	setResponse(rw, nodes)
 }
