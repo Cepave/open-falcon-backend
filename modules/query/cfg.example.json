@@ -50,6 +50,7 @@
         "idle": 10,
         "max": 100
     },
+    "local": "http://localhost:port_of_query",
     "nqmlog": {
         "jsonrpcUrl": "http://127.0.0.1:6171/jsonrpc"
     }
