@@ -2,9 +2,10 @@ package sender
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"strconv"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
@@ -37,6 +38,7 @@ var (
 	GraphQueues    = make(map[string]*nlist.SafeListLimited)
 	InfluxdbQueues = make(map[string]*nlist.SafeListLimited)
 	NqmRpcQueue    *nlist.SafeListLimited
+	StagingQueue   *nlist.SafeListLimited
 )
 
 // 连接池
@@ -229,6 +231,18 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 		// statistics
 		if !isSuccess {
 			proc.SendToInfluxdbDropCnt.Incr()
+		}
+	}
+}
+
+// Push data from endpoint in filters to Staging
+func Push2StagingSendQueue(items []*cmodel.MetricValue) {
+	for _, item := range items {
+		// TODO Staging:filters
+		isSuccess := StagingQueue.PushFront(item)
+
+		if !isSuccess {
+			proc.SendToStagingDropCnt.Incr()
 		}
 	}
 }

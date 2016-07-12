@@ -2,13 +2,14 @@ package rpc
 
 import (
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
 	cmodel "github.com/open-falcon/common/model"
 	cutils "github.com/open-falcon/common/utils"
-	"strconv"
-	"time"
 )
 
 type Transfer int
@@ -136,6 +137,11 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 	nqmItems, genericItems := sender.Demultiplex(items)
 
 	cfg := g.Config()
+
+	if cfg.Staging.Enabled {
+		// TODO Staging: struct convert
+		sender.Push2StagingSendQueue(args)
+	}
 
 	if cfg.Graph.Enabled {
 		sender.Push2GraphSendQueue(genericItems)
