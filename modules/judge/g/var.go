@@ -1,9 +1,10 @@
 package g
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/model"
 	"sync"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
 type SafeStrategyMap struct {
@@ -62,6 +63,12 @@ func (this *SafeExpressionMap) Get() map[string][]*model.Expression {
 	return this.M
 }
 
+func (this *SafeEventMap) GetAll() map[string]*model.Event {
+	this.RLock()
+	defer this.RUnlock()
+	return this.M
+}
+
 func (this *SafeEventMap) Get(key string) (*model.Event, bool) {
 	this.RLock()
 	defer this.RUnlock()
@@ -73,4 +80,12 @@ func (this *SafeEventMap) Set(key string, event *model.Event) {
 	this.Lock()
 	defer this.Unlock()
 	this.M[key] = event
+}
+
+func (this *SafeEventMap) Delete(key string) bool {
+	this.Lock()
+	defer this.Unlock()
+	delete(this.M, key)
+	_, exist := this.M[key]
+	return exist
 }

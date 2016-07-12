@@ -2,11 +2,12 @@ package http
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
 	"github.com/Cepave/open-falcon-backend/modules/judge/store"
-	"net/http"
-	"strings"
 )
 
 func configInfoRoutes() {
@@ -64,6 +65,28 @@ func configInfoRoutes() {
 		}
 
 		w.Write([]byte(strings.Join(arr, "")))
+	})
+
+	http.HandleFunc("/api/judges/list", func(w http.ResponseWriter, r *http.Request) {
+		judgeRes := g.LastEvents.GetAll()
+		RenderDataJson(w, judgeRes)
+	})
+
+	http.HandleFunc("/api/judges/delete", func(w http.ResponseWriter, r *http.Request) {
+		key := r.URL.Query().Get("key")
+		reposCode := "failed"
+		var msg string
+		if key != "" {
+			exist := g.LastEvents.Delete(key)
+			if exist == false {
+				reposCode = "success"
+			} else {
+				msg = fmt.Sprintf("trying to delete judge, but it failed! inputed key: %s", key)
+			}
+		} else {
+			msg = fmt.Sprintf("judge is failed, hash key is empyt!")
+		}
+		RenderDataJson(w, map[string]string{"status": reposCode, "msg": msg})
 	})
 
 }
