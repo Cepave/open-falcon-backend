@@ -44,11 +44,12 @@ var (
 // 连接池
 // node_address -> connection_pool
 var (
-	JudgeConnPools       *cpool.SafeRpcConnPools
-	TsdbConnPoolHelper   *cpool.TsdbConnPoolHelper
-	GraphConnPools       *cpool.SafeRpcConnPools
-	InfluxdbConnPools    *cpool.InfluxdbConnPools
-	NqmRpcConnPoolHelper *cpool.NqmRpcConnPoolHelper
+	JudgeConnPools        *cpool.SafeRpcConnPools
+	TsdbConnPoolHelper    *cpool.TsdbConnPoolHelper
+	GraphConnPools        *cpool.SafeRpcConnPools
+	InfluxdbConnPools     *cpool.InfluxdbConnPools
+	NqmRpcConnPoolHelper  *cpool.NqmRpcConnPoolHelper
+	StagingConnPoolHelper *cpool.StagingConnPoolHelper
 )
 
 // 初始化数据发送服务, 在main函数中调用

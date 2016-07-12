@@ -2,11 +2,12 @@ package sender
 
 import (
 	"errors"
+	"strings"
+
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	cpool "github.com/Cepave/open-falcon-backend/modules/transfer/sender/conn_pool"
 	log "github.com/Sirupsen/logrus"
 	nset "github.com/toolkits/container/set"
-	"strings"
 )
 
 var (
@@ -108,6 +109,12 @@ func initConnPools() {
 	if cfg.NqmRpc.Enabled {
 		NqmRpcConnPoolHelper = cpool.NewNqmRpcConnPoolHelper(cfg.NqmRpc.Address, cfg.NqmRpc.MaxConns, cfg.NqmRpc.MaxIdle, cfg.NqmRpc.ConnTimeout, cfg.NqmRpc.CallTimeout)
 	}
+
+	// Staging
+	if cfg.Staging.Enabled {
+		StagingConnPoolHelper = cpool.NewStagingConnPoolHelper(cfg.Staging.Address, cfg.Staging.MaxConns, cfg.Staging.MaxIdle, cfg.Staging.ConnTimeout, cfg.Staging.CallTimeout)
+	}
+
 	// graph
 	graphInstances := nset.NewSafeSet()
 	for _, nitem := range cfg.Graph.ClusterList {
@@ -135,4 +142,5 @@ func DestroyConnPools() {
 	TsdbConnPoolHelper.Destroy()
 	InfluxdbConnPools.Destroy()
 	NqmRpcConnPoolHelper.Destroy()
+	StagingConnPoolHelper.Destroy()
 }
