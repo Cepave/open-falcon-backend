@@ -1661,60 +1661,15 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	arguments := strings.Split(req.URL.Path, "/")
-	idcName := ""
-	upperLimitSum := float64(0)
+	IDCName := ""
 	if len(arguments) == 6 && arguments[len(arguments)-2] == "bandwidths" && arguments[len(arguments)-1] == "limit" {
-		idcName = arguments[len(arguments)-3]
-	}
-	fcname := g.Config().Api.Name
-	fctoken := getFctoken()
-	url := g.Config().Api.Uplink
-	params := map[string]string{
-		"fcname":   fcname,
-		"fctoken":  fctoken,
-		"pop_name": idcName,
-	}
-	s, err := json.Marshal(params)
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
-	if err != nil {
-		setError(err.Error(), result)
-	}
-	reqPost.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(reqPost)
-	if err != nil {
-		setError(err.Error(), result)
+		IDCName = arguments[len(arguments)-3]
+		queryIDCsBandwidths(IDCName, result)
 	} else {
-		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll(resp.Body)
-		err = json.Unmarshal(body, &nodes)
-		if err != nil {
-			setError(err.Error(), result)
-		}
-
-		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
-			for _, uplink := range nodes["result"].([]interface{}) {
-				upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
-				upperLimitSum += upperLimit
-			}
-		}
+		errorMessage := "Error: wrong API path."
+		errorMessage += " Example: /api/idcs/{IDCName}/bandwidths/limit"
+		setError(errorMessage, result)
 	}
-	items := map[string]interface{}{
-		"idcName":      idcName,
-		"upperLimitMB": upperLimitSum,
-	}
-
-	if _, ok := nodes["info"]; ok {
-		delete(nodes, "info")
-	}
-	if _, ok := nodes["status"]; ok {
-		delete(nodes, "status")
-	}
-	result["items"] = items
 	nodes["result"] = result
 	setResponse(rw, nodes)
 }
