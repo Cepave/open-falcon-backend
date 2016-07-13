@@ -98,7 +98,7 @@ func (this *PortalController) AddNote() {
 	note := this.GetString("note", "")
 	id := this.GetString("id", "xxx")
 	status := this.GetString("status", "")
-	caseId := this.GetString("caseId", "")
+	bossId := this.GetString("caseId", "")
 	switch {
 	case id == "xxx":
 		this.ResposeError(baseResp, "You dosen't pick any event id")
@@ -107,7 +107,39 @@ func (this *PortalController) AddNote() {
 		this.ResposeError(baseResp, "You can not skip closed note")
 		return
 	}
-	err = event.AddNote(username, note, id, status, caseId)
+	err = event.AddNote(username, note, id, status, bossId)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+func (this *PortalController) BatchUpdateNote() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	username := this.GetString("cName", "")
+	note := this.GetString("note", "")
+	ids := this.GetString("ids", "[]")
+	status := this.GetString("status", "ignored")
+	if status == "ignored" && note == "" {
+		note = "ignored by ignored api."
+	}
+	bossId := this.GetString("caseIds", "")
+	switch {
+	case ids == "[]":
+		this.ResposeError(baseResp, "You dosen't pick any event id")
+		return
+	case note == "":
+		this.ResposeError(baseResp, "You can not skip closed note")
+		return
+	}
+	err = event.AddNote(username, note, ids, status, bossId)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return

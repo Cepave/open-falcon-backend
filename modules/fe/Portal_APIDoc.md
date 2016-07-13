@@ -187,6 +187,7 @@
 * params:
   * `id` string
     * ex: "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8"
+    * support batch update -> ex. "s_3_ac9b8a08a4cb2def0320fec7ebecf8c8,s_4_ac9b8a08a4cb2def0320fec7ebecf8c8,s_9_ac9b8a08a4cb2def0320fec7ebecf8c2"
   * `note` string
     * max 300 varchar
   * `status` string options
