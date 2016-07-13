@@ -1597,6 +1597,64 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func queryIDCsBandwidths(IDCName string, result map[string]interface{}) {
+	var nodes = make(map[string]interface{})
+	upperLimitSum := float64(0)
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Uplink
+	params := map[string]string{
+		"fcname":   fcname,
+		"fctoken":  fctoken,
+		"pop_name": IDCName,
+	}
+	s, err := json.Marshal(params)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	reqPost.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqPost)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		err = json.Unmarshal(body, &nodes)
+		if err != nil {
+			setError(err.Error(), result)
+		}
+		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
+			if len(nodes["result"].([]interface{})) == 0 {
+				setError("IDC name not found", result)
+			} else {
+				for _, uplink := range nodes["result"].([]interface{}) {
+					upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
+					upperLimitSum += upperLimit
+				}
+			}
+		} else {
+			setError("Error occurs", result)
+		}
+	}
+	items := map[string]interface{}{
+		"IDCName":      IDCName,
+		"upperLimitMB": upperLimitSum,
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = items
+}
+
 func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
