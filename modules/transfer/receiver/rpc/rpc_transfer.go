@@ -43,7 +43,10 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 	start := time.Now()
 	reply.Invalid = 0
 
+	cfg := g.Config()
+	filters := cfg.Staging.Filters
 	items := []*cmodel.MetaData{}
+	stagingItems := []*cmodel.MetricValue{}
 	for _, v := range args {
 		if v == nil {
 			reply.Invalid += 1
@@ -122,6 +125,25 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 
 		fv.Value = vv
 		items = append(items, fv)
+
+		// Filter Staging items through endpoint
+		if cfg.Staging.Enabled {
+			for _, filter := range filters {
+				if v.Endpoint == filter {
+					sv := &cmodel.MetricValue{
+						Endpoint:  v.Endpoint,
+						Metric:    v.Metric,
+						Value:     v.Value,
+						Step:      v.Step,
+						Type:      v.Type,
+						Tags:      v.Tags,
+						Timestamp: v.Timestamp,
+					}
+					stagingItems = append(stagingItems, sv)
+					break
+				}
+			}
+		}
 	}
 
 	// statistics
@@ -136,11 +158,8 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 	// demultiplexing
 	nqmItems, genericItems := sender.Demultiplex(items)
 
-	cfg := g.Config()
-
 	if cfg.Staging.Enabled {
-		// TODO Staging: struct convert
-		sender.Push2StagingSendQueue(args)
+		sender.Push2StagingSendQueue(stagingItems)
 	}
 
 	if cfg.Graph.Enabled {

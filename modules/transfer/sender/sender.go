@@ -238,17 +238,11 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 
 // Push data from endpoint in filters to Staging
 func Push2StagingSendQueue(items []*cmodel.MetricValue) {
-	filters := g.Config().Staging.Filters
 	for _, item := range items {
-		for _, filter := range filters {
-			// Filter through endpoint
-			if item.Endpoint == filter {
-				isSuccess := StagingQueue.PushFront(item)
-				if !isSuccess {
-					proc.SendToStagingDropCnt.Incr()
-				}
-				break
-			}
+		isSuccess := StagingQueue.PushFront(item)
+
+		if !isSuccess {
+			proc.SendToStagingDropCnt.Incr()
 		}
 	}
 }
