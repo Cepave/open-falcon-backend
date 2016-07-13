@@ -1430,7 +1430,7 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getBandwidthsSum(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
+func getBandwidthsSum(metricType string, duration string, hostnames []string, filter string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
@@ -1478,6 +1478,28 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, re
 			}
 			items = append(items, item)
 		}
+		if len(filter) > 0 && strings.Index(filter, ",") == -1 {
+			queryIDCsBandwidths(filter, result)
+			if len(result["error"].([]string)) > 0 {
+				result["error"] = []string{}
+			} else {
+				upperLimit := result["items"].(map[string]interface{})["upperLimitMB"].(float64) * 1024 * 1024
+				data := []interface{}{}
+				for _, timestamp := range timestamps {
+					datum := []interface{}{
+						timestamp * 1000,
+						upperLimit,
+					}
+					data = append(data, datum)
+				}
+				item := map[string]interface{}{
+					"host":   strings.Join(hostnames, ","),
+					"metric": "net.if.upper.limit.bits",
+					"data":   data,
+				}
+				items = append(items, item)
+			}
+		}
 	}
 	return items
 }
@@ -1503,9 +1525,9 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	if method == "average" {
 		items = getBandwidthsAverage(metricType, duration, hostnames, result)
 	} else if method == "sum" {
-		items = getBandwidthsSum(metricType, duration, hostnames, result)
+		filter := req.URL.Query().Get("filter")
+		items = getBandwidthsSum(metricType, duration, hostnames, filter, result)
 	}
-
 	result["items"] = items
 	nodes["result"] = result
 	nodes["count"] = len(items)
