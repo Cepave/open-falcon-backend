@@ -8,7 +8,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/agent/funcs"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/http"
-	flag "github.com/spf13/pflag"
 	"os"
 )
 
