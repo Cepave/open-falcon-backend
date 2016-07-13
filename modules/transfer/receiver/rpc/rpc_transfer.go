@@ -3,6 +3,7 @@ package rpc
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
@@ -129,7 +130,7 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 		// Filter Staging items through endpoint
 		if cfg.Staging.Enabled {
 			for _, filter := range filters {
-				if v.Endpoint == filter {
+				if strings.HasPrefix(v.Endpoint, filter) {
 					sv := &cmodel.MetricValue{
 						Endpoint:  v.Endpoint,
 						Metric:    v.Metric,
