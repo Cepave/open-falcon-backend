@@ -3,11 +3,11 @@ package http
 import (
 	"net/http"
 
-	"github.com/open-falcon/nodata/collector"
-	"github.com/open-falcon/nodata/config"
-	"github.com/open-falcon/nodata/config/service"
-	"github.com/open-falcon/nodata/g"
-	"github.com/open-falcon/nodata/judge"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/collector"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/config"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/config/service"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/g"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/judge"
 )
 
 func configProcHttpRoutes() {

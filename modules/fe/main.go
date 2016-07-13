@@ -12,23 +12,22 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/model"
 	"github.com/Cepave/open-falcon-backend/modules/fe/mq"
 	log "github.com/Sirupsen/logrus"
-	flag "github.com/spf13/pflag"
 	"github.com/toolkits/logger"
 	"os"
 )
 
 func main() {
-	cfg := flag.String("c", "cfg.json", "configuration file")
-	version := flag.Bool("v", false, "show version")
-	flag.Parse()
-	if *version {
+	vipercfg.Parse()
+	vipercfg.Bind()
+
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
 	// parse config
 	vipercfg.Load()
-	if err := g.ParseConfig(*cfg); err != nil {
+	if err := g.ParseConfig(vipercfg.Config().GetString("config")); err != nil {
 		log.Fatalln(err)
 	}
 	logruslog.Init()

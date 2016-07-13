@@ -6,7 +6,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/open-falcon/nodata/g"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/g"
 )
 
 type Dto struct {

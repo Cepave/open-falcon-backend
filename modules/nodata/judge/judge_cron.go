@@ -9,10 +9,10 @@ import (
 	tcron "github.com/toolkits/cron"
 	ttime "github.com/toolkits/time"
 
-	"github.com/open-falcon/nodata/collector"
-	"github.com/open-falcon/nodata/config"
-	"github.com/open-falcon/nodata/g"
-	"github.com/open-falcon/nodata/sender"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/collector"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/config"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/g"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/sender"
 )
 
 var (
