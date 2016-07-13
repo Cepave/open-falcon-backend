@@ -9,7 +9,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/http"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
-	flag "github.com/spf13/pflag"
 	"os"
 	"os/signal"
 	"syscall"

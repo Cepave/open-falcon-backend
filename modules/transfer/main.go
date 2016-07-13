@@ -9,7 +9,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/receiver"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
-	flag "github.com/spf13/pflag"
 	"os"
 )
 
