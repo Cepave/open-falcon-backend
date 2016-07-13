@@ -1,39 +1,38 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/Cepave/alarm/cron"
-	"github.com/Cepave/alarm/g"
-	"github.com/Cepave/alarm/http"
-	"github.com/Cepave/alarm/logger"
-	"github.com/Cepave/alarm/model"
+	"github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/cron"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/http"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/model"
+	"github.com/spf13/pflag"
 )
 
 func main() {
-	cfg := flag.String("c", "cfg.json", "configuration file")
-	version := flag.Bool("v", false, "show version")
-	help := flag.Bool("h", false, "help")
-	flag.Parse()
+	vipercfg.Parse()
+	vipercfg.Bind()
 
-	if *version {
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
-	if *help {
-		flag.Usage()
+	if vipercfg.Config().GetBool("help") {
+		pflag.Usage()
 		os.Exit(0)
 	}
-
-	g.ParseConfig(*cfg)
+	vipercfg.Load()
+	g.ParseConfig(vipercfg.Config().GetString("config"))
+	logruslog.Init()
 	g.InitRedisConnPool()
 	model.InitDatabase()
-	logger.InitLogger()
 
 	go http.Start()
 	go cron.ReadHighEvent()

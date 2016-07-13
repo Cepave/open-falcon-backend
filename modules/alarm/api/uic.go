@@ -2,10 +2,10 @@ package api
 
 import (
 	"fmt"
-	"github.com/Cepave/alarm/g"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/toolkits/container/set"
 	"github.com/toolkits/net/httplib"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"strings"
 	"sync"
 	"time"

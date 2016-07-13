@@ -4,8 +4,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
-	"github.com/Cepave/alarm/g"
-	"log"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
+	log "github.com/Sirupsen/logrus"
 	_ "net/http/pprof"
 
 	"github.com/astaxie/beego"

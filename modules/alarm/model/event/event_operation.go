@@ -6,9 +6,9 @@ import (
 
 	"database/sql"
 
-	"github.com/Cepave/alarm/logger"
 	coommonModel "github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
+	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -36,7 +36,6 @@ func insertEvent(q orm.Ormer, eve *coommonModel.Event) (res interface{}, err err
 }
 
 func InsertEvent(eve *coommonModel.Event) {
-	log := logger.Logger()
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	var event []EventCases

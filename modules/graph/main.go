@@ -5,7 +5,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	log "github.com/Sirupsen/logrus"
-	flag "github.com/spf13/pflag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -52,23 +51,21 @@ func start_signal(pid int, cfg *g.GlobalConfig) {
 }
 
 func main() {
-	cfg := flag.String("c", "cfg.json", "specify config file")
-	version := flag.Bool("v", false, "show version")
-	versionGit := flag.Bool("vg", false, "show version and git commit log")
-	flag.Parse()
+	vipercfg.Parse()
+	vipercfg.Bind()
 
-	if *version {
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
-	if *versionGit {
+	if vipercfg.Config().GetBool("vg") {
 		fmt.Println(g.VERSION, g.COMMIT)
 		os.Exit(0)
 	}
 
 	// global config
 	vipercfg.Load()
-	g.ParseConfig(*cfg)
+	g.ParseConfig(vipercfg.Config().GetString("config"))
 	logruslog.Init()
 	// init db
 	g.InitDB()

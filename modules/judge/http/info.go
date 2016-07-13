@@ -3,8 +3,8 @@ package http
 import (
 	"fmt"
 	"github.com/open-falcon/common/utils"
-	"github.com/open-falcon/judge/g"
-	"github.com/open-falcon/judge/store"
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	"github.com/Cepave/open-falcon-backend/modules/judge/store"
 	"net/http"
 	"strings"
 )

@@ -3,12 +3,12 @@ package cron
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Cepave/alarm/logger"
 	"time"
 
-	"github.com/Cepave/alarm/g"
-	eventmodel "github.com/Cepave/alarm/model/event"
 	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
+	eventmodel "github.com/Cepave/open-falcon-backend/modules/alarm/model/event"
+	log "github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -45,7 +45,6 @@ func ReadLowEvent() {
 }
 
 func popEvent(queues []string) (*model.Event, error) {
-	log := logger.Logger()
 	count := len(queues)
 
 	params := make([]interface{}, count+1)

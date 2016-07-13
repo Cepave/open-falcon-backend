@@ -3,7 +3,7 @@ package http
 import (
 	"encoding/json"
 	log "github.com/Sirupsen/logrus"
-	"github.com/open-falcon/judge/g"
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
 	"net/http"
 	_ "net/http/pprof"
 )
