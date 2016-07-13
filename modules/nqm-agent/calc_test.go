@@ -5,6 +5,25 @@ import (
 	"testing"
 )
 
+func TestConvToFloat(t *testing.T) {
+	var nilSlice []float64
+	tests := []struct {
+		input    []string
+		expected []float64
+	}{
+		{[]string{"13.24", "38.90", "19.62", "9.48", "13.62"}, []float64{13.24, 38.90, 19.62, 9.48, 13.62}},
+		{[]string{"6.72", "29.08", "8.55", "7.40", "-", "6.26"}, []float64{6.72, 29.08, 8.55, 7.40, 6.26}},
+		{[]string{"38.90", "1823.97", "10.48", "-", "25377.48"}, []float64{38.90, 10.48}},
+		{[]string{"-", "-", "-"}, nilSlice},
+	}
+	for _, v := range tests {
+		if !reflect.DeepEqual(convToFloat(v.input), v.expected) {
+			t.Error(convToFloat(v.input), "!=", v.expected)
+		}
+		t.Log(convToFloat(v.input), v.expected)
+	}
+}
+
 func TestCalcRow(t *testing.T) {
 	// fping
 	tests := [][]string{
