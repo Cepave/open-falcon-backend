@@ -7,8 +7,8 @@ import (
 	cmodel "github.com/open-falcon/common/model"
 	"github.com/toolkits/container/nmap"
 
-	"github.com/open-falcon/nodata/config/service"
-	"github.com/open-falcon/nodata/g"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/config/service"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/g"
 )
 
 // nodata配置(mockcfg)的缓存, 这些数据来自配置中心

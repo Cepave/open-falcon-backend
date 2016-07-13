@@ -8,7 +8,7 @@ import (
 	cron "github.com/toolkits/cron"
 	ntime "github.com/toolkits/time"
 
-	"github.com/open-falcon/task/proc"
+	"github.com/Cepave/open-falcon-backend/modules/task/proc"
 )
 
 const (

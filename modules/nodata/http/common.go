@@ -7,7 +7,7 @@ import (
 
 	"github.com/toolkits/file"
 
-	"github.com/open-falcon/nodata/g"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/g"
 )
 
 func configCommonRoutes() {

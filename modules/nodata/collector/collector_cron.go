@@ -16,8 +16,8 @@ import (
 	thttpclient "github.com/toolkits/http/httpclient"
 	ttime "github.com/toolkits/time"
 
-	"github.com/open-falcon/nodata/config"
-	"github.com/open-falcon/nodata/g"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/config"
+	"github.com/Cepave/open-falcon-backend/modules/nodata/g"
 )
 
 var (

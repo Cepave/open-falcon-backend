@@ -8,30 +8,28 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/sender/g"
 	"github.com/Cepave/open-falcon-backend/modules/sender/http"
 	"github.com/Cepave/open-falcon-backend/modules/sender/redis"
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/pflag"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
-	cfg := flag.String("c", "cfg.json", "configuration file")
-	version := flag.Bool("v", false, "show version")
-	help := flag.Bool("h", false, "help")
-	flag.Parse()
+	vipercfg.Parse()
+	vipercfg.Bind()
 
-	if *version {
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
-	if *help {
-		flag.Usage()
+	if vipercfg.Config().GetBool("help") {
+		pflag.Usage()
 		os.Exit(0)
 	}
 
 	vipercfg.Load()
-	g.ParseConfig(*cfg)
+	g.ParseConfig(vipercfg.Config().GetString("config"))
 	logruslog.Init()
 	cron.InitWorker()
 	redis.InitConnPool()

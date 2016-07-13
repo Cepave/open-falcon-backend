@@ -14,7 +14,9 @@ func convToFloat(samples []string) []float64 {
 			rtt, err := strconv.ParseFloat(sample, 64)
 			if err != nil {
 				log.Println("error occured:", err)
-			} else {
+				continue
+			}
+			if rtt < float64(1000) {
 				floatData = append(floatData, rtt)
 			}
 		}

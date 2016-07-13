@@ -8,30 +8,25 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/agent/funcs"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/http"
-	flag "github.com/spf13/pflag"
 	"os"
 )
 
 func main() {
+	vipercfg.Parse()
+	vipercfg.Bind()
 
-	cfg := flag.String("c", "cfg.json", "configuration file")
-	version := flag.Bool("v", false, "show version")
-	check := flag.Bool("check", false, "check collector")
-
-	flag.Parse()
-
-	if *version {
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
-	if *check {
+	if vipercfg.Config().GetBool("check") {
 		funcs.CheckCollector()
 		os.Exit(0)
 	}
 
 	vipercfg.Load()
-	g.ParseConfig(*cfg)
+	g.ParseConfig(vipercfg.Config().GetString("config"))
 	logruslog.Init()
 
 	g.InitRootDir()

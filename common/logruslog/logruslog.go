@@ -1,8 +1,8 @@
 package logruslog
 
 import (
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	log "github.com/Sirupsen/logrus"
-	"github.com/chyeh/viper"
 )
 
 func logLevel(l string) log.Level {
@@ -27,6 +27,6 @@ func logLevel(l string) log.Level {
 
 func Init() {
 	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
-	logLevelStr := viper.GetString("logLevel")
+	logLevelStr := vipercfg.Config().GetString("logLevel")
 	log.SetLevel(logLevel(logLevelStr))
 }

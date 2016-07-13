@@ -5,7 +5,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/open-falcon/task/g"
+	"github.com/Cepave/open-falcon-backend/modules/task/g"
 )
 
 var DB *sql.DB

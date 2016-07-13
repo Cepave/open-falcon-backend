@@ -5,7 +5,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/open-falcon/common/model"
-	"github.com/open-falcon/judge/g"
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
 	"time"
 )
 
