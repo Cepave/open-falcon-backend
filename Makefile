@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g commands -name '*.go')
-CMD = aggregator graph hbs judge nodata query sender task transfer fe
+CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm
 TARGET = open-falcon
 
 VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
@@ -35,6 +35,7 @@ pack: checkbin
 	@$(foreach var,$(CMD),cp ./bin/$(var)/falcon-$(var) ./out/$(var)/bin;)
 	@cp -r ./modules/query/js ./modules/query/conf/lambdaSetup.json ./out/query/config
 	@cp -r ./modules/fe/{static,views,scripts} ./out/fe/bin
+	@cp -r ./modules/alarm/{static,views} ./out/alarm/bin
 	@cp cfg.json ./out/cfg.json
 	@cp $(TARGET) ./out/$(TARGET)
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
