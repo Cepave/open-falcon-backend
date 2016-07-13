@@ -2,12 +2,13 @@ package http
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/astaxie/beego/orm"
 )
@@ -301,37 +302,33 @@ func getUsers(result map[string]interface{}) map[string]string {
 	return users
 }
 
-func getNotes(result map[string]interface{}) map[string]interface{} {
-	notes := map[string]interface{}{}
-	users := getUsers(result)
+func getNote(hash string, timestamp string) []map[string]string {
 	o := orm.NewOrm()
 	var rows []orm.Params
-	sqlcmd := "SELECT event_caseId, note, status, timestamp, user_id "
-	sqlcmd += "FROM falcon_portal.event_note ORDER BY timestamp DESC"
-	num, err := o.Raw(sqlcmd).Values(&rows)
+	queryStr := fmt.Sprintf(`SELECT note.id as id, note.event_caseId as event_caseId, note.note as note, note.case_id as case_id, note.status as status, note.timestamp as timestamp, user.name as name from
+	(SELECT * from falcon_portal.event_note WHERE event_caseId = '%s' AND timestamp >= '%s')
+	 note LEFT JOIN uic.user as user on note.user_id = user.id;`, hash, timestamp)
+
+	num, err := o.Raw(queryStr).Values(&rows)
+	notes := []map[string]string{}
 	if err != nil {
-		setError(err.Error(), result)
-	} else if num > 0 {
+		log.Debug(err.Error)
+	} else if num == 0 {
+		return notes
+	} else {
 		for _, row := range rows {
 			hash := row["event_caseId"].(string)
 			time := row["timestamp"].(string)
 			time = time[:len(time)-3]
-			userID := row["user_id"].(string)
+			user := row["name"].(string)
 			note := map[string]string{
 				"note":   row["note"].(string),
 				"status": row["status"].(string),
-				"user":   users[userID],
+				"user":   user,
 				"hash":   hash,
 				"time":   time,
 			}
-			if slice, ok := notes[hash]; ok {
-				slice = append(slice.([]map[string]string), note)
-				notes[hash] = slice
-			} else {
-				notes[hash] = []map[string]string{
-					note,
-				}
-			}
+			notes = append(notes, note)
 		}
 	}
 	return notes
@@ -434,7 +431,6 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 		eventsLimit = query.Get("elimit")
 	}
 
-	notes := getNotes(result)
 	o := orm.NewOrm()
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd).Values(&rows)
@@ -455,10 +451,12 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 			timeUpdate = timeUpdate[:len(timeUpdate)-3]
 			process := strings.ToLower(row["process_status"].(string))
 			process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
-			note := []map[string]string{}
-			if _, ok := notes[hash]; ok {
-				note = notes[hash].([]map[string]string)
+			note := getNote(hash, row["timestamp"].(string))
+			//this is a work around for auto clean process when the status is expired
+			if len(note) == 0 {
+				process = "unresolved"
 			}
+			process = strings.Replace(process, process[:1], strings.ToUpper(process[:1]), 1)
 			templateID := row["template_id"].(string)
 			author := row["tpl_creator"].(string)
 			alert := map[string]interface{}{
