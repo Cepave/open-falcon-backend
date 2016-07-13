@@ -24,7 +24,10 @@ func ConfigRoutes() {
 			ctx.Output.Body([]byte("notAllowed"))
 		}),
 		beego.NSRouter("/whenstrategyupdated", &PortalController{}, "get:WhenStrategyUpdated;post:WhenStrategyUpdated"),
+		beego.NSRouter("/whenstrategydeleted", &PortalController{}, "get:WhenStrategyDeleted;post:WhenStrategyDeleted"),
+		beego.NSRouter("/whentempletedeleted", &PortalController{}, "get:WhenTempleteDeleted;post:WhenTempleteDeleted"),
 		beego.NSRouter("/whentempleteunbind", &PortalController{}, "get:WhenTempleteUnbind;post:WhenTempleteUnbind"),
+		beego.NSRouter("/whenendpointunbind", &PortalController{}, "get:WhenEndpointUnbind;post:WhenEndpointUnbind"),
 	)
 	beego.AddNamespace(portal)
 	beego.AddNamespace(alarmAdjust)
