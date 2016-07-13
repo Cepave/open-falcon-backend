@@ -7,7 +7,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/toolkits/file"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"strings"
 	"time"
 )
