@@ -227,7 +227,7 @@
     * ex: "in progress", "unresolved", "resolved", "ignored"
     * support mutiple status query. ex: "resolved,ignored"
   * `filterIgnored` bool
-    * default: true
+    * default: false
   * ok
 
     ```

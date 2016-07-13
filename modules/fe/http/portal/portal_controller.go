@@ -127,7 +127,7 @@ func (this *PortalController) GetNotes() {
 	limitNum, _ := this.GetInt("limit", 0)
 	startTime, _ := this.GetInt64("startTime", 0)
 	endTime, _ := this.GetInt64("endTime", 0)
-	filterIgnored, _ := this.GetBool("filterIgnored", true)
+	filterIgnored, _ := this.GetBool("filterIgnored", false)
 	if id == "xxx" {
 		this.ResposeError(baseResp, "You dosen't pick any event id")
 		return
