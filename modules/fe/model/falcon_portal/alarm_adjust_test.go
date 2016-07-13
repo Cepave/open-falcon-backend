@@ -29,7 +29,7 @@ func TestPortalEventCase(t *testing.T) {
 		So(affectedRows, ShouldEqual, 1)
 		RecoveryALL(q)
 	})
-	Convey("test - WhenStrategyUpdated", t, func() {
+	Convey("test - WhenStrategyDeleted", t, func() {
 		err, affectedRows := WhenStrategyDeleted(41)
 		So(err, ShouldEqual, nil)
 		So(affectedRows, ShouldEqual, 1)
