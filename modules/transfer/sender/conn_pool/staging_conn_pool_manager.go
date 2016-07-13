@@ -6,7 +6,7 @@ import (
 )
 
 func newStagingConnPool(address string, maxConns int, maxIdle int, connTimeout int) *ConnPool {
-	return createOnePool("staging", address, time.Duration(connTimeout), maxConns, maxIdle)
+	return createOnePool("staging", address, time.Duration(connTimeout)*time.Millisecond, maxConns, maxIdle)
 }
 
 type StagingConnPoolHelper struct {
