@@ -1418,7 +1418,7 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 		errors := []string{}
 		var result = make(map[string]interface{})
 		result["error"] = errors
-		errorMessage := "Error: wrong URL path."
+		errorMessage := "Error: wrong API path."
 		if strings.Index(req.URL.Path, "/bandwidths/") > -1 {
 			errorMessage += " Example: /api/platforms/{platformName}/bandwidths/average"
 		} else if strings.Index(req.URL.Path, "/contact") > -1 {
