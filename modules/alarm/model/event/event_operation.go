@@ -6,7 +6,7 @@ import (
 
 	"database/sql"
 
-	"github.com/Cepave/alarm/logger"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/logger"
 	coommonModel "github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
 	"github.com/astaxie/beego/orm"

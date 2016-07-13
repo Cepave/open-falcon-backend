@@ -2,8 +2,8 @@ package cron
 
 import (
 	"fmt"
-	"github.com/Cepave/alarm/api"
-	"github.com/Cepave/alarm/redis"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/api"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/redis"
 	"github.com/Cepave/common/model"
 	"github.com/toolkits/net/httplib"
 	"strings"

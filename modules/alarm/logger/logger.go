@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"github.com/Cepave/alarm/g"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/Sirupsen/logrus"
 	"os"
 )

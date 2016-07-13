@@ -7,11 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Cepave/alarm/cron"
-	"github.com/Cepave/alarm/g"
-	"github.com/Cepave/alarm/http"
-	"github.com/Cepave/alarm/logger"
-	"github.com/Cepave/alarm/model"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/cron"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/http"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/logger"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/model"
 )
 
 func main() {

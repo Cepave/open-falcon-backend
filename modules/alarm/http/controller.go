@@ -2,8 +2,8 @@ package http
 
 import (
 	"fmt"
-	"github.com/Cepave/alarm/g"
-	. "github.com/Cepave/alarm/model/uic"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
+	. "github.com/Cepave/open-falcon-backend/modules/alarm/model/uic"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/toolkits/file"

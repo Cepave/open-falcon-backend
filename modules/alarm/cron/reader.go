@@ -3,11 +3,11 @@ package cron
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Cepave/alarm/logger"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/logger"
 	"time"
 
-	"github.com/Cepave/alarm/g"
-	eventmodel "github.com/Cepave/alarm/model/event"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
+	eventmodel "github.com/Cepave/open-falcon-backend/modules/alarm/model/event"
 	"github.com/Cepave/common/model"
 	"github.com/garyburd/redigo/redis"
 )

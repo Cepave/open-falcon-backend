@@ -2,7 +2,7 @@ package cron
 
 import (
 	"fmt"
-	"github.com/Cepave/alarm/g"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/Cepave/common/model"
 	"github.com/Cepave/common/utils"
 )
