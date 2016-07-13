@@ -5,7 +5,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"net/http"
 
-	"github.com/open-falcon/task/g"
+	"github.com/Cepave/open-falcon-backend/modules/task/g"
 )
 
 type Dto struct {

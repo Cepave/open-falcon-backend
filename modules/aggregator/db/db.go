@@ -2,9 +2,9 @@ package db
 
 import (
 	"database/sql"
+	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/open-falcon/aggregator/g"
 )
 
 var DB *sql.DB

@@ -4,27 +4,25 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	"github.com/open-falcon/judge/cron"
-	"github.com/open-falcon/judge/g"
-	"github.com/open-falcon/judge/http"
-	"github.com/open-falcon/judge/rpc"
-	"github.com/open-falcon/judge/store"
-	flag "github.com/spf13/pflag"
+	"github.com/Cepave/open-falcon-backend/modules/judge/cron"
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	"github.com/Cepave/open-falcon-backend/modules/judge/http"
+	"github.com/Cepave/open-falcon-backend/modules/judge/rpc"
+	"github.com/Cepave/open-falcon-backend/modules/judge/store"
 	"os"
 )
 
 func main() {
-	cfg := flag.String("c", "cfg.json", "configuration file")
-	version := flag.Bool("v", false, "show version")
-	flag.Parse()
+	vipercfg.Parse()
+	vipercfg.Bind()
 
-	if *version {
+	if vipercfg.Config().GetBool("version") {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
 	vipercfg.Load()
-	g.ParseConfig(*cfg)
+	g.ParseConfig(vipercfg.Config().GetString("config"))
 	logruslog.Init()
 
 	g.InitRedisConnPool()
