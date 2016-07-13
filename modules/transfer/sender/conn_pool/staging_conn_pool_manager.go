@@ -2,11 +2,30 @@ package conn_pool
 
 import (
 	"fmt"
+	"net"
+	"net/rpc/jsonrpc"
 	"time"
 )
 
 func newStagingConnPool(address string, maxConns int, maxIdle int, connTimeout int) *ConnPool {
-	return createOnePool("staging", address, time.Duration(connTimeout)*time.Millisecond, maxConns, maxIdle)
+	connectionTimeout := time.Duration(connTimeout) * time.Millisecond
+	p := NewConnPool("staging", address, maxConns, maxIdle)
+
+	p.New = func(connName string) (NConn, error) {
+		_, err := net.ResolveTCPAddr("tcp", p.Address)
+		if err != nil {
+			return nil, err
+		}
+
+		conn, err := net.DialTimeout("tcp", p.Address, connectionTimeout)
+		if err != nil {
+			return nil, err
+		}
+
+		return RpcClient{cli: jsonrpc.NewClient(conn), name: connName}, nil
+	}
+
+	return p
 }
 
 type StagingConnPoolHelper struct {
