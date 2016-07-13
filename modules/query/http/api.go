@@ -1582,8 +1582,8 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 				}
 			}
 		}
-		idcNamesMap := map[string]string{}
-		idcNames := []string{}
+		IDCNamesMap := map[string]string{}
+		IDCNames := []string{}
 		o := orm.NewOrm()
 		var idcs []*Idc
 		sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
@@ -1592,16 +1592,16 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 			setError(err.Error(), result)
 		} else {
 			for _, idc := range idcs {
-				idcNamesMap[idc.Name] = strconv.Itoa(idc.Pop_id)
-				idcNames = appendUniqueString(idcNames, idc.Name)
+				IDCNamesMap[idc.Name] = strconv.Itoa(idc.Pop_id)
+				IDCNames = appendUniqueString(IDCNames, idc.Name)
 			}
 		}
-		sort.Strings(idcNames)
-		for _, idcName := range idcNames {
-			idcID := idcNamesMap[idcName]
+		sort.Strings(IDCNames)
+		for _, IDCName := range IDCNames {
+			idcID := IDCNamesMap[IDCName]
 			if _, ok := idcsMap[idcID]; ok {
 				idc := idcsMap[idcID]
-				idcsMap[idcName] = idc
+				idcsMap[IDCName] = idc
 				delete(idcsMap, idcID)
 			}
 		}
