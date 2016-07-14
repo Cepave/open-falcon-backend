@@ -53,5 +53,6 @@
     "local": "http://localhost:port_of_query",
     "nqmlog": {
         "jsonrpcUrl": "http://127.0.0.1:6171/jsonrpc"
-    }
+    },
+    "fe": "http://10.0.1.167:1234"
 }

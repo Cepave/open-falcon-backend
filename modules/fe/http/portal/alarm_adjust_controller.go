@@ -88,3 +88,20 @@ func (this *PortalController) WhenEndpointUnbind() {
 	this.ServeApiJson(baseResp)
 	return
 }
+
+func (this *PortalController) WhenEndpointOnMaintain() {
+	baseResp := this.BasicRespGen()
+	hostId, _ := this.GetInt("hostId", 0)
+	if hostId == 0 {
+		this.ResposeError(baseResp, "hostId is missing")
+		return
+	}
+	err, resp := events.WhenEndpointOnMaintain(hostId)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	baseResp.Data["affectedRows"] = resp
+	this.ServeApiJson(baseResp)
+	return
+}
