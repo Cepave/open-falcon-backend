@@ -118,7 +118,12 @@ func WhenEndpointUnbind(hostId int, hostgroupId int) (err error, affectedRows in
 	//get hostname by host id
 	hostname := ""
 	err = q.Raw("SELECT hostname FROM host WHERE id = ?", hostId).QueryRow(&hostname)
+	if err != nil {
+		log.Debug(err.Error())
+	}
+	log.Debug("host: %s", hostname)
 	if len(tplids) > 0 && hostname != "" {
+		log.Debug("will disable hostname: %s", hostname)
 		templetIds := "("
 		for ind, mid := range tplids {
 			if ind == 0 {
@@ -136,9 +141,14 @@ func WhenEndpointUnbind(hostId int, hostgroupId int) (err error, affectedRows in
 		}
 		affectedAlerms := []string{}
 		_, err = q.Raw(fmt.Sprintf("SELECT id FROM event_cases WHERE template_id IN %s AND endpoint = '%s'", templetIds, hostname)).QueryRows(&affectedAlerms)
+		if err != nil {
+			log.Debug(err.Error())
+			return
+		}
 		affectedRows = len(affectedAlerms)
 		UpdateCloseNote(affectedAlerms, fmt.Sprintf("Because of endpoint: %s has been unbind form hostgroupId: %d", hostname, hostgroupId))
 		return
 	}
+	log.Debug("addected alerm: %v", affectedRows)
 	return
 }
