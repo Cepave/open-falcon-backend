@@ -1325,8 +1325,11 @@ func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType str
 			if groupName == platformName {
 				for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 					hostname = device.(map[string]interface{})["hostname"].(string)
-					if device.(map[string]interface{})["ip_status"].(string) == "1" {
-						hostnames = append(hostnames, hostname)
+					ip := device.(map[string]interface{})["ip"].(string)
+					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+						if device.(map[string]interface{})["ip_status"].(string) == "1" {
+							hostnames = append(hostnames, hostname)
+						}
 					}
 				}
 			}
