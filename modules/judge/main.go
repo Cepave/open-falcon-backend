@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/judge/cron"
@@ -9,7 +11,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/judge/http"
 	"github.com/Cepave/open-falcon-backend/modules/judge/rpc"
 	"github.com/Cepave/open-falcon-backend/modules/judge/store"
-	"os"
+	flag "github.com/spf13/pflag"
 )
 
 func main() {
