@@ -1418,7 +1418,7 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 		errors := []string{}
 		var result = make(map[string]interface{})
 		result["error"] = errors
-		errorMessage := "Error: wrong URL path."
+		errorMessage := "Error: wrong API path."
 		if strings.Index(req.URL.Path, "/bandwidths/") > -1 {
 			errorMessage += " Example: /api/platforms/{platformName}/bandwidths/average"
 		} else if strings.Index(req.URL.Path, "/contact") > -1 {
@@ -1430,7 +1430,7 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getBandwidthsSum(metricType string, duration string, hostnames []string, result map[string]interface{}) []interface{} {
+func getBandwidthsSum(metricType string, duration string, hostnames []string, filter string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
@@ -1478,6 +1478,28 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, re
 			}
 			items = append(items, item)
 		}
+		if len(filter) > 0 && strings.Index(filter, ",") == -1 {
+			queryIDCsBandwidths(filter, result)
+			if len(result["error"].([]string)) > 0 {
+				result["error"] = []string{}
+			} else {
+				upperLimit := result["items"].(map[string]interface{})["upperLimitMB"].(float64) * 1024 * 1024
+				data := []interface{}{}
+				for _, timestamp := range timestamps {
+					datum := []interface{}{
+						timestamp * 1000,
+						upperLimit,
+					}
+					data = append(data, datum)
+				}
+				item := map[string]interface{}{
+					"host":   strings.Join(hostnames, ","),
+					"metric": "net.if.upper.limit.bits",
+					"data":   data,
+				}
+				items = append(items, item)
+			}
+		}
 	}
 	return items
 }
@@ -1503,9 +1525,9 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	if method == "average" {
 		items = getBandwidthsAverage(metricType, duration, hostnames, result)
 	} else if method == "sum" {
-		items = getBandwidthsSum(metricType, duration, hostnames, result)
+		filter := req.URL.Query().Get("filter")
+		items = getBandwidthsSum(metricType, duration, hostnames, filter, result)
 	}
-
 	result["items"] = items
 	nodes["result"] = result
 	nodes["count"] = len(items)
@@ -1560,8 +1582,8 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 				}
 			}
 		}
-		idcNamesMap := map[string]string{}
-		idcNames := []string{}
+		IDCNamesMap := map[string]string{}
+		IDCNames := []string{}
 		o := orm.NewOrm()
 		var idcs []*Idc
 		sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
@@ -1570,16 +1592,16 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 			setError(err.Error(), result)
 		} else {
 			for _, idc := range idcs {
-				idcNamesMap[idc.Name] = strconv.Itoa(idc.Pop_id)
-				idcNames = appendUniqueString(idcNames, idc.Name)
+				IDCNamesMap[idc.Name] = strconv.Itoa(idc.Pop_id)
+				IDCNames = appendUniqueString(IDCNames, idc.Name)
 			}
 		}
-		sort.Strings(idcNames)
-		for _, idcName := range idcNames {
-			idcID := idcNamesMap[idcName]
+		sort.Strings(IDCNames)
+		for _, IDCName := range IDCNames {
+			idcID := IDCNamesMap[IDCName]
 			if _, ok := idcsMap[idcID]; ok {
 				idc := idcsMap[idcID]
-				idcsMap[idcName] = idc
+				idcsMap[IDCName] = idc
 				delete(idcsMap, idcID)
 			}
 		}
@@ -1597,24 +1619,16 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
+func queryIDCsBandwidths(IDCName string, result map[string]interface{}) {
 	var nodes = make(map[string]interface{})
-	errors := []string{}
-	var result = make(map[string]interface{})
-	result["error"] = errors
-	arguments := strings.Split(req.URL.Path, "/")
-	idcName := ""
 	upperLimitSum := float64(0)
-	if len(arguments) == 6 && arguments[len(arguments)-2] == "bandwidths" && arguments[len(arguments)-1] == "limit" {
-		idcName = arguments[len(arguments)-3]
-	}
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Uplink
 	params := map[string]string{
 		"fcname":   fcname,
 		"fctoken":  fctoken,
-		"pop_name": idcName,
+		"pop_name": IDCName,
 	}
 	s, err := json.Marshal(params)
 	if err != nil {
@@ -1637,19 +1651,23 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			setError(err.Error(), result)
 		}
-
 		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
-			for _, uplink := range nodes["result"].([]interface{}) {
-				upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
-				upperLimitSum += upperLimit
+			if len(nodes["result"].([]interface{})) == 0 {
+				setError("IDC name not found", result)
+			} else {
+				for _, uplink := range nodes["result"].([]interface{}) {
+					upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
+					upperLimitSum += upperLimit
+				}
 			}
+		} else {
+			setError("Error occurs", result)
 		}
 	}
 	items := map[string]interface{}{
-		"idcName":      idcName,
+		"IDCName":      IDCName,
 		"upperLimitMB": upperLimitSum,
 	}
-
 	if _, ok := nodes["info"]; ok {
 		delete(nodes, "info")
 	}
@@ -1657,6 +1675,23 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 		delete(nodes, "status")
 	}
 	result["items"] = items
+}
+
+func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	arguments := strings.Split(req.URL.Path, "/")
+	IDCName := ""
+	if len(arguments) == 6 && arguments[len(arguments)-2] == "bandwidths" && arguments[len(arguments)-1] == "limit" {
+		IDCName = arguments[len(arguments)-3]
+		queryIDCsBandwidths(IDCName, result)
+	} else {
+		errorMessage := "Error: wrong API path."
+		errorMessage += " Example: /api/idcs/{IDCName}/bandwidths/limit"
+		setError(errorMessage, result)
+	}
 	nodes["result"] = result
 	setResponse(rw, nodes)
 }

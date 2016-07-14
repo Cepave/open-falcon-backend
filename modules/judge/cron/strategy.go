@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/open-falcon/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"time"
 )
 

@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	"github.com/open-falcon/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"math"
 	"strconv"
 	"strings"

@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	log "github.com/Sirupsen/logrus"
 	"net"
 	"net/rpc"
 )
