@@ -59,5 +59,26 @@
         "maxConns": 32,
         "maxIdle": 32,
         "addr": "root:password@http(10.20.30.40:8086)/owl"
+    },
+    "nqmRpc": {
+        "enabled":false,
+        "batch": 100,
+        "connTimeout": 1000,
+        "callTimeout": 5000,
+        "maxConns": 32,
+        "maxIdle": 32,
+        "addr": "10.20.30.40:6171/jsonrpc"
+    },
+    "staging": {
+        "enabled": false,
+        "batch": 100,
+        "connTimeout": 1000,
+        "callTimeout": 5000,
+        "maxConns": 32,
+        "maxIdle": 32,
+        "retry": 3,
+        "address": "10.0.1.9:8433",
+        "filters": [
+        ]
     }
 }

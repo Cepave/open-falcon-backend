@@ -29,4 +29,8 @@ func initSendQueues() {
 	if cfg.NqmRpc.Enabled {
 		NqmRpcQueue = nlist.NewSafeListLimited(DefaultSendQueueMaxSize)
 	}
+
+	if cfg.Staging.Enabled {
+		StagingQueue = nlist.NewSafeListLimited(DefaultSendQueueMaxSize)
+	}
 }

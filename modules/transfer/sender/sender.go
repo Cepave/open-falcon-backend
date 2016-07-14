@@ -2,9 +2,10 @@ package sender
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"strconv"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
@@ -37,16 +38,18 @@ var (
 	GraphQueues    = make(map[string]*nlist.SafeListLimited)
 	InfluxdbQueues = make(map[string]*nlist.SafeListLimited)
 	NqmRpcQueue    *nlist.SafeListLimited
+	StagingQueue   *nlist.SafeListLimited
 )
 
 // 连接池
 // node_address -> connection_pool
 var (
-	JudgeConnPools       *cpool.SafeRpcConnPools
-	TsdbConnPoolHelper   *cpool.TsdbConnPoolHelper
-	GraphConnPools       *cpool.SafeRpcConnPools
-	InfluxdbConnPools    *cpool.InfluxdbConnPools
-	NqmRpcConnPoolHelper *cpool.NqmRpcConnPoolHelper
+	JudgeConnPools        *cpool.SafeRpcConnPools
+	TsdbConnPoolHelper    *cpool.TsdbConnPoolHelper
+	GraphConnPools        *cpool.SafeRpcConnPools
+	InfluxdbConnPools     *cpool.InfluxdbConnPools
+	NqmRpcConnPoolHelper  *cpool.NqmRpcConnPoolHelper
+	StagingConnPoolHelper *cpool.StagingConnPoolHelper
 )
 
 // 初始化数据发送服务, 在main函数中调用
@@ -229,6 +232,17 @@ func Push2InfluxdbSendQueue(items []*cmodel.MetaData) {
 		// statistics
 		if !isSuccess {
 			proc.SendToInfluxdbDropCnt.Incr()
+		}
+	}
+}
+
+// Push data from endpoint in filters to Staging
+func Push2StagingSendQueue(items []*cmodel.MetricValue) {
+	for _, item := range items {
+		isSuccess := StagingQueue.PushFront(item)
+
+		if !isSuccess {
+			proc.SendToStagingDropCnt.Incr()
 		}
 	}
 }
