@@ -1159,15 +1159,18 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 			groupName := platform.(map[string]interface{})["platform"].(string)
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
-				popID := device.(map[string]interface{})["pop_id"].(string)
-				hostnames = append(hostnames, hostname)
-				host := map[string]interface{}{
-					"name":     hostname,
-					"platform": groupName,
-					"popID":    popID,
+				ip := device.(map[string]interface{})["ip"].(string)
+				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+					popID := device.(map[string]interface{})["pop_id"].(string)
+					hostnames = append(hostnames, hostname)
+					host := map[string]interface{}{
+						"name":     hostname,
+						"platform": groupName,
+						"popID":    popID,
+					}
+					hosts = append(hosts, host)
+					hostnames = append(hostnames, hostname)
 				}
-				hosts = append(hosts, host)
-				hostnames = append(hostnames, hostname)
 			}
 		}
 		sort.Strings(hostnames)
