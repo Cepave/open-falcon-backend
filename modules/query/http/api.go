@@ -1562,7 +1562,7 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
 				if _, ok := hostnamesMap[hostname]; !ok {
 					ip := device.(map[string]interface{})["ip"].(string)
-					if ip == getIPFromHostname(hostname, result) {
+					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
 						hostnames = append(hostnames, hostname)
 						idcID := device.(map[string]interface{})["pop_id"].(string)
 						host := map[string]interface{}{
