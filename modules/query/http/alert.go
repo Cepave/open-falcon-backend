@@ -393,7 +393,7 @@ func setSQLQuery(templateIDs string, req *http.Request, result map[string]interf
 		conditions := strings.Join(whereConditions, " AND ")
 		sqlcmd += "WHERE " + conditions
 	}
-	sqlcmd += " ORDER BY update_at DESC LIMIT " + limit
+	sqlcmd += " ORDER BY priority ASC, update_at DESC LIMIT " + limit
 	return sqlcmd
 }
 
