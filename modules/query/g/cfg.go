@@ -75,11 +75,12 @@ type GlobalConfig struct {
 	Api     *ApiConfig     `json:"api"`
 	Db      *DbConfig      `json:"db"`
 	Local   string         `json:"local"`
-	NqmLog  *NqmLogConfig  `json:nqmlog`
+	NqmLog  *NqmLogConfig  `json:"nqmlog"`
 	Nqm     *NqmConfig     `json:"nqm"`
 	Grpc    *GrpcConfig    `json:"grpc"`
 	GinHttp *GinHttpConfig `json:"gin_http"`
 	GraphDB *GraphDB       `json:"graphdb"`
+	Fe      string         `json:"fe"`
 }
 
 var (

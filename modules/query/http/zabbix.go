@@ -5,16 +5,19 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	log "github.com/Sirupsen/logrus"
-	"github.com/astaxie/beego/orm"
-	"github.com/bitly/go-simplejson"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	log "github.com/Sirupsen/logrus"
+	"github.com/astaxie/beego/orm"
+	"github.com/bitly/go-simplejson"
 )
 
 type Host struct {
@@ -628,6 +631,30 @@ func muteAlertsOfHost(host Host, params map[string]interface{}, result map[strin
 	return host
 }
 
+func muteAlertsCases(hostid int) {
+	conf := g.Config()
+	apiurl := conf.Fe
+	if conf.Fe == "" {
+		log.Error("conf of fe url is not set , please check it !")
+	}
+	if !strings.Contains(conf.Fe, "http://") {
+		apiurl = fmt.Sprintf("http://%s", conf.Fe)
+	}
+	url := apiurl + "/api/v1/alarmadjust/whenendpointonmaintain"
+	data := fmt.Sprintf("hostId=%d", hostid)
+	resp, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data))
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		log.Debugf("%s : %d", url, resp.StatusCode)
+		res, _ := ioutil.ReadAll(resp.Body)
+		log.Debugf("%v", string(res))
+	}
+}
+
 /**
  * @function name:   func hostUpdate(nodes map[string]interface{})
  * @description:     This function updates host data.
@@ -660,6 +687,7 @@ func hostUpdate(nodes map[string]interface{}) {
 			} else {
 				log.Debugln("update hostId =", host.Id)
 				log.Debugln("mysql row affected nums =", num)
+				muteAlertsCases(host.Id)
 				hostid := strconv.Itoa(host.Id)
 				if _, ok := params["groups"]; ok {
 					unbindGroup(hostid, result)
