@@ -2,6 +2,7 @@ package falconPortal
 
 import (
 	"fmt"
+	"time"
 
 	"strings"
 
@@ -151,6 +152,25 @@ func GetNotes(eventCaseId string, limit int, startTime int64, endTime int64, fil
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	whereConditions := []string{fmt.Sprintf("event_note.event_caseId = '%s' ", eventCaseId)}
+	switch {
+	//allow api only set the startTime and use the currentTime as the endTime
+	case startTime != 0 && endTime == 0:
+		endTime = time.Now().Unix()
+	case startTime == 0 && endTime == 0:
+		tempTime := ""
+		q.Raw("SELECT timestamp FROM event_cases WHERE id = ?", eventCaseId).QueryRow(&tempTime)
+		if tempTime != "" {
+			myzone, _ := time.Now().Zone()
+			parsedTime, err := time.Parse("2006-01-02 15:04:05 MST", fmt.Sprintf("%s %s", tempTime, myzone))
+			log.Debugf("got time: %v , convertedTime: %v, Unix: %v", fmt.Sprintf("%s %s", tempTime, myzone), parsedTime, parsedTime.Unix())
+			if err == nil {
+				startTime = parsedTime.Unix()
+			} else {
+				log.Debug(err.Error())
+			}
+		}
+		endTime = time.Now().Unix()
+	}
 	if startTime > 0 && endTime > 0 {
 		whereConditions = append(whereConditions, fmt.Sprintf("event_note.timestamp BETWEEN FROM_UNIXTIME(%d) AND FROM_UNIXTIME(%d)", startTime, endTime))
 	}

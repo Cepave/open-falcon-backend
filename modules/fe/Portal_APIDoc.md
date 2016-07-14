@@ -228,7 +228,12 @@
     * ex: "in progress", "unresolved", "resolved", "ignored"
     * support mutiple status query. ex: "resolved,ignored"
   * `filterIgnored` bool
-    * default: true
+    * default: false
+  * @Timeiflter
+    * `startTime` unixTime
+    * `endTime` unixTime
+      * Accpet only set startTime and will make the currentTime as the endTime
+      * if startTime & endTime did not specific, will use the lasted #1 of that alarm as startTime , the currentTime will be the endTime.
   * ok
 
     ```
