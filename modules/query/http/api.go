@@ -782,15 +782,18 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 			group := []interface{}{}
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
-				if _, ok := hostnamesMap[hostname]; !ok {
-					hostnames = append(hostnames, hostname)
-					host := map[string]interface{}{
-						"name":     hostname,
-						"activate": device.(map[string]interface{})["ip_status"].(string),
-						"pop_id":   device.(map[string]interface{})["pop_id"].(string),
+				ip := device.(map[string]interface{})["ip"].(string)
+				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+					if _, ok := hostnamesMap[hostname]; !ok {
+						hostnames = append(hostnames, hostname)
+						host := map[string]interface{}{
+							"name":     hostname,
+							"activate": device.(map[string]interface{})["ip_status"].(string),
+							"pop_id":   device.(map[string]interface{})["pop_id"].(string),
+						}
+						group = append(group, host)
+						hostnamesMap[hostname] = 1
 					}
-					group = append(group, host)
-					hostnamesMap[hostname] = 1
 				}
 			}
 			groups[groupName] = group
@@ -1156,15 +1159,18 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 			groupName := platform.(map[string]interface{})["platform"].(string)
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
-				popID := device.(map[string]interface{})["pop_id"].(string)
-				hostnames = append(hostnames, hostname)
-				host := map[string]interface{}{
-					"name":     hostname,
-					"platform": groupName,
-					"popID":    popID,
+				ip := device.(map[string]interface{})["ip"].(string)
+				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+					popID := device.(map[string]interface{})["pop_id"].(string)
+					hostnames = append(hostnames, hostname)
+					host := map[string]interface{}{
+						"name":     hostname,
+						"platform": groupName,
+						"popID":    popID,
+					}
+					hosts = append(hosts, host)
+					hostnames = append(hostnames, hostname)
 				}
-				hosts = append(hosts, host)
-				hostnames = append(hostnames, hostname)
 			}
 		}
 		sort.Strings(hostnames)
@@ -1319,8 +1325,11 @@ func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType str
 			if groupName == platformName {
 				for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 					hostname = device.(map[string]interface{})["hostname"].(string)
-					if device.(map[string]interface{})["ip_status"].(string) == "1" {
-						hostnames = append(hostnames, hostname)
+					ip := device.(map[string]interface{})["ip"].(string)
+					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+						if device.(map[string]interface{})["ip_status"].(string) == "1" {
+							hostnames = append(hostnames, hostname)
+						}
 					}
 				}
 			}
@@ -1553,7 +1562,7 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
 				if _, ok := hostnamesMap[hostname]; !ok {
 					ip := device.(map[string]interface{})["ip"].(string)
-					if ip == getIPFromHostname(hostname, result) {
+					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
 						hostnames = append(hostnames, hostname)
 						idcID := device.(map[string]interface{})["pop_id"].(string)
 						host := map[string]interface{}{
