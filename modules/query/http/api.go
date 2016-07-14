@@ -782,15 +782,18 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 			group := []interface{}{}
 			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 				hostname = device.(map[string]interface{})["hostname"].(string)
-				if _, ok := hostnamesMap[hostname]; !ok {
-					hostnames = append(hostnames, hostname)
-					host := map[string]interface{}{
-						"name":     hostname,
-						"activate": device.(map[string]interface{})["ip_status"].(string),
-						"pop_id":   device.(map[string]interface{})["pop_id"].(string),
+				ip := device.(map[string]interface{})["ip"].(string)
+				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+					if _, ok := hostnamesMap[hostname]; !ok {
+						hostnames = append(hostnames, hostname)
+						host := map[string]interface{}{
+							"name":     hostname,
+							"activate": device.(map[string]interface{})["ip_status"].(string),
+							"pop_id":   device.(map[string]interface{})["pop_id"].(string),
+						}
+						group = append(group, host)
+						hostnamesMap[hostname] = 1
 					}
-					group = append(group, host)
-					hostnamesMap[hostname] = 1
 				}
 			}
 			groups[groupName] = group
