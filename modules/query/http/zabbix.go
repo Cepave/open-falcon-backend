@@ -190,7 +190,7 @@ func checkHostExist(params map[string]interface{}, result map[string]interface{}
  *                   func hostCreate(nodes map[string]interface{})
  */
 func setError(error string, result map[string]interface{}) {
-	log.Println("Error =", error)
+	log.Errorln("Error =", error)
 	result["error"] = append(result["error"].([]string), error)
 }
 
@@ -236,7 +236,7 @@ func bindGroup(hostId int, params map[string]interface{}, args map[string]string
 			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Println("grp_host existed =", grp_host)
+				log.Debugln("grp_host existed =", grp_host)
 			}
 		}
 	}
@@ -284,7 +284,7 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Println("grp_tpl existed =", grp_tpl)
+				log.Debugln("grp_tpl existed =", grp_tpl)
 			}
 		}
 	}
@@ -365,7 +365,7 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 				Ip:        ip,
 				Update_at: getNow(),
 			}
-			log.Println("host =", host)
+			log.Debugln("host =", host)
 
 			o := orm.NewOrm()
 			hostId, err := o.Insert(&host)
@@ -395,7 +395,7 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostCreate(nodes map[string]interface{}) {
-	log.Println("func hostCreate()")
+	log.Debugln("func hostCreate()")
 	params := nodes["params"].(map[string]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -412,7 +412,7 @@ func hostCreate(nodes map[string]interface{}) {
 			macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
 			args["macAddr"] = macAddr
 		}
-		log.Println("args =", args)
+		log.Debugln("args =", args)
 	}
 	nodes["result"] = result
 }
@@ -437,7 +437,7 @@ func unbindGroup(hostId string, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Println("mysql row affected nums =", num)
+	log.Debugln("mysql row affected nums =", num)
 }
 
 /**
@@ -462,7 +462,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
 				setError(err.Error(), result)
 			} else {
 				if num > 0 {
-					log.Println("RowsDeleted =", num)
+					log.Debugln("RowsDeleted =", num)
 					unbindGroup(hostId, result)
 					hostids = append(hostids, hostId)
 				}
@@ -541,7 +541,7 @@ func getGroups(hostId string) []interface{} {
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostGet(nodes map[string]interface{}) {
-	log.Println("func hostGet()")
+	log.Debugln("func hostGet()")
 	params := nodes["params"].(map[string]interface{})
 	items := []interface{}{}
 	errors := []string{}
@@ -572,7 +572,7 @@ func hostGet(nodes map[string]interface{}) {
 			setError(err.Error(), result)
 		} else {
 			countOfRows = int(num)
-			log.Println("countOfRows =", countOfRows)
+			log.Debugln("countOfRows =", countOfRows)
 			for _, host := range hosts {
 				item := map[string]interface{}{}
 				hostId = strconv.Itoa(host.Id)
@@ -640,7 +640,7 @@ func muteAlertsOfHost(host Host, params map[string]interface{}, result map[strin
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostUpdate(nodes map[string]interface{}) {
-	log.Println("func hostUpdate()")
+	log.Debugln("func hostUpdate()")
 	params := nodes["params"].(map[string]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -648,7 +648,7 @@ func hostUpdate(nodes map[string]interface{}) {
 	args := map[string]string{}
 	host := checkHostExist(params, result)
 	if host.Id > 0 {
-		log.Println("host existed")
+		log.Debugln("host existed")
 		valid := checkInputFormat(params, result)
 		if valid {
 			host = muteAlertsOfHost(host, params, result)
@@ -658,8 +658,8 @@ func hostUpdate(nodes map[string]interface{}) {
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Println("update hostId =", host.Id)
-				log.Println("mysql row affected nums =", num)
+				log.Debugln("update hostId =", host.Id)
+				log.Debugln("mysql row affected nums =", num)
 				hostid := strconv.Itoa(host.Id)
 				if _, ok := params["groups"]; ok {
 					unbindGroup(hostid, result)
@@ -674,7 +674,7 @@ func hostUpdate(nodes map[string]interface{}) {
 		log.Println("host not existed")
 		addHost(params, args, result)
 	}
-	log.Println("args =", args)
+	log.Debugln("args =", args)
 	nodes["result"] = result
 }
 
@@ -690,7 +690,7 @@ func hostUpdate(nodes map[string]interface{}) {
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostgroupCreate(nodes map[string]interface{}) {
-	log.Println("func hostgroupCreate()")
+	log.Debugln("func hostgroupCreate()")
 	params := nodes["params"].(map[string]interface{})
 	hostgroupName := params["name"].(string)
 	user := "zabbix"
@@ -702,7 +702,7 @@ func hostgroupCreate(nodes map[string]interface{}) {
 		Create_user: user,
 		Create_at:   now,
 	}
-	log.Println("grp =", grp)
+	log.Debugln("grp =", grp)
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -729,7 +729,7 @@ func hostgroupCreate(nodes map[string]interface{}) {
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostgroupDelete(nodes map[string]interface{}) {
-	log.Println("func hostgroupDelete()")
+	log.Debugln("func hostgroupDelete()")
 	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -740,7 +740,7 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	args = append(args, "DELETE FROM falcon_portal.grp_host WHERE grp_id=?")
 	args = append(args, "DELETE FROM falcon_portal.grp_tpl WHERE grp_id=?")
 	args = append(args, "DELETE FROM falcon_portal.plugin_dir WHERE grp_id=?")
-	log.Println("args =", args)
+	log.Debugln("args =", args)
 
 	o := orm.NewOrm()
 	groupids := []string{}
@@ -753,8 +753,8 @@ func hostgroupDelete(nodes map[string]interface{}) {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.grp WHERE id=?" {
 					groupids = append(groupids, hostgroupId.(string))
-					log.Println("delete hostgroup id =", hostgroupId)
-					log.Println("mysql row affected nums =", num)
+					log.Debugln("delete hostgroup id =", hostgroupId)
+					log.Debugln("mysql row affected nums =", num)
 				}
 			}
 		}
@@ -807,7 +807,7 @@ func getPluginDirsByGroupId(groupId int, result map[string]interface{}) []string
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostgroupGet(nodes map[string]interface{}) {
-	log.Println("func hostgroupGet()")
+	log.Debugln("func hostgroupGet()")
 	params := nodes["params"].(map[string]interface{})
 	items := []interface{}{}
 	errors := []string{}
@@ -880,7 +880,7 @@ func unbindGroupAndTemplates(groupId string, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Println("mysql row affected nums =", num)
+	log.Debugln("mysql row affected nums =", num)
 }
 
 func unbindGroupAndPlugins(groupId int, result map[string]interface{}) {
@@ -891,7 +891,7 @@ func unbindGroupAndPlugins(groupId int, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Println("unbindGroupAndPlugins row affected nums =", num)
+	log.Debugln("unbindGroupAndPlugins row affected nums =", num)
 }
 
 func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]interface{}) {
@@ -914,7 +914,7 @@ func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]int
 		} else if err != nil {
 			setError(err.Error(), result)
 		} else {
-			log.Println("plugin_dir existed =", plugin_dir)
+			log.Debugln("plugin_dir existed =", plugin_dir)
 		}
 	}
 }
@@ -931,7 +931,7 @@ func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]int
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func hostgroupUpdate(nodes map[string]interface{}) {
-	log.Println("func hostgroupUpdate()")
+	log.Debugln("func hostgroupUpdate()")
 	params := nodes["params"].(map[string]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -959,8 +959,8 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					} else if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
 						result["groupids"] = groupids
-						log.Println("update groupid =", hostgroupId)
-						log.Println("mysql row affected nums =", num)
+						log.Debugln("update groupid =", hostgroupId)
+						log.Debugln("mysql row affected nums =", num)
 					}
 				}
 			}
@@ -1015,7 +1015,7 @@ func hostgroupUpdate(nodes map[string]interface{}) {
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func templateCreate(nodes map[string]interface{}) {
-	log.Println("func templateCreate()")
+	log.Debugln("func templateCreate()")
 	params := nodes["params"].(map[string]interface{})
 	templateName := params["host"].(string)
 	user := "zabbix"
@@ -1030,7 +1030,7 @@ func templateCreate(nodes map[string]interface{}) {
 		Create_user: user,
 		Create_at:   now,
 	}
-	log.Println("tpl =", tpl)
+	log.Debugln("tpl =", tpl)
 
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -1052,7 +1052,7 @@ func templateCreate(nodes map[string]interface{}) {
 			Tpl_id:    int(id),
 			Bind_user: user,
 		}
-		log.Println("grp_tpl =", grp_tpl)
+		log.Debugln("grp_tpl =", grp_tpl)
 
 		_, err = o.Insert(&grp_tpl)
 		if err != nil {
@@ -1074,7 +1074,7 @@ func templateCreate(nodes map[string]interface{}) {
  * @called by:       func apiParser(rw http.ResponseWriter, req *http.Request)
  */
 func templateDelete(nodes map[string]interface{}) {
-	log.Println("func templateDelete()")
+	log.Debugln("func templateDelete()")
 	params := nodes["params"].([]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -1083,13 +1083,13 @@ func templateDelete(nodes map[string]interface{}) {
 	args := []interface{}{}
 	args = append(args, "DELETE FROM falcon_portal.tpl WHERE id=?")
 	args = append(args, "DELETE FROM falcon_portal.grp_tpl WHERE tpl_id=?")
-	log.Println("args =", args)
+	log.Debugln("args =", args)
 
 	templateids := []string{}
 	for _, sqlcmd := range args {
-		log.Println(sqlcmd)
+		log.Debugln(sqlcmd)
 		for _, templateId := range params {
-			log.Println("templateId =", templateId)
+			log.Debugln("templateId =", templateId)
 			res, err := o.Raw(sqlcmd.(string), templateId).Exec()
 			if err != nil {
 				setError(err.Error(), result)
@@ -1097,8 +1097,8 @@ func templateDelete(nodes map[string]interface{}) {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.tpl WHERE id=?" {
 					templateids = append(templateids, templateId.(string))
-					log.Println("delete template id =", templateId)
-					log.Println("mysql row affected nums =", num)
+					log.Debugln("delete template id =", templateId)
+					log.Debugln("mysql row affected nums =", num)
 				}
 			}
 		}
@@ -1228,7 +1228,7 @@ func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string
 			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Println("grp_tpl existed =", grp_tpl)
+				log.Debugln("grp_tpl existed =", grp_tpl)
 			}
 		}
 	}
@@ -1242,7 +1242,7 @@ func unbindTemplateAndGroups(templateId string, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Println("mysql row affected nums =", num)
+	log.Debugln("mysql row affected nums =", num)
 }
 
 /**
@@ -1269,7 +1269,7 @@ func templateUpdate(nodes map[string]interface{}) {
 		for _, group := range groups {
 			groupId := group.(map[string]interface{})["groupid"].(string)
 			groupIdInt, err := strconv.Atoi(groupId)
-			log.Println("groupIdInt =", groupIdInt)
+			log.Debugln("groupIdInt =", groupIdInt)
 			if err != nil {
 				setError(err.Error(), result)
 			}
@@ -1332,7 +1332,7 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	param := req.URL.Query()
-	log.Println("param =", param)
+	log.Debugln("param =", param)
 	arr := param["endpoint"]
 	hostname := arr[0]
 	arr = param["time"]
@@ -1341,7 +1341,7 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	arr = param["stra_id"]
 	trigger_id, err := strconv.Atoi(arr[0])
 	if err != nil {
-		log.Println(err.Error())
+		log.Errorln(err.Error())
 	}
 	arr = param["metric"]
 	metric := arr[0]
@@ -1369,32 +1369,32 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 		"fctoken":       fctoken,
 	}
 
-	log.Println("args =", args)
+	log.Debugln("args =", args)
 	bs, err := json.Marshal(args)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorln("Error =", err.Error())
 	}
 
 	url := g.Config().Api.Event
-	log.Println("url =", url)
+	log.Debugln("url =", url)
 
 	reqAlert, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(bs)))
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorln("Error =", err.Error())
 	}
 	reqAlert.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqAlert)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorln("Error =", err.Error())
 	}
 	defer resp.Body.Close()
 
-	log.Println("response Status =", resp.Status) // 200 OK   TypeOf(resp.Status): string
-	log.Println("response Headers =", resp.Header)
+	log.Debugln("response Status =", resp.Status) // 200 OK   TypeOf(resp.Status): string
+	log.Debugln("response Headers =", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Println("response Body =", string(body))
+	log.Debugln("response Body =", string(body))
 	rw.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	rw.Write(body)
 }
@@ -1460,24 +1460,24 @@ func setResponse(rw http.ResponseWriter, resp map[string]interface{}) {
  *                    in func main()
  */
 func apiParser(rw http.ResponseWriter, req *http.Request) {
-	log.Println("func apiParser(rw http.ResponseWriter, req *http.Request)")
+	log.Debugln("func apiParser(rw http.ResponseWriter, req *http.Request)")
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(req.Body)
-	log.Println(buf.Len())
+	log.Debugln(buf.Len())
 	if buf.Len() == 0 {
 		apiAlert(rw, req)
 	} else {
 		s := buf.String() // Does a complete copy of the bytes in the buffer.
-		log.Println("s =", s)
+		log.Debugln("s =", s)
 		json, err := simplejson.NewJson(buf.Bytes())
 		if err != nil {
-			log.Println(err.Error())
+			log.Errorln(err.Error())
 		}
 
 		var nodes = make(map[string]interface{})
 		nodes, _ = json.Map()
 		method := nodes["method"]
-		log.Println(method)
+		log.Debugln(method)
 
 		if method == "host.create" {
 			hostCreate(nodes)
