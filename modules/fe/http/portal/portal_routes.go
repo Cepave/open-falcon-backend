@@ -28,6 +28,7 @@ func ConfigRoutes() {
 		beego.NSRouter("/whentempletedeleted", &PortalController{}, "get:WhenTempleteDeleted;post:WhenTempleteDeleted"),
 		beego.NSRouter("/whentempleteunbind", &PortalController{}, "get:WhenTempleteUnbind;post:WhenTempleteUnbind"),
 		beego.NSRouter("/whenendpointunbind", &PortalController{}, "get:WhenEndpointUnbind;post:WhenEndpointUnbind"),
+		beego.NSRouter("/whenendpointonmaintain", &PortalController{}, "get:WhenEndpointOnMaintain;post:WhenEndpointOnMaintain"),
 	)
 	beego.AddNamespace(portal)
 	beego.AddNamespace(alarmAdjust)
