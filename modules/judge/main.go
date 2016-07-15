@@ -11,7 +11,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/judge/http"
 	"github.com/Cepave/open-falcon-backend/modules/judge/rpc"
 	"github.com/Cepave/open-falcon-backend/modules/judge/store"
-	flag "github.com/spf13/pflag"
 )
 
 func main() {
