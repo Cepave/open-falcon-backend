@@ -76,3 +76,13 @@ type EventNote struct {
 	UserId      int64     `json:"-"`
 	UserName    string    `json:"user_name" orm:"user_name"`
 }
+
+type Host struct {
+	Id            int    `json:"id" orm:"pk"`
+	HostName      string `json:"hostname" orm:"hostname"`
+	AgentVersion  string
+	PluginVersion string
+	MaintainBegin int64
+	MaintainEnd   int64
+	UpdateAt      time.Time
+}
