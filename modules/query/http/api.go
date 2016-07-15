@@ -1813,4 +1813,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/hosts/", getHostsBandwidths)
 	http.HandleFunc("/api/idcs/hosts", getIDCsHosts)
 	http.HandleFunc("/api/idcs/", getIDCsBandwidthsUpperLimit)
+	http.HandleFunc("/api/hosts", getHostsList)
 }
