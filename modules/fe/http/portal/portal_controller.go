@@ -112,6 +112,12 @@ func (this *PortalController) AddNote() {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
+	notes, err := event.GetNotes(id, 0, 0, 0, false)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	baseResp.Data["notes"] = notes
 	this.ServeApiJson(baseResp)
 	return
 }
