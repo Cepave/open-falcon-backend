@@ -79,7 +79,8 @@ type EventNote struct {
 
 type Host struct {
 	Id            int    `json:"id" orm:"pk"`
-	HostName      string `json:"hostname" orm:"hostname"`
+	Hostname      string `json:"hostname" orm:"hostname"`
+	Ip            string
 	AgentVersion  string
 	PluginVersion string
 	MaintainBegin int64
