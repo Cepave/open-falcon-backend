@@ -42,13 +42,17 @@ func (this *AgentHeartbeatRequest) String() string {
 type AgentPluginsResponse struct {
 	Plugins   []string
 	Timestamp int64
+	GitRepo   string
+	GitUpdate bool
 }
 
 func (this *AgentPluginsResponse) String() string {
 	return fmt.Sprintf(
-		"<Plugins:%v, Timestamp:%v>",
+		"<Plugins:%v, Timestamp:%v, GitRepo:%v, GitUpdate:%v>",
 		this.Plugins,
 		this.Timestamp,
+		this.GitRepo,
+		this.GitUpdate,
 	)
 }
 

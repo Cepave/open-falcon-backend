@@ -1,12 +1,15 @@
 package cron
 
 import (
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	log "github.com/Sirupsen/logrus"
-	"strings"
-	"time"
 )
 
 func SyncMinePlugins() {
@@ -59,6 +62,14 @@ func syncMinePlugins() {
 
 		pluginDirs = resp.Plugins
 		timestamp = resp.Timestamp
+		plugins.GitRepo = resp.GitRepo
+
+		if resp.GitUpdate {
+			addr := fmt.Sprintf("http://127.0.0.1%s/plugin/update", g.Config().Http.Listen)
+			log.Println("GitUpdate API address is: ", addr)
+			apiResp, _ := http.Get(addr)
+			log.Println(&apiResp)
+		}
 
 		if g.Config().Debug {
 			log.Println(&resp)
