@@ -6,6 +6,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
 	log "github.com/Sirupsen/logrus"
+	"github.com/astaxie/beego/plugins/cors"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/bitly/go-simplejson"
@@ -31,6 +32,13 @@ func configNqmRoutes() {
 	 * Registers the handler of RESTful service on beego
 	 */
 	serviceController := beego.NewControllerRegister()
+	serviceController.InsertFilter(
+		"*",
+		beego.BeforeRouter,
+		cors.Allow(&cors.Options{
+			AllowAllOrigins: true,
+		}),
+	)
 	setupUrlMappingAndHandler(serviceController)
 	// :~)
 
