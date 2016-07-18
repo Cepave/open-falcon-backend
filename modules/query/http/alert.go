@@ -384,7 +384,7 @@ func setSQLQuery(templateIDs string, req *http.Request, result map[string]interf
 		limit = query.Get("limit")
 	}
 	if templateIDs != "*" {
-		whereConditions = append(whereConditions, "template_id IN ('"+templateIDs+"')")
+		whereConditions = append(whereConditions, "template_id IN ("+templateIDs+")")
 	}
 	if len(whereConditions) > 0 {
 		conditions := strings.Join(whereConditions, " AND ")
