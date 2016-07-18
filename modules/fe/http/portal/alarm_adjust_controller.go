@@ -92,11 +92,13 @@ func (this *PortalController) WhenEndpointUnbind() {
 func (this *PortalController) WhenEndpointOnMaintain() {
 	baseResp := this.BasicRespGen()
 	hostId, _ := this.GetInt("hostId", 0)
+	maintainBegin, _ := this.GetInt64("maintainBegin", 0)
+	maintainEnd, _ := this.GetInt64("maintainEnd", 0)
 	if hostId == 0 {
 		this.ResposeError(baseResp, "hostId is missing")
 		return
 	}
-	err, resp := events.WhenEndpointOnMaintain(hostId)
+	err, resp := events.WhenEndpointOnMaintain(hostId, maintainBegin, maintainEnd)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return

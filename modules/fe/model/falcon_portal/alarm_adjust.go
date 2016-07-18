@@ -1,6 +1,7 @@
 package falconPortal
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -152,22 +153,32 @@ func WhenEndpointUnbind(hostId int, hostgroupId int) (err error, affectedRows in
 	return
 }
 
-func WhenEndpointOnMaintain(hostId int) (err error, affectedRows int) {
+func WhenEndpointOnMaintain(hostId int, maintainBegin int64, maintainEnd int64) (err error, affectedRows int) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
-	hostname := ""
+	var host Host
 	if hostId != 0 {
-		err = q.Raw("SELECT hostname FROM host WHERE id = ?", hostId).QueryRow(&hostname)
-		_, err = q.Raw("UPDATE event_cases SET status = ? WHERE endpoint = ?", modifiedStatus, hostname).Exec()
+		err = q.Raw("SELECT * FROM host WHERE id = ?", hostId).QueryRow(&host)
+		log.Debugf("host: %v", host)
+		if err != nil {
+			return
+		}
+		if maintainBegin <= time.Now().Unix() && maintainEnd >= time.Now().Unix() {
+			_, err = q.Raw("UPDATE event_cases SET status = ? WHERE endpoint = ?", modifiedStatus, host.Hostname).Exec()
+		} else {
+			err = errors.New("MaintainBegin / MaintainEnd is wrong please check it!")
+			log.Debugf("%v , %v, %v", time.Unix(maintainBegin, 10), time.Unix(maintainEnd, 10), err.Error())
+			return
+		}
 	} else {
 		return
 	}
 	affectedAlerms := []string{}
-	_, err = q.Raw("SELECT id FROM event_cases WHERE endpoint = ? ", hostname).QueryRows(&affectedAlerms)
+	_, err = q.Raw("SELECT id FROM event_cases WHERE endpoint = ? ", host.Hostname).QueryRows(&affectedAlerms)
 	if err != nil {
 		log.Debug(err.Error())
 	}
 	affectedRows = len(affectedAlerms)
-	UpdateCloseNote(affectedAlerms, fmt.Sprintf("Because of endpoint: %s is under maintenance", hostname))
+	UpdateCloseNote(affectedAlerms, fmt.Sprintf("Because of endpoint: %s is under maintenance", host.Hostname))
 	return
 }
