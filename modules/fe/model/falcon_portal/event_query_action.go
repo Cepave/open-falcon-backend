@@ -177,8 +177,9 @@ func GetNotes(eventCaseId string, limit int, startTime int64, endTime int64, fil
 	if filterIgnored {
 		whereConditions = append(whereConditions, "event_note.status != 'ignored' ")
 	}
-	if limit == 0 {
-		limit = 10
+	limitTemplete := ""
+	if limit != 0 {
+		limitTemplete = fmt.Sprintf("LIMIT %d", limit)
 	}
 	sqlTemplete := fmt.Sprintf(`SELECT event_note.id as id,
 		event_note.event_caseId as event_caseId,
