@@ -177,8 +177,9 @@ func GetNotes(eventCaseId string, limit int, startTime int64, endTime int64, fil
 	if filterIgnored {
 		whereConditions = append(whereConditions, "event_note.status != 'ignored' ")
 	}
-	if limit == 0 {
-		limit = 10
+	limitTemplete := ""
+	if limit != 0 {
+		limitTemplete = fmt.Sprintf("LIMIT %d", limit)
 	}
 	sqlTemplete := fmt.Sprintf(`SELECT event_note.id as id,
 		event_note.event_caseId as event_caseId,
@@ -189,7 +190,7 @@ func GetNotes(eventCaseId string, limit int, startTime int64, endTime int64, fil
 		event_note.timestamp as timestamp,
 		user.name as user_name
 		FROM falcon_portal.event_note as event_note LEFT JOIN uic.user as user on event_note.user_id = user.id
-		%s ORDER BY event_note.timestamp DESC limit %d`, genSqlFilterTemplete(whereConditions), limit)
+		%s ORDER BY event_note.timestamp DESC %s`, genSqlFilterTemplete(whereConditions), limitTemplete)
 	_, err = q.Raw(sqlTemplete).QueryRows(&enotes)
 	if len(enotes) == 0 {
 		enotes = []EventNote{}

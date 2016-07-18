@@ -384,7 +384,7 @@ func setSQLQuery(templateIDs string, req *http.Request, result map[string]interf
 		limit = query.Get("limit")
 	}
 	if templateIDs != "*" {
-		whereConditions = append(whereConditions, "template_id IN ('"+templateIDs+"')")
+		whereConditions = append(whereConditions, "template_id IN ("+templateIDs+")")
 	}
 	if len(whereConditions) > 0 {
 		conditions := strings.Join(whereConditions, " AND ")
@@ -550,6 +550,22 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 		hostnames = appendUniqueString(hostnames, hostname)
 	}
 	sort.Strings(hostnames)
+
+	hostsTriggeredMap := map[string]string{}
+	for _, hostname := range hostnames {
+		if _, ok := hostsMap[hostname]; ok {
+			host := hostsMap[hostname].(map[string]interface{})
+			platformName := host["platform"].(string)
+			if strings.Index(platformName, ", ") > -1 {
+				for _, name := range strings.Split(platformName, ", ") {
+					platformNames = appendUniqueString(platformNames, name)
+				}
+			} else {
+				platformNames = appendUniqueString(platformNames, platformName)
+			}
+			hostsTriggeredMap[hostname] = platformName
+		}
+	}
 	sort.Strings(platformNames)
 	getPlatformContact(strings.Join(platformNames, ","), rw, nodes)
 	platforms := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})

@@ -631,7 +631,7 @@ func muteAlertsOfHost(host Host, params map[string]interface{}, result map[strin
 	return host
 }
 
-func muteAlertsCases(hostid int) {
+func muteAlertsCases(hostid int, maintainBegin int64, maintainEnd int64) {
 	conf := g.Config()
 	apiurl := conf.Fe
 	if conf.Fe == "" {
@@ -641,7 +641,7 @@ func muteAlertsCases(hostid int) {
 		apiurl = fmt.Sprintf("http://%s", conf.Fe)
 	}
 	url := apiurl + "/api/v1/alarmadjust/whenendpointonmaintain"
-	data := fmt.Sprintf("hostId=%d", hostid)
+	data := fmt.Sprintf("hostId=%d;maintainBegin=%d;maintainEnd=%d", hostid, maintainBegin, maintainEnd)
 	resp, err := http.Post(url, "application/x-www-form-urlencoded", strings.NewReader(data))
 	if err != nil {
 		log.Error(err.Error())
@@ -687,7 +687,9 @@ func hostUpdate(nodes map[string]interface{}) {
 			} else {
 				log.Debugln("update hostId =", host.Id)
 				log.Debugln("mysql row affected nums =", num)
-				muteAlertsCases(host.Id)
+				if num != 0 && host.Maintain_begin != 0 && host.Maintain_end != 0 {
+					muteAlertsCases(host.Id, host.Maintain_begin, host.Maintain_end)
+				}
 				hostid := strconv.Itoa(host.Id)
 				if _, ok := params["groups"]; ok {
 					unbindGroup(hostid, result)

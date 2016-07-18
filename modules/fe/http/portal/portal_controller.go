@@ -99,6 +99,7 @@ func (this *PortalController) AddNote() {
 	id := this.GetString("id", "xxx")
 	status := this.GetString("status", "")
 	bossId := this.GetString("caseId", "")
+	limit, _ := this.GetInt("limit", 0)
 	switch {
 	case id == "xxx":
 		this.ResposeError(baseResp, "You dosen't pick any event id")
@@ -112,6 +113,12 @@ func (this *PortalController) AddNote() {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
+	notes, err := event.GetNotes(id, limit, 0, 0, false)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	baseResp.Data["notes"] = notes
 	this.ServeApiJson(baseResp)
 	return
 }
