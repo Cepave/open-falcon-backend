@@ -550,6 +550,22 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 		hostnames = appendUniqueString(hostnames, hostname)
 	}
 	sort.Strings(hostnames)
+
+	hostsTriggeredMap := map[string]string{}
+	for _, hostname := range hostnames {
+		if _, ok := hostsMap[hostname]; ok {
+			host := hostsMap[hostname].(map[string]interface{})
+			platformName := host["platform"].(string)
+			if strings.Index(platformName, ", ") > -1 {
+				for _, name := range strings.Split(platformName, ", ") {
+					platformNames = appendUniqueString(platformNames, name)
+				}
+			} else {
+				platformNames = appendUniqueString(platformNames, platformName)
+			}
+			hostsTriggeredMap[hostname] = platformName
+		}
+	}
 	sort.Strings(platformNames)
 	getPlatformContact(strings.Join(platformNames, ","), rw, nodes)
 	platforms := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})
