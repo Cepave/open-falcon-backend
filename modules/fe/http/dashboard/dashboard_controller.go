@@ -1,10 +1,14 @@
 package dashboard
 
 import (
+	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
 	"regexp"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
@@ -192,6 +196,46 @@ func (this *DashBoardController) CountNumOfHostGroup() {
 	return
 }
 
+func (this *DashBoardController) EndpRunningPlugin() {
+	baseResp := this.BasicRespGen()
+	session, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	var username *uic.User
+	if session.Uid <= 0 {
+		baseResp.Data["SessionFlag"] = true
+		baseResp.Data["ErrorMsg"] = "Session is not vaild"
+	} else {
+		baseResp.Data["SessionFlag"] = false
+		username = uic.SelectUserById(session.Uid)
+		if username.Name != "root" {
+			baseResp.Data["SessionFlag"] = true
+			baseResp.Data["ErrorMsg"] = "You don't have permission to access this page"
+		}
+	}
+	addr := this.GetString("addr", "")
+	if baseResp.Data["SessionFlag"] == false {
+		resp, AgentErr := http.Get(addr)
+		baseResp.Data["requestAddr"] = addr
+		log.Debugln("response from Agent: ", resp)
+		log.Debugln("error message from Agent: ", AgentErr)
+		if resp != nil {
+			defer resp.Body.Close()
+			htmlData, _ := ioutil.ReadAll(resp.Body)
+			mapStrObj := map[string]interface{}{}
+			json.Unmarshal(htmlData, &mapStrObj)
+			baseResp.Data["msgFromAgent"] = mapStrObj["msg"]
+			baseResp.Data["dataFromAgent"] = mapStrObj["data"]
+		} else {
+			baseResp.Data["errorFromAgent"] = AgentErr.Error()
+		}
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
 func (this *DashBoardController) EndpRegxquryForPlugin() {
 	baseResp := this.BasicRespGen()
 	session, err := this.SessionCheck()
@@ -277,10 +321,9 @@ func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
 	}
 
 	commitsInfo = append(commitsInfo, feed.Items...)
-	log.Println("commit atom feed is:", feed.Items)
-	log.Println("commitsInfo is:", commitsInfo)
+	log.Debugln("commit atom feed is:", feed.Items)
+	log.Debugln("commitsInfo is:", commitsInfo)
 	for _, host := range enpRow {
-		//log.Println("host data is:", host)
 		gitInfo := dashboard.GitInfo{Hostname: host.Hostname,
 			Ip:            host.Ip,
 			AgentVersion:  host.AgentVersion,
@@ -297,7 +340,6 @@ func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
 				break
 			}
 		}
-		//log.Println("gitInfo is: ", gitInfo)
 		enp = append(enp, gitInfo)
 	}
 
