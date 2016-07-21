@@ -3,7 +3,6 @@ package dashboard
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
@@ -198,39 +197,25 @@ func (this *DashBoardController) CountNumOfHostGroup() {
 
 func (this *DashBoardController) EndpRunningPlugin() {
 	baseResp := this.BasicRespGen()
-	session, err := this.SessionCheck()
+	_, err := this.SessionCheck()
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
-	var username *uic.User
-	if session.Uid <= 0 {
-		baseResp.Data["SessionFlag"] = true
-		baseResp.Data["ErrorMsg"] = "Session is not vaild"
-	} else {
-		baseResp.Data["SessionFlag"] = false
-		username = uic.SelectUserById(session.Uid)
-		if username.Name != "root" {
-			baseResp.Data["SessionFlag"] = true
-			baseResp.Data["ErrorMsg"] = "You don't have permission to access this page"
-		}
-	}
+
 	addr := this.GetString("addr", "")
-	if baseResp.Data["SessionFlag"] == false {
-		resp, AgentErr := http.Get(addr)
-		baseResp.Data["requestAddr"] = addr
-		log.Debugln("response from Agent: ", resp)
-		log.Debugln("error message from Agent: ", AgentErr)
-		if resp != nil {
-			defer resp.Body.Close()
-			htmlData, _ := ioutil.ReadAll(resp.Body)
-			mapStrObj := map[string]interface{}{}
-			json.Unmarshal(htmlData, &mapStrObj)
-			baseResp.Data["msgFromAgent"] = mapStrObj["msg"]
-			baseResp.Data["dataFromAgent"] = mapStrObj["data"]
-		} else {
-			baseResp.Data["errorFromAgent"] = AgentErr.Error()
-		}
+	resp, AgentErr := http.Get(addr)
+	baseResp.Data["requestAddr"] = addr
+	log.Debugln("response from Agent: ", resp)
+	log.Debugln("error message from Agent: ", AgentErr)
+	if AgentErr != nil {
+		baseResp.Data["errorFromAgent"] = AgentErr.Error()
+	} else {
+		defer resp.Body.Close()
+		data := map[string]interface{}{}
+		json.NewDecoder(resp.Body).Decode(&data)
+		baseResp.Data["msgFromAgent"] = data["msg"]
+		baseResp.Data["dataFromAgent"] = data["data"]
 	}
 	this.ServeApiJson(baseResp)
 	return
