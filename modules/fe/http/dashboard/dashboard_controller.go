@@ -1,10 +1,13 @@
 package dashboard
 
 import (
+	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	"net/http"
 	"regexp"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
@@ -71,6 +74,36 @@ func (this *DashBoardController) CounterQuery() {
 		baseResp.Data["counters"] = []string{}
 	default:
 		baseResp.Data["counters"] = counters
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+//endpoints query by counter
+func (this *DashBoardController) EndpointQuery() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	counter := this.GetString("counter", "")
+	limitNum, _ := this.GetInt("limit", 0)
+	metricQuery := this.GetString("metricQuery", "")
+	negateMatch, _ := this.GetBool("negateMatch", false)
+	if metricQuery == "" && counter == "" {
+		this.ResposeError(baseResp, "query string && query pattern are both empty, please check it")
+		return
+	}
+	endpoints, err := dashboard.QueryEndpointsByCounter(counter, limitNum, metricQuery, negateMatch)
+	switch {
+	case err != nil:
+		this.ResposeError(baseResp, err.Error())
+		return
+	case len(endpoints) == 0:
+		baseResp.Data["endpoints"] = []string{}
+	default:
+		baseResp.Data["endpoints"] = endpoints
 	}
 	this.ServeApiJson(baseResp)
 	return
@@ -192,6 +225,32 @@ func (this *DashBoardController) CountNumOfHostGroup() {
 	return
 }
 
+func (this *DashBoardController) EndpRunningPlugin() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+
+	addr := this.GetString("addr", "")
+	resp, AgentErr := http.Get(addr)
+	baseResp.Data["requestAddr"] = addr
+	log.Debugln("response from Agent: ", resp)
+	log.Debugln("error message from Agent: ", AgentErr)
+	if AgentErr != nil {
+		baseResp.Data["errorFromAgent"] = AgentErr.Error()
+	} else {
+		defer resp.Body.Close()
+		data := map[string]interface{}{}
+		json.NewDecoder(resp.Body).Decode(&data)
+		baseResp.Data["msgFromAgent"] = data["msg"]
+		baseResp.Data["dataFromAgent"] = data["data"]
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
 func (this *DashBoardController) EndpRegxquryForPlugin() {
 	baseResp := this.BasicRespGen()
 	session, err := this.SessionCheck()
@@ -277,10 +336,9 @@ func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
 	}
 
 	commitsInfo = append(commitsInfo, feed.Items...)
-	log.Println("commit atom feed is:", feed.Items)
-	log.Println("commitsInfo is:", commitsInfo)
+	log.Debugln("commit atom feed is:", feed.Items)
+	log.Debugln("commitsInfo is:", commitsInfo)
 	for _, host := range enpRow {
-		//log.Println("host data is:", host)
 		gitInfo := dashboard.GitInfo{Hostname: host.Hostname,
 			Ip:            host.Ip,
 			AgentVersion:  host.AgentVersion,
@@ -297,7 +355,6 @@ func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
 				break
 			}
 		}
-		//log.Println("gitInfo is: ", gitInfo)
 		enp = append(enp, gitInfo)
 	}
 
