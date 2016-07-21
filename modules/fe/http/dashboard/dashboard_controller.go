@@ -79,6 +79,36 @@ func (this *DashBoardController) CounterQuery() {
 	return
 }
 
+//endpoints query by counter
+func (this *DashBoardController) EndpointQuery() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	counter := this.GetString("counter", "")
+	limitNum, _ := this.GetInt("limit", 0)
+	metricQuery := this.GetString("metricQuery", "")
+	negateMatch, _ := this.GetBool("negateMatch", false)
+	if metricQuery == "" && counter == "" {
+		this.ResposeError(baseResp, "query string && query pattern are both empty, please check it")
+		return
+	}
+	endpoints, err := dashboard.QueryEndpointsByCounter(counter, limitNum, metricQuery, negateMatch)
+	switch {
+	case err != nil:
+		this.ResposeError(baseResp, err.Error())
+		return
+	case len(endpoints) == 0:
+		baseResp.Data["endpoints"] = []string{}
+	default:
+		baseResp.Data["endpoints"] = endpoints
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
 func (this *DashBoardController) HostGroupQuery() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
