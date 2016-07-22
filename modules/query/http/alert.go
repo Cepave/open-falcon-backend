@@ -312,7 +312,7 @@ func getNote(hash string, timestamp string) []map[string]string {
 	num, err := o.Raw(queryStr).Values(&rows)
 	notes := []map[string]string{}
 	if err != nil {
-		log.Debug(err.Error)
+		log.Error(err.Error())
 	} else if num == 0 {
 		return notes
 	} else {
@@ -526,7 +526,7 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 				}
 				item.(map[string]interface{})["contact"] = contacts
 				items = append(items, item)
-				log.Println("host deactivated:", hostname)
+				log.Debugf("host deactivated: %v", hostname)
 			}
 		} else {
 			item.(map[string]interface{})["ip"] = "not found"
@@ -542,7 +542,7 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 			}
 			item.(map[string]interface{})["contact"] = contacts
 			items = append(items, item)
-			log.Println("hostname not found:", hostname)
+			log.Debugf("hostname not found: %v", hostname)
 		}
 	}
 	for _, item := range items {

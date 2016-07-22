@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
@@ -48,14 +49,14 @@ func postByJSON(rw http.ResponseWriter, req *http.Request, url string) {
 	s := buf.String()
 	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	reqPost.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqPost)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -116,13 +117,13 @@ func queryHistory(rw http.ResponseWriter, req *http.Request) {
 func getRequest(rw http.ResponseWriter, url string) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -167,7 +168,7 @@ func postByForm(rw http.ResponseWriter, req *http.Request, url string) {
 	client := &http.Client{}
 	resp, err := client.PostForm(url, req.PostForm)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -376,7 +377,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
-					log.Println("mysql row affected nums =", num)
+					log.Debugf("mysql row affected nums = %v", num)
 					result["strategyID"] = strategyID
 					result["action"] = "create"
 				}
@@ -389,7 +390,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
-					log.Println("mysql row affected nums =", num)
+					log.Debugf("mysql row affected nums = %v", num)
 					result["strategyID"] = strategyID
 					result["action"] = "update"
 				}
@@ -523,7 +524,7 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 				}
 				last, err := graph.Last(*param)
 				if err != nil {
-					log.Printf("graph.last fail, resp: %v, err: %v", last, err)
+					log.Errorf("graph.last fail, resp: %v, err: %v", last, err)
 				}
 				if last == nil {
 					continue
