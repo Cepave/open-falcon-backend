@@ -1705,6 +1705,97 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getHostsList(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	getPlatformJSON(nodes, result)
+	hosts := map[string]interface{}{}
+	hostnames := []string{}
+	hostnamesMap := map[string]int{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			platformName := platform.(map[string]interface{})["platform"].(string)
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+				hostname = device.(map[string]interface{})["hostname"].(string)
+				ip := device.(map[string]interface{})["ip"].(string)
+				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+					if _, ok := hostnamesMap[hostname]; !ok {
+						ip := device.(map[string]interface{})["ip"].(string)
+						if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+							hostnames = append(hostnames, hostname)
+							idcID := device.(map[string]interface{})["pop_id"].(string)
+							host := map[string]interface{}{
+								"activate":     device.(map[string]interface{})["ip_status"].(string),
+								"hostname":     hostname,
+								"idcID":        idcID,
+								"ip":           ip,
+								"platform":     platformName,
+								"isp":          strings.Split(hostname, "-")[0],
+								"provinceCode": strings.Split(hostname, "-")[1],
+							}
+							hostnamesMap[hostname] = 1
+							hosts[hostname] = host
+						}
+					} else {
+						host := hosts[hostname].(map[string]interface{})
+						platforms := strings.Split(host["platform"].(string), ", ")
+						platforms = appendUniqueString(platforms, platformName)
+						host["platform"] = strings.Join(platforms, ", ")
+						hosts[hostname] = host
+					}
+				}
+			}
+		}
+		sort.Strings(hostnames)
+		idcIDsMap := map[string]interface{}{}
+		idcNames := []string{}
+		o := orm.NewOrm()
+		var idcs []*Idc
+		sqlcommand := "SELECT pop_id, province, city, name FROM grafana.idc ORDER BY pop_id ASC"
+		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			for _, idc := range idcs {
+				item := map[string]string{
+					"name":     idc.Name,
+					"province": idc.Province,
+					"city":     idc.City,
+				}
+				idcIDsMap[strconv.Itoa(idc.Pop_id)] = item
+				idcNames = appendUniqueString(idcNames, idc.Name)
+			}
+		}
+		sort.Strings(idcNames)
+		for _, hostname := range hostnames {
+			host := hosts[hostname].(map[string]interface{})
+			idcID := host["idcID"].(string)
+			if _, ok := idcIDsMap[idcID]; ok {
+				item := idcIDsMap[idcID]
+				host["idc"] = item.(map[string]string)["name"]
+				host["province"] = item.(map[string]string)["province"]
+				host["city"] = item.(map[string]string)["city"]
+				delete(host, "idcID")
+				items = append(items, host)
+			}
+		}
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = items
+	nodes["count"] = len(items)
+	nodes["result"] = result
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
@@ -1722,4 +1813,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/hosts/", getHostsBandwidths)
 	http.HandleFunc("/api/idcs/hosts", getIDCsHosts)
 	http.HandleFunc("/api/idcs/", getIDCsBandwidthsUpperLimit)
+	http.HandleFunc("/api/hosts", getHostsList)
 }
