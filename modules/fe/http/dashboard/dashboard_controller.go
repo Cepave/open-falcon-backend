@@ -2,6 +2,7 @@ package dashboard
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -43,6 +44,37 @@ func (this *DashBoardController) EndpRegxqury() {
 	} else {
 		baseResp.Data["endpoints"] = []string{}
 	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
+type xmlEntry struct {
+	ID      string `xml:"id"`
+	Updated string `xml:"updated"`
+}
+
+type xmlData struct {
+	EntryList []xmlEntry `xml:"entry"`
+}
+
+func (this *DashBoardController) LatestPlugin() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+
+	v := xmlData{}
+	if resp, err := http.Get("https://gitlab.com/Cepave/OwlPlugin/commits/master.atom"); err != nil {
+		// handle error.
+		log.Println("Error retrieving resource:", err)
+	} else {
+		defer resp.Body.Close()
+		xml.NewDecoder(resp.Body).Decode(&v)
+	}
+
+	baseResp.Data["EntryList"] = v.EntryList
 	this.ServeApiJson(baseResp)
 	return
 }
@@ -242,8 +274,7 @@ func (this *DashBoardController) EndpRegxquryForPlugin() {
 	}
 	queryStr := ".+"
 	if baseResp.Data["SessionFlag"] == false {
-		enpRow, _ := dashboard.QueryEndpintByNameRegxForOps(queryStr)
-		enp := gitInfoAdapter(enpRow)
+		enp, _ := dashboard.QueryEndpintByNameRegxForOps(queryStr)
 		if len(enp) > 0 {
 			baseResp.Data["Endpoints"] = enp
 		} else {
