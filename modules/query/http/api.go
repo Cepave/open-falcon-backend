@@ -472,12 +472,14 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		setError(err.Error(), result)
+		return
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		setError(err.Error(), result)
+		return
 	}
 	defer resp.Body.Close()
 
