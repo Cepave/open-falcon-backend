@@ -16,7 +16,7 @@ import (
 func getFakeData() (t []*model.Result) {
 	fakedataf, err := ioutil.ReadFile("./test/realdata")
 	if err != nil {
-		log.Println(err.Error())
+		log.Error(err.Error())
 	}
 	var jdata string = string(fakedataf)
 	json.Unmarshal([]byte(jdata), &t)
@@ -39,7 +39,7 @@ func SetOttoVM(vm *otto.Otto, pmap map[string]string, key string, ptype string) 
 		case "int":
 			intval, err := strconv.Atoi(value)
 			if err != nil {
-				log.Println(err.Error())
+				log.Error(err.Error())
 			} else {
 				vm.Set(key, intval)
 			}
