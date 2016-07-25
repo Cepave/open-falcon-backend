@@ -32,7 +32,7 @@ var (
 func Start() {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("grpc got painc")
+			log.Error("graph got painc")
 			log.Error(fmt.Sprintf("%s", r))
 			Start()
 		}
