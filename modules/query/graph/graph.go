@@ -3,9 +3,10 @@ package graph
 import (
 	"errors"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"math"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	cutils "github.com/Cepave/open-falcon-backend/common/utils"
@@ -29,6 +30,13 @@ var (
 )
 
 func Start() {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error("grpc got painc")
+			log.Error(fmt.Sprintf("%s", r))
+			Start()
+		}
+	}()
 	initNodeRings()
 	initConnPools()
 	log.Println("graph.Start ok")
