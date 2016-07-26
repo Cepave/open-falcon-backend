@@ -19,6 +19,12 @@ func ConfigRoutes() {
 		beego.NSRouter("/eventcases/note", &PortalController{}, "get:GetNote;post:GetNote;put:GetNote"),
 		beego.NSRouter("/tpl/count", &PortalController{}, "get:CountNumOfTlp;post:CountNumOfTlp"),
 	)
+	portalv2 := beego.NewNamespace("/api/v2/portal",
+		beego.NSGet("/notallowed", func(ctx *context.Context) {
+			ctx.Output.Body([]byte("notAllowed"))
+		}),
+		beego.NSRouter("/eventcases/get", &PortalController{}, "get:GetEventCasesV2;post:GetEventCasesV2"),
+	)
 	alarmAdjust := beego.NewNamespace("/api/v1/alarmadjust",
 		beego.NSGet("/notallowed", func(ctx *context.Context) {
 			ctx.Output.Body([]byte("notAllowed"))
@@ -31,5 +37,6 @@ func ConfigRoutes() {
 		beego.NSRouter("/whenendpointonmaintain", &PortalController{}, "get:WhenEndpointOnMaintain;post:WhenEndpointOnMaintain"),
 	)
 	beego.AddNamespace(portal)
+	beego.AddNamespace(portalv2)
 	beego.AddNamespace(alarmAdjust)
 }
