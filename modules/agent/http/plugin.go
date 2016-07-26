@@ -2,11 +2,12 @@ package http
 
 import (
 	"fmt"
+	"net/http"
+	"os/exec"
+
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	"github.com/toolkits/file"
-	"net/http"
-	"os/exec"
 )
 
 func configPluginRoutes() {
@@ -40,6 +41,23 @@ func configPluginRoutes() {
 			}
 		}
 
+		w.Write([]byte("success"))
+	})
+
+	http.HandleFunc("/plugin/remove", func(w http.ResponseWriter, r *http.Request) {
+		dir := g.Config().Plugin.Dir
+		parentDir := file.Dir(dir)
+		file.InsureDir(parentDir)
+
+		if file.IsExist(dir) {
+			cmd := exec.Command("rm", "-rf", file.Basename(dir))
+			cmd.Dir = parentDir
+			err := cmd.Run()
+			if err != nil {
+				w.Write([]byte(fmt.Sprintf("rm -rf %s in dir:%s fail. error: %s", file.Basename(dir), parentDir, err)))
+				return
+			}
+		}
 		w.Write([]byte("success"))
 	})
 
