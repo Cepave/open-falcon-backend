@@ -2,10 +2,11 @@ package http
 
 import (
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/astaxie/beego/orm"
@@ -40,7 +41,7 @@ func InitDatabase() {
 
 func Start() {
 	if !g.Config().Http.Enabled {
-		log.Println("http.Start warning, not enable")
+		log.Error("http.Start warning, not enable")
 		return
 	}
 

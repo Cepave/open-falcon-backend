@@ -3,15 +3,16 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	log "github.com/Sirupsen/logrus"
-	"github.com/astaxie/beego/orm"
 	"io/ioutil"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	log "github.com/Sirupsen/logrus"
+	"github.com/astaxie/beego/orm"
 )
 
 type Idc struct {
@@ -57,19 +58,19 @@ func getLocation(pop_id int) map[string]string {
 	}
 	bs, err := json.Marshal(args)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 
 	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(bs)))
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	reqPost.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqPost)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -77,7 +78,7 @@ func getLocation(pop_id int) map[string]string {
 		body, _ := ioutil.ReadAll(resp.Body)
 		nodes := map[string]interface{}{}
 		if err := json.Unmarshal(body, &nodes); err != nil {
-			log.Println(err.Error())
+			log.Errorf("Response data parsing error: %v", err.Error())
 		}
 		status := int(nodes["status"].(float64))
 		if status == 1 {
@@ -97,7 +98,7 @@ func updateCities() {
 	sqlcmd := "SELECT area, province, city, count FROM grafana.idc WHERE 1"
 	_, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	} else {
 		keys := map[string]int{}
 		for _, row := range rows {
@@ -106,7 +107,7 @@ func updateCities() {
 			city := row["city"].(string)
 			count, err := strconv.Atoi(row["count"].(string))
 			if err != nil {
-				log.Println("Error =", err.Error())
+				log.Errorf("Error = %v", err.Error())
 			}
 			key := province + "_" + city
 			if province == city {
@@ -168,10 +169,10 @@ func updateCities() {
 			provinceName := strings.Split(provinceIndex, "_")[1]
 
 			var rows []orm.Params
-			sqlcmd := "SELECT id, province FROM grafana.province WHERE province=?"
+			sqlcmd := "SELECT id, province FROM grafana.province WHERE province = ?"
 			num, err := o.Raw(sqlcmd, provinceName).Values(&rows)
 			if err != nil {
-				log.Println("Error =", err.Error())
+				log.Errorf("Error = %v", err.Error())
 			} else {
 				province := Province{
 					Province:   provinceName,
@@ -181,24 +182,24 @@ func updateCities() {
 				if num > 0 { // existed. update data.
 					id, err := strconv.Atoi(rows[0]["id"].(string))
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					}
 					province.Id = id
 					num, err := o.Update(&province)
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					} else {
 						if num > 0 {
-							log.Println("update provinceId:", id)
-							log.Println("mysql row affected nums:", num)
+							log.Debugf("update provinceId: %v", id)
+							log.Debugf("mysql row affected nums: %v", num)
 						}
 					}
 				} else { // not existed. insert data.
 					provinceId, err := o.Insert(&province)
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					} else {
-						log.Println("Insert provinceId =", provinceId)
+						log.Debugf("Insert provinceId = %v", provinceId)
 					}
 				}
 			}
@@ -212,7 +213,7 @@ func updateCities() {
 			sqlcmd := "SELECT id, city FROM grafana.city WHERE city=?"
 			num, err := o.Raw(sqlcmd, cityName).Values(&rows)
 			if err != nil {
-				log.Println("Error =", err.Error())
+				log.Errorf("Error = %v", err.Error())
 			} else {
 				city := City{
 					Province:   provinceName,
@@ -223,24 +224,24 @@ func updateCities() {
 				if num > 0 { // existed. update data.
 					id, err := strconv.Atoi(rows[0]["id"].(string))
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					}
 					city.Id = id
 					num, err := o.Update(&city)
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					} else {
 						if num > 0 {
-							log.Println("update cityId:", id)
-							log.Println("mysql row affected nums:", num)
+							log.Debugf("update cityId: %v", id)
+							log.Debugf("mysql row affected nums: %v", num)
 						}
 					}
 				} else { // not existed. insert data.
 					cityId, err := o.Insert(&city)
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					} else {
-						log.Println("Insert cityId =", cityId)
+						log.Debugf("Insert cityId = %v", cityId)
 					}
 				}
 			}
@@ -256,7 +257,7 @@ func getMapValues(chartType string) map[string]interface{} {
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	} else if num > 0 {
 		for _, row := range rows {
 			name := row["province"]
@@ -273,7 +274,7 @@ func getMapValues(chartType string) map[string]interface{} {
 	sqlcmd = "SELECT city, count FROM grafana.city WHERE 1"
 	num, err = o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	} else if num > 0 {
 		for _, row := range rows {
 			name := row["city"]
@@ -296,24 +297,24 @@ func updateMapData() {
 	fctoken := getFctoken()
 	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
 	url += "/eqt/yes/hostname/yes/pop/yes/pop_id/yes/show_active/yes/show_isp/yes.json"
-	log.Println("url =", url)
+	log.Debugf("url = %v", url)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	var nodes = make(map[string]interface{})
 	if err := json.Unmarshal(body, &nodes); err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	result := map[string]int{}
 	items := map[string]interface{}{}
@@ -326,7 +327,7 @@ func updateMapData() {
 				countOfDevice++
 				id, err := strconv.Atoi(device.(map[string]interface{})["pop_id"].(string))
 				if err != nil {
-					log.Println("Error =", err.Error())
+					log.Errorf("Error = %v", err.Error())
 				}
 				name := device.(map[string]interface{})["pop"].(string)
 				if _, ok := result[name]; ok {
@@ -349,14 +350,14 @@ func updateMapData() {
 			}
 			countOfPlatform++
 		}
-		log.Println("countOfPlatform =", countOfPlatform)
-		log.Println("countOfDevice =", countOfDevice)
+		log.Debugf("countOfPlatform = %v", countOfPlatform)
+		log.Debugf("countOfDevice = %v", countOfDevice)
 		sort.Strings(names)
 
 		o := orm.NewOrm()
 		o.Using("grafana")
 		for _, name := range names {
-			log.Println("item =", items[name])
+			log.Debugf("item = %v", items[name])
 			item := items[name]
 			pop_id := item.(map[string]interface{})["id"].(int)
 			name := item.(map[string]interface{})["name"].(string)
@@ -366,7 +367,7 @@ func updateMapData() {
 				Pop_id: pop_id,
 			}
 			location := getLocation(pop_id)
-			log.Println("location =", location)
+			log.Debugf("location = %v", location)
 			area := location["area"]
 			province := location["province"]
 			city := location["city"]
@@ -375,7 +376,7 @@ func updateMapData() {
 			sqlcmd := "SELECT id, pop_id FROM grafana.idc WHERE pop_id=?"
 			num, err := o.Raw(sqlcmd, pop_id).Values(&rows)
 			if err != nil {
-				log.Println("Error =", err.Error())
+				log.Errorf("Error = %v", err.Error())
 			} else {
 				idc.Name = name
 				idc.Count = count
@@ -386,24 +387,24 @@ func updateMapData() {
 				if num > 0 { // existed. update data.
 					id, err := strconv.Atoi(rows[0]["id"].(string))
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					}
 					idc.Id = id
 					num, err := o.Update(&idc)
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					} else {
 						if num > 0 {
-							log.Println("update idcId:", id)
-							log.Println("mysql row affected nums:", num)
+							log.Debugf("update idcId: %v", id)
+							log.Debugf("mysql row affected nums: %v", num)
 						}
 					}
 				} else { // not existed. insert data.
 					idcId, err := o.Insert(&idc)
 					if err != nil {
-						log.Println("Error =", err.Error())
+						log.Errorf("Error = %v", err.Error())
 					} else {
-						log.Println("Insert idcId =", idcId)
+						log.Debugf("Insert idcId = %v", idcId)
 					}
 				}
 			}
@@ -541,14 +542,14 @@ func getChartOptions(chartType string) map[string]interface{} {
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	if num > 0 {
 		for _, row := range rows {
 			name := row["province"]
 			count, err := strconv.Atoi(row["count"].(string))
 			if err != nil {
-				log.Println("Error =", err.Error())
+				log.Errorf("Error = %v", err.Error())
 			} else if max < count {
 				max = count
 			}
@@ -561,10 +562,10 @@ func getChartOptions(chartType string) map[string]interface{} {
 		updatedAt := rows[0]["updated_at"]
 		date, err := time.Parse("2006-01-02 15:04:05", updatedAt.(string))
 		if err != nil {
-			log.Println("Error =", err.Error())
+			log.Errorf("Error = %v", err.Error())
 		}
 		hours := time.Since(date).Hours() + 8
-		log.Println("hours =", hours)
+		log.Debugf("hours = %v", hours)
 		if hours > 24 {
 			updateMapData()
 		}
@@ -582,7 +583,7 @@ func getChartOptions(chartType string) map[string]interface{} {
 	sqlcmd = "SELECT city, count FROM grafana.city WHERE 1"
 	num, err = o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	} else if num > 0 {
 		for _, row := range rows {
 			name := row["city"].(string)

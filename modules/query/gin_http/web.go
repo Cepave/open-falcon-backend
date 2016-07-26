@@ -61,6 +61,6 @@ func StartWeb() {
 	openfalcon := handler.Group("/owl")
 	openfalcon.GET("/endpoints", openFalcon.GetEndpoints)
 	openfalcon.GET("/queryrrd", openFalcon.QueryData)
-	log.Println("open gin port on:", conf.GinHttp.Listen)
+	log.Infof("open gin port on: %v", conf.GinHttp.Listen)
 	handler.Run(conf.GinHttp.Listen)
 }

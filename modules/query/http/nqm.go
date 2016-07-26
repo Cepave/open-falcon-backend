@@ -2,19 +2,20 @@ package http
 
 import (
 	"fmt"
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
-	log "github.com/Sirupsen/logrus"
-	"github.com/astaxie/beego/plugins/cors"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
-	"github.com/bitly/go-simplejson"
 	"net/http"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
+
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
+	log "github.com/Sirupsen/logrus"
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/plugins/cors"
+	"github.com/bitly/go-simplejson"
 )
 
 const (
@@ -145,7 +146,7 @@ func outputJsonForPanic(ctx *context.Context) {
 		debug.PrintStack()
 	}
 
-	log.Printf("Error on HTTP Request[%v/%v]. Error: %v", ctx.Input.Method(), ctx.Input.URI(), r)
+	log.Errorf("Error on HTTP Request[%v/%v]. Error: %v", ctx.Input.Method(), ctx.Input.URI(), r)
 
 	ctx.Output.SetStatus(http.StatusBadRequest)
 	ctx.Output.JSON(&jsonDslError{
