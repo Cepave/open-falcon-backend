@@ -16,6 +16,7 @@ func ConfigRoutes() {
 		beego.NSRouter("/endpointplugins", &DashBoardController{}, "get:EndpRegxquryForPlugin;post:EndpRegxquryForPlugin"),
 		beego.NSRouter("/endpointrunningplugins", &DashBoardController{}, "get:EndpRunningPlugin;post:EndpRunningPlugin"),
 		beego.NSRouter("/latestplugin", &DashBoardController{}, "get:LatestPlugin;post:LatestPlugin"),
+		beego.NSRouter("/counterendpoints", &DashBoardController{}, "get:EndpointQuery;post:EndpointQuery"),
 	)
 	hostgroup := beego.NewNamespace("/api/v1/hostgroup",
 		beego.NSGet("/notallowed", func(ctx *context.Context) {
