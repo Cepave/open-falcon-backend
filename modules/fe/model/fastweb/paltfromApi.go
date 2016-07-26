@@ -1,0 +1,108 @@
+package fastweb
+
+import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
+	log "github.com/Sirupsen/logrus"
+	"github.com/astaxie/beego/orm"
+	"github.com/emirpasic/gods/maps/hashmap"
+	"github.com/emirpasic/gods/sets/hashset"
+)
+
+func getFctoken() string {
+	hasher := md5.New()
+	io.WriteString(hasher, g.Config().Api.Token)
+	s := hex.EncodeToString(hasher.Sum(nil))
+
+	t := time.Now()
+	now := t.Format("20060102")
+	s = now + s
+
+	hasher = md5.New()
+	io.WriteString(hasher, s)
+	fctoken := hex.EncodeToString(hasher.Sum(nil))
+	return fctoken
+}
+
+//"https://cdnboss-api.fastweb.com.cn/Base/platform/get_ip"
+//"api_owl"
+//1e70fff31c5d88d1ce6942df4697f961
+func GetPlatformASJSON() (repons PlatformList, err error) {
+	config := g.Config()
+	fctoken := getFctoken()
+	url := config.Api.Map + "/fcname/" + config.Api.Name + "/fctoken/" + fctoken
+	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes.json"
+	log.Debugf("platfrom get url: %s", url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	err = json.Unmarshal(body, &repons)
+	if repons.Status != 1 {
+		err = errors.New("Platform list quer failed")
+	}
+	return
+}
+
+//generate platform mapping of triggered alarm cases
+func GenPlatMap(repons PlatformList, filterList *hashset.Set) (ipMapper *hashmap.Map, platList *hashset.Set, popIds []int) {
+	log.Debugf("filterLIST: %v", filterList.Values())
+	res := repons.Result
+	ipMapper = hashmap.New()
+	platList = hashset.New()
+	popIDSet := hashset.New()
+	for _, platform := range res {
+		for _, ipInfo := range platform.IPList {
+			//only get platform info that matched triggered alarm case
+			if filterList.Contains(ipInfo.HostName) {
+				platList.Add(platform.Platform)
+				ipInfo.Platform = platform.Platform
+				ipMapper.Put(ipInfo.HostName, ipInfo)
+				popID, _ := strconv.Atoi(ipInfo.POPID)
+				popIDSet.Add(popID)
+			}
+		}
+	}
+	log.Debugf("popID set: %v", popIDSet.Values())
+	popIds = []int{}
+	for _, popID := range popIDSet.Values() {
+		popIds = append(popIds, popID.(int))
+	}
+	return
+}
+
+func IdcMapping(popIDs []int) (idcmapping map[int]string, err error) {
+	q := orm.NewOrm()
+	q.Using("grafana")
+	popFilter := ""
+	for idx, pop := range popIDs {
+		if idx == 0 {
+			popFilter = fmt.Sprintf("%d", pop)
+		}
+		popFilter = fmt.Sprintf("%s, %d", popFilter, pop)
+	}
+	sqlcommd := fmt.Sprintf("select name,pop_id from grafana.idc where pop_id IN (%s)", popFilter)
+	idcs := []IDC{}
+	_, err = q.Raw(sqlcommd).QueryRows(&idcs)
+	idcmapping = map[int]string{}
+	for _, idc := range idcs {
+		idcmapping[idc.PopId] = idc.Name
+	}
+	return
+}
