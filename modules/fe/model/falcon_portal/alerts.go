@@ -91,7 +91,7 @@ func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set) (respComplete []
 	for _, item := range resp {
 		ipInfotmp, ok := ipMapping.Get(item.HostName)
 		if !ok {
-			log.Warnf("item.HostName: is missing", item.HostName)
+			log.Debugf("item.HostName: is missing", item.HostName)
 			respCompleteTmp = append(respCompleteTmp, item)
 			continue
 		}
