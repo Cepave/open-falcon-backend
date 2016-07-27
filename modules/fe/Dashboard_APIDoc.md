@@ -92,6 +92,208 @@
       }
       ```
 
+* `GET` `POST` /api/v1/dashboard/endpointplugins
+  * `required login session`
+  * `required root login`
+  * params:
+  * response:
+    * ok
+
+      ```
+      {
+        "version": "v1",
+        "method": "GET",
+        "status": "success",
+        "data": {
+          "Endpoints": [
+            {
+              "id": 1433110,
+              "hostname": "docker",
+              "ip": "10.0.0.167",
+              "agent_version": "5.1.4",
+              "plugin_version": "12155256cec3926186de22e282e67f4ce11cdbf7",
+              "maintain_begin": 0,
+              "maintain_end": 0,
+              "update_at": "2016-06-30T07:53:56Z"
+            },
+            {
+              "id": 1433111,
+              "hostname": "foo",
+              "ip": "10.0.0.168",
+              "agent_version": "5.1.4",
+              "plugin_version": "e5dd60e31698471431546a9a96434053adaa6c59",
+              "maintain_begin": 0,
+              "maintain_end": 0,
+              "update_at": "2016-06-03T07:33:26Z"
+            },
+            ...
+          ],
+        "SessionFlag": false
+        }
+      }
+      ```
+      * Endpoints: the plugins information list of the machines.
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "GET",
+        "status": "failed",
+        "error": {
+          "message": "name or sig is empty, please check again"
+        }
+      }
+      ```
+
+* `GET` `POST` /api/v1/dashboard/endpointrunningplugins
+  * `required login session`
+  * `required root login`
+  * params:
+    * `addr` string
+      * ex. "http://10.0.0.167:1988/plugins"
+  * response:
+    * ok
+
+      ```
+        {
+          "version": "v1",
+          "method": "GET",
+          "status": "success",
+          "data": {
+            "dataFromAgent": {
+              "basic/chk/120_net_ping_gateway_loss.sh": {
+                "Cycle": 120,
+                "FilePath": "basic/chk/120_net_ping_gateway_loss.sh",
+                "MTime": 1.468237012e+09
+              },
+              "basic/chk/60_check_heka_file.sh": {
+                "Cycle": 60,
+                "FilePath": "basic/chk/60_check_heka_file.sh",
+                "MTime": 1.467890476e+09
+              },
+              ...
+            },
+            "msgFromAgent": "success",
+            "requestAddr": "http://10.0.0.167:1988/plugins"
+          }
+        }
+      ```
+      * dataFromAgent: the running plugin information of the target machine.
+    * ok
+
+      ```
+        {
+          "version": "v1",
+          "method": "GET",
+          "status": "success",
+          "data": {
+            "errorFromAgent": "Get http://10.0.0.167:1988/plugins: dial tcp 10.0.0.167:1988: i/o timeout",
+            "requestAddr": "http://10.0.0.167:1988/plugins"
+          }
+        }
+      ```
+      * errorFromAgent: the error message of the target machine.
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "GET",
+        "status": "failed",
+        "error": {
+          "message": "name or sig is empty, please check again"
+        }
+      }
+      ```
+
+* `GET` `POST` /api/v1/dashboard/latestplugin
+  * `required login session`
+  * `required root login`
+  * params:
+  * response:
+    * ok
+
+      ```
+        {
+          "version": "v1",
+          "method": "GET",
+          "status": "success",
+          "data": {
+            "EntryList": [
+              {
+                "ID": "https://gitlab.com/Cepave/OwlPlugin/commit/fdb8d00127613c0044934b4f8c4ed087e5d7e45c",
+                "Updated": "2016-07-26T09:15:27+00:00"
+              },
+              {
+                "ID": "https://gitlab.com/Cepave/OwlPlugin/commit/d709443111216d19f6b8dc4210526c79b3962f16",
+                "Updated": "2016-07-26T17:08:14+08:00"
+              },
+              ...
+            ]
+          }
+        }
+      ```
+      * EntryList: the list of git log
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "GET",
+        "status": "failed",
+        "error": {
+          "message": "name or sig is empty, please check again"
+        }
+      }
+      ```
+
+* `GET` `POST` /api/v1/dashboard/counterendpoints
+  * `required login session`
+  * `required root login`
+  * params:
+    * `counter` string  [the counter]
+      * ex. "agent.alive"
+    * `limit`   integer [the maximum number of output]
+      * ex. 20
+    * `metricQuery` string [regex query string]
+      * ex. ".*nqm.*"
+    * `negateMatch` boolean [negate metricQuery]
+      * ex. true
+  * response:
+    * ok
+
+      ```
+        {
+          "version": "v1",
+          "method": "GET",
+          "status": "success",
+          "data": {
+            "endpoints": [
+              "123",
+              "bgp-bj-jjj",
+              "bgp-bj-kkk",
+              "bgp-bj-hhh",
+              ...
+              "cmb-jx-qqq"
+            ]
+          }
+        }
+      ```
+      * endpoints: the list of endpoints that contains the counter in `counter` string or counters match `metricQuery`
+    * failed
+
+      ```
+      {
+        "version": "v1",
+        "method": "GET",
+        "status": "failed",
+        "error": {
+          "message": "query string && query pattern are both empty, please check it"
+        }
+      }
+      ```
+
 * `GET` `POST` /api/v1//hostgroup/query
   * `required login session`
   * params:
