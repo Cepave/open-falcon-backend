@@ -17,6 +17,8 @@ type Metrics struct {
 	Count                   int32   `json:"count"`
 	NumberOfSentPackets     uint64  `json:"number_of_sent_packets"`
 	NumberOfReceivedPackets uint64  `json:"number_of_received_packets"`
+	NumberOfAgents          int32   `json:"number_of_agents"`
+	NumberOfTargets         int32   `json:"number_of_targets"`
 }
 
 // :~)

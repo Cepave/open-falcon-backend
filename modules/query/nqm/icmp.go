@@ -37,6 +37,8 @@ func (icmpResult *IcmpResult) UnmarshalJSON(p []byte) error {
 		Count:                   int32(jsonObj.Get("count").MustInt()),
 		NumberOfSentPackets:     uint64(jsonObj.Get("number_of_sent_packets").MustUint64()),
 		NumberOfReceivedPackets: uint64(jsonObj.Get("number_of_received_packets").MustUint64()),
+		NumberOfAgents:          int32(jsonObj.Get("number_of_agents").MustUint64()),
+		NumberOfTargets:         int32(jsonObj.Get("number_of_targets").MustUint64()),
 	}
 
 	return nil
