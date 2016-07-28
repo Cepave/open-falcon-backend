@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/common/logruslog"
-	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"os"
 	"os/signal"
+
+	"github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/conf"
 	"github.com/Cepave/open-falcon-backend/modules/query/database"
@@ -35,7 +36,7 @@ func main() {
 	proc.Start()
 
 	// graph
-	graph.Start()
+	go graph.Start()
 
 	if gconf.Grpc.Enabled {
 		// grpc

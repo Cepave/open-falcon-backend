@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -14,24 +12,27 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	log "github.com/Sirupsen/logrus"
 )
 
 func doHTTPQuery(url string) map[string]interface{} {
 	reqGet, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	client := &http.Client{}
 	resp, err := client.Do(reqGet)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 	var nodes = make(map[string]interface{})
 	if resp.Status == "200 OK" {
 		body, _ := ioutil.ReadAll(resp.Body)
 		if err := json.Unmarshal(body, &nodes); err != nil {
-			log.Println(err.Error())
+			log.Error(err.Error())
 		}
 	}
 	return nodes
@@ -77,7 +78,7 @@ func getNextCounterSegment(metric string, counter string) string {
 		//when the counter metric are the same, will retrun "$" as the ending chartacter of query
 		segment = "$"
 	} else {
-		log.Println("metric = ", metric, "counter = ", counter)
+		log.Debugf("metric = %v, counter = %v", metric, counter)
 		counter = strings.Replace(counter, metric, "", 1)
 		segment = strings.Split(counter, ".")[0]
 	}
@@ -102,21 +103,21 @@ func doHTTPPost(target string, endpoints string, metric string, maxQuery string,
 
 	reqPost, err := http.NewRequest("POST", target, strings.NewReader(form.Encode()))
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	reqPost.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqPost)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 	var nodes = make(map[string]interface{})
 	if resp.Status == "200 OK" {
 		body, _ := ioutil.ReadAll(resp.Body)
 		if err := json.Unmarshal(body, &nodes); err != nil {
-			log.Println(err.Error())
+			log.Error(err.Error())
 		}
 	}
 	return nodes
@@ -268,19 +269,19 @@ func getMetricValues(req *http.Request, host string, metrics []string, result []
 		}
 		bs, err := json.Marshal(args)
 		if err != nil {
-			log.Println("Error =", err.Error())
+			log.Errorf("Error = %v", err.Error())
 		}
 
 		reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(bs)))
 		if err != nil {
-			log.Println("Error =", err.Error())
+			log.Errorf("Error = %v", err.Error())
 		}
 		reqPost.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
 		resp, err := client.Do(reqPost)
 		if err != nil {
-			log.Println("Error =", err.Error())
+			log.Errorf("Error = %v", err.Error())
 		}
 		defer resp.Body.Close()
 
@@ -288,7 +289,7 @@ func getMetricValues(req *http.Request, host string, metrics []string, result []
 			body, _ := ioutil.ReadAll(resp.Body)
 			nodes := []interface{}{}
 			if err := json.Unmarshal(body, &nodes); err != nil {
-				log.Println(err.Error())
+				log.Error(err.Error())
 			}
 
 			for _, node := range nodes {
@@ -324,7 +325,7 @@ func getValues(rw http.ResponseWriter, req *http.Request) {
 						metrics = append(metrics, counter_perfix+i["text"].(string))
 					}
 				}
-				log.Printf("metrics:: => %v", metrics)
+				log.Debugf("metrics:: => %v", metrics)
 				result = getMetricValues(req, host, metrics, result)
 			} else {
 				metrics = append(metrics, strings.Join(targets, "."))

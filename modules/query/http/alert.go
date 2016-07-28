@@ -312,7 +312,7 @@ func getNote(hash string, timestamp string) []map[string]string {
 	num, err := o.Raw(queryStr).Values(&rows)
 	notes := []map[string]string{}
 	if err != nil {
-		log.Debug(err.Error)
+		log.Error(err.Error())
 	} else if num == 0 {
 		return notes
 	} else {
@@ -384,7 +384,7 @@ func setSQLQuery(templateIDs string, req *http.Request, result map[string]interf
 		limit = query.Get("limit")
 	}
 	if templateIDs != "*" {
-		whereConditions = append(whereConditions, "template_id IN ('"+templateIDs+"')")
+		whereConditions = append(whereConditions, "template_id IN ("+templateIDs+")")
 	}
 	if len(whereConditions) > 0 {
 		conditions := strings.Join(whereConditions, " AND ")
@@ -526,7 +526,7 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 				}
 				item.(map[string]interface{})["contact"] = contacts
 				items = append(items, item)
-				log.Println("host deactivated:", hostname)
+				log.Debugf("host deactivated: %v", hostname)
 			}
 		} else {
 			item.(map[string]interface{})["ip"] = "not found"
@@ -542,7 +542,7 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 			}
 			item.(map[string]interface{})["contact"] = contacts
 			items = append(items, item)
-			log.Println("hostname not found:", hostname)
+			log.Debugf("hostname not found: %v", hostname)
 		}
 	}
 	for _, item := range items {
@@ -550,6 +550,22 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 		hostnames = appendUniqueString(hostnames, hostname)
 	}
 	sort.Strings(hostnames)
+
+	hostsTriggeredMap := map[string]string{}
+	for _, hostname := range hostnames {
+		if _, ok := hostsMap[hostname]; ok {
+			host := hostsMap[hostname].(map[string]interface{})
+			platformName := host["platform"].(string)
+			if strings.Index(platformName, ", ") > -1 {
+				for _, name := range strings.Split(platformName, ", ") {
+					platformNames = appendUniqueString(platformNames, name)
+				}
+			} else {
+				platformNames = appendUniqueString(platformNames, platformName)
+			}
+			hostsTriggeredMap[hostname] = platformName
+		}
+	}
 	sort.Strings(platformNames)
 	getPlatformContact(strings.Join(platformNames, ","), rw, nodes)
 	platforms := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})

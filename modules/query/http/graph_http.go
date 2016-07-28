@@ -3,9 +3,10 @@ package http
 import (
 	"encoding/json"
 	"errors"
-	log "github.com/Sirupsen/logrus"
 	"net/http"
 	"strings"
+
+	log "github.com/Sirupsen/logrus"
 
 	"regexp"
 
@@ -39,7 +40,7 @@ func graphQueryOne(ec cmodel.GraphInfoParam, body GraphHistoryParam, endpoint st
 	}
 	result, err := graph.QueryOne(request)
 	if err != nil {
-		log.Printf("graph.queryOne fail, %v, (endpoint, counter) = (%s, %s)", err, endpoint, counter)
+		log.Errorf("graph.queryOne fail, %v, (endpoint, counter) = (%s, %s)", err, endpoint, counter)
 	}
 	return result
 }
@@ -197,7 +198,7 @@ func configGraphRoutes() {
 			}
 			info, err := graph.Info(*param)
 			if err != nil {
-				log.Printf("graph.info fail, resp: %v, err: %v", info, err)
+				log.Errorf("graph.info fail, resp: %v, err: %v", info, err)
 			}
 			if info == nil {
 				continue
@@ -233,7 +234,7 @@ func configGraphRoutes() {
 			}
 			last, err := graph.Last(*param)
 			if err != nil {
-				log.Printf("graph.last fail, resp: %v, err: %v", last, err)
+				log.Errorf("graph.last fail, resp: %v, err: %v", last, err)
 			}
 			if last == nil {
 				continue
@@ -272,7 +273,7 @@ func configGraphRoutes() {
 			}
 			last, err := graph.LastRaw(*param)
 			if err != nil {
-				log.Printf("graph.last.raw fail, resp: %v, err: %v", last, err)
+				log.Errorf("graph.last.raw fail, resp: %v, err: %v", last, err)
 			}
 			if last == nil {
 				continue

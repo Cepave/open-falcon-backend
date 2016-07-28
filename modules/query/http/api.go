@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
@@ -48,14 +49,14 @@ func postByJSON(rw http.ResponseWriter, req *http.Request, url string) {
 	s := buf.String()
 	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	reqPost.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqPost)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -116,13 +117,13 @@ func queryHistory(rw http.ResponseWriter, req *http.Request) {
 func getRequest(rw http.ResponseWriter, url string) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -167,7 +168,7 @@ func postByForm(rw http.ResponseWriter, req *http.Request, url string) {
 	client := &http.Client{}
 	resp, err := client.PostForm(url, req.PostForm)
 	if err != nil {
-		log.Println("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -376,7 +377,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
-					log.Println("mysql row affected nums =", num)
+					log.Debugf("mysql row affected nums = %v", num)
 					result["strategyID"] = strategyID
 					result["action"] = "create"
 				}
@@ -389,7 +390,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 					setError(err.Error(), result)
 				} else {
 					num, _ := res.RowsAffected()
-					log.Println("mysql row affected nums =", num)
+					log.Debugf("mysql row affected nums = %v", num)
 					result["strategyID"] = strategyID
 					result["action"] = "update"
 				}
@@ -472,12 +473,14 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		setError(err.Error(), result)
+		return
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		setError(err.Error(), result)
+		return
 	}
 	defer resp.Body.Close()
 
@@ -523,7 +526,7 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 				}
 				last, err := graph.Last(*param)
 				if err != nil {
-					log.Printf("graph.last fail, resp: %v, err: %v", last, err)
+					log.Errorf("graph.last fail, resp: %v, err: %v", last, err)
 				}
 				if last == nil {
 					continue
@@ -1705,6 +1708,97 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getHostsList(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	getPlatformJSON(nodes, result)
+	hosts := map[string]interface{}{}
+	hostnames := []string{}
+	hostnamesMap := map[string]int{}
+	if int(nodes["status"].(float64)) == 1 {
+		hostname := ""
+		for _, platform := range nodes["result"].([]interface{}) {
+			platformName := platform.(map[string]interface{})["platform"].(string)
+			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+				hostname = device.(map[string]interface{})["hostname"].(string)
+				ip := device.(map[string]interface{})["ip"].(string)
+				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+					if _, ok := hostnamesMap[hostname]; !ok {
+						ip := device.(map[string]interface{})["ip"].(string)
+						if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+							hostnames = append(hostnames, hostname)
+							idcID := device.(map[string]interface{})["pop_id"].(string)
+							host := map[string]interface{}{
+								"activate":     device.(map[string]interface{})["ip_status"].(string),
+								"hostname":     hostname,
+								"idcID":        idcID,
+								"ip":           ip,
+								"platform":     platformName,
+								"isp":          strings.Split(hostname, "-")[0],
+								"provinceCode": strings.Split(hostname, "-")[1],
+							}
+							hostnamesMap[hostname] = 1
+							hosts[hostname] = host
+						}
+					} else {
+						host := hosts[hostname].(map[string]interface{})
+						platforms := strings.Split(host["platform"].(string), ", ")
+						platforms = appendUniqueString(platforms, platformName)
+						host["platform"] = strings.Join(platforms, ", ")
+						hosts[hostname] = host
+					}
+				}
+			}
+		}
+		sort.Strings(hostnames)
+		idcIDsMap := map[string]interface{}{}
+		idcNames := []string{}
+		o := orm.NewOrm()
+		var idcs []*Idc
+		sqlcommand := "SELECT pop_id, province, city, name FROM grafana.idc ORDER BY pop_id ASC"
+		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			for _, idc := range idcs {
+				item := map[string]string{
+					"name":     idc.Name,
+					"province": idc.Province,
+					"city":     idc.City,
+				}
+				idcIDsMap[strconv.Itoa(idc.Pop_id)] = item
+				idcNames = appendUniqueString(idcNames, idc.Name)
+			}
+		}
+		sort.Strings(idcNames)
+		for _, hostname := range hostnames {
+			host := hosts[hostname].(map[string]interface{})
+			idcID := host["idcID"].(string)
+			if _, ok := idcIDsMap[idcID]; ok {
+				item := idcIDsMap[idcID]
+				host["idc"] = item.(map[string]string)["name"]
+				host["province"] = item.(map[string]string)["province"]
+				host["city"] = item.(map[string]string)["city"]
+				delete(host, "idcID")
+				items = append(items, host)
+			}
+		}
+	}
+	if _, ok := nodes["info"]; ok {
+		delete(nodes, "info")
+	}
+	if _, ok := nodes["status"]; ok {
+		delete(nodes, "status")
+	}
+	result["items"] = items
+	nodes["count"] = len(items)
+	nodes["result"] = result
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
@@ -1722,4 +1816,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/hosts/", getHostsBandwidths)
 	http.HandleFunc("/api/idcs/hosts", getIDCsHosts)
 	http.HandleFunc("/api/idcs/", getIDCsBandwidthsUpperLimit)
+	http.HandleFunc("/api/hosts", getHostsList)
 }
