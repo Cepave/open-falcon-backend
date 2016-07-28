@@ -5,7 +5,7 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
-	flag "github.com/spf13/pflag"
+	"flag"
 	tknet "github.com/toolkits/net"
 	. "gopkg.in/check.v1"
 	"net"
@@ -40,6 +40,7 @@ func ReleaseDb() {
 var hasInitOrm = false
 
 func InitOrm() {
+
 	if hasInitOrm {
 		return
 	}

@@ -3,17 +3,17 @@ package http
 import (
 	"fmt"
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
 	log "github.com/Sirupsen/logrus"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/bitly/go-simplejson"
 	"net/http"
-	"runtime/debug"
-	"strconv"
 	"strings"
 	"time"
+	"runtime/debug"
+	"strconv"
 )
 
 const (
@@ -22,7 +22,6 @@ const (
 )
 
 var nqmService nqm.ServiceController
-
 func configNqmRoutes() {
 	nqmService = nqm.GetDefaultServiceController()
 	nqmService.Init()
@@ -54,14 +53,14 @@ func setupUrlMappingAndHandler(serviceRegister *beego.ControllerRegister) {
 
 type resultWithDsl struct {
 	queryParams *dsl.QueryParams
-	resultData  interface{}
+	resultData interface{}
 }
 
 func (result *resultWithDsl) MarshalJSON() ([]byte, error) {
 	jsonObject := simplejson.New()
 
-	jsonObject.SetPath([]string{"dsl", "start_time"}, result.queryParams.StartTime.Unix())
-	jsonObject.SetPath([]string{"dsl", "end_time"}, result.queryParams.EndTime.Unix())
+	jsonObject.SetPath([]string{ "dsl", "start_time" }, result.queryParams.StartTime.Unix())
+	jsonObject.SetPath([]string{ "dsl", "end_time" }, result.queryParams.EndTime.Unix())
 	jsonObject.Set("result", result.resultData)
 
 	return jsonObject.MarshalJSON()
@@ -84,7 +83,7 @@ func listIcmpByProvinces(ctx *context.Context) {
 
 	listResult := nqmService.ListByProvinces(dslParams)
 
-	ctx.Output.JSON(&resultWithDsl{queryParams: dslParams, resultData: listResult}, jsonIndent, jsonCoding)
+	ctx.Output.JSON(&resultWithDsl{ queryParams: dslParams, resultData: listResult }, jsonIndent, jsonCoding)
 }
 
 // Lists data of targets, which would be grouped by cities
@@ -99,28 +98,29 @@ func listIcmpByTargetsForAProvince(ctx *context.Context) {
 	dslParams.AgentFilter.MatchProvinces = make([]string, 0) // Ignores the province of agent
 
 	provinceId, _ := strconv.ParseInt(ctx.Input.Param(":province_id"), 10, 16)
-	dslParams.AgentFilterById.MatchProvinces = []int16{int16(provinceId)} // Use the id as the filter of agent
+	dslParams.AgentFilterById.MatchProvinces = []int16 { int16(provinceId) } // Use the id as the filter of agent
 
-	if agentId, parseErrForAgentId := strconv.ParseInt(ctx.Input.Query("agent_id"), 10, 16); parseErrForAgentId == nil {
-		dslParams.AgentFilterById.MatchIds = []int32{int32(agentId)} // Set the filter by agent's id
-	} else if cityId, parseErrForCityId := strconv.ParseInt(ctx.Input.Query("city_id_of_agent"), 10, 16); parseErrForCityId == nil {
-		dslParams.AgentFilterById.MatchCities = []int16{int16(cityId)} // Set the filter by city's id
+	if agentId, parseErrForAgentId := strconv.ParseInt(ctx.Input.Query("agent_id"), 10, 16)
+		parseErrForAgentId == nil {
+		dslParams.AgentFilterById.MatchIds = []int32 { int32(agentId) } // Set the filter by agent's id
+	} else if cityId, parseErrForCityId := strconv.ParseInt(ctx.Input.Query("city_id_of_agent"), 10, 16)
+		parseErrForCityId == nil {
+		dslParams.AgentFilterById.MatchCities = []int16 { int16(cityId) } // Set the filter by city's id
 	}
 
 	listResult := nqmService.ListTargetsWithCityDetail(dslParams)
-	ctx.Output.JSON(&resultWithDsl{queryParams: dslParams, resultData: listResult}, jsonIndent, jsonCoding)
+	ctx.Output.JSON(&resultWithDsl{ queryParams: dslParams, resultData: listResult }, jsonIndent, jsonCoding)
 }
 
 type jsonDslError struct {
-	Code    int    `json:"error_code"`
+	Code int `json:"error_code"`
 	Message string `json:"error_message"`
 }
-
 func outputDslError(ctx *context.Context, err error) {
 	ctx.Output.SetStatus(http.StatusBadRequest)
 	ctx.Output.JSON(
-		&jsonDslError{
-			Code:    1,
+		&jsonDslError {
+			Code: 1,
 			Message: err.Error(),
 		}, jsonIndent, jsonCoding,
 	)
@@ -141,15 +141,15 @@ func outputJsonForPanic(ctx *context.Context) {
 
 	ctx.Output.SetStatus(http.StatusBadRequest)
 	ctx.Output.JSON(&jsonDslError{
-		Code:    -1,
+		Code: -1,
 		Message: fmt.Sprintf("%v", r),
 	}, jsonIndent, jsonCoding)
 }
 
 const (
 	defaultDaysForTimeRange = 7
-	after7Days              = defaultDaysForTimeRange * 24 * time.Hour
-	before7Days             = after7Days * -1
+	after7Days = defaultDaysForTimeRange * 24 * time.Hour
+	before7Days = after7Days * -1
 )
 
 // Process DSL and output error
@@ -172,7 +172,7 @@ func processDsl(dslParams string) (*dsl.QueryParams, error) {
 	/**
 	 * If any of errors for parsing DSL
 	 */
-	result, parseError := dsl.Parse(
+	paramSetters, parseError := dsl.Parse(
 		"Query.nqmdsl", []byte(strNqmDsl),
 	)
 	if parseError != nil {
@@ -180,17 +180,18 @@ func processDsl(dslParams string) (*dsl.QueryParams, error) {
 	}
 	// :~)
 
-	resultDsl := result.(*dsl.QueryParams)
+	queryParams := dsl.NewQueryParams()
+	queryParams.SetUpParams(paramSetters)
 
-	setupTimeRange(resultDsl)
-	setupInnerProvince(resultDsl)
+	setupTimeRange(queryParams)
+	setupInnerProvince(queryParams)
 
-	paramsError := resultDsl.CheckRationalOfParameters()
+	paramsError := queryParams.CheckRationalOfParameters()
 	if paramsError != nil {
 		return nil, paramsError
 	}
 
-	return resultDsl, nil
+	return queryParams, nil
 }
 
 // Sets-up the time range with provided-or-not value of parameters
@@ -201,7 +202,7 @@ func setupTimeRange(queryParams *dsl.QueryParams) {
 	if queryParams.StartTime.IsZero() && queryParams.EndTime.IsZero() {
 		now := time.Now()
 
-		queryParams.StartTime = now.Add(before7Days)  // Include 7 days before
+		queryParams.StartTime = now.Add(before7Days) // Include 7 days before
 		queryParams.EndTime = now.Add(24 * time.Hour) // Include today
 		return
 	}
