@@ -169,7 +169,7 @@ func checkHostExist(params map[string]interface{}, result map[string]interface{}
 		err := o.QueryTable("host").Filter("hostname", hostName).One(&host)
 		if err == orm.ErrMultiRows {
 			// Have multiple records
-			log.Println("returned multiple rows")
+			log.Error("returned multiple rows")
 		} else if err == orm.ErrNoRows {
 			// No result
 		}
@@ -193,7 +193,7 @@ func checkHostExist(params map[string]interface{}, result map[string]interface{}
  *                   func hostCreate(nodes map[string]interface{})
  */
 func setError(error string, result map[string]interface{}) {
-	log.Errorln("Error =", error)
+	log.Errorf("Error = %v", error)
 	result["error"] = append(result["error"].([]string), error)
 }
 
@@ -231,7 +231,7 @@ func bindGroup(hostId int, params map[string]interface{}, args map[string]string
 					Grp_id:  grp_id,
 					Host_id: int(hostId),
 				}
-				log.Println("grp_host =", grp_host)
+				log.Debugf("grp_host = %v", grp_host)
 				_, err = o.Insert(&grp_host)
 				if err != nil {
 					setError(err.Error(), result)
@@ -239,7 +239,7 @@ func bindGroup(hostId int, params map[string]interface{}, args map[string]string
 			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Debugln("grp_host existed =", grp_host)
+				log.Debugf("grp_host existed = %v", grp_host)
 			}
 		}
 	}
@@ -279,7 +279,7 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 					Tpl_id:    tpl_id,
 					Bind_user: "zabbix",
 				}
-				log.Println("grp_tpl =", grp_tpl)
+				log.Debugf("grp_tpl = %v", grp_tpl)
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
 					setError(err.Error(), result)
@@ -287,7 +287,7 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Debugln("grp_tpl existed =", grp_tpl)
+				log.Debugf("grp_tpl existed = %v", grp_tpl)
 			}
 		}
 	}
@@ -368,7 +368,7 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 				Ip:        ip,
 				Update_at: getNow(),
 			}
-			log.Debugln("host =", host)
+			log.Debugf("host = %v", host)
 
 			o := orm.NewOrm()
 			hostId, err := o.Insert(&host)
@@ -415,7 +415,7 @@ func hostCreate(nodes map[string]interface{}) {
 			macAddr := inventory["macaddress_a"].(string) + inventory["macaddress_b"].(string)
 			args["macAddr"] = macAddr
 		}
-		log.Debugln("args =", args)
+		log.Debugf("args = %v", args)
 	}
 	nodes["result"] = result
 }
@@ -440,7 +440,7 @@ func unbindGroup(hostId string, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Debugln("mysql row affected nums =", num)
+	log.Debugf("mysql row affected nums = %v", num)
 }
 
 /**
@@ -465,7 +465,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
 				setError(err.Error(), result)
 			} else {
 				if num > 0 {
-					log.Debugln("RowsDeleted =", num)
+					log.Debugf("RowsDeleted = %v", num)
 					unbindGroup(hostId, result)
 					hostids = append(hostids, hostId)
 				}
@@ -575,7 +575,7 @@ func hostGet(nodes map[string]interface{}) {
 			setError(err.Error(), result)
 		} else {
 			countOfRows = int(num)
-			log.Debugln("countOfRows =", countOfRows)
+			log.Debugf("countOfRows = %v", countOfRows)
 			for _, host := range hosts {
 				item := map[string]interface{}{}
 				hostId = strconv.Itoa(host.Id)
@@ -596,7 +596,7 @@ func hostGet(nodes map[string]interface{}) {
 			if err == orm.ErrMultiRows {
 				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
-				log.Println("host not found")
+				log.Debug("host not found")
 			} else if host.Id > 0 {
 				hostId = strconv.Itoa(host.Id)
 				groups = getGroups(hostId)
@@ -649,9 +649,9 @@ func muteAlertsCases(hostid int, maintainBegin int64, maintainEnd int64) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Debugf("%s : %d", url, resp.StatusCode)
+		log.Errorf("%s : %d", url, resp.StatusCode)
 		res, _ := ioutil.ReadAll(resp.Body)
-		log.Debugf("%v", string(res))
+		log.Error(string(res))
 	}
 }
 
@@ -685,8 +685,8 @@ func hostUpdate(nodes map[string]interface{}) {
 			if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Debugln("update hostId =", host.Id)
-				log.Debugln("mysql row affected nums =", num)
+				log.Debugf("update hostId = %v", host.Id)
+				log.Debugf("mysql row affected nums = %v", num)
 				if num != 0 && host.Maintain_begin != 0 && host.Maintain_end != 0 {
 					muteAlertsCases(host.Id, host.Maintain_begin, host.Maintain_end)
 				}
@@ -701,10 +701,10 @@ func hostUpdate(nodes map[string]interface{}) {
 			}
 		}
 	} else {
-		log.Println("host not existed")
+		log.Debug("host not existed")
 		addHost(params, args, result)
 	}
-	log.Debugln("args =", args)
+	log.Debugf("args = %v", args)
 	nodes["result"] = result
 }
 
@@ -732,7 +732,7 @@ func hostgroupCreate(nodes map[string]interface{}) {
 		Create_user: user,
 		Create_at:   now,
 	}
-	log.Debugln("grp =", grp)
+	log.Debugf("grp = %v", grp)
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -770,7 +770,7 @@ func hostgroupDelete(nodes map[string]interface{}) {
 	args = append(args, "DELETE FROM falcon_portal.grp_host WHERE grp_id=?")
 	args = append(args, "DELETE FROM falcon_portal.grp_tpl WHERE grp_id=?")
 	args = append(args, "DELETE FROM falcon_portal.plugin_dir WHERE grp_id=?")
-	log.Debugln("args =", args)
+	log.Debugf("args = %v", args)
 
 	o := orm.NewOrm()
 	groupids := []string{}
@@ -783,8 +783,8 @@ func hostgroupDelete(nodes map[string]interface{}) {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.grp WHERE id=?" {
 					groupids = append(groupids, hostgroupId.(string))
-					log.Debugln("delete hostgroup id =", hostgroupId)
-					log.Debugln("mysql row affected nums =", num)
+					log.Debugf("delete hostgroup id = %v", hostgroupId)
+					log.Debugf("mysql row affected nums = %v", num)
 				}
 			}
 		}
@@ -800,7 +800,7 @@ func getTemplateIdsByGroupId(groupId int, result map[string]interface{}) []strin
 	sqlcmd := "SELECT DISTINCT tpl_id FROM falcon_portal.grp_tpl WHERE grp_id=?"
 	_, err := o.Raw(sqlcmd, groupId).QueryRows(&tpl_ids)
 	if err == orm.ErrNoRows {
-		log.Println("No templates for groupId:", groupId)
+		log.Errorf("No templates for groupId: %v", groupId)
 	} else if err != nil {
 		setError(err.Error(), result)
 	} else {
@@ -818,7 +818,7 @@ func getPluginDirsByGroupId(groupId int, result map[string]interface{}) []string
 	sqlcmd := "SELECT DISTINCT dir FROM falcon_portal.plugin_dir WHERE grp_id=?"
 	_, err := o.Raw(sqlcmd, groupId).QueryRows(&pluginDirs)
 	if err == orm.ErrNoRows {
-		log.Println("No plugin dirs for groupId:", groupId)
+		log.Errorf("No plugin dirs for groupId: %v", groupId)
 	} else if err != nil {
 		setError(err.Error(), result)
 	}
@@ -885,7 +885,7 @@ func hostgroupGet(nodes map[string]interface{}) {
 			if err == orm.ErrMultiRows {
 				setError("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
-				log.Println("host group not found")
+				log.Error("host group not found")
 			} else if grp.Id > 0 {
 				groupId = strconv.Itoa(grp.Id)
 				countOfRows++
@@ -910,7 +910,7 @@ func unbindGroupAndTemplates(groupId string, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Debugln("mysql row affected nums =", num)
+	log.Debugf("mysql row affected nums = %v", num)
 }
 
 func unbindGroupAndPlugins(groupId int, result map[string]interface{}) {
@@ -921,7 +921,7 @@ func unbindGroupAndPlugins(groupId int, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Debugln("unbindGroupAndPlugins row affected nums =", num)
+	log.Debugf("unbindGroupAndPlugins row affected nums = %v", num)
 }
 
 func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]interface{}) {
@@ -936,7 +936,7 @@ func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]int
 				Dir:         pluginDir,
 				Create_user: "zabbix",
 			}
-			log.Println("plugin_dir =", plugin_dir)
+			log.Debugf("plugin_dir = %v", plugin_dir)
 			_, err = o.Insert(&plugin_dir)
 			if err != nil {
 				setError(err.Error(), result)
@@ -944,7 +944,7 @@ func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]int
 		} else if err != nil {
 			setError(err.Error(), result)
 		} else {
-			log.Debugln("plugin_dir existed =", plugin_dir)
+			log.Debugf("plugin_dir existed = %v", plugin_dir)
 		}
 	}
 }
@@ -989,8 +989,8 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					} else if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
 						result["groupids"] = groupids
-						log.Debugln("update groupid =", hostgroupId)
-						log.Debugln("mysql row affected nums =", num)
+						log.Debugf("update groupid = %v", hostgroupId)
+						log.Debugf("mysql row affected nums = %v", num)
 					}
 				}
 			}
@@ -1060,7 +1060,7 @@ func templateCreate(nodes map[string]interface{}) {
 		Create_user: user,
 		Create_at:   now,
 	}
-	log.Debugln("tpl =", tpl)
+	log.Debugf("tpl = %v", tpl)
 
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -1082,7 +1082,7 @@ func templateCreate(nodes map[string]interface{}) {
 			Tpl_id:    int(id),
 			Bind_user: user,
 		}
-		log.Debugln("grp_tpl =", grp_tpl)
+		log.Debugf("grp_tpl = %v", grp_tpl)
 
 		_, err = o.Insert(&grp_tpl)
 		if err != nil {
@@ -1113,13 +1113,13 @@ func templateDelete(nodes map[string]interface{}) {
 	args := []interface{}{}
 	args = append(args, "DELETE FROM falcon_portal.tpl WHERE id=?")
 	args = append(args, "DELETE FROM falcon_portal.grp_tpl WHERE tpl_id=?")
-	log.Debugln("args =", args)
+	log.Debugf("args = %v", args)
 
 	templateids := []string{}
 	for _, sqlcmd := range args {
 		log.Debugln(sqlcmd)
 		for _, templateId := range params {
-			log.Debugln("templateId =", templateId)
+			log.Debugf("templateId = %v", templateId)
 			res, err := o.Raw(sqlcmd.(string), templateId).Exec()
 			if err != nil {
 				setError(err.Error(), result)
@@ -1127,8 +1127,8 @@ func templateDelete(nodes map[string]interface{}) {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.tpl WHERE id=?" {
 					templateids = append(templateids, templateId.(string))
-					log.Debugln("delete template id =", templateId)
-					log.Debugln("mysql row affected nums =", num)
+					log.Debugf("delete template id = %v", templateId)
+					log.Debugf("mysql row affected nums = %v", num)
 				}
 			}
 		}
@@ -1202,7 +1202,7 @@ func checkTemplateExist(params map[string]interface{}, result map[string]interfa
 			err = o.QueryTable("tpl").Filter("id", templateIdInt).One(&template)
 			if err == orm.ErrMultiRows {
 				// Have multiple records
-				log.Println("returned multiple rows")
+				log.Debugln("returned multiple rows")
 			} else if err == orm.ErrNoRows {
 				// No result
 			}
@@ -1215,7 +1215,7 @@ func checkTemplateExist(params map[string]interface{}, result map[string]interfa
 			err := o.QueryTable("tpl").Filter("tpl_name", templateName).One(&template)
 			if err == orm.ErrMultiRows {
 				// Have multiple records
-				log.Println("returned multiple rows")
+				log.Debugln("returned multiple rows")
 			} else if err == orm.ErrNoRows {
 				// No result
 			}
@@ -1250,7 +1250,7 @@ func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string
 					Tpl_id:    templateId,
 					Bind_user: "zabbix",
 				}
-				log.Println("grp_tpl =", grp_tpl)
+				log.Debugf("grp_tpl = %v", grp_tpl)
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
 					setError(err.Error(), result)
@@ -1258,7 +1258,7 @@ func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string
 			} else if err != nil {
 				setError(err.Error(), result)
 			} else {
-				log.Debugln("grp_tpl existed =", grp_tpl)
+				log.Debugf("grp_tpl existed = %v", grp_tpl)
 			}
 		}
 	}
@@ -1272,7 +1272,7 @@ func unbindTemplateAndGroups(templateId string, result map[string]interface{}) {
 		setError(err.Error(), result)
 	}
 	num, _ := res.RowsAffected()
-	log.Debugln("mysql row affected nums =", num)
+	log.Debugf("mysql row affected nums = %v", num)
 }
 
 /**
@@ -1299,7 +1299,7 @@ func templateUpdate(nodes map[string]interface{}) {
 		for _, group := range groups {
 			groupId := group.(map[string]interface{})["groupid"].(string)
 			groupIdInt, err := strconv.Atoi(groupId)
-			log.Debugln("groupIdInt =", groupIdInt)
+			log.Debugf("groupIdInt = %v", groupIdInt)
 			if err != nil {
 				setError(err.Error(), result)
 			}
@@ -1312,7 +1312,7 @@ func templateUpdate(nodes map[string]interface{}) {
 		templateids := [1]string{string(templateid)}
 		result["templateids"] = templateids
 	} else {
-		log.Println("template not existed")
+		log.Debugln("template not existed")
 	}
 	nodes["result"] = result
 }
@@ -1362,7 +1362,7 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	param := req.URL.Query()
-	log.Debugln("param =", param)
+	log.Debugf("param = %v", param)
 	arr := param["endpoint"]
 	hostname := arr[0]
 	arr = param["time"]
@@ -1399,32 +1399,32 @@ func apiAlert(rw http.ResponseWriter, req *http.Request) {
 		"fctoken":       fctoken,
 	}
 
-	log.Debugln("args =", args)
+	log.Debugf("args = %v", args)
 	bs, err := json.Marshal(args)
 	if err != nil {
-		log.Errorln("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 
 	url := g.Config().Api.Event
-	log.Debugln("url =", url)
+	log.Debugf("url = %v", url)
 
 	reqAlert, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(bs)))
 	if err != nil {
-		log.Errorln("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	reqAlert.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqAlert)
 	if err != nil {
-		log.Errorln("Error =", err.Error())
+		log.Errorf("Error = %v", err.Error())
 	}
 	defer resp.Body.Close()
 
-	log.Debugln("response Status =", resp.Status) // 200 OK   TypeOf(resp.Status): string
-	log.Debugln("response Headers =", resp.Header)
+	log.Debugf("response Status = %v", resp.Status) // 200 OK   TypeOf(resp.Status): string
+	log.Debugf("response Headers = %v", resp.Header)
 	body, _ := ioutil.ReadAll(resp.Body)
-	log.Debugln("response Body =", string(body))
+	log.Debugf("response Body = %v", string(body))
 	rw.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	rw.Write(body)
 }
@@ -1498,7 +1498,7 @@ func apiParser(rw http.ResponseWriter, req *http.Request) {
 		apiAlert(rw, req)
 	} else {
 		s := buf.String() // Does a complete copy of the bytes in the buffer.
-		log.Debugln("s =", s)
+		log.Debugf("s = %v", s)
 		json, err := simplejson.NewJson(buf.Bytes())
 		if err != nil {
 			log.Errorln(err.Error())
