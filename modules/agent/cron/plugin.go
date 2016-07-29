@@ -56,6 +56,7 @@ func syncMinePlugins() {
 			continue
 		}
 
+		log.Println("Agent.MinePlugins content is:", resp)
 		if resp.Timestamp <= timestamp {
 			continue
 		}

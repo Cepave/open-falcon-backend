@@ -19,8 +19,8 @@ func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.Agent
 
 	reply.Plugins = cache.GetPlugins(args.Hostname)
 	reply.Timestamp = time.Now().Unix()
-	reply.GitRepo = "https://gitlab.com/Cepave/OwlPlugin.git"
-	reply.GitUpdate = true
+	reply.GitRepo = g.Config().GitRepo
+	reply.GitUpdate = cache.GitUpdateCheck(args.Hostname)
 
 	return nil
 }

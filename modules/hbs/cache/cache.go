@@ -1,8 +1,9 @@
 package cache
 
 import (
-	log "github.com/Sirupsen/logrus"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 func Init() {
@@ -38,7 +39,7 @@ func Init() {
 	log.Println("cache done")
 
 	go LoopInit()
-
+	go getNewestPluginHash()
 }
 
 func LoopInit() {
