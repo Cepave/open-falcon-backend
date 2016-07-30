@@ -37,6 +37,40 @@ func (this *PortalController) GetEventCases() {
 	return
 }
 
+func (this *PortalController) GetEventCasesV2() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	startTime, _ := this.GetInt64("startTime", 0)
+	endTime, _ := this.GetInt64("endTime", 0)
+	prioprity, _ := this.GetInt("prioprity", -1)
+	status := this.GetString("status", "ALL")
+	processStatus := this.GetString("process", "ALL")
+	metrics := this.GetString("metric", "ALL")
+
+	username := this.GetString("cName", "")
+	limitNum, _ := this.GetInt("limit", 0)
+	elimit, _ := this.GetInt("elimit", 0)
+	caseId := this.GetString("caseId", "")
+	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	alerts, endpoints, err := event.AlertsConvert(events)
+	alerts2 := event.GetAlertInfo(alerts, endpoints)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	baseResp.Data["eventCases"] = alerts2
+	this.ServeApiJson(baseResp)
+	return
+}
+
 func (this *PortalController) GetEvent() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
