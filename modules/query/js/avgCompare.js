@@ -8,7 +8,8 @@ if(cond.match(/[=><]+/g).size === 0){
 avg = 0
 t2 = _.map(input, function(res){
   res.Avg = _.reduce(res.Values, function(sum,v){
-    return (sum+v.Value)
+    value = (isNaN(v.Value)? 0 : v.Value)
+    return (sum+value)
   },0) / (res.Values.length === 0 ? 1 : res.Values.length)
   avg += res.Avg
   return res;
