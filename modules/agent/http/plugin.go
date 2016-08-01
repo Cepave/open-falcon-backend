@@ -3,33 +3,39 @@ package http
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	"github.com/toolkits/file"
 )
 
-func deleteAndCloneRepo(w http.ResponseWriter) {
-	dir := g.Config().Plugin.Dir
-	parentDir := file.Dir(dir)
-	cmd1 := exec.Command("rm", "-rf", file.Basename(dir))
-	cmd1.Dir = parentDir
-	err1 := cmd1.Run()
+func deleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
+	parentDir := file.Dir(pluginDir)
+
+	absPath, _ := filepath.Abs(pluginDir)
+	if absPath == "/" {
+		out = fmt.Sprintf("\nRemove directory:%s is not allowed.", absPath)
+		return
+	}
+	err1 := os.RemoveAll(file.Basename(pluginDir))
 	if err1 != nil {
-		w.Write([]byte(fmt.Sprintf("\nremove the git plugin dir:%s fail. error: %s", file.Basename(dir), err1)))
+		out = fmt.Sprintf("\nremove the git plugin dir:%s fail. error: %s", file.Basename(pluginDir), err1)
 		return
 	} else {
-		w.Write([]byte("\nremove the git plugin dir success"))
+		out = fmt.Sprintf("\nremove the git plugin dir:%s success", file.Basename(pluginDir))
 	}
-	cmd2 := exec.Command("git", "clone", g.Config().Plugin.Git, file.Basename(dir))
-	cmd2.Dir = parentDir
-	err2 := cmd2.Run()
+	cmd := exec.Command("git", "clone", gitRemoteAddr, file.Basename(pluginDir))
+	cmd.Dir = parentDir
+	err2 := cmd.Run()
 	if err2 != nil {
-		w.Write([]byte(fmt.Sprintf("\ngit clone in dir:%s fail. error: %s", parentDir, err2)))
+		out = out + fmt.Sprintf("\ngit clone in dir:%s fail. error: %s", parentDir, err2)
 		return
 	}
-	w.Write([]byte("\ngit clone success"))
+	out = out + "\ngit clone success"
+	return
 }
 
 func configPluginRoutes() {
@@ -50,7 +56,7 @@ func configPluginRoutes() {
 			err := cmd.Run()
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("git pull in dir:%s fail. error: %s", dir, err)))
-				deleteAndCloneRepo(w)
+				w.Write([]byte(deleteAndCloneRepo(dir, g.Config().Plugin.Git)))
 				return
 			}
 		} else {
