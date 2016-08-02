@@ -15,7 +15,7 @@ func GitRepoUpdateCheck(hostname string) bool {
 	if agentUpdateInfo, ok := Agents.Get(hostname); ok {
 		hostGitRepo := agentUpdateInfo.ReportRequest.GitRepo
 		currGitRepo := g.Config().GitRepo
-		log.Println("host GitRepo of ", hostname, hostGitRepo)
+		log.Debugln("host GitRepo of ", hostname, hostGitRepo)
 		return (hostGitRepo != currGitRepo)
 	}
 
@@ -26,8 +26,8 @@ func GitUpdateCheck(hostname string) bool {
 	if agentUpdateInfo, ok := Agents.Get(hostname); ok {
 		hostPluginVersion := agentUpdateInfo.ReportRequest.PluginVersion
 		newestPluginVersion := pluginHash.Get()
-		log.Println("hostPluginVersion of ", hostname, hostPluginVersion)
-		log.Println("newestPluginVersion is:", newestPluginVersion)
+		log.Debugln("hostPluginVersion of ", hostname, hostPluginVersion)
+		log.Debugln("newestPluginVersion is:", newestPluginVersion)
 		return (hostPluginVersion != newestPluginVersion)
 	}
 
@@ -82,8 +82,8 @@ func getNewestPluginHash() {
 			strlist := strings.Split(v.EntryList[0].ID, "/")
 			hash := strlist[len(strlist)-1]
 			pluginHash.Put(hash)
-			log.Println("Get newest plugin hash from atomAddr:", atomAddr)
-			log.Println("Record newest hash as:", hash)
+			log.Debugln("Get newest plugin hash from atomAddr:", atomAddr)
+			log.Debugln("Record newest hash as:", hash)
 		}
 	}
 }
