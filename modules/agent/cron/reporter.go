@@ -2,10 +2,11 @@ package cron
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	log "github.com/Sirupsen/logrus"
-	"time"
 )
 
 func ReportAgentStatus() {
@@ -26,6 +27,7 @@ func reportAgentStatus(interval time.Duration) {
 			IP:            g.IP(),
 			AgentVersion:  g.VERSION,
 			PluginVersion: g.GetCurrPluginVersion(),
+			GitRepo:       g.GetCurrGitRepo(),
 		}
 
 		var resp model.SimpleRpcResponse

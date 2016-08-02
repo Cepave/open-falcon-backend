@@ -11,6 +11,17 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+func GitRepoUpdateCheck(hostname string) bool {
+	if agentUpdateInfo, ok := Agents.Get(hostname); ok {
+		hostGitRepo := agentUpdateInfo.ReportRequest.GitRepo
+		currGitRepo := g.Config().GitRepo
+		log.Println("host GitRepo of ", hostname, hostGitRepo)
+		return (hostGitRepo != currGitRepo)
+	}
+
+	return true
+}
+
 func GitUpdateCheck(hostname string) bool {
 	if agentUpdateInfo, ok := Agents.Get(hostname); ok {
 		hostPluginVersion := agentUpdateInfo.ReportRequest.PluginVersion
