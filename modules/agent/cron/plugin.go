@@ -29,6 +29,16 @@ func SyncMinePlugins() {
 	go syncMinePlugins()
 }
 
+func dirFilter(userBindDir []string) (resultDir []string) {
+	// remove reserved dir: data
+	for _, val := range userBindDir {
+		if !strings.HasPrefix(val, "data/") && val != "data" {
+			resultDir = append(resultDir, val)
+		}
+	}
+	return
+}
+
 func syncMinePlugins() {
 
 	var (
@@ -61,7 +71,7 @@ func syncMinePlugins() {
 			continue
 		}
 
-		pluginDirs = resp.Plugins
+		pluginDirs = dirFilter(resp.Plugins)
 		timestamp = resp.Timestamp
 		plugins.GitRepo = resp.GitRepo
 
@@ -77,6 +87,7 @@ func syncMinePlugins() {
 
 		if g.Config().Debug {
 			log.Println(&resp)
+			log.Println(pluginDirs)
 		}
 
 		if len(pluginDirs) == 0 {
