@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+
 	"github.com/Cepave/open-falcon-backend/commands/reload"
 	"github.com/Cepave/open-falcon-backend/commands/restart"
 	"github.com/Cepave/open-falcon-backend/commands/start"
@@ -9,9 +13,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/commands/stop"
 	"github.com/Cepave/open-falcon-backend/commands/tail"
 	"github.com/mitchellh/cli"
-	"io/ioutil"
-	"log"
-	"os"
 )
 
 // Commands is the mapping of all the available Consul commands.

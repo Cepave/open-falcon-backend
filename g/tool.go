@@ -2,11 +2,12 @@ package g
 
 import (
 	"fmt"
-	"github.com/toolkits/file"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/toolkits/file"
 )
 
 func configExists(cfg string) bool {
