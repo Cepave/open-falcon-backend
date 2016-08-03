@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-
 	"github.com/toolkits/file"
 )
 
@@ -106,6 +105,7 @@ type GlobalConfig struct {
 	Cache        *CacheConfig        `json:"cache"`
 	Http         *HttpConfig         `json:"http"`
 	Salt         string              `json:"salt"`
+	AtomAddr     string              `json:"atomAddress"`
 	CanRegister  bool                `json:"canRegister"`
 	Ldap         *LdapConfig         `json:"ldap"`
 	Uic          *UicConfig          `json:"uic"`

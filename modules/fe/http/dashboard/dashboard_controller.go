@@ -66,7 +66,7 @@ func (this *DashBoardController) LatestPlugin() {
 	}
 
 	v := xmlData{}
-	if resp, err := http.Get("https://gitlab.com/Cepave/OwlPlugin/commits/master.atom"); err != nil {
+	if resp, err := http.Get(g.Config().AtomAddr); err != nil {
 		// handle error.
 		log.Println("Error retrieving resource:", err)
 	} else {
@@ -361,7 +361,7 @@ func (this *DashBoardController) EndpRegxquryForOps() {
 var commitsInfo []*rss.Item
 
 func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
-	feed, err := rss.Fetch("https://gitlab.com/Cepave/OwlPlugin/commits/master.atom")
+	feed, err := rss.Fetch(g.Config().AtomAddr)
 	if err != nil {
 		log.Println(err)
 	}
