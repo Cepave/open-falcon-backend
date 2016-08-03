@@ -2,9 +2,10 @@ package status
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/Cepave/open-falcon-backend/g"
 	"github.com/mitchellh/cli"
-	"strings"
 )
 
 // Command is a Command implementation that runs a Consul agent.

@@ -1,8 +1,6 @@
 package g
 
-import (
 //	"io/ioutil"
-)
 
 var Modules map[string]bool
 var ModuleBins map[string]string

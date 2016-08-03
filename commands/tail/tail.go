@@ -2,11 +2,12 @@ package tail
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/g"
-	"github.com/mitchellh/cli"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/Cepave/open-falcon-backend/g"
+	"github.com/mitchellh/cli"
 )
 
 // Command is a Command implementation that runs a Consul agent.
