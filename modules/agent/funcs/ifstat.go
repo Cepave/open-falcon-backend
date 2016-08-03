@@ -1,15 +1,25 @@
 package funcs
 
 import (
+	"strings"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/nux"
-	"strings"
 )
 
 func NetMetrics() []*model.MetricValue {
 	return CoreNetMetrics(g.Config().Collector.IfacePrefix)
+}
+
+func containsCollector(iface string, ifacePrefix []string) bool {
+	for _, prefix := range ifacePrefix {
+		if strings.Contains(iface, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func CoreNetMetrics(ifacePrefix []string) []*model.MetricValue {
@@ -50,7 +60,7 @@ func CoreNetMetrics(ifacePrefix []string) []*model.MetricValue {
 	inTotalBits := int64(0)
 	outTotalBits := int64(0)
 	for _, netIf := range netIfs {
-		if strings.Contains(netIf.Iface, "eth") || strings.Contains(netIf.Iface, "em") || strings.Contains(netIf.Iface, "enp") {
+		if containsCollector(netIf.Iface, ifacePrefix) {
 			inTotalBits += netIf.InBytes * 8
 			outTotalBits += netIf.OutBytes * 8
 		}
