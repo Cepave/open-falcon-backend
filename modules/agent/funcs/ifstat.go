@@ -10,7 +10,7 @@ import (
 )
 
 func NetMetrics() []*model.MetricValue {
-	return CoreNetMetrics(g.Config().Collector.IfacePrefix)
+	return CoreNetMetrics(g.Config().Collector.IfacePrefix, g.Config().Collector.EthAll)
 }
 
 func containsCollector(iface string, ifacePrefix []string) bool {
@@ -22,7 +22,7 @@ func containsCollector(iface string, ifacePrefix []string) bool {
 	return false
 }
 
-func CoreNetMetrics(ifacePrefix []string) []*model.MetricValue {
+func CoreNetMetrics(ifacePrefix []string, ethAllPrefix []string) []*model.MetricValue {
 
 	netIfs, err := nux.NetIfs(ifacePrefix)
 	if err != nil {
@@ -60,7 +60,7 @@ func CoreNetMetrics(ifacePrefix []string) []*model.MetricValue {
 	inTotalBits := int64(0)
 	outTotalBits := int64(0)
 	for _, netIf := range netIfs {
-		if containsCollector(netIf.Iface, ifacePrefix) {
+		if containsCollector(netIf.Iface, ethAllPrefix) {
 			inTotalBits += netIf.InBytes * 8
 			outTotalBits += netIf.OutBytes * 8
 		}

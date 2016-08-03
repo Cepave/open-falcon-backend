@@ -2,10 +2,11 @@ package g
 
 import (
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
 	"os"
 	"strings"
 	"sync"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/toolkits/file"
 )
@@ -39,6 +40,7 @@ type HttpConfig struct {
 
 type CollectorConfig struct {
 	IfacePrefix []string `json:"ifacePrefix"`
+	EthAll      []string `json:"eth_all"`
 }
 
 type GlobalConfig struct {
