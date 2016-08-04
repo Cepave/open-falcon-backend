@@ -72,7 +72,7 @@ func getNewestPluginHash() {
 		atomAddr := strings.Replace(g.Config().GitRepo, ".git", "/commits/master.atom", -1)
 		if resp, err := http.Get(atomAddr); err != nil {
 			// handle error.
-			log.Println("Error retrieving resource:", err)
+			log.Errorln("Error retrieving resource:", err)
 		} else {
 			defer resp.Body.Close()
 			xml.NewDecoder(resp.Body).Decode(&v)
