@@ -49,6 +49,8 @@ func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 			c.Assert(testedResult[0].grouping, DeepEquals, []int32{20, 40})
 			c.Assert(testedResult[0].metrics.Avg, Equals, float32(45.78))
 			c.Assert(testedResult[0].metrics.Max, Equals, int16(88))
+			c.Assert(testedResult[0].metrics.NumberOfAgents, Equals, int32(50))
+			c.Assert(testedResult[0].metrics.NumberOfTargets, Equals, int32(37))
 		}
 		// :~)
 	}
@@ -90,6 +92,8 @@ func (srv *mockNqmService) QueryIcmpByDsl(r *http.Request, args *IcmpDslArgs, re
 	jsonIcmpStatistics.Set("loss", 0.1)
 	jsonIcmpStatistics.Set("number_of_sent_packets", 9000)
 	jsonIcmpStatistics.Set("number_of_received_packets", 8933)
+	jsonIcmpStatistics.Set("number_of_agents", 50)
+	jsonIcmpStatistics.Set("number_of_targets", 37)
 
 	dsl := args.Dsl
 

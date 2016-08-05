@@ -2,12 +2,41 @@ package http
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	"github.com/toolkits/file"
-	"net/http"
-	"os/exec"
 )
+
+func deleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
+	parentDir := file.Dir(pluginDir)
+
+	absPath, _ := filepath.Abs(pluginDir)
+	if absPath == "/" {
+		out = fmt.Sprintf("\nRemove directory:%s is not allowed.", absPath)
+		return
+	}
+	err1 := os.RemoveAll(file.Basename(pluginDir))
+	if err1 != nil {
+		out = fmt.Sprintf("\nremove the git plugin dir:%s fail. error: %s", file.Basename(pluginDir), err1)
+		return
+	} else {
+		out = fmt.Sprintf("\nremove the git plugin dir:%s success", file.Basename(pluginDir))
+	}
+	cmd := exec.Command("git", "clone", gitRemoteAddr, file.Basename(pluginDir))
+	cmd.Dir = parentDir
+	err2 := cmd.Run()
+	if err2 != nil {
+		out = out + fmt.Sprintf("\ngit clone in dir:%s fail. error: %s", parentDir, err2)
+		return
+	}
+	out = out + "\ngit clone success"
+	return
+}
 
 func configPluginRoutes() {
 	http.HandleFunc("/plugin/update", func(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +56,7 @@ func configPluginRoutes() {
 			err := cmd.Run()
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("git pull in dir:%s fail. error: %s", dir, err)))
+				w.Write([]byte(deleteAndCloneRepo(dir, g.Config().Plugin.Git)))
 				return
 			}
 		} else {

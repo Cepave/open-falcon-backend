@@ -18,6 +18,7 @@
         }
     },
     "salt": "",
+    "atomAddress": "https://example.com/Cepave/OwlPlugin/commits/master.atom",
     "canRegister": true,
     "ldap": {
         "enabled": false,

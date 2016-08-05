@@ -89,7 +89,8 @@ func (s *server) Query(ctx context.Context, in *pb.QueryInput) (*pb.QueryReply, 
 	// When Values is empty will generate null in jsonMarshal
 	// This will terms "null" into "[]"
 	for idx, result := range resTmp {
-		if result.Values == nil {
+		if result == nil {
+			result = &cmodel.GraphQueryResponse{}
 			result.Values = []*cmodel.RRDData{}
 		}
 		resTmp[idx] = result

@@ -88,6 +88,10 @@ func GenPlatMap(repons PlatformList, filterList *hashset.Set) (ipMapper *hashmap
 }
 
 func IdcMapping(popIDs []int) (idcmapping map[int]string, err error) {
+	if len(popIDs) == 0 {
+		err = errors.New("popIdDs is empty")
+		return
+	}
 	q := orm.NewOrm()
 	q.Using("grafana")
 	popFilter := ""

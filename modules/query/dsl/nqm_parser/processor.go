@@ -2,126 +2,179 @@ package nqm_parser
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"time"
 )
 
-const unknown_type = -1
-
 const (
 	_ = iota
-
-	param_start_time      = iota
-	param_end_time        = iota
-	param_agent_isp       = iota
-	param_agent_province  = iota
-	param_agent_city      = iota
-	param_target_isp      = iota
-	param_target_province = iota
-	param_target_city     = iota
 
 	parse_iso8601_minute = "2006-01-02T15:04Z07:00"
 )
 
 var currentTimeZone = time.Now().Format("Z07:00")
 
-type paramContent struct {
-	paramType      int
-	paramValue     interface{}
-	setQueryParams func(*QueryParams, interface{})
-}
+type paramSetter func(*QueryParams)
+var empty_param_setter paramSetter = func(queryParams *QueryParams) {}
 
-var emptyParamContent = &paramContent{unknown_type, nil, func(p *QueryParams, v interface{}) {}}
-
-func parseValidPramName(paramName interface{}, assignedValue interface{}) (*paramContent, error) {
+func buildErrorForInvalidParam(paramName interface{}, assignedValue interface{}) error {
 	if assignedValue == nil {
-		return emptyParamContent, fmt.Errorf("\"%v\" missed \"=<value>\" ?", paramName)
+		return fmt.Errorf("\"%v\" missed \"=<value>\" ?", paramName);
 	}
 
 	if assignedValue != nil {
 		paramValue := assignedValue.([]interface{})[1]
 
 		if paramValue != nil {
-			return emptyParamContent, fmt.Errorf("\"%v\" cannot accept \"%v\"", paramName, paramValue)
+			return fmt.Errorf("\"%v\" cannot accept \"%v\"", paramName, paramValue)
 		}
 
-		return emptyParamContent, fmt.Errorf("\"%v=\" need set value", paramName)
+		return fmt.Errorf("\"%v=\" need set value", paramName)
 	}
 
-	return emptyParamContent, nil
+	return fmt.Errorf("Unknown error")
 }
 
-// Builds paramContent by name of param
-func buildParamContent(paramName interface{}, srcParamValue interface{}) *paramContent {
-	var resultParamType int = unknown_type
-	var implSetParam func(*QueryParams, interface{})
+// Converts []interface{} to []paramSetter
+func toSetters(finalResult interface{}) []paramSetter {
+	if finalResult == nil {
+		return make([]paramSetter, 0)
+	}
 
-	switch paramName.(string) {
-	case "starttime":
-		resultParamType = param_start_time
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.StartTime = v.(time.Time)
-		}
-	case "endtime":
-		resultParamType = param_end_time
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.EndTime = v.(time.Time)
-		}
+	finalResultAsArray := finalResult.([]interface{})
+	resultAsParamSetters := make([]paramSetter, len(finalResultAsArray))
+
+	for i, untypedParamSetter := range finalResultAsArray {
+		resultAsParamSetters[i] = untypedParamSetter.(paramSetter)
+	}
+
+	return resultAsParamSetters
+}
+
+// Builds paramSetter by content of param
+func buildSetterFunc(paramName interface{}, srcParamValue interface{}) (newSetter paramSetter, err error) {
+	paramNameAsString := paramName.(string)
+
+	switch srcParamValue.(type) {
+	case time.Time:
+		newSetter, err = buildSetterFuncForTime(paramNameAsString, srcParamValue.(time.Time))
+	case []string:
+		newSetter, err = buildSetterFuncForStringArray(paramNameAsString, srcParamValue.([]string))
+	case HostRelation:
+		newSetter, err = buildSetterFuncForHostRelation(paramNameAsString, srcParamValue.(HostRelation))
+	default:
+		err = fmt.Errorf("Unsupported for type of param[%v]. Param name: [%v]", reflect.TypeOf(srcParamValue), paramNameAsString)
+	}
+
+	return
+}
+
+func buildSetterFuncForTime(paramName string, timeValue time.Time) (newSetter paramSetter, err error) {
+	newSetter = nil
+
+	switch paramName {
+		case "starttime":
+			newSetter = func (p *QueryParams) {
+				p.StartTime = timeValue
+			}
+		case "endtime":
+			newSetter = func (p *QueryParams) {
+				p.EndTime = timeValue
+			}
+	}
+
+	if newSetter == nil {
+		err = fmt.Errorf("Unsupported time value for property: [%v]", paramName)
+	}
+
+	return
+}
+
+func buildSetterFuncForStringArray(paramName string, values []string) (newSetter paramSetter, err error) {
+	newSetter = nil
+
+	switch paramName {
 	case "agent.isp":
-		resultParamType = param_agent_isp
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.addIspOfAgent(v.([]string)...)
+		newSetter = func (p *QueryParams) {
+			appendForString(&p.AgentFilter.MatchIsps, values)
 		}
 	case "agent.province":
-		resultParamType = param_agent_province
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.addProvinceOfAgent(v.([]string)...)
+		newSetter = func (p *QueryParams) {
+			appendForString(&p.AgentFilter.MatchProvinces, values)
 		}
 	case "agent.city":
-		resultParamType = param_agent_city
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.addCityOfAgent(v.([]string)...)
+		newSetter = func (p *QueryParams) {
+			appendForString(&p.AgentFilter.MatchCities, values)
 		}
 	case "target.isp":
-		resultParamType = param_target_isp
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.addIspOfTarget(v.([]string)...)
+		newSetter = func (p *QueryParams) {
+			appendForString(&p.TargetFilter.MatchIsps, values)
 		}
 	case "target.province":
-		resultParamType = param_target_province
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.addProvinceOfTarget(v.([]string)...)
+		newSetter = func (p *QueryParams) {
+			appendForString(&p.TargetFilter.MatchProvinces, values)
 		}
 	case "target.city":
-		resultParamType = param_target_city
-		implSetParam = func(p *QueryParams, v interface{}) {
-			p.addCityOfTarget(v.([]string)...)
+		newSetter = func (p *QueryParams) {
+			appendForString(&p.TargetFilter.MatchCities, values)
 		}
 	}
 
-	return &paramContent{
-		paramType:      resultParamType,
-		paramValue:     srcParamValue,
-		setQueryParams: implSetParam,
+	if newSetter == nil {
+		err = fmt.Errorf("Unsupported []string value for property: [%v]", paramName)
 	}
+
+	return
 }
 
-// Sets the parameters for query with "starttime" or "endtime"
-//
-// If there are multiple "starttime"s or "endtime"s, the last one is the final value.
-func setParams(queryParams *QueryParams, params interface{}) error {
-	for _, param := range params.([]interface{}) {
-		paramContent := param.(*paramContent)
-		paramContent.setQueryParams(queryParams, paramContent.paramValue)
+// If multiple %<AUTO_COND>% has set on the same properties of agent/target,
+// this building would apply the last one
+func buildSetterFuncForHostRelation(paramName string, relationValue HostRelation) (newSetter paramSetter, err error) {
+	newSetter = nil
+
+	switch paramName {
+	case "agent.isp":
+		newSetter = func (p *QueryParams) {
+			p.IspRelation = relationValue
+		}
+	case "agent.province":
+		newSetter = func (p *QueryParams) {
+			p.ProvinceRelation = relationValue
+		}
+	case "agent.city":
+		newSetter = func (p *QueryParams) {
+			p.CityRelation = relationValue
+		}
+	case "target.isp":
+		newSetter = func (p *QueryParams) {
+			p.IspRelation = relationValue
+		}
+	case "target.province":
+		newSetter = func (p *QueryParams) {
+			p.ProvinceRelation = relationValue
+		}
+	case "target.city":
+		newSetter = func (p *QueryParams) {
+			p.CityRelation = relationValue
+		}
 	}
 
-	return nil
+	if newSetter == nil {
+		err = fmt.Errorf("Unsupported \"HostRelation\" value for property: [%v]", paramName)
+	}
+
+	return
+}
+
+func appendForString(valuesHolder *[]string, values []string) {
+	*valuesHolder = append(*valuesHolder, values...)
 }
 
 func combineStringLiterals(first interface{}, rest interface{}) []string {
 	allRests := rest.([]interface{})
 
-	result := make([]string, 0, len(allRests)+1)
+	result := make([]string, 0, len(allRests) + 1)
 	result = append(result, first.(string))
 
 	for _, v := range allRests {
@@ -142,6 +195,19 @@ func parseUnixTime(c *current) (time.Time, error) {
 	return time.Unix(unixTimeInt64, 0), nil
 }
 
+func parseAutoCondition(autoConditionValue interface{}) (HostRelation, error) {
+	stringValue := autoConditionValue.(string)
+
+	switch stringValue {
+	case "MATCH_ANOTHER":
+		return SAME_VALUE, nil
+	case "NOT_MATCH_ANOTHER":
+		return NOT_SAME_VALUE, nil
+	default:
+		return UNKNOWN_RELATION, fmt.Errorf("Unknown auto-condition: %%%v%%", stringValue);
+	}
+}
+
 // Parses the string representation of ISO-8601 format
 //
 // For example(assumes local timezone is "+08:00"):
@@ -153,7 +219,7 @@ func parseUnixTime(c *current) (time.Time, error) {
 func parseIso8601(c *current) (time.Time, error) {
 	timeStr := string(c.text)
 
-	switch len(timeStr) {
+	switch (len(timeStr)) {
 	case 10:
 		timeStr = fmt.Sprintf("%sT00:00%s", timeStr, currentTimeZone)
 	case 13:
