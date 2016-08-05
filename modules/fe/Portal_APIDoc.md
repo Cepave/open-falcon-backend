@@ -356,6 +356,8 @@
     * set the return limit of events
   * `caseId` string
     * return specific alarm_case
+  * `show_all` bool
+    * filter alarm case of inactive endpoints
 * response:
   * ok
 
