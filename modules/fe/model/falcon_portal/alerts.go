@@ -62,7 +62,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 	return
 }
 
-func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set) (respComplete []AlertsResp) {
+func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set, showAll bool) (respComplete []AlertsResp) {
 	respComplete = resp
 	platformInfo, err := fastweb.GetPlatformASJSON()
 	if err != nil {
@@ -98,7 +98,12 @@ func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set) (respComplete []
 		ipInfo := ipInfotmp.(fastweb.IPInfo)
 		item.Platform = ipInfo.Platform
 		if ipInfo.IPStatus == "0" {
-			item.IP = ipInfo.IP + "(deactivated)"
+			if showAll {
+				item.IP = ipInfo.IP + "(deactivated)"
+			} else {
+				// if this server is set to inactive, will ignored it
+				continue
+			}
 		} else {
 			item.IP = ipInfo.IP
 		}
