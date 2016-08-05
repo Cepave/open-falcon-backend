@@ -2,9 +2,10 @@ package db
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	log "github.com/Sirupsen/logrus"
-	"strings"
 )
 
 func QueryExpressions() (ret []*model.Expression, err error) {

@@ -8,6 +8,5 @@
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:6031"
-    },
-    "gitrepo": "https://example.com/Cepave/OwlPlugin.git"
+    }
 }
