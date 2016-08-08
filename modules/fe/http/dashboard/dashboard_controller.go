@@ -66,12 +66,19 @@ func (this *DashBoardController) LatestPlugin() {
 	}
 
 	v := xmlData{}
-	if resp, err := http.Get(g.Config().AtomAddr); err != nil {
-		// handle error.
-		log.Println("Error retrieving resource:", err)
+
+	c, q_err := dashboard.QueryConfig("atom_addr")
+	log.Println("Lastest Plugin atom address value is: ", c.Value)
+	if q_err != nil {
+		log.Errorln("QueryConfig error: ", q_err)
 	} else {
-		defer resp.Body.Close()
-		xml.NewDecoder(resp.Body).Decode(&v)
+		if resp, err := http.Get(c.Value); err != nil {
+			// handle error.
+			log.Println("Error retrieving resource:", err)
+		} else {
+			defer resp.Body.Close()
+			xml.NewDecoder(resp.Body).Decode(&v)
+		}
 	}
 
 	baseResp.Data["EntryList"] = v.EntryList
@@ -311,7 +318,7 @@ func (this *DashBoardController) EndpRegxquryForPlugin() {
 			baseResp.Data["Endpoints"] = []string{}
 		}
 	}
-	log.Println(baseResp)
+	log.Debugln(baseResp)
 	this.ServeApiJson(baseResp)
 	return
 }
@@ -361,7 +368,13 @@ func (this *DashBoardController) EndpRegxquryForOps() {
 var commitsInfo []*rss.Item
 
 func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
-	feed, err := rss.Fetch(g.Config().AtomAddr)
+	c, q_err := dashboard.QueryConfig("atom_addr")
+	log.Println("gitInfoAdapter shows atom address as: ", c.Value)
+	if q_err != nil {
+		log.Errorln("QueryConfig error: ", q_err)
+	}
+
+	feed, err := rss.Fetch(c.Value)
 	if err != nil {
 		log.Println(err)
 	}
