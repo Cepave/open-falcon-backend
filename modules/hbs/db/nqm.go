@@ -79,7 +79,8 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			SELECT ag_name,
 				isp_id, isp_name,
 				pv_id, pv_name,
-				ct_id, ct_name
+				ct_id, ct_name,
+				ag_nt_id
 			FROM nqm_agent AS ag
 				INNER JOIN
 				(
@@ -113,6 +114,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			&result.IspId, &result.IspName,
 			&result.ProvinceId, &result.ProvinceName,
 			&result.CityId, &result.CityName,
+			&result.NameTagId,
 		); err != nil {
 
 			/**
@@ -197,9 +199,6 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 	for rows.Next() {
 		targets = append(targets, commonModel.NqmTarget{})
 		var currentTarget *commonModel.NqmTarget = &targets[len(targets)-1]
-		currentTarget.NameTag = commonModel.UNDEFINED_STRING
-
-		var nameTag sql.NullString
 
 		rows.Scan(
 			&currentTarget.Id,
@@ -210,11 +209,12 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 			&currentTarget.ProvinceName,
 			&currentTarget.CityId,
 			&currentTarget.CityName,
-			&nameTag,
+			&currentTarget.NameTagId,
+			&currentTarget.NameTag,
 		)
 
-		if nameTag.Valid {
-			currentTarget.NameTag = nameTag.String
+		if currentTarget.NameTagId == commonModel.UNDEFINED_NAME_TAG_ID {
+			currentTarget.NameTag = commonModel.UNDEFINED_STRING
 		}
 	}
 	// :~)
@@ -228,7 +228,8 @@ func loadAllTargets() (*sql.Rows, error) {
 		SELECT tg_id, tg_host,
 			isp_id, isp_name,
 			pv_id, pv_name,
-			ct_id, ct_name, tg.tg_name_tag
+			ct_id, ct_name,
+			nt.nt_id, nt.nt_value
 		FROM nqm_target AS tg
 			INNER JOIN
 			owl_isp AS isp
@@ -239,6 +240,9 @@ func loadAllTargets() (*sql.Rows, error) {
 			INNER JOIN
 			owl_city AS ct
 			ON tg.tg_ct_id = ct.ct_id
+			INNER JOIN
+			owl_name_tag AS nt
+			ON tg.tg_nt_id = nt.nt_id
 		WHERE
 			tg.tg_status=true
 			AND
@@ -253,10 +257,11 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 			tg_id, tg_host,
 			isp_id, isp_name,
 			pv_id, pv_name,
-			ct_id, ct_name, tg.tg_name_tag
+			ct_id, ct_name,
+			nt_id, nt_value
 		FROM (
 			/* Matched target by ISP */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 			FROM nqm_target tg
 				INNER JOIN
 				nqm_pt_target_filter_isp AS tfisp
@@ -267,7 +272,7 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 			/* :~) */
 			UNION
 			/* Matched target by province */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 			FROM nqm_target tg
 				INNER JOIN
 				nqm_pt_target_filter_province AS tfpv
@@ -278,7 +283,7 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 			/* :~) */
 			UNION
 			/* Matched target by city */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 			FROM nqm_target tg
 				INNER JOIN
 				nqm_pt_target_filter_city AS tfct
@@ -289,18 +294,18 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 			/* :~) */
 			UNION
 			/* Matched target by name tag */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 			FROM nqm_target tg
 				INNER JOIN
 				nqm_pt_target_filter_name_tag AS tfnt
 				ON tfnt.tfnt_pt_ag_id = ?
-					AND tg.tg_name_tag = tfnt.tfnt_name_tag
+					AND tg.tg_nt_id = tfnt.tfnt_nt_id
 					AND tg.tg_status = true
 					AND tg.tg_available = true
 			/* :~) */
 			UNION
 			/* Matched target which to be probed by all */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_name_tag
+			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 			FROM nqm_target tg
 			WHERE tg_probed_by_all = true
 				AND tg.tg_status = true
@@ -316,6 +321,9 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 		INNER JOIN
 		owl_city AS ct
 		ON tg.tg_ct_id = ct.ct_id
+		INNER JOIN
+		owl_name_tag AS nt
+		ON tg.tg_nt_id = nt.nt_id
 		`,
 		agentId, agentId, agentId, agentId,
 	)

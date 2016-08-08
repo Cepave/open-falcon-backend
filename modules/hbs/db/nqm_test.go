@@ -179,6 +179,7 @@ func testNeedPingAgent(c *C, testCase getAndRefreshNeedPingAgentTestCase) {
 	c.Assert(testedAgent.IspId, Equals, int16(3))
 	c.Assert(testedAgent.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
 	c.Assert(testedAgent.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
+	c.Assert(testedAgent.NameTagId, Equals, commonModel.UNDEFINED_NAME_TAG_ID)
 	// :~)
 
 	/**
@@ -256,6 +257,10 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 	case "TestDbNqmSuite.TestGetPingTaskState":
 		hbstesting.ExecuteQueriesOrFailInTx(
 			`
+			INSERT INTO owl_name_tag(nt_id, nt_value)
+			VALUES (3221, 'st-1')
+			`,
+			`
 			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address)
 			VALUES
 				(2001, 'pt-01', 'aaa1.ccc', 0x12345678),
@@ -293,12 +298,17 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_name_tag(
-				tfnt_pt_ag_id, tfnt_name_tag
-			) VALUES (2006, 'st-1')
+				tfnt_pt_ag_id, tfnt_nt_id
+			) VALUES (2006, 3221)
 			`,
 		)
 	case "TestDbNqmSuite.TestGetTargetsByAgentForRpc":
 		hbstesting.ExecuteQueriesOrFailInTx(
+			`
+			INSERT INTO owl_name_tag(nt_id, nt_value)
+			VALUES (3001, 'tag-value-1'),
+				(3002, 'tag-value-2')
+			`,
 			`
 			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address)
 			VALUES
@@ -312,15 +322,15 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO nqm_target(
 				tg_id, tg_name, tg_host,
-				tg_isp_id, tg_pv_id, tg_ct_id, tg_probed_by_all, tg_name_tag,
+				tg_isp_id, tg_pv_id, tg_ct_id, tg_probed_by_all, tg_nt_id,
 				tg_status, tg_available
 			)
 			VALUES
-				(402001, 'tgn-1', '1.2.3.4', -1, -1, -1, true, null, true, true),
-				(402002, 'tgn-2', '1.2.3.5', 5, -1, -1, false, null, true, true),
-				(402003, 'tgn-3', '1.2.3.6', -1, 5, -1, false, null, true, true),
-				(402004, 'tgn-4', '1.2.3.7', -1, 20, 20, false, null, true, true),
-				(402005, 'tgn-5', '1.2.3.8', -1, -1, -1, false, 'tag-1', true, true)
+				(402001, 'tgn-1', '1.2.3.4', -1, -1, -1, true, -1, true, true),
+				(402002, 'tgn-2', '1.2.3.5', 5, -1, -1, false, -1, true, true),
+				(402003, 'tgn-3', '1.2.3.6', -1, 5, -1, false, -1, true, true),
+				(402004, 'tgn-4', '1.2.3.7', -1, 20, 20, false, -1, true, true),
+				(402005, 'tgn-5', '1.2.3.8', -1, -1, -1, false, 3001, true, true)
 			`,
 			`
 			INSERT INTO nqm_ping_task(
@@ -354,10 +364,10 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_name_tag(
-				tfnt_pt_ag_id, tfnt_name_tag
+				tfnt_pt_ag_id, tfnt_nt_id
 			)
-			VALUES (230005, 'tag-1'),
-				(230006, 'tag-nothing-matched')
+			VALUES (230005, 3001),
+				(230006, 3002)
 			`,
 		)
 	}
@@ -378,26 +388,24 @@ func (s *TestDbNqmSuite) TearDownTest(c *C) {
 		)
 	case "TestDbNqmSuite.TestGetPingTaskState":
 		hbstesting.ExecuteQueriesOrFailInTx(
-			"SET FOREIGN_KEY_CHECKS=0",
-			"DELETE FROM nqm_pt_target_filter_isp",
-			"DELETE FROM nqm_pt_target_filter_province",
-			"DELETE FROM nqm_pt_target_filter_city",
-			"DELETE FROM nqm_pt_target_filter_name_tag",
-			"DELETE FROM nqm_ping_task",
-			"DELETE FROM nqm_agent",
-			"SET FOREIGN_KEY_CHECKS=1",
+			"DELETE FROM nqm_pt_target_filter_isp WHERE tfisp_pt_ag_id >= 2001 AND tfisp_pt_ag_id <= 2006",
+			"DELETE FROM nqm_pt_target_filter_province WHERE tfpv_pt_ag_id >= 2001 AND tfpv_pt_ag_id <= 2006",
+			"DELETE FROM nqm_pt_target_filter_city WHERE tfct_pt_ag_id >= 2001 AND tfct_pt_ag_id <= 2006",
+			"DELETE FROM nqm_pt_target_filter_name_tag WHERE tfnt_pt_ag_id >= 2001 AND tfnt_pt_ag_id <= 2006",
+			"DELETE FROM nqm_ping_task WHERE pt_ag_id >= 2001 AND pt_ag_id <= 2006",
+			"DELETE FROM nqm_agent WHERE ag_id >= 2001 AND ag_id <= 2006",
+			"DELETE FROM owl_name_tag WHERE nt_id = 3221",
 		)
 	case "TestDbNqmSuite.TestGetTargetsByAgentForRpc":
 		hbstesting.ExecuteQueriesOrFailInTx(
-			"SET FOREIGN_KEY_CHECKS=0",
-			"DELETE FROM nqm_pt_target_filter_isp",
-			"DELETE FROM nqm_pt_target_filter_province",
-			"DELETE FROM nqm_pt_target_filter_city",
-			"DELETE FROM nqm_pt_target_filter_name_tag",
-			"DELETE FROM nqm_ping_task",
-			"DELETE FROM nqm_target",
-			"DELETE FROM nqm_agent",
-			"SET FOREIGN_KEY_CHECKS=1",
+			"DELETE FROM nqm_pt_target_filter_isp WHERE tfisp_pt_ag_id >= 230001 AND tfisp_pt_ag_id <= 230006",
+			"DELETE FROM nqm_pt_target_filter_province WHERE tfpv_pt_ag_id >= 230001 AND tfpv_pt_ag_id <= 230006",
+			"DELETE FROM nqm_pt_target_filter_city WHERE tfct_pt_ag_id >= 230001 AND tfct_pt_ag_id <= 230006",
+			"DELETE FROM nqm_pt_target_filter_name_tag WHERE tfnt_pt_ag_id >= 230001 AND tfnt_pt_ag_id <= 230006",
+			"DELETE FROM nqm_ping_task WHERE pt_ag_id >= 230001 AND pt_ag_id <= 230006",
+			"DELETE FROM nqm_target WHERE tg_id >= 402001 AND tg_id <= 402005",
+			"DELETE FROM nqm_agent WHERE ag_id >= 230001 AND ag_id <= 230006",
+			"DELETE FROM owl_name_tag WHERE nt_id IN (3001, 3002)",
 		)
 	}
 }

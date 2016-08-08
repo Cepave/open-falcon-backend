@@ -12,6 +12,7 @@ const (
 	UNDEFINED_ISP_ID      = int16(UNDEFINED_ID)
 	UNDEFINED_PROVINCE_ID = int16(UNDEFINED_ID)
 	UNDEFINED_CITY_ID     = int16(UNDEFINED_ID)
+	UNDEFINED_NAME_TAG_ID     = int16(UNDEFINED_ID)
 
 	// Value of undefined string
 	UNDEFINED_STRING = "<UNDEFINED>"
@@ -76,6 +77,8 @@ type NqmAgent struct {
 	CityId int16
 	// The name of city
 	CityName string
+
+	NameTagId int16
 }
 
 // Represents the data of target used by NQM agent
@@ -101,27 +104,30 @@ type NqmTarget struct {
 	// The name of city
 	CityName string
 
-	// The tag of the target, UNDEFINED_STRING means no such data for this target
+	// The id of name tag
+	NameTagId int16
+	// The name tag of the target
 	NameTag string
 }
 
-func (target NqmTarget) String() string {
+func (target *NqmTarget) String() string {
 	return fmt.Sprintf(
-		"Id: [%d] Host: [%s] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: [%s]",
+		"Id: [%d] Host: [%s] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: [%s](%d)",
 		target.Id, target.Host,
 		target.IspName, target.IspId,
 		target.ProvinceName, target.ProvinceId,
 		target.CityName, target.CityId,
-		target.NameTag,
+		target.NameTag, target.NameTagId,
 	)
 }
 
-func (agent NqmAgent) String() string {
+func (agent *NqmAgent) String() string {
 	return fmt.Sprintf(
-		"Id: [%d] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d]",
+		"Id: [%d] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: (%d)",
 		agent.Id,
 		agent.IspName, agent.IspId,
 		agent.ProvinceName, agent.ProvinceId,
 		agent.CityName, agent.CityId,
+		agent.NameTagId,
 	)
 }
