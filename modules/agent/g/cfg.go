@@ -13,7 +13,6 @@ import (
 type PluginConfig struct {
 	Enabled bool   `json:"enabled"`
 	Dir     string `json:"dir"`
-	Git     string `json:"git"`
 	LogDir  string `json:"logs"`
 }
 

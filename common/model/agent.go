@@ -9,6 +9,7 @@ type AgentReportRequest struct {
 	IP            string
 	AgentVersion  string
 	PluginVersion string
+	GitRepo       string
 }
 
 func (this *AgentReportRequest) String() string {
@@ -40,15 +41,21 @@ func (this *AgentHeartbeatRequest) String() string {
 }
 
 type AgentPluginsResponse struct {
-	Plugins   []string
-	Timestamp int64
+	Plugins       []string
+	Timestamp     int64
+	GitRepo       string
+	GitUpdate     bool
+	GitRepoUpdate bool
 }
 
 func (this *AgentPluginsResponse) String() string {
 	return fmt.Sprintf(
-		"<Plugins:%v, Timestamp:%v>",
+		"<Plugins:%v, Timestamp:%v, GitRepo:%v, GitUpdate:%v, GitRepoUpdate:%v>",
 		this.Plugins,
 		this.Timestamp,
+		this.GitRepo,
+		this.GitUpdate,
+		this.GitRepoUpdate,
 	)
 }
 

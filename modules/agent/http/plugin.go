@@ -12,7 +12,7 @@ import (
 	"github.com/toolkits/file"
 )
 
-func deleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
+func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
 	parentDir := file.Dir(pluginDir)
 
 	absPath, _ := filepath.Abs(pluginDir)
@@ -56,12 +56,12 @@ func configPluginRoutes() {
 			err := cmd.Run()
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("git pull in dir:%s fail. error: %s", dir, err)))
-				w.Write([]byte(deleteAndCloneRepo(dir, g.Config().Plugin.Git)))
+				w.Write([]byte(DeleteAndCloneRepo(dir, plugins.GitRepo)))
 				return
 			}
 		} else {
 			// git clone
-			cmd := exec.Command("git", "clone", g.Config().Plugin.Git, file.Basename(dir))
+			cmd := exec.Command("git", "clone", plugins.GitRepo, file.Basename(dir))
 			cmd.Dir = parentDir
 			err := cmd.Run()
 			if err != nil {

@@ -19,6 +19,9 @@ func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.Agent
 
 	reply.Plugins = cache.GetPlugins(args.Hostname)
 	reply.Timestamp = time.Now().Unix()
+	reply.GitRepo = g.Config().GitRepo
+	reply.GitUpdate = cache.GitUpdateCheck(args.Hostname)
+	reply.GitRepoUpdate = cache.GitRepoUpdateCheck(args.Hostname)
 
 	return nil
 }
