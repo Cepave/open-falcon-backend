@@ -151,7 +151,10 @@ func CountNumOfTlp() (c int, err error) {
 func GetNotes(eventCaseId string, limit int, startTime int64, endTime int64, filterIgnored bool) (enotes []EventNote, err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
-	whereConditions := []string{fmt.Sprintf("event_note.event_caseId = '%s' ", eventCaseId)}
+	whereConditions := []string{}
+	if eventCaseId != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("event_note.event_caseId = '%s' ", eventCaseId))
+	}
 	switch {
 	//allow api only set the startTime and use the currentTime as the endTime
 	case startTime != 0 && endTime == 0:
