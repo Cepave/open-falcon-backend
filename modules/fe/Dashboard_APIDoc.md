@@ -1,6 +1,6 @@
 # Dashboard API list
 `Don't forget do URL encoding.. will check session automatically`
-* `GET` `POST` /api/v1/dashboard/endpoints
+### `GET` `POST` /api/v1/dashboard/endpoints
   * `required login session`
   * params:
     * `queryStr` string [regex query string]
@@ -46,7 +46,7 @@
         }
       }
       ```
-* `GET` `POST` /api/v1/dashboard/endpointcounters
+### `GET` `POST` /api/v1/dashboard/endpointcounters
   * `required login session`
   * params:
     * `endpoints` []string (list of host name)
@@ -92,7 +92,7 @@
       }
       ```
 
-* `GET` `POST` /api/v1/dashboard/endpointplugins
+### `GET` `POST` /api/v1/dashboard/endpointplugins
   * `required login session`
   * `required root login`
   * params:
@@ -146,7 +146,7 @@
       }
       ```
 
-* `GET` `POST` /api/v1/dashboard/endpointrunningplugins
+### `GET` `POST` /api/v1/dashboard/endpointrunningplugins
   * `required login session`
   * `required root login`
   * params:
@@ -207,7 +207,7 @@
       }
       ```
 
-* `GET` `POST` /api/v1/dashboard/latestplugin
+### `GET` `POST` /api/v1/dashboard/latestplugin
   * `required login session`
   * `required root login`
   * params:
@@ -248,7 +248,7 @@
       }
       ```
 
-* `GET` `POST` /api/v1/dashboard/counterendpoints
+### `GET` `POST` /api/v1/dashboard/counterendpoints
   * `required login session`
   * `required root login`
   * params:
@@ -294,7 +294,7 @@
       }
       ```
 
-* `GET` `POST` /api/v1//hostgroup/query
+### `GET` `POST` /api/v1//hostgroup/query
   * `required login session`
   * params:
     * `queryStr` string [regex query string]
@@ -332,7 +332,7 @@
       }
     }
     ```
-* `GET` `POST` /api/v1//hostgroup/hosts
+### `GET` `POST` /api/v1//hostgroup/hosts
   * `required login session`
   * params:
     * `hostgroups` list of hostgroup
@@ -386,7 +386,7 @@
       }
       ```
 
-* `GET` `POST` /api/v1//hostgroup/hostgroupscounters
+### `GET` `POST` /api/v1//hostgroup/hostgroupscounters
   * `required login session`
   * params:
     * `hostgroups` list of hostgroup
@@ -436,3 +436,4 @@
         }
       }
       ```
+
