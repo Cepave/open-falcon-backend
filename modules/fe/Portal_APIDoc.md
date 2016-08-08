@@ -1,6 +1,6 @@
 # Portal API list
 `Don't forget do URL encoding.. will check session automatically`
-* `GET` `POST` /api/v1/portal/eventcases/get
+### `GET` `POST` /api/v1/portal/eventcases/get
 * `required login session`
 * params:
   * `startTime` timestamp [if set then can't skip endTime]
@@ -83,7 +83,7 @@
     }
     ```
 
-* `GET` `POST` /api/v1/portal/events/get
+### `GET` `POST` /api/v1/portal/events/get
   * `required login session`
   * params:
     * `startTime` timestamp
@@ -152,7 +152,7 @@
         "error": {}
       }
       ```
-* `GET` `POST` /api/v1/portal/eventcases/close
+### `GET` `POST` /api/v1/portal/eventcases/close
 * !! this is deprecated now !!
 * `required login session`
 * params:
@@ -181,7 +181,7 @@
     }
     ```
 
-* `GET` `POST` /api/v1/portal/eventcases/addnote
+### `GET` `POST` /api/v1/portal/eventcases/addnote
 * add note for one event case
 * `required login session`
 * params:
@@ -216,7 +216,7 @@
     }
     ```
 
-* `GET` `POST` /api/v1/portal/eventcases/notes
+### `GET` `POST` /api/v1/portal/eventcases/notes
 * get notes of one event case.
 * `required login session`
 * params:
@@ -286,7 +286,7 @@
       }
     }
     ```
-* `GET` `POST` /api/v1/portal/eventcases/note
+### `GET` `POST` /api/v1/portal/eventcases/note
 * get one note
 * `required login session`
 * params:
@@ -324,7 +324,7 @@
       }
     }
     ```
-* `GET` `POST` /api/v2/portal/eventcases/get
+### `GET` `POST` /api/v2/portal/eventcases/get
 * `required login session`
 * params:
   * `startTime` timestamp [if set then can't skip endTime]
@@ -472,3 +472,119 @@
       }
     }
     ```
+
+### `GET` `POST` /api/v2/portal/eventcases/feed
+* get one note
+* `required login session`
+* if neede refresh alarm page, the any_new will be true
+* params:
+  * `cName` string
+  * `cSig` string
+  * ok
+
+    ```
+    {
+    "version": "v2",
+    "method": "GET",
+    "status": "success",
+    "data": {
+      "admin": true,
+      "any_new": true,
+      events": [
+      {
+        "id": "s_237_0867fdsfdsfsdfdsf1a68cb",
+        "endpoint": "docker-agent",
+        "metric": "service.logs.test",
+        "func": "all(#3)",
+        "cond": "5 \u003e= 5",
+        "note": "this is note",
+        "max_step": 1,
+        "current_step": 1,
+        "priority": 4,
+        "status": "PROBLEM",
+        "start_at": "2016-08-02T15:12:00+08:00",
+        "update_at": "2016-08-02T15:12:00+08:00",
+        "process_note": 0,
+        "process_status": "unresolved",
+        "tpl_creator": "weiqs",
+        "expression_id": 0,
+        "strategy_id": 237,
+        "template_id": 111,
+        "evevnts": [
+          {
+            "id": 923543,
+            "step": 1,
+            "cond": "5 \u003e= 5",
+            "status": 0,
+            "timestamp": "2016-08-02T15:12:00+08:00",
+            "event_caseId": null
+          },
+          {
+            "id": 890743,
+            "step": 1,
+            "cond": "1 \u003e= 5",
+            "status": 1,
+            "timestamp": "2016-07-29T11:08:00+08:00",
+            "event_caseId": null
+          },
+          {
+            "id": 890734,
+            "step": 1,
+            "cond": "5 \u003e= 5",
+            "status": 0,
+            "timestamp": "2016-07-29T11:07:00+08:00",
+            "event_caseId": null
+          },
+          {
+            "id": 890720,
+            "step": 1,
+            "cond": "4 \u003e= 5",
+            "status": 1,
+            "timestamp": "2016-07-29T11:03:00+08:00",
+            "event_caseId": null
+          }]
+      }],
+      "notes": [
+        {
+          "id": 7358,
+          "event_caseId": "s_288_db27b4ff411966bfe6c3dsfds4add58c",
+          "note": "ignored",
+          "case_id": "",
+          "status": "ignored",
+          "timestamp": "2016-08-02T12:09:50+08:00",
+          "user_name": "root"
+        },
+        {
+          "id": 7359,
+          "event_caseId": "s_148_dcf9347sfd21d73ea0299dsf39bd0225",
+          "note": "ignored",
+          "case_id": "",
+          "status": "ignored",
+          "timestamp": "2016-08-02T12:09:50+08:00",
+          "user_name": "root"
+        },
+        {
+          "id": 7360,
+          "event_caseId": "s_128_e7be175bfsdfdsfffec2e083cfd7d22a",
+          "note": "ignored",
+          "case_id": "",
+          "status": "ignored",
+          "timestamp": "2016-08-02T12:09:50+08:00",
+          "user_name": "root"
+        }]
+      }
+    }
+    ```
+  * failed
+
+    ```
+    {
+      "version": "v2",
+      "method": "GET",
+      "status": "failed",
+      "error": {
+        "message": "can not find this kind of session"
+      }
+    }
+    ```
+
