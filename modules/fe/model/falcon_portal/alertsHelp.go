@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Cepave/open-falcon-backend/modules/fe/model/fastweb"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/boss"
 	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 )
@@ -25,7 +25,7 @@ import (
 // }
 
 type PlatformExtend struct {
-	Contact  []fastweb.Contactor `json:"contact"`
+	Contact  []boss.Contactor `json:"contact"`
 	IDC      string              `json:"idc"`
 	IP       string              `json:"ip"`
 	Platform string              `json:"platform"`

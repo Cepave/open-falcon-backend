@@ -1,17 +1,17 @@
-package fastweb
+package boss
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
-	"github.com/Cepave/open-falcon-backend/modules/fe/model/fastweb"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/boss"
 )
 
-type FastWebController struct {
+type BossController struct {
 	base.BaseController
 }
 
-func (this *FastWebController) GetPlaftom() {
+func (this *BossController) GetPlaftom() {
 	baseResp := this.BasicRespGen()
-	res, err := fastweb.GetPlatformASJSON()
+	res, err := boss.GetPlatformASJSON()
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
@@ -21,14 +21,14 @@ func (this *FastWebController) GetPlaftom() {
 	return
 }
 
-func (this *FastWebController) GetContact() {
+func (this *BossController) GetContact() {
 	baseResp := this.BasicRespGen()
 	platform := this.GetString("platform", "")
 	if platform == "" {
 		this.ResposeError(baseResp, "platfrom is empty")
 		return
 	}
-	res, err := fastweb.QueryContact(platform)
+	res, err := boss.QueryContact(platform)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return

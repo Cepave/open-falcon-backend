@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Cepave/open-falcon-backend/modules/fe/model/fastweb"
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/boss"
 	log "github.com/Sirupsen/logrus"
 	"github.com/emirpasic/gods/sets/hashset"
 )
@@ -40,7 +40,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne.Condition = item.Cond
 		recordOne.StepLimit = item.MaxStep
 		recordOne.Step = item.CurrentStep
-		recordOne.Contact = []fastweb.Contactor{fastweb.Contactor{"-", "-", "-"}}
+		recordOne.Contact = []boss.Contactor{boss.Contactor{"-", "-", "-"}}
 		recordOne.Platform = notFound
 		recordOne.IP = notFound
 		recordOne.IDC = notFound
@@ -64,25 +64,25 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 
 func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set, showAll bool) (respComplete []AlertsResp) {
 	respComplete = resp
-	platformInfo, err := fastweb.GetPlatformASJSON()
+	platformInfo, err := boss.GetPlatformASJSON()
 	if err != nil {
 		log.Error("query platform failed, please check boss api status")
 		return
 	}
 	// //get ip mapping , platformList, popIds
-	ipMapping, platList, popIDs := fastweb.GenPlatMap(platformInfo, endpointList)
+	ipMapping, platList, popIDs := boss.GenPlatMap(platformInfo, endpointList)
 	log.Debugf("ipMapping: %v, platList: %v, popIDs: %v", ipMapping.Values(), platList.Values(), popIDs)
 	if ipMapping.Size() == 0 {
 		log.Warnf("can not found any platform info that matched alarms, current alarms case got: %d", len(resp))
 		return
 	}
 	//get contact mapping
-	contactInfo, err := fastweb.GetPlatfromContactInfo(platList)
+	contactInfo, err := boss.GetPlatfromContactInfo(platList)
 	if err != nil {
 		log.Error("query contact info failed, please check boss api status")
 	}
 	//get idc mapping
-	idcMapping, err := fastweb.IdcMapping(popIDs)
+	idcMapping, err := boss.IdcMapping(popIDs)
 	if err != nil {
 		log.Error("query idc info failed, please check boss api status")
 	}
@@ -99,7 +99,7 @@ func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set, showAll bool) (r
 				continue
 			}
 		}
-		ipInfo := ipInfotmp.(fastweb.IPInfo)
+		ipInfo := ipInfotmp.(boss.IPInfo)
 		item.Platform = ipInfo.Platform
 		if ipInfo.IPStatus == "0" {
 			if showAll {
