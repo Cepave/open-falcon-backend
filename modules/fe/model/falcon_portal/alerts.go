@@ -62,7 +62,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 	return
 }
 
-func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set) (respComplete []AlertsResp) {
+func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set, showAll bool) (respComplete []AlertsResp) {
 	respComplete = resp
 	platformInfo, err := fastweb.GetPlatformASJSON()
 	if err != nil {
@@ -92,13 +92,22 @@ func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set) (respComplete []
 		ipInfotmp, ok := ipMapping.Get(item.HostName)
 		if !ok {
 			log.Debugf("item.HostName: is missing", item.HostName)
-			respCompleteTmp = append(respCompleteTmp, item)
-			continue
+			if showAll {
+				respCompleteTmp = append(respCompleteTmp, item)
+			} else {
+				//if not found any ip mapping of this host on boss will skip it
+				continue
+			}
 		}
 		ipInfo := ipInfotmp.(fastweb.IPInfo)
 		item.Platform = ipInfo.Platform
 		if ipInfo.IPStatus == "0" {
-			item.IP = ipInfo.IP + "(deactivated)"
+			if showAll {
+				item.IP = ipInfo.IP + "(deactivated)"
+			} else {
+				// if this host is set to inactive, will skip it
+				continue
+			}
 		} else {
 			item.IP = ipInfo.IP
 		}
