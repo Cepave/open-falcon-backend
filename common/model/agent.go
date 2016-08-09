@@ -14,11 +14,12 @@ type AgentReportRequest struct {
 
 func (this *AgentReportRequest) String() string {
 	return fmt.Sprintf(
-		"<Hostname:%s, IP:%s, AgentVersion:%s, PluginVersion:%s>",
+		"<Hostname:%s, IP:%s, AgentVersion:%s, PluginVersion:%s, GitRepo: %s>",
 		this.Hostname,
 		this.IP,
 		this.AgentVersion,
 		this.PluginVersion,
+		this.GitRepo,
 	)
 }
 
