@@ -6,6 +6,7 @@ var Modules map[string]bool
 var ModuleBins map[string]string
 var ModuleConfs map[string]string
 var ModuleApps map[string]string
+var PidOf map[string]string
 var AllModulesInOrder []string
 
 func init() {
@@ -76,6 +77,22 @@ func init() {
 		"sender":     "falcon-sender",
 		"task":       "falcon-task",
 		"transfer":   "falcon-transfer",
+	}
+
+	PidOf = map[string]string{
+		"agent":      "<NOT SET>",
+		"nqm-agent":  "<NOT SET>",
+		"aggregator": "<NOT SET>",
+		"alarm":      "<NOT SET>",
+		"graph":      "<NOT SET>",
+		"fe":         "<NOT SET>",
+		"hbs":        "<NOT SET>",
+		"judge":      "<NOT SET>",
+		"nodata":     "<NOT SET>",
+		"query":      "<NOT SET>",
+		"sender":     "<NOT SET>",
+		"task":       "<NOT SET>",
+		"transfer":   "<NOT SET>",
 	}
 
 	// Modules are deployed in this order

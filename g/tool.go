@@ -86,3 +86,24 @@ func CheckModuleStatus(name string) int {
 	fmt.Println("running with PID [", pidStr, "]!!")
 	return ModuleRunning
 }
+
+func setPid(name string) {
+	output, _ := exec.Command("pgrep", "-f", ModuleApps[name]).Output()
+	pidStr := strings.TrimSpace(string(output))
+	PidOf[name] = pidStr
+}
+
+func Pid(name string) string {
+	if PidOf[name] == "<NOT SET>" {
+		setPid(name)
+	}
+	return PidOf[name]
+}
+
+func IsRunning(name string) bool {
+	setPid(name)
+	if Pid(name) == "" {
+		return false
+	}
+	return true
+}
