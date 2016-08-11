@@ -2,6 +2,7 @@ package funcs
 
 import (
 	"fmt"
+
 	"github.com/toolkits/nux"
 	"github.com/toolkits/sys"
 )
@@ -19,7 +20,7 @@ func CheckCollector() {
 
 	output["kernel  "] = len(KernelMetrics()) > 0
 	output["df.bytes"] = len(DeviceMetrics()) > 0
-	output["net.if  "] = len(CoreNetMetrics([]string{})) > 0
+	output["net.if  "] = len(CoreNetMetrics([]string{}, []string{})) > 0
 	output["loadavg "] = len(LoadAvgMetrics()) > 0
 	output["cpustat "] = procStatErr == nil
 	output["disk.io "] = listDiskErr == nil

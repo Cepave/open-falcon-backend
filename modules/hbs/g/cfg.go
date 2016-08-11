@@ -2,9 +2,10 @@ package g
 
 import (
 	"encoding/json"
+	"sync"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
-	"sync"
 )
 
 type HttpConfig struct {
@@ -20,6 +21,7 @@ type GlobalConfig struct {
 	Listen    string      `json:"listen"`
 	Trustable []string    `json:"trustable"`
 	Http      *HttpConfig `json:"http"`
+	GitRepo   string      `json:"gitrepo"`
 }
 
 var (

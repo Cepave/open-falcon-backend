@@ -3,9 +3,9 @@ package g
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
 )
 
@@ -73,6 +73,10 @@ type ApiConfig struct {
 	Access   string `json:"access"`
 	Role     string `json:"role"`
 	Logout   string `json:"logout"`
+	Name     string `json:"name"`
+	Token    string `json:"token"`
+	Map      string `json:"map"`
+	Contact  string `json:"contact"`
 }
 
 type GraphConfig struct {
@@ -101,6 +105,7 @@ type GlobalConfig struct {
 	Cache        *CacheConfig        `json:"cache"`
 	Http         *HttpConfig         `json:"http"`
 	Salt         string              `json:"salt"`
+	AtomAddr     string              `json:"atomAddress"`
 	CanRegister  bool                `json:"canRegister"`
 	Ldap         *LdapConfig         `json:"ldap"`
 	Uic          *UicConfig          `json:"uic"`

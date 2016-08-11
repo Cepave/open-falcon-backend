@@ -2,10 +2,11 @@ package g
 
 import (
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
 	"os"
 	"strings"
 	"sync"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/toolkits/file"
 )
@@ -13,7 +14,6 @@ import (
 type PluginConfig struct {
 	Enabled bool   `json:"enabled"`
 	Dir     string `json:"dir"`
-	Git     string `json:"git"`
 	LogDir  string `json:"logs"`
 }
 
@@ -39,6 +39,7 @@ type HttpConfig struct {
 
 type CollectorConfig struct {
 	IfacePrefix []string `json:"ifacePrefix"`
+	EthAll      []string `json:"eth_all"`
 }
 
 type GlobalConfig struct {

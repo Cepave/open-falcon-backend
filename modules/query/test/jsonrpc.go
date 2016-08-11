@@ -7,7 +7,7 @@ import (
 	rpchttp "github.com/gorilla/http"
 	"github.com/gorilla/rpc/v2"
 	"github.com/gorilla/rpc/v2/json2"
-	flag "github.com/spf13/pflag"
+	"flag"
 	. "gopkg.in/check.v1"
 	"net"
 	"net/http/httptest"
@@ -23,8 +23,6 @@ func StartMockJsonRpcServer(c *C, jsonrpcServiceSetupFunc func(*rpc.Server)) {
 	if testHttpServer != nil {
 		return
 	}
-
-	flag.Parse()
 
 	jsonrpcService := rpc.NewServer()
 	jsonrpcService.RegisterCodec(json2.NewCodec(), "application/json")

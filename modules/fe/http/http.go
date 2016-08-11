@@ -3,6 +3,7 @@ package http
 import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/dashboard"
+	"github.com/Cepave/open-falcon-backend/modules/fe/http/boss"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/home"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/portal"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/uic"
@@ -25,6 +26,7 @@ func Start() {
 	uic.ConfigRoutes()
 	dashboard.ConfigRoutes()
 	portal.ConfigRoutes()
+	boss.ConfigRoutes()
 
 	beego.AddFuncMap("member", uic_model.MembersByTeamId)
 	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{

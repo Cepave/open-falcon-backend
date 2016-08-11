@@ -18,6 +18,7 @@
         }
     },
     "salt": "",
+    "atomAddress": "https://example.com/Cepave/OwlPlugin/commits/master.atom",
     "canRegister": true,
     "ldap": {
         "enabled": false,
@@ -53,6 +54,10 @@
         "falconAlarm": "http://11.11.11.11:9912/"
     },
     "api": {
+        "name": "example_name",
+        "token": "example_token",
+        "contact": "https://example.com/example_contact",
+        "map": "https://example.com/example_get_ip",
         "key": "yourKey",
         "redirect": "yourId||http://example.com/path_to_redirect/__TOKEN__",
         "login": "https://example.com/path_to_login",

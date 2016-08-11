@@ -29,7 +29,8 @@
         "backdoor": false
     },
     "collector": {
-        "ifacePrefix": ["eth", "em", "bond", "enp"]
+        "ifacePrefix": ["eth", "em", "bond", "enp"],
+        "eth_all": ["eth", "em", "enp"]
     },
     "ignore": {
         "cpu.busy": true,

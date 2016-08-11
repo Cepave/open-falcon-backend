@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/fe/cache"
@@ -9,11 +12,11 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/graph"
 	"github.com/Cepave/open-falcon-backend/modules/fe/grpc"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http"
+	"github.com/Cepave/open-falcon-backend/modules/fe/http/portal"
 	"github.com/Cepave/open-falcon-backend/modules/fe/model"
 	"github.com/Cepave/open-falcon-backend/modules/fe/mq"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/logger"
-	"os"
 )
 
 func main() {
@@ -47,7 +50,16 @@ func main() {
 	}
 	if conf.Http.Enabled {
 		go http.Start()
+		go portal.CornDaemonStart()
 	}
 
-	select {}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	select {
+	case sig := <-c:
+		if sig.String() == "^C" {
+			os.Exit(3)
+		}
+	}
 }

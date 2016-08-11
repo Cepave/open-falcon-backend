@@ -1,12 +1,16 @@
 package cron
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/agent/g"
-	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
-	log "github.com/Sirupsen/logrus"
+	"fmt"
+	"net/http"
 	"strings"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
+	localHttp "github.com/Cepave/open-falcon-backend/modules/agent/http"
+	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
+	log "github.com/Sirupsen/logrus"
 )
 
 func SyncMinePlugins() {
@@ -23,6 +27,16 @@ func SyncMinePlugins() {
 	}
 
 	go syncMinePlugins()
+}
+
+func dirFilter(userBindDir []string) (resultDir []string) {
+	// remove reserved dir: data
+	for _, val := range userBindDir {
+		if !strings.HasPrefix(val, "data/") && val != "data" {
+			resultDir = append(resultDir, val)
+		}
+	}
+	return
 }
 
 func syncMinePlugins() {
@@ -57,11 +71,23 @@ func syncMinePlugins() {
 			continue
 		}
 
-		pluginDirs = resp.Plugins
+		pluginDirs = dirFilter(resp.Plugins)
 		timestamp = resp.Timestamp
+		plugins.GitRepo = resp.GitRepo
+
+		if resp.GitRepoUpdate {
+			log.Println("GitRepo updating ... ")
+			localHttp.DeleteAndCloneRepo(g.Config().Plugin.Dir, plugins.GitRepo)
+		} else if resp.GitUpdate {
+			addr := fmt.Sprintf("http://127.0.0.1%s/plugin/update", g.Config().Http.Listen)
+			log.Println("GitUpdate API address is: ", addr)
+			apiResp, _ := http.Get(addr)
+			log.Println(&apiResp)
+		}
 
 		if g.Config().Debug {
 			log.Println(&resp)
+			log.Println(pluginDirs)
 		}
 
 		if len(pluginDirs) == 0 {

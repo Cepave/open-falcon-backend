@@ -9,6 +9,7 @@ type Plugin struct {
 var (
 	Plugins              = make(map[string]*Plugin)
 	PluginsWithScheduler = make(map[string]*PluginScheduler)
+	GitRepo              string
 )
 
 func DelNoUsePlugins(newPlugins map[string]*Plugin) {

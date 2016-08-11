@@ -10,6 +10,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	log "github.com/Sirupsen/logrus"
 )
 
 func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.AgentPluginsResponse) error {
@@ -19,6 +20,10 @@ func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.Agent
 
 	reply.Plugins = cache.GetPlugins(args.Hostname)
 	reply.Timestamp = time.Now().Unix()
+	reply.GitRepo = g.Config().GitRepo
+	reply.GitUpdate = cache.GitUpdateCheck(args.Hostname)
+	reply.GitRepoUpdate = cache.GitRepoUpdateCheck(args.Hostname)
+	log.Debugln("show reply of MinePlugins: ", reply)
 
 	return nil
 }
@@ -29,6 +34,7 @@ func (t *Agent) ReportStatus(args *model.AgentReportRequest, reply *model.Simple
 		return nil
 	}
 
+	log.Debugln("show request of ReportStatus: ", args)
 	cache.Agents.Put(args)
 
 	return nil
