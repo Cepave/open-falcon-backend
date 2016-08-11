@@ -11,8 +11,9 @@ import (
 // 5.1.0: 同步插件的时候不再使用checksum机制
 // 5.1.3: Fix config syntax error when deploying
 // 5.1.4: Only trustable ip could access the webpage
+// 5.1.5: New policy and plugin mechanism
 const (
-	VERSION          = "5.1.4"
+	VERSION          = "5.1.5"
 	COLLECT_INTERVAL = time.Second
 	URL_CHECK_HEALTH = "url.check.health"
 	NET_PORT_LISTEN  = "net.port.listen"
