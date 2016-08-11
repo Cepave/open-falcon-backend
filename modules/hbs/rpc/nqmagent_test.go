@@ -143,8 +143,12 @@ func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 				(630003, 'tgn-3', '1.2.3.6', 3, 4, -1, true, -1, true, true)
 			`,
 			`
-			INSERT INTO nqm_ping_task(pt_ag_id, pt_period)
-			VALUES(405001, 10)
+			INSERT INTO nqm_ping_task(pt_id, pt_period)
+			VALUES(32001, 10)
+			`,
+			`
+			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id)
+			VALUES(405001, 32001)
 			`,
 		)
 	}
@@ -154,9 +158,10 @@ func (s *TestRpcNqmAgentSuite) TearDownTest(c *C) {
 	switch c.TestName() {
 	case "TestRpcNqmAgentSuite.TestTask":
 		hbstesting.ExecuteQueriesOrFailInTx(
-			"DELETE FROM nqm_ping_task WHERE pt_ag_id = 405001",
-			"DELETE FROM nqm_target WHERE tg_id >= 630001 AND tg_id <= 630003",
+			"DELETE FROM nqm_agent_ping_task WHERE apt_ag_id = 405001",
+			"DELETE FROM nqm_ping_task WHERE pt_id = 32001",
 			"DELETE FROM nqm_agent WHERE ag_id = 405001",
+			"DELETE FROM nqm_target WHERE tg_id >= 630001 AND tg_id <= 630003",
 			"DELETE FROM owl_name_tag WHERE nt_id = 9901",
 		)
 	}

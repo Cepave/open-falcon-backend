@@ -83,20 +83,19 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 				ag_nt_id
 			FROM nqm_agent AS ag
 				INNER JOIN
-				(
-					SELECT pt_ag_id
-					FROM nqm_ping_task
-					WHERE pt_ag_id = ?
-						/* Check if the period is overed since last time executed */
-						AND TIMESTAMPDIFF(
-							MINUTE,
-							IFNULL(pt_time_last_execute, FROM_UNIXTIME(0)), /* Use the very first time */
-							FROM_UNIXTIME(?)
-						) >= pt_period
-						/* :~) */
-				) AS pt
-				ON ag.ag_id = pt.pt_ag_id
-					AND ag.ag_status = true
+				nqm_agent_ping_task AS apt
+				ON apt.apt_ag_id = ?
+					AND ag.ag_id = apt.apt_ag_id
+					AND ag.ag_status = TRUE # Agent must be enabled
+				INNER JOIN
+				nqm_ping_task AS pt
+				ON apt.apt_pt_id = pt.pt_id
+					AND pt.pt_enable = TRUE # Task must be enabled
+					AND TIMESTAMPDIFF(
+						MINUTE,
+						IFNULL(apt.apt_time_last_execute, FROM_UNIXTIME(0)), /* Use the very first time */
+						FROM_UNIXTIME(?)
+					) >= pt.pt_period
 				INNER JOIN
 				owl_isp AS isp
 				ON ag.ag_isp_id = isp.isp_id
@@ -144,9 +143,9 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 		 */
 		if _, err = DB.Exec(
 			`
-			UPDATE nqm_ping_task
-			SET pt_time_last_execute = FROM_UNIXTIME(?)
-			WHERE pt_ag_id = ?
+			UPDATE nqm_agent_ping_task
+			SET apt_time_last_execute = FROM_UNIXTIME(?)
+			WHERE apt_ag_id = ?
 			`,
 			checkedTime.Unix(), agentId,
 		); err != nil {
@@ -162,9 +161,9 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 }
 
 const (
-	NO_PING_TASK               = 0
-	HAS_PING_TASK_WITH_FILTER  = 1
-	HAS_PING_TASK_ALL_MATCHING = 2
+	NO_PING_TASK = 0
+	HAS_PING_TASK = 1
+	HAS_PING_TASK_MATCH_ANY_TARGET = 2
 )
 
 // Gets the targets(to be probed) for RPC
@@ -175,27 +174,29 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 		return
 	}
 
+	if taskState == NO_PING_TASK {
+		targets = make([]commonModel.NqmTarget, 0)
+		return
+	}
+
 	var rows *sql.Rows
 
 	switch taskState {
-	case NO_PING_TASK:
-		targets = make([]commonModel.NqmTarget, 0)
-		return
-	case HAS_PING_TASK_WITH_FILTER:
+	case HAS_PING_TASK_MATCH_ANY_TARGET:
+		rows ,err = loadAllEnabledTargets()
+	case HAS_PING_TASK:
 		rows, err = loadTargetsByFilter(agentId)
-	case HAS_PING_TASK_ALL_MATCHING:
-		rows, err = loadAllTargets()
 	}
 
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 
 	/**
 	 * Converts the data to NQM targets for RPC
 	 */
-	defer rows.Close()
-	targets = make([]commonModel.NqmTarget, 0, 4)
+	targets = make([]commonModel.NqmTarget, 0, 32)
 	for rows.Next() {
 		targets = append(targets, commonModel.NqmTarget{})
 		var currentTarget *commonModel.NqmTarget = &targets[len(targets)-1]
@@ -222,14 +223,15 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 	return
 }
 
-func loadAllTargets() (*sql.Rows, error) {
+func loadAllEnabledTargets() (*sql.Rows, error) {
 	return DB.Query(
 		`
-		SELECT tg_id, tg_host,
+		SELECT
+			tg_id, tg_host,
 			isp_id, isp_name,
 			pv_id, pv_name,
 			ct_id, ct_name,
-			nt.nt_id, nt.nt_value
+			nt_id, nt_value
 		FROM nqm_target AS tg
 			INNER JOIN
 			owl_isp AS isp
@@ -243,13 +245,12 @@ func loadAllTargets() (*sql.Rows, error) {
 			INNER JOIN
 			owl_name_tag AS nt
 			ON tg.tg_nt_id = nt.nt_id
-		WHERE
-			tg.tg_status=true
-			AND
-			tg.tg_available=true;
+		WHERE tg.tg_status = true
+			AND tg.tg_available = true
 		`,
-	)
+	);
 }
+
 func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 	return DB.Query(
 		`
@@ -262,46 +263,15 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 		FROM (
 			/* Matched target by ISP */
 			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
-			FROM nqm_target tg
+			FROM
+				nqm_agent_ping_task AS apt
 				INNER JOIN
-				nqm_pt_target_filter_isp AS tfisp
-				ON tfisp.tfisp_pt_ag_id = ?
-					AND tg.tg_isp_id = tfisp.tfisp_isp_id
-					AND tg.tg_status = true
-					AND tg.tg_available = true
-			/* :~) */
-			UNION
-			/* Matched target by province */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
-			FROM nqm_target tg
+				nqm_ping_task AS pt
+				ON pt.pt_id = apt.apt_pt_id
+					AND apt.apt_ag_id = ?
 				INNER JOIN
-				nqm_pt_target_filter_province AS tfpv
-				ON tfpv.tfpv_pt_ag_id = ?
-					AND tg.tg_pv_id = tfpv.tfpv_pv_id
-					AND tg.tg_status = true
-					AND tg.tg_available = true
-			/* :~) */
-			UNION
-			/* Matched target by city */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
-			FROM nqm_target tg
-				INNER JOIN
-				nqm_pt_target_filter_city AS tfct
-				ON tfct.tfct_pt_ag_id = ?
-					AND tg.tg_ct_id = tfct.tfct_ct_id
-					AND tg.tg_status = true
-					AND tg.tg_available = true
-			/* :~) */
-			UNION
-			/* Matched target by name tag */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
-			FROM nqm_target tg
-				INNER JOIN
-				nqm_pt_target_filter_name_tag AS tfnt
-				ON tfnt.tfnt_pt_ag_id = ?
-					AND tg.tg_nt_id = tfnt.tfnt_nt_id
-					AND tg.tg_status = true
-					AND tg.tg_available = true
+				vw_enabled_targets_by_ping_task AS vw_tg
+				ON pt.pt_id = vw_tg.tg_pt_id
 			/* :~) */
 			UNION
 			/* Matched target which to be probed by all */
@@ -325,86 +295,58 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 		owl_name_tag AS nt
 		ON tg.tg_nt_id = nt.nt_id
 		`,
-		agentId, agentId, agentId, agentId,
+		agentId,
 	)
 }
 
 func getPingTaskState(agentId int) (result int, err error) {
 	result = NO_PING_TASK
 
-	if err = DB.QueryRow(
-		`
-		SELECT COUNT(pt_ag_id)
-		FROM nqm_ping_task
-		WHERE pt_ag_id = ?
-		`,
-		agentId,
-	).Scan(&result); err != nil {
-		return
-	}
+	var numberOfViablePingTasks int
+	var numberOfEmptyPingTasks int
 
 	/**
-	 * Without ping task
+	 * Checks if there is any PING TASK(enabled)
 	 */
-	if result == NO_PING_TASK {
-		return
-	}
-	// :~)
-
-	/**
-	 * Checks whether there is any filter configuration for the ping task
-	 */
-	var hasFilter int
 	if err = DB.QueryRow(
 		`
 		SELECT
-		 	/* Get any condition of name tag filter  */
-			(
-				SELECT COUNT(tfnt.tfnt_pt_ag_id)
-				FROM nqm_pt_target_filter_name_tag AS tfnt
-				WHERE tfnt.tfnt_pt_ag_id = ?
-				LIMIT 1
-			)
-			/* :~) */
-			+
-			/* Get any condition of ISP filter  */
-			(
-				SELECT COUNT(tfisp.tfisp_pt_ag_id)
-				FROM nqm_pt_target_filter_isp AS tfisp
-				WHERE tfisp.tfisp_pt_ag_id = ?
-				LIMIT 1
-			)
-			/* :~) */
-			+
-			/* Get any condition of province filter  */
-			(
-				SELECT COUNT(tfpv.tfpv_pt_ag_id)
-				FROM nqm_pt_target_filter_province AS tfpv
-				WHERE tfpv.tfpv_pt_ag_id = ?
-				LIMIT 1
-			)
-			/* :~) */
-			+
-			/* Get any condition of city filter  */
-			(
-				SELECT COUNT(tfct.tfct_pt_ag_id)
-				FROM nqm_pt_target_filter_city AS tfct
-				WHERE tfct.tfct_pt_ag_id = ?
-				LIMIT 1
-			)
-			/* :~) */
+			COUNT(IF(pt_has_filter = 1, 1, NULL)) AS num_of_viable_ping_task,
+			COUNT(IF(pt_has_filter = 0, 1, NULL)) AS num_of_empty_ping_task
+		FROM (
+			SELECT
+				/**
+				 * 1 - The ping task has at least one filter
+				 * 0 - The ping task has no filter(matching all targets)
+				 */
+				IF(
+					pt_number_of_name_tag_filters +
+					pt_number_of_isp_filters +
+					pt_number_of_province_filters +
+					pt_number_of_city_filters
+					> 0,
+					1, 0
+				) AS pt_has_filter
+				# //:~)
+			FROM nqm_agent_ping_task AS apt
+				INNER JOIN
+				nqm_ping_task AS pt
+				ON apt.apt_pt_id = pt.pt_id
+					AND pt.pt_enable = TRUE
+					AND apt_ag_id = ?
+		) AS pt_filter_counter
 		`,
-		agentId, agentId, agentId, agentId,
-	).Scan(&hasFilter); err != nil {
+		agentId,
+	).Scan(&numberOfViablePingTasks, &numberOfEmptyPingTasks); err != nil {
 		return
 	}
-	// :~)
 
-	if hasFilter >= 1 {
-		result = HAS_PING_TASK_WITH_FILTER
-	} else {
-		result = HAS_PING_TASK_ALL_MATCHING
+	if numberOfEmptyPingTasks > 0 {
+		result = HAS_PING_TASK_MATCH_ANY_TARGET
+	} else if numberOfViablePingTasks > 0 {
+		result = HAS_PING_TASK
 	}
+	// :~)
 
 	return
 }
