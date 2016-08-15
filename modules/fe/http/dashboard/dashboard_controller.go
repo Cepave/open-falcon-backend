@@ -68,13 +68,12 @@ func (this *DashBoardController) LatestPlugin() {
 	v := xmlData{}
 
 	c, q_err := dashboard.QueryConfig("atom_addr")
-	log.Println("Lastest Plugin atom address value is: ", c.Value)
 	if q_err != nil {
 		log.Errorln("QueryConfig error: ", q_err)
 	} else {
+		log.Debugln("Lastest Plugin atom address value is: ", c.Value)
 		if resp, err := http.Get(c.Value); err != nil {
-			// handle error.
-			log.Println("Error retrieving resource:", err)
+			log.Errorln("Error retrieving resource:", err)
 		} else {
 			defer resp.Body.Close()
 			xml.NewDecoder(resp.Body).Decode(&v)
@@ -369,14 +368,14 @@ var commitsInfo []*rss.Item
 
 func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
 	c, q_err := dashboard.QueryConfig("atom_addr")
-	log.Println("gitInfoAdapter shows atom address as: ", c.Value)
 	if q_err != nil {
 		log.Errorln("QueryConfig error: ", q_err)
 	}
+	log.Debugln("gitInfoAdapter shows atom address as: ", c.Value)
 
 	feed, err := rss.Fetch(c.Value)
 	if err != nil {
-		log.Println(err)
+		log.Errorln(err)
 	}
 
 	commitsInfo = append(commitsInfo, feed.Items...)
