@@ -526,7 +526,8 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 				}
 				last, err := graph.Last(*param)
 				if err != nil {
-					log.Errorf("graph.last fail, resp: %v, err: %v", last, err)
+					setError("graph.last fail, err: "+err.Error(), result)
+					return data
 				}
 				if last == nil {
 					continue
@@ -933,6 +934,7 @@ func getGraphQueryResponse(metrics []string, duration string, hostnames []string
 			response, err := graph.QueryOne(request)
 			if err != nil {
 				setError("graph.queryOne fail, "+err.Error(), result)
+				return data
 			}
 			if result == nil {
 				continue
