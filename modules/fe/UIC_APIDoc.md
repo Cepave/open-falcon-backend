@@ -1,6 +1,6 @@
 # UIC API list
 `Don't forget do URL encoding..`
-* `POST` /api/v1/auth/register
+### `POST` /api/v1/auth/register
   * params:
     * `name` string [useraccount]
     * `password` string
@@ -35,7 +35,7 @@
         }
       }
       ```
-* `POST` /api/v1/auth/login
+### `POST` /api/v1/auth/login
   * params:
     * `name` string [useraccount]
     * `password` string
@@ -68,7 +68,7 @@
         }
       }
       ```
-* `GET` `POST` /api/v1/auth/logout
+### `GET` `POST` /api/v1/auth/logout
   * params:
     * `cName` string [useraccount] option
     * `cSig` string option
@@ -98,7 +98,7 @@
         }
       }
       ```
-* `GET` `POST` /api/v1/auth/sessioncheck
+### `GET` `POST` /api/v1/auth/sessioncheck
   * params:
     * `cName` string [useraccount] option
     * `cSig` string option
@@ -132,7 +132,7 @@
         }
       }
       ```
-* `POST` /api/v1/auth/user
+### `POST` /api/v1/auth/user
   * params:
     * `cName` string [useraccount] option
     * `cSig` string option
@@ -167,7 +167,7 @@
         }
       }
       ```
-* `POST` /api/v1/auth/user/update
+### `POST` /api/v1/auth/user/update
   * params:
     * `cName` string [useraccount] option
     * `cSig` string option
@@ -203,3 +203,4 @@
         }
       }
       ```
+

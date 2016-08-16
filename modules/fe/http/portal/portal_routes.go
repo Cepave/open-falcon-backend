@@ -24,6 +24,7 @@ func ConfigRoutes() {
 			ctx.Output.Body([]byte("notAllowed"))
 		}),
 		beego.NSRouter("/eventcases/get", &PortalController{}, "get:GetEventCasesV2;post:GetEventCasesV2"),
+		beego.NSRouter("/eventcases/feed", &PortalController{}, "get:OnTimeFeeding;post:OnTimeFeeding"),
 	)
 	alarmAdjust := beego.NewNamespace("/api/v1/alarmadjust",
 		beego.NSGet("/notallowed", func(ctx *context.Context) {

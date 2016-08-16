@@ -1,4 +1,4 @@
-package fastweb
+package boss
 
 import (
 	"crypto/md5"
@@ -34,9 +34,6 @@ func getFctoken() string {
 	return fctoken
 }
 
-//"https://cdnboss-api.fastweb.com.cn/Base/platform/get_ip"
-//"api_owl"
-//1e70fff31c5d88d1ce6942df4697f961
 func GetPlatformASJSON() (repons PlatformList, err error) {
 	config := g.Config()
 	fctoken := getFctoken()
