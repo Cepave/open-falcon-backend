@@ -32,11 +32,12 @@ type RedisConfig struct {
 }
 
 type AlarmConfig struct {
-	Enabled      bool         `json:"enabled"`
-	MinInterval  int64        `json:"minInterval"`
-	QueuePattern string       `json:"queuePattern"`
-	AllowReSet   bool         `json:"allow_reset"`
-	Redis        *RedisConfig `json:"redis"`
+	Enabled             bool         `json:"enabled"`
+	MinInterval         int64        `json:"minInterval"`
+	QueuePattern        string       `json:"queuePattern"`
+	AllowReSet          bool         `json:"allow_reset"`
+	EventsStoreFilePath string       `json:"events_store_file_path"`
+	Redis               *RedisConfig `json:"redis"`
 }
 
 type GlobalConfig struct {

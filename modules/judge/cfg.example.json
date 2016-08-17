@@ -27,6 +27,7 @@
             "readTimeout": 5000,
             "writeTimeout": 5000
         },
-        "allow_reset": false
+        "allow_reset": false,
+        "events_store_file_path": "events_cache.json"
     }
 }
