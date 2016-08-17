@@ -2,6 +2,7 @@ package g
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -9,14 +10,18 @@ import (
 	"github.com/toolkits/file"
 )
 
-func GetCurrPluginVersion() string {
+func GetCurrPluginVersion() (str string, err error) {
 	if !Config().Plugin.Enabled {
-		return "plugin not enabled"
+		str = "0"
+		err = errors.New("plugin not enabled")
+		return
 	}
 
 	pluginDir := Config().Plugin.Dir
 	if !file.IsExist(pluginDir) {
-		return "plugin dir not existent"
+		str = "0"
+		err = errors.New("plugin dir not existent")
+		return
 	}
 
 	cmd := exec.Command("git", "rev-parse", "HEAD")
@@ -24,12 +29,15 @@ func GetCurrPluginVersion() string {
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		return fmt.Sprintf("Error:%s", err.Error())
+		str = "0"
+		return
 	}
 
-	return strings.TrimSpace(out.String())
+	// err is nil
+	str = strings.TrimSpace(out.String())
+	return
 }
 
 func GetCurrGitRepo() string {
