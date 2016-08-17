@@ -28,6 +28,7 @@ func main() {
 
 	g.InitRedisConnPool()
 	g.InitHbsClient()
+	g.InitLastEvents()
 
 	store.InitHistoryBigMap()
 
