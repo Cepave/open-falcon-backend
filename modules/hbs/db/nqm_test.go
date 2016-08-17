@@ -130,22 +130,30 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
  * Tests getting data of agent for RPC
  */
 type getAndRefreshNeedPingAgentTestCase struct {
-	agentId   int
+	agentId int
 	checkTimeAsString string
-	checker   Checker
+	expectedUpdatedPingTask int
+	assertFunc hbstesting.AssertFunc
 
-	checkTimeAsTime time.Time
 	testedAgent *commonModel.NqmAgent
+	checkTimeAsTime time.Time
 	testedErr error
 }
 
 func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
 	testedCases := []getAndRefreshNeedPingAgentTestCase{
-		{agentId: 130001, checkTimeAsString: "2115-08-08T00:00:00+00:00", checker: IsNil},  // No ping task setting
-		{agentId: 130002, checkTimeAsString: "2010-05-05T10:59:00+08:00", checker: IsNil},  // The period is not elapsed yet
-		{agentId: 130003, checkTimeAsString: "2013-10-01T00:00:00+08:00", checker: NotNil}, // Never executed
-		{agentId: 130004, checkTimeAsString: "2012-06-10T09:00:00+08:00", checker: NotNil}, // The period is elapsed
-		{agentId: 130005, checkTimeAsString: "2012-06-10T09:00:00+08:00", checker: IsNil},  // Disabled agent
+		{
+			agentId: 130001, checkTimeAsString: "2010-05-05T11:00:00+08:00",
+			expectedUpdatedPingTask: 3,
+			assertFunc: func(c *C) {
+			},
+		},
+		{
+			agentId: 130002, checkTimeAsString: "2010-05-05T11:00:00+08:00",
+			expectedUpdatedPingTask: 0,
+			assertFunc: func(c *C) {
+			},
+		},
 	}
 
 	for _, testCase := range testedCases {
@@ -155,56 +163,44 @@ func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
 			testCase.agentId, testCase.checkTimeAsTime,
 		)
 
-		assertNeedPingAgent(c, testCase)
+		assertRefreshedPingTask(c, &testCase);
 	}
 }
-
-func assertNeedPingAgent(
-	c *C, testCase getAndRefreshNeedPingAgentTestCase,
-) {
-	c.Logf("Current tested agent Id: %d", testCase.agentId)
-
-	testedAgent := testCase.testedAgent
-
-	/**
-	 * Asserts the result data
-	 */
+func assertRefreshedPingTask(c *C, testCase *getAndRefreshNeedPingAgentTestCase) {
 	c.Assert(testCase.testedErr, IsNil)
-	c.Assert(testedAgent, testCase.checker)
-	// :~)
-
-	if testCase.checker == IsNil {
-		return
-	}
 
 	/**
-	 * Asserts the content of returned agent
+	 * Asserts the number of modified time of last executed
 	 */
-	c.Assert(testedAgent.Id, Equals, testCase.agentId)
-	c.Assert(testedAgent.IspId, Equals, int16(3))
-	c.Assert(testedAgent.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
-	c.Assert(testedAgent.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
-	c.Assert(testedAgent.NameTagId, Equals, commonModel.UNDEFINED_NAME_TAG_ID)
-	// :~)
-
-	/**
-	 * Asserts the updated time of ping task
-	 */
-	//var updatedTime int64
-	var unixTime int64
+	var numberOfModified int = -1
 	hbstesting.QueryForRow(
 		func(row *sql.Row) {
-			c.Assert(row.Scan(&unixTime), IsNil)
+			row.Scan(&numberOfModified)
 		},
 		`
-		SELECT UNIX_TIMESTAMP(apt_time_last_execute)
+		SELECT COUNT(*)
 		FROM nqm_agent_ping_task
 		WHERE apt_ag_id = ?
+			AND apt_time_last_execute = FROM_UNIXTIME(?)
 		`,
-		testCase.agentId,
+		testCase.agentId, testCase.checkTimeAsTime.Unix(),
 	)
 
-	c.Assert(unixTime, Equals, testCase.checkTimeAsTime.Unix())
+	c.Assert(numberOfModified, Equals, testCase.expectedUpdatedPingTask)
+	// :~)
+
+	/**
+	 * Asserts the result data of agent
+	 */
+	if testCase.expectedUpdatedPingTask > 0 {
+		agentData := testCase.testedAgent
+
+		c.Assert(agentData.IspId, Equals, int16(3))
+		c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
+		c.Assert(agentData.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
+		c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_CITY_ID)
+		c.Assert(agentData.NameTagId, Equals, commonModel.UNDEFINED_NAME_TAG_ID)
+	}
 	// :~)
 }
 
@@ -410,27 +406,39 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
 			VALUES
-				(130001, 'gc-1', 'tt1.org', 0x12345678, 3, TRUE), # No Ping task setting
-				(130002, 'gc-2', 'tt2.org', 0x13345678, 3, TRUE), # The period is not elapse yet
-				(130003, 'gc-3', 'tt3.org', 0x14345678, 3, TRUE), # Never executed
-				(130004, 'gc-4', 'tt4.org', 0x15345678, 3, TRUE), # The period is elapsed
-				(130005, 'gc-5', 'tt5.org', 0x15345678, 3, FALSE) # The agent is disabled
+				(130001, 'gc-1', 'tt1.org', 0x12345678, 3, TRUE), # Enabled agent(with complex situation)
+				(130002, 'gc-5', 'tt5.org', 0x15345678, 3, FALSE) # The agent is disabled
 			`,
 			`
-			INSERT INTO nqm_ping_task(pt_id, pt_period)
+			INSERT INTO nqm_ping_task(pt_id, pt_period, pt_enable)
 			VALUES
-				(9402, 60),
-				(9403, 60),
-				(9404, 60),
-				(9405, 60)
+				(9401, 60, false), # Disabled ping task
+				(9402, 60, true), # The period is not elapsed
+				(9403, 60, true), # The period is not elapsed
+				(9404, 60, true), # Never executed
+				(9405, 60, true), # Never executed
+				(9406, 60, true) # The period is elapsed
 			`,
 			`
 			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id, apt_time_last_execute)
 			VALUES
-				(130002, 9402, '2010-05-05 10:00:00'), # The period is not elapse yet
-				(130003, 9403, NULL),
-				(130004, 9404, '2012-06-10 08:00:00'), # The period is elapsed
-				(130005, 9405, NULL)
+				/**
+				 * Enabled agent
+				 */
+				(130001, 9401, '2010-05-05 08:00:00'),
+				(130001, 9402, '2010-05-05 10:01:00'),
+				(130001, 9403, '2010-05-05 10:13:00'),
+				(130001, 9404, NULL),
+				(130001, 9405, NULL),
+				(130001, 9406, '2010-05-05 09:58:00'),
+				# :~)
+				/**
+				 * 1. The agent is disabled
+				 * 2. Two of the ping task should be executed if the agent is enabled
+				 */
+				(130002, 9404, NULL),
+				(130002, 9405, '2012-05-05 09:58:00')
+				# :~)
 			`,
 		)
 	case "TestDbNqmSuite.TestGetPingTaskState":
@@ -529,7 +537,7 @@ func (s *TestDbNqmSuite) TearDownTest(c *C) {
 	case "TestDbNqmSuite.TestGetAndRefreshNeedPingAgentForRpc":
 		hbstesting.ExecuteQueriesOrFailInTx(
 			"DELETE FROM nqm_agent_ping_task WHERE apt_ag_id >= 130001 AND apt_ag_id <= 130005",
-			"DELETE FROM nqm_ping_task WHERE pt_id >= 9402 AND pt_id <= 9405",
+			"DELETE FROM nqm_ping_task WHERE pt_id >= 9401 AND pt_id <= 9410",
 			"DELETE FROM nqm_agent WHERE ag_id >= 130001 AND ag_id <= 130005",
 		)
 	case "TestDbNqmSuite.TestGetPingTaskState":

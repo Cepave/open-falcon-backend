@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
 	log "github.com/Sirupsen/logrus"
@@ -59,12 +60,75 @@ func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
 // 1) No ping task configuration
 // 2) The period is overed yet
 func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (result *commonModel.NqmAgent, err error) {
-	result = &commonModel.NqmAgent{
-		Id: agentId,
-	}
+	result = nil
+
+	var temporaryTableName = fmt.Sprintf("tmp_effective_ping_task_%d", agentId)
 
 	err = inTx(func(tx *sql.Tx) (err error) {
+		tx.Exec(fmt.Sprintf(
+			"DROP TEMPORARY TABLE %s IF EXISTS", temporaryTableName,
+		));
+		tx.Exec(
+			/**
+			 * Creates temporary table for matched ping task
+			 *
+			 * Must be matched with all of the following conditions
+			 * 1) The agent is enabled
+			 * 2) The ping task is enabled
+			 * 3) The period of time is elapsed or the ping task is never executed
+			 */
+			fmt.Sprintf(`
+				CREATE TEMPORARY TABLE IF NOT EXISTS %s
+				AS
+				SELECT apt.apt_pt_id AS pt_id
+				FROM nqm_agent AS ag
+					INNER JOIN
+					nqm_agent_ping_task AS apt
+					ON apt.apt_ag_id = ?
+						AND ag.ag_id = apt.apt_ag_id
+						AND ag.ag_status = TRUE # Agent must be enabled
+					INNER JOIN
+					nqm_ping_task AS pt
+					ON apt.apt_pt_id = pt.pt_id
+						AND pt.pt_enable = TRUE # Task must be enabled
+						AND TIMESTAMPDIFF(
+							MINUTE,
+							IFNULL(apt.apt_time_last_execute, FROM_UNIXTIME(0)), /* Use the very first time */
+							FROM_UNIXTIME(?)
+						) >= pt.pt_period
+				`,
+				temporaryTableName,
+			),
+			// :~)
+			agentId, checkedTime.Unix(),
+		);
+
+		var numberOfPingTasks int
+
+		/**
+		 * If There is no ping task, this function gives no data
+		 */
+		if err = tx.QueryRow(fmt.Sprintf(
+			`
+			SELECT COUNT(pt_id) AS number_of_ping_task
+			FROM %s
+			`,
+			temporaryTableName,
+		)).Scan(&numberOfPingTasks);
+			err != nil {
+
+			return
+		}
+
+		if numberOfPingTasks == 0 {
+			return
+		}
+		// :~)
+
 		var dbAgentName sql.NullString
+		result = &commonModel.NqmAgent{
+			Id: agentId,
+		}
 
 		if err = tx.QueryRow(
 			/**
@@ -83,20 +147,6 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 				ag_nt_id
 			FROM nqm_agent AS ag
 				INNER JOIN
-				nqm_agent_ping_task AS apt
-				ON apt.apt_ag_id = ?
-					AND ag.ag_id = apt.apt_ag_id
-					AND ag.ag_status = TRUE # Agent must be enabled
-				INNER JOIN
-				nqm_ping_task AS pt
-				ON apt.apt_pt_id = pt.pt_id
-					AND pt.pt_enable = TRUE # Task must be enabled
-					AND TIMESTAMPDIFF(
-						MINUTE,
-						IFNULL(apt.apt_time_last_execute, FROM_UNIXTIME(0)), /* Use the very first time */
-						FROM_UNIXTIME(?)
-					) >= pt.pt_period
-				INNER JOIN
 				owl_isp AS isp
 				ON ag.ag_isp_id = isp.isp_id
 				INNER JOIN
@@ -105,9 +155,10 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 				INNER JOIN
 				owl_city AS ct
 				ON ag.ag_ct_id = ct.ct_id
+			WHERE ag.ag_id = ?
 			`,
 			// :~)
-			agentId, checkedTime.Unix(),
+			agentId,
 		).Scan(
 			&dbAgentName,
 			&result.IspId, &result.IspName,
@@ -115,16 +166,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			&result.CityId, &result.CityName,
 			&result.NameTagId,
 		); err != nil {
-
-			/**
-			 * There is no need to perform ping task
-			 */
 			result = nil
-			if err == sql.ErrNoRows {
-				err = nil
-			}
-			// :~)
-
 			return
 		}
 
@@ -139,17 +181,21 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 		// :~)
 
 		/**
-		 * Updates the last execute
+		 * Updates the time of last executed
 		 */
-		if _, err = DB.Exec(
-			`
-			UPDATE nqm_agent_ping_task
-			SET apt_time_last_execute = FROM_UNIXTIME(?)
-			WHERE apt_ag_id = ?
-			`,
+		if _, err = tx.Exec(
+			fmt.Sprintf(
+				`
+				UPDATE nqm_agent_ping_task AS apt,
+					%s AS effective_pt
+				SET apt_time_last_execute = FROM_UNIXTIME(?)
+				WHERE apt.apt_pt_id = effective_pt.pt_id
+					AND apt_ag_id = ?
+				`,
+				temporaryTableName,
+			),
 			checkedTime.Unix(), agentId,
 		); err != nil {
-
 			result = nil
 		}
 		// :~)
