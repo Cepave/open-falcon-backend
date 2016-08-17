@@ -1,6 +1,7 @@
 {
     "debug": true,
     "debugHost": "nil",
+    "logLevel": "info",
     "remain": 11, 
     "http": {
         "enabled": true,
@@ -25,6 +26,7 @@
             "connTimeout": 5000,
             "readTimeout": 5000,
             "writeTimeout": 5000
-        }
+        },
+        "allow_reset": false
     }
 }

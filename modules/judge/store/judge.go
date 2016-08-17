@@ -3,9 +3,9 @@ package store
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	log "github.com/Sirupsen/logrus"
 )
 
 func Judge(L *SafeLinkedList, firstItem *model.JudgeItem, now int64) {
@@ -191,7 +191,9 @@ func judgeItemWithExpression(L *SafeLinkedList, expression *model.Expression, fi
 func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int64, event *model.Event, maxStep int) {
 	lastEvent, exists := g.LastEvents.Get(event.Id)
 	needSet := false
-	if exists {
+	if g.Config().Alarm.AllowReSet && exists {
+		log.Debug("lastEvent: %v", lastEvent)
+		log.Debug("currentEvent: %v", event)
 		//if strategy is changed will reset currentStep to "1"
 		needSet = fmt.Sprintf("%s %v", lastEvent.Strategy.Operator, lastEvent.Strategy.RightValue) != fmt.Sprintf("%s %v", event.Strategy.Operator, event.Strategy.RightValue)
 	}
