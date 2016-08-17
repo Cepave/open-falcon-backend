@@ -192,8 +192,8 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 	lastEvent, exists := g.LastEvents.Get(event.Id)
 	needSet := false
 	if g.Config().Alarm.AllowReSet && exists {
-		log.Debug("lastEvent: %v", lastEvent)
-		log.Debug("currentEvent: %v", event)
+		log.Debugf("lastEvent: %v", lastEvent)
+		log.Debugf("currentEvent: %v", event)
 		//if strategy is changed will reset currentStep to "1"
 		needSet = fmt.Sprintf("%s %v", lastEvent.Strategy.Operator, lastEvent.Strategy.RightValue) != fmt.Sprintf("%s %v", event.Strategy.Operator, event.Strategy.RightValue)
 	}
