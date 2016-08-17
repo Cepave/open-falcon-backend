@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -19,8 +20,8 @@ func configExists(cfg string) bool {
 
 var regexpReplaceCurrentFolder, _ = regexp.Compile("^\\.")
 
-func GetConfFileArgs(cfg string) ([]string, error) {
-	if !configExists(cfg) {
+func ConfFileArgs(cfg string) ([]string, error) {
+	if !file.IsExist(cfg) {
 		return nil, fmt.Errorf("expect config file: %s\n", cfg)
 	}
 
@@ -85,6 +86,45 @@ func CheckModuleStatus(name string) int {
 
 	fmt.Println("running with PID [", pidStr, "]!!")
 	return ModuleRunning
+}
+
+func rel(p string) string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	// filepath.Abs() returns an error only when os.Getwd() returns an error;
+	abs, _ := filepath.Abs(p)
+
+	r, err := filepath.Rel(wd, abs)
+	if err != nil {
+		return ""
+	}
+
+	return r
+}
+
+func HasCfg(name string) error {
+	if err := HasModule(name); err != nil {
+		return err
+	}
+
+	cfg := Cfg(name)
+
+	if _, err := os.Stat(Cfg(name)); err != nil {
+		r := rel(cfg)
+		return fmt.Errorf("expect config file: %s\n", r)
+	}
+
+	return nil
+}
+
+func HasModule(name string) error {
+	if Modules[name] {
+		return nil
+	}
+	return fmt.Errorf("%s doesn't exist\n", name)
 }
 
 func setPid(name string) {
