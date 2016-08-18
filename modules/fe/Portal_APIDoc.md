@@ -1,5 +1,62 @@
 # Portal API list
 `Don't forget do URL encoding.. will check session automatically`
+
+### `POST` /api/v1/portal/dashboard/counters
+
+params:
+
+- `regexStr`: [RegExp String], e.g `.+`
+
+```json
+{
+  "version": "v1",
+  "method": "POST",
+  "status": "success",
+  "data": {
+    "counters": [
+      {
+        "id": 3,
+        "name": "agent.alive"
+      },
+      {
+        "id": 5,
+        "name": "cpu.guest"
+      },
+    ...
+    ]
+  }
+}
+```
+
+### `POST` /api/v1/portal/dashboard/counterendpoints
+
+params:
+
+- `counters`: [String, ArrayString]
+  - e.g. `["task","docker-task"]`
+- `regexStr`: [RegExp String],  e.g `.+`
+
+```json
+{
+  "version": "v1",
+  "method": "POST",
+  "status": "success",
+  "data": {
+    "endpoints": [
+      {
+        "id": 3,
+        "name": "docker"
+      },
+      {
+        "id": 4,
+        "name": "aaaaa"
+      }
+    ]
+  }
+}
+```
+
+
 ### `GET` `POST` /api/v1/portal/eventcases/get
 * `required login session`
 * params:
