@@ -492,7 +492,13 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			VALUES
 				(402001, 'tgn-1', '1.2.3.4', -1, -1, -1, true, -1, true, true), # Probed by all
 				(402002, 'tgn-2', '1.2.3.5', 5, -1, -1, false, -1, true, true),
-				(402003, 'tgn-3', '1.2.3.6', -1, -1, -1, false, -1, true, true)
+				(402003, 'tgn-3', '1.2.3.6', -1, -1, -1, false, -1, true, true),
+				/**
+				 * Disabled target
+				 */
+				(402005, 'tgn-4', '1.2.3.11', 5, -1, -1, true, -1, false, true),
+				(402006, 'tgn-5', '1.2.3.12', 5, -1, -1, true, -1, true, false)
+				# :~)
 			`,
 			`
 			INSERT INTO nqm_ping_task(
@@ -551,7 +557,7 @@ func (s *TestDbNqmSuite) TearDownTest(c *C) {
 			"DELETE FROM nqm_agent_ping_task WHERE apt_ag_id >= 230001 AND apt_ag_id <= 230003",
 			"DELETE FROM nqm_ping_task WHERE pt_id >= 34021 AND pt_id <= 34023",
 			"DELETE FROM nqm_agent WHERE ag_id >= 230001 AND ag_id <= 230003",
-			"DELETE FROM nqm_target WHERE tg_id >= 402001 AND tg_id <= 402003",
+			"DELETE FROM nqm_target WHERE tg_id >= 402001 AND tg_id <= 402010",
 		)
 	}
 }
