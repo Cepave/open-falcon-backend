@@ -46,7 +46,7 @@ func openLogFile(name string) (*os.File, error) {
 	return logOutput, nil
 }
 
-func checkPreq(name string) error {
+func checkReq(name string) error {
 	if err := g.HasModule(name); err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func start(c *cobra.Command, args []string) error {
 	//	}
 	//	args = g.GetModuleArgsInOrder(args)
 	//}
-	g.GetModuleArgsInOrder(args)
+	g.PreqOrder(args)
 
 	for _, moduleName := range args {
 		// Skip starting if the module is already running
@@ -98,7 +98,7 @@ func start(c *cobra.Command, args []string) error {
 			continue
 		}
 
-		if err := checkPreq(moduleName); err != nil {
+		if err := checkReq(moduleName); err != nil {
 			return err
 		}
 
