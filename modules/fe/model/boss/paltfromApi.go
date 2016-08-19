@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
@@ -82,6 +83,25 @@ func GenPlatMap(repons PlatformList, filterList *hashset.Set) (ipMapper *hashmap
 		popIds = append(popIds, popID.(int))
 	}
 	return
+}
+
+func getIPFromHostname(hostname string) string {
+	ip := ""
+	fragments := strings.Split(hostname, "-")
+	slice := []string{}
+	if len(fragments) == 6 {
+		fragments := fragments[2:]
+		for _, fragment := range fragments {
+			num, err := strconv.Atoi(fragment)
+			if err == nil {
+				slice = append(slice, strconv.Itoa(num))
+			}
+		}
+		if len(slice) == 4 {
+			ip = strings.Join(slice, ".")
+		}
+	}
+	return ip
 }
 
 func IdcMapping(popIDs []int) (idcmapping map[int]string, err error) {
