@@ -10,6 +10,11 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
+func tick() <-chan time.Time {
+	dur := time.Second * GetGeneralConfig().Hbs.Interval
+	return time.Tick(dur)
+}
+
 func updatedMsg(old map[string]model.MeasurementsProperty, updated map[string]model.MeasurementsProperty) string {
 	msg := ""
 	if updated == nil { // Reset all enabled measurements
@@ -64,10 +69,8 @@ func query() {
 }
 
 func Query() {
-	for {
+	query()
+	for _ = range tick() {
 		query()
-
-		dur := time.Second * GetGeneralConfig().Hbs.Interval
-		time.Sleep(dur)
 	}
 }
