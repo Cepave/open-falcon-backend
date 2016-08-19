@@ -71,9 +71,12 @@ func GenPlatMap(repons PlatformList, filterList *hashset.Set) (ipMapper *hashmap
 			if filterList.Contains(ipInfo.HostName) {
 				platList.Add(platform.Platform)
 				ipInfo.Platform = platform.Platform
-				ipMapper.Put(ipInfo.HostName, ipInfo)
 				popID, _ := strconv.Atoi(ipInfo.POPID)
 				popIDSet.Add(popID)
+				ip := ipInfo.IP
+				if len(ip) > 0 && ip == getIPFromHostname(ipInfo.HostName) {
+					ipMapper.Put(ipInfo.HostName, ipInfo)
+				}
 			}
 		}
 	}
