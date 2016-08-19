@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-TARGET_SOURCE = $(shell find main.go g commands -name '*.go')
+TARGET_SOURCE = $(shell find main.go g cmd -name '*.go')
 CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent
 TARGET = open-falcon
 
