@@ -11,6 +11,8 @@ import (
 	"github.com/toolkits/net"
 )
 
+var HbsRespTime time.Time
+
 type SingleConnRpcClient struct {
 	rpcClient *rpc.Client
 	RpcServer string
@@ -48,7 +50,11 @@ func (this *SingleConnRpcClient) insureConn() {
 		}
 
 		log.Println("[ hbs ] Error on query:", err)
-
+		dur := int64(time.Since(HbsRespTime).Minutes())
+		var nilTime time.Time
+		if HbsRespTime.Add(6*time.Minute).Before(time.Now()) && HbsRespTime != nilTime {
+			log.Infof("[ hbs ] Last response: %dm ago\n", dur)
+		}
 		if retry > 6 {
 			retry = 1
 		}

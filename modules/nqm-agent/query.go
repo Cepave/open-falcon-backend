@@ -51,6 +51,7 @@ func query() {
 		return
 	}
 	log.Println("[ hbs ] Response received")
+	HbsRespTime = time.Now()
 
 	oldResp := GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse)
 	if !configFromHbsUpdated(resp, oldResp) {
