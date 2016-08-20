@@ -34,8 +34,8 @@ func ResultGen(alist []string) (result []GrafanaResp) {
 func parseTager(query string) (endpoints []string, counter string, ldfunction string) {
 	log.Debugf("got query string: %s ", query)
 	parseRgex := "^([^#]+)#(.+)"
-	if strings.Contains(query, "@owl@") {
-		parseRgex = "^([^#]+)#(.+)@owl@(.+)"
+	if strings.Contains(query, "#{") {
+		parseRgex = "^([^#]+)#(.+)#({.+)"
 	}
 	r := regexp.MustCompile(parseRgex)
 	matched := r.FindStringSubmatch(query)
