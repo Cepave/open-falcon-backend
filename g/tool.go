@@ -133,6 +133,9 @@ func Pid(name string) string {
 }
 
 func IsRunning(name string) bool {
+	if !HasModule(name) {
+		return false
+	}
 	setPid(name)
 	if Pid(name) == "" {
 		return false
