@@ -58,3 +58,8 @@
     filename: "masato-12.sql",
     comment: "note feture support"
 }
+- {
+    id: "laurence-13",
+    filename: "laurence-13.sql",
+    comment: "[OWL-480] git repo address move to mysql."
+}
