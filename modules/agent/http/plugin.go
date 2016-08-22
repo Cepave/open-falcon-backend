@@ -1,7 +1,6 @@
 package http
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -28,8 +27,7 @@ func RunCmdWithTimeout(cmd *exec.Cmd, timeout int64) (err error) {
 	case <-time.After(d):
 		// timed out
 		cmd.Process.Kill()
-		errMsg := fmt.Sprintf("Command %s time out", cmd.Path)
-		err = errors.New(errMsg)
+		err = fmt.Errorf("Command %s time out", cmd.Path)
 	}
 	return
 }
