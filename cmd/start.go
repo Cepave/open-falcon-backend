@@ -59,7 +59,6 @@ func checkReq(name string) error {
 }
 
 func isStarted(name string) bool {
-	timer := time.NewTimer(time.Second)
 	ticker := time.NewTicker(time.Millisecond * 100)
 
 	for {
@@ -68,7 +67,7 @@ func isStarted(name string) bool {
 			if g.IsRunning(name) {
 				return true
 			}
-		case <-timer.C:
+		case <-time.After(time.Second):
 			return false
 		}
 	}
