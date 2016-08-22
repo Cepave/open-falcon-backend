@@ -48,6 +48,33 @@ func (this *DashBoardController) EndpRegxqury() {
 	return
 }
 
+func (this *DashBoardController) CounterRegxQuery() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	queryStr := this.GetString("queryStr", "")
+	if queryStr == "" {
+		this.ResposeError(baseResp, "query string is empty, please check it")
+		return
+	}
+	limitNum, _ := this.GetInt("limit", 0)
+	counters, err := dashboard.QueryCounterByNameRegx(queryStr, limitNum)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	if len(counters) > 0 {
+		baseResp.Data["counters"] = counters
+	} else {
+		baseResp.Data["counters"] = []string{}
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
 type xmlEntry struct {
 	ID      string `xml:"id"`
 	Updated string `xml:"updated"`
@@ -117,7 +144,7 @@ func (this *DashBoardController) CounterQuery() {
 	return
 }
 
-// endpoint group query by counter
+// endpoint query by counter
 func (this *DashBoardController) EndpointsQuery() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
