@@ -117,23 +117,26 @@ func (this *DashBoardController) CounterQuery() {
 	return
 }
 
-//endpoints query by counter
-func (this *DashBoardController) EndpointQuery() {
+// endpoint group query by counter
+func (this *DashBoardController) EndpointsQuery() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
-	counter := this.GetString("counter", "")
+	counters := this.GetString("counters", "")
+	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
+	countersArr := strings.Split(rexstr.ReplaceAllString(counters, ""), ",")
 	limitNum, _ := this.GetInt("limit", 0)
-	metricQuery := this.GetString("metricQuery", "")
-	negateMatch, _ := this.GetBool("negateMatch", false)
-	if metricQuery == "" && counter == "" {
-		this.ResposeError(baseResp, "query string && query pattern are both empty, please check it")
+	// We need a string pattern to filter outputs.
+	// default filter pattern is .+
+	filter := this.GetString("filter", ".+")
+	if counters == "" {
+		this.ResposeError(baseResp, "query string counters is empty, please check it")
 		return
 	}
-	endpoints, err := dashboard.QueryEndpointsByCounter(counter, limitNum, metricQuery, negateMatch)
+	endpoints, err := dashboard.QueryEndpointsByCounter(countersArr, limitNum, filter)
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
