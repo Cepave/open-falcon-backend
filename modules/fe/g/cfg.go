@@ -105,7 +105,6 @@ type GlobalConfig struct {
 	Cache        *CacheConfig        `json:"cache"`
 	Http         *HttpConfig         `json:"http"`
 	Salt         string              `json:"salt"`
-	AtomAddr     string              `json:"atomAddress"`
 	CanRegister  bool                `json:"canRegister"`
 	Ldap         *LdapConfig         `json:"ldap"`
 	Uic          *UicConfig          `json:"uic"`
