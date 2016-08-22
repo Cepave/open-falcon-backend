@@ -45,7 +45,7 @@ func configFromHbsUpdated(newResp model.NqmTaskResponse, oldResp model.NqmTaskRe
 
 func query() {
 	var resp model.NqmTaskResponse
-	err := rpcClient.Call("NqmAgent.Task", req, &resp)
+	err := RPCCall("NqmAgent.Task", req, &resp)
 	if err != nil {
 		log.Println("[ hbs ] Error on RPC call:", err)
 		return
