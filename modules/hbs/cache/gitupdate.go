@@ -28,9 +28,6 @@ func GitUpdateCheck(hostname string) bool {
 		newestPluginVersion := pluginHash.Get()
 		log.Debugln("hostPluginVersion of ", hostname, hostPluginVersion)
 		log.Debugln("newestPluginVersion is:", newestPluginVersion)
-		if hostPluginVersion == "0" {
-			return true
-		}
 		return (hostPluginVersion != newestPluginVersion)
 	}
 

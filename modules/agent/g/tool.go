@@ -9,16 +9,18 @@ import (
 	"github.com/toolkits/file"
 )
 
+const zeroHash string = "0"
+
 func GetCurrPluginVersion() (str string, err error) {
 	if !Config().Plugin.Enabled {
-		str = "0"
+		str = zeroHash
 		err = errors.New("plugin not enabled")
 		return
 	}
 
 	pluginDir := Config().Plugin.Dir
 	if !file.IsExist(pluginDir) {
-		str = "0"
+		str = zeroHash
 		err = errors.New("plugin dir not existent")
 		return
 	}
@@ -30,7 +32,7 @@ func GetCurrPluginVersion() (str string, err error) {
 	cmd.Stdout = &out
 	err = cmd.Run()
 	if err != nil {
-		str = "0"
+		str = zeroHash
 		return
 	}
 
@@ -41,14 +43,14 @@ func GetCurrPluginVersion() (str string, err error) {
 
 func GetCurrGitRepo() (str string, err error) {
 	if !Config().Plugin.Enabled {
-		str = "0"
+		str = zeroHash
 		err = errors.New("plugin not enabled")
 		return
 	}
 
 	pluginDir := Config().Plugin.Dir
 	if !file.IsExist(pluginDir) {
-		str = "0"
+		str = zeroHash
 		err = errors.New("plugin dir not existent")
 		return
 	}
@@ -60,7 +62,7 @@ func GetCurrGitRepo() (str string, err error) {
 	cmd.Stdout = &out
 	err = cmd.Run()
 	if err != nil {
-		str = "0"
+		str = zeroHash
 		return
 	}
 
