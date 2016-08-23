@@ -23,7 +23,7 @@ func getFakeData() (t []*model.Result) {
 	return
 }
 
-func getFuncSetup(funName string) *conf.FunConfig {
+func GetFuncSetup(funName string) *conf.FunConfig {
 	return conf.GetFunc(funName)
 }
 
@@ -43,11 +43,17 @@ func SetOttoVM(vm *otto.Otto, pmap map[string]string, key string, ptype string) 
 			} else {
 				vm.Set(key, intval)
 			}
+		case "bool":
+			boolVal, err := strconv.ParseBool(value)
+			if err != nil {
+				log.Error(err.Error())
+			}
+			vm.Set(key, boolVal)
 		}
 	}
 }
 
-func setParamsToJSVM(httpParams map[string]string, funcParams []string, vm *otto.Otto) *otto.Otto {
+func SetParamsToJSVM(httpParams map[string]string, funcParams []string, vm *otto.Otto) *otto.Otto {
 	for _, params := range funcParams {
 		ss := strings.Split(params, ":")
 		paramsKey := ss[0]

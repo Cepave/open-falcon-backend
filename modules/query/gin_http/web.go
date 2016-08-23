@@ -3,12 +3,11 @@ package ginHttp
 import (
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/gin_http/computeFunc"
+	grahttp "github.com/Cepave/open-falcon-backend/modules/query/gin_http/grafana"
 	"github.com/Cepave/open-falcon-backend/modules/query/gin_http/openFalcon"
 	"github.com/gin-gonic/gin"
 )
@@ -53,14 +52,20 @@ func CORSMiddleware() gin.HandlerFunc {
 func StartWeb() {
 	handler := gin.Default()
 	handler.Use(CORSMiddleware())
-	compute := handler.Group("/func")
 	conf := g.Config()
+
+	compute := handler.Group("/func")
 	compute.GET("/compute", computeFunc.Compute)
 	compute.GET("/funcations", computeFunc.GetAvaibleFun)
 	compute.GET("/smapledata", computeFunc.GetTestData)
+
 	openfalcon := handler.Group("/owl")
 	openfalcon.GET("/endpoints", openFalcon.GetEndpoints)
 	openfalcon.GET("/queryrrd", openFalcon.QueryData)
-	log.Infof("open gin port on: %v", conf.GinHttp.Listen)
+
+	grafana := handler.Group("/api/grafana")
+	grafana.GET("/", grahttp.GrafanaMain)
+	grafana.GET("/metrics/find", grahttp.GrafanaMain)
+	grafana.POST("/render", grahttp.GetQueryTargets)
 	handler.Run(conf.GinHttp.Listen)
 }
