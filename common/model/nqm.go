@@ -79,6 +79,9 @@ type NqmAgent struct {
 	CityName string
 
 	NameTagId int16
+
+	// The id of group tags
+	GroupTagIds []int32
 }
 
 // Represents the data of target used by NQM agent
@@ -108,6 +111,9 @@ type NqmTarget struct {
 	NameTagId int16
 	// The name tag of the target
 	NameTag string
+
+	// The id of group tags
+	GroupTagIds []int32
 }
 
 func (target *NqmTarget) String() string {

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
+	dbCommon "github.com/Cepave/open-falcon-backend/common/db"
+	utils "github.com/Cepave/open-falcon-backend/common/utils"
 	log "github.com/Sirupsen/logrus"
 	"time"
 )
@@ -126,25 +128,23 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 		// :~)
 
 		var dbAgentName sql.NullString
+		var concatedIdsOfGroupTag sql.NullString
+
 		result = &commonModel.NqmAgent{
 			Id: agentId,
 		}
 
 		if err = tx.QueryRow(
 			/**
-			 * Gets one row if the executing of ping task is needed
-			 *
-			 * Gets no row if:
-			 * 1) No ping task configuration
-			 * 2) The period is overed yet
-			 * 3) The agent is disabled
+			 * Gets data of agent if the any of ping task need to be executed
 			 */
 			`
 			SELECT ag_name,
 				isp_id, isp_name,
 				pv_id, pv_name,
 				ct_id, ct_name,
-				ag_nt_id
+				ag_nt_id,
+				GROUP_CONCAT(agt.agt_gt_id ORDER BY agt.agt_gt_id ASC SEPARATOR ',') AS gts
 			FROM nqm_agent AS ag
 				INNER JOIN
 				owl_isp AS isp
@@ -155,7 +155,11 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 				INNER JOIN
 				owl_city AS ct
 				ON ag.ag_ct_id = ct.ct_id
+				LEFT OUTER JOIN
+				nqm_agent_group_tag AS agt
+				ON ag.ag_id = agt.agt_ag_id
 			WHERE ag.ag_id = ?
+			GROUP BY ag_name, isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, ag_nt_id
 			`,
 			// :~)
 			agentId,
@@ -164,11 +168,15 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 			&result.IspId, &result.IspName,
 			&result.ProvinceId, &result.ProvinceName,
 			&result.CityId, &result.CityName,
-			&result.NameTagId,
+			&result.NameTagId, &concatedIdsOfGroupTag,
 		); err != nil {
 			result = nil
 			return
 		}
+
+		result.GroupTagIds = utils.IntTo32(
+			dbCommon.GroupedStringToIntArray(concatedIdsOfGroupTag, ","),
+		)
 
 		/**
 		 * Loads name of agent
@@ -245,7 +253,9 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 	targets = make([]commonModel.NqmTarget, 0, 32)
 	for rows.Next() {
 		targets = append(targets, commonModel.NqmTarget{})
+
 		var currentTarget *commonModel.NqmTarget = &targets[len(targets)-1]
+		var concatedIdsOfGroupTags sql.NullString
 
 		rows.Scan(
 			&currentTarget.Id,
@@ -258,6 +268,11 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 			&currentTarget.CityName,
 			&currentTarget.NameTagId,
 			&currentTarget.NameTag,
+			&concatedIdsOfGroupTags,
+		)
+
+		currentTarget.GroupTagIds = utils.IntTo32(
+			dbCommon.GroupedStringToIntArray(concatedIdsOfGroupTags, ","),
 		)
 
 		if currentTarget.NameTagId == commonModel.UNDEFINED_NAME_TAG_ID {
@@ -277,7 +292,8 @@ func loadAllEnabledTargets() (*sql.Rows, error) {
 			isp_id, isp_name,
 			pv_id, pv_name,
 			ct_id, ct_name,
-			nt_id, nt_value
+			nt_id, nt_value,
+			GROUP_CONCAT(tgt.tgt_gt_id ORDER BY tgt.tgt_gt_id ASC SEPARATOR ',') AS gts
 		FROM nqm_target AS tg
 			INNER JOIN
 			owl_isp AS isp
@@ -291,8 +307,12 @@ func loadAllEnabledTargets() (*sql.Rows, error) {
 			INNER JOIN
 			owl_name_tag AS nt
 			ON tg.tg_nt_id = nt.nt_id
-		WHERE tg.tg_status = true
-			AND tg.tg_available = true
+			LEFT OUTER JOIN
+			nqm_target_group_tag AS tgt
+			ON tg.tg_id = tgt.tgt_tg_id
+		WHERE tg.tg_status = TRUE
+			AND tg.tg_available = TRUE
+		GROUP BY tg_id, tg_host, isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
 		`,
 	);
 }
@@ -305,41 +325,46 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 			isp_id, isp_name,
 			pv_id, pv_name,
 			ct_id, ct_name,
-			nt_id, nt_value
+			nt_id, nt_value,
+			GROUP_CONCAT(tgt.tgt_gt_id ORDER BY tgt.tgt_gt_id ASC SEPARATOR ',') AS gts
 		FROM (
-			/* Matched target by ISP */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
-			FROM
-				nqm_agent_ping_task AS apt
-				INNER JOIN
-				nqm_ping_task AS pt
-				ON pt.pt_id = apt.apt_pt_id
-					AND apt.apt_ag_id = ?
-				INNER JOIN
-				vw_enabled_targets_by_ping_task AS vw_tg
-				ON pt.pt_id = vw_tg.tg_pt_id
-			/* :~) */
-			UNION
-			/* Matched target which to be probed by all */
-			SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
-			FROM nqm_target tg
-			WHERE tg_probed_by_all = true
-				AND tg.tg_status = true
-				AND tg.tg_available = true
-			/* :~) */
-		) AS tg
-		INNER JOIN
-		owl_isp AS isp
-		ON tg.tg_isp_id = isp.isp_id
-		INNER JOIN
-		owl_province AS pv
-		ON tg.tg_pv_id = pv.pv_id
-		INNER JOIN
-		owl_city AS ct
-		ON tg.tg_ct_id = ct.ct_id
-		INNER JOIN
-		owl_name_tag AS nt
-		ON tg.tg_nt_id = nt.nt_id
+				/* Matched target by ISP */
+				SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+				FROM
+					nqm_agent_ping_task AS apt
+					INNER JOIN
+					nqm_ping_task AS pt
+					ON pt.pt_id = apt.apt_pt_id
+						AND apt.apt_ag_id = ?
+					INNER JOIN
+					vw_enabled_targets_by_ping_task AS vw_tg
+					ON pt.pt_id = vw_tg.tg_pt_id
+				/* :~) */
+				UNION
+				/* Matched target which to be probed by all */
+				SELECT tg_id, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+				FROM nqm_target tg
+				WHERE tg_probed_by_all = true
+					AND tg.tg_status = true
+					AND tg.tg_available = true
+				/* :~) */
+			) AS tg
+			INNER JOIN
+			owl_isp AS isp
+			ON tg.tg_isp_id = isp.isp_id
+			INNER JOIN
+			owl_province AS pv
+			ON tg.tg_pv_id = pv.pv_id
+			INNER JOIN
+			owl_city AS ct
+			ON tg.tg_ct_id = ct.ct_id
+			INNER JOIN
+			owl_name_tag AS nt
+			ON tg.tg_nt_id = nt.nt_id
+			LEFT OUTER JOIN
+			nqm_target_group_tag AS tgt
+			ON tg.tg_id = tgt.tgt_tg_id
+		GROUP BY tg_id, tg_host, isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
 		`,
 		agentId,
 	)
@@ -369,7 +394,8 @@ func getPingTaskState(agentId int) (result int, err error) {
 					pt_number_of_name_tag_filters +
 					pt_number_of_isp_filters +
 					pt_number_of_province_filters +
-					pt_number_of_city_filters
+					pt_number_of_city_filters +
+					pt_number_of_group_tag_filters
 					> 0,
 					1, 0
 				) AS pt_has_filter
