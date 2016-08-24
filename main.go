@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 
 	"github.com/Cepave/open-falcon-backend/cmd"
@@ -12,14 +10,14 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use:   "open-falcon",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use: "open-falcon",
+	//Short: "A brief description of your application",
+	//Long: `A longer description that spans multiple lines and likely contains
+	//examples and usage of using your application. For example:
+	//
+	//Cobra is a CLI library for Go that empowers applications.
+	//This application is a tool to generate the needed files
+	//to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -30,7 +28,7 @@ to quickly create a Cobra application.`,
 //var startCommand cli.Command
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	//cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports Persistent Flags, which, if defined here,
@@ -67,23 +65,23 @@ func initConfig() {
 }
 
 func main() {
-	log.SetOutput(ioutil.Discard)
+	//log.SetOutput(ioutil.Discard)
 
 	// Get the command line args. We shortcut "--version" and "-v" to
 	// just show the version.
-	args := os.Args[1:]
-	for _, arg := range args {
-		if arg == "--" {
-			break
-		}
-		if arg == "-v" || arg == "--version" {
-			newArgs := make([]string, len(args)+1)
-			newArgs[0] = "version"
-			copy(newArgs[1:], args)
-			args = newArgs
-			break
-		}
-	}
+	//args := os.Args[1:]
+	//for _, arg := range args {
+	//	if arg == "--" {
+	//		break
+	//	}
+	//	if arg == "-v" || arg == "--version" {
+	//		newArgs := make([]string, len(args)+1)
+	//		newArgs[0] = "version"
+	//		copy(newArgs[1:], args)
+	//		args = newArgs
+	//		break
+	//	}
+	//}
 
 	//cli := &cli.CLI{
 	//	Args:     args,
