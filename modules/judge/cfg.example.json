@@ -3,7 +3,6 @@
     "debugHost": "nil",
     "remain": 11,
     "root_dir": "/home/judge",
-    "remain": 11,
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:6081"
