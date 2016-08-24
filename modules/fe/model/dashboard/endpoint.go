@@ -17,6 +17,17 @@ func QueryEndpintByNameRegx(queryStr string, limit int) (enp []Endpoint, err err
 	return
 }
 
+func QueryCounterByNameRegx(queryStr string, limit int) (counters []string, err error) {
+	config := g.Config()
+	if limit == 0 || limit > config.GraphDB.Limit {
+		limit = config.GraphDB.Limit
+	}
+	q := orm.NewOrm()
+	q.Using("graph")
+	_, err = q.Raw("select distinct(counter) from `endpoint_counter` where counter regexp ? limit ?", queryStr, limit).QueryRows(&counters)
+	return
+}
+
 func QueryEndpintByNameRegxForOps(queryStr string) (enp []Hosts, err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")

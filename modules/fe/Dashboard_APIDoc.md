@@ -247,19 +247,48 @@
         }
       }
       ```
+### `GET` `POST` /api/v1/dashboard/counters
+  * `required login session`
+  * params:
+    * `queryStr` string  [regex query string]
+      * ex. `.+`
+    * `limit`   integer [the maximum number of output]
+      * ex. 20
+  * response:
+    * ok
+    ```
+      {
+      "version": "v1",
+      "method": "GET",
+      "status": "success",
+      "data": {
+        "counters": [
+          "check.heka.file",
+          "check.heka.alived"
+        ]
+      }
+    ```
+    * failed
+    ```
+      {
+        "version": "v1",
+        "method": "GET",
+        "status": "failed",
+        "error": {
+          "message": "query string is empty, please check it"
+        }
+      }
+    ```
 
 ### `GET` `POST` /api/v1/dashboard/counterendpoints
   * `required login session`
-  * `required root login`
   * params:
-    * `counter` string  [the counter]
-      * ex. "agent.alive"
+    * `counters` string array [the counter string array]
+      * ex. `["agent.alive", "task"]`
     * `limit`   integer [the maximum number of output]
       * ex. 20
-    * `metricQuery` string [regex query string]
-      * ex. ".*nqm.*"
-    * `negateMatch` boolean [negate metricQuery]
-      * ex. true
+    * `filter` string [regex string describing the output]
+      * ex. "bgp-.*"
   * response:
     * ok
 
@@ -270,17 +299,15 @@
           "status": "success",
           "data": {
             "endpoints": [
-              "123",
               "bgp-bj-jjj",
               "bgp-bj-kkk",
               "bgp-bj-hhh",
               ...
-              "cmb-jx-qqq"
             ]
           }
         }
       ```
-      * endpoints: the list of endpoints that contains the counter in `counter` string or counters match `metricQuery`
+      * endpoints: the list of endpoints that contains the counter in `counters` string array
     * failed
 
       ```
@@ -289,7 +316,7 @@
         "method": "GET",
         "status": "failed",
         "error": {
-          "message": "query string && query pattern are both empty, please check it"
+          "message": "query string counters is empty, please check it"
         }
       }
       ```
