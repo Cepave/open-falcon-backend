@@ -34,7 +34,9 @@ func dumpAllJudgedEvents() {
 	if err != nil {
 		log.Error(err.Error())
 	}
+
 	filepath := g.Config().Alarm.EventsStoreFilePath
+
 	err = ioutil.WriteFile(filepath, data, 0644)
 	if err != nil {
 		log.Error(err.Error())

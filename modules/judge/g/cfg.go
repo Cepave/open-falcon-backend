@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -92,6 +93,11 @@ func ParseConfig(cfg string) {
 	//support develop mode
 	if c.RootDir == "" {
 		c.RootDir = filepath.Dir(os.Args[0])
+	}
+
+	//when the file path is not set to full path, will use the working directory as the store perfix
+	if !strings.HasPrefix(c.Alarm.EventsStoreFilePath, "/") {
+		c.Alarm.EventsStoreFilePath = c.RootDir + "/" + c.Alarm.EventsStoreFilePath
 	}
 
 	configLock.Lock()

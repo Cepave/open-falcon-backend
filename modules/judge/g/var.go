@@ -2,12 +2,13 @@ package g
 
 import (
 	"encoding/json"
-	"github.com/Cepave/open-falcon-backend/common/model"
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	log "github.com/Sirupsen/logrus"
 )
 
 type SafeStrategyMap struct {
@@ -43,7 +44,6 @@ func InitHbsClient() {
 }
 
 func InitLastEvents() {
-	pwd, _ := os.Getwd()
 
 	if !Config().Alarm.StoreEventToFile {
 		return
@@ -65,7 +65,7 @@ func InitLastEvents() {
 			LastEvents.Set(event.Id, event)
 		}
 	} else {
-		log.Infof("currentPaht :%v, %v ", pwd, err.Error)
+		log.Error(err.Error())
 	}
 
 	if err != nil {
