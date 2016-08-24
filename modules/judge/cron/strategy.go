@@ -3,14 +3,24 @@ package cron
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
 	log "github.com/Sirupsen/logrus"
-	"io/ioutil"
-	"time"
 )
 
-func SyncStrategies() {
+func SyncStrategies(pid chan string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("run time panic: %v", r)
+			pid <- "SyncStrategies"
+			return
+		}
+	}()
+
 	duration := time.Duration(g.Config().Hbs.Interval) * time.Second
 	for {
 		syncStrategies()
