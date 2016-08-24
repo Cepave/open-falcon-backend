@@ -3,23 +3,24 @@ package g
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 
 	"github.com/toolkits/file"
 )
 
+const zeroHash string = "0"
+
 func GetCurrPluginVersion() (str string, err error) {
 	if !Config().Plugin.Enabled {
-		str = "0"
+		str = zeroHash
 		err = errors.New("plugin not enabled")
 		return
 	}
 
 	pluginDir := Config().Plugin.Dir
 	if !file.IsExist(pluginDir) {
-		str = "0"
+		str = zeroHash
 		err = errors.New("plugin dir not existent")
 		return
 	}
@@ -31,7 +32,7 @@ func GetCurrPluginVersion() (str string, err error) {
 	cmd.Stdout = &out
 	err = cmd.Run()
 	if err != nil {
-		str = "0"
+		str = zeroHash
 		return
 	}
 
@@ -40,14 +41,18 @@ func GetCurrPluginVersion() (str string, err error) {
 	return
 }
 
-func GetCurrGitRepo() string {
+func GetCurrGitRepo() (str string, err error) {
 	if !Config().Plugin.Enabled {
-		return "plugin not enabled"
+		str = zeroHash
+		err = errors.New("plugin not enabled")
+		return
 	}
 
 	pluginDir := Config().Plugin.Dir
 	if !file.IsExist(pluginDir) {
-		return "plugin dir not existent"
+		str = zeroHash
+		err = errors.New("plugin dir not existent")
+		return
 	}
 
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
@@ -55,10 +60,13 @@ func GetCurrGitRepo() string {
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
-		return fmt.Sprintf("Error:%s", err.Error())
+		str = zeroHash
+		return
 	}
 
-	return strings.TrimSpace(out.String())
+	// err is nil
+	str = strings.TrimSpace(out.String())
+	return
 }

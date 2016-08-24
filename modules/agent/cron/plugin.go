@@ -70,6 +70,7 @@ func syncMinePlugins() {
 		if resp.Timestamp <= timestamp {
 			continue
 		}
+		log.Println("Response of RPC call Agent.MinePlugins: ", &resp)
 
 		pluginDirs = dirFilter(resp.Plugins)
 		timestamp = resp.Timestamp
@@ -77,7 +78,8 @@ func syncMinePlugins() {
 
 		if resp.GitRepoUpdate {
 			log.Println("GitRepo updating ... ")
-			localHttp.DeleteAndCloneRepo(g.Config().Plugin.Dir, plugins.GitRepo)
+			gitUpdateResult := localHttp.DeleteAndCloneRepo(g.Config().Plugin.Dir, plugins.GitRepo)
+			log.Println(gitUpdateResult)
 		} else if resp.GitUpdate {
 			addr := fmt.Sprintf("http://127.0.0.1%s/plugin/update", g.Config().Http.Listen)
 			log.Println("GitUpdate API address is: ", addr)
