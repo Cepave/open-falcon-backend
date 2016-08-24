@@ -39,6 +39,7 @@ type AlarmConfig struct {
 	MinInterval         int64        `json:"minInterval"`
 	QueuePattern        string       `json:"queuePattern"`
 	AllowReSet          bool         `json:"allow_reset"`
+	StoreEventToFile    bool         `json:"store_event_to_file"`
 	EventsStoreFilePath string       `json:"events_store_file_path"`
 	Redis               *RedisConfig `json:"redis"`
 }

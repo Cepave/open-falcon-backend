@@ -44,6 +44,11 @@ func InitHbsClient() {
 
 func InitLastEvents() {
 	pwd, _ := os.Getwd()
+
+	if !Config().Alarm.StoreEventToFile {
+		return
+	}
+
 	filepath := Config().Alarm.EventsStoreFilePath
 	_, err := os.Stat(filepath)
 	if err == nil {
