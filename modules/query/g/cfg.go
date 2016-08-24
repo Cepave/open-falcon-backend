@@ -2,8 +2,11 @@ package g
 
 import (
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
+	"os"
+	"path/filepath"
 	"sync"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/logger"
 	"github.com/toolkits/file"
@@ -70,6 +73,7 @@ type GraphDB struct {
 
 type GlobalConfig struct {
 	Debug   bool           `json:"debug"`
+	RootDir string         `json:"root_dir"`
 	Http    *HttpConfig    `json:"http"`
 	Graph   *GraphConfig   `json:"graph"`
 	Api     *ApiConfig     `json:"api"`
@@ -123,6 +127,11 @@ func ParseConfig(cfg string) {
 	err = json.Unmarshal([]byte(configContent), &c)
 	if err != nil {
 		log.Fatalln("parse config file", cfg, "error:", err.Error())
+	}
+
+	//support develop mode
+	if c.RootDir == "" {
+		c.RootDir = filepath.Dir(os.Args[0])
 	}
 
 	SetConfig(&c)

@@ -13,8 +13,9 @@ import (
 // 5.1.4: Only trustable ip could access the webpage
 // 5.1.5: New policy and plugin mechanism
 // 5.1.6: Update cfg.json in release package. Program file is same as 5.1.5.
+// 5.1.7: Fix failure of plugin updating.
 const (
-	VERSION          = "5.1.6"
+	VERSION          = "5.1.7"
 	COLLECT_INTERVAL = time.Second
 	URL_CHECK_HEALTH = "url.check.health"
 	NET_PORT_LISTEN  = "net.port.listen"

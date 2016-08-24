@@ -2,9 +2,12 @@ package g
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"sync"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
-	"sync"
 )
 
 type HttpConfig struct {
@@ -43,6 +46,7 @@ type AlarmConfig struct {
 type GlobalConfig struct {
 	Debug     bool         `json:"debug"`
 	DebugHost string       `json:"debugHost"`
+	RootDir   string       `json:"root_dir"`
 	Remain    int          `json:"remain"`
 	Http      *HttpConfig  `json:"http"`
 	Rpc       *RpcConfig   `json:"rpc"`
@@ -82,6 +86,11 @@ func ParseConfig(cfg string) {
 	err = json.Unmarshal([]byte(configContent), &c)
 	if err != nil {
 		log.Fatalln("parse config file:", cfg, "fail:", err)
+	}
+
+	//support develop mode
+	if c.RootDir == "" {
+		c.RootDir = filepath.Dir(os.Args[0])
 	}
 
 	configLock.Lock()

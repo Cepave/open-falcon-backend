@@ -1,6 +1,7 @@
 package dashboard
 
 import (
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/astaxie/beego/orm"
 )
@@ -20,6 +21,13 @@ func QueryEndpintByNameRegxForOps(queryStr string) (enp []Hosts, err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	_, err = q.Raw("select * from `host` where hostname regexp ?", queryStr).QueryRows(&enp)
+	return
+}
+
+func QueryConfig(key string) (c model.Config, err error) {
+	q := orm.NewOrm()
+	q.Using("falcon_portal")
+	err = q.Raw("select t.key, t.value from common_config as t where t.key = ?", key).QueryRow(&c)
 	return
 }
 

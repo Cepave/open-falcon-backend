@@ -22,11 +22,16 @@ func reportAgentStatus(interval time.Duration) {
 			hostname = fmt.Sprintf("error:%s", err.Error())
 		}
 
+		currPluginVersion, currPluginErr := g.GetCurrPluginVersion()
+		if currPluginErr != nil {
+			log.Println("GetCurrPluginVersion returns error: ", currPluginErr)
+		}
+
 		req := model.AgentReportRequest{
 			Hostname:      hostname,
 			IP:            g.IP(),
 			AgentVersion:  g.VERSION,
-			PluginVersion: g.GetCurrPluginVersion(),
+			PluginVersion: currPluginVersion,
 			GitRepo:       g.GetCurrGitRepo(),
 		}
 

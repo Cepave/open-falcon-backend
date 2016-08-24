@@ -3,12 +3,14 @@ package conf
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"sync"
 
+	log "github.com/Sirupsen/logrus"
+
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/utils"
 )
 
@@ -38,17 +40,22 @@ func Config() map[string]*FunConfig {
 }
 
 func functionMapGen() {
-	f := "./"
-	currentPath, _ := os.Getwd()
-	if _, err := os.Stat(fmt.Sprintf("%s/js", currentPath)); err == nil {
-		f = fmt.Sprintf("%s/js", currentPath)
-	} else if _, err := os.Stat(fmt.Sprintf("%s/../js", currentPath)); err == nil {
-		f = fmt.Sprintf("%s/../js", currentPath)
-	} else if _, err := os.Stat(fmt.Sprintf("%s/../config/js", currentPath)); err == nil {
-		f = fmt.Sprintf("%s/../config/js", currentPath)
-	} else {
+	currentPath := g.Config().RootDir
+	possiblePath := []string{"conf/js", "js"}
+	f := ""
+	for _, pa := range possiblePath {
+		paf := fmt.Sprintf("%s/%s", currentPath, pa)
+		if _, err := os.Stat(paf); err != nil {
+			log.Debugf("can't not load file from: %s", paf)
+		} else {
+			f = paf
+			break
+		}
+	}
+	if f == "" {
 		log.Fatalf("load js files got error, currentPaht: %s , please check your code tree and make is correct!", currentPath)
 	}
+
 	FunctionMap = map[string]*FunConfig{}
 	for _, v := range gconfig {
 		contain := jsFileReader(fmt.Sprintf("%s/%s", f, v.FilePath))
@@ -58,15 +65,22 @@ func functionMapGen() {
 }
 
 func ReadConf() {
-	var f string
-	currentPath, _ := os.Getwd()
-	if _, err := os.Stat(fmt.Sprintf("%s/conf/lambdaSetup.json", currentPath)); err == nil {
-		f = fmt.Sprintf("%s/conf/lambdaSetup.json", currentPath)
-	} else if _, err := os.Stat(fmt.Sprintf("%s/../config/lambdaSetup.json", currentPath)); err == nil {
-		f = fmt.Sprintf("%s/../config/lambdaSetup.json", currentPath)
-	} else {
+	currentPath := g.Config().RootDir
+	possiblePath := []string{"conf/lambdaSetup.json", "config/lambdaSetup.json"}
+	f := ""
+	for _, pa := range possiblePath {
+		paf := fmt.Sprintf("%s/%s", currentPath, pa)
+		if _, err := os.Stat(paf); err != nil {
+			log.Debugf("can't not load file from: %s", paf)
+		} else {
+			f = paf
+			break
+		}
+	}
+	if f == "" {
 		log.Fatalf("lambdaSetup.json not found, currentPaht: %s", currentPath)
 	}
+
 	confpath = &f
 	dat, err := ioutil.ReadFile(f)
 	if err != nil {
