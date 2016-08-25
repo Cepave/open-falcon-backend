@@ -1084,17 +1084,14 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 	keywords := map[string]interface{}{}
 	for _, host := range hostsExisted {
 		id := host.(map[string]interface{})["id"].(int)
-		platform := host.(map[string]interface{})["platform"].([]string)
+		platform := host.(map[string]interface{})["platform"].(string)
 		tags := []string{}
-		for _, s := range platform {
-			tags = appendUniqueString(tags, s)
-			if _, ok := keywords[s]; ok {
-				keywords[s] = appendUnique(keywords[s].([]int), id)
-			} else {
-				keywords[s] = []int{id}
-			}
+		tags = appendUniqueString(tags, platform)
+		if _, ok := keywords[platform]; ok {
+			keywords[platform] = appendUnique(keywords[platform].([]int), id)
+		} else {
+			keywords[platform] = []int{id}
 		}
-
 		isp := host.(map[string]interface{})["isp"].(string)
 		tags = appendUniqueString(tags, isp)
 		if _, ok := keywords[isp]; ok {
