@@ -1069,14 +1069,10 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 			popID := host.(map[string]interface{})["popID"].(string)
 			idc := idcMap[popID]
 			platform := host.(map[string]interface{})["platform"].(string)
-			if _, ok := hostExisted.(map[string]interface{})["platform"]; ok {
-				hostExisted.(map[string]interface{})["platform"] = appendUniqueString(hostExisted.(map[string]interface{})["platform"].([]string), platform)
-			} else {
-				hostExisted.(map[string]interface{})["platform"] = []string{platform}
-			}
 			hostExisted.(map[string]interface{})["isp"] = isp
 			hostExisted.(map[string]interface{})["province"] = province
 			hostExisted.(map[string]interface{})["idc"] = idc
+			hostExisted.(map[string]interface{})["platform"] = platform
 			hostsExisted[hostname] = hostExisted
 		}
 	}
