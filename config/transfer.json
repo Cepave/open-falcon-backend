@@ -3,11 +3,11 @@
     "minStep": 30,
     "http": {
         "enabled": true,
-        "listen": "0.0.0.0:6060"
+        "listen": "%%TRANSFER_HTTP%%"
     },
     "rpc": {
         "enabled": true,
-        "listen": "0.0.0.0:8433"
+        "listen": "%%TRANSFER_RPC%%"
     },
     "socket": {
         "enabled": false,
@@ -36,7 +36,7 @@
         "replicas": 500,
         "migrating": false,
         "cluster": {
-            "graph-00" : "10.20.30.40:6070"
+            "graph-00" : "%%GRAPH_RPC%%"
         },
         "clusterMigrating": {
         }
