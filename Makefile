@@ -28,6 +28,7 @@ checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
 	@if [ -e out ] ; then rm -rf out; fi
 	@mkdir out
+	@bash ./config/confgen.sh
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/bin;)
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/config;)
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/logs;)
@@ -40,6 +41,7 @@ pack: checkbin
 	@cp cfg.json ./out/cfg.json
 	@cp $(TARGET) ./out/$(TARGET)
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
+	@git checkout -- ./config
 	@rm -rf out
 
 clean:
