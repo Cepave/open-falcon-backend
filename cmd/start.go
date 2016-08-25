@@ -28,7 +28,7 @@ Modules:
 }
 
 var PreqOrderFlag bool
-var LogfileFlag bool
+var ConsoleOutputFlag bool
 
 func cmdArgs(name string) []string {
 	return []string{"-c", g.Cfg(name)}
@@ -49,22 +49,23 @@ func openLogFile(name string) (*os.File, error) {
 	return logOutput, nil
 }
 
-func execModule(logfile bool, name string) error {
+func execModule(co bool, name string) error {
 	cmd := exec.Command(g.Bin(name), cmdArgs(name)...)
-	if logfile {
-		logOutput, err := openLogFile(name)
-		if err != nil {
-			return err
-		}
-		defer logOutput.Close()
-		cmd.Stdout = logOutput
-		cmd.Stderr = logOutput
-		return cmd.Start()
+
+	if co {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
 	}
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	logOutput, err := openLogFile(name)
+	if err != nil {
+		return err
+	}
+	defer logOutput.Close()
+	cmd.Stdout = logOutput
+	cmd.Stderr = logOutput
+	return cmd.Start()
 }
 
 func checkReq(name string) error {
@@ -114,7 +115,7 @@ func start(c *cobra.Command, args []string) error {
 			continue
 		}
 
-		if err := execModule(LogfileFlag, moduleName); err != nil {
+		if err := execModule(ConsoleOutputFlag, moduleName); err != nil {
 			return err
 		}
 
