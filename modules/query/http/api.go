@@ -1197,6 +1197,44 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func addNetworkSpeedAndBondMode(metrics []string, hostnames []string, result map[string]interface{}) []string {
+	metrics = append(metrics, "nic.bond.mode")
+	o := orm.NewOrm()
+	var rows []orm.Params
+	hostname := strings.Join(hostnames, "','")
+	sqlcmd := "SELECT id FROM graph.endpoint WHERE endpoint IN ('" + hostname + "')"
+	num, err := o.Raw(sqlcmd).Values(&rows)
+	endpointIDs := []string{}
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			endpointIDs = append(endpointIDs, row["id"].(string))
+		}
+	}
+	tags := []string{}
+	if len(endpointIDs) > 0 {
+		sqlcmd = "SELECT DISTINCT tag FROM graph.tag_endpoint WHERE endpoint_id IN ('"
+		sqlcmd += strings.Join(endpointIDs, "','") + "') AND tag LIKE 'device=%'"
+		num, err := o.Raw(sqlcmd).Values(&rows)
+		if err != nil {
+			setError(err.Error(), result)
+		} else if num > 0 {
+			for _, row := range rows {
+				tag := row["tag"].(string)
+				if strings.Index(tag, "bond") > -1 || strings.Index(tag, "eth") > -1 {
+					tags = append(tags, tag)
+				}
+			}
+		}
+	}
+	for _, tag := range tags {
+		speedMetric := "nic.default.out.speed/" + tag
+		metrics = append(metrics, speedMetric)
+	}
+	return metrics
+}
+
 func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
