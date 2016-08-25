@@ -41,7 +41,7 @@ func Config() map[string]*FunConfig {
 
 func functionMapGen() {
 	currentPath := g.Config().RootDir
-	possiblePath := []string{"conf/js", "js"}
+	possiblePath := []string{"../config/js", "config/js", "conf/js", "js"}
 	f := ""
 	for _, pa := range possiblePath {
 		paf := fmt.Sprintf("%s/%s", currentPath, pa)
@@ -66,7 +66,7 @@ func functionMapGen() {
 
 func ReadConf() {
 	currentPath := g.Config().RootDir
-	possiblePath := []string{"conf/lambdaSetup.json", "config/lambdaSetup.json"}
+	possiblePath := []string{"conf/lambdaSetup.json", "config/lambdaSetup.json", "../config/lambdaSetup.json"}
 	f := ""
 	for _, pa := range possiblePath {
 		paf := fmt.Sprintf("%s/%s", currentPath, pa)
