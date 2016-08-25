@@ -1244,26 +1244,53 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	metricType := arguments[4]
 	hostnames := strings.Split(arguments[5], ",")
 	metrics := getMetricsByMetricType(metricType)
+	if metricType == "bandwidths" {
+		metrics = addNetworkSpeedAndBondMode(metrics, hostnames, result)
+	}
 	duration := "1d"
 	if len(arguments) > 6 {
 		duration = arguments[6]
 	}
 	data := getGraphQueryResponse(metrics, duration, hostnames, result)
 	for _, series := range data {
-		values := []interface{}{}
-		for _, rrdObj := range series.Values {
-			value := []interface{}{
-				rrdObj.Timestamp * 1000,
-				rrdObj.Value,
+		metric := series.Counter
+		if strings.Index(metric, "nic.default.out.speed/device=") > -1 {
+			if len(series.Values) > 0 && series.Values[0].Value > 0 {
+				series.Counter = "net.transmission.limit.90%"
+				limit := series.Values[0].Value
+				for _, item := range series.Values {
+					value := item.Value
+					if value > limit {
+						limit = value
+						break
+					}
+				}
+				limit *= 1024 * 1024 * 0.9
+				for key, _ := range series.Values {
+					series.Values[key].Value = limit
+				}
+			} else {
+				series.Counter = ""
 			}
-			values = append(values, value)
 		}
-		item := map[string]interface{}{
-			"host":   series.Endpoint,
-			"metric": series.Counter,
-			"data":   values,
+		if series.Counter != "" {
+			if series.Counter == "nic.bond.mode" {
+			}
+			values := []interface{}{}
+			for _, rrdObj := range series.Values {
+				value := []interface{}{
+					rrdObj.Timestamp * 1000,
+					rrdObj.Value,
+				}
+				values = append(values, value)
+			}
+			item := map[string]interface{}{
+				"host":   series.Endpoint,
+				"metric": series.Counter,
+				"data":   values,
+			}
+			items = append(items, item)
 		}
-		items = append(items, item)
 	}
 	result["items"] = items
 	var nodes = make(map[string]interface{})
