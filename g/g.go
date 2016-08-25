@@ -1,18 +1,17 @@
 package g
 
-import (
-//	"io/ioutil"
-)
+import "path/filepath"
 
 var Modules map[string]bool
-var ModuleBins map[string]string
-var ModuleConfs map[string]string
+var BinOf map[string]string
+var cfgOf map[string]string
 var ModuleApps map[string]string
+var logpathOf map[string]string
+var PidOf map[string]string
 var AllModulesInOrder []string
 
 func init() {
 	//	dirs, _ := ioutil.ReadDir("./modules")
-
 	//	for _, dir := range dirs {
 	//		Modules[dir.Name()] = true
 	//	}
@@ -32,7 +31,7 @@ func init() {
 		"transfer":   true,
 	}
 
-	ModuleBins = map[string]string{
+	BinOf = map[string]string{
 		"agent":      "./agent/bin/falcon-agent",
 		"nqm-agent":  "./agent/bin/falcon-nqm-agent",
 		"aggregator": "./aggregator/bin/falcon-aggregator",
@@ -48,7 +47,7 @@ func init() {
 		"transfer":   "./transfer/bin/falcon-transfer",
 	}
 
-	ModuleConfs = map[string]string{
+	cfgOf = map[string]string{
 		"agent":      "./agent/config/cfg.json",
 		"nqm-agent":  "./nqm-agent/config/cfg.json",
 		"aggregator": "./aggregator/config/cfg.json",
@@ -80,6 +79,38 @@ func init() {
 		"transfer":   "falcon-transfer",
 	}
 
+	logpathOf = map[string]string{
+		"agent":      "./agent/logs/agent.log",
+		"nqm-agent":  "./nqm-agent/logs/nqm-agent.log",
+		"aggregator": "./aggregator/logs/aggregator.log",
+		"alarm":      "./alarm/logs/alarm.log",
+		"fe":         "./fe/logs/fe.log",
+		"graph":      "./graph/logs/graph.log",
+		"hbs":        "./hbs/logs/hbs.log",
+		"judge":      "./judge/logs/judge.log",
+		"nodata":     "./nodata/logs/nodata.log",
+		"query":      "./query/logs/query.log",
+		"sender":     "./sender/logs/sender.log",
+		"task":       "./task/logs/task.log",
+		"transfer":   "./transfer/logs/transfer.log",
+	}
+
+	PidOf = map[string]string{
+		"agent":      "<NOT SET>",
+		"nqm-agent":  "<NOT SET>",
+		"aggregator": "<NOT SET>",
+		"alarm":      "<NOT SET>",
+		"graph":      "<NOT SET>",
+		"fe":         "<NOT SET>",
+		"hbs":        "<NOT SET>",
+		"judge":      "<NOT SET>",
+		"nodata":     "<NOT SET>",
+		"query":      "<NOT SET>",
+		"sender":     "<NOT SET>",
+		"task":       "<NOT SET>",
+		"transfer":   "<NOT SET>",
+	}
+
 	// Modules are deployed in this order
 	AllModulesInOrder = []string{
 		"graph",
@@ -95,4 +126,24 @@ func init() {
 		"aggregator",
 		"agent",
 	}
+}
+
+func Bin(name string) string {
+	p, _ := filepath.Abs(BinOf[name])
+	return p
+}
+
+func Cfg(name string) string {
+	p, _ := filepath.Abs(cfgOf[name])
+	return p
+}
+
+func LogPath(name string) string {
+	p, _ := filepath.Abs(logpathOf[name])
+	return p
+}
+
+func LogDir(name string) string {
+	d, _ := filepath.Abs(filepath.Dir(logpathOf[name]))
+	return d
 }
