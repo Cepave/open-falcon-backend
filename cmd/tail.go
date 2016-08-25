@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Tail = &cobra.Command{
+var Monitor = &cobra.Command{
 	Use:   "tail [Module ...]",
 	Short: "Display an Open-Falcon module's log",
 	Long: `
@@ -20,10 +20,10 @@ A module represents a single node in a cluster.
 Modules:
 
   ` + strings.Join(g.AllModulesInOrder, " "),
-	RunE: tail,
+	RunE: monitor,
 }
 
-func tail(c *cobra.Command, args []string) error {
+func monitor(c *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return c.Usage()
 	}
