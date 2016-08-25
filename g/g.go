@@ -2,8 +2,6 @@ package g
 
 import "path/filepath"
 
-//	"io/ioutil"
-
 var Modules map[string]bool
 var BinOf map[string]string
 var cfgOf map[string]string
@@ -14,7 +12,6 @@ var AllModulesInOrder []string
 
 func init() {
 	//	dirs, _ := ioutil.ReadDir("./modules")
-
 	//	for _, dir := range dirs {
 	//		Modules[dir.Name()] = true
 	//	}
