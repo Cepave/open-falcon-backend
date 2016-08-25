@@ -4,7 +4,9 @@
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:1234",
-        "cookie": ".example.com"
+        "cookie": ".example.com",
+        "view_path": "/home/fe/bin/views",
+        "static_path": "/home/fe/bin/static"
     },
     "cache": {
         "enabled": true,

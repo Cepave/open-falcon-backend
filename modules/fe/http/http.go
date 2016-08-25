@@ -2,12 +2,13 @@ package http
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
-	"github.com/Cepave/open-falcon-backend/modules/fe/http/dashboard"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/boss"
+	"github.com/Cepave/open-falcon-backend/modules/fe/http/dashboard"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/home"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/portal"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/uic"
 	uic_model "github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
+	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
 )
@@ -32,5 +33,13 @@ func Start() {
 	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
 		AllowAllOrigins: true,
 	}))
+	if g.Config().Http.ViewPath != "" {
+		log.Infof("set http view_path in %v", g.Config().Http.ViewPath)
+		beego.SetViewsPath(g.Config().Http.ViewPath)
+	}
+	if g.Config().Http.StaticPath != "" {
+		log.Infof("set http static_path in %v", g.Config().Http.StaticPath)
+		beego.SetStaticPath("/static", g.Config().Http.StaticPath)
+	}
 	beego.Run(addr)
 }
