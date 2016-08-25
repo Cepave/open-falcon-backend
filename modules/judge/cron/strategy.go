@@ -3,19 +3,55 @@ package cron
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/Cepave/open-falcon-backend/modules/judge/g"
-	"github.com/Cepave/open-falcon-backend/common/model"
+	"io/ioutil"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	log "github.com/Sirupsen/logrus"
 )
 
-func SyncStrategies() {
+func SyncStrategies(pid chan string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("run time panic: %v", r)
+			pid <- "SyncStrategies"
+			return
+		}
+	}()
+
 	duration := time.Duration(g.Config().Hbs.Interval) * time.Second
 	for {
 		syncStrategies()
 		syncExpression()
+		dumpAllJudgedEvents()
 		time.Sleep(duration)
 	}
+}
+
+//dump current events into file, can solve the problem of huge alarm triggered when restart judge
+func dumpAllJudgedEvents() {
+	event := g.LastEvents.GetAll()
+	if len(event) == 0 {
+		return
+	}
+	var tmpStore []*model.Event
+	for _, value := range event {
+		tmpStore = append(tmpStore, value)
+	}
+	data, err := json.Marshal(tmpStore)
+	if err != nil {
+		log.Error(err.Error())
+	}
+
+	filepath := g.Config().Alarm.EventsStoreFilePath
+
+	err = ioutil.WriteFile(filepath, data, 0644)
+	if err != nil {
+		log.Error(err.Error())
+	}
+	log.Debug("dumpAllJudgedEvents into local file.")
 }
 
 func syncStrategies() {
