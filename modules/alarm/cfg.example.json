@@ -3,7 +3,9 @@
     "uicToken": "",
     "http": {
         "enabled": true,
-        "listen": "0.0.0.0:9912"
+        "listen": "0.0.0.0:9912",
+        "view_path": "/home/alarm/bin/views",
+        "static_path": "/home/alarm/bin/static"
     },
     "queue": {
         "sms": "/sms",
