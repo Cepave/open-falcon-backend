@@ -1,11 +1,10 @@
 {
     "debug": false,
-    "hostname": "docker-agent",
+    "hostname": "",
     "ip": "",
     "plugin": {
         "enabled": false,
         "dir": "./plugin",
-        "git": "https://coding.net/ulricqin/plugin.git",
         "logs": "./logs"
     },
     "heartbeat": {
@@ -28,7 +27,8 @@
         "backdoor": false
     },
     "collector": {
-        "ifacePrefix": ["eth", "em"]
+        "ifacePrefix": ["eth", "em", "bond", "enp"],
+        "eth_all": ["eth", "em", "enp"]
     },
     "ignore": {
         "cpu.busy": true,
