@@ -526,7 +526,8 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 				}
 				last, err := graph.Last(*param)
 				if err != nil {
-					log.Errorf("graph.last fail, resp: %v, err: %v", last, err)
+					setError("graph.last fail, err: "+err.Error(), result)
+					return data
 				}
 				if last == nil {
 					continue
@@ -933,6 +934,7 @@ func getGraphQueryResponse(metrics []string, duration string, hostnames []string
 			response, err := graph.QueryOne(request)
 			if err != nil {
 				setError("graph.queryOne fail, "+err.Error(), result)
+				return data
 			}
 			if result == nil {
 				continue
@@ -1067,14 +1069,10 @@ func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[
 			popID := host.(map[string]interface{})["popID"].(string)
 			idc := idcMap[popID]
 			platform := host.(map[string]interface{})["platform"].(string)
-			if _, ok := hostExisted.(map[string]interface{})["platform"]; ok {
-				hostExisted.(map[string]interface{})["platform"] = appendUniqueString(hostExisted.(map[string]interface{})["platform"].([]string), platform)
-			} else {
-				hostExisted.(map[string]interface{})["platform"] = []string{platform}
-			}
 			hostExisted.(map[string]interface{})["isp"] = isp
 			hostExisted.(map[string]interface{})["province"] = province
 			hostExisted.(map[string]interface{})["idc"] = idc
+			hostExisted.(map[string]interface{})["platform"] = platform
 			hostsExisted[hostname] = hostExisted
 		}
 	}
@@ -1086,17 +1084,14 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 	keywords := map[string]interface{}{}
 	for _, host := range hostsExisted {
 		id := host.(map[string]interface{})["id"].(int)
-		platform := host.(map[string]interface{})["platform"].([]string)
+		platform := host.(map[string]interface{})["platform"].(string)
 		tags := []string{}
-		for _, s := range platform {
-			tags = appendUniqueString(tags, s)
-			if _, ok := keywords[s]; ok {
-				keywords[s] = appendUnique(keywords[s].([]int), id)
-			} else {
-				keywords[s] = []int{id}
-			}
+		tags = appendUniqueString(tags, platform)
+		if _, ok := keywords[platform]; ok {
+			keywords[platform] = appendUnique(keywords[platform].([]int), id)
+		} else {
+			keywords[platform] = []int{id}
 		}
-
 		isp := host.(map[string]interface{})["isp"].(string)
 		tags = appendUniqueString(tags, isp)
 		if _, ok := keywords[isp]; ok {
@@ -1195,6 +1190,44 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func addNetworkSpeedAndBondMode(metrics []string, hostnames []string, result map[string]interface{}) []string {
+	metrics = append(metrics, "nic.bond.mode")
+	o := orm.NewOrm()
+	var rows []orm.Params
+	hostname := strings.Join(hostnames, "','")
+	sqlcmd := "SELECT id FROM graph.endpoint WHERE endpoint IN ('" + hostname + "')"
+	num, err := o.Raw(sqlcmd).Values(&rows)
+	endpointIDs := []string{}
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			endpointIDs = append(endpointIDs, row["id"].(string))
+		}
+	}
+	tags := []string{}
+	if len(endpointIDs) > 0 {
+		sqlcmd = "SELECT DISTINCT tag FROM graph.tag_endpoint WHERE endpoint_id IN ('"
+		sqlcmd += strings.Join(endpointIDs, "','") + "') AND tag LIKE 'device=%'"
+		num, err := o.Raw(sqlcmd).Values(&rows)
+		if err != nil {
+			setError(err.Error(), result)
+		} else if num > 0 {
+			for _, row := range rows {
+				tag := row["tag"].(string)
+				if strings.Index(tag, "bond") > -1 || strings.Index(tag, "eth") > -1 {
+					tags = append(tags, tag)
+				}
+			}
+		}
+	}
+	for _, tag := range tags {
+		speedMetric := "nic.default.out.speed/" + tag
+		metrics = append(metrics, speedMetric)
+	}
+	return metrics
+}
+
 func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -1204,26 +1237,53 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	metricType := arguments[4]
 	hostnames := strings.Split(arguments[5], ",")
 	metrics := getMetricsByMetricType(metricType)
+	if metricType == "bandwidths" {
+		metrics = addNetworkSpeedAndBondMode(metrics, hostnames, result)
+	}
 	duration := "1d"
 	if len(arguments) > 6 {
 		duration = arguments[6]
 	}
 	data := getGraphQueryResponse(metrics, duration, hostnames, result)
 	for _, series := range data {
-		values := []interface{}{}
-		for _, rrdObj := range series.Values {
-			value := []interface{}{
-				rrdObj.Timestamp * 1000,
-				rrdObj.Value,
+		metric := series.Counter
+		if strings.Index(metric, "nic.default.out.speed/device=") > -1 {
+			if len(series.Values) > 0 && series.Values[0].Value > 0 {
+				series.Counter = "net.transmission.limit.90%"
+				limit := series.Values[0].Value
+				for _, item := range series.Values {
+					value := item.Value
+					if value > limit {
+						limit = value
+						break
+					}
+				}
+				limit *= 1024 * 1024 * 0.9
+				for key, _ := range series.Values {
+					series.Values[key].Value = limit
+				}
+			} else {
+				series.Counter = ""
 			}
-			values = append(values, value)
 		}
-		item := map[string]interface{}{
-			"host":   series.Endpoint,
-			"metric": series.Counter,
-			"data":   values,
+		if series.Counter != "" {
+			if series.Counter == "nic.bond.mode" {
+			}
+			values := []interface{}{}
+			for _, rrdObj := range series.Values {
+				value := []interface{}{
+					rrdObj.Timestamp * 1000,
+					rrdObj.Value,
+				}
+				values = append(values, value)
+			}
+			item := map[string]interface{}{
+				"host":   series.Endpoint,
+				"metric": series.Counter,
+				"data":   values,
+			}
+			items = append(items, item)
 		}
-		items = append(items, item)
 	}
 	result["items"] = items
 	var nodes = make(map[string]interface{})

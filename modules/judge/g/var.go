@@ -1,10 +1,14 @@
 package g
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
+	log "github.com/Sirupsen/logrus"
 )
 
 type SafeStrategyMap struct {
@@ -36,6 +40,38 @@ func InitHbsClient() {
 	HbsClient = &SingleConnRpcClient{
 		RpcServers: Config().Hbs.Servers,
 		Timeout:    time.Duration(Config().Hbs.Timeout) * time.Millisecond,
+	}
+}
+
+func InitLastEvents() {
+
+	if !Config().Alarm.StoreEventToFile {
+		return
+	}
+
+	filepath := Config().Alarm.EventsStoreFilePath
+	_, err := os.Stat(filepath)
+	if err == nil {
+		data, err := ioutil.ReadFile(filepath)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		var v []*model.Event
+		err = json.Unmarshal(data, &v)
+		if err != nil {
+			log.Error(err.Error())
+		}
+		for _, event := range v {
+			LastEvents.Set(event.Id, event)
+		}
+	} else {
+		log.Error(err.Error())
+	}
+
+	if err != nil {
+		log.Error(err.Error())
+	} else if len(LastEvents.GetAll()) != 0 {
+		log.Infof("init lastEvent of %s , %d events is inserted", filepath, len(LastEvents.GetAll()))
 	}
 }
 

@@ -1,0 +1,2 @@
+CREATE TABLE tab_1(id INT);
+CREATE TABLE tab_2(id INT);

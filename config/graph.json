@@ -2,17 +2,17 @@
     "debug": true,
     "http": {
         "enabled": true,
-        "listen": "0.0.0.0:6071"
+        "listen": "%%GRAPH_HTTP%%"
     },
     "rpc": {
         "enabled": true,
-        "listen": "0.0.0.0:6070"
+        "listen": "%%GRAPH_RPC%%"
     },
     "rrd": {
         "storage": "/home/graph/data/6070"
     },
     "db": {
-        "dsn": "root:password@tcp(172.17.0.3:3306)/graph?loc=Local&parseTime=true",
+        "dsn": "%%MYSQL%%/graph?loc=Local&parseTime=true",
         "maxIdle": 4
     }
 }

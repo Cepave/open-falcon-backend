@@ -5,9 +5,26 @@
 
 # Get Started
 
-    git clone https://github.com/cepave/open-falcon-backend.git
-    cd open-falcon-backend
-    git submodule update --init
+## Start MySQL and Redis using docker
+
+    cd docker
+    docker-compose -f init.yml up -d
+    docker inspect docker_mysql_1
+    docker inspect docker_redis_1
+    cd ..
+
+## Change your environment setting
+    
+    vi config/confgen.sh
+
+## Start Backend modules
+
+    make clean all pack
+    mkdir out
+    mv open-falcon-v2.0.0.tar.gz out/
+    cd out
+    tar zxvf open-falcon-v2.0.0.tar.gz
+    ./open-falcon start agent graph transfer hbs fe query
 
 # Compilation
 
@@ -28,7 +45,7 @@ Agent for example:
 # Package Management
 ## How-to
 
-Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exported. (You can ignore GO15VENDOREXPERIMENT using Go 1.6+.)
+Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exported. (`export GODEBUG=cgocheck=0` using Go 1.6+.)
 
  0. Install `trash` by `go get github.com/rancher/trash`.
  1. Edit `trash.yml` file to your needs. See the example as follow.
@@ -46,12 +63,3 @@ import:
 # Package Release
 
 	make clean all pack
-
-## 自動偵測模板改變重製告警step
-當使用者改變模改內的告警條件 ex. `cpu.idle > 10` -> `cpu.idle > 50`, 告警的step counter將會被重製.
-
-## 新增兩個api
-* /api/judges/list
-  * 拿到judge內部所有現存告警列表
-* /api/judges/delete
-  * 使用特定的hash將該告警從judge內部移除

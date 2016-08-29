@@ -1,7 +1,8 @@
 {
     "debug": true,
     "debugHost": "nil",
-    "remain": 11, 
+    "remain": 11,
+    "root_dir": "/home/judge",
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:6081"
@@ -25,6 +26,9 @@
             "connTimeout": 5000,
             "readTimeout": 5000,
             "writeTimeout": 5000
-        }
+        },
+        "allow_reset": false,
+        "store_event_to_file": true,
+        "events_store_file_path": "events_cache.json"
     }
 }

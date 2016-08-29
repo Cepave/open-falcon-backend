@@ -6,6 +6,19 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
+type Config struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+func (this *Config) String() string {
+	return fmt.Sprintf(
+		"<Key:%s, Value:%s>",
+		this.Key,
+		this.Value,
+	)
+}
+
 type Expression struct {
 	Id         int               `json:"id"`
 	Metric     string            `json:"metric"`

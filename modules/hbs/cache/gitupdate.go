@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	log "github.com/Sirupsen/logrus"
 )
 
 func GitRepoUpdateCheck(hostname string) bool {
 	if agentUpdateInfo, ok := Agents.Get(hostname); ok {
 		hostGitRepo := agentUpdateInfo.ReportRequest.GitRepo
-		currGitRepo := g.Config().GitRepo
+		currGitRepo := GitRepo.Get()
 		log.Debugln("host GitRepo of ", hostname, hostGitRepo)
 		return (hostGitRepo != currGitRepo)
 	}
@@ -50,10 +50,15 @@ func (this *SafePluginHash) Get() (commitHash string) {
 	this.RLock()
 	defer this.RUnlock()
 	commitHash = this.hash
-	return commitHash
+	return
 }
 
 var pluginHash = &SafePluginHash{hash: ""}
+
+type SafeGitRepo struct {
+	sync.RWMutex
+	gitRepo string
+}
 
 type xmlEntry struct {
 	ID      string `xml:"id"`
@@ -68,8 +73,13 @@ func getNewestPluginHash() {
 	for {
 		time.Sleep(time.Minute)
 
+		addr := GitRepo.Get()
+		log.Debugln("show GitRepo.Get():", addr)
+		if !strings.HasPrefix(addr, "http") {
+			continue
+		}
 		v := xmlData{}
-		atomAddr := strings.Replace(g.Config().GitRepo, ".git", "/commits/master.atom", -1)
+		atomAddr := strings.Replace(addr, ".git", "/commits/master.atom", -1)
 		if resp, err := http.Get(atomAddr); err != nil {
 			// handle error.
 			log.Errorln("Error retrieving resource:", err)
@@ -84,6 +94,33 @@ func getNewestPluginHash() {
 			pluginHash.Put(hash)
 			log.Debugln("Get newest plugin hash from atomAddr:", atomAddr)
 			log.Debugln("Record newest hash as:", hash)
+		}
+	}
+}
+
+var GitRepo = &SafeGitRepo{gitRepo: ""}
+
+func (this *SafeGitRepo) Put(gitRepo string) {
+	this.Lock()
+	defer this.Unlock()
+	this.gitRepo = gitRepo
+}
+
+func (this *SafeGitRepo) Get() (gitRepo string) {
+	this.RLock()
+	defer this.RUnlock()
+	gitRepo = this.gitRepo
+	return
+}
+
+func getGitRepoAddr() {
+	for {
+		time.Sleep(time.Minute)
+
+		cfg, err := db.QueryConfig("git_repo")
+		if err == nil {
+			GitRepo.Put(cfg.Value)
+			log.Debugln("Read git repo address from DB: ", cfg.Value)
 		}
 	}
 }

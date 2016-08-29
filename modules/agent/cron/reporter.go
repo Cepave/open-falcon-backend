@@ -22,14 +22,25 @@ func reportAgentStatus(interval time.Duration) {
 			hostname = fmt.Sprintf("error:%s", err.Error())
 		}
 
+		currPluginVersion, currPluginErr := g.GetCurrPluginVersion()
+		if currPluginErr != nil {
+			log.Println("GetCurrPluginVersion returns error: ", currPluginErr)
+		}
+
+		currPluginRepo, currRepoErr := g.GetCurrGitRepo()
+		if currRepoErr != nil {
+			log.Println("GetCurrGitRepo returns error: ", currRepoErr)
+		}
+
 		req := model.AgentReportRequest{
 			Hostname:      hostname,
 			IP:            g.IP(),
 			AgentVersion:  g.VERSION,
-			PluginVersion: g.GetCurrPluginVersion(),
-			GitRepo:       g.GetCurrGitRepo(),
+			PluginVersion: currPluginVersion,
+			GitRepo:       currPluginRepo,
 		}
 
+		log.Println("show req of Agent.ReportStatus: ", req)
 		var resp model.SimpleRpcResponse
 		err = g.HbsClient.Call("Agent.ReportStatus", req, &resp)
 		if err != nil || resp.Code != 0 {

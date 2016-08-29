@@ -1,0 +1,65 @@
+- {
+    id: "mike-1",
+    filename: "mike-1.sql",
+    comment: "The initialization of existing database schema"
+}
+- {
+    id: "mike-2",
+    filename: "mike-2.sql",
+    comment: "NQM database schema"
+}
+- {
+    id: "mike-3",
+    filename: "mike-3.sql",
+    comment: "Buildin data of ISP, province, and city"
+}
+- {
+    id: "mike-4",
+    filename: "mike-4.sql",
+    comment: "Add name of agent"
+}
+- {
+    id: "masato-5",
+    filename: "masato-5.sql",
+    comment: "Add event of alram in portal",
+}
+- {
+    id: "myhung-6",
+    filename: "myhung-6.sql",
+    comment: "Change city, isp, and province name english into chinese"
+}
+- {
+    id: "don-7",
+    filename: "don-7.sql",
+    comment: "[OWL-302] add CREATE TABLE tags"
+}
+- {
+    id: "chyeh-8",
+    filename: "chyeh-8.sql",
+    comment: "[OWL-451] Change the schemas for Fastbat"
+}
+- {
+    id: "masato-9",
+    filename: "masato-9.sql",
+    comment: "[OWL-468] Alarm Case database table script change"
+}
+- {
+    id: "masato-10",
+    filename: "masato-10.sql",
+    comment: "add status column for alarm"
+}
+- {
+    id: "chyeh-11",
+    filename: "chyeh-11.sql",
+    comment: "utf8_unicode_ci -> utf8_general_ci"
+}
+- {
+    id: "masato-12",
+    filename: "masato-12.sql",
+    comment: "note feture support"
+}
+- {
+    id: "laurence-13",
+    filename: "laurence-13.sql",
+    comment: "[OWL-480] git repo address move to mysql."
+}

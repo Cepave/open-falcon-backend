@@ -3,12 +3,14 @@
     "company": "MI",
     "http": {
         "enabled": true,
-        "listen": "0.0.0.0:1234",
-        "cookie": ".example.com"
+        "listen": "%%FE_HTTP%%",
+        "cookie": ".owl.fastweb.com.cn",
+        "view_path": "/home/vagrant/workspace/src/github.com/Cepave/open-falcon-backend/out/fe/bin/views",
+        "static_path": "/home/vagrant/workspace/src/github.com/Cepave/open-falcon-backend/out/fe/bin/static"
     },
     "cache": {
         "enabled": true,
-        "redis": "172.17.0.2:6379",
+        "redis": "%%REDIS%%",
         "idle": 10,
         "max": 1000,
         "timeout": {
@@ -24,22 +26,58 @@
         "addr": "ldap.example.com:389"
     },
     "uic": {
-        "addr": "root:@tcp(172.17.0.3:3306)/uic?charset=utf8&loc=Asia%2FChongqing",
+        "addr": "%%MYSQL%%/uic?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
     },
+    "graphdb": {
+        "addr": "%%MYSQL%%/graph?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100,
+        "limit": 500,
+        "limitHostGroup": 5
+    },
+    "falcon_portal": {
+        "addr": "%%MYSQL%%/falcon_portal?charset=utf8&loc=Asia%2FChongqing",
+        "idle": 10,
+        "max": 100,
+        "limit": 500
+    },
     "shortcut": {
-        "falconPortal": "http://10.20.30.40:5050/",
-        "falconDashboard": "http://10.20.30.40:7070/",
-        "grafanaDashboard": "http://10.20.30.40:3001/",
-        "falconAlarm": "http://10.20.30.40:9912/"
+        "falconPortal": "http://%%PORTAL%%",
+        "falconDashboard": "http://%%DASHBOARD%%",
+        "grafanaDashboard": "http://%%GRAFANA%%",
+        "falconAlarm": "http://%%ALARM%%"
     },
     "api": {
-        "key": "yourKey",
-        "redirect": "yourId||http://example.com/path_to_redirect/__TOKEN__",
-        "login": "https://example.com/path_to_login",
-        "access": "https://example.com/path_to_access",
-        "role": "https://example.com/path_to_role",
-        "logout": "https://example.com/path_to_logout"
+        "name": "api_owl",
+        "token": "fastweb_owl",
+        "contact": "https://cdnboss-api.fastweb.com.cn/Base/platform/get_platform_linkman",
+        "map": "https://cdnboss-api.fastweb.com.cn/Base/platform/get_ip",
+        "key": "PnyAcETlCLOIjlZiyrpUEYaVpvfhuVOg",
+        "redirect": "taiwan_owl||http://owl.fastweb.com.cn/auth/login/__TOKEN__",
+        "login": "https://cdnboss.fastweb.com.cn/Third/login",
+        "access": "https://cdnboss.fastweb.com.cn/Third/get_access_info",
+        "role": "https://cdnboss.fastweb.com.cn/Third/api/get_user_role",
+        "logout": "https://cdnboss.fastweb.com.cn/Third/logout"
+    },
+    "graph": {
+        "connTimeout": 1000,
+        "callTimeout": 5000,
+        "maxConns": 32,
+        "maxIdle": 32,
+        "replicas": 500,
+        "cluster": {
+            "graph-00": "%%GRAPH%%"
+        }
+    },
+    "grpc":{
+        "enabled": false,
+        "port": 1235
+    },
+    "mq":{
+        "enabled": true,
+        "queue": "amqp://owlmq:@K5o9jldsa@owl.fastweb.com.cn:5672/",
+        "consumer": "http://query.owl.fastweb.com.cn/api"
     }
 }

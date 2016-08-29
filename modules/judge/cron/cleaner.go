@@ -1,11 +1,22 @@
 package cron
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/judge/store"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/judge/store"
+	log "github.com/Sirupsen/logrus"
 )
 
-func CleanStale() {
+func CleanStale(pid chan string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("run time panic: %v", r)
+			pid <- "CleanStale"
+			return
+		}
+	}()
+
 	for {
 		time.Sleep(time.Hour * 5)
 		cleanStale()

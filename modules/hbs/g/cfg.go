@@ -21,7 +21,6 @@ type GlobalConfig struct {
 	Listen    string      `json:"listen"`
 	Trustable []string    `json:"trustable"`
 	Http      *HttpConfig `json:"http"`
-	GitRepo   string      `json:"gitrepo"`
 }
 
 var (

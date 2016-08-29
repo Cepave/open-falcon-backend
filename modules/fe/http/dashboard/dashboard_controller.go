@@ -48,6 +48,33 @@ func (this *DashBoardController) EndpRegxqury() {
 	return
 }
 
+func (this *DashBoardController) CounterRegxQuery() {
+	baseResp := this.BasicRespGen()
+	_, err := this.SessionCheck()
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	queryStr := this.GetString("queryStr", "")
+	if queryStr == "" {
+		this.ResposeError(baseResp, "query string is empty, please check it")
+		return
+	}
+	limitNum, _ := this.GetInt("limit", 0)
+	counters, err := dashboard.QueryCounterByNameRegx(queryStr, limitNum)
+	if err != nil {
+		this.ResposeError(baseResp, err.Error())
+		return
+	}
+	if len(counters) > 0 {
+		baseResp.Data["counters"] = counters
+	} else {
+		baseResp.Data["counters"] = []string{}
+	}
+	this.ServeApiJson(baseResp)
+	return
+}
+
 type xmlEntry struct {
 	ID      string `xml:"id"`
 	Updated string `xml:"updated"`
@@ -66,12 +93,18 @@ func (this *DashBoardController) LatestPlugin() {
 	}
 
 	v := xmlData{}
-	if resp, err := http.Get(g.Config().AtomAddr); err != nil {
-		// handle error.
-		log.Println("Error retrieving resource:", err)
+
+	c, q_err := dashboard.QueryConfig("atom_addr")
+	if q_err != nil {
+		log.Errorln("QueryConfig error: ", q_err)
 	} else {
-		defer resp.Body.Close()
-		xml.NewDecoder(resp.Body).Decode(&v)
+		log.Debugln("Lastest Plugin atom address value is: ", c.Value)
+		if resp, err := http.Get(c.Value); err != nil {
+			log.Errorln("Error retrieving resource:", err)
+		} else {
+			defer resp.Body.Close()
+			xml.NewDecoder(resp.Body).Decode(&v)
+		}
 	}
 
 	baseResp.Data["EntryList"] = v.EntryList
@@ -111,23 +144,26 @@ func (this *DashBoardController) CounterQuery() {
 	return
 }
 
-//endpoints query by counter
-func (this *DashBoardController) EndpointQuery() {
+// endpoint query by counter
+func (this *DashBoardController) EndpointsQuery() {
 	baseResp := this.BasicRespGen()
 	_, err := this.SessionCheck()
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
-	counter := this.GetString("counter", "")
+	counters := this.GetString("counters", "")
+	rexstr, _ := regexp.Compile("^\\s*\\[\\s*|\\s*\\]\\s*$")
+	countersArr := strings.Split(rexstr.ReplaceAllString(counters, ""), ",")
 	limitNum, _ := this.GetInt("limit", 0)
-	metricQuery := this.GetString("metricQuery", "")
-	negateMatch, _ := this.GetBool("negateMatch", false)
-	if metricQuery == "" && counter == "" {
-		this.ResposeError(baseResp, "query string && query pattern are both empty, please check it")
+	// We need a string pattern to filter outputs.
+	// default filter pattern is .+
+	filter := this.GetString("filter", ".+")
+	if counters == "" {
+		this.ResposeError(baseResp, "query string counters is empty, please check it")
 		return
 	}
-	endpoints, err := dashboard.QueryEndpointsByCounter(counter, limitNum, metricQuery, negateMatch)
+	endpoints, err := dashboard.QueryEndpointsByCounter(countersArr, limitNum, filter)
 	switch {
 	case err != nil:
 		this.ResposeError(baseResp, err.Error())
@@ -311,7 +347,7 @@ func (this *DashBoardController) EndpRegxquryForPlugin() {
 			baseResp.Data["Endpoints"] = []string{}
 		}
 	}
-	log.Println(baseResp)
+	log.Debugln(baseResp)
 	this.ServeApiJson(baseResp)
 	return
 }
@@ -361,9 +397,15 @@ func (this *DashBoardController) EndpRegxquryForOps() {
 var commitsInfo []*rss.Item
 
 func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
-	feed, err := rss.Fetch(g.Config().AtomAddr)
+	c, q_err := dashboard.QueryConfig("atom_addr")
+	if q_err != nil {
+		log.Errorln("QueryConfig error: ", q_err)
+	}
+	log.Debugln("gitInfoAdapter shows atom address as: ", c.Value)
+
+	feed, err := rss.Fetch(c.Value)
 	if err != nil {
-		log.Println(err)
+		log.Errorln(err)
 	}
 
 	commitsInfo = append(commitsInfo, feed.Items...)
