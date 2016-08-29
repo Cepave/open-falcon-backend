@@ -1249,7 +1249,7 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 		metric := series.Counter
 		if strings.Index(metric, "nic.default.out.speed/device=") > -1 {
 			if len(series.Values) > 0 && series.Values[0].Value > 0 {
-				series.Counter = "net.transmission.limit.90%"
+				series.Counter = "net.transmission.limit.80%"
 				limit := series.Values[0].Value
 				for _, item := range series.Values {
 					value := item.Value
@@ -1258,7 +1258,7 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 						break
 					}
 				}
-				limit *= 1024 * 1024 * 0.9
+				limit *= 1024 * 1024 * 0.8
 				for key, _ := range series.Values {
 					series.Values[key].Value = limit
 				}
@@ -1267,8 +1267,6 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 		if series.Counter != "" {
-			if series.Counter == "nic.bond.mode" {
-			}
 			values := []interface{}{}
 			for _, rrdObj := range series.Values {
 				value := []interface{}{
