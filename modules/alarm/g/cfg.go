@@ -2,16 +2,19 @@ package g
 
 import (
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
 	"sync"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/toolkits/file"
 )
 
 type HttpConfig struct {
-	Debug   bool   `json:"debug"`
-	Enabled bool   `json:"enabled"`
-	Listen  string `json:"listen"`
+	Debug      bool   `json:"debug"`
+	Enabled    bool   `json:"enabled"`
+	Listen     string `json:"listen"`
+	ViewPath   string `json:"view_path"`
+	StaticPath string `json:"static_path"`
 }
 
 type QueueConfig struct {

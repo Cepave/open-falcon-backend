@@ -4,9 +4,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
+	_ "net/http/pprof"
+
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	log "github.com/Sirupsen/logrus"
-	_ "net/http/pprof"
 
 	"github.com/astaxie/beego"
 )
@@ -69,6 +70,15 @@ func Start() {
 		beego.BConfig.RunMode = "dev"
 	} else {
 		beego.BConfig.RunMode = "prod"
+	}
+
+	if g.Config().Http.ViewPath != "" {
+		log.Infof("set http view_path in %v", g.Config().Http.ViewPath)
+		beego.SetViewsPath(g.Config().Http.ViewPath)
+	}
+	if g.Config().Http.StaticPath != "" {
+		log.Infof("set http static_path in %v", g.Config().Http.StaticPath)
+		beego.SetStaticPath("/static", g.Config().Http.StaticPath)
 	}
 
 	beego.Run(addr)
