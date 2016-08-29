@@ -5,7 +5,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/alarm/api"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/redis"
-	"github.com/Cepave/common/model"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	log "github.com/Sirupsen/logrus"
 )
 
