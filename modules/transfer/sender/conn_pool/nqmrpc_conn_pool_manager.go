@@ -79,7 +79,7 @@ func (this *NqmRpcConnPoolHelper) Call(method string, args interface{}, resp int
 
 	rpcClient := conn.(JsonRpcV2Client)
 
-	done := make(chan error)
+	done := make(chan error, 1)
 	go func() {
 		done <- rpcClient.Call(method, args, resp)
 	}()

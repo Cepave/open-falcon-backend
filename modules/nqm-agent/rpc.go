@@ -66,7 +66,7 @@ func RPCCall(method string, args interface{}, reply interface{}) error {
 		initConn(rpcServer, rpcTimeout)
 	}
 
-	done := make(chan error)
+	done := make(chan error, 1)
 	go func() {
 		done <- rpcClient.Call(method, args, reply)
 	}()
