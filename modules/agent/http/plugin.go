@@ -10,27 +10,9 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
-	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
+	"github.com/toolkits/sys"
 )
-
-func RunCmdWithTimeout(cmd *exec.Cmd, timeout int64) (err error) {
-	if err = cmd.Start(); err != nil {
-		log.Fatalln("Start shell command error:", err)
-	}
-	done := make(chan error)
-	go func() { done <- cmd.Wait() }()
-
-	d := time.Duration(time.Duration(timeout) * time.Second)
-	select {
-	case err = <-done:
-	case <-time.After(d):
-		// timed out
-		cmd.Process.Kill()
-		err = fmt.Errorf("Command %s time out", cmd.Path)
-	}
-	return
-}
 
 func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
 	parentDir := file.Dir(pluginDir)
@@ -49,7 +31,8 @@ func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
 	}
 	cmd := exec.Command("git", "clone", gitRemoteAddr, file.Basename(pluginDir))
 	cmd.Dir = parentDir
-	err2 := RunCmdWithTimeout(cmd, 600)
+	cmd.Start()
+	err2, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
 	if err2 != nil {
 		out = out + fmt.Sprintf("\ngit clone in dir:%s fail. error: %s", parentDir, err2)
 		return
@@ -73,7 +56,8 @@ func configPluginRoutes() {
 			// git pull
 			cmd := exec.Command("git", "pull")
 			cmd.Dir = dir
-			err := RunCmdWithTimeout(cmd, 600)
+			cmd.Start()
+			err, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("git pull in dir:%s fail. error: %s", dir, err)))
 				w.Write([]byte(DeleteAndCloneRepo(dir, plugins.GitRepo)))
@@ -83,7 +67,8 @@ func configPluginRoutes() {
 			// git clone
 			cmd := exec.Command("git", "clone", plugins.GitRepo, file.Basename(dir))
 			cmd.Dir = parentDir
-			err := RunCmdWithTimeout(cmd, 600)
+			cmd.Start()
+			err, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("git clone in dir:%s fail. error: %s", parentDir, err)))
 				return
