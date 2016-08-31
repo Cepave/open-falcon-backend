@@ -50,7 +50,7 @@ func (this *PluginScheduler) Stop() {
 func noOwnerExecPerm(fpath string) bool {
 	info, err := os.Stat(fpath)
 	if err != nil {
-		log.Println("[Error] cannot stat file", err)
+		log.Errorln("cannot stat file", err)
 	}
 
 	perm := info.Mode().Perm()
@@ -136,7 +136,7 @@ func PluginRun(plugin *Plugin) {
 	if errStr != "" {
 		logFile := filepath.Join(g.Config().Plugin.LogDir, plugin.FilePath+".stderr.log")
 		if _, err = file.WriteString(logFile, errStr); err != nil {
-			log.Printf("[ERROR] write log to %s fail, error: %s\n", logFile, err)
+			log.Errorf("write log to %s fail, error: %s\n", logFile, err)
 		}
 	}
 
@@ -147,14 +147,14 @@ func PluginRun(plugin *Plugin) {
 		}
 
 		if err != nil {
-			log.Println("[ERROR] kill process", fpath, "occur error:", err)
+			log.Errorln("kill process", fpath, "occur error:", err)
 		}
 
 		return
 	}
 
 	if err != nil {
-		log.Println("[ERROR] exec plugin", fpath, "fail. error:", err)
+		log.Errorln("exec plugin", fpath, "fail. error:", err)
 		return
 	}
 
@@ -170,7 +170,7 @@ func PluginRun(plugin *Plugin) {
 	var metrics []*model.MetricValue
 	err = json.Unmarshal(data, &metrics)
 	if err != nil {
-		log.Printf("[ERROR] json.Unmarshal stdout of %s fail. error:%s stdout: \n%s\n", fpath, err, stdout.String())
+		log.Errorf("json.Unmarshal stdout of %s fail. error:%s stdout: \n%s\n", fpath, err, stdout.String())
 		return
 	}
 
