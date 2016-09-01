@@ -133,7 +133,7 @@ func (this *InfluxdbConnPools) Call(addr string, items []*cmodel.JudgeItem) erro
 	influxdbClient := conn.(InfluxdbClient)
 	callTimeout := time.Duration(this.CallTimeout) * time.Millisecond
 
-	done := make(chan error)
+	done := make(chan error, 1)
 	go func() {
 		done <- influxdbClient.Call(items)
 	}()

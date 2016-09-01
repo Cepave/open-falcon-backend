@@ -10,12 +10,14 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
+const timeLayout = "2006-01-02 15:04:05"
+
 //will deprecated
 func CloseEvent(username string, colsed_note string, id string) (err error) {
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
 	userid := uic.ReadUserIdByName(username)
-	_, err = q.Raw("Update event_cases SET user_modified = ?, closed_at = ?, status = ?, closed_note = ? WHERE id = ?", userid, time.Now(), "SOLVED", colsed_note, id).Exec()
+	_, err = q.Raw("Update event_cases SET user_modified = ?, closed_at = ?, status = ?, closed_note = ? WHERE id = ?", userid, time.Now().Format(timeLayout), "SOLVED", colsed_note, id).Exec()
 	return
 }
 
@@ -49,7 +51,7 @@ func AddNote(username string, processNote string, eventcaseid string, processSta
 			sqlbase = fmt.Sprintf("%s, status = '%s'", sqlbase, processStatus)
 		}
 		var processNoteID int
-		q.Raw(fmt.Sprintf("Insert INTO event_note %s, timestamp = ? ;", sqlbase), time.Now()).Exec()
+		q.Raw(fmt.Sprintf("Insert INTO event_note %s, timestamp = ? ;", sqlbase), time.Now().Format(timeLayout)).Exec()
 		err = q.Raw("SELECT LAST_INSERT_ID()").QueryRow(&processNoteID)
 		if processNoteID != 0 && (processStatus == "resolved" || processStatus == "in progress" || processStatus == "ignored") && err == nil {
 			err = UpdateCaseStatus(eventid, processNoteID, processStatus)

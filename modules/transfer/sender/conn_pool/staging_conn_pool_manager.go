@@ -58,7 +58,7 @@ func (this *StagingConnPoolHelper) Call(method string, args interface{}, resp in
 	rpcClient := conn.(RpcClient)
 	callTimeout := time.Duration(this.callTimeout) * time.Millisecond
 
-	done := make(chan error)
+	done := make(chan error, 1)
 	go func() {
 		done <- rpcClient.Call(method, args, resp)
 	}()

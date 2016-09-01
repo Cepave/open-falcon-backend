@@ -1,6 +1,8 @@
 package http
 
 import (
+	"strings"
+
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/boss"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/dashboard"
@@ -21,6 +23,17 @@ func Start() {
 	addr := g.Config().Http.Listen
 	if addr == "" {
 		return
+	}
+
+	switch strings.ToLower(g.Config().Log) {
+	case "info":
+		beego.SetLevel(beego.LevelInformational)
+	case "debug":
+		beego.SetLevel(beego.LevelDebug)
+	case "warn":
+		beego.SetLevel(beego.LevelWarning)
+	case "error":
+		beego.SetLevel(beego.LevelError)
 	}
 
 	home.ConfigRoutes()
