@@ -27,7 +27,8 @@ func (this *PortalController) GetEventCases() {
 	limitNum, _ := this.GetInt("limit", 0)
 	elimit, _ := this.GetInt("elimit", 0)
 	caseId := this.GetString("caseId", "")
-	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
+	includeEvents, _ := this.GetBool("includeEvents", false)
+	events, err := event.GetEventCases(includeEvents, startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
@@ -56,7 +57,8 @@ func (this *PortalController) GetEventCasesV2() {
 	elimit, _ := this.GetInt("elimit", 0)
 	caseId := this.GetString("caseId", "")
 	showAll, _ := this.GetBool("show_all", false)
-	events, err := event.GetEventCases(startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
+	includeEvents, _ := this.GetBool("includeEvents", false)
+	events, err := event.GetEventCases(includeEvents, startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
