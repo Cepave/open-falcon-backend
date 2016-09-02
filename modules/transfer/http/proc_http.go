@@ -1,12 +1,13 @@
 package http
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
-	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
-	cutils "github.com/open-falcon/common/utils"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
+	cutils "github.com/open-falcon/common/utils"
 )
 
 func configProcHttpRoutes() {
@@ -31,20 +32,25 @@ func configProcHttpRoutes() {
 		args := strings.Split(urlParam, "/")
 
 		argsLen := len(args)
-		endpoint := args[0]
-		metric := args[1]
-		tags := make(map[string]string)
-		if argsLen > 2 {
-			tagVals := strings.Split(args[2], ",")
-			for _, tag := range tagVals {
-				tagPairs := strings.Split(tag, "=")
-				if len(tagPairs) == 2 {
-					tags[tagPairs[0]] = tagPairs[1]
+		if argsLen >= 2 {
+			endpoint := args[0]
+			metric := args[1]
+			tags := make(map[string]string)
+			if argsLen > 2 {
+				tagVals := strings.Split(args[2], ",")
+				for _, tag := range tagVals {
+					tagPairs := strings.Split(tag, "=")
+					if len(tagPairs) == 2 {
+						tags[tagPairs[0]] = tagPairs[1]
+					}
 				}
 			}
+			proc.RecvDataTrace.SetPK(cutils.PK(endpoint, metric, tags))
+			RenderDataJson(w, proc.RecvDataTrace.GetAllTraced())
+		} else {
+			msg := "API trace needs to have endpoint, metric, parameter"
+			RenderDataJson(w, msg)
 		}
-		proc.RecvDataTrace.SetPK(cutils.PK(endpoint, metric, tags))
-		RenderDataJson(w, proc.RecvDataTrace.GetAllTraced())
 	})
 
 	// filter
