@@ -159,7 +159,7 @@ func GetNotes(eventCaseId string, limit int, startTime int64, endTime int64, fil
 	//allow api only set the startTime and use the currentTime as the endTime
 	case startTime != 0 && endTime == 0:
 		endTime = time.Now().Unix()
-	case startTime == 0 && endTime == 0:
+	case startTime != 0 && endTime != 0:
 		tempTime := ""
 		q.Raw("SELECT timestamp FROM event_cases WHERE id = ?", eventCaseId).QueryRow(&tempTime)
 		if tempTime != "" {
