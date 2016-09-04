@@ -65,11 +65,12 @@ func (this *PortalController) GetEventCasesV2() {
 	}
 	alerts, endpoints, err := event.AlertsConvert(events)
 	alerts2 := event.GetAlertInfo(alerts, endpoints, showAll)
+	alerts3 := event.GetAlertsNotes(alerts2)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
-	baseResp.Data["eventCases"] = alerts2
+	baseResp.Data["eventCases"] = alerts3
 	this.ServeApiJson(baseResp)
 	return
 }
