@@ -2,10 +2,11 @@ package http
 
 import (
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
-	"github.com/Cepave/open-falcon-backend/modules/judge/g"
 	"net/http"
 	_ "net/http/pprof"
+
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	log "github.com/Sirupsen/logrus"
 )
 
 type Dto struct {
@@ -44,7 +45,16 @@ func AutoRender(w http.ResponseWriter, data interface{}, err error) {
 	RenderDataJson(w, data)
 }
 
-func Start() {
+func Start(pid chan string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("run time panic: %v", r)
+			pid <- "http"
+			return
+		}
+	}()
+
 	if !g.Config().Http.Enabled {
 		return
 	}

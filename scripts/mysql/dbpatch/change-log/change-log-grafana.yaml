@@ -1,0 +1,12 @@
+[
+    {
+        id: "mike-1",
+        filename: "mike-1.sql",
+        comment: "The initialization of existing database schema"
+    },
+    {
+        id: "chyeh-2",
+        filename: "chyeh-2.sql",
+        comment: "utf8_unicode_ci -> utf8_general_ci"
+    }
+]

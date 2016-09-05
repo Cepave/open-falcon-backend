@@ -142,6 +142,8 @@ func (this *PortalController) AddNote() {
 	case note == "":
 		this.ResposeError(baseResp, "You can not skip closed note")
 		return
+	case status == "":
+		this.ResposeError(baseResp, "You can not skip status of note")
 	}
 	err = event.AddNote(username, note, id, status, bossId)
 	if err != nil {

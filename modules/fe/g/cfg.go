@@ -10,9 +10,11 @@ import (
 )
 
 type HttpConfig struct {
-	Enabled bool   `json:"enabled"`
-	Listen  string `json:"listen"`
-	Cookie  string `json:"cookie"`
+	Enabled    bool   `json:"enabled"`
+	Listen     string `json:"listen"`
+	Cookie     string `json:"cookie"`
+	ViewPath   string `json:"view_path"`
+	StaticPath string `json:"static_path"`
 }
 
 type TimeoutConfig struct {
@@ -105,7 +107,6 @@ type GlobalConfig struct {
 	Cache        *CacheConfig        `json:"cache"`
 	Http         *HttpConfig         `json:"http"`
 	Salt         string              `json:"salt"`
-	AtomAddr     string              `json:"atomAddress"`
 	CanRegister  bool                `json:"canRegister"`
 	Ldap         *LdapConfig         `json:"ldap"`
 	Uic          *UicConfig          `json:"uic"`

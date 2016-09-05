@@ -1,13 +1,23 @@
 package rpc
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/judge/g"
-	log "github.com/Sirupsen/logrus"
 	"net"
 	"net/rpc"
+
+	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	log "github.com/Sirupsen/logrus"
 )
 
-func Start() {
+func Start(pid chan string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("run time panic: %v", r)
+			pid <- "rpc"
+			return
+		}
+	}()
+
 	if !g.Config().Rpc.Enabled {
 		return
 	}

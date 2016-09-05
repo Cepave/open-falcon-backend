@@ -6,10 +6,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	"github.com/toolkits/file"
+	"github.com/toolkits/sys"
 )
 
 func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
@@ -29,7 +31,8 @@ func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
 	}
 	cmd := exec.Command("git", "clone", gitRemoteAddr, file.Basename(pluginDir))
 	cmd.Dir = parentDir
-	err2 := cmd.Run()
+	cmd.Start()
+	err2, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
 	if err2 != nil {
 		out = out + fmt.Sprintf("\ngit clone in dir:%s fail. error: %s", parentDir, err2)
 		return
@@ -53,7 +56,8 @@ func configPluginRoutes() {
 			// git pull
 			cmd := exec.Command("git", "pull")
 			cmd.Dir = dir
-			err := cmd.Run()
+			cmd.Start()
+			err, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("git pull in dir:%s fail. error: %s", dir, err)))
 				w.Write([]byte(DeleteAndCloneRepo(dir, plugins.GitRepo)))
@@ -63,7 +67,8 @@ func configPluginRoutes() {
 			// git clone
 			cmd := exec.Command("git", "clone", plugins.GitRepo, file.Basename(dir))
 			cmd.Dir = parentDir
-			err := cmd.Run()
+			cmd.Start()
+			err, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("git clone in dir:%s fail. error: %s", parentDir, err)))
 				return

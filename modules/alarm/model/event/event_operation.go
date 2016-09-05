@@ -6,11 +6,13 @@ import (
 
 	"database/sql"
 
-	coommonModel "github.com/Cepave/common/model"
-	"github.com/Cepave/common/utils"
+	coommonModel "github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 )
+
+const timeLayout = "2006-01-02 15:04:05"
 
 func insertEvent(q orm.Ormer, eve *coommonModel.Event) (res interface{}, err error) {
 	var status int
@@ -30,7 +32,7 @@ func insertEvent(q orm.Ormer, eve *coommonModel.Event) (res interface{}, err err
 		eve.CurrentStep,
 		fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 		status,
-		time.Unix(eve.EventTime, 0),
+		time.Unix(eve.EventTime, 0).Format(timeLayout),
 	).Exec()
 	return
 }
@@ -42,6 +44,8 @@ func InsertEvent(eve *coommonModel.Event) {
 	q.Raw("select * from event_cases where id = ?", eve.Id).QueryRows(&event)
 	var sqlLog sql.Result
 	var errRes error
+	log.Debugf("events: %v", eve)
+	log.Debugf("express is null: %v", eve.Expression == nil)
 	if len(event) == 0 {
 		//create cases
 		sqltemplete := `INSERT INTO event_cases (
@@ -76,9 +80,9 @@ func InsertEvent(eve *coommonModel.Event) {
 			eve.Priority(),
 			eve.Status,
 			//start_at
-			time.Unix(eve.EventTime, 0),
+			time.Unix(eve.EventTime, 0).Format(timeLayout),
 			//update_at
-			time.Unix(eve.EventTime, 0),
+			time.Unix(eve.EventTime, 0).Format(timeLayout),
 			eve.Strategy.Tpl.Creator,
 			eve.ExpressionId(),
 			eve.StrategyId(),
@@ -109,7 +113,7 @@ func InsertEvent(eve *coommonModel.Event) {
 			sqltemplete = fmt.Sprintf("%v ,timestamp = ? WHERE id = ?", sqltemplete)
 			sqlLog, errRes = q.Raw(
 				sqltemplete,
-				time.Unix(eve.EventTime, 0),
+				time.Unix(eve.EventTime, 0).Format(timeLayout),
 				eve.MaxStep(),
 				eve.CurrentStep,
 				eve.Strategy.Note,
@@ -121,14 +125,14 @@ func InsertEvent(eve *coommonModel.Event) {
 				eve.ExpressionId(),
 				eve.StrategyId(),
 				eve.TplId(),
-				time.Unix(eve.EventTime, 0),
+				time.Unix(eve.EventTime, 0).Format(timeLayout),
 				eve.Id,
 			).Exec()
 		} else {
 			sqltemplete = fmt.Sprintf("%v WHERE id = ?", sqltemplete)
 			sqlLog, errRes = q.Raw(
 				sqltemplete,
-				time.Unix(eve.EventTime, 0),
+				time.Unix(eve.EventTime, 0).Format(timeLayout),
 				eve.MaxStep(),
 				eve.CurrentStep,
 				eve.Strategy.Note,

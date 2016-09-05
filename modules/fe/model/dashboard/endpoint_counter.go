@@ -19,31 +19,53 @@ func QueryEndpointidbyNames(endpoints []string, limit int) (enp []Endpoint, err 
 	return
 }
 
-func QueryEndpointsByCounter(counter string, limit int, metricQuery string, negatePattern bool) (endpoints []string, err error) {
+func QueryEndpointIDByCounters(counters []string) (endpointID []string, err error) {
+	q := orm.NewOrm()
+	q.Using("graph")
+	q.QueryTable("endpoint_counter")
+	qb, _ := orm.NewQueryBuilder("mysql")
+	qt := qb.Select("distinct(endpoint_id)").From("endpoint_counter").Where("counter").In(counters...)
+	_, err = q.Raw(qt.String()).QueryRows(&endpointID)
+
+	return
+}
+
+func QueryEndpointNamesByID(endpointIDs []string, limit int, filter string) (endpointNames []string, err error) {
+	q := orm.NewOrm()
+	q.Using("graph")
+	q.QueryTable("endpoint")
+	qb, _ := orm.NewQueryBuilder("mysql")
+	var qt orm.QueryBuilder
+	if filter == "" {
+		qt = qb.Select("endpoint").From("endpoint").Where("id").In(endpointIDs...).Limit(limit)
+	} else {
+		regStr := fmt.Sprintf("endpoint regexp '%s'", filter)
+		qt = qb.Select("endpoint").From("endpoint").Where(regStr).And("id").In(endpointIDs...).Limit(limit)
+	}
+	_, err = q.Raw(qt.String()).QueryRows(&endpointNames)
+
+	return
+}
+
+func QueryEndpointsByCounter(counters []string, limit int, filter string) (endpoints []string, err error) {
 	config := g.Config()
 	if limit == 0 || limit > config.GraphDB.Limit {
 		limit = config.GraphDB.Limit
 	}
 
-	q := orm.NewOrm()
-	q.Using("graph")
-	q.QueryTable("endpoint_counter")
-	var queryprefix string
-	if metricQuery == "" {
-		queryprefix = fmt.Sprintf("select endpoint from endpoint as table1 inner join (select distinct endpoint_id from endpoint_counter where counter = '%s') as table2 where table1.id = table2.endpoint_id limit %d", counter, limit)
-	} else {
-		var negate string
-		if negatePattern {
-			negate = "not"
-		}
-		queryprefix = fmt.Sprintf("select endpoint from endpoint as table1 inner join (select distinct endpoint_id from endpoint_counter where counter %s regexp '%s') as table2 where table1.id = table2.endpoint_id limit %d", negate, metricQuery, limit)
-	}
-	var enp []Endpoint
-	_, err = q.Raw(queryprefix).QueryRows(&enp)
-	for _, v := range enp {
-		endpoints = append(endpoints, v.Endpoint)
+	enpIDs, IDErr := QueryEndpointIDByCounters(counters)
+	if IDErr != nil {
+		err = IDErr
+		return
 	}
 
+	endpoints, NameErr := QueryEndpointNamesByID(enpIDs, limit, filter)
+	if NameErr != nil {
+		err = NameErr
+		return
+	}
+
+	err = nil
 	return
 }
 

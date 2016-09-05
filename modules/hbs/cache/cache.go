@@ -40,6 +40,7 @@ func Init() {
 
 	go LoopInit()
 	go getNewestPluginHash()
+	go getGitRepoAddr()
 }
 
 func LoopInit() {

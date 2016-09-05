@@ -41,7 +41,7 @@ func Compute(c *gin.Context) {
 			"msg": "Get params fun error",
 		})
 	}
-	funcInstance := getFuncSetup(funcName)
+	funcInstance := GetFuncSetup(funcName)
 	if funcInstance.FuncationName == "" {
 		c.JSON(400, gin.H{
 			"msg": "Not found this compute method",
@@ -55,7 +55,7 @@ func Compute(c *gin.Context) {
 	} else {
 		vm.Set("input", getFakeData())
 	}
-	setParamsToJSVM(tmpparams, funcInstance.Params, vm)
+	vm = SetParamsToJSVM(tmpparams, funcInstance.Params, vm)
 	vm.Run(funcInstance.Codes)
 	output, err := vm.Get("output")
 	if err != nil {

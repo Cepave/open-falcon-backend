@@ -5,7 +5,6 @@
     "plugin": {
         "enabled": false,
         "dir": "./plugin",
-        "git": "https://github.com/Cepave/plugin.git",
         "logs": "./logs"
     },
     "heartbeat": {

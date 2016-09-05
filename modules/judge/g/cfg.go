@@ -2,9 +2,13 @@ package g
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
-	"sync"
 )
 
 type HttpConfig struct {
@@ -32,15 +36,19 @@ type RedisConfig struct {
 }
 
 type AlarmConfig struct {
-	Enabled      bool         `json:"enabled"`
-	MinInterval  int64        `json:"minInterval"`
-	QueuePattern string       `json:"queuePattern"`
-	Redis        *RedisConfig `json:"redis"`
+	Enabled             bool         `json:"enabled"`
+	MinInterval         int64        `json:"minInterval"`
+	QueuePattern        string       `json:"queuePattern"`
+	AllowReSet          bool         `json:"allow_reset"`
+	StoreEventToFile    bool         `json:"store_event_to_file"`
+	EventsStoreFilePath string       `json:"events_store_file_path"`
+	Redis               *RedisConfig `json:"redis"`
 }
 
 type GlobalConfig struct {
 	Debug     bool         `json:"debug"`
 	DebugHost string       `json:"debugHost"`
+	RootDir   string       `json:"root_dir"`
 	Remain    int          `json:"remain"`
 	Http      *HttpConfig  `json:"http"`
 	Rpc       *RpcConfig   `json:"rpc"`
@@ -80,6 +88,16 @@ func ParseConfig(cfg string) {
 	err = json.Unmarshal([]byte(configContent), &c)
 	if err != nil {
 		log.Fatalln("parse config file:", cfg, "fail:", err)
+	}
+
+	//support develop mode
+	if c.RootDir == "" {
+		c.RootDir = filepath.Dir(os.Args[0])
+	}
+
+	//when the file path is not set to full path, will use the working directory as the store perfix
+	if !strings.HasPrefix(c.Alarm.EventsStoreFilePath, "/") {
+		c.Alarm.EventsStoreFilePath = c.RootDir + "/" + c.Alarm.EventsStoreFilePath
 	}
 
 	configLock.Lock()

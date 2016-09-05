@@ -1,8 +1,6 @@
 package portal
 
 import (
-	"os"
-	"os/signal"
 	"sync"
 
 	"strconv"
@@ -78,13 +76,15 @@ func (this *PortalController) OnTimeFeeding() {
 	return
 }
 
-func CronForQuery(updatTo chan UpdatedEvents) {
+func CronForQuery(updatTo chan UpdatedEvents, pid chan string) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("CronForQuery stop for unknown reason, will resume is automatically")
+			time.Sleep(time.Minute * 1)
+			pid <- "CronForQuery"
+			return
 		}
-		CronForQuery(updatTo)
 	}()
+
 	for {
 		currentTime := time.Now().Unix()
 		startTime := (currentTime - int64(60*1))
@@ -102,12 +102,13 @@ func CronForQuery(updatTo chan UpdatedEvents) {
 	}
 }
 
-func CronReciveUpdate(updatTo chan UpdatedEvents) {
+func CronReciveUpdate(updatTo chan UpdatedEvents, pid chan string) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("CronReciveUpdate stop for unknown reason, will resume is automatically")
+			time.Sleep(time.Minute * 1)
+			pid <- "CronReciveUpdate"
+			return
 		}
-		CronReciveUpdate(updatTo)
 	}()
 	for {
 		select {
@@ -123,14 +124,22 @@ func CornDaemonStart() {
 	log.Info("on time query cron job start!")
 	defer log.Error("cron stoped , on time feeding function will broke, please restart this application")
 	updateChann := make(chan UpdatedEvents)
-	go CronForQuery(updateChann)
-	go CronReciveUpdate(updateChann)
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	select {
-	case sig := <-c:
-		if sig.String() == "^C" {
-			os.Exit(3)
+	supervisorChn := make(chan string)
+	go CronForQuery(updateChann, supervisorChn)
+	go CronReciveUpdate(updateChann, supervisorChn)
+
+	for {
+		select {
+		case sup := <-supervisorChn:
+			if sup == "CronForQuery" {
+				log.Errorf("%s dead will unknown reason, will restart the this rotuine", sup)
+				go CronForQuery(updateChann, supervisorChn)
+			} else if sup == "CornReceiveUpdate" {
+				log.Errorf("%s dead will unknown reason, will restart the this rotuine", sup)
+				go CronReciveUpdate(updateChann, supervisorChn)
+			} else {
+				log.Errorf("got worng params of supervisorChn -> %v .", sup)
+			}
 		}
 	}
 }
