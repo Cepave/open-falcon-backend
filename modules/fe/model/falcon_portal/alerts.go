@@ -33,7 +33,8 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne.TimeStart = sTime
 		recordOne.TimeUpdate = eTime
 		recordOne.Duration = getDuration(eTime)
-		recordOne.Notes = getNote(item.Id, sTime)
+		// recordOne.Notes = getNote(item.Id, sTime)
+		recordOne.Notes = []map[string]string{}
 		recordOne.Events = item.Events
 		recordOne.Process = item.ProcessStatus
 		recordOne.Function = item.Func

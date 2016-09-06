@@ -332,6 +332,10 @@
 * `required login session`
 * v2: mapping get from boss api, v3: mapping get from sql cache
 * params:
+  * `includeEvents` string (boolean)
+    * ex. false, true
+    * default: `false`
+    * if true will response events information (time-series alerts data by step).
   * `startTime` timestamp [if set then can't skip endTime]
     * ex: 1457450919
     * if not specific, means get all
