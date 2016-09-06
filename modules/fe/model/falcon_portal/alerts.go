@@ -127,3 +127,34 @@ func GetAlertInfo(resp []AlertsResp, endpointList *hashset.Set, showAll bool) (r
 	respComplete = respCompleteTmp
 	return
 }
+
+func GetAlertsNotes(alerts []AlertsResp) (alertsResp []AlertsResp) {
+	alertsResp = []AlertsResp{}
+	for _, record := range alerts {
+		record.Notes = getNote(record.Hash, record.TimeStart)
+		alertsResp = append(alertsResp, record)
+	}
+	return
+}
+
+func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bool) (respComplete []AlertsResp) {
+	respComplete = resp
+	hostmap := boss.GetIPMap()
+	contactmap := boss.GenContactMap()
+	respCompleteTmp := []AlertsResp{}
+	for _, item := range resp {
+		if result, ok := hostmap[item.HostName]; ok {
+			item.IDC = result.Idc
+			item.Platform = result.Platform
+			item.IP = result.Ip
+			if contacts, ok := contactmap[item.Platform]; ok {
+				item.Contact = contacts
+			}
+		} else {
+			continue
+		}
+		respCompleteTmp = append(respCompleteTmp, item)
+	}
+	respComplete = respCompleteTmp
+	return
+}
