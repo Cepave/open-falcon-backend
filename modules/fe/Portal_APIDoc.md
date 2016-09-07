@@ -328,9 +328,7 @@
     ```
 
 ### `GET` `POST` /api/v2/portal/eventcases/get
-### `GET` `POST` /api/v3/portal/eventcases/get
 * `required login session`
-* v2: mapping get from boss api, v3: mapping get from sql cache
 * params:
   * `includeEvents` string (boolean)
     * ex. false, true

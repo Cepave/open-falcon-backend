@@ -24,15 +24,8 @@ func ConfigRoutes() {
 		beego.NSGet("/notallowed", func(ctx *context.Context) {
 			ctx.Output.Body([]byte("notAllowed"))
 		}),
-		beego.NSRouter("/eventcases/get", &PortalController{}, "get:GetEventCasesV2;post:GetEventCasesV2"),
-		beego.NSRouter("/eventcases/feed", &PortalController{}, "get:OnTimeFeeding;post:OnTimeFeeding"),
-	)
-
-	portalv3 := beego.NewNamespace("/api/v3/portal",
-		beego.NSGet("/notallowed", func(ctx *context.Context) {
-			ctx.Output.Body([]byte("notAllowed"))
-		}),
 		beego.NSRouter("/eventcases/get", &PortalController{}, "get:GetEventCasesV3;post:GetEventCasesV3"),
+		beego.NSRouter("/eventcases/feed", &PortalController{}, "get:OnTimeFeeding;post:OnTimeFeeding"),
 	)
 
 	alarmAdjust := beego.NewNamespace("/api/v1/alarmadjust",
@@ -49,6 +42,5 @@ func ConfigRoutes() {
 
 	beego.AddNamespace(portal)
 	beego.AddNamespace(portalv2)
-	beego.AddNamespace(portalv3)
 	beego.AddNamespace(alarmAdjust)
 }
