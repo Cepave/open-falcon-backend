@@ -43,7 +43,7 @@ func syncBuiltinMetrics() {
 		var resp model.BuiltinMetricResponse
 		err = g.HbsClient.Call("Agent.BuiltinMetrics", req, &resp)
 		if err != nil {
-			log.Println("ERROR:", err)
+			log.Errorln("call Agent.BuiltinMetrics fail", err)
 			continue
 		}
 

@@ -63,14 +63,14 @@ func syncMinePlugins() {
 		var resp model.AgentPluginsResponse
 		err = g.HbsClient.Call("Agent.MinePlugins", req, &resp)
 		if err != nil {
-			log.Println("ERROR:", err)
+			log.Errorln("call Agent.MinePlugins fail", err)
 			continue
 		}
 
 		if resp.Timestamp <= timestamp {
 			continue
 		}
-		log.Println("Response of RPC call Agent.MinePlugins: ", &resp)
+		log.Debugln("Response of RPC call Agent.MinePlugins: ", &resp)
 
 		pluginDirs = dirFilter(resp.Plugins)
 		timestamp = resp.Timestamp
@@ -79,12 +79,12 @@ func syncMinePlugins() {
 		if resp.GitRepoUpdate {
 			log.Println("GitRepo updating ... ")
 			gitUpdateResult := localHttp.DeleteAndCloneRepo(g.Config().Plugin.Dir, plugins.GitRepo)
-			log.Println(gitUpdateResult)
+			log.Debugln(gitUpdateResult)
 		} else if resp.GitUpdate {
 			addr := fmt.Sprintf("http://127.0.0.1%s/plugin/update", g.Config().Http.Listen)
 			log.Println("GitUpdate API address is: ", addr)
 			apiResp, _ := http.Get(addr)
-			log.Println(&apiResp)
+			log.Debugln(&apiResp)
 		}
 
 		if g.Config().Debug {

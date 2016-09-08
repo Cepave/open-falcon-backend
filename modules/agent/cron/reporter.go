@@ -24,12 +24,12 @@ func reportAgentStatus(interval time.Duration) {
 
 		currPluginVersion, currPluginErr := g.GetCurrPluginVersion()
 		if currPluginErr != nil {
-			log.Println("GetCurrPluginVersion returns error: ", currPluginErr)
+			log.Warnln("GetCurrPluginVersion returns: ", currPluginErr)
 		}
 
 		currPluginRepo, currRepoErr := g.GetCurrGitRepo()
 		if currRepoErr != nil {
-			log.Println("GetCurrGitRepo returns error: ", currRepoErr)
+			log.Warnln("GetCurrGitRepo returns: ", currRepoErr)
 		}
 
 		req := model.AgentReportRequest{
@@ -40,11 +40,11 @@ func reportAgentStatus(interval time.Duration) {
 			GitRepo:       currPluginRepo,
 		}
 
-		log.Println("show req of Agent.ReportStatus: ", req)
+		log.Debugln("show req of Agent.ReportStatus: ", req)
 		var resp model.SimpleRpcResponse
 		err = g.HbsClient.Call("Agent.ReportStatus", req, &resp)
 		if err != nil || resp.Code != 0 {
-			log.Println("call Agent.ReportStatus fail:", err, "Request:", req, "Response:", resp)
+			log.Errorln("call Agent.ReportStatus fail:", err, "Request:", req, "Response:", resp)
 		}
 
 		time.Sleep(interval)
