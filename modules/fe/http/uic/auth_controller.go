@@ -384,7 +384,11 @@ func (this *AuthController) LoginWithToken() {
 		} else {
 			this.CreateSession(user.Id, 3600*24*30)
 		}
-		this.Redirect("/me/info", 302)
+		if callback != "" {
+			this.Redirect(callback, 302)
+		} else {
+			this.Redirect("/me/info", 302)
+		}
 	} else {
 		// not logged in. redirect to login page.
 		appSig := this.GetString("sig", "")
