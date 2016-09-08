@@ -287,7 +287,6 @@ CREATE TABLE events (
   DEFAULT CHARSET =utf8;
 
 
-
 SET NAMES 'utf8';
 SET @@session.default_storage_engine = 'InnoDB';
 
@@ -1209,7 +1208,8 @@ FROM nqm_target tg
 
 CREATE TABLE `common_config` (
     `key` VARCHAR(255) NOT NULL DEFAULT '',
-    `value` VARCHAR(255) NOT NULL DEFAULT ''
+    `value` VARCHAR(255) NOT NULL DEFAULT '',
+    CONSTRAINT pk_common_config PRIMARY KEY(`key`)
 )
     ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

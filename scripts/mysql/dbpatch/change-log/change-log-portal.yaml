@@ -98,3 +98,8 @@
     filename: "mike-19.sql",
     comment: "Add filter of ping task for group tag"
 }
+- {
+    id: "laurence-20",
+    filename: "laurence-20.sql",
+    comment: "[OWL-1046] add primary key to table common_config."
+}
