@@ -67,10 +67,18 @@ func ListAgentsInCityByProvinceId(provinceId int32) []*AgentsInCity {
 		SELECT ag.ag_id, ag.ag_name, ag.ag_hostname, INET_NTOA(CONV(HEX(ag.ag_ip_address), 16, 10)) AS ag_ip_address,
 			ct.ct_id, ct.ct_name, ct.ct_post_code
 		FROM nqm_agent AS ag
+			/**
+			 * Only lists the agents(enabled) has ping task(enabled)
+			 */
+			INNER JOIN
+			nqm_agent_ping_task AS apt
+			ON ag.ag_id = apt.apt_ag_id
+				AND ag.ag_status = TRUE
 			INNER JOIN
 			nqm_ping_task AS pt
-			ON ag.ag_id = pt.pt_ag_id
-				AND ag.ag_status = 1
+			ON pt.pt_id = apt.apt_pt_id
+				AND pt.pt_enable = TRUE
+			# //:~)
 			INNER JOIN
 			owl_city AS ct
 			ON ag.ag_ct_id = ct.ct_id

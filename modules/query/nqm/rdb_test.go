@@ -274,9 +274,6 @@ func (s *TestNqmRdbSuite) SetUpTest(c *C) {
 		)
 	case "TestNqmRdbSuite.TestListAgentsInCityByProvinceId":
 		qtest.ExecuteQueriesOrFailInTx(
-			// 14305 - Disabled agent
-			// 14311 - Agent without ping task
-			// 14312 - Not the matched province
 			`
 			INSERT INTO nqm_agent(
 				ag_id, ag_name, ag_connection_id,
@@ -287,18 +284,29 @@ func (s *TestNqmRdbSuite) SetUpTest(c *C) {
 			(14302, 'agent-2', '92.20.50.2', 'ag-2-host', 0x5A143202, -1, 3, 2, true),
 			(14303, 'agent-3', '92.20.50.3', 'ag-3-host', 0x5A143203, -1, 3, 3, true),
 			(14304, 'agent-4', '92.20.50.4', 'ag-4-host', 0x5A143204, -1, 3, 3, true),
-			(14305, 'agent-5', '92.20.50.5', 'ag-5-host', 0x5A143205, -1, 3, 3, false),
-			(14311, 'agent-11', '92.20.50.11', 'ag-11-host', 0x5A14320B, -1, 3, 3, true),
-			(14312, 'agent-12', '92.20.50.12', 'ag-12-host', 0x5A14320C, -1, 4, 3, true)
+			(14305, 'agent-5', '92.20.50.5', 'ag-5-host', 0x5A143205, -1, 3, 3, false), # Agent disabled
+			(14306, 'agent-6', '92.20.50.6', 'ag-6-host', 0x5A143206, -1, 3, 3, false), # Task disabled
+			(14311, 'agent-11', '92.20.50.11', 'ag-11-host', 0x5A14320B, -1, 3, 3, true), # Has no task
+			(14312, 'agent-12', '92.20.50.12', 'ag-12-host', 0x5A14320C, -1, 4, 3, true) # Not-matched province
 			`,
 			`
-			INSERT INTO nqm_ping_task(pt_ag_id, pt_period)
+			INSERT INTO nqm_ping_task(pt_id, pt_period, pt_enable)
 			VALUES
-			(14301, 100),
-			(14302, 100),
-			(14303, 100),
-			(14304, 100),
-			(14305, 100)
+			(7701, 100, TRUE),
+			(7702, 100, TRUE),
+			(7703, 100, TRUE),
+			(7704, 100, TRUE),
+			(7705, 100, TRUE),
+			(7706, 100, FALSE)
+			`,
+			`
+			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id)
+			VALUES(14301, 7701),
+				(14302, 7702),
+				(14303, 7703),
+				(14304, 7704),
+				(14305, 7705),
+				(14306, 7706)
 			`,
 		)
 	}
@@ -317,7 +325,8 @@ func (s *TestNqmRdbSuite) TearDownTest(c *C) {
 		)
 	case "TestNqmRdbSuite.TestListAgentsInCityByProvinceId":
 		qtest.ExecuteQueriesOrFailInTx(
-			`DELETE FROM nqm_ping_task WHERE pt_ag_id >= 14301 AND pt_ag_id <= 14320`,
+			`DELETE FROM nqm_agent_ping_task WHERE apt_ag_id >= 14301 AND apt_ag_id <= 14320`,
+			`DELETE FROM nqm_ping_task WHERE pt_id >= 7701 AND pt_id <= 7706`,
 			`DELETE FROM nqm_agent WHERE ag_id >= 14301 AND ag_id <= 14320`,
 		)
 	}

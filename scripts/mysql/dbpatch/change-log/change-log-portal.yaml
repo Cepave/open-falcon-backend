@@ -63,3 +63,38 @@
     filename: "laurence-13.sql",
     comment: "[OWL-480] git repo address move to mysql."
 }
+- {
+    id: "mike-13",
+    filename: "mike-13.sql",
+    comment: "Refactory to id for name tag"
+}
+- {
+    id: "mike-14",
+    filename: "mike-14.sql",
+    comment: "Refacotry between agent and ping task to M-to-N relationship"
+}
+- {
+    id: "mike-15",
+    filename: "mike-15.sql",
+    comment: "Add view for ping tasks"
+}
+- {
+    id: "mike-16",
+    filename: "mike-16.sql",
+    comment: "Add comment column for agent/target/ping task"
+}
+- {
+    id: "mike-17",
+    filename: "mike-17.sql",
+    comment: "Add group tag"
+}
+- {
+    id: "mike-18",
+    filename: "mike-18.sql",
+    comment: "Add name of ping task"
+}
+- {
+    id: "mike-19",
+    filename: "mike-19.sql",
+    comment: "Add filter of ping task for group tag"
+}
