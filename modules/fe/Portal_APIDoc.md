@@ -152,6 +152,7 @@
         "error": {}
       }
       ```
+
 ### `GET` `POST` /api/v1/portal/eventcases/close
 * !! this is deprecated now !!
 * `required login session`
@@ -286,6 +287,7 @@
       }
     }
     ```
+
 ### `GET` `POST` /api/v1/portal/eventcases/note
 * get one note
 * `required login session`
@@ -324,6 +326,7 @@
       }
     }
     ```
+
 ### `GET` `POST` /api/v2/portal/eventcases/get
 * `required login session`
 * params:
@@ -591,4 +594,3 @@
       }
     }
     ```
-

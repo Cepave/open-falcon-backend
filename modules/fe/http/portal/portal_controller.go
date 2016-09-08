@@ -64,7 +64,7 @@ func (this *PortalController) GetEventCasesV2() {
 		return
 	}
 	alertTmpStore, endpoints, err := event.AlertsConvert(events)
-	alertswithInfo := event.GetAlertInfo(alertTmpStore, endpoints, showAll)
+	alertswithInfo := event.GetAlertInfoFromDB(alertTmpStore, endpoints, showAll)
 	alertswithNote := event.GetAlertsNotes(alertswithInfo)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
