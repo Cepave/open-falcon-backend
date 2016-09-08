@@ -24,7 +24,7 @@ func ConfigRoutes() {
 		beego.NSGet("/notallowed", func(ctx *context.Context) {
 			ctx.Output.Body([]byte("notAllowed"))
 		}),
-		beego.NSRouter("/eventcases/get", &PortalController{}, "get:GetEventCasesV3;post:GetEventCasesV3"),
+		beego.NSRouter("/eventcases/get", &PortalController{}, "get:GetEventCasesV2;post:GetEventCasesV2"),
 		beego.NSRouter("/eventcases/feed", &PortalController{}, "get:OnTimeFeeding;post:OnTimeFeeding"),
 	)
 

@@ -64,50 +64,13 @@ func (this *PortalController) GetEventCasesV2() {
 		return
 	}
 	alertTmpStore, endpoints, err := event.AlertsConvert(events)
-	alertswithInfo := event.GetAlertInfo(alertTmpStore, endpoints, showAll)
+	alertswithInfo := event.GetAlertInfoFromDB(alertTmpStore, endpoints, showAll)
 	alertswithNote := event.GetAlertsNotes(alertswithInfo)
 	if err != nil {
 		this.ResposeError(baseResp, err.Error())
 		return
 	}
 	baseResp.Data["eventCases"] = alertswithNote
-	this.ServeApiJson(baseResp)
-	return
-}
-
-func (this *PortalController) GetEventCasesV3() {
-	baseResp := this.BasicRespGen()
-	_, err := this.SessionCheck()
-	if err != nil {
-		this.ResposeError(baseResp, err.Error())
-		return
-	}
-	startTime, _ := this.GetInt64("startTime", 0)
-	endTime, _ := this.GetInt64("endTime", 0)
-	prioprity, _ := this.GetInt("prioprity", -1)
-	status := this.GetString("status", "ALL")
-	processStatus := this.GetString("process", "ALL")
-	metrics := this.GetString("metric", "ALL")
-
-	username := this.GetString("cName", "")
-	limitNum, _ := this.GetInt("limit", 0)
-	elimit, _ := this.GetInt("elimit", 0)
-	caseId := this.GetString("caseId", "")
-	showAll, _ := this.GetBool("show_all", false)
-	includeEvents, _ := this.GetBool("includeEvents", false)
-	events, err := event.GetEventCases(includeEvents, startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
-	if err != nil {
-		this.ResposeError(baseResp, err.Error())
-		return
-	}
-	alerts, endpoints, err := event.AlertsConvert(events)
-	alerts2 := event.GetAlertInfoFromDB(alerts, endpoints, showAll)
-	alerts3 := event.GetAlertsNotes(alerts2)
-	if err != nil {
-		this.ResposeError(baseResp, err.Error())
-		return
-	}
-	baseResp.Data["eventCases"] = alerts3
 	this.ServeApiJson(baseResp)
 	return
 }
