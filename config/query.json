@@ -4,6 +4,14 @@
         "enabled": true,
         "listen": "%%QUERY_HTTP%%"
     },
+    "hosts": {
+        "enabled": true,
+        "interval": 60
+    },
+    "contacts": {
+        "enabled": true,
+        "interval": 3600
+    },
     "gin_http": {
         "enabled":  true,
         "listen":   "%%GIN_HTTP%%"
