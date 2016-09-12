@@ -1456,8 +1456,6 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 						items = append(items, item)
 					}
 					platformMap[name] = items
-				} else {
-					platformMap[name] = "BOSS 沒有平台負責人資訊"
 				}
 			}
 		}
