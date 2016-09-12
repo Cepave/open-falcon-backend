@@ -103,3 +103,13 @@
     filename: "laurence-20.sql",
     comment: "[OWL-1046] add primary key to table common_config."
 }
+- {
+    id: "mike-21",
+    filename: "mike-21.sql",
+    comment: "Re-arrange id of NQM agents"
+}
+- {
+    id: "mike-22",
+    filename: "mike-22.sql",
+    comment: "Re-arrange id of host"
+}

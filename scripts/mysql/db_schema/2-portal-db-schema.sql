@@ -11,7 +11,7 @@ SET NAMES utf8;
 DROP TABLE IF EXISTS host;
 CREATE TABLE host
 (
-  id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id             INT NOT NULL AUTO_INCREMENT,
   hostname       VARCHAR(255) NOT NULL DEFAULT '',
   ip             VARCHAR(16)  NOT NULL DEFAULT '',
   agent_version  VARCHAR(16)  NOT NULL DEFAULT '',
@@ -49,10 +49,15 @@ CREATE TABLE `grp` (
 DROP TABLE IF EXISTS grp_host;
 CREATE TABLE grp_host
 (
-  grp_id  INT UNSIGNED NOT NULL,
-  host_id INT UNSIGNED NOT NULL,
-  KEY idx_grp_host_grp_id (grp_id),
-  KEY idx_grp_host_host_id (host_id)
+  grp_id INT UNSIGNED,
+  host_id INT,
+	PRIMARY KEY(grp_id, host_id),
+	CONSTRAINT fk_grp_host__grp FOREIGN KEY(grp_id) REFERENCES grp(id)
+			ON DELETE CASCADE
+			ON UPDATE RESTRICT,
+	CONSTRAINT fk_grp_host__host FOREIGN KEY(host_id) REFERENCES host(id)
+			ON DELETE CASCADE
+			ON UPDATE RESTRICT
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8
