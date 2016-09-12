@@ -43,13 +43,15 @@ type Platforms struct {
 	Updated  string
 }
 
-func SyncHostsTable() {
+func SyncHostsAndContactsTable() {
 	if g.Config().Hosts.Enabled || g.Config().Contacts.Enabled {
 		if g.Config().Hosts.Enabled {
+			syncHostsTable()
 			intervalToSyncHostsTable := uint64(10)
 			gocron.Every(intervalToSyncHostsTable).Seconds().Do(syncHostsTable)
 		}
 		if g.Config().Contacts.Enabled {
+			syncContactsTable()
 			intervalToSyncContactsTable := uint64(g.Config().Contacts.Interval)
 			gocron.Every(intervalToSyncContactsTable).Seconds().Do(syncContactsTable)
 		}
@@ -73,6 +75,7 @@ func getIDCMap() map[string]interface{} {
 }
 
 func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string) {
+	log.Debugf("func updateHostsTable()")
 	var hosts []Hosts
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -140,6 +143,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 }
 
 func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
+	log.Debugf("func updatePlatformsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
 	var platform Platforms
@@ -166,7 +170,8 @@ func updatePlatformsTable(platformNames []string, platformsMap map[string]map[st
 	}
 }
 
-func updateContactsTable(contactNames []string, contactsMap map[string]map[string]string) {
+func updateContactsTable(contactNames []string, contactsMap map[string]map[string]interface{}) {
+	log.Debugf("func updateContactsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
 	var contact Contacts
@@ -182,8 +187,8 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 		} else if err != nil {
 			log.Errorf(err.Error())
 		} else {
-			contact.Email = user["email"]
-			contact.Phone = user["phone"]
+			contact.Email = user["email"].(string)
+			contact.Phone = user["phone"].(string)
 			contact.Updated = getNow()
 			_, err := o.Update(&contact)
 			if err != nil {
@@ -194,6 +199,7 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 }
 
 func addContactsToPlatformsTable(contacts map[string]interface{}) {
+	log.Debugf("func addContactsToPlatformsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
 	var platforms []Platforms
@@ -205,8 +211,8 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 			contactsOfPlatform := []string{}
 			platformName := platform.Platform
 			if users, ok := contacts[platformName]; ok {
-				for _, user := range users.([]map[string]string) {
-					contactName := user["name"]
+				for _, user := range users.([]interface{}) {
+					contactName := user.(map[string]interface{})["name"].(string)
 					contactsOfPlatform = appendUniqueString(contactsOfPlatform, contactName)
 				}
 			}
@@ -223,6 +229,7 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 }
 
 func syncHostsTable() {
+	log.Debugf("func syncHostsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
@@ -238,6 +245,7 @@ func syncHostsTable() {
 		currentTime, _ := time.Parse(format, getNow())
 		diff = currentTime.Unix() - updatedTime.Unix()
 	}
+	log.Debugf("diff =", diff)
 	if int(diff) < g.Config().Hosts.Interval {
 		return
 	}
@@ -292,15 +300,17 @@ func syncHostsTable() {
 	}
 	sort.Strings(hostnames)
 	sort.Strings(platformNames)
+	log.Debugf("platformNames =", platformNames)
 	updateHostsTable(hostnames, hostsMap)
 	updatePlatformsTable(platformNames, platformsMap)
 }
 
 func syncContactsTable() {
+	log.Debugf("func syncContactsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM boss.platforms ORDER BY updated DESC LIMIT 1"
+	sql := "SELECT updated FROM boss.contacts ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
 	diff := int64(0)
 	if err != nil {
@@ -312,6 +322,7 @@ func syncContactsTable() {
 		currentTime, _ := time.Parse(format, getNow())
 		diff = currentTime.Unix() - updatedTime.Unix()
 	}
+	log.Debugf("diff =", diff)
 	if int(diff) < g.Config().Contacts.Interval {
 		return
 	}
@@ -334,18 +345,18 @@ func syncContactsTable() {
 	result["error"] = errors
 	getPlatformContact(strings.Join(platformNames, ","), nodes)
 	contactNames := []string{}
-	contactsMap := map[string]map[string]string{}
+	contactsMap := map[string]map[string]interface{}{}
 	contacts := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})
 	for _, platformName := range platformNames {
-		 if items, ok := contacts[platformName]; ok {
-			 for _, user := range items.([]map[string]string) {
-				 contactName := user["name"]
-				 if _, ok := contactsMap[contactName]; !ok {
-					 contactsMap[contactName] = user
-					 contactNames = append(contactNames, contactName)
-				 }
-			 }
-		 }
+		if items, ok := contacts[platformName]; ok {
+			for _, user := range items.([]interface{}) {
+				contactName := user.(map[string]interface{})["name"].(string)
+				if _, ok := contactsMap[contactName]; !ok {
+					contactsMap[contactName] = user.(map[string]interface{})
+					contactNames = append(contactNames, contactName)
+				}
+			}
+		}
 	}
 	sort.Strings(contactNames)
 	updateContactsTable(contactNames, contactsMap)
