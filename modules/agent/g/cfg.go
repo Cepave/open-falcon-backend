@@ -74,7 +74,7 @@ func Hostname() (string, error) {
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		log.Println("ERROR: os.Hostname() fail", err)
+		log.Errorln("os.Hostname() fail", err)
 	}
 	// hostname -s
 	// -s, --short

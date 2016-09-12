@@ -5,6 +5,14 @@
         "enabled":  true,
         "listen":   "0.0.0.0:9966"
     },
+    "hosts": {
+        "enabled": true,
+        "interval": 60
+    },
+    "contacts": {
+        "enabled": true,
+        "interval": 3600
+    },
     "gin_http": {
         "enabled":  true,
         "listen":   "0.0.0.0:9967"

@@ -17,6 +17,16 @@ type HttpConfig struct {
 	Listen  string `json:"listen"`
 }
 
+type HostsConfig struct {
+	Enabled  bool `json:"enabled"`
+	Interval int  `json:"interval"`
+}
+
+type ContactsConfig struct {
+	Enabled  bool `json:"enabled"`
+	Interval int  `json:"interval"`
+}
+
 type GinHttpConfig struct {
 	Enabled bool   `json:"enabled"`
 	Listen  string `json:"listen"`
@@ -75,6 +85,8 @@ type GlobalConfig struct {
 	Debug   bool           `json:"debug"`
 	RootDir string         `json:"root_dir"`
 	Http    *HttpConfig    `json:"http"`
+	Hosts   *HostsConfig   `json:"hosts"`
+	Contacts *ContactsConfig `json:"contacts"`
 	Graph   *GraphConfig   `json:"graph"`
 	Api     *ApiConfig     `json:"api"`
 	Db      *DbConfig      `json:"db"`

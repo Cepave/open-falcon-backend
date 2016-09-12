@@ -34,7 +34,7 @@ func genSqlFilterTemplete(whereConditions []string) string {
 
 const SkipFilter = "ALL"
 
-func GetEventCases(startTime int64, endTime int64, priority int, status string, progressStatus string, limit int, elimit int, username string, metrics string, caseId string) (result []EventCases, err error) {
+func GetEventCases(includeEvents bool, startTime int64, endTime int64, priority int, status string, progressStatus string, limit int, elimit int, username string, metrics string, caseId string) (result []EventCases, err error) {
 	config := g.Config()
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
@@ -78,20 +78,22 @@ func GetEventCases(startTime int64, endTime int64, priority int, status string, 
 		result = []EventCases{}
 		return
 	}
-	//set default number of event
-	var eventLimit int
-	if eventLimit = elimit; elimit == 0 {
-		eventLimit = 10
-	}
-	for indx, event := range result {
-		var eventArr []*Events
-		q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s' order by timestamp DESC Limit %d", event.Id, eventLimit)).QueryRows(&eventArr)
-		if len(eventArr) != 0 {
-			event.Events = eventArr
-		} else {
-			event.Events = []*Events{}
+	if includeEvents {
+		//set default number of event
+		var eventLimit int
+		if eventLimit = elimit; elimit == 0 {
+			eventLimit = 10
 		}
-		result[indx] = event
+		for indx, event := range result {
+			var eventArr []*Events
+			q.Raw(fmt.Sprintf("SELECT * FROM `events` WHERE event_caseId = '%s' order by timestamp DESC Limit %d", event.Id, eventLimit)).QueryRows(&eventArr)
+			if len(eventArr) != 0 {
+				event.Events = eventArr
+			} else {
+				event.Events = []*Events{}
+			}
+			result[indx] = event
+		}
 	}
 	return
 }
@@ -159,7 +161,7 @@ func GetNotes(eventCaseId string, limit int, startTime int64, endTime int64, fil
 	//allow api only set the startTime and use the currentTime as the endTime
 	case startTime != 0 && endTime == 0:
 		endTime = time.Now().Unix()
-	case startTime == 0 && endTime == 0:
+	case startTime != 0 && endTime != 0:
 		tempTime := ""
 		q.Raw("SELECT timestamp FROM event_cases WHERE id = ?", eventCaseId).QueryRow(&tempTime)
 		if tempTime != "" {

@@ -1,12 +1,13 @@
 package cron
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/agent/g"
-	log "github.com/Sirupsen/logrus"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
+	log "github.com/Sirupsen/logrus"
 )
 
 func SyncBuiltinMetrics() {
@@ -43,7 +44,7 @@ func syncBuiltinMetrics() {
 		var resp model.BuiltinMetricResponse
 		err = g.HbsClient.Call("Agent.BuiltinMetrics", req, &resp)
 		if err != nil {
-			log.Println("ERROR:", err)
+			log.Errorln("call Agent.BuiltinMetrics fail", err)
 			continue
 		}
 
@@ -115,10 +116,18 @@ func syncBuiltinMetrics() {
 						tmpMap[1] = strings.TrimSpace(arr[i][5:])
 					} else if strings.HasPrefix(arr[i], "cmdline=") {
 						tmpMap[2] = strings.TrimSpace(arr[i][8:])
+					} else if strings.Contains(arr[i], "=") {
+						log.Errorln("proc.num with wrong tag:", arr)
+						tmpMap[3] = "wrong tags"
 					}
 				}
 
-				procs[metric.Tags] = tmpMap
+				_, nameExist := tmpMap[1]
+				_, cmdExist := tmpMap[2]
+				_, wrongTagsExist := tmpMap[3]
+				if !wrongTagsExist && !(nameExist && cmdExist) {
+					procs[metric.Tags] = tmpMap
+				}
 			}
 		}
 

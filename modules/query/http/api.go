@@ -1410,7 +1410,7 @@ func getPlatformBandwidthsFiveMinutesAverage(platformName string, metricType str
 	return nodes
 }
 
-func getPlatformContact(platformName string, rw http.ResponseWriter, nodes map[string]interface{}) {
+func getPlatformContact(platformName string, nodes map[string]interface{}) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
@@ -1483,7 +1483,7 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 		nodes = getPlatformBandwidthsFiveMinutesAverage(platformName, metricType, rw)
 	} else if len(arguments) == 5 && arguments[len(arguments)-1] == "contact" {
 		platformName := arguments[len(arguments)-2]
-		getPlatformContact(platformName, rw, nodes)
+		getPlatformContact(platformName, nodes)
 	} else {
 		errors := []string{}
 		var result = make(map[string]interface{})
