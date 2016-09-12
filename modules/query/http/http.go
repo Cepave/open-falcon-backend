@@ -31,6 +31,10 @@ func InitDatabase() {
 	orm.RegisterDataBase("grafana", "mysql", strConn, config.Db.Idle, config.Db.Max)
 	orm.RegisterModel(new(Province), new(City), new(Idc))
 
+	strConn = strings.Replace(config.Db.Addr, "falcon_portal", "boss", 1)
+	orm.RegisterDataBase("boss", "mysql", strConn, config.Db.Idle, config.Db.Max)
+	orm.RegisterModel(new(Contacts), new(Hosts), new(Platforms))
+
 	orm.RegisterDataBase("gz_nqm", "mysql", config.Nqm.Addr, config.Nqm.Idle, config.Nqm.Max)
 	orm.RegisterModel(new(Nqm_node))
 
@@ -58,6 +62,7 @@ func Start() {
 
 	// start mysql database
 	InitDatabase()
+	SyncHostsTable()
 
 	// start http server
 	addr := g.Config().Http.Listen
