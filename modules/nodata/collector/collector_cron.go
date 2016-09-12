@@ -25,7 +25,7 @@ var (
 )
 
 func StartCollectorCron() {
-	collectorCron.AddFuncCC("*/20 * * * * ?", func() {
+	collectorCron.AddFuncCC("*/10 * * * * ?", func() {
 		start := time.Now().Unix()
 		cnt := collectDataOnce()
 		end := time.Now().Unix()

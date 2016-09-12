@@ -9,5 +9,5 @@ func AgentMetrics() []*model.MetricValue {
 }
 
 func AgentMetricsThirty() []*model.MetricValue {
-	return []*model.MetricValue{GaugeValue("agent.alive.30", 1)}
+	return []*model.MetricValue{GaugeValue("agent.alive.30sec", 1)}
 }
