@@ -229,13 +229,11 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 }
 
 func syncHostsTable() {
-	log.Debugf("func syncHostsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
 	sql := "SELECT updated FROM boss.hosts WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
-	diff := int64(0)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
@@ -243,11 +241,10 @@ func syncHostsTable() {
 		format := "2006-01-02 15:04:05"
 		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
 		currentTime, _ := time.Parse(format, getNow())
-		diff = currentTime.Unix() - updatedTime.Unix()
-	}
-	log.Debugf("diff =", diff)
-	if int(diff) < g.Config().Hosts.Interval {
-		return
+		diff := currentTime.Unix() - updatedTime.Unix()
+		if int(diff) < g.Config().Hosts.Interval {
+			return
+		}
 	}
 
 	var nodes = make(map[string]interface{})
@@ -312,7 +309,6 @@ func syncContactsTable() {
 	var rows []orm.Params
 	sql := "SELECT updated FROM boss.contacts ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
-	diff := int64(0)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
@@ -320,11 +316,10 @@ func syncContactsTable() {
 		format := "2006-01-02 15:04:05"
 		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
 		currentTime, _ := time.Parse(format, getNow())
-		diff = currentTime.Unix() - updatedTime.Unix()
-	}
-	log.Debugf("diff =", diff)
-	if int(diff) < g.Config().Contacts.Interval {
-		return
+		diff := currentTime.Unix() - updatedTime.Unix()
+		if int(diff) < g.Config().Contacts.Interval {
+			return
+		}
 	}
 
 	platformNames := []string{}
