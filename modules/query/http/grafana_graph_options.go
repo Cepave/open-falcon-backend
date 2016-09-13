@@ -302,12 +302,14 @@ func updateMapData() {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Errorf("Error = %v", err.Error())
+		return
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Errorf("Error = %v", err.Error())
+		return
 	}
 	defer resp.Body.Close()
 
@@ -315,102 +317,104 @@ func updateMapData() {
 	var nodes = make(map[string]interface{})
 	if err := json.Unmarshal(body, &nodes); err != nil {
 		log.Errorf("Error = %v", err.Error())
+		return
 	}
 	result := map[string]int{}
 	items := map[string]interface{}{}
 	names := []string{}
-	if int(nodes["status"].(float64)) == 1 {
-		countOfPlatform := 0
-		countOfDevice := 0
-		for _, platform := range nodes["result"].([]interface{}) {
-			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
-				countOfDevice++
-				id, err := strconv.Atoi(device.(map[string]interface{})["pop_id"].(string))
+	if int(nodes["status"].(float64)) != 1 {
+		return
+	}
+	countOfPlatform := 0
+	countOfDevice := 0
+	for _, platform := range nodes["result"].([]interface{}) {
+		for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+			countOfDevice++
+			id, err := strconv.Atoi(device.(map[string]interface{})["pop_id"].(string))
+			if err != nil {
+				log.Errorf("Error = %v", err.Error())
+			}
+			name := device.(map[string]interface{})["pop"].(string)
+			if _, ok := result[name]; ok {
+				result[name]++
+				item := items[name]
+				count := item.(map[string]interface{})["count"].(int)
+				count++
+				item.(map[string]interface{})["count"] = count
+				items[name] = item
+			} else {
+				result[name] = 1
+				item := map[string]interface{}{
+					"id":    id,
+					"name":  name,
+					"count": 1,
+				}
+				items[name] = item
+				names = append(names, name)
+			}
+		}
+		countOfPlatform++
+	}
+	log.Debugf("countOfPlatform = %v", countOfPlatform)
+	log.Debugf("countOfDevice = %v", countOfDevice)
+	sort.Strings(names)
+
+	o := orm.NewOrm()
+	o.Using("grafana")
+	for _, name := range names {
+		log.Debugf("item = %v", items[name])
+		item := items[name]
+		pop_id := item.(map[string]interface{})["id"].(int)
+		name := item.(map[string]interface{})["name"].(string)
+		count := item.(map[string]interface{})["count"].(int)
+		now := getNow()
+		idc := Idc{
+			Pop_id: pop_id,
+		}
+		location := getLocation(pop_id)
+		log.Debugf("location = %v", location)
+		area := location["area"]
+		province := location["province"]
+		city := location["city"]
+
+		var rows []orm.Params
+		sqlcmd := "SELECT id, pop_id FROM grafana.idc WHERE pop_id=?"
+		num, err := o.Raw(sqlcmd, pop_id).Values(&rows)
+		if err != nil {
+			log.Errorf("Error = %v", err.Error())
+		} else {
+			idc.Name = name
+			idc.Count = count
+			idc.Area = area
+			idc.Province = province
+			idc.City = city
+			idc.Updated_at = now
+			if num > 0 { // existed. update data.
+				id, err := strconv.Atoi(rows[0]["id"].(string))
 				if err != nil {
 					log.Errorf("Error = %v", err.Error())
 				}
-				name := device.(map[string]interface{})["pop"].(string)
-				if _, ok := result[name]; ok {
-					result[name]++
-					item := items[name]
-					count := item.(map[string]interface{})["count"].(int)
-					count++
-					item.(map[string]interface{})["count"] = count
-					items[name] = item
+				idc.Id = id
+				num, err := o.Update(&idc)
+				if err != nil {
+					log.Errorf("Error = %v", err.Error())
 				} else {
-					result[name] = 1
-					item := map[string]interface{}{
-						"id":    id,
-						"name":  name,
-						"count": 1,
+					if num > 0 {
+						log.Debugf("update idcId: %v", id)
+						log.Debugf("mysql row affected nums: %v", num)
 					}
-					items[name] = item
-					names = append(names, name)
 				}
-			}
-			countOfPlatform++
-		}
-		log.Debugf("countOfPlatform = %v", countOfPlatform)
-		log.Debugf("countOfDevice = %v", countOfDevice)
-		sort.Strings(names)
-
-		o := orm.NewOrm()
-		o.Using("grafana")
-		for _, name := range names {
-			log.Debugf("item = %v", items[name])
-			item := items[name]
-			pop_id := item.(map[string]interface{})["id"].(int)
-			name := item.(map[string]interface{})["name"].(string)
-			count := item.(map[string]interface{})["count"].(int)
-			now := getNow()
-			idc := Idc{
-				Pop_id: pop_id,
-			}
-			location := getLocation(pop_id)
-			log.Debugf("location = %v", location)
-			area := location["area"]
-			province := location["province"]
-			city := location["city"]
-
-			var rows []orm.Params
-			sqlcmd := "SELECT id, pop_id FROM grafana.idc WHERE pop_id=?"
-			num, err := o.Raw(sqlcmd, pop_id).Values(&rows)
-			if err != nil {
-				log.Errorf("Error = %v", err.Error())
-			} else {
-				idc.Name = name
-				idc.Count = count
-				idc.Area = area
-				idc.Province = province
-				idc.City = city
-				idc.Updated_at = now
-				if num > 0 { // existed. update data.
-					id, err := strconv.Atoi(rows[0]["id"].(string))
-					if err != nil {
-						log.Errorf("Error = %v", err.Error())
-					}
-					idc.Id = id
-					num, err := o.Update(&idc)
-					if err != nil {
-						log.Errorf("Error = %v", err.Error())
-					} else {
-						if num > 0 {
-							log.Debugf("update idcId: %v", id)
-							log.Debugf("mysql row affected nums: %v", num)
-						}
-					}
-				} else { // not existed. insert data.
-					idcId, err := o.Insert(&idc)
-					if err != nil {
-						log.Errorf("Error = %v", err.Error())
-					} else {
-						log.Debugf("Insert idcId = %v", idcId)
-					}
+			} else { // not existed. insert data.
+				idcId, err := o.Insert(&idc)
+				if err != nil {
+					log.Errorf("Error = %v", err.Error())
+				} else {
+					log.Debugf("Insert idcId = %v", idcId)
 				}
 			}
 		}
-		updateCities()
 	}
+	updateCities()
 }
 
 func getBarChartOptions(chartType string, provinces []interface{}) map[string]interface{} {
