@@ -1503,25 +1503,40 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
 	metricMap := map[string]interface{}{}
+	valuesMap := map[string]map[float64]float64{}
 	timestamps := []float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
 		data := getGraphQueryResponse(metrics, duration, hostnames, result)
-		for _, rrdObj := range data[0].Values {
+		index := -1
+		max := 0
+		for key, item := range data {
+			if len(item.Values) > max {
+				max = len(item.Values)
+				index = key
+			}
+		}
+		for _, rrdObj := range data[index].Values {
 			timestamps = append(timestamps, float64(rrdObj.Timestamp))
 		}
 		if len(timestamps) > 0 {
 			for _, metric := range metrics {
-				values := []float64{}
-				for _, _ = range timestamps {
-					values = append(values, float64(0))
+				valuesPair := map[float64]float64{}
+				for _, timestamp := range timestamps {
+					valuesPair[timestamp] = float64(0)
 				}
-				metricMap[metric] = values
+				valuesMap[metric] = valuesPair
 			}
 			for _, series := range data {
-				values := metricMap[series.Counter].([]float64)
-				for key, rrdObj := range series.Values {
+				valuesPair := valuesMap[series.Counter]
+				for _, rrdObj := range series.Values {
 					if !math.IsNaN(float64(rrdObj.Value)) {
-						values[key] += float64(rrdObj.Value)
+						valuesPair[float64(rrdObj.Timestamp)] += float64(rrdObj.Value)
+					}
+				}
+				values := []float64{}
+				for _, timestamp := range timestamps {
+					if valuesPair[timestamp] >= 0 {
+						values = append(values, valuesPair[timestamp])
 					}
 				}
 				metricMap[series.Counter] = values
