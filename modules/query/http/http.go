@@ -61,7 +61,7 @@ func Start() {
 
 	// start mysql database
 	InitDatabase()
-	SyncHostsAndContactsTable()
+	go SyncHostsAndContactsTable()
 
 	// start http server
 	addr := g.Config().Http.Listen
