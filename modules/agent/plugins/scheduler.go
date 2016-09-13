@@ -128,7 +128,10 @@ func PluginRun(plugin *Plugin) {
 	cmd.Stdout = &stdout
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
-	cmd.Start()
+	err := cmd.Start()
+	if err != nil {
+		log.Errorln(fpath, " start fails: ", err)
+	}
 
 	err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(timeout)*time.Millisecond)
 
