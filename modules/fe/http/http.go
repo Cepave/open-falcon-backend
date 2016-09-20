@@ -42,6 +42,7 @@ func Start() {
 	portal.ConfigRoutes()
 	boss.ConfigRoutes()
 
+	beego.SetLogger("console", `{"color":false}`)
 	beego.AddFuncMap("member", uic_model.MembersByTeamId)
 	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
 		AllowAllOrigins: true,

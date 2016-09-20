@@ -53,6 +53,7 @@ func Duration(now, before int64) string {
 
 func init() {
 	configRoutes()
+	beego.SetLogger("console", `{"color":false}`)
 	beego.AddFuncMap("duration", Duration)
 }
 
