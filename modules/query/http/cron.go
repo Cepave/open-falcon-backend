@@ -46,8 +46,9 @@ type Platforms struct {
 func SyncHostsAndContactsTable() {
 	if g.Config().Hosts.Enabled || g.Config().Contacts.Enabled {
 		if g.Config().Hosts.Enabled {
+			updateMapData()
 			syncHostsTable()
-			intervalToSyncHostsTable := uint64(10)
+			intervalToSyncHostsTable := uint64(g.Config().Hosts.Interval)
 			gocron.Every(intervalToSyncHostsTable).Seconds().Do(syncHostsTable)
 		}
 		if g.Config().Contacts.Enabled {
@@ -102,22 +103,22 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	var host Hosts
 	for _, hostname := range hostnames {
 		item := hostsMap[hostname]
+		activate, _ := strconv.Atoi(item["activate"])
+		host.Hostname = item["hostname"]
+		host.Exist = 1
+		host.Activate = activate
+		host.Platform = item["platform"]
+		host.Ip = item["ip"]
+		host.Isp = strings.Split(item["hostname"], "-")[0]
+		host.Updated = getNow()
 		idcID := item["idcID"]
 		if _, ok := idcMap[idcID]; ok {
 			idc := idcMap[idcID]
-			activate, _ := strconv.Atoi(item["activate"])
-			host.Hostname = item["hostname"]
-			host.Exist = 1
-			host.Activate = activate
-			host.Platform = item["platform"]
 			host.Idc = idc.(Idc).Name
 			host.Province = idc.(Idc).Province
 			host.City = idc.(Idc).City
-			host.Ip = item["ip"]
-			host.Isp = strings.Split(item["hostname"], "-")[0]
-			host.Updated = getNow()
-			hosts = append(hosts, host)
 		}
+		hosts = append(hosts, host)
 	}
 	for _, item := range hosts {
 		err := o.QueryTable("hosts").Filter("hostname", item.Hostname).One(&host)
