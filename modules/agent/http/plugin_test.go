@@ -18,7 +18,10 @@ func TestDeleteAndCloneRepo(t *testing.T) {
 func TestRunCmdWithTimeout(t *testing.T) {
 	cmd := exec.Command("sleep", "500")
 	t1 := time.Now()
-	cmd.Start()
+	err := cmd.Start()
+	if err != nil {
+		t.Log("cmd start fails: ", err)
+	}
 	err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(3)*time.Second)
 	t2 := time.Now()
 	t.Log("Time spent should less than 4 second: ", t2.Sub(t1))
@@ -30,7 +33,10 @@ func TestRunCmdWithTimeout(t *testing.T) {
 	}
 
 	cmd2 := exec.Command("sleep", "1")
-	cmd2.Start()
+	err2 := cmd2.Start()
+	if err2 != nil {
+		t.Log("cmd start fails: ", err2)
+	}
 	err2, isTimeout2 := sys.CmdRunWithTimeout(cmd, time.Duration(3)*time.Second)
 	t.Log("error message is:", err2)
 	t.Log("Timeout happens: ", isTimeout2)
