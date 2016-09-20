@@ -17,7 +17,7 @@ import (
 
 var (
 	judgeCron     = tcron.New()
-	judgeCronSpec = "0/20 * * * * ?"
+	judgeCronSpec = "*/20 * * * * ?"
 )
 
 func StartJudgeCron() {
