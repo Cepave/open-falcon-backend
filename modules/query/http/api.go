@@ -1650,13 +1650,26 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 		metricType = arguments[len(arguments)-3]
 		method = arguments[len(arguments)-2]
 		duration = arguments[len(arguments)-1]
+	} else if len(arguments) == 5 && arguments[2] == "hosts" {
+		hostnames = strings.Split(arguments[3], ",")
+		method = arguments[4]
 	}
-
 	if method == "average" {
 		items = getBandwidthsAverage(metricType, duration, hostnames, result)
 	} else if method == "sum" {
 		filter := req.URL.Query().Get("filter")
 		items = getBandwidthsSum(metricType, duration, hostnames, filter, result)
+	} else if method == "nic-out-speed" {
+		for _, hostname := range hostnames {
+			if strings.Index(hostname, "-") > -1 {
+				NICOutSpeed := getNICOutSpeed(hostname, result)
+				item := map[string]interface{}{
+					"hostname": hostname,
+					"nic.out.speed.bits": NICOutSpeed,
+				}
+				items = append(items, item)
+			}
+		}
 	}
 	result["items"] = items
 	nodes["result"] = result
