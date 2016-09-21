@@ -912,7 +912,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		offset := int64(multiplier) * seconds
 		now := time.Now().Unix()
 		timestampFrom = now - offset
-		timestampTo = now
+		timestampTo = now + int64(5 * 60)
 	}
 	return
 }
