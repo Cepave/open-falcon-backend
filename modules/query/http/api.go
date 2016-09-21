@@ -1274,6 +1274,9 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 		duration = arguments[6]
 	}
 	data := getGraphQueryResponse(metrics, duration, hostnames, result)
+	dataRecent := getGraphQueryResponse(metrics, "30min", hostnames, result)
+	data = addRecentData(data, dataRecent)
+
 	for _, series := range data {
 		metric := series.Counter
 		if strings.Index(metric, "nic.default.out.speed/device=") > -1 {
