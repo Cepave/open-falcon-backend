@@ -1228,6 +1228,35 @@ func addNetworkSpeedAndBondMode(metrics []string, hostnames []string, result map
 	return metrics
 }
 
+func addRecentData(data []*cmodel.GraphQueryResponse, dataRecent []*cmodel.GraphQueryResponse) []*cmodel.GraphQueryResponse {
+	for key, item := range data {
+		hostname := item.Endpoint
+		metric := item.Counter
+		latest := int64(0)
+		if len(item.Values) > 0 {
+			values := []*cmodel.RRDData{}
+			for _, pair := range item.Values {
+				if !math.IsNaN(float64(pair.Value)) && pair.Value > 0 {
+					latest = pair.Timestamp
+					values = append(values, pair)
+				}
+			}
+			for _, itemRecent := range dataRecent {
+				if itemRecent.Endpoint == hostname && itemRecent.Counter == metric {
+					for _, pair := range itemRecent.Values {
+						if pair.Timestamp > latest && !math.IsNaN(float64(pair.Value)) && pair.Value > 0 {
+							values = append(values, pair)
+						}
+					}
+				}
+			}
+			item.Values = values
+			data[key] = item
+		}
+	}
+	return data
+}
+
 func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
