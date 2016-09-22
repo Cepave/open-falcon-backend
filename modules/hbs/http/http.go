@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	"github.com/gin-gonic/gin"
 	log "github.com/Sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
@@ -13,9 +14,14 @@ type Dto struct {
 	Data interface{} `json:"data"`
 }
 
+var ginRouter *gin.Engine
+
 func init() {
-	configCommonRoutes()
-	configProcRoutes()
+	gin.SetMode(gin.ReleaseMode)
+	ginRouter = gin.New()
+
+	configCommonRoutes(ginRouter)
+	configProcRoutes(ginRouter)
 }
 
 func RenderJson(w http.ResponseWriter, v interface{}) {
@@ -54,9 +60,11 @@ func Start() {
 		return
 	}
 	s := &http.Server{
-		Addr:           addr,
+		Addr: addr,
+		Handler: ginRouter,
 		MaxHeaderBytes: 1 << 30,
 	}
+
 	log.Println("http listening", addr)
 	log.Fatalln(s.ListenAndServe())
 }

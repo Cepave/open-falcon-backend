@@ -368,8 +368,7 @@ func (dbController *DbController) QueryForRows(
 		for rows.Next() {
 			numberOfRows++
 
-			if iterateControl := rowsCallback.NextRow(rows)
-				iterateControl == IterateStop {
+			if rowsCallback.NextRow(rows) == IterateStop {
 				break
 			}
 		}
