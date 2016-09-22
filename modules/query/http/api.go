@@ -912,7 +912,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		offset := int64(multiplier) * seconds
 		now := time.Now().Unix()
 		timestampFrom = now - offset
-		timestampTo = now
+		timestampTo = now + int64(5 * 60)
 	}
 	return
 }
@@ -1228,6 +1228,35 @@ func addNetworkSpeedAndBondMode(metrics []string, hostnames []string, result map
 	return metrics
 }
 
+func addRecentData(data []*cmodel.GraphQueryResponse, dataRecent []*cmodel.GraphQueryResponse) []*cmodel.GraphQueryResponse {
+	for key, item := range data {
+		hostname := item.Endpoint
+		metric := item.Counter
+		latest := int64(0)
+		if len(item.Values) > 0 {
+			values := []*cmodel.RRDData{}
+			for _, pair := range item.Values {
+				if !math.IsNaN(float64(pair.Value)) && pair.Value > 0 {
+					latest = pair.Timestamp
+					values = append(values, pair)
+				}
+			}
+			for _, itemRecent := range dataRecent {
+				if itemRecent.Endpoint == hostname && itemRecent.Counter == metric {
+					for _, pair := range itemRecent.Values {
+						if pair.Timestamp > latest && !math.IsNaN(float64(pair.Value)) && pair.Value > 0 {
+							values = append(values, pair)
+						}
+					}
+				}
+			}
+			item.Values = values
+			data[key] = item
+		}
+	}
+	return data
+}
+
 func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -1245,6 +1274,9 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 		duration = arguments[6]
 	}
 	data := getGraphQueryResponse(metrics, duration, hostnames, result)
+	dataRecent := getGraphQueryResponse(metrics, "30min", hostnames, result)
+	data = addRecentData(data, dataRecent)
+
 	for _, series := range data {
 		metric := series.Counter
 		if strings.Index(metric, "nic.default.out.speed/device=") > -1 {
