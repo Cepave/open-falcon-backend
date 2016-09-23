@@ -5,51 +5,81 @@ import (
 	"fmt"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
-	dbCommon "github.com/Cepave/open-falcon-backend/common/db"
+	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	utils "github.com/Cepave/open-falcon-backend/common/utils"
-	log "github.com/Sirupsen/logrus"
 	"time"
 )
 
-// Inserts a new agent or updates existing one
-func RefreshAgentInfo(agent *model.NqmAgent) (err error) {
-	/**
-	 * Update the data
-	 */
-	if _, err = DB.Exec(
+/**
+ * Refresh agent or add a new one
+ */
+type refreshAgentProcessor struct {
+	agent *model.NqmAgent
+}
+func (self *refreshAgentProcessor) BootCallback(tx *sql.Tx) bool {
+	result := commonDb.ToTxExt(tx).Exec(
+		`
+		UPDATE nqm_agent
+		SET ag_hostname = ?,
+			ag_ip_address = ?,
+			ag_last_heartbeat = ?
+		WHERE ag_connection_id = ?
+		`,
+		self.agent.Hostname(),
+		[]byte(self.agent.IpAddress),
+		time.Now(),
+		self.agent.ConnectionId(),
+	)
+
+	return commonDb.ToResultExt(result).RowsAffected() == 0
+}
+func (self *refreshAgentProcessor) IfTrue(tx *sql.Tx) {
+	now := time.Now()
+	ipAddress := []byte(self.agent.IpAddress)
+
+	commonDb.ToTxExt(tx).Exec(
 		`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat)
 		VALUES(?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
-			ag_hostname = VALUES(ag_hostname),
-			ag_ip_address = VALUES(ag_ip_address),
-			ag_last_heartbeat = VALUES(ag_last_heartbeat)
+			ag_hostname = ?,
+			ag_ip_address = ?,
+			ag_last_heartbeat = ?
 		`,
-		agent.ConnectionId(),
-		agent.Hostname(),
-		[]byte(agent.IpAddress),
-		time.Now(),
-	); err != nil {
+		self.agent.ConnectionId(),
+		self.agent.Hostname(),
+		ipAddress,
+		now,
+		self.agent.Hostname(),
+		ipAddress,
+		now,
+	)
+}
+func (self *refreshAgentProcessor) ResultRow(row *sql.Row) {
+	commonDb.ToRowExt(row).Scan(&self.agent.Id)
+}
 
-		log.Printf("Cannot refresh agent: [%v]. Error: %v", agent.ConnectionId(), err)
+// Inserts a new agent or updates existing one
+func RefreshAgentInfo(agent *model.NqmAgent) (dbError error) {
+	dbCtrl := commonDb.NewDbController(DB)
+	dbCtrl.RegisterPanicHandler(commonDb.NewDbErrorCapture(&dbError))
+
+	agentProcessor := &refreshAgentProcessor{ agent }
+
+	dbCtrl.InTxForIf(agentProcessor)
+	if dbError != nil {
 		return
 	}
-	// :~)
 
-	/**
-	 * Loads id from auto-generated PK
-	 */
-	if err = DB.QueryRow(
+	dbCtrl.QueryForRow(
+		agentProcessor,
 		`
 		SELECT ag_id
 		FROM nqm_agent
 		WHERE ag_connection_id = ?
 		`,
 		agent.ConnectionId(),
-	).Scan(&agent.Id); err != nil {
-		return
-	}
-	// :~)
+	)
 
 	return
 }
@@ -175,7 +205,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 		}
 
 		result.GroupTagIds = utils.IntTo32(
-			dbCommon.GroupedStringToIntArray(concatedIdsOfGroupTag, ","),
+			commonDb.GroupedStringToIntArray(concatedIdsOfGroupTag, ","),
 		)
 
 		/**
@@ -272,7 +302,7 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 		)
 
 		currentTarget.GroupTagIds = utils.IntTo32(
-			dbCommon.GroupedStringToIntArray(concatedIdsOfGroupTags, ","),
+			commonDb.GroupedStringToIntArray(concatedIdsOfGroupTags, ","),
 		)
 
 		if currentTarget.NameTagId == commonModel.UNDEFINED_NAME_TAG_ID {
