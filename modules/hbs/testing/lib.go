@@ -4,18 +4,23 @@ import (
 	"database/sql"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	flag "github.com/spf13/pflag"
+	"flag"
 	tknet "github.com/toolkits/net"
 	. "gopkg.in/check.v1"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"time"
+	check "gopkg.in/check.v1"
 )
 
 var dsnMysql = flag.String("dsn_mysql", "", "Dsn of Mysql")
 
 var DbForTest *sql.DB
+
+// This function accepts a checker struct and
+// it is executed by testing
+type AssertFunc func(*check.C)
 
 func InitDb() {
 	if *dsnMysql == "" {

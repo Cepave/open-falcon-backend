@@ -15,7 +15,7 @@ $(CMD):
 	go build -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
-	go build -o open-falcon
+	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(< VERSION)" -o open-falcon
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
 dev: format

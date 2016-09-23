@@ -89,7 +89,7 @@ func CronForQuery(updatTo chan UpdatedEvents, pid chan string) {
 		currentTime := time.Now().Unix()
 		startTime := (currentTime - int64(60*1))
 		log.Debugf("cron job for on time query: range -> %v ~ %v", startTime, currentTime)
-		events, err := event.GetEventCases(startTime, currentTime, -1, "ALL", "ALL", 500, 0, "root", "ALL", "")
+		events, err := event.GetEventCases(false, startTime, currentTime, -1, "ALL", "ALL", 500, 0, "root", "ALL", "")
 		if err != nil {
 			log.Errorf("crond get evnetCase go err: %v", err.Error())
 		}

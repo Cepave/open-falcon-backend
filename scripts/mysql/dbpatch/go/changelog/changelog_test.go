@@ -79,9 +79,10 @@ func (suite *ChangeLogSuite) TestLoadScripts(c *C) {
 
 	var testScripts, err = samplePatchConfig.loadScripts(".", ";")
 	c.Assert(err, IsNil)
-	c.Assert(len(testScripts), Equals, 2)
+	c.Assert(testScripts, HasLen, 3)
 	c.Assert(testScripts[0], Equals, "CREATE TABLE tab_1(id INT)")
 	c.Assert(testScripts[1], Equals, "CREATE TABLE tab_2(id INT)")
+	c.Assert(testScripts[2], Matches, "CREATE PROCEDURE proc().+UPDATE tab_1 SET id = 20;.+")
 }
 
 // Global usage(packge level)

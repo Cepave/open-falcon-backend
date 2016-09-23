@@ -89,18 +89,21 @@ func (suite *TestRpcNqmAgentSuite) TestTask(c *C) {
 			 * Asserts the 1st target
 			 */
 			for _, v := range resp.Targets {
-				c.Log("Target: %v", v)
+				c.Logf("Target: %v", &v)
 			}
 
 			sort.Sort(byID(resp.Targets))
-			var expectedTargets = model.NqmTarget{
-				Id: 630001, Host: "1.2.3.4", NameTag: model.UNDEFINED_STRING,
-				IspId: 1, IspName: "北京三信时代",
-				ProvinceId: 4, ProvinceName: "北京",
-				CityId: -1, CityName: model.UNDEFINED_STRING,
-			}
 
-			c.Assert(resp.Targets[0], DeepEquals, expectedTargets)
+			c.Assert(
+				resp.Targets[0], DeepEquals,
+				model.NqmTarget{
+					Id: 630001, Host: "1.2.3.4",
+					IspId: 1, IspName: "北京三信时代",
+					ProvinceId: 4, ProvinceName: "北京",
+					CityId: model.UNDEFINED_CITY_ID, CityName: model.UNDEFINED_STRING,
+					NameTagId: model.UNDEFINED_NAME_TAG_ID, NameTag: model.UNDEFINED_STRING,
+				},
+			)
 			// :~)
 		},
 	)
@@ -122,22 +125,30 @@ func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 
 		hbstesting.ExecuteQueriesOrFailInTx(
 			`
+			INSERT INTO owl_name_tag(nt_id, nt_value)
+			VALUES (9901, 'tag-1')
+			`,
+			`
 			INSERT INTO nqm_agent(ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_pv_id, ag_ct_id)
 			VALUES (405001, 'ag-name-1', 'ag-rpc-1', 'rpc-1.org', 0x12345672, 3, 2, -1)
 			`,
 			`
 			INSERT INTO nqm_target(
 				tg_id, tg_name, tg_host,
-				tg_isp_id, tg_pv_id, tg_ct_id, tg_probed_by_all, tg_name_tag, tg_available, tg_status
+				tg_isp_id, tg_pv_id, tg_ct_id, tg_probed_by_all, tg_nt_id, tg_available, tg_status
 			)
 			VALUES
-				(630001, 'tgn-1', '1.2.3.4', 1, 4, -1, true, null, true, true),
-				(630002, 'tgn-2', '1.2.3.5', 2, 4, -1, true, 'tag-1', true, true),
-				(630003, 'tgn-3', '1.2.3.6', 3, 4, -1, true, null, true, true)
+				(630001, 'tgn-1', '1.2.3.4', 1, 4, -1, true, -1, true, true),
+				(630002, 'tgn-2', '1.2.3.5', 2, 4, -1, true, 9901, true, true),
+				(630003, 'tgn-3', '1.2.3.6', 3, 4, -1, true, -1, true, true)
 			`,
 			`
-			INSERT INTO nqm_ping_task(pt_ag_id, pt_period)
-			VALUES(405001, 10)
+			INSERT INTO nqm_ping_task(pt_id, pt_period)
+			VALUES(32001, 10)
+			`,
+			`
+			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id)
+			VALUES(405001, 32001)
 			`,
 		)
 	}
@@ -147,11 +158,11 @@ func (s *TestRpcNqmAgentSuite) TearDownTest(c *C) {
 	switch c.TestName() {
 	case "TestRpcNqmAgentSuite.TestTask":
 		hbstesting.ExecuteQueriesOrFailInTx(
-			"SET FOREIGN_KEY_CHECKS=0",
-			"DELETE FROM nqm_ping_task",
-			"DELETE FROM nqm_target",
-			"DELETE FROM nqm_agent",
-			"SET FOREIGN_KEY_CHECKS=1",
+			"DELETE FROM nqm_agent_ping_task WHERE apt_ag_id = 405001",
+			"DELETE FROM nqm_ping_task WHERE pt_id = 32001",
+			"DELETE FROM nqm_agent WHERE ag_id = 405001",
+			"DELETE FROM nqm_target WHERE tg_id >= 630001 AND tg_id <= 630003",
+			"DELETE FROM owl_name_tag WHERE nt_id = 9901",
 		)
 	}
 }

@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS common_config;
 CREATE TABLE `common_config` (
     `key` VARCHAR(255) NOT NULL DEFAULT '',
     `value` VARCHAR(255) NOT NULL DEFAULT ''

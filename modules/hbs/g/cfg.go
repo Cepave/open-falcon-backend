@@ -57,10 +57,14 @@ func ParseConfig(cfg string) {
 		log.Fatalln("parse config file:", cfg, "fail:", err)
 	}
 
+	SetConfig(&c)
+
+	log.Println("read config file:", cfg, "successfully")
+}
+
+func SetConfig(newConfig *GlobalConfig) {
 	configLock.Lock()
 	defer configLock.Unlock()
 
-	config = &c
-
-	log.Println("read config file:", cfg, "successfully")
+	config = newConfig
 }
