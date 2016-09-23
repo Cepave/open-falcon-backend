@@ -1,0 +1,3 @@
+import:
+- package: github.com/astaxie/beego
+  version: v1.6.1
