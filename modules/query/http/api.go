@@ -1619,6 +1619,53 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	return items
 }
 
+func getNICOutSpeed(hostname string, result map[string]interface{}) int {
+	NICOutSpeed := 0
+	metrics := []string{
+		"nic.out.speed/device=bond0",
+		"nic.out.speed/device=eth0",
+		"nic.out.speed/device=eth1",
+		"nic.out.speed/device=eth2",
+		"nic.out.speed/device=eth3",
+		"nic.out.speed/device=eth4",
+		"nic.out.speed/device=eth5",
+	}
+	var param cmodel.GraphLastParam
+	var params []cmodel.GraphLastParam
+	param.Endpoint = hostname
+	for _, metric := range metrics {
+		param.Counter = metric
+		params = append(params, param)
+	}
+
+	var data []cmodel.GraphLastResp
+	proc.LastRequestCnt.Incr()
+	for _, param := range params {
+		last, err := graph.Last(param)
+		if err != nil {
+			setError("graph.last fail, err: "+err.Error(), result)
+			return NICOutSpeed
+		}
+		if last == nil {
+			continue
+		}
+		data = append(data, *last)
+	}
+	proc.LastRequestItemCnt.IncrBy(int64(len(data)))
+	if len(data) > 0 {
+		if data[0].Value.Value > 0 {
+			NICOutSpeed = int(data[0].Value.Value)
+		} else {
+			for _, item := range data {
+				if NICOutSpeed < int(item.Value.Value) {
+					NICOutSpeed = int(item.Value.Value)
+				}
+			}
+		}
+	}
+	return NICOutSpeed
+}
+
 func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	items := []interface{}{}
@@ -1635,13 +1682,26 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 		metricType = arguments[len(arguments)-3]
 		method = arguments[len(arguments)-2]
 		duration = arguments[len(arguments)-1]
+	} else if len(arguments) == 5 && arguments[2] == "hosts" {
+		hostnames = strings.Split(arguments[3], ",")
+		method = arguments[4]
 	}
-
 	if method == "average" {
 		items = getBandwidthsAverage(metricType, duration, hostnames, result)
 	} else if method == "sum" {
 		filter := req.URL.Query().Get("filter")
 		items = getBandwidthsSum(metricType, duration, hostnames, filter, result)
+	} else if method == "nic-out-speed" {
+		for _, hostname := range hostnames {
+			if strings.Index(hostname, "-") > -1 {
+				NICOutSpeed := getNICOutSpeed(hostname, result)
+				item := map[string]interface{}{
+					"hostname": hostname,
+					"nic.out.speed.bits": NICOutSpeed,
+				}
+				items = append(items, item)
+			}
+		}
 	}
 	result["items"] = items
 	nodes["result"] = result
