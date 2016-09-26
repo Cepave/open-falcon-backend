@@ -1,0 +1,17 @@
+#!/bin/bash
+
+command -v trash >/dev/null 2>&1  || {
+  echo "trash not found";
+  echo "Installing trash...";
+  go get github.com/rancher/trash
+  if [[ $? != 0 ]]; then exit $?; fi
+  echo "Successfully installed trash";
+}
+
+echo "Running trash...";
+trash -k -cache package_cache_tmp;
+if [[ $? != 0 ]]; then exit $?; fi
+
+echo "Fetching dependencies...";
+go get ./...;
+if [[ $? != 0 ]]; then exit $?; fi
