@@ -5,7 +5,7 @@ TARGET = open-falcon
 
 VERSION := $(shell cat VERSION)
 
-all: trash $(CMD) $(TARGET)
+all: $(CMD) $(TARGET)
 
 $(CMD):
 	go build -o bin/$@/falcon-$@ ./modules/$@
@@ -52,7 +52,4 @@ clean:
 	@rm -rf ./vendor
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
-trash:
-	trash -k -cache package_cache_tmp
-
-.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe
+.PHONY: clean all aggregator graph hbs judge nodata query sender task transfer fe
