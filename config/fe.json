@@ -48,6 +48,7 @@
         "idle": 10,
         "max": 100,
         "limit": 500
+    },
     "shortcut": {
         "falconPortal": "http://%%PORTAL%%",
         "falconDashboard": "http://%%DASHBOARD%%",
