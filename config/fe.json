@@ -43,6 +43,11 @@
         "max": 100,
         "limit": 500
     },
+    "boss": {
+        "addr": "%%MYSQL%%/boss?charset=utf8&loc=Asia%2FChongqing",
+        "idle": 10,
+        "max": 100,
+        "limit": 500
     "shortcut": {
         "falconPortal": "http://%%PORTAL%%",
         "falconDashboard": "http://%%DASHBOARD%%",
