@@ -125,6 +125,7 @@ func init() {
 		"task",
 		"aggregator",
 		"agent",
+		"nqm-agent",
 	}
 }
 
