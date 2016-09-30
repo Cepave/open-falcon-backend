@@ -490,6 +490,18 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	}
 }
 
+func queryHostsData(result map[string]interface{}) []Hosts {
+	var hosts []Hosts
+	o := orm.NewOrm()
+	o.Using("boss")
+	sql := "SELECT hostname, activate, platform, idc, ip, isp, province, city FROM boss.hosts WHERE exist = 1 ORDER BY hostname ASC"
+	_, err := o.Raw(sql).QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	return hosts
+}
+
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
 	var queries []*cmodel.GraphLastParam
 	o := orm.NewOrm()
