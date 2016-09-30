@@ -567,7 +567,7 @@ func addPlatformToAlerts(alerts []interface{}, result map[string]interface{}, no
 		}
 	}
 	sort.Strings(platformNames)
-	getPlatformContact(strings.Join(platformNames, ","), rw, nodes)
+	getPlatformContact(strings.Join(platformNames, ","), nodes)
 	platforms := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})
 	if len(platforms) > 0 {
 		for _, item := range items {

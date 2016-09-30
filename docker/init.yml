@@ -17,7 +17,7 @@ services:
     - ../scripts/mysql/db_schema:/docker-entrypoint-initdb.d
     - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf:ro
   redis:
-    command: redis-server /config/redis.conf
+    command: redis-server ./redis.conf
     extends:
       file: common.yml
       service: template-backend

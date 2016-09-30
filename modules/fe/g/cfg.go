@@ -44,11 +44,18 @@ type GraphDBConfig struct {
 	Limit          int    `json:"limit"`
 	LimitHostGroup int    `json:"limitHostGroup"`
 }
+
 type FalconPortalConfig struct {
 	Addr  string `json:"addr"`
 	Idle  int    `json:"idle"`
 	Max   int    `json:"max"`
 	Limit int    `json:"limit"`
+}
+
+type BossConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
 }
 
 type ShortcutConfig struct {
@@ -111,6 +118,7 @@ type GlobalConfig struct {
 	Ldap         *LdapConfig         `json:"ldap"`
 	Uic          *UicConfig          `json:"uic"`
 	GraphDB      *GraphDBConfig      `json:"graphdb"`
+	BossDB       *BossConfig         `json:"boss"`
 	FalconPortal *FalconPortalConfig `json:"falcon_portal"`
 	Shortcut     *ShortcutConfig     `json:"shortcut"`
 	Api          *ApiConfig          `json:"api"`

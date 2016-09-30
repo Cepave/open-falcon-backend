@@ -286,19 +286,6 @@ CREATE TABLE events (
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
-DROP TABLE IF EXISTS common_config;
-CREATE TABLE `common_config` (
-    `key` VARCHAR(255) NOT NULL DEFAULT '',
-    `value` VARCHAR(255) NOT NULL DEFAULT ''
-)
-    ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-INSERT INTO `common_config`(`key`, `value`)
-VALUES('git_repo', 'https://gitlab.com/Cepave/OwlPlugin.git');
-
-INSERT INTO `common_config`(`key`, `value`)
-VALUES('atom_addr', 'https://gitlab.com/Cepave/OwlPlugin/commits/master.atom');
-
 
 SET NAMES 'utf8';
 SET @@session.default_storage_engine = 'InnoDB';
@@ -344,6 +331,23 @@ CREATE TABLE IF NOT EXISTS owl_city(
   DEFAULT CHARSET =utf8
   COLLATE =utf8_general_ci;
 
+CREATE TABLE IF NOT EXISTS owl_name_tag(
+	nt_id SMALLINT PRIMARY KEY AUTO_INCREMENT,
+	nt_value VARCHAR(64) NOT NULL,
+	CONSTRAINT unq_owl_name_tag__nt_value UNIQUE INDEX(nt_value)
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_general_ci;
+
+CREATE TABLE IF NOT EXISTS owl_group_tag (
+	gt_id INTEGER,
+	gt_name VARCHAR(64) NOT NULL,
+	CONSTRAINT pk_owl_group_tag PRIMARY KEY(gt_id),
+	CONSTRAINT unq_owl_group_tag__gt_name UNIQUE INDEX(gt_name)
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_general_ci;
+
 CREATE TABLE IF NOT EXISTS nqm_agent(
 	ag_id INT PRIMARY KEY AUTO_INCREMENT,
 	ag_name VARCHAR(128),
@@ -353,8 +357,10 @@ CREATE TABLE IF NOT EXISTS nqm_agent(
 	ag_isp_id SMALLINT NOT NULL DEFAULT -1,
 	ag_pv_id SMALLINT NOT NULL DEFAULT -1,
 	ag_ct_id SMALLINT NOT NULL DEFAULT -1,
+	ag_nt_id SMALLINT NOT NULL DEFAULT -1,
 	ag_status BOOLEAN NOT NULL DEFAULT true,
 	ag_last_heartbeat DATETIME,
+	ag_comment VARCHAR(2048),
 	CONSTRAINT fk_nqm_agent__owl_isp FOREIGN KEY
 		(ag_isp_id) REFERENCES owl_isp(isp_id)
 			ON DELETE RESTRICT
@@ -367,9 +373,29 @@ CREATE TABLE IF NOT EXISTS nqm_agent(
 		(ag_ct_id) REFERENCES owl_city(ct_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT,
+	CONSTRAINT fk_nqm_agent__owl_name_tag FOREIGN KEY
+		(ag_nt_id) REFERENCES owl_name_tag(nt_id)
+			ON DELETE RESTRICT
+			ON UPDATE RESTRICT,
 	CONSTRAINT UNIQUE INDEX unq_nqm_agent__ag_connection_id
 		(ag_connection_id),
 	INDEX ix_nqm_agent__ag_name(ag_name)
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_general_ci;
+
+CREATE TABLE IF NOT EXISTS nqm_agent_group_tag(
+	agt_ag_id INTEGER,
+	agt_gt_id INTEGER,
+	CONSTRAINT pk_nqm_agent_group_tag PRIMARY KEY(agt_ag_id, agt_gt_id),
+	CONSTRAINT fk_nqm_agent_group_tag__nqm_agent FOREIGN KEY
+		(agt_ag_id) REFERENCES nqm_agent(ag_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT,
+	CONSTRAINT fk_nqm_agent_group_tag__owl_group_tag FOREIGN KEY
+		(agt_gt_id) REFERENCES owl_group_tag(gt_id)
+		ON DELETE RESTRICT
+		ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
   COLLATE =utf8_general_ci;
@@ -391,17 +417,19 @@ CREATE TABLE IF NOT EXISTS nqm_target(
 	tg_isp_id SMALLINT NOT NULL DEFAULT -1,
 	tg_pv_id SMALLINT NOT NULL DEFAULT -1,
 	tg_ct_id SMALLINT NOT NULL DEFAULT -1,
-	tg_name_tag VARCHAR(64),
+	tg_nt_id SMALLINT NOT NULL DEFAULT -1,
+	tg_name_tag VARCHAR(64), /* Deprecated */
 	tg_probed_by_all BOOLEAN NOT NULL DEFAULT false,
 	tg_class_id SMALLINT UNSIGNED NOT NULL DEFAULT 1,
 	tg_available BOOLEAN NOT NULL DEFAULT false,
 	tg_last_result BOOLEAN NOT NULL DEFAULT false,
 	tg_status BOOLEAN NOT NULL DEFAULT false,
 	tg_last_probed_ts DATETIME,
+	tg_comment VARCHAR(2048),
 	tg_created_ts DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT UNIQUE INDEX unq_nqm_target__tg_host
 		(tg_host),
-	INDEX ix_nqm_target__tg_name_tag
+	INDEX ix_nqm_target__tg_name_tag /* Deprecated */
 		(tg_name_tag),
 	INDEX ix_nqm_target__tg_probed_by_all
 		(tg_probed_by_all),
@@ -417,6 +445,10 @@ CREATE TABLE IF NOT EXISTS nqm_target(
 		(tg_ct_id) REFERENCES owl_city(ct_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT,
+	CONSTRAINT fk_nqm_target__owl_name_tag FOREIGN KEY
+		(tg_nt_id) REFERENCES owl_name_tag(nt_id)
+			ON DELETE RESTRICT
+			ON UPDATE RESTRICT,
 	CONSTRAINT fk_nqm_target__nqm_target_class FOREIGN KEY
 		(tg_class_id) REFERENCES nqm_target_class(tc_id)
 			ON DELETE RESTRICT
@@ -425,24 +457,70 @@ CREATE TABLE IF NOT EXISTS nqm_target(
   DEFAULT CHARSET =utf8
   COLLATE =utf8_general_ci;
 
-CREATE TABLE IF NOT EXISTS nqm_ping_task(
-	pt_ag_id INT PRIMARY KEY,
-	pt_period SMALLINT NOT NULL,
-	pt_time_last_execute DATETIME,
-	CONSTRAINT fk_nqm_ping_task__nqm_agent FOREIGN KEY
-		(pt_ag_id) REFERENCES nqm_agent(ag_id)
-			ON DELETE CASCADE
-			ON UPDATE CASCADE
+CREATE TABLE IF NOT EXISTS nqm_target_group_tag(
+	tgt_tg_id INTEGER,
+	tgt_gt_id INTEGER,
+	CONSTRAINT pk_nqm_target_group_tag PRIMARY KEY(tgt_tg_id, tgt_gt_id),
+	CONSTRAINT fk_nqm_target_group_tag__nqm_target FOREIGN KEY
+		(tgt_tg_id) REFERENCES nqm_target(tg_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT,
+	CONSTRAINT fk_nqm_target_group_tag__owl_group_tag FOREIGN KEY
+		(tgt_gt_id) REFERENCES owl_group_tag(gt_id)
+		ON DELETE RESTRICT
+		ON UPDATE RESTRICT
 )
   DEFAULT CHARSET =utf8
   COLLATE =utf8_general_ci;
 
+CREATE TABLE IF NOT EXISTS nqm_ping_task(
+	pt_ag_id INT, -- Deprecated
+	pt_time_last_execute DATETIME, -- Deprecated
+	pt_id INT AUTO_INCREMENT,
+	pt_name VARCHAR(64) NULL,
+	pt_period SMALLINT NOT NULL,
+	pt_enable BOOLEAN NOT NULL DEFAULT TRUE,
+	pt_number_of_isp_filters SMALLINT NOT NULL DEFAULT 0,
+	pt_number_of_province_filters SMALLINT NOT NULL DEFAULT 0,
+	pt_number_of_city_filters SMALLINT NOT NULL DEFAULT 0,
+	pt_number_of_name_tag_filters SMALLINT NOT NULL DEFAULT 0,
+	pt_number_of_group_tag_filters SMALLINT NOT NULL DEFAULT 0,
+	pt_comment VARCHAR(2048),
+	CONSTRAINT pk_nqm_ping_task PRIMARY KEY(pt_id)
+)
+  DEFAULT CHARSET=utf8
+  COLLATE=utf8_general_ci;
+
+/**
+ * 建立 agent 與 ping task 的表格
+ */
+CREATE TABLE IF NOT EXISTS nqm_agent_ping_task(
+	apt_ag_id INTEGER,
+	apt_pt_id INTEGER,
+	apt_time_last_execute DATETIME,
+	CONSTRAINT pk_nqm_agent_ping_task PRIMARY KEY(apt_ag_id, apt_pt_id),
+	CONSTRAINT fk_nqm_agent_ping_task__nqm_agent FOREIGN KEY(apt_ag_id)
+		REFERENCES nqm_agent(ag_id)
+		ON UPDATE RESTRICT
+		ON DELETE RESTRICT,
+	CONSTRAINT fk_nqm_agent_ping_task__nqm_ping_task FOREIGN KEY(apt_pt_id)
+		REFERENCES nqm_ping_task(pt_id)
+		ON UPDATE RESTRICT
+		ON DELETE RESTRICT
+);
+
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_name_tag(
-	tfnt_pt_ag_id INT,
-	tfnt_name_tag VARCHAR(64),
-	CONSTRAINT pk_nqm_pt_target_filter_isp PRIMARY KEY (tfnt_pt_ag_id, tfnt_name_tag),
+	tfnt_pt_ag_id INT, -- Deprecated
+	tfnt_name_tag VARCHAR(64), -- Deprecated
+	tfnt_pt_id INT,
+	tfnt_nt_id SMALLINT,
+	CONSTRAINT pk_nqm_pt_target_filter_isp PRIMARY KEY (tfnt_pt_id, tfnt_nt_id),
 	CONSTRAINT fk_nqm_pt_target_filter_nt__nqm_ping_task FOREIGN KEY
-		(tfnt_pt_ag_id) REFERENCES nqm_ping_task(pt_ag_id)
+		(tfnt_pt_id) REFERENCES nqm_ping_task(pt_id)
+			ON DELETE CASCADE
+			ON UPDATE RESTRICT,
+	CONSTRAINT fk_nqm_pt_target_filter_name_tag__owl_name_tag FOREIGN KEY
+		(tfnt_nt_id) REFERENCES owl_name_tag(nt_id)
 			ON DELETE RESTRICT
 			ON UPDATE RESTRICT
 )
@@ -450,12 +528,13 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_name_tag(
   COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_isp(
-	tfisp_pt_ag_id INT,
+	tfisp_pt_ag_id INT, -- Deprecated
+	tfisp_pt_id INT,
 	tfisp_isp_id SMALLINT,
-	CONSTRAINT pk_nqm_pt_target_filter_isp PRIMARY KEY (tfisp_pt_ag_id, tfisp_isp_id),
+	CONSTRAINT pk_nqm_pt_target_filter_isp PRIMARY KEY (tfisp_pt_id, tfisp_isp_id),
 	CONSTRAINT fk_nqm_pt_target_filter_isp__nqm_ping_task FOREIGN KEY
-		(tfisp_pt_ag_id) REFERENCES nqm_ping_task(pt_ag_id)
-			ON DELETE RESTRICT
+		(tfisp_pt_id) REFERENCES nqm_ping_task(pt_id)
+			ON DELETE CASCADE
 			ON UPDATE RESTRICT,
 	CONSTRAINT fk_nqm_pt_target_filter_isp__owl_isp FOREIGN KEY
 		(tfisp_isp_id) REFERENCES owl_isp(isp_id)
@@ -466,12 +545,13 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_isp(
   COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_province(
-	tfpv_pt_ag_id INT,
+	tfpv_pt_ag_id INT, -- Deprecated
+	tfpv_pt_id INT,
 	tfpv_pv_id SMALLINT,
-	CONSTRAINT pk_nqm_pt_target_filter_province PRIMARY KEY (tfpv_pt_ag_id, tfpv_pv_id),
+	CONSTRAINT pk_nqm_pt_target_filter_province PRIMARY KEY (tfpv_pt_id, tfpv_pv_id),
 	CONSTRAINT fk_nqm_pt_target_filter_province__nqm_ping_task FOREIGN KEY
-		(tfpv_pt_ag_id) REFERENCES nqm_ping_task(pt_ag_id)
-			ON DELETE RESTRICT
+		(tfpv_pt_id) REFERENCES nqm_ping_task(pt_id)
+			ON DELETE CASCADE
 			ON UPDATE RESTRICT,
 	CONSTRAINT fk_nqm_pt_target_filter_province__owl_province FOREIGN KEY
 		(tfpv_pv_id) REFERENCES owl_province(pv_id)
@@ -482,12 +562,13 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_province(
   COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_city(
-	tfct_pt_ag_id INT,
+	tfct_pt_ag_id INT, -- Deprecated
+	tfct_pt_id INT,
 	tfct_ct_id SMALLINT,
-	CONSTRAINT pk_nqm_pt_target_filter_city PRIMARY KEY (tfct_pt_ag_id, tfct_ct_id),
+	CONSTRAINT pk_nqm_pt_target_filter_city PRIMARY KEY (tfct_pt_id, tfct_ct_id),
 	CONSTRAINT fk_nqm_pt_target_filter_city__nqm_ping_task FOREIGN KEY
-		(tfct_pt_ag_id) REFERENCES nqm_ping_task(pt_ag_id)
-			ON DELETE RESTRICT
+		(tfct_pt_id) REFERENCES nqm_ping_task(pt_id)
+			ON DELETE CASCADE
 			ON UPDATE RESTRICT,
 	CONSTRAINT fk_nqm_pt_target_filter_city_pv__owl_city FOREIGN KEY
 		(tfct_ct_id) REFERENCES owl_city(ct_id)
@@ -496,6 +577,27 @@ CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_city(
 )
   DEFAULT CHARSET =utf8
   COLLATE =utf8_general_ci;
+
+CREATE TABLE IF NOT EXISTS nqm_pt_target_filter_group_tag(
+	tfgt_pt_id INT,
+	tfgt_gt_id INT,
+	CONSTRAINT pk_nqm_pt_target_filter_group_tag PRIMARY KEY(tfgt_pt_id, tfgt_gt_id),
+	CONSTRAINT fk_nqm_pt_target_filter_group_tag__nqm_ping_task FOREIGN KEY
+		(tfgt_pt_id) REFERENCES nqm_ping_task(pt_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT,
+	CONSTRAINT fk_nqm_pt_target_filter_group_tag__owl_group_tag FOREIGN KEY
+		(tfgt_gt_id) REFERENCES owl_group_tag(gt_id)
+		ON DELETE RESTRICT
+		ON UPDATE RESTRICT
+)
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_general_ci;
+
+INSERT INTO owl_name_tag(nt_id, nt_value)
+VALUES(-1, '<UNDEFINED>')
+ON DUPLICATE KEY UPDATE
+	nt_value = VALUES(nt_value);
 
 INSERT INTO owl_isp(isp_id, isp_name, isp_acronym)
 VALUES
@@ -891,3 +993,228 @@ VALUES
 ON DUPLICATE KEY UPDATE
 		tc_weight = VALUES(tc_weight),
 		tc_name = VALUES(tc_name);
+
+/**
+ * Get called by various trigger
+ */
+DELIMITER //
+CREATE PROCEDURE proc_ping_task_refresh_number_of_filters(
+	IN ping_task_id INTEGER
+)
+BEGIN
+	UPDATE nqm_ping_task AS pt
+	SET pt_number_of_name_tag_filters = (
+			SELECT COUNT(tfnt_nt_id)
+			FROM nqm_pt_target_filter_name_tag
+			WHERE tfnt_pt_id = ping_task_id
+		),
+		pt_number_of_isp_filters = (
+			SELECT COUNT(tfisp_isp_id)
+			FROM nqm_pt_target_filter_isp
+			WHERE tfisp_pt_id = ping_task_id
+		),
+		pt_number_of_province_filters = (
+			SELECT COUNT(tfpv_pv_id)
+			FROM nqm_pt_target_filter_province
+			WHERE tfpv_pt_id = ping_task_id
+		),
+		pt_number_of_city_filters = (
+			SELECT COUNT(tfct_ct_id)
+			FROM nqm_pt_target_filter_city
+			WHERE tfct_pt_id = ping_task_id
+		),
+		pt_number_of_group_tag_filters = (
+			SELECT COUNT(tfgt_gt_id)
+			FROM nqm_pt_target_filter_group_tag
+			WHERE tfgt_pt_id = ping_task_id
+		)
+	WHERE pt.pt_id = ping_task_id;
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_insert__nqm_pt_target_filter_name_tag
+AFTER INSERT on nqm_pt_target_filter_name_tag
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(NEW.tfnt_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_delete__nqm_pt_target_filter_name_tag
+AFTER DELETE on nqm_pt_target_filter_name_tag
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(OLD.tfnt_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_insert__nqm_pt_target_filter_isp
+AFTER INSERT on nqm_pt_target_filter_isp
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(NEW.tfisp_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_delete__nqm_pt_target_filter_isp
+AFTER DELETE on nqm_pt_target_filter_isp
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(OLD.tfisp_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_insert__nqm_pt_target_filter_province
+AFTER INSERT on nqm_pt_target_filter_province
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(NEW.tfpv_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_delete__nqm_pt_target_filter_province
+AFTER DELETE on nqm_pt_target_filter_province
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(OLD.tfpv_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_insert__nqm_pt_target_filter_city
+AFTER INSERT on nqm_pt_target_filter_city
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(NEW.tfct_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_delete__nqm_pt_target_filter_city
+AFTER DELETE on nqm_pt_target_filter_city
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(OLD.tfct_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_insert__nqm_pt_target_filter_group_tag
+AFTER INSERT on nqm_pt_target_filter_group_tag
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(NEW.tfgt_pt_id);
+END//
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER tri_after_delete__nqm_pt_target_filter_group_tag
+AFTER DELETE on nqm_pt_target_filter_group_tag
+FOR EACH ROW
+BEGIN
+	CALL proc_ping_task_refresh_number_of_filters(OLD.tfgt_pt_id);
+END//
+DELIMITER ;
+
+/**
+ * Filters the enabled targets with ping tasks(enabled).
+ *
+ * 1) This view ignores the empty ping tasks(without any filter).
+ * 2) This view doesn't include the targets which are probed by all(nqm_target.tg_probed_by_all).
+ */
+CREATE OR REPLACE VIEW vw_enabled_targets_by_ping_task(
+	tg_pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+)
+AS
+/* Matched target by ISP */
+SELECT pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+FROM nqm_target tg
+	INNER JOIN
+	nqm_pt_target_filter_isp AS tfisp
+	ON tg.tg_isp_id = tfisp.tfisp_isp_id
+		AND tg.tg_status = TRUE
+		AND tg.tg_available = TRUE
+	INNER JOIN
+	nqm_ping_task AS pt
+	ON pt.pt_id = tfisp.tfisp_pt_id
+		AND pt.pt_enable = TRUE
+/* :~) */
+UNION
+/* Matched target by province */
+SELECT pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+FROM nqm_target tg
+	INNER JOIN
+	nqm_pt_target_filter_province AS tfpv
+	ON tg.tg_pv_id = tfpv.tfpv_pv_id
+		AND tg.tg_status = TRUE
+		AND tg.tg_available = TRUE
+	INNER JOIN
+	nqm_ping_task AS pt
+	ON pt.pt_id = tfpv.tfpv_pt_id
+		AND pt.pt_enable = TRUE
+/* :~) */
+UNION
+/* Matched target by city */
+SELECT pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+FROM nqm_target tg
+	INNER JOIN
+	nqm_pt_target_filter_city AS tfct
+	ON tg.tg_ct_id = tfct.tfct_ct_id
+		AND tg.tg_status = TRUE
+		AND tg.tg_available = TRUE
+	INNER JOIN
+	nqm_ping_task AS pt
+	ON pt.pt_id = tfct.tfct_pt_id
+		AND pt.pt_enable = TRUE
+/* :~) */
+UNION
+/* Matched target by name tag */
+SELECT pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+FROM nqm_target tg
+	INNER JOIN
+	nqm_pt_target_filter_name_tag AS tfnt
+	ON tg.tg_nt_id = tfnt.tfnt_nt_id
+		AND tg.tg_status = TRUE
+		AND tg.tg_available = TRUE
+	INNER JOIN
+	nqm_ping_task AS pt
+	ON pt.pt_id = tfnt.tfnt_pt_id
+		AND pt.pt_enable = TRUE
+/* :~) */
+UNION
+/* Matched target by group tag */
+SELECT pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+FROM nqm_target tg
+	INNER JOIN
+	nqm_target_group_tag AS tgt
+	ON tg.tg_id = tgt.tgt_tg_id
+		AND tg.tg_status = TRUE
+		AND tg.tg_available = TRUE
+	INNER JOIN
+	nqm_pt_target_filter_group_tag AS tfgt
+	ON tgt.tgt_gt_id = tfgt.tfgt_gt_id
+	INNER JOIN
+	nqm_ping_task AS pt
+	ON pt.pt_id = tfgt.tfgt_pt_id
+		AND pt.pt_enable = TRUE
+/* :~) */
+;
+
+CREATE TABLE `common_config` (
+    `key` VARCHAR(255) NOT NULL DEFAULT '',
+    `value` VARCHAR(255) NOT NULL DEFAULT '',
+    CONSTRAINT pk_common_config PRIMARY KEY(`key`)
+)
+    ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO `common_config`(`key`, `value`)
+VALUES('git_repo', 'https://gitlab.com/Cepave/OwlPlugin.git');
+
+INSERT INTO `common_config`(`key`, `value`)
+VALUES('atom_addr', 'https://gitlab.com/Cepave/OwlPlugin/commits/master.atom');

@@ -8,8 +8,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var versionFlag bool
+
 var RootCmd = &cobra.Command{
 	Use: "open-falcon",
+	RunE: func(c *cobra.Command, args []string) error {
+		if versionFlag {
+			fmt.Printf("Open-Falcon version %s, build %s\n", Version, GitCommit)
+			return nil
+		}
+		return c.Usage()
+	},
 }
 
 func init() {
@@ -19,6 +28,8 @@ func init() {
 	RootCmd.AddCommand(cmd.Check)
 	RootCmd.AddCommand(cmd.Monitor)
 	RootCmd.AddCommand(cmd.Reload)
+
+	RootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "show version")
 	cmd.Start.Flags().BoolVar(&cmd.PreqOrderFlag, "preq-order", false, "start modules in the order of prerequisites")
 	cmd.Start.Flags().BoolVar(&cmd.ConsoleOutputFlag, "console-output", false, "print the module's output to the console")
 }

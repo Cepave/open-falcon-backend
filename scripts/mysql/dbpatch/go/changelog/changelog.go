@@ -69,6 +69,8 @@ func LoadChangeLogFromFile(changeLogFile string) (configOfPatches []PatchConfig,
 	return LoadChangeLogFromReader(fileOfChangeLog)
 }
 
+const ESCAPED_DELIMITER = "!DBPATCH!ESCAPED_DELIMITER!";
+
 // Opens the file of patch and reads the script in it(splitted by delimiter)
 func (patchConfig *PatchConfig) loadScripts(folderBase string, delimiter string) (scripts []string, err error) {
 	/**
@@ -90,6 +92,7 @@ func (patchConfig *PatchConfig) loadScripts(folderBase string, delimiter string)
 
 	/**
 	 * Reads content of patch file and spilt the content by delimiter
+	 * ** Replace the escaped delimiter with special string **
 	 */
 	var contentOfScript []byte
 	if contentOfScript, err = ioutil.ReadAll(targetFile)
@@ -97,18 +100,25 @@ func (patchConfig *PatchConfig) loadScripts(folderBase string, delimiter string)
 		return
 	}
 
+	stringOfScript := string(contentOfScript)
+	stringOfScript = strings.Replace(stringOfScript, delimiter + delimiter, ESCAPED_DELIMITER, -1)
+
 	var rowScripts = strings.Split(
-		string(contentOfScript), delimiter,
+		stringOfScript, delimiter,
 	)
 	// :~)
 
 	/**
 	 * Skip the empty content of script
 	 * e.x. CREATE TABLE xxx;;
+	 *
+	 * ** Replace back the escaped delimiters**
 	 */
 	scripts = make([]string, 0, len(rowScripts) - 1)
 	for _, rowScript := range rowScripts {
 		rowScript = strings.TrimSpace(rowScript)
+		rowScript = strings.Replace(rowScript, ESCAPED_DELIMITER, delimiter, -1)
+
 		if rowScript == "" {
 			continue
 		}

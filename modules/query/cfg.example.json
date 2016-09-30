@@ -5,6 +5,14 @@
         "enabled":  true,
         "listen":   "0.0.0.0:9966"
     },
+    "hosts": {
+        "enabled": true,
+        "interval": 60
+    },
+    "contacts": {
+        "enabled": true,
+        "interval": 3600
+    },
     "gin_http": {
         "enabled":  true,
         "listen":   "0.0.0.0:9967"
@@ -37,6 +45,11 @@
     },
     "db": {
         "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
+    "bossdb": {
+        "addr": "root:@tcp(127.0.0.1:3306)/boss?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
     },

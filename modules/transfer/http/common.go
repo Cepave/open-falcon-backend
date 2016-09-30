@@ -2,10 +2,10 @@ package http
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/toolkits/file"
-	"net/http"
-	"strings"
 )
 
 func configCommonRoutes() {
@@ -26,11 +26,6 @@ func configCommonRoutes() {
 	})
 
 	http.HandleFunc("/config/reload", func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.RemoteAddr, "127.0.0.1") {
-			g.ParseConfig(g.ConfigFile)
-			RenderDataJson(w, "ok")
-		} else {
-			RenderDataJson(w, "no privilege")
-		}
+		RenderDataJson(w, "/config/reload is not suppored in transfer now. Please use restart instead.")
 	})
 }
