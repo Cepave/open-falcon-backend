@@ -1051,40 +1051,25 @@ func appendUnique(slice []int, num int) []int {
 	return slice
 }
 
-func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[string]interface{}) map[string]interface{} {
-	hostsExisted := map[string]interface{}{}
+func getExistedHosts(hosts []map[string]string, hostnamesExisted []string, result map[string]interface{}) map[string]map[string]string {
+	hostsExisted := map[string]map[string]string{}
 	for key, hostname := range hostnamesExisted {
-		host := map[string]interface{}{
-			"id":   key + 1,
+		host := map[string]string{
+			"id":   strconv.Itoa(key + 1),
 			"name": hostname,
 		}
 		hostsExisted[hostname] = host
 	}
-	idcMap := map[string]string{}
-	o := orm.NewOrm()
-	var idcs []*Idc
-	sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
-	_, err := o.Raw(sqlcommand).QueryRows(&idcs)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
-		for _, idc := range idcs {
-			idcMap[strconv.Itoa(idc.Pop_id)] = idc.Name
-		}
-	}
 	for _, host := range hosts {
-		hostname := host.(map[string]interface{})["name"].(string)
+		hostname := host["name"]
 		if _, ok := hostsExisted[hostname]; ok {
 			hostExisted := hostsExisted[hostname]
 			isp := strings.Split(hostname, "-")[0]
 			province := strings.Split(hostname, "-")[1]
-			popID := host.(map[string]interface{})["popID"].(string)
-			idc := idcMap[popID]
-			platform := host.(map[string]interface{})["platform"].(string)
-			hostExisted.(map[string]interface{})["isp"] = isp
-			hostExisted.(map[string]interface{})["province"] = province
-			hostExisted.(map[string]interface{})["idc"] = idc
-			hostExisted.(map[string]interface{})["platform"] = platform
+			hostExisted["isp"] = isp
+			hostExisted["province"] = province
+			hostExisted["idc"] = host["idc"]
+			hostExisted["platform"] = host["platform"]
 			hostsExisted[hostname] = hostExisted
 		}
 	}
