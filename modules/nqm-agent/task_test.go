@@ -68,12 +68,13 @@ func initJsonRpcServer(addr string) {
 }
 
 func initJsonRpcClient(srvAddr string) {
-	rpcClient.RpcServer = srvAddr
+	rpcServer = srvAddr
 	req = model.NqmTaskRequest{
 		Hostname:     "nqm-agent",
 		IpAddress:    "1.2.3.4",
 		ConnectionId: "arg-arg-arg",
 	}
+	rpcClient = initConn(rpcServer, rpcTimeout)
 }
 
 func TestTask(t *testing.T) {
