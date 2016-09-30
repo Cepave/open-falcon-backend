@@ -1146,42 +1146,26 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	count := 0
-	getPlatformJSON(nodes, result)
-	hosts := []interface{}{}
+	data := queryHostsData(result)
+	hosts := []map[string]string{}
 	hostnames := []string{}
-	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
-		hostname := ""
-		for _, platform := range nodes["result"].([]interface{}) {
-			groupName := platform.(map[string]interface{})["platform"].(string)
-			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
-				hostname = device.(map[string]interface{})["hostname"].(string)
-				ip := device.(map[string]interface{})["ip"].(string)
-				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-					popID := device.(map[string]interface{})["pop_id"].(string)
-					hostnames = append(hostnames, hostname)
-					host := map[string]interface{}{
-						"name":     hostname,
-						"platform": groupName,
-						"popID":    popID,
-					}
-					hosts = append(hosts, host)
-					hostnames = append(hostnames, hostname)
-				}
-			}
+	hostname := ""
+	for _, item := range data {
+		hostname = item.Hostname
+		hostnames = append(hostnames, hostname)
+		host := map[string]string{
+			"name":     hostname,
+			"platform": item.Platform,
+			"idc":      item.Idc,
 		}
-		sort.Strings(hostnames)
-		hostnamesExisted := getExistedHostnames(hostnames, result)
-		sort.Strings(hostnamesExisted)
-		hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
-		count = len(hostsExisted)
-		completeApolloFiltersData(hostsExisted, result)
+		hosts = append(hosts, host)
 	}
-	if _, ok := nodes["info"]; ok {
-		delete(nodes, "info")
-	}
-	if _, ok := nodes["status"]; ok {
-		delete(nodes, "status")
-	}
+	sort.Strings(hostnames)
+	hostnamesExisted := getExistedHostnames(hostnames, result)
+	sort.Strings(hostnamesExisted)
+	hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
+	count = len(hostsExisted)
+	completeApolloFiltersData(hostsExisted, result)
 	nodes["count"] = count
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
