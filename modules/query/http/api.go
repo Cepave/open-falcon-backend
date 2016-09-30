@@ -1076,12 +1076,15 @@ func getExistedHosts(hosts []map[string]string, hostnamesExisted []string, resul
 	return hostsExisted
 }
 
-func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[string]interface{}) {
+func completeApolloFiltersData(hostsExisted map[string]map[string]string, result map[string]interface{}) {
 	hosts := map[string]interface{}{}
 	keywords := map[string]interface{}{}
 	for _, host := range hostsExisted {
-		id := host.(map[string]interface{})["id"].(int)
-		platform := host.(map[string]interface{})["platform"].(string)
+		id, err := strconv.Atoi(host["id"])
+		if err != nil {
+			setError(err.Error(), result)
+		}
+		platform := host["platform"]
 		tags := []string{}
 		tags = appendUniqueString(tags, platform)
 		if _, ok := keywords[platform]; ok {
@@ -1089,23 +1092,21 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		} else {
 			keywords[platform] = []int{id}
 		}
-		isp := host.(map[string]interface{})["isp"].(string)
+		isp := host["isp"]
 		tags = appendUniqueString(tags, isp)
 		if _, ok := keywords[isp]; ok {
 			keywords[isp] = appendUnique(keywords[isp].([]int), id)
 		} else {
 			keywords[isp] = []int{id}
 		}
-
-		province := host.(map[string]interface{})["province"].(string)
+		province := host["province"]
 		tags = appendUniqueString(tags, province)
 		if _, ok := keywords[province]; ok {
 			keywords[province] = appendUnique(keywords[province].([]int), id)
 		} else {
 			keywords[province] = []int{id}
 		}
-
-		name := host.(map[string]interface{})["name"].(string)
+		name := host["name"]
 		fragments := strings.Split(name, "-")
 		if len(fragments) == 6 {
 			fragments := fragments[2:]
@@ -1118,21 +1119,21 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 				}
 			}
 		}
-		ip := getIPFromHostname(name, result)
+		ip := host["ip"]
 		keywords[ip] = []int{id}
 		tags = appendUniqueString(tags, ip)
 
-		idc := host.(map[string]interface{})["idc"].(string)
+		idc := host["idc"]
 		tags = appendUniqueString(tags, idc)
 		if _, ok := keywords[idc]; ok {
 			keywords[idc] = appendUnique(keywords[idc].([]int), id)
 		} else {
 			keywords[idc] = []int{id}
 		}
-		host.(map[string]interface{})["tag"] = strings.Join(tags, ",")
-		delete(host.(map[string]interface{}), "id")
-		delete(host.(map[string]interface{}), "isp")
-		delete(host.(map[string]interface{}), "province")
+		host["tag"] = strings.Join(tags, ",")
+		delete(host, "id")
+		delete(host, "isp")
+		delete(host, "province")
 		hosts[strconv.Itoa(id)] = host
 	}
 	result["hosts"] = hosts
