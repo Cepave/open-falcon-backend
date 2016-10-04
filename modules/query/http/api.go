@@ -490,6 +490,18 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	}
 }
 
+func queryHostsData(result map[string]interface{}) []Hosts {
+	var hosts []Hosts
+	o := orm.NewOrm()
+	o.Using("boss")
+	sql := "SELECT hostname, activate, platform, idc, ip, isp, province, city FROM boss.hosts WHERE exist = 1 ORDER BY hostname ASC"
+	_, err := o.Raw(sql).QueryRows(&hosts)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	return hosts
+}
+
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
 	var queries []*cmodel.GraphLastParam
 	o := orm.NewOrm()
@@ -1039,52 +1051,40 @@ func appendUnique(slice []int, num int) []int {
 	return slice
 }
 
-func getExistedHosts(hosts []interface{}, hostnamesExisted []string, result map[string]interface{}) map[string]interface{} {
-	hostsExisted := map[string]interface{}{}
+func getExistedHosts(hosts []map[string]string, hostnamesExisted []string, result map[string]interface{}) map[string]map[string]string {
+	hostsExisted := map[string]map[string]string{}
 	for key, hostname := range hostnamesExisted {
-		host := map[string]interface{}{
-			"id":   key + 1,
+		host := map[string]string{
+			"id":   strconv.Itoa(key + 1),
 			"name": hostname,
 		}
 		hostsExisted[hostname] = host
 	}
-	idcMap := map[string]string{}
-	o := orm.NewOrm()
-	var idcs []*Idc
-	sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
-	_, err := o.Raw(sqlcommand).QueryRows(&idcs)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
-		for _, idc := range idcs {
-			idcMap[strconv.Itoa(idc.Pop_id)] = idc.Name
-		}
-	}
 	for _, host := range hosts {
-		hostname := host.(map[string]interface{})["name"].(string)
+		hostname := host["name"]
 		if _, ok := hostsExisted[hostname]; ok {
 			hostExisted := hostsExisted[hostname]
 			isp := strings.Split(hostname, "-")[0]
 			province := strings.Split(hostname, "-")[1]
-			popID := host.(map[string]interface{})["popID"].(string)
-			idc := idcMap[popID]
-			platform := host.(map[string]interface{})["platform"].(string)
-			hostExisted.(map[string]interface{})["isp"] = isp
-			hostExisted.(map[string]interface{})["province"] = province
-			hostExisted.(map[string]interface{})["idc"] = idc
-			hostExisted.(map[string]interface{})["platform"] = platform
+			hostExisted["isp"] = isp
+			hostExisted["province"] = province
+			hostExisted["idc"] = host["idc"]
+			hostExisted["platform"] = host["platform"]
 			hostsExisted[hostname] = hostExisted
 		}
 	}
 	return hostsExisted
 }
 
-func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[string]interface{}) {
+func completeApolloFiltersData(hostsExisted map[string]map[string]string, result map[string]interface{}) {
 	hosts := map[string]interface{}{}
 	keywords := map[string]interface{}{}
 	for _, host := range hostsExisted {
-		id := host.(map[string]interface{})["id"].(int)
-		platform := host.(map[string]interface{})["platform"].(string)
+		id, err := strconv.Atoi(host["id"])
+		if err != nil {
+			setError(err.Error(), result)
+		}
+		platform := host["platform"]
 		tags := []string{}
 		tags = appendUniqueString(tags, platform)
 		if _, ok := keywords[platform]; ok {
@@ -1092,23 +1092,21 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 		} else {
 			keywords[platform] = []int{id}
 		}
-		isp := host.(map[string]interface{})["isp"].(string)
+		isp := host["isp"]
 		tags = appendUniqueString(tags, isp)
 		if _, ok := keywords[isp]; ok {
 			keywords[isp] = appendUnique(keywords[isp].([]int), id)
 		} else {
 			keywords[isp] = []int{id}
 		}
-
-		province := host.(map[string]interface{})["province"].(string)
+		province := host["province"]
 		tags = appendUniqueString(tags, province)
 		if _, ok := keywords[province]; ok {
 			keywords[province] = appendUnique(keywords[province].([]int), id)
 		} else {
 			keywords[province] = []int{id}
 		}
-
-		name := host.(map[string]interface{})["name"].(string)
+		name := host["name"]
 		fragments := strings.Split(name, "-")
 		if len(fragments) == 6 {
 			fragments := fragments[2:]
@@ -1121,21 +1119,21 @@ func completeApolloFiltersData(hostsExisted map[string]interface{}, result map[s
 				}
 			}
 		}
-		ip := getIPFromHostname(name, result)
+		ip := host["ip"]
 		keywords[ip] = []int{id}
 		tags = appendUniqueString(tags, ip)
 
-		idc := host.(map[string]interface{})["idc"].(string)
+		idc := host["idc"]
 		tags = appendUniqueString(tags, idc)
 		if _, ok := keywords[idc]; ok {
 			keywords[idc] = appendUnique(keywords[idc].([]int), id)
 		} else {
 			keywords[idc] = []int{id}
 		}
-		host.(map[string]interface{})["tag"] = strings.Join(tags, ",")
-		delete(host.(map[string]interface{}), "id")
-		delete(host.(map[string]interface{}), "isp")
-		delete(host.(map[string]interface{}), "province")
+		host["tag"] = strings.Join(tags, ",")
+		delete(host, "id")
+		delete(host, "isp")
+		delete(host, "province")
 		hosts[strconv.Itoa(id)] = host
 	}
 	result["hosts"] = hosts
@@ -1148,42 +1146,26 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	count := 0
-	getPlatformJSON(nodes, result)
-	hosts := []interface{}{}
+	data := queryHostsData(result)
+	hosts := []map[string]string{}
 	hostnames := []string{}
-	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
-		hostname := ""
-		for _, platform := range nodes["result"].([]interface{}) {
-			groupName := platform.(map[string]interface{})["platform"].(string)
-			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
-				hostname = device.(map[string]interface{})["hostname"].(string)
-				ip := device.(map[string]interface{})["ip"].(string)
-				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-					popID := device.(map[string]interface{})["pop_id"].(string)
-					hostnames = append(hostnames, hostname)
-					host := map[string]interface{}{
-						"name":     hostname,
-						"platform": groupName,
-						"popID":    popID,
-					}
-					hosts = append(hosts, host)
-					hostnames = append(hostnames, hostname)
-				}
-			}
+	hostname := ""
+	for _, item := range data {
+		hostname = item.Hostname
+		hostnames = append(hostnames, hostname)
+		host := map[string]string{
+			"name":     hostname,
+			"platform": item.Platform,
+			"idc":      item.Idc,
 		}
-		sort.Strings(hostnames)
-		hostnamesExisted := getExistedHostnames(hostnames, result)
-		sort.Strings(hostnamesExisted)
-		hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
-		count = len(hostsExisted)
-		completeApolloFiltersData(hostsExisted, result)
+		hosts = append(hosts, host)
 	}
-	if _, ok := nodes["info"]; ok {
-		delete(nodes, "info")
-	}
-	if _, ok := nodes["status"]; ok {
-		delete(nodes, "status")
-	}
+	sort.Strings(hostnames)
+	hostnamesExisted := getExistedHostnames(hostnames, result)
+	sort.Strings(hostnamesExisted)
+	hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
+	count = len(hostsExisted)
+	completeApolloFiltersData(hostsExisted, result)
 	nodes["count"] = count
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
