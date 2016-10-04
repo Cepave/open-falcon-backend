@@ -650,8 +650,8 @@ func getAnomalies(errorHosts []map[string]string, result map[string]interface{})
 	return anomalies
 }
 
-func completeAgentAliveData(groups map[string]interface{}, groupNames []string, result map[string]interface{}) {
-	errorHosts := []interface{}{}
+func completeAgentAliveData(groups map[string][]map[string]string, groupNames []string, result map[string]interface{}) {
+	errorHosts := []map[string]string{}
 	platforms := []interface{}{}
 	count := map[string]int{}
 	countOfNormalSum := 0
@@ -663,7 +663,7 @@ func completeAgentAliveData(groups map[string]interface{}, groupNames []string, 
 	name := ""
 	activate := ""
 	version := ""
-	pop_id := ""
+	plugin := ""
 	status := ""
 	items := result["items"].(map[string]interface{})
 	for _, groupName := range groupNames {
@@ -675,17 +675,17 @@ func completeAgentAliveData(groups map[string]interface{}, groupNames []string, 
 		countOfError := 0
 		countOfMiss := 0
 		countOfDeactivated := 0
-		group := groups[groupName].([]interface{})
+		group := groups[groupName]
 		for _, agent := range group {
-			name = agent.(map[string]interface{})["name"].(string)
-			activate = agent.(map[string]interface{})["activate"].(string)
-			pop_id = agent.(map[string]interface{})["pop_id"].(string)
+			name = agent["name"]
+			activate = agent["activate"]
 			status = ""
 			version = ""
 			if activate == "1" {
 				if item, ok := items[name]; ok {
 					status = item.(map[string]interface{})["status"].(string)
 					version = item.(map[string]interface{})["version"].(string)
+					plugin = item.(map[string]interface{})["plugin"].(string)
 				} else {
 					status = "miss"
 					countOfMiss++
@@ -705,14 +705,16 @@ func completeAgentAliveData(groups map[string]interface{}, groupNames []string, 
 				"id":       strconv.Itoa(hostId),
 				"name":     name,
 				"platform": groupName,
-				"pop_id":   pop_id,
 				"status":   status,
 				"version":  version,
 			}
 			if host["status"] == "error" {
+				host["idc"] = agent["idc"]
+				host["city"] = agent["city"]
+				host["province"] = agent["province"]
 				errorHosts = append(errorHosts, host)
 			} else {
-				delete(host, "pop_id")
+				host["plugin"] = plugin
 			}
 			hosts = append(hosts, host)
 			hostId++
