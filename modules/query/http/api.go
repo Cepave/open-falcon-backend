@@ -751,51 +751,46 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	getPlatformJSON(nodes, result)
-	groups := map[string]interface{}{}
-	groupNames := []string{}
+	data := queryHostsData(result)
+	platforms := map[string][]map[string]string{}
+	platformNames := []string{}
 	hostnames := []string{}
-	hostnamesMap := map[string]int{}
-	if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
-		hostname := ""
-		for _, platform := range nodes["result"].([]interface{}) {
-			groupName := platform.(map[string]interface{})["platform"].(string)
-			groupNames = append(groupNames, groupName)
-			group := []interface{}{}
-			for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
-				hostname = device.(map[string]interface{})["hostname"].(string)
-				ip := device.(map[string]interface{})["ip"].(string)
-				if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-					if _, ok := hostnamesMap[hostname]; !ok {
-						hostnames = append(hostnames, hostname)
-						host := map[string]interface{}{
-							"name":     hostname,
-							"activate": device.(map[string]interface{})["ip_status"].(string),
-							"pop_id":   device.(map[string]interface{})["pop_id"].(string),
-						}
-						group = append(group, host)
-						hostnamesMap[hostname] = 1
-					}
-				}
-			}
-			groups[groupName] = group
+	hostname := ""
+	platformName := ""
+	hosts := []map[string]string{}
+	for _, item := range data {
+		hostname = item.Hostname
+		platformName = item.Platform
+		hostnames = append(hostnames, hostname)
+		host := map[string]string{
+			"name":     hostname,
+			"activate": strconv.Itoa(item.Activate),
+			"platform": platformName,
+			"idc":      item.Idc,
+			"city":     item.City,
+			"province": item.Province,
 		}
-		sort.Strings(hostnames)
-		sort.Strings(groupNames)
+		hostnames = append(hostnames, hostname)
+		platformNames = appendUniqueString(platformNames, platformName)
+		hosts = append(hosts, host)
 
-		hostnamesExisted := []string{}
-		var versions = make(map[string]string)
-		queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
-		data := queryAgentAlive(queries, req.Host, result)
-		classifyAgentAliveResponse(data, hostnamesExisted, versions, result)
-		completeAgentAliveData(groups, groupNames, result)
+		if platform, ok := platforms[platformName]; ok {
+			platform = append(platform, host)
+			platforms[platformName] = platform
+		} else {
+			platforms[platformName] = []map[string]string{
+				host,
+			}
+		}
 	}
-	if _, ok := nodes["info"]; ok {
-		delete(nodes, "info")
-	}
-	if _, ok := nodes["status"]; ok {
-		delete(nodes, "status")
-	}
+	sort.Strings(hostnames)
+	sort.Strings(platformNames)
+	hostnamesExisted := []string{}
+	var versions = make(map[string]map[string]string)
+	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
+	agentAliveData := queryAgentAlive(queries, req.Host, result)
+	classifyAgentAliveResponse(agentAliveData, hostnamesExisted, versions, result)
+	completeAgentAliveData(platforms, platformNames, result)
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	setResponse(rw, nodes)
