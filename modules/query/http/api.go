@@ -581,9 +581,8 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 	return data
 }
 
-func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) {
+func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) {
 	name := ""
-	version := ""
 	status := ""
 	alive := 0
 	var diff int64
@@ -603,7 +602,7 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 			now := time.Now().Unix()
 			diff = now - timestamp
 		}
-		version = versions[name]
+		version := versions[name]
 		if alive > 0 {
 			if diff > 3600 {
 				status = "warm"
@@ -611,9 +610,11 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 				status = "normal"
 			}
 		}
-		item := map[string]interface{}{}
-		item["version"] = version
-		item["status"] = status
+		item := map[string]interface{}{
+			"status": status,
+			"version": version["agent"],
+			"plugin": version["plugin"],
+		}
 		items[name] = item
 	}
 	result["items"] = items
