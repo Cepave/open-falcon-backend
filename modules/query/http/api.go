@@ -620,72 +620,31 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 	result["items"] = items
 }
 
-func getAnomalies(errorHosts []interface{}, result map[string]interface{}) map[string]interface{} {
+func getAnomalies(errorHosts []map[string]string, result map[string]interface{}) map[string]interface{} {
 	anomalies := map[string]interface{}{}
-	pop_ids := map[string]string{}
+	provinces := map[string][]map[string]string{}
+	provinceNames := []string{}
 	for _, errorHost := range errorHosts {
-		pop_id := errorHost.(map[string]string)["pop_id"]
-		pop_ids[pop_id] = pop_id
-	}
-	arr := []string{}
-	for _, pop_id := range pop_ids {
-		arr = append(arr, pop_id)
-	}
-	sort.Strings(arr)
-
-	sqlcmd := "SELECT pop_id, name, province, city FROM grafana.idc WHERE pop_id IN ('"
-	sqlcmd += strings.Join(arr, "','") + "')"
-	idcs := map[string]interface{}{}
-	var rows []orm.Params
-	o := orm.NewOrm()
-	o.Using("grafana")
-	_, err := o.Raw(sqlcmd).Values(&rows)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
-		for _, row := range rows {
-			idc := map[string]string{
-				"idc":      row["name"].(string),
-				"province": row["province"].(string),
-				"city":     row["city"].(string),
-			}
-			idcs[row["pop_id"].(string)] = idc
+		provinceName := errorHost["province"]
+		if provinceName == "特区" {
+			provinceName = errorHost["city"]
 		}
-	}
-
-	anomalies2 := map[string]interface{}{}
-	for _, errorHost := range errorHosts {
-		pop_id := errorHost.(map[string]string)["pop_id"]
-		if idc, ok := idcs[pop_id]; ok {
-			errorHost.(map[string]string)["idc"] = idc.(map[string]string)["idc"]
-			errorHost.(map[string]string)["city"] = idc.(map[string]string)["city"]
-			provinceName := idc.(map[string]string)["province"]
-			if provinceName == "特区" {
-				provinceName = idc.(map[string]string)["city"]
-			}
-			errorHost.(map[string]string)["province"] = provinceName
-			delete(errorHost.(map[string]string), "pop_id")
-
-			if province, ok := anomalies2[provinceName]; ok {
-				province = append(province.([]map[string]string), errorHost.(map[string]string))
-				anomalies2[provinceName] = province
-			} else {
-				anomalies2[provinceName] = []map[string]string{
-					errorHost.(map[string]string),
-				}
-			}
+		if province, ok := provinces[provinceName]; ok {
+			province = append(province, errorHost)
+			provinces[provinceName] = province
 		} else {
-			errorHost.(map[string]string)["idc"] = ""
-			errorHost.(map[string]string)["city"] = ""
-			errorHost.(map[string]string)["province"] = ""
+			provinces[provinceName] = []map[string]string{
+				errorHost,
+			}
+			provinceNames = append(provinceNames, provinceName)
 		}
 	}
-
-	for provinceName, hosts := range anomalies2 {
-		count := len(hosts.([]map[string]string))
+	sort.Strings(provinceNames)
+	for _, provinceName := range provinceNames {
+		province := provinces[provinceName]
 		anomalies[provinceName] = map[string]interface{}{
-			"count": count,
-			"hosts": hosts,
+			"count": len(province),
+			"hosts": province,
 		}
 	}
 	return anomalies
