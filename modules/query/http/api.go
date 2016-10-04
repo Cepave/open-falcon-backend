@@ -502,12 +502,12 @@ func queryHostsData(result map[string]interface{}) []Hosts {
 	return hosts
 }
 
-func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
+func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
 	var queries []*cmodel.GraphLastParam
 	o := orm.NewOrm()
 	var hosts []*Host
 	hostnamesStr := strings.Join(hostnames, "','")
-	sqlcommand := "SELECT hostname, agent_version FROM falcon_portal.host WHERE hostname IN ('"
+	sqlcommand := "SELECT hostname, agent_version, plugin_version FROM falcon_portal.host WHERE hostname IN ('"
 	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
 	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
 	if err != nil {
@@ -517,7 +517,11 @@ func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map
 			var query cmodel.GraphLastParam
 			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
 				hostnamesExisted = append(hostnamesExisted, host.Hostname)
-				versions[host.Hostname] = host.Agent_version
+				version := map[string]string{
+					"agent": host.Agent_version,
+					"plugin": host.Plugin_version,
+				}
+				versions[host.Hostname] = version
 				query.Endpoint = host.Hostname
 				query.Counter = "agent.alive"
 				queries = append(queries, &query)
