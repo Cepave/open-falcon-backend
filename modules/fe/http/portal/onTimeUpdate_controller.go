@@ -63,12 +63,14 @@ func (this *PortalController) OnTimeFeeding() {
 		}
 		events = eventsTmp
 	}
+	alertTmpStore, endpoints, err := event.AlertsConvert(events)
+	alertswithInfo := event.GetAlertInfoFromDB(alertTmpStore, endpoints, false)
 	notes := storeEvents.Enotes
 	anyNew := false
 	if len(events) != 0 || len(notes) != 0 {
 		anyNew = true
 	}
-	baseResp.Data["events"] = events
+	baseResp.Data["events"] = alertswithInfo
 	baseResp.Data["notes"] = notes
 	baseResp.Data["any_new"] = anyNew
 	baseResp.Data["admin"] = isadmin
