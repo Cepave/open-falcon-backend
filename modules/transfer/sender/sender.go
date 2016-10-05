@@ -3,6 +3,7 @@ package sender
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -331,6 +332,23 @@ func strToInt32(out *int32, index string, dict map[string]string) error {
 	return nil
 }
 
+func strToInt32Slc(out *[]int32, index string, dict map[string]string) error {
+	if v, ok := dict[index]; ok {
+		if v == "" {
+			return nil
+		}
+		strSlc := strings.Split(v, "-")
+		for _, str := range strSlc {
+			i, err := strconv.Atoi(str)
+			if err != nil {
+				return err
+			}
+			*out = append(*out, int32(i))
+		}
+	}
+	return nil
+}
+
 func strToInt16(out *int16, index string, dict map[string]string) error {
 	var err error
 	var ii int64
@@ -346,11 +364,12 @@ func strToInt16(out *int16, index string, dict map[string]string) error {
 
 func convert2NqmEndpoint(d *cmodel.MetaData, endType string) (*nqmEndpoint, error) {
 	t := nqmEndpoint{
-		Id:         -1,
-		IspId:      -1,
-		ProvinceId: -1,
-		CityId:     -1,
-		NameTagId:  -1,
+		Id:          -1,
+		IspId:       -1,
+		ProvinceId:  -1,
+		CityId:      -1,
+		NameTagId:   -1,
+		GroupTagIds: []int32{},
 	}
 
 	if err := strToInt32(&t.Id, endType+"-id", d.Tags); err != nil {
@@ -366,6 +385,9 @@ func convert2NqmEndpoint(d *cmodel.MetaData, endType string) (*nqmEndpoint, erro
 		return nil, err
 	}
 	if err := strToInt32(&t.NameTagId, endType+"-name-tag-id", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt32Slc(&t.GroupTagIds, endType+"-group-tag-ids", d.Tags); err != nil {
 		return nil, err
 	}
 

@@ -3,6 +3,7 @@ package sender
 import (
 	"encoding/json"
 	cmodel "github.com/open-falcon/common/model"
+	"reflect"
 	"testing"
 )
 
@@ -54,24 +55,26 @@ func createMetaData() *cmodel.MetaData {
 		Value:       0.000000,
 		CounterType: "",
 		Tags: map[string]string{
-			"rttmin":             "18.64",
-			"rttavg":             "21",
-			"rttmax":             "26.56",
-			"rttmdev":            "234.2",
-			"rttmedian":          "21.5",
-			"pkttransmit":        "13",
-			"pktreceive":         "12",
-			"dstpoint":           "test.endpoint.niean.2",
-			"agent-id":           "1334",
-			"agent-isp-id":       "12",
-			"agent-province-id":  "13",
-			"agent-city-id":      "14",
-			"agent-name-tag-id":  "123",
-			"target-id":          "2334",
-			"target-isp-id":      "22",
-			"target-province-id": "23",
-			"target-city-id":     "24",
-			"target-name-tag-id": "223",
+			"rttmin":               "18.64",
+			"rttavg":               "21",
+			"rttmax":               "26.56",
+			"rttmdev":              "234.2",
+			"rttmedian":            "21.5",
+			"pkttransmit":          "13",
+			"pktreceive":           "12",
+			"dstpoint":             "test.endpoint.niean.2",
+			"agent-id":             "1334",
+			"agent-isp-id":         "12",
+			"agent-province-id":    "13",
+			"agent-city-id":        "14",
+			"agent-name-tag-id":    "123",
+			"agent-group-tag-ids":  "12-13-14",
+			"target-id":            "2334",
+			"target-isp-id":        "22",
+			"target-province-id":   "23",
+			"target-city-id":       "24",
+			"target-name-tag-id":   "223",
+			"target-group-tag-ids": "22-23-24",
 		},
 	}
 
@@ -107,14 +110,15 @@ func TestConvert2NqmEndpoint(t *testing.T) {
 	in := createMetaData()
 	out_ptr, _ := convert2NqmEndpoint(in, "agent")
 	out := nqmEndpoint{
-		Id:         1334,
-		IspId:      12,
-		ProvinceId: 13,
-		CityId:     14,
-		NameTagId:  123,
+		Id:          1334,
+		IspId:       12,
+		ProvinceId:  13,
+		CityId:      14,
+		NameTagId:   123,
+		GroupTagIds: []int32{12, 13, 14},
 	}
 
-	if out != *out_ptr {
+	if !reflect.DeepEqual(out, *out_ptr) {
 		t.Error("Expected output: ", out)
 		t.Error("Real output:     ", *out_ptr)
 
@@ -122,14 +126,15 @@ func TestConvert2NqmEndpoint(t *testing.T) {
 
 	out_ptr, _ = convert2NqmEndpoint(in, "target")
 	out = nqmEndpoint{
-		Id:         2334,
-		IspId:      22,
-		ProvinceId: 23,
-		CityId:     24,
-		NameTagId:  223,
+		Id:          2334,
+		IspId:       22,
+		ProvinceId:  23,
+		CityId:      24,
+		NameTagId:   223,
+		GroupTagIds: []int32{22, 23, 24},
 	}
 
-	if out != *out_ptr {
+	if !reflect.DeepEqual(out, *out_ptr) {
 		t.Error("Expected output: ", out)
 		t.Error("Real output:     ", *out_ptr)
 	}
