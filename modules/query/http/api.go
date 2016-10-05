@@ -285,7 +285,7 @@ func processAgentAliveData(data []cmodel.GraphLastResp, hostnames []string, vers
 		version = versions[name]
 		if alive > 0 {
 			if diff > 3600 {
-				status = "warm"
+				status = "warn"
 				countOfWarn++
 			} else {
 				status = "normal"
@@ -602,7 +602,7 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 		version = versions[name]
 		if alive > 0 {
 			if diff > 3600 {
-				status = "warm"
+				status = "warn"
 			} else {
 				status = "normal"
 			}
@@ -732,7 +732,7 @@ func completeAgentAliveData(groups map[string]interface{}, groupNames []string, 
 			}
 			if status == "normal" {
 				countOfNormal++
-			} else if status == "warm" {
+			} else if status == "warn" {
 				countOfWarn++
 			} else if status == "error" {
 				countOfError++
