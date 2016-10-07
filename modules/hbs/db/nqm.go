@@ -166,7 +166,7 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 
 		if err = tx.QueryRow(
 			/**
-			 * Gets data of agent if the any of ping task need to be executed
+			 * Gets data of agent if any of the ping task need to be executed
 			 */
 			`
 			SELECT ag_name,

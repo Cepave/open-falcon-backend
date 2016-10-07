@@ -113,3 +113,8 @@
     filename: "mike-22.sql",
     comment: "Re-arrange id of host"
 }
+- {
+    id: "mike-23",
+    filename: "mike-23.sql",
+    comment: "Fix the view of filtering targets for ping task"
+}
