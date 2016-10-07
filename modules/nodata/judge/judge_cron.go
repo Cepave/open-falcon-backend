@@ -17,7 +17,7 @@ import (
 
 var (
 	judgeCron     = tcron.New()
-	judgeCronSpec = "0 * * * * ?"
+	judgeCronSpec = "*/20 * * * * ?"
 )
 
 func StartJudgeCron() {
@@ -95,8 +95,8 @@ func genTs(nowTs int64, step int64) int64 {
 }
 
 func getTimeout(step int64) int64 {
-	if step < 60 {
-		return 180 //60*3
+	if step < 30 {
+		return 90 //30*3
 	}
 
 	return step * 3

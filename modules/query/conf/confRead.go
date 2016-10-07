@@ -54,6 +54,8 @@ func functionMapGen() {
 	}
 	if f == "" {
 		log.Fatalf("load js files got error, currentPaht: %s , please check your code tree and make is correct!", currentPath)
+	} else {
+		log.Info("load javascript scrips successed in " + f)
 	}
 
 	FunctionMap = map[string]*FunConfig{}
@@ -79,6 +81,8 @@ func ReadConf() {
 	}
 	if f == "" {
 		log.Fatalf("lambdaSetup.json not found, currentPaht: %s", currentPath)
+	} else {
+		log.Info("read lambdaSetup.json successed wuth " + f)
 	}
 
 	confpath = &f

@@ -912,7 +912,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		offset := int64(multiplier) * seconds
 		now := time.Now().Unix()
 		timestampFrom = now - offset
-		timestampTo = now
+		timestampTo = now + int64(5 * 60)
 	}
 	return
 }
@@ -1228,6 +1228,35 @@ func addNetworkSpeedAndBondMode(metrics []string, hostnames []string, result map
 	return metrics
 }
 
+func addRecentData(data []*cmodel.GraphQueryResponse, dataRecent []*cmodel.GraphQueryResponse) []*cmodel.GraphQueryResponse {
+	for key, item := range data {
+		hostname := item.Endpoint
+		metric := item.Counter
+		latest := int64(0)
+		if len(item.Values) > 0 {
+			values := []*cmodel.RRDData{}
+			for _, pair := range item.Values {
+				if !math.IsNaN(float64(pair.Value)) && pair.Value > 0 {
+					latest = pair.Timestamp
+					values = append(values, pair)
+				}
+			}
+			for _, itemRecent := range dataRecent {
+				if itemRecent.Endpoint == hostname && itemRecent.Counter == metric {
+					for _, pair := range itemRecent.Values {
+						if pair.Timestamp > latest && !math.IsNaN(float64(pair.Value)) && pair.Value > 0 {
+							values = append(values, pair)
+						}
+					}
+				}
+			}
+			item.Values = values
+			data[key] = item
+		}
+	}
+	return data
+}
+
 func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -1245,6 +1274,9 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 		duration = arguments[6]
 	}
 	data := getGraphQueryResponse(metrics, duration, hostnames, result)
+	dataRecent := getGraphQueryResponse(metrics, "30min", hostnames, result)
+	data = addRecentData(data, dataRecent)
+
 	for _, series := range data {
 		metric := series.Counter
 		if strings.Index(metric, "nic.default.out.speed/device=") > -1 {
@@ -1456,8 +1488,6 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 						items = append(items, item)
 					}
 					platformMap[name] = items
-				} else {
-					platformMap[name] = "BOSS 沒有平台負責人資訊"
 				}
 			}
 		}
@@ -1505,25 +1535,40 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
 	metricMap := map[string]interface{}{}
+	valuesMap := map[string]map[float64]float64{}
 	timestamps := []float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
 		data := getGraphQueryResponse(metrics, duration, hostnames, result)
-		for _, rrdObj := range data[0].Values {
+		index := -1
+		max := 0
+		for key, item := range data {
+			if len(item.Values) > max {
+				max = len(item.Values)
+				index = key
+			}
+		}
+		for _, rrdObj := range data[index].Values {
 			timestamps = append(timestamps, float64(rrdObj.Timestamp))
 		}
 		if len(timestamps) > 0 {
 			for _, metric := range metrics {
-				values := []float64{}
-				for _, _ = range timestamps {
-					values = append(values, float64(0))
+				valuesPair := map[float64]float64{}
+				for _, timestamp := range timestamps {
+					valuesPair[timestamp] = float64(0)
 				}
-				metricMap[metric] = values
+				valuesMap[metric] = valuesPair
 			}
 			for _, series := range data {
-				values := metricMap[series.Counter].([]float64)
-				for key, rrdObj := range series.Values {
+				valuesPair := valuesMap[series.Counter]
+				for _, rrdObj := range series.Values {
 					if !math.IsNaN(float64(rrdObj.Value)) {
-						values[key] += float64(rrdObj.Value)
+						valuesPair[float64(rrdObj.Timestamp)] += float64(rrdObj.Value)
+					}
+				}
+				values := []float64{}
+				for _, timestamp := range timestamps {
+					if valuesPair[timestamp] >= 0 {
+						values = append(values, valuesPair[timestamp])
 					}
 				}
 				metricMap[series.Counter] = values
@@ -1574,6 +1619,53 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	return items
 }
 
+func getNICOutSpeed(hostname string, result map[string]interface{}) int {
+	NICOutSpeed := 0
+	metrics := []string{
+		"nic.out.speed/device=bond0",
+		"nic.out.speed/device=eth0",
+		"nic.out.speed/device=eth1",
+		"nic.out.speed/device=eth2",
+		"nic.out.speed/device=eth3",
+		"nic.out.speed/device=eth4",
+		"nic.out.speed/device=eth5",
+	}
+	var param cmodel.GraphLastParam
+	var params []cmodel.GraphLastParam
+	param.Endpoint = hostname
+	for _, metric := range metrics {
+		param.Counter = metric
+		params = append(params, param)
+	}
+
+	var data []cmodel.GraphLastResp
+	proc.LastRequestCnt.Incr()
+	for _, param := range params {
+		last, err := graph.Last(param)
+		if err != nil {
+			setError("graph.last fail, err: "+err.Error(), result)
+			return NICOutSpeed
+		}
+		if last == nil {
+			continue
+		}
+		data = append(data, *last)
+	}
+	proc.LastRequestItemCnt.IncrBy(int64(len(data)))
+	if len(data) > 0 {
+		if data[0].Value.Value > 0 {
+			NICOutSpeed = int(data[0].Value.Value)
+		} else {
+			for _, item := range data {
+				if NICOutSpeed < int(item.Value.Value) {
+					NICOutSpeed = int(item.Value.Value)
+				}
+			}
+		}
+	}
+	return NICOutSpeed
+}
+
 func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	items := []interface{}{}
@@ -1590,13 +1682,26 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 		metricType = arguments[len(arguments)-3]
 		method = arguments[len(arguments)-2]
 		duration = arguments[len(arguments)-1]
+	} else if len(arguments) == 5 && arguments[2] == "hosts" {
+		hostnames = strings.Split(arguments[3], ",")
+		method = arguments[4]
 	}
-
 	if method == "average" {
 		items = getBandwidthsAverage(metricType, duration, hostnames, result)
 	} else if method == "sum" {
 		filter := req.URL.Query().Get("filter")
 		items = getBandwidthsSum(metricType, duration, hostnames, filter, result)
+	} else if method == "nic-out-speed" {
+		for _, hostname := range hostnames {
+			if strings.Index(hostname, "-") > -1 {
+				NICOutSpeed := getNICOutSpeed(hostname, result)
+				item := map[string]interface{}{
+					"hostname": hostname,
+					"nic.out.speed.bits": NICOutSpeed,
+				}
+				items = append(items, item)
+			}
+		}
 	}
 	result["items"] = items
 	nodes["result"] = result

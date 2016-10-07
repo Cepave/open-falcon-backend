@@ -3,15 +3,15 @@ TARGET_SOURCE = $(shell find main.go g cmd -name '*.go')
 CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent
 TARGET = open-falcon
 
-VERSION?=$(shell awk -F\" '/^const Version/ { print $$2; exit }' ./g/version.go)
+VERSION := $(shell cat VERSION)
 
-all: $(CMD) $(TARGET)
+all: trash $(CMD) $(TARGET)
 
 $(CMD):
 	go build -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
-	go build -o open-falcon
+	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
 
 # dev creates binaries for testing locally - these are put into ./bin and $GOPATH
 dev: format
@@ -48,7 +48,11 @@ clean:
 	@rm -rf ./bin
 	@rm -rf ./out
 	@rm -rf ./$(TARGET)
+	@rm -rf ./package_cache_tmp
+	@rm -rf ./vendor
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
-.PHONY: clean all aggregator graph hbs judge nodata query sender task transfer fe
+trash:
+	trash -k -cache package_cache_tmp
 
+.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe
