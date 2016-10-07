@@ -10,11 +10,21 @@ type FuncsAndInterval struct {
 	Interval int
 }
 
+const (
+	IntervalThirtySec = 30
+)
+
 var Mappers []FuncsAndInterval
 
 func BuildMappers() {
 	interval := g.Config().Transfer.Interval
 	Mappers = []FuncsAndInterval{
+		FuncsAndInterval{
+			Fs: []func() []*model.MetricValue{
+				AgentMetricsThirty,
+			},
+			Interval: IntervalThirtySec,
+		},
 		FuncsAndInterval{
 			Fs: []func() []*model.MetricValue{
 				AgentMetrics,

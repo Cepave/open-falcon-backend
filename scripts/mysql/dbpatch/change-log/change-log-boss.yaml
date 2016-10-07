@@ -1,0 +1,7 @@
+[
+    {
+        id: "myhung-1",
+        filename: "myhung-1.sql",
+        comment: "The initialization of existing database schema"
+    }
+]

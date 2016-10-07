@@ -52,6 +52,11 @@
         "idle": 10,
         "max": 100
     },
+    "bossdb": {
+        "addr": "%%MYSQL%%/boss?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
     "nqm": {
         "addr": "%%MYSQL%%/gz_nqm?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,

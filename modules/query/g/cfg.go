@@ -82,21 +82,22 @@ type GraphDB struct {
 }
 
 type GlobalConfig struct {
-	Debug   bool           `json:"debug"`
-	RootDir string         `json:"root_dir"`
-	Http    *HttpConfig    `json:"http"`
-	Hosts   *HostsConfig   `json:"hosts"`
+	Debug    bool            `json:"debug"`
+	RootDir  string          `json:"root_dir"`
+	Http     *HttpConfig     `json:"http"`
+	Hosts    *HostsConfig    `json:"hosts"`
 	Contacts *ContactsConfig `json:"contacts"`
-	Graph   *GraphConfig   `json:"graph"`
-	Api     *ApiConfig     `json:"api"`
-	Db      *DbConfig      `json:"db"`
-	Local   string         `json:"local"`
-	NqmLog  *NqmLogConfig  `json:"nqmlog"`
-	Nqm     *NqmConfig     `json:"nqm"`
-	Grpc    *GrpcConfig    `json:"grpc"`
-	GinHttp *GinHttpConfig `json:"gin_http"`
-	GraphDB *GraphDB       `json:"graphdb"`
-	Fe      string         `json:"fe"`
+	Graph    *GraphConfig    `json:"graph"`
+	Api      *ApiConfig      `json:"api"`
+	Db       *DbConfig       `json:"db"`
+	BossDB   *DbConfig       `json:"bossdb"`
+	Local    string          `json:"local"`
+	NqmLog   *NqmLogConfig   `json:"nqmlog"`
+	Nqm      *NqmConfig      `json:"nqm"`
+	Grpc     *GrpcConfig     `json:"grpc"`
+	GinHttp  *GinHttpConfig  `json:"gin_http"`
+	GraphDB  *GraphDB        `json:"graphdb"`
+	Fe       string          `json:"fe"`
 }
 
 var (

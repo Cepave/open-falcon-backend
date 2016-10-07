@@ -10,6 +10,7 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
 	"github.com/toolkits/sys"
 )
@@ -20,20 +21,38 @@ func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
 	absPath, _ := filepath.Abs(pluginDir)
 	if absPath == "/" {
 		out = fmt.Sprintf("\nRemove directory:%s is not allowed.", absPath)
+		log.Errorln(out)
 		return
 	}
 	err1 := os.RemoveAll(file.Basename(pluginDir))
 	if err1 != nil {
 		out = fmt.Sprintf("\nremove the git plugin dir:%s fail. error: %s", file.Basename(pluginDir), err1)
+		log.Errorln(out)
 		return
 	} else {
 		out = fmt.Sprintf("\nremove the git plugin dir:%s success", file.Basename(pluginDir))
 	}
+
 	cmd := exec.Command("git", "clone", gitRemoteAddr, file.Basename(pluginDir))
 	cmd.Dir = parentDir
-	cmd.Start()
-	err2, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+	err := cmd.Start()
+	if err != nil {
+		log.Errorln("git clone start fails: ", err)
+	}
+
+	err2, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+	if isTimeout {
+		// has be killed
+		if err2 == nil {
+			log.Warnln("timeout and kill process git clone successfully")
+		}
+		if err2 != nil {
+			log.Errorln("kill process git clone occur error:", err2)
+		}
+		return
+	}
 	if err2 != nil {
+		log.Errorln("git clone run fails:", err2)
 		out = out + fmt.Sprintf("\ngit clone in dir:%s fail. error: %s", parentDir, err2)
 		return
 	}
@@ -56,9 +75,23 @@ func configPluginRoutes() {
 			// git pull
 			cmd := exec.Command("git", "pull")
 			cmd.Dir = dir
-			cmd.Start()
-			err, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+			err := cmd.Start()
 			if err != nil {
+				log.Errorln("git pull start fails: ", err)
+			}
+			err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+			if isTimeout {
+				// has be killed
+				if err == nil {
+					log.Warnln("timeout and kill process git pull successfully")
+				}
+				if err != nil {
+					log.Errorln("kill process git pull occur error:", err)
+				}
+				return
+			}
+			if err != nil {
+				log.Errorf("git pull in dir: %s fail. error: %s", dir, err)
 				w.Write([]byte(fmt.Sprintf("git pull in dir:%s fail. error: %s", dir, err)))
 				w.Write([]byte(DeleteAndCloneRepo(dir, plugins.GitRepo)))
 				return
@@ -67,9 +100,23 @@ func configPluginRoutes() {
 			// git clone
 			cmd := exec.Command("git", "clone", plugins.GitRepo, file.Basename(dir))
 			cmd.Dir = parentDir
-			cmd.Start()
-			err, _ := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+			err := cmd.Start()
 			if err != nil {
+				log.Errorln("git clone start fails: ", err)
+			}
+			err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+			if isTimeout {
+				// has be killed
+				if err == nil {
+					log.Warnln("timeout and kill process git clone successfully")
+				}
+				if err != nil {
+					log.Errorln("kill process git clone occur error:", err)
+				}
+				return
+			}
+			if err != nil {
+				log.Errorf("git clone in dir:%s fail. error: %s", parentDir, err)
 				w.Write([]byte(fmt.Sprintf("git clone in dir:%s fail. error: %s", parentDir, err)))
 				return
 			}

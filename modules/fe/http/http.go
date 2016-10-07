@@ -42,6 +42,7 @@ func Start() {
 	portal.ConfigRoutes()
 	boss.ConfigRoutes()
 
+	beego.SetLogger("console", `{"color":false}`)
 	beego.AddFuncMap("member", uic_model.MembersByTeamId)
 	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
 		AllowAllOrigins: true,
@@ -54,5 +55,6 @@ func Start() {
 		log.Infof("set http static_path in %v", g.Config().Http.StaticPath)
 		beego.SetStaticPath("/static", g.Config().Http.StaticPath)
 	}
+	log.Infof("current beego verion: %v", beego.VERSION)
 	beego.Run(addr)
 }
