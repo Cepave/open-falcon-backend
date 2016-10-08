@@ -13,17 +13,6 @@ $(CMD):
 $(TARGET): $(TARGET_SOURCE)
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
 
-# dev creates binaries for testing locally - these are put into ./bin and $GOPATH
-dev: format
-	@CONSUL_DEV=1 sh -c "'$(CURDIR)/scripts/build.sh'"
-
-test: format
-	@./scripts/test.sh
-
-format:
-	@echo "--> Running go fmt"
-	@go fmt `go list ./...`
-
 checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
 	@if [ -e out ] ; then rm -rf out; fi
