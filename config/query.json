@@ -37,7 +37,7 @@
         "map": "https://cdnboss-api.fastweb.com.cn/Base/platform/get_ip",
         "geo": "https://cdnboss-api.fastweb.com.cn/pop/get_area",
         "uplink": "https://cdnboss-api.fastweb.com.cn/base/get_uplink_list",
-        "query": "http://127.0.0.1:9966",
+        "query": "%%QUERY_HTTP%%",
         "dashboard": "http://127.0.0.1:8081",
         "max": 1000
     },
@@ -62,9 +62,9 @@
         "idle": 10,
         "max": 100
     },
-    "local": "http://localhost:9966",
+    "local": "%%QUERY_HTTP%%",
     "nqmlog": {
         "jsonrpcUrl": "http://127.0.0.1:6171/jsonrpc"
     },
-    "fe": "http://127.0.0.1:1235"
+    "fe": "%%FE%%"
 }

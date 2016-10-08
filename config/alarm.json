@@ -12,12 +12,12 @@
         "serverchan": "/serverchan"
     },
     "falcon_portal": {
-        "addr": "root@tcp(mysql:3306)/falcon_portal?charset=utf8&loc=Asia%2FChongqing",
+        "addr": "%%MYSQL%%/falcon_portal?charset=utf8&loc=Asia%2FChongqing",
         "idle": 10,
         "max": 100
     },
     "redis": {
-        "addr": "127.0.0.1:6379",
+        "addr": "%%REDIS%%",
         "maxIdle": 5,
         "highQueues": [
             "event:p0",
@@ -45,12 +45,12 @@
         "falconDashboard": "http://127.0.0.1:8081/",
         "grafanaDashboard": "http://127.0.0.1:3000/",
         "falconAlarm": "http://127.0.0.1:9912/",
-        "falconUIC": "http://127.0.0.1:1234/"
+        "falconUIC": "%%FE_HTTP%%"
     },
     "uic": {
-        "addr": "root:@tcp(127.0.0.1:3306)/uic?charset=utf8&loc=Asia%2FTaipei",
+        "addr": "%%MYSQL%%/uic?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
     },
-    "redirectUrl": "http://11.11.11.11:1234/auth/login?callback=http%3A//11.11.11.11%3A9912/"
+    "redirectUrl": "http://%%FE_HTTP%%/auth/login?callback=http%3A//0.0.0.0%3A9912/"
 }

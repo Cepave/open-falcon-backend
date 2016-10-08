@@ -23,7 +23,7 @@
         "maxIdle": 32,
         "replicas": 500,
         "cluster": {
-            "judge-00" : "10.20.30.40:6080"
+            "judge-00" : "127.0.0.1:6080"
         }
     },
     "graph": {
@@ -58,7 +58,7 @@
         "callTimeout": 5000,
         "maxConns": 32,
         "maxIdle": 32,
-        "addr": "root:password@http(10.20.30.40:8086)/owl"
+        "addr": "root:password@http(127.0.0.1:8086)/owl"
     },
     "nqmRpc": {
         "enabled":false,
@@ -67,7 +67,7 @@
         "callTimeout": 5000,
         "maxConns": 32,
         "maxIdle": 32,
-        "addr": "10.20.30.40:6171/jsonrpc"
+        "addr": "127.0.0.1:6171/jsonrpc"
     },
     "staging": {
         "enabled": false,
@@ -77,7 +77,7 @@
         "maxConns": 32,
         "maxIdle": 32,
         "retry": 3,
-        "address": "10.0.1.9:8433",
+        "address": "%%TRANSFER_RPC%%",
         "filters": [
         ]
     }
