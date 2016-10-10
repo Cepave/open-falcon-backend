@@ -31,7 +31,6 @@ type EndpointCounter struct {
 }
 
 func EndpointQuery(query string) (endpointList []string) {
-	database.Init()
 	db := database.DBConn()
 	gconf := g.Config()
 	var enps []Endpoint
@@ -55,7 +54,6 @@ func EndpointQuery(query string) (endpointList []string) {
 }
 
 func EndpointIdQuery(endpoints []string) (endpointList []int64) {
-	database.Init()
 	db := database.DBConn()
 	percooke := ""
 	for indx, e := range endpoints {
@@ -78,7 +76,6 @@ func EndpointIdQuery(endpoints []string) (endpointList []int64) {
 }
 
 func FindMatchedCounters(endpointList []int64, counter string) (result []string) {
-	database.Init()
 	db := database.DBConn()
 	percooke := ""
 	for indx, e := range endpointList {
