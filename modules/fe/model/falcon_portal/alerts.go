@@ -151,6 +151,8 @@ func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bo
 			if contacts, ok := contactmap[item.Platform]; ok {
 				item.Contact = contacts
 			}
+		} else if showAll {
+			// will append this reocrd into output without boss info
 		} else {
 			continue
 		}

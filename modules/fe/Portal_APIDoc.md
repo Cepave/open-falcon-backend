@@ -2,6 +2,7 @@
 `Don't forget do URL encoding.. will check session automatically`
 ### `GET` `POST` /api/v1/portal/eventcases/get
 * `required login session`
+* !! this is deprecated, please use v2 api
 * params:
   * `startTime` timestamp [if set then can't skip endTime]
     * ex: 1457450919
@@ -9,10 +10,11 @@
   * `endTime` timestamp [if set then can't skip startTime]
     * ex: 1477450919
     * if not specific, means get all
-  * `priority` int
-    * ex: 0
-    * -1 means no specific any priority level, get all.
-    * default: -1
+  * `priority` string
+    * ex: "0"
+    * "ALL" means no specific any priority level, get all.
+    * support mutiple condition query. ex. "0,1,2"
+    * default: "ALL"
   * `status` string options
     * ex: "PROBLEM", "OK"
     * "ALL" means no specific any status, get all.
@@ -340,10 +342,11 @@
   * `endTime` timestamp [if set then can't skip startTime]
     * ex: 1477450919
     * if not specific, means get all
-  * `priority` int
-    * ex: 0
-    * -1 means no specific any priority level, get all.
-    * default: -1
+  * `priority` string
+    * ex: "0"
+    * "ALL" means no specific any priority level, get all.
+    * support mutiple condition query. ex. "0,1,2"
+    * default: "ALL"
   * `status` string options
     * ex: "PROBLEM", "OK"
     * "ALL" means no specific any status, get all.
@@ -364,7 +367,7 @@
   * `caseId` string
     * return specific alarm_case
   * `show_all` bool
-    * filter alarm case of inactive endpoints
+    * display all endpoints without boss filter, will keep empty if this endpoint can not found in boss system.
 * response:
   * ok
 

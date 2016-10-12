@@ -63,12 +63,14 @@ func (this *PortalController) OnTimeFeeding() {
 		}
 		events = eventsTmp
 	}
+	alertTmpStore, endpoints, err := event.AlertsConvert(events)
+	alertswithInfo := event.GetAlertInfoFromDB(alertTmpStore, endpoints, false)
 	notes := storeEvents.Enotes
 	anyNew := false
 	if len(events) != 0 || len(notes) != 0 {
 		anyNew = true
 	}
-	baseResp.Data["events"] = events
+	baseResp.Data["events"] = alertswithInfo
 	baseResp.Data["notes"] = notes
 	baseResp.Data["any_new"] = anyNew
 	baseResp.Data["admin"] = isadmin
@@ -89,7 +91,7 @@ func CronForQuery(updatTo chan UpdatedEvents, pid chan string) {
 		currentTime := time.Now().Unix()
 		startTime := (currentTime - int64(60*1))
 		log.Debugf("cron job for on time query: range -> %v ~ %v", startTime, currentTime)
-		events, err := event.GetEventCases(false, startTime, currentTime, -1, "ALL", "ALL", 500, 0, "root", "ALL", "")
+		events, err := event.GetEventCases(false, startTime, currentTime, "ALL", "ALL", "ALL", 500, 0, "root", "ALL", "")
 		if err != nil {
 			log.Errorf("crond get evnetCase go err: %v", err.Error())
 		}

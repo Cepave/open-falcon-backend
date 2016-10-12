@@ -24,10 +24,11 @@ Modules:
 }
 
 func stop(c *cobra.Command, args []string) error {
-	if len(args) == 0 {
-		return c.Usage()
-	}
 	args = g.RmDup(args)
+
+	if len(args) == 0 {
+		args = g.AllModulesInOrder
+	}
 
 	for _, moduleName := range args {
 		if !g.HasModule(moduleName) {

@@ -18,7 +18,7 @@ func (this *PortalController) GetEventCases() {
 	}
 	startTime, _ := this.GetInt64("startTime", 0)
 	endTime, _ := this.GetInt64("endTime", 0)
-	prioprity, _ := this.GetInt("prioprity", -1)
+	prioprity := this.GetString("prioprity", "ALL")
 	status := this.GetString("status", "ALL")
 	processStatus := this.GetString("process_status", "ALL")
 	metrics := this.GetString("metrics", "ALL")
@@ -47,7 +47,7 @@ func (this *PortalController) GetEventCasesV2() {
 	}
 	startTime, _ := this.GetInt64("startTime", 0)
 	endTime, _ := this.GetInt64("endTime", 0)
-	prioprity, _ := this.GetInt("prioprity", -1)
+	prioprity := this.GetString("prioprity", "ALL")
 	status := this.GetString("status", "ALL")
 	processStatus := this.GetString("process", "ALL")
 	metrics := this.GetString("metric", "ALL")
