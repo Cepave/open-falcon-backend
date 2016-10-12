@@ -118,3 +118,8 @@
     filename: "mike-23.sql",
     comment: "Fix the view of filtering targets for ping task"
 }
+- {
+    id: "mike-24",
+    filename: "mike-24.sql",
+    comment: "Fix the view of filtering targets for ping task"
+}

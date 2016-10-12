@@ -6,7 +6,11 @@
  */
 CREATE OR REPLACE VIEW vw_ping_task
 AS
-SELECT pt.*,
+SELECT pt_id, pt_name, pt_period, pt_enable,
+	pt_number_of_name_tag_filters, pt_number_of_isp_filters,
+	pt_number_of_province_filters, pt_number_of_city_filters,
+	pt_number_of_group_tag_filters,
+	pt_comment,
 	(
 		IF(pt_number_of_name_tag_filters > 0, 1, 0) +
 		IF(pt_number_of_isp_filters > 0, 1, 0) +
