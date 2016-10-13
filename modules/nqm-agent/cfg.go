@@ -38,7 +38,7 @@ type GeneralConfig struct {
 var (
 	jsonConfig    atomic.Value // for *JSONConfigFile
 	hbsResp       atomic.Value // for receiving model.NqmTaskResponse
-	generalConfig *GeneralConfig
+	generalConfig = GeneralConfig{}
 )
 
 func publicIP() (string, error) {
@@ -50,11 +50,11 @@ func publicIP() (string, error) {
 	return ipStr, nil
 }
 
-func JSONConfig() *JSONConfigFile {
-	return jsonConfig.Load().(*JSONConfigFile)
+func JSONConfig() JSONConfigFile {
+	return jsonConfig.Load().(JSONConfigFile)
 }
 
-func SetJSONConfig(c *JSONConfigFile) {
+func SetJSONConfig(c JSONConfigFile) {
 	jsonConfig.Store(c)
 }
 
@@ -95,7 +95,8 @@ func ip() string {
 
 	ip, err := publicIP()
 	if err != nil {
-		log.Println("IP not set in config, getting public IP...failed:", err)
+		log.Fatalln("IP not set in config, getting public IP...failed:", err)
+
 	} else {
 		log.Println("IP not set in config, getting public IP...succeeded: [", ip, "]")
 	}
@@ -120,7 +121,7 @@ func connectionID() string {
 	return connectionID
 }
 
-func jsonUnmarshaller() *JSONConfigFile {
+func jsonUnmarshaller() JSONConfigFile {
 	var c = JSONConfigFile{
 		Agent: &AgentConfig{},
 		Hbs:   &HbsConfig{},
@@ -130,23 +131,20 @@ func jsonUnmarshaller() *JSONConfigFile {
 		log.Fatal("Parsing configuration file [", vipercfg.Config().GetString("config"), "] failed:", err)
 	}
 	log.Println("Reading configuration file [", vipercfg.Config().GetString("config"), "] succeeded")
-	return &c
+	return c
 }
 
-func GetGeneralConfig() *GeneralConfig {
+func GetGeneralConfig() GeneralConfig {
 	return generalConfig
 }
 
-func InitGeneralConfig(cfgFilePath string) {
-	var cfg GeneralConfig
-	generalConfig = &cfg
+func InitJSONConfig() {
+	c := jsonUnmarshaller()
+	SetJSONConfig(c)
+}
 
-	SetJSONConfig(jsonUnmarshaller())
-	SetHBSResp(model.NqmTaskResponse{})
-
-	cfg.Hostname = hostname()
-	if cfg.IPAddress = ip(); cfg.IPAddress == "UNKNOWN" {
-		log.Fatalln("IP can't be \"UNKNOWN\"")
-	}
-	cfg.ConnectionID = connectionID()
+func InitGeneralConfig() {
+	generalConfig.Hostname = hostname()
+	generalConfig.IPAddress = ip()
+	generalConfig.ConnectionID = connectionID()
 }

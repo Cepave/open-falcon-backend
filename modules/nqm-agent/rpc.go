@@ -78,4 +78,5 @@ func InitRPC() {
 		IpAddress:    GetGeneralConfig().IPAddress,
 		ConnectionId: GetGeneralConfig().ConnectionID,
 	}
+	SetHBSResp(model.NqmTaskResponse{})
 }

@@ -18,7 +18,8 @@ func main() {
 	}
 
 	vipercfg.Load()
-	InitGeneralConfig(vipercfg.Config().GetString("config"))
+	InitJSONConfig()
+	InitGeneralConfig()
 	logruslog.Init()
 	InitRPC()
 
