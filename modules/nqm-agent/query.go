@@ -11,7 +11,7 @@ import (
 )
 
 func tick() <-chan time.Time {
-	dur := time.Second * GetGeneralConfig().Hbs.Interval
+	dur := time.Second * JSONConfig().Hbs.Interval
 	return time.Tick(dur)
 }
 
@@ -53,7 +53,7 @@ func query() {
 	log.Println("[ hbs ] Response received")
 	HbsRespTime = time.Now()
 
-	oldResp := GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse)
+	oldResp := HBSResp()
 	if !configFromHbsUpdated(resp, oldResp) {
 		return
 	}
@@ -65,7 +65,7 @@ func query() {
 		msg = msg + " - " + measMsg
 	}
 
-	GetGeneralConfig().hbsResp.Store(resp)
+	SetHBSResp(resp)
 	log.Println(msg)
 }
 

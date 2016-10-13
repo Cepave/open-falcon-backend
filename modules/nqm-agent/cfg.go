@@ -1,19 +1,16 @@
 package main
 
 import (
-	"encoding/json"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/toolkits/file"
+	"github.com/Cepave/open-falcon-backend/common/vipercfg"
+	log "github.com/Sirupsen/logrus"
 )
 
 type AgentConfig struct {
@@ -34,8 +31,6 @@ type JSONConfigFile struct {
 }
 
 type GeneralConfig struct {
-	JSONConfigFile
-	hbsResp      atomic.Value // for receiving model.NqmTaskResponse
 	Hostname     string
 	IPAddress    string
 	ConnectionID string
@@ -43,33 +38,12 @@ type GeneralConfig struct {
 
 var (
 	jsonConfig    *JSONConfigFile
+	hbsResp       atomic.Value // for receiving model.NqmTaskResponse
 	generalConfig *GeneralConfig
 	jsonCfgLock   = new(sync.RWMutex)
 )
 
-func getBinAbsPath() string {
-	bin, err := filepath.Abs(os.Args[0])
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return bin
-}
-
-func getWorkingDirAbsPath() string {
-	return filepath.Dir(getBinAbsPath())
-}
-
-func getCfgAbsPath(cfgPath string) string {
-	if cfgPath == "cfg.json" {
-		return filepath.Join(getWorkingDirAbsPath(), cfgPath)
-	}
-
-	wd, _ := os.Getwd()
-	cfgAbsPath := filepath.Join(wd, cfgPath)
-	return cfgAbsPath
-}
-
-func PublicIP() (string, error) {
+func publicIP() (string, error) {
 	output, err := exec.Command("dig", "+short", "myip.opendns.com", "@resolver1.opendns.com").Output()
 	if err != nil {
 		return "UNKNOWN", err
@@ -78,14 +52,22 @@ func PublicIP() (string, error) {
 	return ipStr, nil
 }
 
-func getJSONConfig() *JSONConfigFile {
+func JSONConfig() *JSONConfigFile {
 	jsonCfgLock.RLock()
 	defer jsonCfgLock.RUnlock()
 	return jsonConfig
 }
 
-func getHostname() string {
-	hostname := getJSONConfig().Hostname
+func HBSResp() model.NqmTaskResponse {
+	return hbsResp.Load().(model.NqmTaskResponse)
+}
+
+func SetHBSResp(r model.NqmTaskResponse) {
+	hbsResp.Store(r)
+}
+
+func hostname() string {
+	hostname := JSONConfig().Hostname
 	if hostname != "" {
 		log.Println("Hostname set in config: [", hostname, "]")
 		return hostname
@@ -104,14 +86,14 @@ func getHostname() string {
 	return hostname
 }
 
-func getIP() string {
-	ip := getJSONConfig().IPAddress
+func ip() string {
+	ip := JSONConfig().IPAddress
 	if ip != "" {
 		log.Println("IP set in config: [", ip, "]")
 		return ip
 	}
 
-	ip, err := PublicIP()
+	ip, err := publicIP()
 	if err != nil {
 		log.Println("IP not set in config, getting public IP...failed:", err)
 	} else {
@@ -120,8 +102,8 @@ func getIP() string {
 	return ip
 }
 
-func getConnectionID() string {
-	connectionID := getJSONConfig().ConnectionID
+func connectionID() string {
+	connectionID := JSONConfig().ConnectionID
 	if connectionID != "" {
 		log.Println("ConnectionID set in config: [", connectionID, "]")
 		return connectionID
@@ -138,31 +120,17 @@ func getConnectionID() string {
 	return connectionID
 }
 
-func loadJSONConfig(cfgFile string) {
-	cfgFile = filepath.Clean(cfgFile)
-	cfgPath := getCfgAbsPath(cfgFile)
-
-	if !file.IsExist(cfgPath) {
-		log.Fatalln("Configuration file [", cfgFile, "] doesn't exist")
+func jsonUnmarshaller() *JSONConfigFile {
+	var c = JSONConfigFile{
+		Agent: &AgentConfig{},
+		Hbs:   &HbsConfig{},
 	}
-
-	configContent, err := file.ToTrimString(cfgPath)
+	err := vipercfg.Config().Unmarshal(&c)
 	if err != nil {
-		log.Fatalln("Reading configuration file [", cfgFile, "] failed:", err)
+		log.Fatal("Parsing configuration file [", vipercfg.Config().GetString("config"), "] failed:", err)
 	}
-
-	var c JSONConfigFile
-	err = json.Unmarshal([]byte(configContent), &c)
-	if err != nil {
-		log.Fatalln("Parsing configuration file [", cfgFile, "] failed:", err)
-	}
-
-	jsonCfgLock.Lock()
-	defer jsonCfgLock.Unlock()
-
-	jsonConfig = &c
-
-	log.Println("Reading configuration file [", cfgFile, "] succeeded")
+	log.Println("Reading configuration file [", vipercfg.Config().GetString("config"), "] succeeded")
+	return &c
 }
 
 func GetGeneralConfig() *GeneralConfig {
@@ -173,13 +141,12 @@ func InitGeneralConfig(cfgFilePath string) {
 	var cfg GeneralConfig
 	generalConfig = &cfg
 
-	loadJSONConfig(cfgFilePath)
-	cfg.Agent = getJSONConfig().Agent
-	cfg.Hbs = getJSONConfig().Hbs
-	cfg.hbsResp.Store(model.NqmTaskResponse{})
-	cfg.Hostname = getHostname()
-	if cfg.IPAddress = getIP(); cfg.IPAddress == "UNKNOWN" {
+	jsonConfig = jsonUnmarshaller()
+	SetHBSResp(model.NqmTaskResponse{})
+
+	cfg.Hostname = hostname()
+	if cfg.IPAddress = ip(); cfg.IPAddress == "UNKNOWN" {
 		log.Fatalln("IP can't be \"UNKNOWN\"")
 	}
-	cfg.ConnectionID = getConnectionID()
+	cfg.ConnectionID = connectionID()
 }

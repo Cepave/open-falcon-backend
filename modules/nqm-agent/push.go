@@ -14,7 +14,7 @@ func Push(params []ParamToAgent, util string) {
 		log.Fatalln("[", util, "] , Error on formatting body:,", err)
 	}
 
-	postReq, err := http.NewRequest("POST", GetGeneralConfig().Agent.PushURL, bytes.NewBuffer(paramsBody))
+	postReq, err := http.NewRequest("POST", JSONConfig().Agent.PushURL, bytes.NewBuffer(paramsBody))
 	postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	postReq.Header.Set("Connection", "close")
 
