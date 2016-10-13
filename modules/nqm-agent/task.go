@@ -26,10 +26,10 @@ func Task(u Utility) ([]string, []model.NqmTarget, model.NqmAgent, time.Duration
 	hbsResp := HBSResp()
 
 	if !hbsResp.NeedPing {
-		return nil, nil, model.NqmAgent{}, JSONConfig().Hbs.Interval, fmt.Errorf("[ " + u.UtilName() + " ] No tasks assigned.")
+		return nil, nil, model.NqmAgent{}, Config().Hbs.Interval, fmt.Errorf("[ " + u.UtilName() + " ] No tasks assigned.")
 	}
 	if !hbsResp.Measurements[u.UtilName()].Enabled {
-		return nil, nil, model.NqmAgent{}, JSONConfig().Hbs.Interval, fmt.Errorf("[ " + u.UtilName() + " ] Not enabled.")
+		return nil, nil, model.NqmAgent{}, Config().Hbs.Interval, fmt.Errorf("[ " + u.UtilName() + " ] Not enabled.")
 
 	}
 	targets := make([]model.NqmTarget, len(hbsResp.Targets))

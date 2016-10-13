@@ -21,7 +21,7 @@ type HbsConfig struct {
 	Interval  time.Duration `json:"interval"`
 }
 
-type JSONConfigFile struct {
+type JSONConfig struct {
 	Agent        *AgentConfig `json:"agent"`
 	Hbs          *HbsConfig   `json:"hbs"`
 	Hostname     string       `json:"hostname"`
@@ -29,16 +29,16 @@ type JSONConfigFile struct {
 	ConnectionID string       `json:"connectionID"`
 }
 
-type GeneralConfig struct {
+type Metadata struct {
 	Hostname     string
 	IPAddress    string
 	ConnectionID string
 }
 
 var (
-	jsonConfig    atomic.Value // for *JSONConfigFile
-	hbsResp       atomic.Value // for receiving model.NqmTaskResponse
-	generalConfig = GeneralConfig{}
+	jsonConfig atomic.Value // for JSONConfig
+	hbsResp    atomic.Value // for receiving model.NqmTaskResponse
+	metadata   = Metadata{}
 )
 
 func publicIP() (string, error) {
@@ -50,11 +50,11 @@ func publicIP() (string, error) {
 	return ipStr, nil
 }
 
-func JSONConfig() JSONConfigFile {
-	return jsonConfig.Load().(JSONConfigFile)
+func Config() JSONConfig {
+	return jsonConfig.Load().(JSONConfig)
 }
 
-func SetJSONConfig(c JSONConfigFile) {
+func SetConfig(c JSONConfig) {
 	jsonConfig.Store(c)
 }
 
@@ -67,7 +67,7 @@ func SetHBSResp(r model.NqmTaskResponse) {
 }
 
 func hostname() string {
-	hostname := JSONConfig().Hostname
+	hostname := Config().Hostname
 	if hostname != "" {
 		log.Println("Hostname set in config: [", hostname, "]")
 		return hostname
@@ -87,7 +87,7 @@ func hostname() string {
 }
 
 func ip() string {
-	ip := JSONConfig().IPAddress
+	ip := Config().IPAddress
 	if ip != "" {
 		log.Println("IP set in config: [", ip, "]")
 		return ip
@@ -104,7 +104,7 @@ func ip() string {
 }
 
 func connectionID() string {
-	connectionID := JSONConfig().ConnectionID
+	connectionID := Config().ConnectionID
 	if connectionID != "" {
 		log.Println("ConnectionID set in config: [", connectionID, "]")
 		return connectionID
@@ -112,17 +112,17 @@ func connectionID() string {
 
 	// Logically it shouldn't happen because ConnectionID is alwasy generated
 	// after Hostname and IPAddress are set.
-	if GetGeneralConfig().Hostname == "" || GetGeneralConfig().IPAddress == "" {
+	if Meta().Hostname == "" || Meta().IPAddress == "" {
 		log.Fatalln("ConnectionID not set in config, generating...failed!")
 	}
 
-	connectionID = GetGeneralConfig().Hostname + "@" + GetGeneralConfig().IPAddress
+	connectionID = Meta().Hostname + "@" + Meta().IPAddress
 	log.Println("ConnectionID not set in config, generating...succeeded: [", connectionID, "]")
 	return connectionID
 }
 
-func jsonUnmarshaller() JSONConfigFile {
-	var c = JSONConfigFile{
+func jsonUnmarshaller() JSONConfig {
+	var c = JSONConfig{
 		Agent: &AgentConfig{},
 		Hbs:   &HbsConfig{},
 	}
@@ -134,17 +134,17 @@ func jsonUnmarshaller() JSONConfigFile {
 	return c
 }
 
-func GetGeneralConfig() GeneralConfig {
-	return generalConfig
-}
-
-func InitJSONConfig() {
+func InitConfig() {
 	c := jsonUnmarshaller()
-	SetJSONConfig(c)
+	SetConfig(c)
 }
 
-func InitGeneralConfig() {
-	generalConfig.Hostname = hostname()
-	generalConfig.IPAddress = ip()
-	generalConfig.ConnectionID = connectionID()
+func Meta() *Metadata {
+	return &metadata
+}
+
+func GenMeta() {
+	Meta().Hostname = hostname()
+	Meta().IPAddress = ip()
+	Meta().ConnectionID = connectionID()
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func tick() <-chan time.Time {
-	dur := time.Second * JSONConfig().Hbs.Interval
+	dur := time.Second * Config().Hbs.Interval
 	return time.Tick(dur)
 }
 
