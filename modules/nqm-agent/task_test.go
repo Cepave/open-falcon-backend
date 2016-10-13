@@ -74,7 +74,6 @@ func initJsonRpcClient(srvAddr string) {
 		IpAddress:    "1.2.3.4",
 		ConnectionId: "arg-arg-arg",
 	}
-	rpcClient = initConn(rpcServer, rpcTimeout)
 }
 
 func TestTask(t *testing.T) {

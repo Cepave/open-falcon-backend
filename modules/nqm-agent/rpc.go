@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"net/rpc"
 	"time"
@@ -11,21 +12,20 @@ import (
 	"github.com/toolkits/net"
 )
 
+const ConnTimeout = 50 * time.Second
+
 var HbsRespTime time.Time
 
 var (
-	req        model.NqmTaskRequest
-	rpcClient  *rpc.Client
-	rpcServer  string
-	rpcTimeout time.Duration
+	req       model.NqmTaskRequest
+	rpcServer string
 )
 var retryCnt = int(1)
 
-func closeConn() {
-	if err := rpcClient.Close(); err != nil {
-		log.Errorln("[ hbs ]", err)
+func closeConn(c *rpc.Client) {
+	if err := c.Close(); err != nil {
+		log.Errorln("[ hbs ] Error on closing RPC connection", err)
 	}
-	rpcClient = nil
 }
 
 func wait4Retry() {
@@ -36,16 +36,9 @@ func wait4Retry() {
 	retryCnt++
 }
 
-func hasConn() bool {
-	if rpcClient != nil {
-		return true
-	}
-	return false
-}
-
-func initConn(server string, timeout time.Duration) *rpc.Client {
+func initConn(server string) *rpc.Client {
 	for {
-		client, err := net.JsonRpcClient("tcp", server, timeout)
+		client, err := net.JsonRpcClient("tcp", server, ConnTimeout)
 		if err == nil {
 			return client
 		}
@@ -62,28 +55,20 @@ func initConn(server string, timeout time.Duration) *rpc.Client {
 }
 
 func RPCCall(method string, args interface{}, reply interface{}) error {
-	if !hasConn() {
-		initConn(rpcServer, rpcTimeout)
-	}
+	currentRpcClient := initConn(rpcServer)
+	defer closeConn(currentRpcClient)
 
 	done := make(chan error, 1)
 	go func() {
-		done <- rpcClient.Call(method, args, reply)
+		done <- currentRpcClient.Call(method, args, reply)
 	}()
 
-	callTimeout := time.Duration(50 * time.Second)
 	select {
-	case <-time.After(callTimeout):
-		log.Warnf("rpc call timeout %v => %v", rpcClient, rpcServer)
-		closeConn()
+	case <-time.After(ConnTimeout):
+		return fmt.Errorf("Call to server <%s> timed out (%d seconds)", rpcServer, ConnTimeout)
 	case err := <-done:
-		if err != nil {
-			closeConn()
-			return err
-		}
+		return err
 	}
-
-	return nil
 }
 
 func InitRPC() {
@@ -93,5 +78,4 @@ func InitRPC() {
 		IpAddress:    GetGeneralConfig().IPAddress,
 		ConnectionId: GetGeneralConfig().ConnectionID,
 	}
-	rpcClient = initConn(rpcServer, rpcTimeout)
 }
