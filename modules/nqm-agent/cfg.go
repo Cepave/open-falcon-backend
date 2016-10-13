@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -37,10 +36,9 @@ type GeneralConfig struct {
 }
 
 var (
-	jsonConfig    *JSONConfigFile
+	jsonConfig    atomic.Value // for *JSONConfigFile
 	hbsResp       atomic.Value // for receiving model.NqmTaskResponse
 	generalConfig *GeneralConfig
-	jsonCfgLock   = new(sync.RWMutex)
 )
 
 func publicIP() (string, error) {
@@ -53,9 +51,11 @@ func publicIP() (string, error) {
 }
 
 func JSONConfig() *JSONConfigFile {
-	jsonCfgLock.RLock()
-	defer jsonCfgLock.RUnlock()
-	return jsonConfig
+	return jsonConfig.Load().(*JSONConfigFile)
+}
+
+func SetJSONConfig(c *JSONConfigFile) {
+	jsonConfig.Store(c)
 }
 
 func HBSResp() model.NqmTaskResponse {
@@ -141,7 +141,7 @@ func InitGeneralConfig(cfgFilePath string) {
 	var cfg GeneralConfig
 	generalConfig = &cfg
 
-	jsonConfig = jsonUnmarshaller()
+	SetJSONConfig(jsonUnmarshaller())
 	SetHBSResp(model.NqmTaskResponse{})
 
 	cfg.Hostname = hostname()
