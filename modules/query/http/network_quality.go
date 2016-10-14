@@ -300,4 +300,5 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 func configNQMRoutes() {
 	http.HandleFunc("/api/nqm/nodes", getNQMNodes)
 	http.HandleFunc("/api/nqm/loss", getNQMPacketLoss)
+	http.HandleFunc("/api/nqm/jaguar", getJaguar)
 }
