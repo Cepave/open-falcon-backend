@@ -100,8 +100,11 @@ func getSum(slice []float64) float64 {
 	return sum
 }
 
-func getPacketLossAndAveragePingTime(tableName string, timestamp string, result map[string]interface{}) map[string]interface{} {
+func getPacketLossAndAveragePingTime(tableName string, timestamp int64, result map[string]interface{}) map[string]interface{} {
 	idc := map[string]interface{}{}
+	if timestamp == int64(0) {
+		return idc
+	}
 	sends := []float64{}
 	receives := []float64{}
 	averages := []float64{}
@@ -110,7 +113,7 @@ func getPacketLossAndAveragePingTime(tableName string, timestamp string, result 
 	o.Using("gz_nqm")
 	sqlcmd := "SELECT send, receive, avg FROM gz_nqm." + tableName + " WHERE mtime = ?"
 	var rows []orm.Params
-	num, err := o.Raw(sqlcmd, timestamp).Values(&rows)
+	num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestamp))).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
 	} else if num > 0 {
@@ -136,17 +139,13 @@ func getPacketLossAndAveragePingTime(tableName string, timestamp string, result 
 		}
 	}
 	divider := float64(len(sends))
-	packetLossRate := 1 - (getSum(receives) / getSum(sends))
-	averagePingTimeMilliseconds := getSum(averages) / divider
-
-	timestampInt, err := strconv.Atoi(timestamp)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
+	if divider > 0 {
+		packetLossRate := 1 - (getSum(receives) / getSum(sends))
+		averagePingTimeMilliseconds := getSum(averages) / divider
 		idc = map[string]interface{}{
 			"packetLossRate":              packetLossRate,
 			"averagePingTimeMilliseconds": averagePingTimeMilliseconds,
-			"time": time.Unix(int64(timestampInt), 0).Format("2006-01-02 15:04"),
+			"time": time.Unix(timestamp, 0).Format("2006-01-02 15:04"),
 		}
 	}
 	return idc
