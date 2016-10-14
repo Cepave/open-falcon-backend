@@ -210,6 +210,93 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getJaguar(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	timestamp := int64(0)
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	timeFormat := "2006-01-02 15:04"
+	timeInput := req.URL.Query().Get("time")
+	date, err := time.ParseInLocation(timeFormat, timeInput, loc)
+	if err == nil {
+		timestamp = date.Unix()
+	}
+	nodeMap := map[string]map[string]string{}
+	nodeNames := []string{}
+	o := orm.NewOrm()
+	o.Using("gz_nqm")
+	var NQMNodes []*Nqm_node
+	_, err = o.Raw("SELECT nid, pname, cname, iname FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, node := range NQMNodes {
+			nodeName := node.Nid
+			node := map[string]string{
+				"node":     nodeName,
+				"province": node.Pname,
+				"city":     node.Cname,
+				"isp":      node.Iname,
+			}
+			nodeMap[nodeName] = node
+			nodeNames = append(nodeNames, nodeName)
+		}
+	}
+	sqlcmd := "SELECT nid, ip, note FROM gz_nqm.nqm_dev WHERE nid IN ('"
+	sqlcmd += strings.Join(nodeNames, "','") + "')"
+	var rows []orm.Params
+	_, err = o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, row := range rows {
+			nodeName := row["nid"].(string)
+			nodeMap[nodeName]["ip"] = row["ip"].(string)
+			nodeMap[nodeName]["idc"] = row["note"].(string)
+		}
+	}
+	for _, nodeName := range nodeNames {
+		node := nodeMap[nodeName]
+		item := map[string]interface{}{
+			"node":     node["node"],
+			"province": node["province"],
+			"city":     node["city"],
+			"isp":      node["isp"],
+			"ip":       node["ip"],
+			"idc":      node["idc"],
+			"loss":     nil,
+			"ping.ms":  nil,
+			"time":     nil,
+		}
+		tableName := "nqm_log_" + strings.Replace(nodeName, "-", "_", -1)
+		timestampLatest := getLatestTimestamp(tableName, result)
+		if timestampLatest > 0 {
+			timestampNearest := timestampLatest
+			if timestamp > 0 {
+				timestampNearest = getNearestTimestamp(tableName, timestamp, result)
+			}
+			resp := getPacketLossAndAveragePingTime(tableName, timestampNearest, result)
+			if _, ok := resp["packetLossRate"]; ok {
+				item["loss"] = resp["packetLossRate"]
+				item["ping.ms"] = resp["averagePingTimeMilliseconds"]
+				item["time"] = resp["time"]
+			}
+		}
+		items = append(items, item)
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configNQMRoutes() {
 	http.HandleFunc("/api/nqm/nodes", getNQMNodes)
 	http.HandleFunc("/api/nqm/loss", getNQMPacketLoss)
