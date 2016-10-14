@@ -70,6 +70,25 @@ func getLatestTimestamp(tableName string, result map[string]interface{}) string 
 	return timestamp
 }
 
+func getNearestTimestamp(tableName string, bound int64, result map[string]interface{}) int64 {
+	timestamp := int64(0)
+	o := orm.NewOrm()
+	o.Using("gz_nqm")
+	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName
+	sqlcmd += " WHERE mtime <= ? ORDER BY mtime DESC LIMIT 1"
+	var rows []orm.Params
+	num, err := o.Raw(sqlcmd, bound).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		mtime, err := strconv.Atoi(rows[0]["mtime"].(string))
+		if err == nil {
+			timestamp = int64(mtime)
+		}
+	}
+	return timestamp
+}
+
 func getSum(slice []float64) float64 {
 	sum := float64(0)
 	for _, number := range slice {
