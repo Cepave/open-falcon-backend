@@ -55,8 +55,8 @@ func getNQMNodes(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getLatestTimestamp(tableName string, result map[string]interface{}) string {
-	timestamp := ""
+func getLatestTimestamp(tableName string, result map[string]interface{}) int64 {
+	timestamp := int64(0)
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName + " ORDER BY mtime DESC LIMIT 1"
@@ -65,7 +65,10 @@ func getLatestTimestamp(tableName string, result map[string]interface{}) string 
 	if err != nil {
 		setError(err.Error(), result)
 	} else if num > 0 {
-		timestamp = rows[0]["mtime"].(string)
+		mtime, err := strconv.Atoi(rows[0]["mtime"].(string))
+		if err == nil {
+			timestamp = int64(mtime)
+		}
 	}
 	return timestamp
 }
