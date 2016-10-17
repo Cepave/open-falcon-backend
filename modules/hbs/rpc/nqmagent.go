@@ -15,7 +15,6 @@ import (
 // If the NqmTaskRequest.ConnectionId is not existing in database,
 // this function would create one, but the NqmTiskResponse.NeedPing would be value of false.
 func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonModel.NqmTaskResponse) (err error) {
-
 	/**
 	 * Validates data
 	 */

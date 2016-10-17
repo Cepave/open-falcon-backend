@@ -3,7 +3,8 @@ package http
 import (
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
-	"github.com/gin-gonic/gin"
+	nqmhttp "github.com/Cepave/open-falcon-backend/modules/hbs/http/nqm"
+	"gopkg.in/gin-gonic/gin.v1"
 	log "github.com/Sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
@@ -22,6 +23,8 @@ func init() {
 
 	configCommonRoutes(ginRouter)
 	configProcRoutes(ginRouter)
+
+	nqmhttp.RegisterRoutes(ginRouter)
 }
 
 func RenderJson(w http.ResponseWriter, v interface{}) {
