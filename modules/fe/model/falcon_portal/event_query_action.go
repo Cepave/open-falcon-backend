@@ -34,7 +34,7 @@ func genSqlFilterTemplete(whereConditions []string) string {
 
 const SkipFilter = "ALL"
 
-func GetEventCases(includeEvents bool, startTime int64, endTime int64, priority int, status string, progressStatus string, limit int, elimit int, username string, metrics string, caseId string) (result []EventCases, err error) {
+func GetEventCases(includeEvents bool, startTime int64, endTime int64, priority string, status string, progressStatus string, limit int, elimit int, username string, metrics string, caseId string) (result []EventCases, err error) {
 	config := g.Config()
 	q := orm.NewOrm()
 	q.Using("falcon_portal")
@@ -52,8 +52,8 @@ func GetEventCases(includeEvents bool, startTime int64, endTime int64, priority 
 	if startTime != 0 && endTime != 0 {
 		whereConditions = append(whereConditions, fmt.Sprintf("update_at BETWEEN FROM_UNIXTIME(%d) AND FROM_UNIXTIME(%d)", startTime, endTime))
 	}
-	if priority != -1 {
-		whereConditions = append(whereConditions, fmt.Sprintf("priority = %d", priority))
+	if priority != "ALL" {
+		whereConditions = append(whereConditions, fmt.Sprintf("priority IN (%s) ", priority))
 	}
 	if status != SkipFilter {
 		log.Debug("statis ", status)

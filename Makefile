@@ -5,7 +5,7 @@ TARGET = open-falcon
 
 VERSION := $(shell cat VERSION)
 
-all: trash $(CMD) $(TARGET)
+all: $(CMD) $(TARGET)
 
 $(CMD):
 	go build -o bin/$@/falcon-$@ ./modules/$@
@@ -13,22 +13,10 @@ $(CMD):
 $(TARGET): $(TARGET_SOURCE)
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
 
-# dev creates binaries for testing locally - these are put into ./bin and $GOPATH
-dev: format
-	@CONSUL_DEV=1 sh -c "'$(CURDIR)/scripts/build.sh'"
-
-test: format
-	@./scripts/test.sh
-
-format:
-	@echo "--> Running go fmt"
-	@go fmt `go list ./...`
-
 checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
 	@if [ -e out ] ; then rm -rf out; fi
 	@mkdir out
-	@bash ./config/confgen.sh
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/bin;)
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/config;)
 	@$(foreach var,$(CMD),mkdir -p ./out/$(var)/logs;)
@@ -39,9 +27,9 @@ pack: checkbin
 	@cp -r ./modules/alarm/{static,views} ./out/alarm/bin
 	@cp -r ./modules/agent/public ./out/agent/bin
 	@cp cfg.json ./out/cfg.json
+	@bash ./config/confgen.sh
 	@cp $(TARGET) ./out/$(TARGET)
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
-	@git checkout -- ./config
 	@rm -rf out
 
 clean:
@@ -52,7 +40,4 @@ clean:
 	@rm -rf ./vendor
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
-trash:
-	trash -k -cache package_cache_tmp
-
-.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe
+.PHONY: clean all aggregator graph hbs judge nodata query sender task transfer fe

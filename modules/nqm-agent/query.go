@@ -47,7 +47,7 @@ func query() {
 	var resp model.NqmTaskResponse
 	err := RPCCall("NqmAgent.Task", req, &resp)
 	if err != nil {
-		log.Println("[ hbs ] Error on RPC call:", err)
+		log.Errorln("[ hbs ] Error on RPC call:", err)
 		return
 	}
 	log.Println("[ hbs ] Response received")

@@ -55,8 +55,8 @@ func getNQMNodes(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getLatestTimestamp(tableName string, result map[string]interface{}) string {
-	timestamp := ""
+func getLatestTimestamp(tableName string, result map[string]interface{}) int64 {
+	timestamp := int64(0)
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName + " ORDER BY mtime DESC LIMIT 1"
@@ -65,7 +65,29 @@ func getLatestTimestamp(tableName string, result map[string]interface{}) string 
 	if err != nil {
 		setError(err.Error(), result)
 	} else if num > 0 {
-		timestamp = rows[0]["mtime"].(string)
+		mtime, err := strconv.Atoi(rows[0]["mtime"].(string))
+		if err == nil {
+			timestamp = int64(mtime)
+		}
+	}
+	return timestamp
+}
+
+func getNearestTimestamp(tableName string, bound int64, result map[string]interface{}) int64 {
+	timestamp := int64(0)
+	o := orm.NewOrm()
+	o.Using("gz_nqm")
+	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName
+	sqlcmd += " WHERE mtime <= ? ORDER BY mtime DESC LIMIT 1"
+	var rows []orm.Params
+	num, err := o.Raw(sqlcmd, bound).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		mtime, err := strconv.Atoi(rows[0]["mtime"].(string))
+		if err == nil {
+			timestamp = int64(mtime)
+		}
 	}
 	return timestamp
 }
@@ -78,8 +100,11 @@ func getSum(slice []float64) float64 {
 	return sum
 }
 
-func getPacketLossAndAveragePingTime(tableName string, timestamp string, result map[string]interface{}) map[string]interface{} {
+func getPacketLossAndAveragePingTime(tableName string, timestamp int64, result map[string]interface{}) map[string]interface{} {
 	idc := map[string]interface{}{}
+	if timestamp == int64(0) {
+		return idc
+	}
 	sends := []float64{}
 	receives := []float64{}
 	averages := []float64{}
@@ -88,7 +113,7 @@ func getPacketLossAndAveragePingTime(tableName string, timestamp string, result 
 	o.Using("gz_nqm")
 	sqlcmd := "SELECT send, receive, avg FROM gz_nqm." + tableName + " WHERE mtime = ?"
 	var rows []orm.Params
-	num, err := o.Raw(sqlcmd, timestamp).Values(&rows)
+	num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestamp))).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
 	} else if num > 0 {
@@ -114,17 +139,13 @@ func getPacketLossAndAveragePingTime(tableName string, timestamp string, result 
 		}
 	}
 	divider := float64(len(sends))
-	packetLossRate := 1 - (getSum(receives) / getSum(sends))
-	averagePingTimeMilliseconds := getSum(averages) / divider
-
-	timestampInt, err := strconv.Atoi(timestamp)
-	if err != nil {
-		setError(err.Error(), result)
-	} else {
+	if divider > 0 {
+		packetLossRate := 1 - (getSum(receives) / getSum(sends))
+		averagePingTimeMilliseconds := getSum(averages) / divider
 		idc = map[string]interface{}{
 			"packetLossRate":              packetLossRate,
 			"averagePingTimeMilliseconds": averagePingTimeMilliseconds,
-			"time": time.Unix(int64(timestampInt), 0).Format("2006-01-02 15:04"),
+			"time": time.Unix(timestamp, 0).Format("2006-01-02 15:04"),
 		}
 	}
 	return idc
@@ -173,9 +194,9 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	}
 	sort.Strings(idcNames)
 	for _, idcName := range idcNames {
-		tableName := "nqm_log_prober_" + strings.Replace(idcName, "-", "_", -1)
+		tableName := "nqm_log_" + strings.Replace(idcName, "-", "_", -1)
 		timestamp := getLatestTimestamp(tableName, result)
-		if timestamp != "" {
+		if timestamp > 0 {
 			idc := getPacketLossAndAveragePingTime(tableName, timestamp, result)
 			idc["nodeName"] = idcName
 			idc["pid"] = pidMap[idcName]
@@ -189,7 +210,95 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getJaguar(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	timestamp := int64(0)
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	timeFormat := "2006-01-02 15:04"
+	timeInput := req.URL.Query().Get("time")
+	date, err := time.ParseInLocation(timeFormat, timeInput, loc)
+	if err == nil {
+		timestamp = date.Unix()
+	}
+	nodeMap := map[string]map[string]string{}
+	nodeNames := []string{}
+	o := orm.NewOrm()
+	o.Using("gz_nqm")
+	var NQMNodes []*Nqm_node
+	_, err = o.Raw("SELECT nid, pname, cname, iname FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, node := range NQMNodes {
+			nodeName := node.Nid
+			node := map[string]string{
+				"node":     nodeName,
+				"province": node.Pname,
+				"city":     node.Cname,
+				"isp":      node.Iname,
+			}
+			nodeMap[nodeName] = node
+			nodeNames = append(nodeNames, nodeName)
+		}
+	}
+	sqlcmd := "SELECT nid, ip, note FROM gz_nqm.nqm_dev WHERE nid IN ('"
+	sqlcmd += strings.Join(nodeNames, "','") + "')"
+	var rows []orm.Params
+	_, err = o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else {
+		for _, row := range rows {
+			nodeName := row["nid"].(string)
+			nodeMap[nodeName]["ip"] = row["ip"].(string)
+			nodeMap[nodeName]["idc"] = row["note"].(string)
+		}
+	}
+	for _, nodeName := range nodeNames {
+		node := nodeMap[nodeName]
+		item := map[string]interface{}{
+			"node":     node["node"],
+			"province": node["province"],
+			"city":     node["city"],
+			"isp":      node["isp"],
+			"ip":       node["ip"],
+			"idc":      node["idc"],
+			"loss":     nil,
+			"ping.ms":  nil,
+			"time":     nil,
+		}
+		tableName := "nqm_log_" + strings.Replace(nodeName, "-", "_", -1)
+		timestampLatest := getLatestTimestamp(tableName, result)
+		if timestampLatest > 0 {
+			timestampNearest := timestampLatest
+			if timestamp > 0 {
+				timestampNearest = getNearestTimestamp(tableName, timestamp, result)
+			}
+			resp := getPacketLossAndAveragePingTime(tableName, timestampNearest, result)
+			if _, ok := resp["packetLossRate"]; ok {
+				item["loss"] = resp["packetLossRate"]
+				item["ping.ms"] = resp["averagePingTimeMilliseconds"]
+				item["time"] = resp["time"]
+			}
+		}
+		items = append(items, item)
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configNQMRoutes() {
 	http.HandleFunc("/api/nqm/nodes", getNQMNodes)
 	http.HandleFunc("/api/nqm/loss", getNQMPacketLoss)
+	http.HandleFunc("/api/nqm/jaguar", getJaguar)
 }
