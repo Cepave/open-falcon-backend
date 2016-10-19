@@ -4,7 +4,9 @@ import (
 	"sort"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
+	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	. "gopkg.in/check.v1"
 )
 
@@ -119,11 +121,7 @@ func (s *TestRpcNqmAgentSuite) TearDownSuite(c *C) {
 func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 	switch c.TestName() {
 	case "TestRpcNqmAgentSuite.TestTask":
-		if !hbstesting.HasDbEnvForMysqlOrSkip(c) {
-			return
-		}
-
-		hbstesting.ExecuteQueriesOrFailInTx(
+		executeInTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
 			VALUES (9901, 'tag-1')
@@ -157,7 +155,7 @@ func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 func (s *TestRpcNqmAgentSuite) TearDownTest(c *C) {
 	switch c.TestName() {
 	case "TestRpcNqmAgentSuite.TestTask":
-		hbstesting.ExecuteQueriesOrFailInTx(
+		executeInTx(
 			"DELETE FROM nqm_agent_ping_task WHERE apt_ag_id = 405001",
 			"DELETE FROM nqm_ping_task WHERE pt_id = 32001",
 			"DELETE FROM nqm_agent WHERE ag_id = 405001",
@@ -165,4 +163,9 @@ func (s *TestRpcNqmAgentSuite) TearDownTest(c *C) {
 			"DELETE FROM owl_name_tag WHERE nt_id = 9901",
 		)
 	}
+}
+
+func executeInTx(sqls ...string) {
+	dbCtrl := commonDb.NewDbController(db.DB)
+	dbCtrl.InTx(commonDb.BuildTxForSqls(sqls...))
 }

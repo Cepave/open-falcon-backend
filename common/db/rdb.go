@@ -62,6 +62,17 @@ func (callbackFunc TxCallbackFunc) InTx(tx *sql.Tx) {
 	callbackFunc(tx)
 }
 
+// BuildTxForSqls builds function for exeuction of multiple SQLs
+func BuildTxForSqls(queries... string) TxCallback {
+	return TxCallbackFunc(func(tx *sql.Tx) {
+		for _, v := range queries {
+			if _, err := tx.Exec(v); err != nil {
+				panic(err)
+			}
+		}
+	})
+}
+
 // Executes callbacks in transaction if the boot callback has true value
 type ExecuteIfByTx interface {
 	// First calling of database for boolean result

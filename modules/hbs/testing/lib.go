@@ -22,23 +22,25 @@ var DbForTest *sql.DB
 // it is executed by testing
 type AssertFunc func(*check.C)
 
-func InitDb() {
+type InitDbCallback func(dsn string, maxIdle int) error
+type ReleaseDbCallback func()
+
+func DoInitDb(callback InitDbCallback) {
 	if *dsnMysql == "" {
 		return
 	}
 
-	var err error
-	if DbForTest, err = sql.Open("mysql", *dsnMysql); err != nil {
-
-		log.Fatalf("Cannot connect to database: %v", err)
+	if err := callback(*dsnMysql, 2)
+		err != nil {
+		panic(err)
 	}
 }
-
-func ReleaseDb() {
-	if DbForTest != nil {
-		DbForTest.Close()
-		DbForTest = nil
+func DoReleaseDb(callback ReleaseDbCallback) {
+	if *dsnMysql == "" {
+		return
 	}
+
+	callback()
 }
 
 // Checks whether or not skipping testing by viable arguments
@@ -52,52 +54,6 @@ func HasDbEnvForMysqlOrSkip(c *C) bool {
 	return hasMySqlDsn
 }
 
-// IoC Callback for rows
-// This method would use sql.DB.Query method to retrive data
-func QueryForRows(
-	rowsCallback func(row *sql.Rows),
-	sqlQuery string, args ...interface{},
-) {
-	rows, err := DbForTest.Query(
-		sqlQuery, args...,
-	)
-
-	if err != nil {
-		log.Fatalf("Query SQL error. %v. SQL:\n%v\n", err, sqlQuery)
-	}
-
-	defer rows.Close()
-	for rows.Next() {
-		rowsCallback(rows)
-	}
-}
-
-// IoC Callback for row
-// This method would use sql.DB.QueryRow method to retrive data
-func QueryForRow(
-	rowCallback func(row *sql.Row),
-	sqlQuery string, args ...interface{},
-) {
-	row := DbForTest.QueryRow(
-		sqlQuery, args...,
-	)
-
-	rowCallback(row)
-}
-
-// IoC execution(in transaction)
-func ExecuteInTx(txCallback func(*sql.Tx)) {
-	var tx *sql.Tx
-	var err error
-
-	if tx, err = DbForTest.Begin(); err != nil {
-		log.Fatalf("Cannot create transaction: %v", err)
-	}
-
-	defer tx.Commit()
-	txCallback(tx)
-}
-
 // IoC execution
 func ExecuteOrFail(query string, args ...interface{}) sql.Result {
 	result, err := DbForTest.Exec(query, args...)
@@ -107,19 +63,6 @@ func ExecuteOrFail(query string, args ...interface{}) sql.Result {
 	}
 
 	return result
-}
-
-// IoC execution(in transaction)
-func ExecuteQueriesOrFailInTx(queries ...string) {
-	ExecuteInTx(
-		func(tx *sql.Tx) {
-			for _, v := range queries {
-				if _, err := tx.Exec(v); err != nil {
-					log.Fatalf("Execute SQL error. %v. SQL:\n%v\n", err, v)
-				}
-			}
-		},
-	)
 }
 
 type RpcTestEnv struct {

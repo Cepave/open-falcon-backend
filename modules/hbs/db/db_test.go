@@ -13,11 +13,13 @@ type TestDbSuite struct{}
 var _ = Suite(&TestDbSuite{})
 
 func (s *TestDbSuite) SetUpSuite(c *C) {
-	hbstesting.InitDb()
-	DB = hbstesting.DbForTest
+	if !hbstesting.HasDbEnvForMysqlOrSkip(c) {
+		return
+	}
+
+	hbstesting.DoInitDb(DbInit)
 }
 
 func (s *TestDbSuite) TearDownSuite(c *C) {
-	hbstesting.ReleaseDb()
-	DB = nil
+	hbstesting.DoReleaseDb(Release)
 }

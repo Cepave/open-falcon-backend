@@ -6,7 +6,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
 )
 
 type TestAgentSuite struct{}
@@ -74,10 +73,6 @@ func (s *TestAgentSuite) TearDownSuite(c *C) {
 }
 
 func (s *TestAgentSuite) SetUpTest(c *C) {
-	if !hbstesting.HasDbEnvForMysqlOrSkip(c) {
-		return
-	}
-
 	switch c.TestName() {
 	case "TestAgentSuite.TestUpdateAgent":
 		g.SetConfig(&g.GlobalConfig{

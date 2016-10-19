@@ -14,12 +14,16 @@ var GormDb *gorm.DB
 
 // Initialize the resource for RDB
 func Init() {
-	err := dbInit(g.Config().Database)
+	err := DbInit(
+		g.Config().Database,
+		g.Config().MaxIdle,
+	)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 }
+
 // Initialize the resource for RDB
 func Release() {
 	if GormDb != nil {
@@ -27,7 +31,7 @@ func Release() {
 	}
 }
 
-func dbInit(dsn string) (err error) {
+func DbInit(dsn string, maxIdle int) (err error) {
 	/**
 	 * Initialize Gorm(It would call ping())
 	 */
@@ -41,7 +45,7 @@ func dbInit(dsn string) (err error) {
 	 * Use the sql.DB object from Gorm and ping
 	 */
 	DB = GormDb.DB()
-	DB.SetMaxIdleConns(g.Config().MaxIdle)
+	DB.SetMaxIdleConns(maxIdle)
 	// :~)
 
 	return

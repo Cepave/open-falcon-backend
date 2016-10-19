@@ -15,11 +15,13 @@ type TestRpcSuite struct{}
 var _ = Suite(&TestRpcSuite{})
 
 func (s *TestRpcSuite) SetUpSuite(c *C) {
-	hbstesting.InitDb()
-	db.DB = hbstesting.DbForTest
+	if !hbstesting.HasDbEnvForMysqlOrSkip(c) {
+		return
+	}
+
+	hbstesting.DoInitDb(db.DbInit)
 }
 
 func (s *TestRpcSuite) TearDownSuite(c *C) {
-	hbstesting.ReleaseDb()
-	db.DB = nil
+	hbstesting.DoReleaseDb(db.Release)
 }
