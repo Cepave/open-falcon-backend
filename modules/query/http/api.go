@@ -1217,7 +1217,7 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 		duration = arguments[6]
 	}
 	data := getGraphQueryResponse(metrics, duration, hostnames, result)
-	dataRecent := getGraphQueryResponse(metrics, "30min", hostnames, result)
+	dataRecent := getGraphQueryResponse(metrics, "10min", hostnames, result)
 	data = addRecentData(data, dataRecent)
 
 	for _, series := range data {
@@ -1482,6 +1482,8 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	timestamps := []float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
 		data := getGraphQueryResponse(metrics, duration, hostnames, result)
+		dataRecent := getGraphQueryResponse(metrics, "10min", hostnames, result)
+		data = addRecentData(data, dataRecent)
 		index := -1
 		max := 0
 		for key, item := range data {
