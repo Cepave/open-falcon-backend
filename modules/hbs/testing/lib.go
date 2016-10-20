@@ -8,7 +8,6 @@ import (
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"time"
-	check "gopkg.in/check.v1"
 )
 
 type RpcTestEnv struct {

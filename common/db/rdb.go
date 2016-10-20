@@ -455,6 +455,11 @@ func (dbController *DbController) InTxForIf(ifCallbacks ExecuteIfByTx) {
 	dbController.InTx(txFunc)
 }
 
+// Executes in transaction
+func (dbController *DbController) ExecQueriesInTx(queries... string) {
+	dbController.InTx(BuildTxForSqls(queries...))
+}
+
 // Releases the database object under this object
 //
 // As of service application(web, daemon...), this method is rarely get called

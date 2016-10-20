@@ -1,4 +1,4 @@
-package nqm
+package basis
 
 import (
 	"database/sql"
