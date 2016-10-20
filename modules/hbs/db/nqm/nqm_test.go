@@ -1,4 +1,4 @@
-package db
+package nqm
 
 import (
 	"database/sql"
@@ -6,9 +6,9 @@ import (
 	"sort"
 	"time"
 
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
-
+	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 
 	. "gopkg.in/check.v1"
@@ -19,11 +19,11 @@ type TestDbNqmSuite struct{}
 var _ = Suite(&TestDbNqmSuite{})
 
 func (s *TestDbNqmSuite) SetUpSuite(c *C) {
-	(&TestDbSuite{}).SetUpSuite(c)
+	hbstesting.InitDb(c)
 }
 
 func (s *TestDbNqmSuite) TearDownSuite(c *C) {
-	(&TestDbSuite{}).TearDownSuite(c)
+	hbstesting.ReleaseDb(c)
 }
 
 /**
@@ -70,8 +70,7 @@ func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
 	var testedIpAddress net.IP
 	var testedLenOfIpAddress int
 
-	dbCtrl := commonDb.NewDbController(DB)
-	dbCtrl.QueryForRow(
+	DbFacade.SqlDbCtrl.QueryForRow(
 		commonDb.RowCallbackFunc(func(row *sql.Row) {
 			row.Scan(&testedConnectionId, &testedHostName, &testedIpAddress, &testedLenOfIpAddress)
 		}),
@@ -182,8 +181,7 @@ func assertRefreshedPingTask(c *C, testCase *getAndRefreshNeedPingAgentTestCase)
 	 */
 	var numberOfModified int = -1
 
-	dbCtrl := commonDb.NewDbController(DB)
-	dbCtrl.QueryForRow(
+	DbFacade.SqlDbCtrl.QueryForRow(
 		commonDb.RowCallbackFunc(func(row *sql.Row) {
 			row.Scan(&numberOfModified)
 		}),
@@ -275,17 +273,15 @@ func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
 		},
 	}
 
-	dbCtrl := commonDb.NewDbController(DB)
-
 	for _, testCase := range testedCases {
 		/**
 		 * Executes INSERT/DELETE statements
 		 */
-		dbCtrl.InTx(commonDb.BuildTxForSqls(testCase.sqls...))
+		DbFacade.SqlDbCtrl.InTx(commonDb.BuildTxForSqls(testCase.sqls...))
 		// :~)
 
 		numberOfRows := 0
-		dbCtrl.QueryForRow(
+		DbFacade.SqlDbCtrl.QueryForRow(
 			commonDb.RowCallbackFunc(func(row *sql.Row) {
 				numberOfRows++
 
@@ -342,12 +338,11 @@ func (suite *TestDbNqmSuite) Test_vw_enabled_targets_by_ping_task(c *C) {
 		{ 47311, 1 },
 	}
 
-	dbCtrl := commonDb.NewDbController(DB)
 	for _, testCase := range testCases {
 		c.Logf("Current tested id of ping task: [%d]", testCase.pingTaskId)
 
 		var numberOfRows int = 0
-		dbCtrl.QueryForRows(
+		DbFacade.SqlDbCtrl.QueryForRows(
 			commonDb.RowsCallbackFunc(func (row *sql.Rows) commonDb.IterateControl {
 				numberOfRows++
 
@@ -371,6 +366,8 @@ func (suite *TestDbNqmSuite) Test_vw_enabled_targets_by_ping_task(c *C) {
 }
 
 func (s *TestDbNqmSuite) SetUpTest(c *C) {
+	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
+
 	switch c.TestName() {
 	case "TestDbNqmSuite.Test_vw_enabled_targets_by_ping_task":
 		executeInTx(
@@ -653,6 +650,8 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 }
 
 func (s *TestDbNqmSuite) TearDownTest(c *C) {
+	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
+
 	switch c.TestName() {
 	case "TestDbNqmSuite.Test_vw_enabled_targets_by_ping_task":
 		executeInTx(
@@ -698,9 +697,4 @@ func (s *TestDbNqmSuite) TearDownTest(c *C) {
 			"DELETE FROM owl_group_tag WHERe gt_id >= 12021 AND gt_id <= 12024",
 		)
 	}
-}
-
-func executeInTx(sqls ...string) {
-	dbCtrl := commonDb.NewDbController(DB)
-	dbCtrl.InTx(commonDb.BuildTxForSqls(sqls...))
 }

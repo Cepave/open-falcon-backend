@@ -1,4 +1,4 @@
-package db
+package nqm
 
 import (
 	"database/sql"
@@ -77,15 +77,12 @@ func (self *refreshHostProcessor) IfTrue(tx *sql.Tx) {
 func refreshAgent(agentInfo *model.AgentUpdateInfo) (dbError error) {
 	processor := refreshHostProcessor(*agentInfo.ReportRequest)
 
-	dbCtrl := buildDbCtrl(&dbError)
-	dbCtrl.InTxForIf(&processor)
+	DbFacade.SqlDbCtrl.InTxForIf(&processor)
 
 	return
 }
 func updateAgent(agentInfo *model.AgentUpdateInfo) (dbError error) {
-	dbCtrl := buildDbCtrl(&dbError)
-
-	dbCtrl.Exec(
+	DbFacade.SqlDbCtrl.Exec(
 		`
 		UPDATE host
 		SET ip = ?,
@@ -100,11 +97,4 @@ func updateAgent(agentInfo *model.AgentUpdateInfo) (dbError error) {
 	)
 
 	return
-}
-
-func buildDbCtrl(errorObj *error) *commonDb.DbController {
-	dbCtrl := commonDb.NewDbController(DB)
-	dbCtrl.RegisterPanicHandler(commonDb.NewDbErrorCapture(errorObj))
-
-	return dbCtrl
 }

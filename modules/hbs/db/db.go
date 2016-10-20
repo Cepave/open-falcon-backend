@@ -2,21 +2,22 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
-	"github.com/jinzhu/gorm"
+	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB
-var GormDb *gorm.DB
+var DbFacade = &commonDb.DbFacade{}
 
 // Initialize the resource for RDB
 func Init() {
 	err := DbInit(
-		g.Config().Database,
-		g.Config().MaxIdle,
+		&commonDb.DbConfig {
+			Dsn: g.Config().Database,
+			MaxIdle: g.Config().MaxIdle,
+		},
 	)
 
 	if err != nil {
@@ -26,27 +27,17 @@ func Init() {
 
 // Initialize the resource for RDB
 func Release() {
-	if GormDb != nil {
-		GormDb.Close()
-	}
+	DbFacade.Release()
+	DB = DbFacade.SqlDb
 }
 
-func DbInit(dsn string, maxIdle int) (err error) {
-	/**
-	 * Initialize Gorm(It would call ping())
-	 */
-	GormDb, err = gorm.Open("mysql", dsn)
+func DbInit(dbConfig *commonDb.DbConfig) (err error) {
+	err = DbFacade.Open(dbConfig)
 	if err != nil {
-		return fmt.Errorf("Open Gorm error: %v", err)
+		return
 	}
-	// :~)
 
-	/**
-	 * Use the sql.DB object from Gorm and ping
-	 */
-	DB = GormDb.DB()
-	DB.SetMaxIdleConns(maxIdle)
-	// :~)
+	DB = DbFacade.SqlDb
 
 	return
 }
@@ -55,7 +46,7 @@ func DbInit(dsn string, maxIdle int) (err error) {
 func inTx(txCallback func(tx *sql.Tx) error) (err error) {
 	var tx *sql.Tx
 
-	if tx, err = DB.Begin(); err != nil {
+	if tx, err = DbFacade.SqlDb.Begin(); err != nil {
 		return
 	}
 

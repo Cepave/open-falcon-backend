@@ -5,7 +5,7 @@ import (
 	"time"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+	dbnqm "github.com/Cepave/open-falcon-backend/modules/hbs/db/nqm"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
 	"github.com/asaskevich/govalidator"
 )
@@ -32,7 +32,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	 * Refresh the information of agent
 	 */
 	var currentAgent = model.NewNqmAgent(&request)
-	if err = db.RefreshAgentInfo(currentAgent); err != nil {
+	if err = dbnqm.RefreshAgentInfo(currentAgent); err != nil {
 		return
 	}
 	// :~)
@@ -41,7 +41,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	 * Checks and loads agent which is needing performing ping task
 	 */
 	var nqmAgent *commonModel.NqmAgent
-	if nqmAgent, err = db.GetAndRefreshNeedPingAgentForRpc(
+	if nqmAgent, err = dbnqm.GetAndRefreshNeedPingAgentForRpc(
 		currentAgent.Id, time.Now(),
 	); err != nil {
 		return
@@ -56,7 +56,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	 * Loads matched targets
 	 */
 	var targets []commonModel.NqmTarget
-	if targets, err = db.GetTargetsByAgentForRpc(currentAgent.Id); err != nil {
+	if targets, err = dbnqm.GetTargetsByAgentForRpc(currentAgent.Id); err != nil {
 
 		return
 	}

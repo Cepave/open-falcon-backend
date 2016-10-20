@@ -6,7 +6,7 @@ package cache
 
 import (
 	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+	nqmdb "github.com/Cepave/open-falcon-backend/modules/hbs/db/nqm"
 	"sync"
 	"time"
 )
@@ -28,7 +28,7 @@ func (this *SafeAgents) Put(req *model.AgentReportRequest) {
 		ReportRequest: req,
 	}
 
-	db.UpdateAgent(val)
+	nqmdb.UpdateAgent(val)
 
 	this.Lock()
 	defer this.Unlock()

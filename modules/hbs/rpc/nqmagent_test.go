@@ -4,9 +4,7 @@ import (
 	"sort"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
-	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	. "gopkg.in/check.v1"
 )
 
@@ -112,13 +110,15 @@ func (suite *TestRpcNqmAgentSuite) TestTask(c *C) {
 }
 
 func (s *TestRpcNqmAgentSuite) SetUpSuite(c *C) {
-	(&TestRpcSuite{}).SetUpSuite(c)
+	hbstesting.InitDb(c)
 }
 func (s *TestRpcNqmAgentSuite) TearDownSuite(c *C) {
-	(&TestRpcSuite{}).TearDownSuite(c)
+	hbstesting.ReleaseDb(c)
 }
 
 func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
+	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
+
 	switch c.TestName() {
 	case "TestRpcNqmAgentSuite.TestTask":
 		executeInTx(
@@ -153,6 +153,8 @@ func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 }
 
 func (s *TestRpcNqmAgentSuite) TearDownTest(c *C) {
+	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
+
 	switch c.TestName() {
 	case "TestRpcNqmAgentSuite.TestTask":
 		executeInTx(
@@ -165,7 +167,3 @@ func (s *TestRpcNqmAgentSuite) TearDownTest(c *C) {
 	}
 }
 
-func executeInTx(sqls ...string) {
-	dbCtrl := commonDb.NewDbController(db.DB)
-	dbCtrl.InTx(commonDb.BuildTxForSqls(sqls...))
-}
