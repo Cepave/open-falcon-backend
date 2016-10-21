@@ -44,7 +44,7 @@ func marshalJSONParamsToCassandra(nqmDataGram string, metric string) ParamToAgen
 	data.Tags = nqmDataGram
 	data.Metric = metric
 	data.Timestamp = time.Now().Unix()
-	data.Endpoint = GetGeneralConfig().Hostname
+	data.Endpoint = Meta().Hostname
 	data.Value = "0"
 	data.CounterType = "GAUGE"
 	data.Step = int64(60) // a useless field in Cassandra
@@ -99,7 +99,7 @@ func convToNqmTarget(s model.NqmTarget) nqmNodeData {
  *     Transmission Time - float64
  */
 func marshalJSONToGraph(target model.NqmTarget, agent model.NqmAgent, metric string, value interface{}, step int64) ParamToAgent {
-	endpoint := GetGeneralConfig().Hostname
+	endpoint := Meta().Hostname
 	counterType := "GAUGE"
 	tags := "nqm-agent-isp=" + agent.IspName +
 		",nqm-agent-province=" + agent.ProvinceName +

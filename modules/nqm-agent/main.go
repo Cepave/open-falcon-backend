@@ -18,8 +18,10 @@ func main() {
 	}
 
 	vipercfg.Load()
-	InitGeneralConfig(vipercfg.Config().GetString("config"))
+	InitConfig()
 	logruslog.Init()
+
+	GenMeta()
 	InitRPC()
 
 	go Query()
