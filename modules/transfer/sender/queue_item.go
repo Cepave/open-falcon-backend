@@ -5,12 +5,13 @@ import (
 )
 
 type nqmEndpoint struct {
-	Id          int32   `json:"id"`
-	IspId       int16   `json:"isp_id"`
-	ProvinceId  int16   `json:"province_id"`
-	CityId      int16   `json:"city_id"`
-	NameTagId   int32   `json:"name_tag_id"`
-	GroupTagIds []int32 `json:"group_tag_ids"`
+	Id         int32 `json:"id"`
+	IspId      int16 `json:"isp_id"`
+	ProvinceId int16 `json:"province_id"`
+	CityId     int16 `json:"city_id"`
+	NameTagId  int32 `json:"name_tag_id"`
+	//GroupTagIds []int32 `json:"group_tag_ids"`
+	GroupTagIds []int32 `json:"-"`
 }
 
 func (end nqmEndpoint) String() string {
