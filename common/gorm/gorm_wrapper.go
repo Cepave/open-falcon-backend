@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/jinzhu/gorm"
 	"github.com/Cepave/open-falcon-backend/common/db"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 )
 
 type GormDbExt struct {
@@ -11,6 +12,17 @@ type GormDbExt struct {
 	ConvertError ErrorConverter
 
 	gormDb *gorm.DB
+}
+
+// Callback function for transaction
+type TxCallback interface {
+	InTx(*gorm.DB)
+}
+
+// the function object delegates the TxCallback interface
+type TxCallbackFunc func(*gorm.DB)
+func (callbackFunc TxCallbackFunc) InTx(gormDB *gorm.DB) {
+	callbackFunc(gormDB)
 }
 
 // Converter of error
@@ -64,6 +76,36 @@ func (self *GormDbExt) Rows() *sql.Rows {
 	self.ConvertError.PanicIfError(err)
 
 	return rows
+}
+
+// Executes gorm in transaction
+func (self *GormDbExt) InTx(txCallback TxCallback) {
+	txGormDb := self.gormDb.Begin()
+
+	defer func() {
+		p := recover()
+		if p != nil {
+			txGormDb.Rollback()
+			panic(p)
+		}
+	}()
+
+	txCallback.InTx(txGormDb)
+
+	self.ConvertError.PanicIfDbError(txGormDb.Commit())
+}
+
+// Selects the query by callback and perform "SELECT FOUND_ROWS()" to gets the total number of matched rows
+func (self *GormDbExt) SelectWithFoundRows(txCallback TxCallback, paging *commonModel.Paging) {
+	var finalFunc TxCallbackFunc = func(txGormDb *gorm.DB) {
+		txCallback.InTx(txGormDb)
+
+		var selectFoundRows = txGormDb.Raw("SELECT FOUND_ROWS()")
+		err := selectFoundRows.Row().Scan(&paging.TotalCount)
+		self.ConvertError.PanicIfError(err)
+	}
+
+	self.InTx(finalFunc)
 }
 
 // Same as ScanRows with panic instead of returned error

@@ -2,8 +2,10 @@ package db
 
 import (
 	"database/sql"
+	"github.com/jinzhu/gorm"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -29,6 +31,20 @@ func Init() {
 func Release() {
 	DbFacade.Release()
 	DB = DbFacade.SqlDb
+}
+
+// This function converts the error to default database error
+//
+// See ToGormDbExt
+var DefaultGormErrorConverter gormExt.ErrorConverter = func(err error) error {
+	return commonDb.NewDatabaseError(err)
+}
+
+// Converts gormDb to GormDbExt with convertion of DbError
+func ToGormDbExt(gormDb *gorm.DB) *gormExt.GormDbExt {
+	gormDbExt := gormExt.ToGormDbExt(gormDb)
+	gormDbExt.ConvertError = DefaultGormErrorConverter
+	return gormDbExt
 }
 
 func DbInit(dbConfig *commonDb.DbConfig) (err error) {

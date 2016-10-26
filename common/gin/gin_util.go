@@ -1,19 +1,30 @@
 package gin
 
 import (
+	"fmt"
 	"gopkg.in/gin-gonic/gin.v1"
 	model "github.com/Cepave/open-falcon-backend/common/model"
+	"regexp"
 	"strconv"
+	"strings"
 )
 
 const (
 	headerPageSize = "page-size"
 	headerPagePos = "page-pos"
 	headerTotalCount = "total-count"
-	headerPageMore = "page_more"
+	headerPageMore = "page-more"
+	headerOrderBy = "order-by"
 )
 
 // PagingByHeader would initialize paging object by header
+//
+// This funcion would load header value:
+// "page-size" - The size of page
+// "page-pos" - The position of page, starting with "1"
+// "order-by" - The order for paging
+//
+// 		<prop_1>#<dir>:<prop_2>#<dir>:...
 //
 // context - The gin context
 // defaultPaging - The default value of paging
@@ -37,6 +48,14 @@ func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Pa
 			finalPaging.Position = int32(parsedValue)
 		}
 	}
+	if orderBy := context.Request.Header.Get(headerOrderBy)
+		orderBy != "" {
+
+		parsedValue, err := parseOrderBy(orderBy)
+		if err == nil {
+			finalPaging.OrderBy = parsedValue
+		}
+	}
 
 	return &finalPaging
 }
@@ -52,4 +71,52 @@ func HeaderWithPaging(context *gin.Context, defaultPaging *model.Paging) {
 		pageMore = "true"
 	}
 	context.Header(headerPageMore, pageMore)
+}
+
+var regexpOrderValue = regexp.MustCompile(`^\w+(?:#(?:a|d|asc|desc|ascending|descending))?(?::\w+(?:#(?:a|d|asc|desc|ascending|descending))?)*$`)
+func parseOrderBy(headerValueOfOrderBy string) ([]*model.OrderByEntity, error) {
+	var result []*model.OrderByEntity
+
+	headerValueOfOrderBy = strings.ToLower(headerValueOfOrderBy)
+	if !regexpOrderValue.MatchString(headerValueOfOrderBy) {
+		return result, fmt.Errorf("Header value cannot be recognized. [%v]", headerValueOfOrderBy)
+	}
+
+	for _, entity := range strings.Split(headerValueOfOrderBy, ":") {
+		if entity == "" {
+			continue
+		}
+
+		var newOrderEntity = model.OrderByEntity{
+			Direction: model.DefaultDirection,
+		}
+		if strings.Contains(entity, "#") {
+			/**
+			 * Process <prop_1>#<dir> syntax
+			 */
+			orderPair := strings.Split(entity, "#")
+
+			newOrderEntity.Expr = orderPair[0]
+			newOrderEntity.Direction = getOrderDirection(orderPair[1])
+			// :~)
+		} else {
+			// Process only <prop_1> syntax
+			newOrderEntity.Expr = entity
+		}
+
+		result = append(result, &newOrderEntity)
+	}
+
+	return result, nil
+}
+
+func getOrderDirection(value string) byte {
+	switch value {
+	case "asc", "ascending", "a":
+		return model.Ascending
+	case "desc", "descending", "d":
+		return model.Descending
+	}
+
+	return model.DefaultDirection
 }
