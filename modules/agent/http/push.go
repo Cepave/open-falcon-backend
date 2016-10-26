@@ -22,7 +22,9 @@ func configPushRoutes() {
 			return
 		}
 
-		g.SendToTransfer(metrics)
+		toTransfer, toMQ := g.DemultiplexMetrics(metrics)
+		g.SendToTransfer(toTransfer)
+		g.SendToMQ(toMQ)
 		w.Write([]byte("success"))
 	})
 }

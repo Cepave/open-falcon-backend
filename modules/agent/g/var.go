@@ -5,6 +5,7 @@ import (
 	n "github.com/Cepave/open-falcon-backend/common/net"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/net"
+	"github.com/toolkits/net/httplib"
 	"github.com/toolkits/slice"
 	"os"
 	"strings"
@@ -53,6 +54,38 @@ func InitRpcClients() {
 			Timeout:   time.Duration(Config().Heartbeat.Timeout) * time.Millisecond,
 		}
 	}
+}
+
+func SendToMQ(metrics []*model.MetricValue) {
+	for _, val := range metrics {
+		url := "http://10.20.30.40:5000/"
+		res, err := httplib.PostJSON(url, val)
+		if err != nil {
+			log.Println("SendtoMQ failed", err, res)
+		}
+		log.Debugln("SendtoMQ success.", res)
+	}
+}
+
+func hasMQType(vType string) bool {
+	vTypeSlice := strings.Split(vType, ",")
+	for _, val := range vTypeSlice {
+		if val == "MQ" {
+			return true
+		}
+	}
+	return false
+}
+
+func DemultiplexMetrics(metrics []*model.MetricValue) (metricsToTransfer []*model.MetricValue, metricsToMQ []*model.MetricValue) {
+	for _, value := range metrics {
+		if hasMQType(value.Type) {
+			metricsToMQ = append(metricsToMQ, value)
+		} else {
+			metricsToTransfer = append(metricsToTransfer, value)
+		}
+	}
+	return
 }
 
 func SendToTransfer(metrics []*model.MetricValue) {
