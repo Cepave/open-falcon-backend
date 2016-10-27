@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	utils "github.com/Cepave/open-falcon-backend/common/utils"
@@ -14,7 +14,7 @@ import (
  * Refresh agent or add a new one
  */
 type refreshAgentProcessor struct {
-	agent *model.NqmAgent
+	agent *nqmModel.NqmAgent
 }
 func (self *refreshAgentProcessor) BootCallback(tx *sql.Tx) bool {
 	result := commonDb.ToTxExt(tx).Exec(
@@ -60,7 +60,7 @@ func (self *refreshAgentProcessor) ResultRow(row *sql.Row) {
 }
 
 // Inserts a new agent or updates existing one
-func RefreshAgentInfo(agent *model.NqmAgent) (dbError error) {
+func RefreshAgentInfo(agent *nqmModel.NqmAgent) (dbError error) {
 	dbCtrl := commonDb.NewDbController(DbFacade.SqlDb)
 	dbCtrl.RegisterPanicHandler(commonDb.NewDbErrorCapture(&dbError))
 

@@ -2,9 +2,11 @@ package rpc
 
 import (
 	"sort"
+	"net/rpc"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
-	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
+	testJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
+	testHbs "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
 	. "gopkg.in/check.v1"
 )
 
@@ -57,63 +59,60 @@ func (suite *TestRpcNqmAgentSuite) TestTask(c *C) {
 	}
 	var resp model.NqmTaskResponse
 
-	hbstesting.DefaultListenAndExecute(
-		new(NqmAgent),
-		func(rpcTestEnvInstance *hbstesting.RpcTestEnv) {
-			err := rpcTestEnvInstance.RpcClient.Call(
-				"NqmAgent.Task", req, &resp,
-			)
+	testJsonRpc.OpenClient(c, func(jsonRpcClient *rpc.Client) {
+		err := jsonRpcClient.Call(
+			"NqmAgent.Task", req, &resp,
+		)
 
-			/**
-			 * Asserts the agent
-			 */
-			c.Assert(err, IsNil)
-			c.Logf("Got response: %v", &resp)
-			c.Logf("Agent : %v", resp.Agent)
+		/**
+		 * Asserts the agent
+		 */
+		c.Assert(err, IsNil)
+		c.Logf("Got response: %v", &resp)
+		c.Logf("Agent : %v", resp.Agent)
 
-			c.Assert(resp.NeedPing, Equals, true)
-			c.Assert(resp.Agent.Id, Equals, 405001)
-			c.Assert(resp.Agent.Name, Equals, "ag-name-1")
-			c.Assert(resp.Agent.IspId, Equals, int16(3))
-			c.Assert(resp.Agent.IspName, Equals, "移动")
-			c.Assert(resp.Agent.ProvinceId, Equals, int16(2))
-			c.Assert(resp.Agent.ProvinceName, Equals, "山西")
-			c.Assert(resp.Agent.CityId, Equals, model.UNDEFINED_CITY_ID)
-			c.Assert(resp.Agent.CityName, Equals, model.UNDEFINED_STRING)
+		c.Assert(resp.NeedPing, Equals, true)
+		c.Assert(resp.Agent.Id, Equals, 405001)
+		c.Assert(resp.Agent.Name, Equals, "ag-name-1")
+		c.Assert(resp.Agent.IspId, Equals, int16(3))
+		c.Assert(resp.Agent.IspName, Equals, "移动")
+		c.Assert(resp.Agent.ProvinceId, Equals, int16(2))
+		c.Assert(resp.Agent.ProvinceName, Equals, "山西")
+		c.Assert(resp.Agent.CityId, Equals, model.UNDEFINED_CITY_ID)
+		c.Assert(resp.Agent.CityName, Equals, model.UNDEFINED_STRING)
 
-			c.Assert(len(resp.Targets), Equals, 3)
-			c.Assert(resp.Measurements["fping"].Command[0], Equals, "fping")
-			// :~)
+		c.Assert(len(resp.Targets), Equals, 3)
+		c.Assert(resp.Measurements["fping"].Command[0], Equals, "fping")
+		// :~)
 
-			/**
-			 * Asserts the 1st target
-			 */
-			for _, v := range resp.Targets {
-				c.Logf("Target: %v", &v)
-			}
+		/**
+		 * Asserts the 1st target
+		 */
+		for _, v := range resp.Targets {
+			c.Logf("Target: %v", &v)
+		}
 
-			sort.Sort(byID(resp.Targets))
+		sort.Sort(byID(resp.Targets))
 
-			c.Assert(
-				resp.Targets[0], DeepEquals,
-				model.NqmTarget{
-					Id: 630001, Host: "1.2.3.4",
-					IspId: 1, IspName: "北京三信时代",
-					ProvinceId: 4, ProvinceName: "北京",
-					CityId: model.UNDEFINED_CITY_ID, CityName: model.UNDEFINED_STRING,
-					NameTagId: model.UNDEFINED_NAME_TAG_ID, NameTag: model.UNDEFINED_STRING,
-				},
-			)
-			// :~)
-		},
-	)
+		c.Assert(
+			resp.Targets[0], DeepEquals,
+			model.NqmTarget{
+				Id: 630001, Host: "1.2.3.4",
+				IspId: 1, IspName: "北京三信时代",
+				ProvinceId: 4, ProvinceName: "北京",
+				CityId: model.UNDEFINED_CITY_ID, CityName: model.UNDEFINED_STRING,
+				NameTagId: model.UNDEFINED_NAME_TAG_ID, NameTag: model.UNDEFINED_STRING,
+			},
+		)
+		// :~)
+	})
 }
 
 func (s *TestRpcNqmAgentSuite) SetUpSuite(c *C) {
-	hbstesting.InitDb(c)
+	testHbs.InitDb(c)
 }
 func (s *TestRpcNqmAgentSuite) TearDownSuite(c *C) {
-	hbstesting.ReleaseDb(c)
+	testHbs.ReleaseDb(c)
 }
 
 func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {

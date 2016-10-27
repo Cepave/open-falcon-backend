@@ -2,8 +2,8 @@ package nqm
 
 import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	nqmmodel "github.com/Cepave/open-falcon-backend/modules/hbs/model/nqm"
-	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 )
 
@@ -14,26 +14,26 @@ var _ = Suite(&TestAgentSuite{})
 // Tests the list of agents with various conditions
 func (suite *TestAgentSuite) TestListAgents(c *C) {
 	testCases := []struct {
-		query *nqmmodel.AgentQuery
+		query *nqmModel.AgentQuery
 		pageSize int32
 		pagePosition int32
 		expectedCountOfCurrentPage int
 		expectedCountOfAll int32
 	} {
 		{ // All data
-			&nqmmodel.AgentQuery {},
+			&nqmModel.AgentQuery {},
 			10, 1, 3, 3,
 		},
 		{ // 2nd page
-			&nqmmodel.AgentQuery {},
+			&nqmModel.AgentQuery {},
 			2, 2, 1, 3,
 		},
 		{ // Match nothing for futher page
-			&nqmmodel.AgentQuery {},
+			&nqmModel.AgentQuery {},
 			10, 10, 0, 3,
 		},
 		{ // Match 1 row by all of the conditions
-			&nqmmodel.AgentQuery {
+			&nqmModel.AgentQuery {
 				Name: "ag-name-1",
 				ConnectionId: "ag-list-1",
 				Hostname: "hn-list-1",
@@ -45,12 +45,12 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 			}, 10, 1, 1, 1,
 		},
 		{ // Match 1 row(by special IP address)
-			&nqmmodel.AgentQuery {
+			&nqmModel.AgentQuery {
 				IpAddress: "12.37",
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
-			&nqmmodel.AgentQuery {
+			&nqmModel.AgentQuery {
 				ConnectionId: "ag-list-1",
 				Hostname: "hn-list-2",
 			}, 10, 1, 0, 0,
@@ -89,11 +89,11 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 }
 
 func (s *TestAgentSuite) SetUpSuite(c *C) {
-	hbstesting.InitDb(c)
+	DbFacade = dbTest.InitDbFacade(c)
 }
 
 func (s *TestAgentSuite) TearDownSuite(c *C) {
-	hbstesting.ReleaseDb(c)
+	dbTest.ReleaseDbFacade(c, DbFacade)
 }
 
 func (s *TestAgentSuite) SetUpTest(c *C) {

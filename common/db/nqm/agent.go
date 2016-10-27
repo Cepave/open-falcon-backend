@@ -3,21 +3,20 @@ package nqm
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	nqmmodel "github.com/Cepave/open-falcon-backend/modules/hbs/model/nqm"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 )
 
 // Lists the agents by query condition
-func ListAgents(query *nqmmodel.AgentQuery, paging *commonModel.Paging) []*nqmmodel.ViewAgentForList {
-	var result []*nqmmodel.ViewAgentForList
+func ListAgents(query *nqmModel.AgentQuery, paging *commonModel.Paging) []*nqmModel.ViewAgentForList {
+	var result []*nqmModel.ViewAgentForList
 
 	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) {
 		/**
 		 * Retrieves the page of data
 		 */
-		var selectAgent = txGormDb.Model(&nqmmodel.ViewAgentForList{}).
+		var selectAgent = txGormDb.Model(&nqmModel.ViewAgentForList{}).
 			Select(`SQL_CALC_FOUND_ROWS
 				ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
 				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,
@@ -73,10 +72,10 @@ func ListAgents(query *nqmmodel.AgentQuery, paging *commonModel.Paging) []*nqmmo
 		}
 		// :~)
 
-		db.ToGormDbExt(selectAgent.Find(&result)).PanicIfError()
+		gormExt.ToDefaultGormDbExt(selectAgent.Find(&result)).PanicIfError()
 	}
 
-	db.ToGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
+	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
 		funcTxLoader, paging,
 	)
 
@@ -136,7 +135,7 @@ func buildSortingClauseOfAgents(paging *commonModel.Paging) string {
 	}
 
 	querySyntax, err := orderByDialect.ToQuerySyntax(paging.OrderBy)
-	db.DefaultGormErrorConverter.PanicIfError(err)
+	gormExt.DefaultGormErrorConverter.PanicIfError(err)
 
 	return querySyntax
 }

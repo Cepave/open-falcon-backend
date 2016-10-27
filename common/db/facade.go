@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // Gives facade interface supporting multiple object of db

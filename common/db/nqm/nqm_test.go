@@ -6,8 +6,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Cepave/open-falcon-backend/modules/hbs/model"
-	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 
@@ -19,11 +19,11 @@ type TestDbNqmSuite struct{}
 var _ = Suite(&TestDbNqmSuite{})
 
 func (s *TestDbNqmSuite) SetUpSuite(c *C) {
-	hbstesting.InitDb(c)
+	DbFacade = dbTest.InitDbFacade(c)
 }
 
 func (s *TestDbNqmSuite) TearDownSuite(c *C) {
-	hbstesting.ReleaseDb(c)
+	dbTest.ReleaseDbFacade(c, DbFacade)
 }
 
 /**
@@ -47,7 +47,7 @@ func (suite *TestDbNqmSuite) TestRefreshAgentInfo(c *C) {
 }
 
 func testRefreshAgentInfo(c *C, args refreshAgentTestCase) {
-	var testedAgent = model.NewNqmAgent(
+	var testedAgent = nqmModel.NewNqmAgent(
 		&commonModel.NqmTaskRequest{
 			ConnectionId: args.connectionId,
 			Hostname:     args.hostName,
