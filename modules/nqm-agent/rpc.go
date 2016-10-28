@@ -72,10 +72,11 @@ func RPCCall(method string, args interface{}, reply interface{}) error {
 }
 
 func InitRPC() {
-	rpcServer = GetGeneralConfig().Hbs.RPCServer
+	rpcServer = Config().Hbs.RPCServer
 	req = model.NqmTaskRequest{
-		Hostname:     GetGeneralConfig().Hostname,
-		IpAddress:    GetGeneralConfig().IPAddress,
-		ConnectionId: GetGeneralConfig().ConnectionID,
+		Hostname:     Meta().Hostname,
+		IpAddress:    Meta().IPAddress,
+		ConnectionId: Meta().ConnectionID,
 	}
+	SetHBSResp(model.NqmTaskResponse{})
 }
