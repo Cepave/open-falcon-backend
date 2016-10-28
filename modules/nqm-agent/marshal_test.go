@@ -76,9 +76,7 @@ func TestAssembleTags(t *testing.T) {
 }
 
 func TestMarshalStatsRow(t *testing.T) {
-	var cfg GeneralConfig
-	generalConfig = &cfg
-	cfg.Hostname = "unit-test-hostname"
+	metadata.Hostname = "unit-test-hostname"
 
 	nqmAgent := model.NqmAgent{
 		Id: -1, IspId: -1, ProvinceId: -1, CityId: -1,
@@ -96,7 +94,7 @@ func TestMarshalStatsRow(t *testing.T) {
 		"tcpping": {false, []string{"tcpping", "-i", "0.01", "-c", "4"}, 300},
 		"tcpconn": {false, []string{"tcpconn"}, 300},
 	}
-	GetGeneralConfig().hbsResp.Store(resp)
+	SetHBSResp(resp)
 
 	agent := nqmNodeData{
 		"-1", "-1", "-1", "-1", "11", "12-13-14",

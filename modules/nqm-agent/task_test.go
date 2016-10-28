@@ -77,12 +77,12 @@ func initJsonRpcClient(srvAddr string) {
 }
 
 func TestTask(t *testing.T) {
-	GetGeneralConfig().hbsResp.Store(model.NqmTaskResponse{})
+	SetHBSResp(model.NqmTaskResponse{})
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
 
 	query()
-	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse)
+	hbsResp := HBSResp()
 	cmd, targets, agent, _, err := Task(new(Fping))
 	if err != nil {
 		t.Error(err)
