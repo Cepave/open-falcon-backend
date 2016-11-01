@@ -958,7 +958,7 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	}
 	metrics := getMetricsByMetricType(metricType)
 	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
-		data := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
+		data, _ := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
 
 		for _, series := range data {
 			values := []interface{}{}
