@@ -1502,9 +1502,11 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	valuesMap := map[string]map[float64]float64{}
 	timestamps := []float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data := getGraphQueryResponse(metrics, duration, hostnames, result)
-		dataRecent := getGraphQueryResponse(metrics, "10min", hostnames, result)
-		data = addRecentData(data, dataRecent)
+		data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
+		if diff > 43200 {
+			dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
+			data = addRecentData(data, dataRecent)
+		}
 		index := -1
 		max := 0
 		for key, item := range data {
