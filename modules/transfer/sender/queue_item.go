@@ -31,8 +31,8 @@ type nqmMetrics struct {
 	Rttmax      int32   `json:"max"`
 	Rttmdev     float32 `json:"mdev"`
 	Rttmedian   float32 `json:"med"`
-	Pkttransmit int32   `json:"sentPackets"`
-	Pktreceive  int32   `json:"receivedPackets"`
+	Pkttransmit int32   `json:"sent_packets"`
+	Pktreceive  int32   `json:"received_packets"`
 }
 
 func (metric nqmMetrics) String() string {
