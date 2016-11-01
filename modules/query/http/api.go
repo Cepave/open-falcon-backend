@@ -904,9 +904,10 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 	return timestampFrom, timestampTo
 }
 
-func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) ([]*cmodel.GraphQueryResponse, int64) {
 	data := []*cmodel.GraphQueryResponse{}
 	start, end := convertDurationToPoint(duration, result)
+	diff := end - start
 
 	proc.HistoryRequestCnt.Incr()
 	for _, hostname := range hostnames {
@@ -921,7 +922,7 @@ func getGraphQueryResponse(metrics []string, duration string, hostnames []string
 			response, err := graph.QueryOne(request)
 			if err != nil {
 				setError("graph.queryOne fail, "+err.Error(), result)
-				return data
+				return data, diff
 			}
 			if result == nil {
 				continue
@@ -934,7 +935,7 @@ func getGraphQueryResponse(metrics []string, duration string, hostnames []string
 	for _, item := range data {
 		proc.HistoryResponseItemCnt.IncrBy(int64(len(item.Values)))
 	}
-	return data
+	return data, diff
 }
 
 func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
