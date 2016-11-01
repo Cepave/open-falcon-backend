@@ -3,14 +3,15 @@ package socket
 import (
 	"bufio"
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
-	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
-	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
-	cmodel "github.com/open-falcon/common/model"
 	"net"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
+	cmodel "github.com/open-falcon/common/model"
 )
 
 func socketTelnetHandle(conn net.Conn) {
@@ -63,7 +64,7 @@ func socketTelnetHandle(conn net.Conn) {
 	proc.RecvCnt.IncrBy(int64(len(items)))
 
 	// demultiplexing
-	nqmItems, genericItems := sender.Demultiplex(items)
+	nqmFpingItems, nqmTcppingItems, nqmTcpconnItems, genericItems := sender.Demultiplex(items)
 
 	if cfg.Graph.Enabled {
 		sender.Push2GraphSendQueue(genericItems)
@@ -78,7 +79,9 @@ func socketTelnetHandle(conn net.Conn) {
 	}
 
 	if cfg.NqmRpc.Enabled {
-		sender.Push2NqmRpcSendQueue(nqmItems)
+		sender.Push2NqmIcmpSendQueue(nqmFpingItems)
+		sender.Push2NqmTcpSendQueue(nqmTcppingItems)
+		sender.Push2NqmTcpconnSendQueue(nqmTcpconnItems)
 	}
 
 	return

@@ -48,19 +48,36 @@ func (metric nqmMetrics) String() string {
 	)
 }
 
-type nqmRpcItem struct {
+type nqmPingItem struct {
 	Timestamp int64       `json:"time"`
 	Agent     nqmEndpoint `json:"agent"`
 	Target    nqmEndpoint `json:"target"`
 	Metrics   nqmMetrics  `json:"metrics"`
 }
 
-func (this nqmRpcItem) String() string {
+func (this nqmPingItem) String() string {
 	return fmt.Sprintf(
 		"<TS:%d, Src:<%v>, Dst:<%v>, Metrics:<%v>>",
 		this.Timestamp,
 		this.Agent,
 		this.Target,
 		this.Metrics,
+	)
+}
+
+type nqmConnItem struct {
+	Timestamp int64       `json:"time"`
+	Agent     nqmEndpoint `json:"agent"`
+	Target    nqmEndpoint `json:"target"`
+	TotalTime int32       `json:"total_time"`
+}
+
+func (this nqmConnItem) String() string {
+	return fmt.Sprintf(
+		"<TS:%d, Src:<%v>, Dst:<%v>, Metrics:<%v>>",
+		this.Timestamp,
+		this.Agent,
+		this.Target,
+		this.TotalTime,
 	)
 }

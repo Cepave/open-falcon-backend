@@ -2,6 +2,9 @@ package sender
 
 import (
 	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httputil"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -62,7 +65,9 @@ func startSendTasks() {
 	go forward2InfluxdbTask(InfluxdbQueues["default"], influxdbConcurrent)
 
 	if cfg.NqmRpc.Enabled {
-		go forward2NqmRpcTask()
+		go forward2NqmIcmpTask()
+		go forward2NqmTcpTask()
+		go forward2NqmTcpconnTask()
 	}
 
 	if cfg.Staging.Enabled {
@@ -258,50 +263,213 @@ func forward2InfluxdbTask(Q *list.SafeListLimited, concurrent int) {
 	}
 }
 
-func forward2NqmRpcTask() {
+func forward2NqmIcmpTask() {
 	batch := g.Config().NqmRpc.Batch // 一次发送,最多batch条数据
 	concurrent := g.Config().NqmRpc.MaxConns
 	sema := nsema.NewSemaphore(concurrent)
 
 	for {
-		items := NqmRpcQueue.PopBackBy(batch)
+		items := NqmIcmpQueue.PopBackBy(batch)
 		if len(items) == 0 {
 			time.Sleep(DefaultSendTaskSleepInterval)
 			continue
 		}
 
-		nqmRpcItems := make([]*nqmRpcItem, len(items))
+		nqmIcmpItems := make([]*nqmPingItem, len(items))
 		for i, v := range items {
-			nqmRpcItems[i] = v.(*nqmRpcItem)
+			nqmIcmpItems[i] = v.(*nqmPingItem)
 		}
 
 		//  同步Call + 有限并发 进行发送
 		sema.Acquire()
-		go func(itemList []*nqmRpcItem) {
+		go func(itemList []*nqmPingItem) {
 			defer sema.Release()
 
 			for _, v := range itemList {
-				resp := &cmodel.SimpleRpcResponse{}
+				//resp := &cmodel.SimpleRpcResponse{}
 				var err error
 				sendOk := false
 				for i := 0; i < 3; i++ { //最多重试3次
-					err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
-					if err == nil {
-						sendOk = true
-						break
+					//err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
+					vv := []nqmPingItem{*v}
+					paramsBody, err := json.Marshal(vv[0])
+					postReq, err := http.NewRequest("POST", "http://"+g.Config().NqmRpc.Address+"/nqm/icmp", bytes.NewBuffer(paramsBody))
+
+					postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
+					postReq.Header.Set("Connection", "close")
+
+					b, e := httputil.DumpRequest(postReq, true)
+					if e != nil {
+						log.Errorln("fuckya:", e)
 					}
-					time.Sleep(time.Millisecond * 10)
+					log.Debugf("[ Cassandra ] Body: %q", b)
+
+					httpClient := &http.Client{}
+					postResp, err := httpClient.Do(postReq)
+					if err != nil {
+						log.Errorln("[ Cassandra ] Error on push:", err)
+						time.Sleep(time.Millisecond * 10)
+						continue
+					}
+					defer postResp.Body.Close()
+					b, e = httputil.DumpResponse(postResp, true)
+					if e != nil {
+						log.Errorln("fuckya:", e)
+					}
+					log.Debugf("Resp Body: %q", b)
+					sendOk = true
+					break
 				}
 
 				// statistics
 				if !sendOk {
-					log.Printf("send to NqmRpc fail: %v", err)
-					proc.SendToNqmRpcFailCnt.IncrBy(1)
+					log.Printf("send to /nqm/icmp fail: %v", err)
+					proc.SendToNqmIcmpFailCnt.IncrBy(1)
 				} else {
-					proc.SendToNqmRpcCnt.IncrBy(1)
+					proc.SendToNqmIcmpCnt.IncrBy(1)
 				}
 			}
-		}(nqmRpcItems)
+		}(nqmIcmpItems)
+	}
+}
+
+func forward2NqmTcpTask() {
+	batch := g.Config().NqmRpc.Batch // 一次发送,最多batch条数据
+	concurrent := g.Config().NqmRpc.MaxConns
+	sema := nsema.NewSemaphore(concurrent)
+
+	for {
+		items := NqmTcpQueue.PopBackBy(batch)
+		if len(items) == 0 {
+			time.Sleep(DefaultSendTaskSleepInterval)
+			continue
+		}
+
+		nqmTcpItems := make([]*nqmPingItem, len(items))
+		for i, v := range items {
+			nqmTcpItems[i] = v.(*nqmPingItem)
+		}
+
+		//  同步Call + 有限并发 进行发送
+		sema.Acquire()
+		go func(itemList []*nqmPingItem) {
+			defer sema.Release()
+
+			for _, v := range itemList {
+				//resp := &cmodel.SimpleRpcResponse{}
+				var err error
+				sendOk := false
+				for i := 0; i < 3; i++ { //最多重试3次
+					//err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
+					vv := []nqmPingItem{*v}
+					paramsBody, err := json.Marshal(vv[0])
+					postReq, err := http.NewRequest("POST", "http://"+g.Config().NqmRpc.Address+"/nqm/tcp", bytes.NewBuffer(paramsBody))
+
+					postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
+					postReq.Header.Set("Connection", "close")
+
+					b, e := httputil.DumpRequest(postReq, true)
+					if e != nil {
+						log.Errorln("fuckya:", e)
+					}
+					log.Debugf("[ Cassandra ] Body: %q", b)
+
+					httpClient := &http.Client{}
+					postResp, err := httpClient.Do(postReq)
+					if err != nil {
+						log.Errorln("[ Cassandra ] Error on push:", err)
+						time.Sleep(time.Millisecond * 10)
+						continue
+					}
+					defer postResp.Body.Close()
+					b, e = httputil.DumpResponse(postResp, true)
+					if e != nil {
+						log.Errorln("fuckya:", e)
+					}
+					log.Debugf("Resp Body: %q", b)
+					sendOk = true
+					break
+				}
+
+				// statistics
+				if !sendOk {
+					log.Printf("send to /nqm/tcp fail: %v", err)
+					proc.SendToNqmTcpFailCnt.IncrBy(1)
+				} else {
+					proc.SendToNqmTcpCnt.IncrBy(1)
+				}
+			}
+		}(nqmTcpItems)
+	}
+}
+
+func forward2NqmTcpconnTask() {
+	batch := g.Config().NqmRpc.Batch // 一次发送,最多batch条数据
+	concurrent := g.Config().NqmRpc.MaxConns
+	sema := nsema.NewSemaphore(concurrent)
+
+	for {
+		items := NqmTcpconnQueue.PopBackBy(batch)
+		if len(items) == 0 {
+			time.Sleep(DefaultSendTaskSleepInterval)
+			continue
+		}
+
+		nqmTcpconnItems := make([]*nqmConnItem, len(items))
+		for i, v := range items {
+			nqmTcpconnItems[i] = v.(*nqmConnItem)
+		}
+
+		//  同步Call + 有限并发 进行发送
+		sema.Acquire()
+		go func(itemList []*nqmConnItem) {
+			defer sema.Release()
+
+			for _, v := range itemList {
+				//resp := &cmodel.SimpleRpcResponse{}
+				var err error
+				sendOk := false
+				for i := 0; i < 3; i++ { //最多重试3次
+					//err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
+					vv := []nqmConnItem{*v}
+					paramsBody, err := json.Marshal(vv[0])
+					postReq, err := http.NewRequest("POST", "http://"+g.Config().NqmRpc.Address+"/nqm/tcpconn", bytes.NewBuffer(paramsBody))
+
+					postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
+					postReq.Header.Set("Connection", "close")
+
+					b, e := httputil.DumpRequest(postReq, true)
+					if e != nil {
+						log.Errorln("fuckya:", e)
+					}
+					log.Debugf("[ Cassandra ] Body: %q", b)
+
+					httpClient := &http.Client{}
+					postResp, err := httpClient.Do(postReq)
+					if err != nil {
+						log.Errorln("[ Cassandra ] Error on push:", err)
+						time.Sleep(time.Millisecond * 10)
+						continue
+					}
+					defer postResp.Body.Close()
+					b, e = httputil.DumpResponse(postResp, true)
+					if e != nil {
+						log.Errorln("fuckya:", e)
+					}
+					log.Debugf("Resp Body: %q", b)
+					sendOk = true
+					break
+				}
+
+				// statistics
+				if !sendOk {
+					log.Printf("send to /nqm/tcpconn fail: %v", err)
+					proc.SendToNqmTcpconnFailCnt.IncrBy(1)
+				} else {
+					proc.SendToNqmTcpconnCnt.IncrBy(1)
+				}
+			}
+		}(nqmTcpconnItems)
 	}
 }
 
