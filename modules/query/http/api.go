@@ -1568,13 +1568,7 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 func getNICOutSpeed(hostname string, result map[string]interface{}) int {
 	NICOutSpeed := 0
 	metrics := []string{
-		"nic.out.speed/device=bond0",
-		"nic.out.speed/device=eth0",
-		"nic.out.speed/device=eth1",
-		"nic.out.speed/device=eth2",
-		"nic.out.speed/device=eth3",
-		"nic.out.speed/device=eth4",
-		"nic.out.speed/device=eth5",
+		"nic.default.out.speed",
 	}
 	var param cmodel.GraphLastParam
 	var params []cmodel.GraphLastParam
