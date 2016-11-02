@@ -78,7 +78,7 @@ func socketTelnetHandle(conn net.Conn) {
 		sender.Push2InfluxdbSendQueue(genericItems)
 	}
 
-	if cfg.NqmRpc.Enabled {
+	if cfg.NqmRest.Enabled {
 		sender.Push2NqmIcmpSendQueue(nqmFpingItems)
 		sender.Push2NqmTcpSendQueue(nqmTcppingItems)
 		sender.Push2NqmTcpconnSendQueue(nqmTcpconnItems)

@@ -179,7 +179,7 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 		sender.Push2InfluxdbSendQueue(genericItems)
 	}
 
-	if cfg.NqmRpc.Enabled {
+	if cfg.NqmRest.Enabled {
 		sender.Push2NqmIcmpSendQueue(nqmFpingItems)
 		sender.Push2NqmTcpSendQueue(nqmTcppingItems)
 		sender.Push2NqmTcpconnSendQueue(nqmTcpconnItems)

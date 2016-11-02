@@ -64,7 +64,7 @@ func startSendTasks() {
 
 	go forward2InfluxdbTask(InfluxdbQueues["default"], influxdbConcurrent)
 
-	if cfg.NqmRpc.Enabled {
+	if cfg.NqmRest.Enabled {
 		go forward2NqmIcmpTask()
 		go forward2NqmTcpTask()
 		go forward2NqmTcpconnTask()
@@ -264,8 +264,8 @@ func forward2InfluxdbTask(Q *list.SafeListLimited, concurrent int) {
 }
 
 func forward2NqmIcmpTask() {
-	batch := g.Config().NqmRpc.Batch // 一次发送,最多batch条数据
-	concurrent := g.Config().NqmRpc.MaxConns
+	batch := g.Config().NqmRest.Batch // 一次发送,最多batch条数据
+	concurrent := g.Config().NqmRest.MaxConns
 	sema := nsema.NewSemaphore(concurrent)
 
 	for {
@@ -293,7 +293,7 @@ func forward2NqmIcmpTask() {
 					//err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
 					vv := []nqmPingItem{*v}
 					paramsBody, err := json.Marshal(vv[0])
-					postReq, err := http.NewRequest("POST", "http://"+g.Config().NqmRpc.Address+"/nqm/icmp", bytes.NewBuffer(paramsBody))
+					postReq, err := http.NewRequest("POST", g.Config().NqmRest.Fping, bytes.NewBuffer(paramsBody))
 
 					postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
 					postReq.Header.Set("Connection", "close")
@@ -334,8 +334,8 @@ func forward2NqmIcmpTask() {
 }
 
 func forward2NqmTcpTask() {
-	batch := g.Config().NqmRpc.Batch // 一次发送,最多batch条数据
-	concurrent := g.Config().NqmRpc.MaxConns
+	batch := g.Config().NqmRest.Batch // 一次发送,最多batch条数据
+	concurrent := g.Config().NqmRest.MaxConns
 	sema := nsema.NewSemaphore(concurrent)
 
 	for {
@@ -363,7 +363,7 @@ func forward2NqmTcpTask() {
 					//err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
 					vv := []nqmPingItem{*v}
 					paramsBody, err := json.Marshal(vv[0])
-					postReq, err := http.NewRequest("POST", "http://"+g.Config().NqmRpc.Address+"/nqm/tcp", bytes.NewBuffer(paramsBody))
+					postReq, err := http.NewRequest("POST", g.Config().NqmRest.Tcpping, bytes.NewBuffer(paramsBody))
 
 					postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
 					postReq.Header.Set("Connection", "close")
@@ -404,8 +404,8 @@ func forward2NqmTcpTask() {
 }
 
 func forward2NqmTcpconnTask() {
-	batch := g.Config().NqmRpc.Batch // 一次发送,最多batch条数据
-	concurrent := g.Config().NqmRpc.MaxConns
+	batch := g.Config().NqmRest.Batch // 一次发送,最多batch条数据
+	concurrent := g.Config().NqmRest.MaxConns
 	sema := nsema.NewSemaphore(concurrent)
 
 	for {
@@ -433,7 +433,7 @@ func forward2NqmTcpconnTask() {
 					//err = NqmRpcConnPoolHelper.Call("NqmEndpoint.AddIcmp", []*nqmRpcItem{v}, resp)
 					vv := []nqmConnItem{*v}
 					paramsBody, err := json.Marshal(vv[0])
-					postReq, err := http.NewRequest("POST", "http://"+g.Config().NqmRpc.Address+"/nqm/tcpconn", bytes.NewBuffer(paramsBody))
+					postReq, err := http.NewRequest("POST", g.Config().NqmRest.Tcpconn, bytes.NewBuffer(paramsBody))
 
 					postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
 					postReq.Header.Set("Connection", "close")

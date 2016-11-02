@@ -72,14 +72,16 @@ type InfluxdbConfig struct {
 	Address     string `json:"addr"`
 }
 
-type NqmRpcConfig struct {
+type NqmRestConfig struct {
 	Enabled     bool   `json:"enabled"`
 	Batch       int    `json:"batch"`
 	ConnTimeout int    `json:"connTimeout"`
 	CallTimeout int    `json:"callTimeout"`
 	MaxConns    int    `json:"maxConns"`
 	MaxIdle     int    `json:"maxIdle"`
-	Address     string `json:"addr"`
+	Fping       string `json:"fping"`
+	Tcpping     string `json:"tcpping"`
+	Tcpconn     string `json:"tcpconn"`
 }
 
 type StagingConfig struct {
@@ -104,7 +106,7 @@ type GlobalConfig struct {
 	Graph    *GraphConfig    `json:"graph"`
 	Tsdb     *TsdbConfig     `json:"tsdb"`
 	Influxdb *InfluxdbConfig `json:"influxdb"`
-	NqmRpc   *NqmRpcConfig   `json:"nqmRpc"`
+	NqmRest  *NqmRestConfig  `json:"nqmRest"`
 	Staging  *StagingConfig  `json:"staging"`
 }
 

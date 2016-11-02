@@ -50,7 +50,6 @@ var (
 	TsdbConnPoolHelper    *cpool.TsdbConnPoolHelper
 	GraphConnPools        *cpool.SafeRpcConnPools
 	InfluxdbConnPools     *cpool.InfluxdbConnPools
-	NqmRpcConnPoolHelper  *cpool.NqmRpcConnPoolHelper
 	StagingConnPoolHelper *cpool.StagingConnPoolHelper
 )
 
