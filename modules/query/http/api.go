@@ -1210,7 +1210,8 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	hostnames := strings.Split(arguments[5], ",")
 	metrics := getMetricsByMetricType(metricType)
 	if metricType == "bandwidths" {
-		metrics = addNetworkSpeedAndBondMode(metrics, hostnames, result)
+		metrics = append(metrics, "nic.bond.mode")
+		metrics = append(metrics, "nic.default.out.speed")
 	}
 	duration := "1d"
 	if len(arguments) > 6 {
@@ -1222,7 +1223,7 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 
 	for _, series := range data {
 		metric := series.Counter
-		if strings.Index(metric, "nic.default.out.speed/device=") > -1 {
+		if strings.Index(metric, "nic.default.out.speed") > -1 {
 			if len(series.Values) > 0 && series.Values[0].Value > 0 {
 				series.Counter = "net.transmission.limit.80%"
 				limit := series.Values[0].Value
@@ -1567,13 +1568,7 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 func getNICOutSpeed(hostname string, result map[string]interface{}) int {
 	NICOutSpeed := 0
 	metrics := []string{
-		"nic.out.speed/device=bond0",
-		"nic.out.speed/device=eth0",
-		"nic.out.speed/device=eth1",
-		"nic.out.speed/device=eth2",
-		"nic.out.speed/device=eth3",
-		"nic.out.speed/device=eth4",
-		"nic.out.speed/device=eth5",
+		"nic.default.out.speed",
 	}
 	var param cmodel.GraphLastParam
 	var params []cmodel.GraphLastParam
