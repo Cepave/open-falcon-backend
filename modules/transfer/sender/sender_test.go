@@ -221,8 +221,8 @@ func TestConvert2NqmPingItem(t *testing.T) {
 				CounterType: "",
 				Tags: map[string]string{
 					"rttmin":               "18.64",
-					"rttavg":               "21",
-					"rttmax":               "26.56",
+					"rttavg":               "21.01",
+					"rttmax":               "26.58",
 					"rttmdev":              "234.2",
 					"rttmedian":            "21.5",
 					"pkttransmit":          "13",
@@ -262,7 +262,7 @@ func TestConvert2NqmPingItem(t *testing.T) {
 				},
 				Metrics: nqmMetrics{
 					Rttmin:      18,
-					Rttavg:      21,
+					Rttavg:      21.01,
 					Rttmax:      26,
 					Rttmdev:     234.2,
 					Rttmedian:   21.5,
@@ -280,8 +280,8 @@ func TestConvert2NqmPingItem(t *testing.T) {
 				CounterType: "",
 				Tags: map[string]string{
 					"rttmin":               "18.64",
-					"rttavg":               "21",
-					"rttmax":               "26.56",
+					"rttavg":               "21.01",
+					"rttmax":               "26.58",
 					"rttmdev":              "234.2",
 					"rttmedian":            "21.5",
 					"pkttransmit":          "13",
@@ -321,7 +321,7 @@ func TestConvert2NqmPingItem(t *testing.T) {
 				},
 				Metrics: nqmMetrics{
 					Rttmin:      18,
-					Rttavg:      21,
+					Rttavg:      21.01,
 					Rttmax:      26,
 					Rttmdev:     234.2,
 					Rttmedian:   21.5,
@@ -388,7 +388,7 @@ func TestConvert2NqmConnItem(t *testing.T) {
 					NameTagId:   223,
 					GroupTagIds: []int32{22, 23, 24},
 				},
-				TotalTime: 18,
+				TotalTime: 18.64,
 			},
 		},
 	}

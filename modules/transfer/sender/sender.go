@@ -362,7 +362,7 @@ func convert2NqmConnItem(d *cmodel.MetaData) (*nqmConnItem, error) {
 		Timestamp: d.Timestamp,
 		Agent:     *agent,
 		Target:    *target,
-		TotalTime: int32(tt),
+		TotalTime: tt,
 	}
 
 	return &t, nil
