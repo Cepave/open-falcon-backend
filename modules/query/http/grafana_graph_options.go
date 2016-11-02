@@ -79,6 +79,7 @@ func getLocation(pop_id int) map[string]string {
 		nodes := map[string]interface{}{}
 		if err := json.Unmarshal(body, &nodes); err != nil {
 			log.Errorf("Response data parsing error: %v", err.Error())
+			return location
 		}
 		status := int(nodes["status"].(float64))
 		if status == 1 {
