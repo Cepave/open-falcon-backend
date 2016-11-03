@@ -36,11 +36,14 @@ type Hosts struct {
 }
 
 type Platforms struct {
-	Id       int
-	Platform string
-	Contacts string
-	Count    int
-	Updated  string
+	Id        int
+	Platform  string
+	Contacts  string
+	Principal string
+	Deputy    string
+	Upgrader  string
+	Count     int
+	Updated   string
 }
 
 func SyncHostsAndContactsTable() {
