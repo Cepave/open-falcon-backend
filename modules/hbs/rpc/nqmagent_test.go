@@ -126,8 +126,12 @@ func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {
 			VALUES (9901, 'tag-1')
 			`,
 			`
-			INSERT INTO nqm_agent(ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_pv_id, ag_ct_id)
-			VALUES (405001, 'ag-name-1', 'ag-rpc-1', 'rpc-1.org', 0x12345672, 3, 2, -1)
+			INSERT INTO host(id, hostname, agent_version, plugin_version)
+			VALUES(54091, 'rpc-1.org', '', '')
+			`,
+			`
+			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_pv_id, ag_ct_id)
+			VALUES (405001, 54091, 'ag-name-1', 'ag-rpc-1', 'rpc-1.org', 0x12345672, 3, 2, -1)
 			`,
 			`
 			INSERT INTO nqm_target(
@@ -160,6 +164,7 @@ func (s *TestRpcNqmAgentSuite) TearDownTest(c *C) {
 			"DELETE FROM nqm_agent_ping_task WHERE apt_ag_id = 405001",
 			"DELETE FROM nqm_ping_task WHERE pt_id = 32001",
 			"DELETE FROM nqm_agent WHERE ag_id = 405001",
+			"DELETE FROM host WHERE id = 54091",
 			"DELETE FROM nqm_target WHERE tg_id >= 630001 AND tg_id <= 630003",
 			"DELETE FROM owl_name_tag WHERE nt_id = 9901",
 		)

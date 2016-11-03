@@ -1,7 +1,6 @@
 package nqm
 
 import (
-	"fmt"
 	"net"
 	"time"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
@@ -10,40 +9,7 @@ import (
 	"strings"
 )
 
-// Agent represents the data of agent in RDB
 type Agent struct {
-	Id int32 `gorm:"primary_key:true;column:ag_id"`
-	Name string `gorm:"column:ag_name"`
-	ConnectionId string `gorm:"column:ag_connection_id"`
-	Hostname string `gorm:"column:ag_hostname"`
-	IpAddress net.IP `gorm:"column:ag_ip_address"`
-	Status bool `gorm:"column:ag_status"`
-	Comment string `gorm:"column:ag_comment"`
-	LastHeartBeat time.Time `gorm:"column:ag_last_heartbeat"`
-}
-
-func (Agent) TableName() string {
-	return "nqm_agent"
-}
-
-func (agent *Agent) String() string {
-	return fmt.Sprintf(
-		"Id[%d] Name: [%s] Connection Id: [%s] IpAddress: [%v] Status: [%v]",
-		agent.Id, agent.Name, agent.ConnectionId,
-		agent.IpAddress, agent.Status,
-	)
-}
-
-type AgentGroupTag struct {
-	AgentId int32 `gorm:"column:agt_ag_id"`
-	GroupTagId int32 `gorm:"column:agt_gt_id"`
-}
-
-func (AgentGroupTag) TableName() string {
-	return "nqm_agent_group_tag"
-}
-
-type ViewAgentForList struct {
 	Id int32 `gorm:"primary_key:true;column:ag_id"`
 	Name string `gorm:"column:ag_name"`
 	ConnectionId string `gorm:"column:ag_connection_id"`
@@ -69,10 +35,10 @@ type ViewAgentForList struct {
 	NamesOfGroupTags string `gorm:"column:gt_names"`
 	GroupTags []*owlModel.GroupTag
 }
-func (ViewAgentForList) TableName() string {
+func (Agent) TableName() string {
 	return "nqm_agent"
 }
-func (agentView *ViewAgentForList) MarshalJSON() ([]byte, error) {
+func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonObject := json.New()
 
 	jsonObject.Set("id", agentView.Id)
@@ -113,7 +79,7 @@ func (agentView *ViewAgentForList) MarshalJSON() ([]byte, error) {
 
 	return jsonObject.MarshalJSON()
 }
-func (agentView *ViewAgentForList) AfterLoad() {
+func (agentView *Agent) AfterLoad() {
 	if agentView.IdsOfGroupTags == "" {
 		return
 	}

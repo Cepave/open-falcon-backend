@@ -112,12 +112,16 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 			VALUES(12001, '上海光速群'),(12002, '湖南SSD群')
 			`,
 			`
+			INSERT INTO host(id, hostname, agent_version, plugin_version)
+			VALUES(67001, 'hn-list-1', '', '')
+			`,
+			`
 			-- IP: 123.52.14.21
 			INSERT INTO nqm_agent(
-				ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status,
+				ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status,
 				ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id
 			)
-			VALUES(7061, 'ag-name-1', 'ag-list-1', 'hn-list-1', x'7B340E15', 1, 3, 3, 5, 4990)
+			VALUES(7061, 67001, 'ag-name-1', 'ag-list-1', 'hn-list-1', x'7B340E15', 1, 3, 3, 5, 4990)
 			`,
 			`
 			INSERT INTO nqm_agent_group_tag(agt_ag_id, agt_gt_id)
@@ -125,13 +129,13 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 			`,
 			`
 			-- IP: 12.5.104.121
-			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
-			VALUES(7062, 'ag-list-2', 'hn-list-2', x'0C056879', 4, 0)
+			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
+			VALUES(7062, 67001, 'ag-list-2', 'hn-list-2', x'0C056879', 4, 0)
 			`,
 			`
 			-- IP: 12.37.22.48
-			INSERT INTO nqm_agent(ag_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
-			VALUES(7063, 'ag-list-3', 'hn-list-3', x'0C251630', 3, 1)
+			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
+			VALUES(7063, 67001, 'ag-list-3', 'hn-list-3', x'0C251630', 3, 1)
 			`,
 		)
 	}
@@ -145,6 +149,9 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			`
 			DELETE FROM nqm_agent
 			WHERE ag_id >= 7061 AND ag_id <= 7063
+			`,
+			`
+			DELETE FROM host WHERE id = 67001
 			`,
 			`
 			DELETE FROM owl_name_tag

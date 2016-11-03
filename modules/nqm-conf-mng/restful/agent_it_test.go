@@ -45,16 +45,14 @@ func (s *TestAgentItSuite) SetUpTest(c *C) {
 	case "TestAgentItSuite.TestListAgents":
 		inTx(
 			`
-			INSERT INTO nqm_agent(ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id)
-			VALUES(4321, 'agent-it-01', 'agent-01@28.71.19.22', 'agent-01.fb.com', x'1C471316', 7)
+			INSERT INTO host(id, hostname, agent_version, plugin_version)
+			VALUES(22091, 'agent-it-01', '', '')
 			`,
 			`
-			INSERT INTO nqm_agent(ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id)
-			VALUES(4322, 'agent-it-02', 'agent-02@28.71.19.23', 'agent-02.fb.com', x'1C471317', 7)
-			`,
-			`
-			INSERT INTO nqm_agent(ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id)
-			VALUES(4323, 'agent-it-03', 'agent-03@28.71.19.23', 'agent-03.fb.com', x'1C471318', 7)
+			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id)
+			VALUES(4321, 22091, 'agent-it-01', 'agent-01@28.71.19.22', 'agent-01.fb.com', x'1C471316', 7),
+				(4322, 22091, 'agent-it-02', 'agent-02@28.71.19.23', 'agent-02.fb.com', x'1C471317', 7),
+				(4323, 22091, 'agent-it-03', 'agent-03@28.71.19.23', 'agent-03.fb.com', x'1C471318', 7)
 			`,
 		)
 	}
@@ -66,6 +64,7 @@ func (s *TestAgentItSuite) TearDownTest(c *C) {
 	case "TestAgentItSuite.TestListAgents":
 		inTx(
 			"DELETE FROM nqm_agent WHERE ag_id >= 4321 AND ag_id <= 4323",
+			"DELETE FROM host WHERE id = 22091",
 		)
 	}
 }

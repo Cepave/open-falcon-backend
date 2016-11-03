@@ -123,3 +123,8 @@
     filename: "mike-24.sql",
     comment: "Fix the view of filtering targets for ping task"
 }
+- {
+    id: "mike-25",
+    filename: "mike-25.sql",
+    comment: "Add FK to host from nqm_agent"
+}

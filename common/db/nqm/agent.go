@@ -9,14 +9,14 @@ import (
 )
 
 // Lists the agents by query condition
-func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmModel.ViewAgentForList, *commonModel.Paging) {
-	var result []*nqmModel.ViewAgentForList
+func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmModel.Agent, *commonModel.Paging) {
+	var result []*nqmModel.Agent
 
 	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) {
 		/**
 		 * Retrieves the page of data
 		 */
-		var selectAgent = txGormDb.Model(&nqmModel.ViewAgentForList{}).
+		var selectAgent = txGormDb.Model(&nqmModel.Agent{}).
 			Select(`SQL_CALC_FOUND_ROWS
 				ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
 				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,

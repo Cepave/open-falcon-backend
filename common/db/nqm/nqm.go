@@ -39,8 +39,26 @@ func (self *refreshAgentProcessor) IfTrue(tx *sql.Tx) {
 
 	commonDb.ToTxExt(tx).Exec(
 		`
-		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat)
-		VALUES(?, ?, ?, ?)
+		INSERT INTO host(hostname, ip, agent_version, plugin_version)
+		VALUES(?, ?, '', '')
+		ON DUPLICATE KEY UPDATE
+			ip = ?
+		`,
+		self.agent.Hostname(),
+		self.agent.IpAddress.String(),
+		self.agent.IpAddress.String(),
+	)
+	commonDb.ToTxExt(tx).Exec(
+		`
+		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)
+		VALUES(
+			?, ?, ?, ?,
+			(
+				SELECT id
+				FROM host
+				WHERE hostname = ?
+			)
+		)
 		ON DUPLICATE KEY UPDATE
 			ag_hostname = ?,
 			ag_ip_address = ?,
@@ -50,6 +68,7 @@ func (self *refreshAgentProcessor) IfTrue(tx *sql.Tx) {
 		self.agent.Hostname(),
 		ipAddress,
 		now,
+		self.agent.Hostname(),
 		self.agent.Hostname(),
 		ipAddress,
 		now,
