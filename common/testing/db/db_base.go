@@ -11,6 +11,23 @@ import (
 
 var dsnMysql = flag.String("dsn_mysql", "", "DSN of MySql")
 
+// This callback is used to setup a viable database configuration while testing
+type ViableDbConfigFunc func(config *commonDb.DbConfig)
+
+// This function is used to:
+//
+// 1) Check whether or not the configuration o "dsn_mysql" has been supplied
+// 2) If it does, supply the data of configuration to callback function
+func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
+	config := GetDbConfig(c)
+
+	if config != nil {
+		configFunc(config)
+	}
+
+	return config != nil
+}
+
 func GetDbConfig(c *check.C) *commonDb.DbConfig {
 	if *dsnMysql == "" {
 		c.Skip(fmt.Sprintf("Skip database testing. Needs \"-dsn_mysql=<MySQL DSN>\""))

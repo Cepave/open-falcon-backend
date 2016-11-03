@@ -27,6 +27,10 @@ type DbConfig struct {
 	MaxIdle int
 }
 
+func (config *DbConfig) String() string {
+	return fmt.Sprintf("DSN: [%s]. Max Idle: [%d]", config.Dsn, config.MaxIdle)
+}
+
 // Open this facade with ping()
 func (facade *DbFacade) Open(dbConfig *DbConfig) (err error) {
 	if facade.initialized {
@@ -38,7 +42,7 @@ func (facade *DbFacade) Open(dbConfig *DbConfig) (err error) {
 	 */
 	facade.GormDb, err = gorm.Open("mysql", dbConfig.Dsn)
 	if err != nil {
-		return fmt.Errorf("Open Gorm error: %v", err)
+		err = fmt.Errorf("Open Gorm error: %v", err)
 	}
 	// :~)
 
@@ -50,6 +54,7 @@ func (facade *DbFacade) Open(dbConfig *DbConfig) (err error) {
 	// :~)
 
 	facade.SqlDbCtrl = NewDbController(facade.SqlDb)
+	facade.initialized = true
 
 	return
 }

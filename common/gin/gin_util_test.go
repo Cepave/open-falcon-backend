@@ -49,7 +49,7 @@ func (suite *TestGinUtilSuite) TestPagingByHeader(c *C) {
 	}
 }
 
-func (suite *TestGinUtilSuite) TestparseOrderBy(c *C) {
+func (suite *TestGinUtilSuite) TestParseOrderBy(c *C) {
 	testCases := []struct {
 		sampleValue string
 		expectedOrderBy []*model.OrderByEntity

@@ -4,6 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/chyeh/viper"
 	"github.com/spf13/pflag"
+	owlPflag "github.com/Cepave/open-falcon-backend/common/pflag"
 )
 
 // Gets called before pflag.Parse()
@@ -24,18 +25,24 @@ func OwlDefaultPflagDefiner() {
 //
 // LoadConfigFile() would call ParseCmd() to get the file path of configuration.
 type ConfigLoader struct {
+	// The definer of pflag
+	FlagDefiner PflagDefiner
+	// If the value of string is true, the mapped function would be called
+	TrueValueCallbacks map[string]func()
+
 	cmdViper *viper.Viper
 	configViper *viper.Viper
 
 	parseCmdError error
 	loadConfigFileError error
-
-	FlagDefiner PflagDefiner
 }
 
 func NewOwlConfigLoader() *ConfigLoader {
 	return &ConfigLoader {
 		FlagDefiner: OwlDefaultPflagDefiner,
+		TrueValueCallbacks: map[string]func(){
+			"help": owlPflag.PrintHelpAndExit0,
+		},
 	}
 }
 
@@ -90,6 +97,18 @@ func (loader *ConfigLoader) MustLoadConfigFile() *viper.Viper {
 
 	return viper
 }
+
+// Executes callback for true values
+func (loader *ConfigLoader) ProcessTrueValueCallbacks() {
+	cmdViper := loader.MustParseCmd()
+
+	for name, callback := range loader.TrueValueCallbacks {
+		if cmdViper.GetBool(name) {
+			callback()
+		}
+	}
+}
+
 // Loads configuration from command line, panic if there is error
 func (loader *ConfigLoader) LoadConfigFile() (*viper.Viper, error) {
 	if loader.configViper != nil || loader.loadConfigFileError != nil {

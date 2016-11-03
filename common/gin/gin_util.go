@@ -61,16 +61,20 @@ func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Pa
 }
 
 // HeaderWithPaging would set headers with information of paging
-func HeaderWithPaging(context *gin.Context, defaultPaging *model.Paging) {
-	context.Header(headerPageSize, string(defaultPaging.Size))
-	context.Header(headerPagePos, string(defaultPaging.Position))
-	context.Header(headerTotalCount, string(defaultPaging.TotalCount))
+func HeaderWithPaging(context *gin.Context, paging *model.Paging) {
+	context.Header(headerPageSize, int32ToString(paging.Size))
+	context.Header(headerPagePos, int32ToString(paging.Position))
+	context.Header(headerTotalCount, int32ToString(paging.TotalCount))
 
 	pageMore := "false"
-	if defaultPaging.PageMore {
+	if paging.PageMore {
 		pageMore = "true"
 	}
 	context.Header(headerPageMore, pageMore)
+}
+
+func int32ToString(v int32) string {
+	return strconv.FormatInt(int64(v), 10)
 }
 
 var regexpOrderValue = regexp.MustCompile(`^\w+(?:#(?:a|d|asc|desc|ascending|descending))?(?::\w+(?:#(?:a|d|asc|desc|ascending|descending))?)*$`)
