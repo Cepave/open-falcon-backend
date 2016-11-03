@@ -232,6 +232,7 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 
 func addContactsToPlatformsTable(contacts map[string]interface{}) {
 	log.Debugf("func addContactsToPlatformsTable()")
+	now := getNow()
 	o := orm.NewOrm()
 	o.Using("boss")
 	var platforms []Platforms
@@ -240,21 +241,33 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 		log.Errorf(err.Error())
 	} else {
 		for _, platform := range platforms {
-			contactsOfPlatform := []string{}
 			platformName := platform.Platform
-			if users, ok := contacts[platformName]; ok {
-				for _, user := range users.([]interface{}) {
-					contactName := user.(map[string]interface{})["name"].(string)
-					contactsOfPlatform = appendUniqueString(contactsOfPlatform, contactName)
+			if items, ok := contacts[platformName]; ok {
+				contacts := []string{}
+				for role, user := range items.(map[string]map[string]string) {
+					if (role == "principal") {
+						platform.Principal = user["name"]
+					} else if (role == "deputy") {
+						platform.Deputy = user["name"]
+					} else if (role == "upgrader") {
+						platform.Upgrader = user["name"]
+					}
 				}
+				if (len(platform.Principal) > 0) {
+					contacts = append(contacts, platform.Principal)
+				}
+				if (len(platform.Deputy) > 0) {
+					contacts = append(contacts, platform.Deputy)
+				}
+				if (len(platform.Upgrader) > 0) {
+					contacts = append(contacts, platform.Upgrader)
+				}
+				platform.Contacts = strings.Join(contacts, ",")
 			}
-			if len(contactsOfPlatform) > 0 {
-				platform.Contacts = strings.Join(contactsOfPlatform, ",")
-				platform.Updated = getNow()
-				_, err := o.Update(&platform)
-				if err != nil {
-					log.Errorf(err.Error())
-				}
+			platform.Updated = now
+			_, err := o.Update(&platform)
+			if err != nil {
+				log.Errorf(err.Error())
 			}
 		}
 	}
