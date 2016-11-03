@@ -51,7 +51,7 @@ CREATE TABLE `idcs` (
 DROP TABLE IF EXISTS `ips`;
 CREATE TABLE `ips` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
-  `ip` varchar(20) CHARACTER SET utf8 NOT NULL UNIQUE,
+  `ip` varchar(20) CHARACTER SET utf8 NOT NULL,
   `exist` boolean DEFAULT NULL,
   `status` boolean DEFAULT NULL,
   `hostname` varchar(30) CHARACTER SET utf8 NOT NULL,
