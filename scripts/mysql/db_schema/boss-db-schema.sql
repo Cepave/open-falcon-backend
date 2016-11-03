@@ -11,7 +11,7 @@ CREATE TABLE `contacts` (
   `name` varchar(10) CHARACTER SET utf8 NOT NULL UNIQUE,
   `phone` varchar(20) CHARACTER SET utf8 NOT NULL,
   `email` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
-  `updated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
