@@ -684,12 +684,16 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 	countOfMissSum := 0
 	countOfDeactivatedSum := 0
 	hostId := 1
-	name := ""
+	hostname := ""
 	activate := ""
 	version := ""
 	plugin := ""
 	status := ""
 	items := result["items"].(map[string]interface{})
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT idc, city, province FROM boss.hosts WHERE hostname = ?"
 	for _, groupName := range groupNames {
 		platform := map[string]interface{}{}
 		hosts := []interface{}{}
@@ -701,12 +705,12 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 		countOfDeactivated := 0
 		group := groups[groupName]
 		for _, agent := range group {
-			name = agent["name"]
+			hostname = agent["hostname"]
 			activate = agent["activate"]
 			status = ""
 			version = ""
 			if activate == "1" {
-				if item, ok := items[name]; ok {
+				if item, ok := items[hostname]; ok {
 					status = item.(map[string]interface{})["status"].(string)
 					version = item.(map[string]interface{})["version"].(string)
 					plugin = item.(map[string]interface{})["plugin"].(string)
@@ -727,15 +731,22 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 			}
 			host := map[string]string{
 				"id":       strconv.Itoa(hostId),
-				"name":     name,
+				"name":     hostname,
 				"platform": groupName,
 				"status":   status,
+				"ip":       agent["ip"],
 				"version":  version,
 			}
 			if host["status"] == "error" {
-				host["idc"] = agent["idc"]
-				host["city"] = agent["city"]
-				host["province"] = agent["province"]
+				num, err := o.Raw(sql, hostname).Values(&rows)
+				if err != nil {
+					setError(err.Error(), result)
+				} else if num > 0 {
+					row := rows[0]
+					host["idc"] = row["idc"].(string)
+					host["city"] = row["city"].(string)
+					host["province"] = row["province"].(string)
+				}
 				errorHosts = append(errorHosts, host)
 			} else {
 				host["plugin"] = plugin
