@@ -208,39 +208,6 @@ func syncIDCsTable() {
 	updateIDCsTable(IDCNames, IDCsMap)
 }
 
-func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
-	log.Debugf("func updatePlatformsTable()")
-	now := getNow()
-	o := orm.NewOrm()
-	o.Using("boss")
-	var platform Platforms
-	for _, platformName := range platformNames {
-		count, err := o.QueryTable("ips").Filter("platform", platformName).Filter("exist", 1).Filter("status", 1).Exclude("hostname__isnull", true).Count()
-		if err != nil {
-			count = 0
-		}
-		group := platformsMap[platformName]
-		err = o.QueryTable("platforms").Filter("platform", group["platformName"]).One(&platform)
-		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.platforms(platform, count, updated) VALUES(?, ?, ?)"
-			_, err := o.Raw(sql, group["platformName"], count, now).Exec()
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		} else if err != nil {
-			log.Errorf(err.Error())
-		} else {
-			platform.Platform = group["platformName"].(string)
-			platform.Count = int(count)
-			platform.Updated = now
-			_, err := o.Update(&platform)
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		}
-	}
-}
-
 func updateContactsTable(contactNames []string, contactsMap map[string]map[string]string) {
 	log.Debugf("func updateContactsTable()")
 	o := orm.NewOrm()
@@ -636,6 +603,39 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		} else {
 			item.Id = host.Id
 			_, err := o.Update(&item)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}
+	}
+}
+
+func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
+	log.Debugf("func updatePlatformsTable()")
+	now := getNow()
+	o := orm.NewOrm()
+	o.Using("boss")
+	var platform Platforms
+	for _, platformName := range platformNames {
+		count, err := o.QueryTable("ips").Filter("platform", platformName).Filter("exist", 1).Filter("status", 1).Exclude("hostname__isnull", true).Count()
+		if err != nil {
+			count = 0
+		}
+		group := platformsMap[platformName]
+		err = o.QueryTable("platforms").Filter("platform", group["platformName"]).One(&platform)
+		if err == orm.ErrNoRows {
+			sql := "INSERT INTO boss.platforms(platform, count, updated) VALUES(?, ?, ?)"
+			_, err := o.Raw(sql, group["platformName"], count, now).Exec()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		} else if err != nil {
+			log.Errorf(err.Error())
+		} else {
+			platform.Platform = group["platformName"].(string)
+			platform.Count = int(count)
+			platform.Updated = now
+			_, err := o.Update(&platform)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
