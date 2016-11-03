@@ -64,8 +64,11 @@ DROP TABLE IF EXISTS `platforms`;
 CREATE TABLE `platforms` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `platform` varchar(30) CHARACTER SET utf8 NOT NULL UNIQUE,
-  `contacts` varchar(50) CHARACTER SET utf8 DEFAULT NULL,
+  `contacts` varchar(80) CHARACTER SET utf8 DEFAULT NULL,
+  `principal` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
+  `deputy` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
+  `upgrader` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
   `count` int(6) DEFAULT NULL,
-  `updated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
