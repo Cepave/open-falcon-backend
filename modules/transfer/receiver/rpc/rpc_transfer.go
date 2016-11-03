@@ -88,7 +88,7 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 
 		// TODO 呵呵,这里需要再优雅一点
 		now := start.Unix()
-		if v.Timestamp <= 0 || v.Timestamp > now*2 {
+		if v.Timestamp <= 0 || v.Timestamp > now*1+7200 {
 			v.Timestamp = now
 		}
 
