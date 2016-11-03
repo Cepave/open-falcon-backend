@@ -507,3 +507,40 @@ func syncContactsTable() {
 	updateContactsTable(contactNames, contactsMap)
 	addContactsToPlatformsTable(contacts)
 }
+
+func updateIDCsTable(IDCNames []string, IDCsMap map[string]map[string]string) {
+	log.Debugf("func updateIDCsTable()")
+	now := getNow()
+	o := orm.NewOrm()
+	o.Using("boss")
+	var idc Idcs
+	for _, IDCName := range IDCNames {
+		item := IDCsMap[IDCName]
+		err := o.QueryTable("idcs").Filter("idc", IDCName).One(&idc)
+		if err == orm.ErrNoRows {
+			sql := "INSERT INTO boss.idcs(popid, idc, bandwidth, count, area, province, city, updated) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+			_, err := o.Raw(sql, item["popid"], item["idc"], item["bandwidth"], item["count"], item["area"], item["province"], item["city"], now).Exec()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		} else if err != nil {
+			log.Errorf(err.Error())
+		} else {
+			popID, _ := strconv.Atoi(item["popid"])
+			bandwidth, _ := strconv.Atoi(item["bandwidth"])
+			count, _ := strconv.Atoi(item["count"])
+			idc.Popid = popID
+			idc.Idc = item["idc"]
+			idc.Bandwidth = bandwidth
+			idc.Count = count
+			idc.Area = item["area"]
+			idc.Province = item["province"]
+			idc.City = item["city"]
+			idc.Updated = now
+			_, err := o.Update(&idc)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}
+	}
+}
