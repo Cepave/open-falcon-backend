@@ -1441,16 +1441,28 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 		if err != nil {
 			setError(err.Error(), result)
 		} else if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
+			roles := []string{
+				"principal",
+				"backuper",
+				"upgrader",
+			}
 			for _, name := range strings.Split(platformName, ",") {
-				if platform, ok := nodes["result"].(map[string]interface{})[name].([]interface{}); ok {
-					items := []interface{}{}
-					for _, contact := range platform {
-						item := map[string]interface{}{
-							"name":  contact.(map[string]interface{})["realname"].(string),
-							"phone": contact.(map[string]interface{})["cell"].(string),
-							"email": contact.(map[string]interface{})["email"].(string),
+				if platform, ok := nodes["result"].(map[string]interface{})[name].(map[string]interface{}); ok {
+					items := map[string]map[string]string{}
+					for _, role := range roles {
+						if value, ok := platform[role].([]interface{}); ok {
+							person := value[0]
+							item := map[string]string{
+								"name":  person.(map[string]interface{})["realname"].(string),
+								"phone": person.(map[string]interface{})["cell"].(string),
+								"email": person.(map[string]interface{})["email"].(string),
+							}
+							if (role == "backuper") {
+								items["deputy"] = item
+							} else {
+								items[role] = item
+							}
 						}
-						items = append(items, item)
 					}
 					platformMap[name] = items
 				}
