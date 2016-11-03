@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/orm"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	"github.com/jasonlvhit/gocron"
 	log "github.com/Sirupsen/logrus"
+	"github.com/astaxie/beego/orm"
+	"github.com/jasonlvhit/gocron"
 )
 
 type Contacts struct {
@@ -82,7 +82,7 @@ func SyncHostsAndContactsTable() {
 			intervalToSyncContactsTable := uint64(g.Config().Contacts.Interval)
 			gocron.Every(intervalToSyncContactsTable).Seconds().Do(syncContactsTable)
 		}
-		<- gocron.Start()
+		<-gocron.Start()
 	}
 }
 
@@ -106,7 +106,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	var hosts []Hosts
 	o := orm.NewOrm()
 	o.Using("boss")
-	_, err := o.QueryTable("hosts").All(&hosts)
+	_, err := o.QueryTable("hosts").Limit(10000).All(&hosts)
 	if err != nil {
 		log.Errorf(err.Error())
 	} else {
@@ -125,6 +125,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		}
 	}
 
+	hosts = []Hosts{}
 	idcMap := getIDCMap()
 	var host Hosts
 	for _, hostname := range hostnames {
@@ -147,7 +148,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		hosts = append(hosts, host)
 	}
 	for _, item := range hosts {
-		err := o.QueryTable("hosts").Filter("hostname", item.Hostname).One(&host)
+		err := o.QueryTable("hosts").Limit(10000).Filter("hostname", item.Hostname).One(&host)
 		if err == orm.ErrNoRows {
 			sql := "INSERT INTO boss.hosts("
 			sql += "hostname, exist, activate, platform, idc, ip, "
@@ -336,8 +337,8 @@ func syncHostsTable() {
 		}
 		platformsMap[platformName] = map[string]interface{}{
 			"platformName": platformName,
-			"count": countOfHosts,
-			"contacts": "",
+			"count":        countOfHosts,
+			"contacts":     "",
 		}
 	}
 	sort.Strings(hostnames)
