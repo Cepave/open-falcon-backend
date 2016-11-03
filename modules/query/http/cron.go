@@ -1,6 +1,9 @@
 package http
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -109,6 +112,98 @@ func queryIDCsHostsCount(IDCName string) int64 {
 		count = int64(0)
 	}
 	return count
+}
+
+func syncIDCsTable() {
+	log.Debugf("func syncIDCsTable()")
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT updated FROM boss.idcs ORDER BY updated DESC LIMIT 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	} else if num > 0 {
+		format := "2006-01-02 15:04:05"
+		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
+		currentTime, _ := time.Parse(format, getNow())
+		diff := currentTime.Unix() - updatedTime.Unix()
+		if int(diff) < g.Config().Contacts.Interval {
+			return
+		}
+	}
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
+	url += "/pop/yes/pop_id/yes.json"
+	log.Debugf("url = %v", url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Errorf("Error = %v", err.Error())
+		return
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Errorf("Error = %v", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	body, _ := ioutil.ReadAll(resp.Body)
+	var nodes = make(map[string]interface{})
+	if err := json.Unmarshal(body, &nodes); err != nil {
+		log.Errorf("Error = %v", err.Error())
+		return
+	}
+	if nodes["status"] == nil {
+		return
+	} else if int(nodes["status"].(float64)) != 1 {
+		return
+	}
+	IDCsMap := map[string]map[string]string{}
+	IDCNames := []string{}
+	for _, platform := range nodes["result"].([]interface{}) {
+		for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
+			IDCName := device.(map[string]interface{})["pop"].(string)
+			if _, ok := IDCsMap[IDCName]; !ok {
+				popID := device.(map[string]interface{})["pop_id"].(string)
+				item := map[string]string{
+					"idc":   IDCName,
+					"popid": popID,
+				}
+				IDCsMap[IDCName] = item
+				IDCNames = appendUniqueString(IDCNames, IDCName)
+			}
+		}
+	}
+	for _, IDCName := range IDCNames {
+		idc := IDCsMap[IDCName]
+		idcID, err := strconv.Atoi(idc["popid"])
+		if err == nil {
+			location := getLocation(idcID)
+			log.Debugf("location = %v", location)
+			idc["area"] = location["area"]
+			idc["province"] = location["province"]
+			idc["city"] = location["city"]
+		}
+		queryIDCsBandwidths(IDCName, result)
+		idc["bandwidth"] = "0"
+		if val, ok := result["items"].(map[string]interface{})["upperLimitMB"].(float64); ok {
+			bandwidth := int(val)
+			idc["bandwidth"] = strconv.Itoa(bandwidth)
+		}
+		count := int(queryIDCsHostsCount(IDCName))
+		idc["count"] = strconv.Itoa(count)
+		IDCsMap[IDCName] = idc
+	}
+	updateIDCsTable(IDCNames, IDCsMap)
 }
 
 func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string) {
