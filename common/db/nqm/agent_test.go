@@ -58,7 +58,7 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 	}
 
 	for _, testCase := range testCases {
-		paging := &commonModel.Paging{
+		paging := commonModel.Paging{
 			Size: testCase.pageSize,
 			Position: testCase.pagePosition,
 			OrderBy: []*commonModel.OrderByEntity {
@@ -73,7 +73,8 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 				&commonModel.OrderByEntity{ "group_tag", commonModel.Descending },
 			},
 		}
-		testedResult := ListAgents(
+
+		testedResult, newPaging := ListAgents(
 			testCase.query, paging,
 		)
 
@@ -84,7 +85,7 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 			//c.Assert(agent.IspId, Equals, agent.Isp.Id)
 		}
 		c.Assert(testedResult, HasLen, testCase.expectedCountOfCurrentPage)
-		c.Assert(paging.TotalCount, Equals, testCase.expectedCountOfAll)
+		c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll)
 	}
 }
 

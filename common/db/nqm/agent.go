@@ -9,7 +9,7 @@ import (
 )
 
 // Lists the agents by query condition
-func ListAgents(query *nqmModel.AgentQuery, paging *commonModel.Paging) []*nqmModel.ViewAgentForList {
+func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmModel.ViewAgentForList, *commonModel.Paging) {
 	var result []*nqmModel.ViewAgentForList
 
 	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) {
@@ -49,7 +49,7 @@ func ListAgents(query *nqmModel.AgentQuery, paging *commonModel.Paging) []*nqmMo
 				ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
 				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
 			`).
-			Order(buildSortingClauseOfAgents(paging)).
+			Order(buildSortingClauseOfAgents(&paging)).
 			Offset(paging.GetOffset())
 
 		if query.Name != "" {
@@ -76,7 +76,7 @@ func ListAgents(query *nqmModel.AgentQuery, paging *commonModel.Paging) []*nqmMo
 	}
 
 	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
-		funcTxLoader, paging,
+		funcTxLoader, &paging,
 	)
 
 	/**
@@ -87,7 +87,7 @@ func ListAgents(query *nqmModel.AgentQuery, paging *commonModel.Paging) []*nqmMo
 	}
 	// :~)
 
-	return result
+	return result, &paging
 }
 
 var orderByDialect = commonModel.NewSqlOrderByDialect(
