@@ -123,3 +123,8 @@
     filename: "mike-24.sql",
     comment: "Fix the view of filtering targets for ping task"
 }
+- {
+    id: "chyeh-25",
+    filename: "chyeh-25.sql",
+    comment: "[OWL-816] Add new entries to owl_city"
+}
