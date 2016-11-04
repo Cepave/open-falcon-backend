@@ -1804,11 +1804,13 @@ func queryIDCsBandwidths(IDCName string, result map[string]interface{}) {
 		}
 		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			if len(nodes["result"].([]interface{})) == 0 {
-				setError("IDC name not found", result)
+				errorMessage := "IDC name not found: " + IDCName
+				setError(errorMessage, result)
 			} else {
 				for _, uplink := range nodes["result"].([]interface{}) {
-					upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
-					upperLimitSum += upperLimit
+					if upperLimit, ok := uplink.(map[string]interface{})["all_uplink_top"].(float64); ok {
+						upperLimitSum += upperLimit
+					}
 				}
 			}
 		} else {
