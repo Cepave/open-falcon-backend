@@ -3,29 +3,39 @@ package http
 import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/toolkits/file"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
 )
 
-func configCommonRoutes() {
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
-	})
+func configCommonRoutes(router *gin.Engine) {
+	router.GET("/health", gin.WrapF(health))
+	router.GET("/version", gin.WrapF(version))
+	router.GET("/workdir", gin.WrapF(workDir))
+	router.GET("/config/reload", gin.WrapF(reloadConfig))
+}
 
-	http.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(g.VERSION))
-	})
+// Checks health of web service
+func health(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("ok"))
+}
 
-	http.HandleFunc("/workdir", func(w http.ResponseWriter, r *http.Request) {
-		RenderDataJson(w, file.SelfDir())
-	})
+// Gets version of HBS
+func version(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(g.VERSION))
+}
 
-	http.HandleFunc("/config/reload", func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.RemoteAddr, "127.0.0.1") {
-			g.ParseConfig(g.ConfigFile)
-			RenderDataJson(w, g.Config())
-		} else {
-			w.Write([]byte("no privilege"))
-		}
-	})
+// Gets the working dir of current application
+func workDir(w http.ResponseWriter, r *http.Request) {
+	RenderDataJson(w, file.SelfDir())
+}
+
+// Reload the configuration
+func reloadConfig(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.RemoteAddr, "127.0.0.1") {
+		g.ParseConfig(g.ConfigFile)
+		RenderDataJson(w, g.Config())
+	} else {
+		w.Write([]byte("no privilege"))
+	}
 }

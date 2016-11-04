@@ -330,11 +330,17 @@ func (suite *TestDbNqmSuite) Test_vw_enabled_targets_by_ping_task(c *C) {
 		pingTaskId int
 		expectedNumberOfData int
 	} {
-		{ 47301, 5 },
-		{ 47302, 0 },
+		{ 47301, 1 },
+		{ 47302, 1 },
+		{ 47303, 1 },
+		{ 47304, 1 },
+		{ 47305, 1 },
+		{ 47311, 1 },
 	}
 
 	for _, testCase := range testCases {
+		c.Logf("Current tested id of ping task: [%d]", testCase.pingTaskId)
+
 		var numberOfRows int = 0
 		hbstesting.QueryForRows(
 			func (row *sql.Rows) {
@@ -352,6 +358,7 @@ func (suite *TestDbNqmSuite) Test_vw_enabled_targets_by_ping_task(c *C) {
 			testCase.pingTaskId,
 		)
 
+		c.Logf("Number of matched targets: [%d]", numberOfRows)
 		c.Assert(numberOfRows, Equals, testCase.expectedNumberOfData)
 	}
 }
@@ -370,7 +377,9 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`,
 			`
 			INSERT INTO owl_group_tag(gt_id, gt_name)
-			VALUES (23201, 'group-tag-1'), (23202, 'gruop-tag-2')
+			VALUES (23201, 'group-tag-1'),
+				(23202, 'group-tag-2'),
+				(23203, 'group-tag-3')
 			`,
 			`
 			INSERT INTO nqm_target(
@@ -384,50 +393,66 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 				(72003, 'tgn-e-3', '105.12.3.3', -1, -1, 12, -1, TRUE, TRUE), # Matched by city
 				(72004, 'tgn-e-4', '105.12.3.4', -1, -1, -1, 4071, TRUE, TRUE), # Matched by name tag
 				(72005, 'tgn-e-5', '105.12.3.5', -1, -1, -1, -1, TRUE, TRUE), # Matched by group tag
-				(72013, 'tgn-d-1', '106.12.3.1', 4, 7, 13, 4072, TRUE, FALSE), # Matched, but disabled
-				(72014, 'tgn-d-2', '106.12.3.2', 4, 7, 13, 4072, FALSE, TRUE) # Matched, but disabled
+				(72011, 'tgn-e-11', '105.12.3.11', 4, 7, 13, 4072, TRUE, TRUE), # Matched with all of the filters
+				(72013, 'tgn-d-1', '106.12.3.1', 4, 7, 13, 4072, TRUE, FALSE), # Matched, but disabled(status)
+				(72014, 'tgn-d-2', '106.12.3.2', 4, 7, 13, 4072, FALSE, TRUE) # Matched, but disabled(available)
 			`,
 			`
 			INSERT INTO nqm_target_group_tag(
 				tgt_tg_id, tgt_gt_id
 			)
-			VALUES(72005, 23201), (72013, 23202), (72014, 23202)
+			VALUES(72005, 23201),
+				(72013, 23202), (72014, 23202), -- Disabled
+				(72011, 23202), (72011, 23203) -- Matched with all of the filters
 			`,
 			`
 			INSERT INTO nqm_ping_task(
 				pt_id, pt_period, pt_enable
 			)
-			VALUES (47301, 20, true), (47302, 20, false)
+			VALUES (47301, 20, true), -- Just ISP filter
+				(47302, 20, true), -- Just province filter
+				(47303, 20, true), -- Just city filter
+				(47304, 20, true), -- Just filter of name tag
+				(47305, 20, true), -- Just filter of group tag
+				(47306, 20, false), -- disabled filter
+				(47311, 20, true) -- Has all of the filters
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_isp(
 				tfisp_pt_id, tfisp_isp_id
 			)
-			VALUES (47301, 3), (47302, 4)
+			VALUES (47301, 3),
+				(47311, 3), (47311, 4),
+				(47306, 3)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_province(
 				tfpv_pt_id, tfpv_pv_id
 			)
-			VALUES (47301, 6), (47302, 7)
+			VALUES (47302, 6),
+				(47311, 6), (47311, 7)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_city(
 				tfct_pt_id, tfct_ct_id
 			)
-			VALUES (47301, 12), (47302, 13)
+			VALUES (47303, 12),
+				(47311, 12), (47311, 13)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_name_tag(
 				tfnt_pt_id, tfnt_nt_id
 			)
-			VALUES (47301, 4071), (47302, 4072)
+			VALUES (47304, 4071),
+				(47311, 4071), (47311, 4072)
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_group_tag(
 				tfgt_pt_id, tfgt_gt_id
 			)
-			VALUES (47301, 23201), (47302, 23202)
+			VALUES (47305, 23201),
+				(47311, 23201),
+				(47311, 23202), (47311, 23203)
 			`,
 		)
 	case "TestDbNqmSuite.TestTriggersOfFiltersForPingTask":
@@ -628,11 +653,11 @@ func (s *TestDbNqmSuite) TearDownTest(c *C) {
 	switch c.TestName() {
 	case "TestDbNqmSuite.Test_vw_enabled_targets_by_ping_task":
 		hbstesting.ExecuteQueriesOrFailInTx(
-			`DELETE FROM nqm_ping_task WHERE pt_id >= 47301 AND pt_id <= 47302`,
+			`DELETE FROM nqm_ping_task WHERE pt_id >= 47301 AND pt_id <= 47311`,
 			`DELETE FROM nqm_target WHERE tg_id >= 72001 AND tg_id <= 72014`,
 			`DELETE FROM owl_name_tag WHERE nt_id >= 4071 AND nt_id <= 4072`,
 			`DELETE FROM nqm_target_group_tag WHERE tgt_tg_id >= 72001 AND tgt_tg_id <= 72014`,
-			`DELETE FROM owl_group_tag WHERE gt_id >= 23201 AND gt_id <= 23202`,
+			`DELETE FROM owl_group_tag WHERE gt_id >= 23201 AND gt_id <= 23203`,
 		)
 	case "TestDbNqmSuite.TestTriggersOfFiltersForPingTask":
 		hbstesting.ExecuteQueriesOrFailInTx(
