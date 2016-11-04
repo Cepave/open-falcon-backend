@@ -502,6 +502,30 @@ func queryHostsData(result map[string]interface{}) []Hosts {
 	return hosts
 }
 
+func queryIPsData(result map[string]interface{}) []map[string]string {
+	IPs := []map[string]string{}
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT ip, hostname, platform, status FROM boss.ips WHERE exist = 1 AND hostname != ''"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+		return IPs
+	} else if num > 0 {
+		for _, row := range rows {
+			item := map[string]string{
+				"hostname": row["hostname"].(string),
+				"ip":       row["ip"].(string),
+				"platform": row["platform"].(string),
+				"activate": row["status"].(string),
+			}
+			IPs = append(IPs, item)
+		}
+	}
+	return IPs
+}
+
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
 	var queries []*cmodel.GraphLastParam
 	o := orm.NewOrm()
@@ -660,12 +684,16 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 	countOfMissSum := 0
 	countOfDeactivatedSum := 0
 	hostId := 1
-	name := ""
+	hostname := ""
 	activate := ""
 	version := ""
 	plugin := ""
 	status := ""
 	items := result["items"].(map[string]interface{})
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT idc, city, province FROM boss.hosts WHERE hostname = ?"
 	for _, groupName := range groupNames {
 		platform := map[string]interface{}{}
 		hosts := []interface{}{}
@@ -677,12 +705,12 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 		countOfDeactivated := 0
 		group := groups[groupName]
 		for _, agent := range group {
-			name = agent["name"]
+			hostname = agent["hostname"]
 			activate = agent["activate"]
 			status = ""
 			version = ""
 			if activate == "1" {
-				if item, ok := items[name]; ok {
+				if item, ok := items[hostname]; ok {
 					status = item.(map[string]interface{})["status"].(string)
 					version = item.(map[string]interface{})["version"].(string)
 					plugin = item.(map[string]interface{})["plugin"].(string)
@@ -703,15 +731,22 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 			}
 			host := map[string]string{
 				"id":       strconv.Itoa(hostId),
-				"name":     name,
+				"name":     hostname,
 				"platform": groupName,
 				"status":   status,
+				"ip":       agent["ip"],
 				"version":  version,
 			}
 			if host["status"] == "error" {
-				host["idc"] = agent["idc"]
-				host["city"] = agent["city"]
-				host["province"] = agent["province"]
+				num, err := o.Raw(sql, hostname).Values(&rows)
+				if err != nil {
+					setError(err.Error(), result)
+				} else if num > 0 {
+					row := rows[0]
+					host["idc"] = row["idc"].(string)
+					host["city"] = row["city"].(string)
+					host["province"] = row["province"].(string)
+				}
 				errorHosts = append(errorHosts, host)
 			} else {
 				host["plugin"] = plugin
@@ -751,29 +786,17 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	data := queryHostsData(result)
+	data := queryIPsData(result)
 	platforms := map[string][]map[string]string{}
 	platformNames := []string{}
 	hostnames := []string{}
 	hostname := ""
 	platformName := ""
-	hosts := []map[string]string{}
-	for _, item := range data {
-		hostname = item.Hostname
-		platformName = item.Platform
-		hostnames = append(hostnames, hostname)
-		host := map[string]string{
-			"name":     hostname,
-			"activate": strconv.Itoa(item.Activate),
-			"platform": platformName,
-			"idc":      item.Idc,
-			"city":     item.City,
-			"province": item.Province,
-		}
-		hostnames = append(hostnames, hostname)
+	for _, host := range data {
+		hostname = host["hostname"]
+		platformName = host["platform"]
+		hostnames = appendUniqueString(hostnames, hostname)
 		platformNames = appendUniqueString(platformNames, platformName)
-		hosts = append(hosts, host)
-
 		if platform, ok := platforms[platformName]; ok {
 			platform = append(platform, host)
 			platforms[platformName] = platform
@@ -1803,11 +1826,13 @@ func queryIDCsBandwidths(IDCName string, result map[string]interface{}) {
 		}
 		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			if len(nodes["result"].([]interface{})) == 0 {
-				setError("IDC name not found", result)
+				errorMessage := "IDC name not found: " + IDCName
+				setError(errorMessage, result)
 			} else {
 				for _, uplink := range nodes["result"].([]interface{}) {
-					upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
-					upperLimitSum += upperLimit
+					if upperLimit, ok := uplink.(map[string]interface{})["all_uplink_top"].(float64); ok {
+						upperLimitSum += upperLimit
+					}
 				}
 			}
 		} else {
