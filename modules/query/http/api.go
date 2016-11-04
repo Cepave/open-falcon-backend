@@ -1060,6 +1060,58 @@ func getExistedHosts(hosts []map[string]string, hostnamesExisted []string, resul
 	return hostsExisted
 }
 
+func getHostsLocations(hosts []map[string]string, hostnamesInput []string, result map[string]interface{}) ([]map[string]string, []string) {
+	hostnames := []string{}
+	hostsMap := map[string]map[string]string{}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	hostnameStr := strings.Join(hostnamesInput, "','")
+	sqlcmd := "SELECT hostname, idc, isp, province, city FROM boss.hosts"
+	sqlcmd += " WHERE hostname IN ('" + hostnameStr + "')"
+	sqlcmd += " AND exist = 1"
+	sqlcmd += " ORDER BY hostname ASC"
+
+	num, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			if _, ok := hostsMap[hostname]; !ok {
+				provinceCode := ""
+				slice := strings.Split(hostname, "-")
+				if len(slice) >= 4 {
+					provinceCode = slice[1]
+				}
+				if len(provinceCode) > 3 {
+					provinceCode = ""
+				}
+				host := map[string]string{
+					"idc": row["idc"].(string),
+					"isp": row["isp"].(string),
+					"province": row["province"].(string),
+					"provinceCode": provinceCode,
+					"city": row["city"].(string),
+				}
+				hostsMap[hostname] = host
+				hostnames = append(hostnames, hostname)
+			}
+		}
+	}
+	for key, host := range hosts {
+		hostname := host["name"]
+		if val, ok := hostsMap[hostname]; ok {
+			host["idc"] = val["idc"]
+			host["isp"] = val["isp"]
+			host["province"] = val["province"]
+			host["provinceCode"] = val["provinceCode"]
+			host["city"] = val["city"]
+			hosts[key] = host
+		}
+	}
+	return hosts, hostnames
+}
+
 func completeApolloFiltersData(hostsExisted map[string]map[string]string, result map[string]interface{}) {
 	hosts := map[string]interface{}{}
 	keywords := map[string]interface{}{}
