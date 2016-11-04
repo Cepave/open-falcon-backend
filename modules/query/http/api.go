@@ -502,6 +502,30 @@ func queryHostsData(result map[string]interface{}) []Hosts {
 	return hosts
 }
 
+func queryIPsData(result map[string]interface{}) []map[string]string {
+	IPs := []map[string]string{}
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT ip, hostname, platform, status FROM boss.ips WHERE exist = 1 AND hostname != ''"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+		return IPs
+	} else if num > 0 {
+		for _, row := range rows {
+			item := map[string]string{
+				"hostname": row["hostname"].(string),
+				"ip":       row["ip"].(string),
+				"platform": row["platform"].(string),
+				"activate": row["status"].(string),
+			}
+			IPs = append(IPs, item)
+		}
+	}
+	return IPs
+}
+
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
 	var queries []*cmodel.GraphLastParam
 	o := orm.NewOrm()
