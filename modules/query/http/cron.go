@@ -212,7 +212,7 @@ func syncHostsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM boss.hosts WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
+	sql := "SELECT updated FROM boss.ips WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -226,7 +226,6 @@ func syncHostsTable() {
 			return
 		}
 	}
-
 	var nodes = make(map[string]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -240,44 +239,77 @@ func syncHostsTable() {
 	platformNames := []string{}
 	platformsMap := map[string]map[string]interface{}{}
 	hostnames := []string{}
+	IPs := []string{}
+	IPKeys := []string{}
+	IPsMap := map[string]map[string]string{}
 	hostsMap := map[string]map[string]string{}
-	hostnamesMap := map[string]int{}
 	idcIDs := []string{}
 	hostname := ""
 	for _, platform := range nodes["result"].([]interface{}) {
-		countOfHosts := 0
 		platformName := platform.(map[string]interface{})["platform"].(string)
 		platformNames = appendUniqueString(platformNames, platformName)
 		for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 			hostname = device.(map[string]interface{})["hostname"].(string)
 			ip := device.(map[string]interface{})["ip"].(string)
-			if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-				if _, ok := hostnamesMap[hostname]; !ok {
+			status := device.(map[string]interface{})["ip_status"].(string)
+			item := map[string]string{
+				"ip":       ip,
+				"exist":    "1",
+				"status":   status,
+				"hostname": hostname,
+				"platform": platformName,
+			}
+			IPs = append(IPs, ip)
+			IPKey := platformName + "_" + ip
+			IPKeys = append(IPKeys, IPKey)
+			if _, ok := IPsMap[ip]; !ok {
+				IPsMap[IPKey] = item
+			}
+			if len(hostname) > 0 {
+				if host, ok := hostsMap[hostname]; !ok {
 					hostnames = append(hostnames, hostname)
 					idcID := device.(map[string]interface{})["pop_id"].(string)
 					host := map[string]string{
 						"hostname": hostname,
-						"activate": device.(map[string]interface{})["ip_status"].(string),
-						"platform": platformName,
+						"activate": "0",
+						"platforms": platformName,
 						"idcID":    idcID,
 						"ip":       ip,
 					}
+					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+						host["ip"] = ip
+						host["platform"] = platformName
+					}
+					if status == "1" {
+						host["activate"] = "1"
+					}
 					hostsMap[hostname] = host
 					idcIDs = appendUniqueString(idcIDs, idcID)
-					hostnamesMap[hostname] = 1
-					countOfHosts++
+				} else {
+					platforms := strings.Split(host["platforms"], ",")
+					platforms = appendUniqueString(platforms, platformName)
+					host["platforms"] = strings.Join(platforms, ",")
+					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
+						host["ip"] = ip
+						host["platform"] = platformName
+					}
+					if status == "1" {
+						host["activate"] = "1"
+					}
+					hostsMap[hostname] = host
 				}
 			}
 		}
 		platformsMap[platformName] = map[string]interface{}{
 			"platformName": platformName,
-			"count":        countOfHosts,
-			"contacts":     "",
 		}
 	}
+	sort.Strings(IPs)
+	sort.Strings(IPKeys)
 	sort.Strings(hostnames)
 	sort.Strings(platformNames)
 	log.Debugf("platformNames =", platformNames)
+	updateIPsTable(IPKeys, IPsMap)
 	updateHostsTable(hostnames, hostsMap)
 	updatePlatformsTable(platformNames, platformsMap)
 }
