@@ -367,7 +367,6 @@ func syncContactsTable() {
 			return
 		}
 	}
-
 	platformNames := []string{}
 	sql = "SELECT DISTINCT platform FROM boss.platforms ORDER BY platform ASC"
 	num, err = o.Raw(sql).Values(&rows)
@@ -386,14 +385,14 @@ func syncContactsTable() {
 	result["error"] = errors
 	getPlatformContact(strings.Join(platformNames, ","), nodes)
 	contactNames := []string{}
-	contactsMap := map[string]map[string]interface{}{}
+	contactsMap := map[string]map[string]string{}
 	contacts := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})
 	for _, platformName := range platformNames {
 		if items, ok := contacts[platformName]; ok {
-			for _, user := range items.([]interface{}) {
-				contactName := user.(map[string]interface{})["name"].(string)
+			for _, user := range items.(map[string]map[string]string) {
+				contactName := user["name"]
 				if _, ok := contactsMap[contactName]; !ok {
-					contactsMap[contactName] = user.(map[string]interface{})
+					contactsMap[contactName] = user
 					contactNames = append(contactNames, contactName)
 				}
 			}
