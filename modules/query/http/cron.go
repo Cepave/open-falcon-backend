@@ -533,6 +533,7 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 		} else {
 			status, _ := strconv.Atoi(item["status"])
 			ip.Ip = item["ip"]
+			ip.Exist = 1
 			ip.Status = status
 			ip.Hostname = item["hostname"]
 			ip.Platform = item["platform"]
