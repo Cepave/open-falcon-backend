@@ -75,10 +75,12 @@ type Platforms struct {
 func SyncHostsAndContactsTable() {
 	if g.Config().Hosts.Enabled || g.Config().Contacts.Enabled {
 		if g.Config().Hosts.Enabled {
-			updateMapData()
+			syncIDCsTable()
 			syncHostsTable()
 			intervalToSyncHostsTable := uint64(g.Config().Hosts.Interval)
 			gocron.Every(intervalToSyncHostsTable).Seconds().Do(syncHostsTable)
+			intervalToSyncContactsTable := uint64(g.Config().Contacts.Interval)
+			gocron.Every(intervalToSyncContactsTable).Seconds().Do(syncIDCsTable)
 		}
 		if g.Config().Contacts.Enabled {
 			syncContactsTable()
