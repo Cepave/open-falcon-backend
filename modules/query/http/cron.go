@@ -21,18 +21,19 @@ type Contacts struct {
 }
 
 type Hosts struct {
-	Id       int
-	Hostname string
-	Exist    int
-	Activate int
-	Platform string
-	Idc      string
-	Ip       string
-	Isp      string
-	Province string
-	City     string
-	Status   string
-	Updated  string
+	Id        int
+	Hostname  string
+	Exist     int
+	Activate  int
+	Platform  string
+	Platforms string
+	Idc       string
+	Ip        string
+	Isp       string
+	Province  string
+	City      string
+	Status    string
+	Updated   string
 }
 
 type Platforms struct {
