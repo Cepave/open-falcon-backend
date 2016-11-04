@@ -1075,65 +1075,131 @@ func getExistedHosts(hosts []map[string]string, hostnamesExisted []string, resul
 	return hostsExisted
 }
 
-func completeApolloFiltersData(hostsExisted map[string]map[string]string, result map[string]interface{}) {
-	hosts := map[string]interface{}{}
-	keywords := map[string]interface{}{}
-	for _, host := range hostsExisted {
-		id, err := strconv.Atoi(host["id"])
-		if err != nil {
-			setError(err.Error(), result)
+func getHostsLocations(hosts []map[string]string, hostnamesInput []string, result map[string]interface{}) ([]map[string]string, []string) {
+	hostnames := []string{}
+	hostsMap := map[string]map[string]string{}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	hostnameStr := strings.Join(hostnamesInput, "','")
+	sqlcmd := "SELECT hostname, idc, isp, province, city FROM boss.hosts"
+	sqlcmd += " WHERE hostname IN ('" + hostnameStr + "')"
+	sqlcmd += " AND exist = 1"
+	sqlcmd += " ORDER BY hostname ASC"
+
+	num, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			if _, ok := hostsMap[hostname]; !ok {
+				provinceCode := ""
+				slice := strings.Split(hostname, "-")
+				if len(slice) >= 4 {
+					provinceCode = slice[1]
+				}
+				if len(provinceCode) > 3 {
+					provinceCode = ""
+				}
+				host := map[string]string{
+					"idc": row["idc"].(string),
+					"isp": row["isp"].(string),
+					"province": row["province"].(string),
+					"provinceCode": provinceCode,
+					"city": row["city"].(string),
+				}
+				hostsMap[hostname] = host
+				hostnames = append(hostnames, hostname)
+			}
 		}
+	}
+	for key, host := range hosts {
+		hostname := host["name"]
+		if val, ok := hostsMap[hostname]; ok {
+			host["idc"] = val["idc"]
+			host["isp"] = val["isp"]
+			host["province"] = val["province"]
+			host["provinceCode"] = val["provinceCode"]
+			host["city"] = val["city"]
+			hosts[key] = host
+		}
+	}
+	return hosts, hostnames
+}
+
+func completeApolloFiltersData(hostsInput []map[string]string, result map[string]interface{}) {
+	hosts := map[string]map[string]string{}
+	keywords := map[string][]string{}
+	for key, host := range hostsInput {
+		id := strconv.Itoa(key + 1)
 		platform := host["platform"]
 		tags := []string{}
 		tags = appendUniqueString(tags, platform)
 		if _, ok := keywords[platform]; ok {
-			keywords[platform] = appendUnique(keywords[platform].([]int), id)
+			keywords[platform] = appendUniqueString(keywords[platform], id)
 		} else {
-			keywords[platform] = []int{id}
+			keywords[platform] = []string{id}
 		}
 		isp := host["isp"]
-		tags = appendUniqueString(tags, isp)
-		if _, ok := keywords[isp]; ok {
-			keywords[isp] = appendUnique(keywords[isp].([]int), id)
-		} else {
-			keywords[isp] = []int{id}
-		}
-		province := host["province"]
-		tags = appendUniqueString(tags, province)
-		if _, ok := keywords[province]; ok {
-			keywords[province] = appendUnique(keywords[province].([]int), id)
-		} else {
-			keywords[province] = []int{id}
-		}
-		name := host["name"]
-		fragments := strings.Split(name, "-")
-		if len(fragments) == 6 {
-			fragments := fragments[2:]
-			for _, fragment := range fragments {
-				tags = appendUniqueString(tags, fragment)
-				if _, ok := keywords[fragment]; ok {
-					keywords[fragment] = appendUnique(keywords[fragment].([]int), id)
-				} else {
-					keywords[fragment] = []int{id}
-				}
+		if len (isp) > 0 {
+			tags = appendUniqueString(tags, isp)
+			if _, ok := keywords[isp]; ok {
+				keywords[isp] = appendUniqueString(keywords[isp], id)
+			} else {
+				keywords[isp] = []string{id}
 			}
 		}
 		ip := host["ip"]
-		keywords[ip] = []int{id}
-		tags = appendUniqueString(tags, ip)
-
+		if len (ip) > 0 {
+			tags = appendUniqueString(tags, ip)
+			if _, ok := keywords[ip]; ok {
+				keywords[ip] = appendUniqueString(keywords[ip], id)
+			} else {
+				keywords[ip] = []string{id}
+			}
+		}
 		idc := host["idc"]
-		tags = appendUniqueString(tags, idc)
-		if _, ok := keywords[idc]; ok {
-			keywords[idc] = appendUnique(keywords[idc].([]int), id)
-		} else {
-			keywords[idc] = []int{id}
+		if len (idc) > 0 {
+			tags = appendUniqueString(tags, idc)
+			if _, ok := keywords[idc]; ok {
+				keywords[idc] = appendUniqueString(keywords[idc], id)
+			} else {
+				keywords[idc] = []string{id}
+			}
+		}
+		province := host["province"]
+		if len (province) > 0 {
+			tags = appendUniqueString(tags, province)
+			if _, ok := keywords[province]; ok {
+				keywords[province] = appendUniqueString(keywords[province], id)
+			} else {
+				keywords[province] = []string{id}
+			}
+		}
+		provinceCode := host["provinceCode"]
+		if len (provinceCode) > 0 {
+			tags = appendUniqueString(tags, provinceCode)
+			if _, ok := keywords[provinceCode]; ok {
+				keywords[provinceCode] = appendUniqueString(keywords[provinceCode], id)
+			} else {
+				keywords[provinceCode] = []string{id}
+			}
+		}
+		hostname := host["name"]
+		if len (hostname) > 0 {
+			tags = appendUniqueString(tags, hostname)
+			if _, ok := keywords[hostname]; ok {
+				keywords[hostname] = appendUniqueString(keywords[hostname], id)
+			} else {
+				keywords[hostname] = []string{id}
+			}
 		}
 		host["tag"] = strings.Join(tags, ",")
 		delete(host, "id")
 		delete(host, "isp")
 		delete(host, "province")
-		hosts[strconv.Itoa(id)] = host
+		delete(host, "provinceCode")
+		hosts[id] = host
 	}
 	result["hosts"] = hosts
 	result["keywords"] = keywords
@@ -1145,26 +1211,24 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	count := 0
-	data := queryHostsData(result)
+	data := queryIPsData(result)
 	hosts := []map[string]string{}
 	hostnames := []string{}
 	hostname := ""
 	for _, item := range data {
-		hostname = item.Hostname
+		hostname = item["hostname"]
 		hostnames = append(hostnames, hostname)
 		host := map[string]string{
 			"name":     hostname,
-			"platform": item.Platform,
-			"idc":      item.Idc,
+			"platform": item["platform"],
+			"ip":       item["ip"],
 		}
 		hosts = append(hosts, host)
 	}
 	sort.Strings(hostnames)
-	hostnamesExisted := getExistedHostnames(hostnames, result)
-	sort.Strings(hostnamesExisted)
-	hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
-	count = len(hostsExisted)
-	completeApolloFiltersData(hostsExisted, result)
+	hosts, hostnames = getHostsLocations(hosts, hostnames, result)
+	count = len(hostnames)
+	completeApolloFiltersData(hosts, result)
 	nodes["count"] = count
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
