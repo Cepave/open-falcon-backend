@@ -208,34 +208,6 @@ func syncIDCsTable() {
 	updateIDCsTable(IDCNames, IDCsMap)
 }
 
-func updateContactsTable(contactNames []string, contactsMap map[string]map[string]string) {
-	log.Debugf("func updateContactsTable()")
-	o := orm.NewOrm()
-	o.Using("boss")
-	var contact Contacts
-	for _, contactName := range contactNames {
-		user := contactsMap[contactName]
-		err := o.QueryTable("contacts").Filter("name", user["name"]).One(&contact)
-		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.contacts(name, phone, email, updated) VALUES(?, ?, ?, ?)"
-			_, err := o.Raw(sql, user["name"], user["phone"], user["email"], getNow()).Exec()
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		} else if err != nil {
-			log.Errorf(err.Error())
-		} else {
-			contact.Email = user["email"]
-			contact.Phone = user["phone"]
-			contact.Updated = getNow()
-			_, err := o.Update(&contact)
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		}
-	}
-}
-
 func syncHostsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -401,6 +373,34 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 			}
 			platform.Updated = now
 			_, err := o.Update(&platform)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}
+	}
+}
+
+func updateContactsTable(contactNames []string, contactsMap map[string]map[string]string) {
+	log.Debugf("func updateContactsTable()")
+	o := orm.NewOrm()
+	o.Using("boss")
+	var contact Contacts
+	for _, contactName := range contactNames {
+		user := contactsMap[contactName]
+		err := o.QueryTable("contacts").Filter("name", user["name"]).One(&contact)
+		if err == orm.ErrNoRows {
+			sql := "INSERT INTO boss.contacts(name, phone, email, updated) VALUES(?, ?, ?, ?)"
+			_, err := o.Raw(sql, user["name"], user["phone"], user["email"], getNow()).Exec()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		} else if err != nil {
+			log.Errorf(err.Error())
+		} else {
+			contact.Email = user["email"]
+			contact.Phone = user["phone"]
+			contact.Updated = getNow()
+			_, err := o.Update(&contact)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
