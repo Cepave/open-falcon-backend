@@ -60,6 +60,22 @@ CREATE TABLE `ips` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
+DROP TABLE IF EXISTS `nodes`;
+CREATE TABLE `nodes` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `node` varchar(40) CHARACTER SET utf8 NOT NULL UNIQUE,
+  `ip` varchar(20) CHARACTER SET utf8 NOT NULL UNIQUE,
+  `area` varchar(25) CHARACTER SET utf8 NOT NULL,
+  `province` varchar(10) CHARACTER SET utf8 NOT NULL,
+  `city` varchar(15) CHARACTER SET utf8 NOT NULL,
+  `idc` varchar(50) CHARACTER SET utf8 NOT NULL,
+  `isp` varchar(15) CHARACTER SET utf8 NOT NULL,
+  `ping` FLOAT DEFAULT NULL,
+  `loss` FLOAT DEFAULT NULL,
+  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
 DROP TABLE IF EXISTS `platforms`;
 CREATE TABLE `platforms` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
