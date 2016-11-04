@@ -1127,65 +1127,79 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 	return hosts, hostnames
 }
 
-func completeApolloFiltersData(hostsExisted map[string]map[string]string, result map[string]interface{}) {
-	hosts := map[string]interface{}{}
-	keywords := map[string]interface{}{}
-	for _, host := range hostsExisted {
-		id, err := strconv.Atoi(host["id"])
-		if err != nil {
-			setError(err.Error(), result)
-		}
+func completeApolloFiltersData(hostsInput []map[string]string, result map[string]interface{}) {
+	hosts := map[string]map[string]string{}
+	keywords := map[string][]string{}
+	for key, host := range hostsInput {
+		id := strconv.Itoa(key + 1)
 		platform := host["platform"]
 		tags := []string{}
 		tags = appendUniqueString(tags, platform)
 		if _, ok := keywords[platform]; ok {
-			keywords[platform] = appendUnique(keywords[platform].([]int), id)
+			keywords[platform] = appendUniqueString(keywords[platform], id)
 		} else {
-			keywords[platform] = []int{id}
+			keywords[platform] = []string{id}
 		}
 		isp := host["isp"]
-		tags = appendUniqueString(tags, isp)
-		if _, ok := keywords[isp]; ok {
-			keywords[isp] = appendUnique(keywords[isp].([]int), id)
-		} else {
-			keywords[isp] = []int{id}
-		}
-		province := host["province"]
-		tags = appendUniqueString(tags, province)
-		if _, ok := keywords[province]; ok {
-			keywords[province] = appendUnique(keywords[province].([]int), id)
-		} else {
-			keywords[province] = []int{id}
-		}
-		name := host["name"]
-		fragments := strings.Split(name, "-")
-		if len(fragments) == 6 {
-			fragments := fragments[2:]
-			for _, fragment := range fragments {
-				tags = appendUniqueString(tags, fragment)
-				if _, ok := keywords[fragment]; ok {
-					keywords[fragment] = appendUnique(keywords[fragment].([]int), id)
-				} else {
-					keywords[fragment] = []int{id}
-				}
+		if len (isp) > 0 {
+			tags = appendUniqueString(tags, isp)
+			if _, ok := keywords[isp]; ok {
+				keywords[isp] = appendUniqueString(keywords[isp], id)
+			} else {
+				keywords[isp] = []string{id}
 			}
 		}
 		ip := host["ip"]
-		keywords[ip] = []int{id}
-		tags = appendUniqueString(tags, ip)
-
+		if len (ip) > 0 {
+			tags = appendUniqueString(tags, ip)
+			if _, ok := keywords[ip]; ok {
+				keywords[ip] = appendUniqueString(keywords[ip], id)
+			} else {
+				keywords[ip] = []string{id}
+			}
+		}
 		idc := host["idc"]
-		tags = appendUniqueString(tags, idc)
-		if _, ok := keywords[idc]; ok {
-			keywords[idc] = appendUnique(keywords[idc].([]int), id)
-		} else {
-			keywords[idc] = []int{id}
+		if len (idc) > 0 {
+			tags = appendUniqueString(tags, idc)
+			if _, ok := keywords[idc]; ok {
+				keywords[idc] = appendUniqueString(keywords[idc], id)
+			} else {
+				keywords[idc] = []string{id}
+			}
+		}
+		province := host["province"]
+		if len (province) > 0 {
+			tags = appendUniqueString(tags, province)
+			if _, ok := keywords[province]; ok {
+				keywords[province] = appendUniqueString(keywords[province], id)
+			} else {
+				keywords[province] = []string{id}
+			}
+		}
+		provinceCode := host["provinceCode"]
+		if len (provinceCode) > 0 {
+			tags = appendUniqueString(tags, provinceCode)
+			if _, ok := keywords[provinceCode]; ok {
+				keywords[provinceCode] = appendUniqueString(keywords[provinceCode], id)
+			} else {
+				keywords[provinceCode] = []string{id}
+			}
+		}
+		hostname := host["name"]
+		if len (hostname) > 0 {
+			tags = appendUniqueString(tags, hostname)
+			if _, ok := keywords[hostname]; ok {
+				keywords[hostname] = appendUniqueString(keywords[hostname], id)
+			} else {
+				keywords[hostname] = []string{id}
+			}
 		}
 		host["tag"] = strings.Join(tags, ",")
 		delete(host, "id")
 		delete(host, "isp")
 		delete(host, "province")
-		hosts[strconv.Itoa(id)] = host
+		delete(host, "provinceCode")
+		hosts[id] = host
 	}
 	result["hosts"] = hosts
 	result["keywords"] = keywords
