@@ -1196,26 +1196,24 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	count := 0
-	data := queryHostsData(result)
+	data := queryIPsData(result)
 	hosts := []map[string]string{}
 	hostnames := []string{}
 	hostname := ""
 	for _, item := range data {
-		hostname = item.Hostname
+		hostname = item["hostname"]
 		hostnames = append(hostnames, hostname)
 		host := map[string]string{
 			"name":     hostname,
-			"platform": item.Platform,
-			"idc":      item.Idc,
+			"platform": item["platform"],
+			"ip":       item["ip"],
 		}
 		hosts = append(hosts, host)
 	}
 	sort.Strings(hostnames)
-	hostnamesExisted := getExistedHostnames(hostnames, result)
-	sort.Strings(hostnamesExisted)
-	hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
-	count = len(hostsExisted)
-	completeApolloFiltersData(hostsExisted, result)
+	hosts, hostnames = getHostsLocations(hosts, hostnames, result)
+	count = len(hostnames)
+	completeApolloFiltersData(hosts, result)
 	nodes["count"] = count
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
