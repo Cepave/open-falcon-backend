@@ -786,29 +786,17 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	data := queryHostsData(result)
+	data := queryIPsData(result)
 	platforms := map[string][]map[string]string{}
 	platformNames := []string{}
 	hostnames := []string{}
 	hostname := ""
 	platformName := ""
-	hosts := []map[string]string{}
-	for _, item := range data {
-		hostname = item.Hostname
-		platformName = item.Platform
-		hostnames = append(hostnames, hostname)
-		host := map[string]string{
-			"name":     hostname,
-			"activate": strconv.Itoa(item.Activate),
-			"platform": platformName,
-			"idc":      item.Idc,
-			"city":     item.City,
-			"province": item.Province,
-		}
-		hostnames = append(hostnames, hostname)
+	for _, host := range data {
+		hostname = host["hostname"]
+		platformName = host["platform"]
+		hostnames = appendUniqueString(hostnames, hostname)
 		platformNames = appendUniqueString(platformNames, platformName)
-		hosts = append(hosts, host)
-
 		if platform, ok := platforms[platformName]; ok {
 			platform = append(platform, host)
 			platforms[platformName] = platform
