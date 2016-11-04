@@ -22,13 +22,15 @@ CREATE TABLE `hosts` (
   `exist` boolean DEFAULT NULL,
   `activate` boolean DEFAULT NULL,
   `platform` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
+  `platforms` varchar(150) CHARACTER SET utf8 DEFAULT NULL,
   `idc` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
   `ip` varchar(20) CHARACTER SET utf8 NOT NULL,
   `isp` varchar(10) CHARACTER SET utf8 NOT NULL,
   `province` varchar(10) CHARACTER SET utf8 DEFAULT NULL,
   `city` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
   `status` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
-  `updated` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `remark` varchar(256) CHARACTER SET utf8 DEFAULT NULL,
+  `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
