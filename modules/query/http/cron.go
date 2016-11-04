@@ -21,26 +21,52 @@ type Contacts struct {
 }
 
 type Hosts struct {
+	Id        int
+	Hostname  string
+	Exist     int
+	Activate  int
+	Platform  string
+	Platforms string
+	Idc       string
+	Ip        string
+	Isp       string
+	Province  string
+	City      string
+	Status    string
+	Updated   string
+}
+
+type Idcs struct {
+	Id        int
+	Popid     int
+	Idc       string
+	Bandwidth int
+	Count     int
+	Area      string
+	Province  string
+	City      string
+	Updated   string
+}
+
+type Ips struct {
 	Id       int
-	Hostname string
-	Exist    int
-	Activate int
-	Platform string
-	Idc      string
 	Ip       string
-	Isp      string
-	Province string
-	City     string
-	Status   string
+	Exist    int
+	Status   int
+	Hostname string
+	Platform string
 	Updated  string
 }
 
 type Platforms struct {
-	Id       int
-	Platform string
-	Contacts string
-	Count    int
-	Updated  string
+	Id        int
+	Platform  string
+	Contacts  string
+	Principal string
+	Deputy    string
+	Upgrader  string
+	Count     int
+	Updated   string
 }
 
 func SyncHostsAndContactsTable() {
@@ -146,15 +172,20 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 
 func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
 	log.Debugf("func updatePlatformsTable()")
+	now := getNow()
 	o := orm.NewOrm()
 	o.Using("boss")
 	var platform Platforms
 	for _, platformName := range platformNames {
+		count, err := o.QueryTable("ips").Filter("platform", platformName).Filter("exist", 1).Filter("status", 1).Exclude("hostname__isnull", true).Count()
+		if err != nil {
+			count = 0
+		}
 		group := platformsMap[platformName]
-		err := o.QueryTable("platforms").Filter("platform", group["platformName"]).One(&platform)
+		err = o.QueryTable("platforms").Filter("platform", group["platformName"]).One(&platform)
 		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.platforms(platform, contacts, count, updated) VALUES(?, ?, ?, ?)"
-			_, err := o.Raw(sql, group["platformName"], group["contacts"], group["count"], getNow()).Exec()
+			sql := "INSERT INTO boss.platforms(platform, count, updated) VALUES(?, ?, ?)"
+			_, err := o.Raw(sql, group["platformName"], count, now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -162,8 +193,8 @@ func updatePlatformsTable(platformNames []string, platformsMap map[string]map[st
 			log.Errorf(err.Error())
 		} else {
 			platform.Platform = group["platformName"].(string)
-			platform.Count = group["count"].(int)
-			platform.Updated = getNow()
+			platform.Count = int(count)
+			platform.Updated = now
 			_, err := o.Update(&platform)
 			if err != nil {
 				log.Errorf(err.Error())
@@ -172,7 +203,7 @@ func updatePlatformsTable(platformNames []string, platformsMap map[string]map[st
 	}
 }
 
-func updateContactsTable(contactNames []string, contactsMap map[string]map[string]interface{}) {
+func updateContactsTable(contactNames []string, contactsMap map[string]map[string]string) {
 	log.Debugf("func updateContactsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -189,8 +220,8 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 		} else if err != nil {
 			log.Errorf(err.Error())
 		} else {
-			contact.Email = user["email"].(string)
-			contact.Phone = user["phone"].(string)
+			contact.Email = user["email"]
+			contact.Phone = user["phone"]
 			contact.Updated = getNow()
 			_, err := o.Update(&contact)
 			if err != nil {
@@ -202,6 +233,7 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 
 func addContactsToPlatformsTable(contacts map[string]interface{}) {
 	log.Debugf("func addContactsToPlatformsTable()")
+	now := getNow()
 	o := orm.NewOrm()
 	o.Using("boss")
 	var platforms []Platforms
@@ -210,21 +242,33 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 		log.Errorf(err.Error())
 	} else {
 		for _, platform := range platforms {
-			contactsOfPlatform := []string{}
 			platformName := platform.Platform
-			if users, ok := contacts[platformName]; ok {
-				for _, user := range users.([]interface{}) {
-					contactName := user.(map[string]interface{})["name"].(string)
-					contactsOfPlatform = appendUniqueString(contactsOfPlatform, contactName)
+			if items, ok := contacts[platformName]; ok {
+				contacts := []string{}
+				for role, user := range items.(map[string]map[string]string) {
+					if (role == "principal") {
+						platform.Principal = user["name"]
+					} else if (role == "deputy") {
+						platform.Deputy = user["name"]
+					} else if (role == "upgrader") {
+						platform.Upgrader = user["name"]
+					}
 				}
+				if (len(platform.Principal) > 0) {
+					contacts = append(contacts, platform.Principal)
+				}
+				if (len(platform.Deputy) > 0) {
+					contacts = append(contacts, platform.Deputy)
+				}
+				if (len(platform.Upgrader) > 0) {
+					contacts = append(contacts, platform.Upgrader)
+				}
+				platform.Contacts = strings.Join(contacts, ",")
 			}
-			if len(contactsOfPlatform) > 0 {
-				platform.Contacts = strings.Join(contactsOfPlatform, ",")
-				platform.Updated = getNow()
-				_, err := o.Update(&platform)
-				if err != nil {
-					log.Errorf(err.Error())
-				}
+			platform.Updated = now
+			_, err := o.Update(&platform)
+			if err != nil {
+				log.Errorf(err.Error())
 			}
 		}
 	}
@@ -323,7 +367,6 @@ func syncContactsTable() {
 			return
 		}
 	}
-
 	platformNames := []string{}
 	sql = "SELECT DISTINCT platform FROM boss.platforms ORDER BY platform ASC"
 	num, err = o.Raw(sql).Values(&rows)
@@ -342,14 +385,14 @@ func syncContactsTable() {
 	result["error"] = errors
 	getPlatformContact(strings.Join(platformNames, ","), nodes)
 	contactNames := []string{}
-	contactsMap := map[string]map[string]interface{}{}
+	contactsMap := map[string]map[string]string{}
 	contacts := nodes["result"].(map[string]interface{})["items"].(map[string]interface{})
 	for _, platformName := range platformNames {
 		if items, ok := contacts[platformName]; ok {
-			for _, user := range items.([]interface{}) {
-				contactName := user.(map[string]interface{})["name"].(string)
+			for _, user := range items.(map[string]map[string]string) {
+				contactName := user["name"]
 				if _, ok := contactsMap[contactName]; !ok {
-					contactsMap[contactName] = user.(map[string]interface{})
+					contactsMap[contactName] = user
 					contactNames = append(contactNames, contactName)
 				}
 			}
