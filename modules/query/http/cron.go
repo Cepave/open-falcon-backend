@@ -101,6 +101,16 @@ func getIDCMap() map[string]interface{} {
 	return idcMap
 }
 
+func queryIDCsHostsCount(IDCName string) int64 {
+	o := orm.NewOrm()
+	o.Using("boss")
+	count, err := o.QueryTable("hosts").Limit(10000).Filter("idc", IDCName).Count()
+	if err != nil {
+		count = int64(0)
+	}
+	return count
+}
+
 func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string) {
 	log.Debugf("func updateHostsTable()")
 	var hosts []Hosts
