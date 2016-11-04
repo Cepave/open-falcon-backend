@@ -10,6 +10,8 @@ type nqmEndpoint struct {
 	ProvinceId int16 `json:"province_id"`
 	CityId     int16 `json:"city_id"`
 	NameTagId  int32 `json:"name_tag_id"`
+	//GroupTagIds []int32 `json:"group_tag_ids"`
+	GroupTagIds []int32 `json:"-"`
 }
 
 func (end nqmEndpoint) String() string {
@@ -29,8 +31,8 @@ type nqmMetrics struct {
 	Rttmax      int32   `json:"max"`
 	Rttmdev     float32 `json:"mdev"`
 	Rttmedian   float32 `json:"med"`
-	Pkttransmit int32   `json:"sentPackets"`
-	Pktreceive  int32   `json:"receivedPackets"`
+	Pkttransmit int32   `json:"sent_packets"`
+	Pktreceive  int32   `json:"received_packets"`
 }
 
 func (metric nqmMetrics) String() string {
@@ -46,19 +48,36 @@ func (metric nqmMetrics) String() string {
 	)
 }
 
-type nqmRpcItem struct {
+type nqmPingItem struct {
 	Timestamp int64       `json:"time"`
 	Agent     nqmEndpoint `json:"agent"`
 	Target    nqmEndpoint `json:"target"`
 	Metrics   nqmMetrics  `json:"metrics"`
 }
 
-func (this nqmRpcItem) String() string {
+func (this nqmPingItem) String() string {
 	return fmt.Sprintf(
 		"<TS:%d, Src:<%v>, Dst:<%v>, Metrics:<%v>>",
 		this.Timestamp,
 		this.Agent,
 		this.Target,
 		this.Metrics,
+	)
+}
+
+type nqmConnItem struct {
+	Timestamp int64       `json:"time"`
+	Agent     nqmEndpoint `json:"agent"`
+	Target    nqmEndpoint `json:"target"`
+	TotalTime float32     `json:"total_time"`
+}
+
+func (this nqmConnItem) String() string {
+	return fmt.Sprintf(
+		"<TS:%d, Src:<%v>, Dst:<%v>, Metrics:<%v>>",
+		this.Timestamp,
+		this.Agent,
+		this.Target,
+		this.TotalTime,
 	)
 }
