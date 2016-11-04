@@ -203,7 +203,7 @@ func updatePlatformsTable(platformNames []string, platformsMap map[string]map[st
 	}
 }
 
-func updateContactsTable(contactNames []string, contactsMap map[string]map[string]interface{}) {
+func updateContactsTable(contactNames []string, contactsMap map[string]map[string]string) {
 	log.Debugf("func updateContactsTable()")
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -220,8 +220,8 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 		} else if err != nil {
 			log.Errorf(err.Error())
 		} else {
-			contact.Email = user["email"].(string)
-			contact.Phone = user["phone"].(string)
+			contact.Email = user["email"]
+			contact.Phone = user["phone"]
 			contact.Updated = getNow()
 			_, err := o.Update(&contact)
 			if err != nil {
