@@ -208,75 +208,6 @@ func syncIDCsTable() {
 	updateIDCsTable(IDCNames, IDCsMap)
 }
 
-func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string) {
-	log.Debugf("func updateHostsTable()")
-	var hosts []Hosts
-	o := orm.NewOrm()
-	o.Using("boss")
-	_, err := o.QueryTable("hosts").Limit(10000).All(&hosts)
-	if err != nil {
-		log.Errorf(err.Error())
-	} else {
-		format := "2006-01-02 15:04:05"
-		for _, host := range hosts {
-			updatedTime, _ := time.Parse(format, host.Updated)
-			currentTime, _ := time.Parse(format, getNow())
-			diff := currentTime.Unix() - updatedTime.Unix()
-			if diff > 600 {
-				host.Exist = 0
-				_, err := o.Update(&host)
-				if err != nil {
-					log.Errorf(err.Error())
-				}
-			}
-		}
-	}
-
-	hosts = []Hosts{}
-	idcMap := getIDCMap()
-	var host Hosts
-	for _, hostname := range hostnames {
-		item := hostsMap[hostname]
-		activate, _ := strconv.Atoi(item["activate"])
-		host.Hostname = item["hostname"]
-		host.Exist = 1
-		host.Activate = activate
-		host.Platform = item["platform"]
-		host.Ip = item["ip"]
-		host.Isp = strings.Split(item["hostname"], "-")[0]
-		host.Updated = getNow()
-		idcID := item["idcID"]
-		if _, ok := idcMap[idcID]; ok {
-			idc := idcMap[idcID]
-			host.Idc = idc.(Idc).Name
-			host.Province = idc.(Idc).Province
-			host.City = idc.(Idc).City
-		}
-		hosts = append(hosts, host)
-	}
-	for _, item := range hosts {
-		err := o.QueryTable("hosts").Limit(10000).Filter("hostname", item.Hostname).One(&host)
-		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.hosts("
-			sql += "hostname, exist, activate, platform, idc, ip, "
-			sql += "isp, province, city, updated) "
-			sql += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item.Hostname, item.Exist, item.Activate, item.Platform, item.Idc, item.Ip, item.Isp, item.Province, item.City, item.Updated).Exec()
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		} else if err != nil {
-			log.Errorf(err.Error())
-		} else {
-			item.Id = host.Id
-			_, err := o.Update(&item)
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		}
-	}
-}
-
 func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
 	log.Debugf("func updatePlatformsTable()")
 	now := getNow()
@@ -608,6 +539,103 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			ip.Platform = item["platform"]
 			ip.Updated = now
 			_, err := o.Update(&ip)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}
+	}
+}
+
+func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string) {
+	log.Debugf("func updateHostsTable()")
+	now := getNow()
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT updated FROM boss.hosts WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	} else if num > 0 {
+		format := "2006-01-02 15:04:05"
+		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
+		currentTime, _ := time.Parse(format, getNow())
+		diff := currentTime.Unix() - updatedTime.Unix()
+		if int(diff) < g.Config().Hosts.Interval {
+			return
+		}
+	}
+	idcMap := getIDCMap()
+	var hosts []Hosts
+	var host Hosts
+	for _, hostname := range hostnames {
+		item := hostsMap[hostname]
+		activate, _ := strconv.Atoi(item["activate"])
+		host.Hostname = item["hostname"]
+		host.Exist = 1
+		host.Activate = activate
+		host.Platform = item["platform"]
+		host.Platforms = item["platforms"]
+		if len(host.Platform) == 0 {
+			host.Platform = strings.Split(host.Platforms, ",")[0]
+		}
+		host.Ip = item["ip"]
+		ISP := ""
+		str := strings.Replace(item["hostname"], "_", "-", -1)
+		slice := strings.Split(str, "-")
+		if len(slice) >= 4 {
+			ISP = slice[0]
+		}
+		if len(ISP) > 5 {
+			ISP = ""
+		}
+		host.Isp = ISP
+		host.Updated = now
+		idcID := item["idcID"]
+		if _, ok := idcMap[idcID]; ok {
+			idc := idcMap[idcID]
+			host.Idc = idc.(Idc).Name
+			host.Province = idc.(Idc).Province
+			host.City = idc.(Idc).City
+		}
+		hosts = append(hosts, host)
+	}
+
+	sql = "SELECT id FROM boss.hosts WHERE exist = 1 AND updated <= DATE_SUB(CONVERT_TZ(NOW(),'+00:00','+08:00'), INTERVAL 30 MINUTE)"
+	num, err = o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if num > 0 {
+		for _, row := range rows {
+			hostID := row["id"]
+			err := o.QueryTable("hosts").Limit(10000).Filter("id", hostID).One(&host)
+			if err == nil {
+				host.Exist = 0
+				_, err := o.Update(&host)
+				if err != nil {
+					log.Errorf("func updateHostsTable()", err.Error())
+				}
+			}
+		}
+	}
+
+	for _, item := range hosts {
+		err := o.QueryTable("hosts").Limit(10000).Filter("hostname", item.Hostname).One(&host)
+		if err == orm.ErrNoRows {
+			sql := "INSERT INTO boss.hosts("
+			sql += "hostname, exist, activate, platform, platforms, idc, ip, "
+			sql += "isp, province, city, updated) "
+			sql += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			_, err := o.Raw(sql, item.Hostname, item.Exist, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, item.Updated).Exec()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		} else if err != nil {
+			log.Errorf(err.Error())
+		} else {
+			item.Id = host.Id
+			_, err := o.Update(&item)
 			if err != nil {
 				log.Errorf(err.Error())
 			}
