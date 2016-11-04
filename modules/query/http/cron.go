@@ -36,6 +36,18 @@ type Hosts struct {
 	Updated   string
 }
 
+type Idcs struct {
+	Id        int
+	Popid     int
+	Idc       string
+	Bandwidth int
+	Count     int
+	Area      string
+	Province  string
+	City      string
+	Updated   string
+}
+
 type Platforms struct {
 	Id        int
 	Platform  string
