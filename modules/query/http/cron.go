@@ -338,49 +338,6 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 	}
 }
 
-func addContactsToPlatformsTable(contacts map[string]interface{}) {
-	log.Debugf("func addContactsToPlatformsTable()")
-	now := getNow()
-	o := orm.NewOrm()
-	o.Using("boss")
-	var platforms []Platforms
-	_, err := o.QueryTable("platforms").All(&platforms)
-	if err != nil {
-		log.Errorf(err.Error())
-	} else {
-		for _, platform := range platforms {
-			platformName := platform.Platform
-			if items, ok := contacts[platformName]; ok {
-				contacts := []string{}
-				for role, user := range items.(map[string]map[string]string) {
-					if (role == "principal") {
-						platform.Principal = user["name"]
-					} else if (role == "deputy") {
-						platform.Deputy = user["name"]
-					} else if (role == "upgrader") {
-						platform.Upgrader = user["name"]
-					}
-				}
-				if (len(platform.Principal) > 0) {
-					contacts = append(contacts, platform.Principal)
-				}
-				if (len(platform.Deputy) > 0) {
-					contacts = append(contacts, platform.Deputy)
-				}
-				if (len(platform.Upgrader) > 0) {
-					contacts = append(contacts, platform.Upgrader)
-				}
-				platform.Contacts = strings.Join(contacts, ",")
-			}
-			platform.Updated = now
-			_, err := o.Update(&platform)
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		}
-	}
-}
-
 func syncHostsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -508,6 +465,49 @@ func syncContactsTable() {
 	sort.Strings(contactNames)
 	updateContactsTable(contactNames, contactsMap)
 	addContactsToPlatformsTable(contacts)
+}
+
+func addContactsToPlatformsTable(contacts map[string]interface{}) {
+	log.Debugf("func addContactsToPlatformsTable()")
+	now := getNow()
+	o := orm.NewOrm()
+	o.Using("boss")
+	var platforms []Platforms
+	_, err := o.QueryTable("platforms").All(&platforms)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else {
+		for _, platform := range platforms {
+			platformName := platform.Platform
+			if items, ok := contacts[platformName]; ok {
+				contacts := []string{}
+				for role, user := range items.(map[string]map[string]string) {
+					if (role == "principal") {
+						platform.Principal = user["name"]
+					} else if (role == "deputy") {
+						platform.Deputy = user["name"]
+					} else if (role == "upgrader") {
+						platform.Upgrader = user["name"]
+					}
+				}
+				if (len(platform.Principal) > 0) {
+					contacts = append(contacts, platform.Principal)
+				}
+				if (len(platform.Deputy) > 0) {
+					contacts = append(contacts, platform.Deputy)
+				}
+				if (len(platform.Upgrader) > 0) {
+					contacts = append(contacts, platform.Upgrader)
+				}
+				platform.Contacts = strings.Join(contacts, ",")
+			}
+			platform.Updated = now
+			_, err := o.Update(&platform)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}
+	}
 }
 
 func updateIDCsTable(IDCNames []string, IDCsMap map[string]map[string]string) {
