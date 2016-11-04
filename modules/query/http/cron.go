@@ -48,6 +48,16 @@ type Idcs struct {
 	Updated   string
 }
 
+type Ips struct {
+	Id       int
+	Ip       string
+	Exist    int
+	Status   int
+	Hostname string
+	Platform string
+	Updated  string
+}
+
 type Platforms struct {
 	Id        int
 	Platform  string
