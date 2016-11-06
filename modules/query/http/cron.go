@@ -107,11 +107,20 @@ func getIDCMap() map[string]interface{} {
 }
 
 func queryIDCsHostsCount(IDCName string) int64 {
+	count := int64(0)
 	o := orm.NewOrm()
 	o.Using("boss")
-	count, err := o.QueryTable("hosts").Limit(10000).Filter("idc", IDCName).Count()
+	var rows []orm.Params
+	sql := "SELECT COUNT(*) FROM boss.hosts WHERE idc = ?"
+	num, err := o.Raw(sql, IDCName).Values(&rows)
 	if err != nil {
-		count = int64(0)
+		log.Errorf(err.Error())
+	} else if num > 0 {
+		row := rows[0]
+		countInt, err := strconv.Atoi(row["COUNT(*)"].(string))
+		if err == nil {
+			count = int64(countInt)
+		}
 	}
 	return count
 }
