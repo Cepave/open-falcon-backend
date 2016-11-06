@@ -559,23 +559,6 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string) {
 	log.Debugf("func updateHostsTable()")
 	now := getNow()
-	o := orm.NewOrm()
-	o.Using("boss")
-	var rows []orm.Params
-	sql := "SELECT updated FROM boss.hosts WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
-	num, err := o.Raw(sql).Values(&rows)
-	if err != nil {
-		log.Errorf(err.Error())
-		return
-	} else if num > 0 {
-		format := "2006-01-02 15:04:05"
-		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
-		currentTime, _ := time.Parse(format, getNow())
-		diff := currentTime.Unix() - updatedTime.Unix()
-		if int(diff) < g.Config().Hosts.Interval {
-			return
-		}
-	}
 	idcMap := getIDCMap()
 	var hosts []Hosts
 	var host Hosts
@@ -583,7 +566,6 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		item := hostsMap[hostname]
 		activate, _ := strconv.Atoi(item["activate"])
 		host.Hostname = item["hostname"]
-		host.Exist = 1
 		host.Activate = activate
 		host.Platform = item["platform"]
 		host.Platforms = item["platforms"]
@@ -601,7 +583,6 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 			ISP = ""
 		}
 		host.Isp = ISP
-		host.Updated = now
 		idcID := item["idcID"]
 		if _, ok := idcMap[idcID]; ok {
 			idc := idcMap[idcID]
@@ -612,40 +593,66 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		hosts = append(hosts, host)
 	}
 
-	sql = "SELECT id FROM boss.hosts WHERE exist = 1 AND updated <= DATE_SUB(CONVERT_TZ(NOW(),'+00:00','+08:00'), INTERVAL 30 MINUTE)"
-	num, err = o.Raw(sql).Values(&rows)
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT updated FROM boss.hosts WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
+	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
+		return
 	} else if num > 0 {
-		for _, row := range rows {
-			hostID := row["id"]
-			err := o.QueryTable("hosts").Limit(10000).Filter("id", hostID).One(&host)
-			if err == nil {
-				host.Exist = 0
-				_, err := o.Update(&host)
-				if err != nil {
-					log.Errorf("func updateHostsTable()", err.Error())
-				}
-			}
+		format := "2006-01-02 15:04:05"
+		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
+		currentTime, _ := time.Parse(format, getNow())
+		diff := currentTime.Unix() - updatedTime.Unix()
+		if int(diff) < g.Config().Hosts.Interval {
+			return
 		}
 	}
 
 	for _, item := range hosts {
-		err := o.QueryTable("hosts").Limit(10000).Filter("hostname", item.Hostname).One(&host)
-		if err == orm.ErrNoRows {
+		sql = "SELECT id FROM boss.hosts WHERE hostname = ? LIMIT 1"
+		num, err := o.Raw(sql, item.Hostname).Values(&rows)
+		if num == 0 {
 			sql := "INSERT INTO boss.hosts("
 			sql += "hostname, exist, activate, platform, platforms, idc, ip, "
 			sql += "isp, province, city, updated) "
 			sql += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item.Hostname, item.Exist, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, item.Updated).Exec()
+			_, err := o.Raw(sql, item.Hostname, 1, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
 		} else if err != nil {
 			log.Errorf(err.Error())
-		} else {
-			item.Id = host.Id
-			_, err := o.Update(&item)
+		} else if num > 0 {
+			row := rows[0]
+			ID := row["id"]
+			sql = "UPDATE boss.hosts"
+			sql += " SET exist = ?, activate = ?, platform = ?,"
+			sql += " platforms = ?, idc = ?, ip = ?, isp = ?,"
+			sql += " province = ?, city = ?, updated = ?"
+			sql += " WHERE id = ?"
+			_, err := o.Raw(sql, 1, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, now, ID).Exec()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}
+	}
+
+	sql = "SELECT id FROM boss.hosts WHERE exist = ?"
+	sql += " AND updated <= DATE_SUB(CONVERT_TZ(NOW(),'+00:00','+08:00'), "
+	sql += " INTERVAL 10 MINUTE) LIMIT 30"
+	num, err = o.Raw(sql, 1).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if num > 0 {
+		for _, row := range rows {
+			ID := row["id"]
+			sql = "UPDATE boss.hosts"
+			sql += " SET exist = ?"
+			sql += " WHERE id = ?"
+			_, err := o.Raw(sql, 0, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
