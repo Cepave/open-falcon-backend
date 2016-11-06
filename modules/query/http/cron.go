@@ -506,47 +506,49 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 		}
 	}
 
-	var ip Ips
-	sql = "SELECT id FROM boss.ips WHERE exist = 1 AND updated <= DATE_SUB(CONVERT_TZ(NOW(),'+00:00','+08:00'), INTERVAL 30 MINUTE)"
-	num, err = o.Raw(sql).Values(&rows)
-	if err != nil {
-		log.Errorf(err.Error())
-	} else if num > 0 {
-		for _, row := range rows {
-			ID := row["id"]
-			err := o.QueryTable("ips").Limit(10000).Filter("id", ID).One(&ip)
-			if err == nil {
-				ip.Exist = 0
-				_, err := o.Update(&ip)
-				if err != nil {
-					log.Errorf("func updateIPsTable()", err.Error())
-				}
-			}
-		}
-	}
-
 	for _, IPName := range IPNames {
 		item := IPsMap[IPName]
-		err := o.QueryTable("ips").Limit(10000).Filter("ip", item["ip"]).Filter("platform", item["platform"]).One(&ip)
-		if err == orm.ErrNoRows {
+		sql := "SELECT id FROM boss.ips WHERE ip = ? AND platform = ? LIMIT 1"
+		num, err := o.Raw(sql, item["ip"], item["platform"]).Values(&rows)
+		if num == 0 {
+			status, _ := strconv.Atoi(item["status"])
 			sql := "INSERT INTO boss.ips("
 			sql += "ip, exist, status, hostname, platform, updated) "
 			sql += "VALUES(?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item["ip"], item["exist"], item["status"], item["hostname"], item["platform"], now).Exec()
+			_, err := o.Raw(sql, item["ip"], 1, status, item["hostname"], item["platform"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
 		} else if err != nil {
 			log.Errorf(err.Error())
-		} else {
+		} else if num > 0 {
+			row := rows[0]
+			ID := row["id"]
 			status, _ := strconv.Atoi(item["status"])
-			ip.Ip = item["ip"]
-			ip.Exist = 1
-			ip.Status = status
-			ip.Hostname = item["hostname"]
-			ip.Platform = item["platform"]
-			ip.Updated = now
-			_, err := o.Update(&ip)
+			sql := "UPDATE boss.ips"
+			sql += " SET ip = ?, exist = ?, status = ?,"
+			sql += " hostname = ?, platform = ?, updated = ?"
+			sql += " WHERE id = ?"
+			_, err := o.Raw(sql, item["ip"], 1, status, item["hostname"], item["platform"], now, ID).Exec()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}
+	}
+
+	sql = "SELECT id FROM boss.ips WHERE exist = ?"
+	sql += " AND updated <= DATE_SUB(CONVERT_TZ(NOW(),'+00:00','+08:00'), "
+	sql += " INTERVAL 10 MINUTE) LIMIT 30"
+	num, err = o.Raw(sql, 1).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if num > 0 {
+		for _, row := range rows {
+			ID := row["id"]
+			sql = "UPDATE boss.ips"
+			sql += " SET exist = ?"
+			sql += " WHERE id = ?"
+			_, err := o.Raw(sql, 0, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
