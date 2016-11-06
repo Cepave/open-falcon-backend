@@ -263,7 +263,6 @@ func syncHostsTable() {
 			status := device.(map[string]interface{})["ip_status"].(string)
 			item := map[string]string{
 				"ip":       ip,
-				"exist":    "1",
 				"status":   status,
 				"hostname": hostname,
 				"platform": platformName,
