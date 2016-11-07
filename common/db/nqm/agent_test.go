@@ -5,11 +5,74 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
+	"net"
 )
 
 type TestAgentSuite struct{}
 
 var _ = Suite(&TestAgentSuite{})
+
+// Tests the adding of new agent
+func (suite *TestAgentSuite) TestAddAgent(c *C) {
+	addedAgent := &nqmModel.AgentForAdding{
+		Name: "sample-agent",
+		ConnectionId: "sample-agent@19.87.109.41",
+		Hostname: "sample-agent-01",
+		IpAddress: net.ParseIP("19.87.109.41").To4(),
+		Status: true,
+		Comment: "This is sample agent",
+		IspId: 3,
+		ProvinceId: 20,
+		CityId: 6,
+		NameTagValue: "CISCO-617",
+		GroupTags: []string {
+			"TPE-03", "TPE-04", "TPE-05",
+		},
+	}
+
+	testCases := []struct {
+		addedAgent *nqmModel.AgentForAdding
+		hasError bool
+	} {
+		{ addedAgent, false },
+		{ addedAgent, true }, // Duplicated connection id
+	}
+
+	for _, testCase := range testCases {
+		currentAddedAgent := testCase.addedAgent
+		newAgent, err := AddAgent(currentAddedAgent)
+
+		/**
+		 * Asserts the occuring error
+		 */
+		if testCase.hasError {
+			c.Assert(newAgent, IsNil)
+			c.Assert(err, NotNil)
+
+			typedErr, ok := err.(ErrDuplicatedNqmAgent)
+			c.Logf("Has error: %v", typedErr)
+			c.Assert(ok, Equals, true)
+			c.Assert(typedErr.ConnectionId, Equals, currentAddedAgent.ConnectionId)
+			continue
+		}
+		// :~)
+
+		c.Logf("New Agent: %v", newAgent)
+		c.Logf("New Agent[Group Tags]: %v", newAgent.GroupTags)
+
+		c.Assert(err, IsNil)
+
+		c.Assert(newAgent.Name, Equals, currentAddedAgent.Name)
+		c.Assert(newAgent.ConnectionId, Equals, currentAddedAgent.ConnectionId)
+		c.Assert(newAgent.Hostname, Equals, currentAddedAgent.Hostname)
+		c.Assert(newAgent.IpAddress.String(), Equals, currentAddedAgent.IpAddress.String())
+		c.Assert(newAgent.IspName, Equals, "移动")
+		c.Assert(newAgent.ProvinceName, Equals, "广东")
+		c.Assert(newAgent.CityName, Equals, "深圳市")
+		c.Assert(newAgent.NameTagValue, Equals, currentAddedAgent.NameTagValue)
+		c.Assert(newAgent.GroupTags, HasLen, 3)
+	}
+}
 
 // Tests the list of agents with various conditions
 func (suite *TestAgentSuite) TestListAgents(c *C) {
@@ -160,6 +223,21 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			`
 			DELETE FROM owl_group_tag
 			WHERE gt_id >= 12001 AND gt_id <= 12002
+			`,
+		)
+	case "TestAgentSuite.TestAddAgent":
+		executeInTx(
+			`
+			DELETE FROM nqm_agent
+			WHERE ag_connection_id = 'sample-agent@19.87.109.41'
+			`,
+			`
+			DELETE FROM owl_name_tag
+			WHERE nt_value = 'CISCO-617'
+			`,
+			`
+			DELETE FROM owl_group_tag
+			WHERE gt_name LIKE 'TPE%'
 			`,
 		)
 	}

@@ -345,7 +345,7 @@ CREATE TABLE IF NOT EXISTS owl_name_tag(
   COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS owl_group_tag (
-	gt_id INTEGER,
+	gt_id INTEGER AUTO_INCREMENT,
 	gt_name VARCHAR(64) NOT NULL,
 	CONSTRAINT pk_owl_group_tag PRIMARY KEY(gt_id),
 	CONSTRAINT unq_owl_group_tag__gt_name UNIQUE INDEX(gt_name)

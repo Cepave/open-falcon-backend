@@ -1,6 +1,7 @@
 package nqm
 
 import (
+	"fmt"
 	"net"
 	"time"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
@@ -9,12 +10,39 @@ import (
 	"strings"
 )
 
+type AgentForAdding struct {
+	Id int32
+	Name string
+	ConnectionId string
+	Comment string
+	Status bool
+
+	IpAddress net.IP
+	Hostname string
+
+	IspId int16
+	ProvinceId int16
+	CityId int16
+
+	NameTagValue string
+
+	GroupTags []string
+}
+func (agent *AgentForAdding) GetIpAddressAsBytes() []byte {
+	return ([]byte)(agent.IpAddress.To4())
+}
+func (agent *AgentForAdding) GetIpAddressAsString() string {
+	return agent.IpAddress.String()
+}
+
 type Agent struct {
 	Id int32 `gorm:"primary_key:true;column:ag_id"`
 	Name string `gorm:"column:ag_name"`
-	ConnectionId string `gorm:"column:ag_connection_id"`
+	ConnectionId string `gorm:"column:ag_connection_id""`
 	Hostname string `gorm:"column:ag_hostname"`
+
 	IpAddress net.IP `gorm:"column:ag_ip_address"`
+
 	Status bool `gorm:"column:ag_status"`
 	Comment string `gorm:"column:ag_comment"`
 	LastHeartBeat time.Time `gorm:"column:ag_last_heartbeat"`
@@ -96,4 +124,10 @@ func (agentView *Agent) AfterLoad() {
 			},
 		)
 	}
+}
+func (agent *Agent) String() string {
+	return fmt.Sprintf(
+		"Id: [%d]. Name: [%s]. Connection Id: [%s]. IpAddress: [%s]. Hostname: [%s]. Status: [%v]",
+		agent.Id, agent.Name, agent.ConnectionId, agent.IpAddress, agent.Hostname, agent.Status,
+	)
 }
