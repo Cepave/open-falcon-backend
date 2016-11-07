@@ -3,5 +3,10 @@
         id: "myhung-1",
         filename: "myhung-1.sql",
         comment: "The initialization of existing database schema"
+    },
+    {
+        id: "laurence-2",
+        filename: "laurence-2.sql",
+        comment: "[OWL-1205][scripts] add boss.idcs and boss.ips tables"
     }
 ]

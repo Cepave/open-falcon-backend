@@ -502,6 +502,30 @@ func queryHostsData(result map[string]interface{}) []Hosts {
 	return hosts
 }
 
+func queryIPsData(result map[string]interface{}) []map[string]string {
+	IPs := []map[string]string{}
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT ip, hostname, platform, status FROM boss.ips WHERE exist = 1 AND hostname != ''"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+		return IPs
+	} else if num > 0 {
+		for _, row := range rows {
+			item := map[string]string{
+				"hostname": row["hostname"].(string),
+				"ip":       row["ip"].(string),
+				"platform": row["platform"].(string),
+				"activate": row["status"].(string),
+			}
+			IPs = append(IPs, item)
+		}
+	}
+	return IPs
+}
+
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
 	var queries []*cmodel.GraphLastParam
 	o := orm.NewOrm()
@@ -660,12 +684,16 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 	countOfMissSum := 0
 	countOfDeactivatedSum := 0
 	hostId := 1
-	name := ""
+	hostname := ""
 	activate := ""
 	version := ""
 	plugin := ""
 	status := ""
 	items := result["items"].(map[string]interface{})
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT idc, city, province FROM boss.hosts WHERE hostname = ?"
 	for _, groupName := range groupNames {
 		platform := map[string]interface{}{}
 		hosts := []interface{}{}
@@ -677,12 +705,12 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 		countOfDeactivated := 0
 		group := groups[groupName]
 		for _, agent := range group {
-			name = agent["name"]
+			hostname = agent["hostname"]
 			activate = agent["activate"]
 			status = ""
 			version = ""
 			if activate == "1" {
-				if item, ok := items[name]; ok {
+				if item, ok := items[hostname]; ok {
 					status = item.(map[string]interface{})["status"].(string)
 					version = item.(map[string]interface{})["version"].(string)
 					plugin = item.(map[string]interface{})["plugin"].(string)
@@ -703,15 +731,22 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 			}
 			host := map[string]string{
 				"id":       strconv.Itoa(hostId),
-				"name":     name,
+				"name":     hostname,
 				"platform": groupName,
 				"status":   status,
+				"ip":       agent["ip"],
 				"version":  version,
 			}
 			if host["status"] == "error" {
-				host["idc"] = agent["idc"]
-				host["city"] = agent["city"]
-				host["province"] = agent["province"]
+				num, err := o.Raw(sql, hostname).Values(&rows)
+				if err != nil {
+					setError(err.Error(), result)
+				} else if num > 0 {
+					row := rows[0]
+					host["idc"] = row["idc"].(string)
+					host["city"] = row["city"].(string)
+					host["province"] = row["province"].(string)
+				}
 				errorHosts = append(errorHosts, host)
 			} else {
 				host["plugin"] = plugin
@@ -751,29 +786,17 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	data := queryHostsData(result)
+	data := queryIPsData(result)
 	platforms := map[string][]map[string]string{}
 	platformNames := []string{}
 	hostnames := []string{}
 	hostname := ""
 	platformName := ""
-	hosts := []map[string]string{}
-	for _, item := range data {
-		hostname = item.Hostname
-		platformName = item.Platform
-		hostnames = append(hostnames, hostname)
-		host := map[string]string{
-			"name":     hostname,
-			"activate": strconv.Itoa(item.Activate),
-			"platform": platformName,
-			"idc":      item.Idc,
-			"city":     item.City,
-			"province": item.Province,
-		}
-		hostnames = append(hostnames, hostname)
+	for _, host := range data {
+		hostname = host["hostname"]
+		platformName = host["platform"]
+		hostnames = appendUniqueString(hostnames, hostname)
 		platformNames = appendUniqueString(platformNames, platformName)
-		hosts = append(hosts, host)
-
 		if platform, ok := platforms[platformName]; ok {
 			platform = append(platform, host)
 			platforms[platformName] = platform
@@ -1037,65 +1060,131 @@ func getExistedHosts(hosts []map[string]string, hostnamesExisted []string, resul
 	return hostsExisted
 }
 
-func completeApolloFiltersData(hostsExisted map[string]map[string]string, result map[string]interface{}) {
-	hosts := map[string]interface{}{}
-	keywords := map[string]interface{}{}
-	for _, host := range hostsExisted {
-		id, err := strconv.Atoi(host["id"])
-		if err != nil {
-			setError(err.Error(), result)
+func getHostsLocations(hosts []map[string]string, hostnamesInput []string, result map[string]interface{}) ([]map[string]string, []string) {
+	hostnames := []string{}
+	hostsMap := map[string]map[string]string{}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	hostnameStr := strings.Join(hostnamesInput, "','")
+	sqlcmd := "SELECT hostname, idc, isp, province, city FROM boss.hosts"
+	sqlcmd += " WHERE hostname IN ('" + hostnameStr + "')"
+	sqlcmd += " AND exist = 1"
+	sqlcmd += " ORDER BY hostname ASC"
+
+	num, err := o.Raw(sqlcmd).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			if _, ok := hostsMap[hostname]; !ok {
+				provinceCode := ""
+				slice := strings.Split(hostname, "-")
+				if len(slice) >= 4 {
+					provinceCode = slice[1]
+				}
+				if len(provinceCode) > 3 {
+					provinceCode = ""
+				}
+				host := map[string]string{
+					"idc": row["idc"].(string),
+					"isp": row["isp"].(string),
+					"province": row["province"].(string),
+					"provinceCode": provinceCode,
+					"city": row["city"].(string),
+				}
+				hostsMap[hostname] = host
+				hostnames = append(hostnames, hostname)
+			}
 		}
+	}
+	for key, host := range hosts {
+		hostname := host["name"]
+		if val, ok := hostsMap[hostname]; ok {
+			host["idc"] = val["idc"]
+			host["isp"] = val["isp"]
+			host["province"] = val["province"]
+			host["provinceCode"] = val["provinceCode"]
+			host["city"] = val["city"]
+			hosts[key] = host
+		}
+	}
+	return hosts, hostnames
+}
+
+func completeApolloFiltersData(hostsInput []map[string]string, result map[string]interface{}) {
+	hosts := map[string]map[string]string{}
+	keywords := map[string][]string{}
+	for key, host := range hostsInput {
+		id := strconv.Itoa(key + 1)
 		platform := host["platform"]
 		tags := []string{}
 		tags = appendUniqueString(tags, platform)
 		if _, ok := keywords[platform]; ok {
-			keywords[platform] = appendUnique(keywords[platform].([]int), id)
+			keywords[platform] = appendUniqueString(keywords[platform], id)
 		} else {
-			keywords[platform] = []int{id}
+			keywords[platform] = []string{id}
 		}
 		isp := host["isp"]
-		tags = appendUniqueString(tags, isp)
-		if _, ok := keywords[isp]; ok {
-			keywords[isp] = appendUnique(keywords[isp].([]int), id)
-		} else {
-			keywords[isp] = []int{id}
-		}
-		province := host["province"]
-		tags = appendUniqueString(tags, province)
-		if _, ok := keywords[province]; ok {
-			keywords[province] = appendUnique(keywords[province].([]int), id)
-		} else {
-			keywords[province] = []int{id}
-		}
-		name := host["name"]
-		fragments := strings.Split(name, "-")
-		if len(fragments) == 6 {
-			fragments := fragments[2:]
-			for _, fragment := range fragments {
-				tags = appendUniqueString(tags, fragment)
-				if _, ok := keywords[fragment]; ok {
-					keywords[fragment] = appendUnique(keywords[fragment].([]int), id)
-				} else {
-					keywords[fragment] = []int{id}
-				}
+		if len (isp) > 0 {
+			tags = appendUniqueString(tags, isp)
+			if _, ok := keywords[isp]; ok {
+				keywords[isp] = appendUniqueString(keywords[isp], id)
+			} else {
+				keywords[isp] = []string{id}
 			}
 		}
 		ip := host["ip"]
-		keywords[ip] = []int{id}
-		tags = appendUniqueString(tags, ip)
-
+		if len (ip) > 0 {
+			tags = appendUniqueString(tags, ip)
+			if _, ok := keywords[ip]; ok {
+				keywords[ip] = appendUniqueString(keywords[ip], id)
+			} else {
+				keywords[ip] = []string{id}
+			}
+		}
 		idc := host["idc"]
-		tags = appendUniqueString(tags, idc)
-		if _, ok := keywords[idc]; ok {
-			keywords[idc] = appendUnique(keywords[idc].([]int), id)
-		} else {
-			keywords[idc] = []int{id}
+		if len (idc) > 0 {
+			tags = appendUniqueString(tags, idc)
+			if _, ok := keywords[idc]; ok {
+				keywords[idc] = appendUniqueString(keywords[idc], id)
+			} else {
+				keywords[idc] = []string{id}
+			}
+		}
+		province := host["province"]
+		if len (province) > 0 {
+			tags = appendUniqueString(tags, province)
+			if _, ok := keywords[province]; ok {
+				keywords[province] = appendUniqueString(keywords[province], id)
+			} else {
+				keywords[province] = []string{id}
+			}
+		}
+		provinceCode := host["provinceCode"]
+		if len (provinceCode) > 0 {
+			tags = appendUniqueString(tags, provinceCode)
+			if _, ok := keywords[provinceCode]; ok {
+				keywords[provinceCode] = appendUniqueString(keywords[provinceCode], id)
+			} else {
+				keywords[provinceCode] = []string{id}
+			}
+		}
+		hostname := host["name"]
+		if len (hostname) > 0 {
+			tags = appendUniqueString(tags, hostname)
+			if _, ok := keywords[hostname]; ok {
+				keywords[hostname] = appendUniqueString(keywords[hostname], id)
+			} else {
+				keywords[hostname] = []string{id}
+			}
 		}
 		host["tag"] = strings.Join(tags, ",")
 		delete(host, "id")
 		delete(host, "isp")
 		delete(host, "province")
-		hosts[strconv.Itoa(id)] = host
+		delete(host, "provinceCode")
+		hosts[id] = host
 	}
 	result["hosts"] = hosts
 	result["keywords"] = keywords
@@ -1107,26 +1196,24 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	count := 0
-	data := queryHostsData(result)
+	data := queryIPsData(result)
 	hosts := []map[string]string{}
 	hostnames := []string{}
 	hostname := ""
 	for _, item := range data {
-		hostname = item.Hostname
+		hostname = item["hostname"]
 		hostnames = append(hostnames, hostname)
 		host := map[string]string{
 			"name":     hostname,
-			"platform": item.Platform,
-			"idc":      item.Idc,
+			"platform": item["platform"],
+			"ip":       item["ip"],
 		}
 		hosts = append(hosts, host)
 	}
 	sort.Strings(hostnames)
-	hostnamesExisted := getExistedHostnames(hostnames, result)
-	sort.Strings(hostnamesExisted)
-	hostsExisted := getExistedHosts(hosts, hostnamesExisted, result)
-	count = len(hostsExisted)
-	completeApolloFiltersData(hostsExisted, result)
+	hosts, hostnames = getHostsLocations(hosts, hostnames, result)
+	count = len(hostnames)
+	completeApolloFiltersData(hosts, result)
 	nodes["count"] = count
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
@@ -1420,16 +1507,28 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 		if err != nil {
 			setError(err.Error(), result)
 		} else if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
+			roles := []string{
+				"principal",
+				"backuper",
+				"upgrader",
+			}
 			for _, name := range strings.Split(platformName, ",") {
-				if platform, ok := nodes["result"].(map[string]interface{})[name].([]interface{}); ok {
-					items := []interface{}{}
-					for _, contact := range platform {
-						item := map[string]interface{}{
-							"name":  contact.(map[string]interface{})["realname"].(string),
-							"phone": contact.(map[string]interface{})["cell"].(string),
-							"email": contact.(map[string]interface{})["email"].(string),
+				if platform, ok := nodes["result"].(map[string]interface{})[name].(map[string]interface{}); ok {
+					items := map[string]map[string]string{}
+					for _, role := range roles {
+						if value, ok := platform[role].([]interface{}); ok {
+							person := value[0]
+							item := map[string]string{
+								"name":  person.(map[string]interface{})["realname"].(string),
+								"phone": person.(map[string]interface{})["cell"].(string),
+								"email": person.(map[string]interface{})["email"].(string),
+							}
+							if (role == "backuper") {
+								items["deputy"] = item
+							} else {
+								items[role] = item
+							}
 						}
-						items = append(items, item)
 					}
 					platformMap[name] = items
 				}
@@ -1768,11 +1867,13 @@ func queryIDCsBandwidths(IDCName string, result map[string]interface{}) {
 		}
 		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			if len(nodes["result"].([]interface{})) == 0 {
-				setError("IDC name not found", result)
+				errorMessage := "IDC name not found: " + IDCName
+				setError(errorMessage, result)
 			} else {
 				for _, uplink := range nodes["result"].([]interface{}) {
-					upperLimit := uplink.(map[string]interface{})["all_uplink_top"].(float64)
-					upperLimitSum += upperLimit
+					if upperLimit, ok := uplink.(map[string]interface{})["all_uplink_top"].(float64); ok {
+						upperLimitSum += upperLimit
+					}
 				}
 			}
 		} else {
