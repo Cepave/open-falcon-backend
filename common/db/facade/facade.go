@@ -14,6 +14,7 @@ import (
 //
 // This facade supports:
 // 	gorm - github.com/jinzhu/gorm
+// 	sqlx - github.com/Cepave/open-falcon-backend/common/db/sqlx
 // 	database/sql.DB
 // 	dbCtrl
 type DbFacade struct {

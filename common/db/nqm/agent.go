@@ -19,20 +19,26 @@ func (err ErrDuplicatedNqmAgent) Error() string {
 	return fmt.Sprintf("Duplicated NQM agent. Connection Id: [%s]", err.ConnectionId)
 }
 
+// Add and retrieve detail data of agent
+//
+// Errors:
+// 		ErrDuplicatedNqmAgent - The agent is existing with the same connection id
 func AddAgent(addedAgent *nqmModel.AgentForAdding) (*nqmModel.Agent, error) {
+	/**
+	 * Gets error message
+	 */
 	txProcessor := &addAgentTx{
 		agent: addedAgent,
 	}
 
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
+	// :~)
 
 	if txProcessor.err != nil {
 		return nil, txProcessor.err
 	}
 
-	agent := GetAgentById(addedAgent.Id)
-
-	return agent, nil
+	return GetAgentById(addedAgent.Id), nil
 }
 
 func GetAgentById(agentId int32) *nqmModel.Agent {

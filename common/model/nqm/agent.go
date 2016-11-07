@@ -12,21 +12,21 @@ import (
 
 type AgentForAdding struct {
 	Id int32
-	Name string
-	ConnectionId string
-	Comment string
-	Status bool
+	Name string `json:"name"`
+	ConnectionId string `json:"connection_id"`
+	Comment string `json:"comment"`
+	Status bool `json:"status"`
 
-	IpAddress net.IP
-	Hostname string
+	Hostname string `json:"hostname"`
+	IpAddress net.IP `json:"ip_address"`
 
-	IspId int16
-	ProvinceId int16
-	CityId int16
+	IspId int16 `json:"isp_id"`
+	ProvinceId int16 `json:"province_id"`
+	CityId int16 `json:"city_id"`
 
-	NameTagValue string
+	NameTagValue string `json:"name_tag"`
 
-	GroupTags []string
+	GroupTags []string `json:"group_tags"`
 }
 func (agent *AgentForAdding) GetIpAddressAsBytes() []byte {
 	return ([]byte)(agent.IpAddress.To4())
@@ -74,6 +74,7 @@ func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonObject.Set("connection_id", agentView.ConnectionId)
 	jsonObject.Set("hostname", agentView.Hostname)
 	jsonObject.Set("ip_address", agentView.IpAddress)
+	jsonObject.Set("status", agentView.Status)
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", agentView.IspId)
