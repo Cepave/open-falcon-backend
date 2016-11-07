@@ -875,28 +875,15 @@ func getMetricsByMetricType(metricType string) []string {
 }
 
 func convertDurationToPoint(duration string, result map[string]interface{}) (timestampFrom int64, timestampTo int64) {
-	timestampFrom = int64(0)
-	timestampTo = int64(0)
 	if strings.Index(duration, ",") > -1 {
-		from := strings.Split(duration, ",")[0]
-		to := strings.Split(duration, ",")[1]
-		timestampFrom, err := strconv.ParseInt(from, 10, 64)
-		if err != nil {
-			loc, err := time.LoadLocation("Asia/Taipei")
-			if err != nil {
-				loc = time.Local
-			}
-			timeFormat := "2006-01-02 15:04:05"
-			date, err := time.ParseInLocation(timeFormat, from, loc)
-			if err != nil {
-				setError(err.Error(), result)
-			} else {
-				timestampFrom = date.Unix()
-			}
+		var e error
+		timestampFrom, e = strconv.ParseInt(strings.Split(duration, ",")[0], 10, 64)
+		if e != nil {
+			setError(e.Error(), result)
 		}
-		timestampTo, err := strconv.ParseInt(to, 10, 64)
-		if err != nil {
-			timestampTo = time.Now().UTC().Unix()
+		timestampTo, e = strconv.ParseInt(strings.Split(duration, ",")[1], 10, 64)
+		if e != nil {
+			setError(e.Error(), result)
 		}
 		if timestampFrom >= timestampTo {
 			setError("Value of timestampFrom should be less than value of timestampTo.", result)
@@ -904,7 +891,6 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		if timestampTo > time.Now().Unix() {
 			setError("Value of timestampTo should be equal to or less than value of now.", result)
 		}
-		return timestampFrom, timestampTo
 	} else if strings.Index(duration, "d") > -1 || strings.Index(duration, "min") > -1 {
 		unit := ""
 		seconds := int64(0)
@@ -924,13 +910,12 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		timestampFrom = now - offset
 		timestampTo = now + int64(5 * 60)
 	}
-	return timestampFrom, timestampTo
+	return
 }
 
-func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) ([]*cmodel.GraphQueryResponse, int64) {
+func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	data := []*cmodel.GraphQueryResponse{}
 	start, end := convertDurationToPoint(duration, result)
-	diff := end - start
 
 	proc.HistoryRequestCnt.Incr()
 	for _, hostname := range hostnames {
@@ -945,7 +930,7 @@ func getGraphQueryResponse(metrics []string, duration string, hostnames []string
 			response, err := graph.QueryOne(request)
 			if err != nil {
 				setError("graph.queryOne fail, "+err.Error(), result)
-				return data, diff
+				return data
 			}
 			if result == nil {
 				continue
@@ -958,7 +943,7 @@ func getGraphQueryResponse(metrics []string, duration string, hostnames []string
 	for _, item := range data {
 		proc.HistoryResponseItemCnt.IncrBy(int64(len(item.Values)))
 	}
-	return data, diff
+	return data
 }
 
 func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
@@ -981,7 +966,7 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	}
 	metrics := getMetricsByMetricType(metricType)
 	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
-		data, _ := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
+		data := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
 
 		for _, series := range data {
 			values := []interface{}{}
@@ -1319,11 +1304,8 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	if len(arguments) > 6 {
 		duration = arguments[6]
 	}
-	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
-	dataRecent := []*cmodel.GraphQueryResponse{}
-	if diff > 43200 {
-		dataRecent, _ = getGraphQueryResponse(metrics, "10min", hostnames, result)
-	}
+	data := getGraphQueryResponse(metrics, duration, hostnames, result)
+	dataRecent := getGraphQueryResponse(metrics, "10min", hostnames, result)
 	data = addRecentData(data, dataRecent)
 
 	for _, series := range data {
@@ -1332,9 +1314,6 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 			if len(series.Values) > 0 && series.Values[0].Value > 0 {
 				series.Counter = "net.transmission.limit.80%"
 				limit := series.Values[0].Value
-				if series.Values[len(series.Values)-1].Value > 0 {
-					limit = series.Values[len(series.Values)-1].Value
-				}
 				for _, item := range series.Values {
 					value := item.Value
 					if value > limit {
@@ -1401,7 +1380,7 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 	metrics := getMetricsByMetricType(metricType)
 	hostMap := map[string]interface{}{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data, _ := getGraphQueryResponse(metrics, duration, hostnames, result)
+		data := getGraphQueryResponse(metrics, duration, hostnames, result)
 		for _, series := range data {
 			values := []interface{}{}
 			for _, rrdObj := range series.Values {
@@ -1602,11 +1581,9 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	valuesMap := map[string]map[float64]float64{}
 	timestamps := []float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
-		if diff > 43200 {
-			dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
-			data = addRecentData(data, dataRecent)
-		}
+		data := getGraphQueryResponse(metrics, duration, hostnames, result)
+		dataRecent := getGraphQueryResponse(metrics, "10min", hostnames, result)
+		data = addRecentData(data, dataRecent)
 		index := -1
 		max := 0
 		for key, item := range data {
