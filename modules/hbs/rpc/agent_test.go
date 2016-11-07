@@ -4,7 +4,10 @@ import (
 	"net/rpc"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	testJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
-	testHbs "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+
+	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -50,10 +53,10 @@ func (suite *TestAgentSuite) TestReportStatus(c *C) {
 }
 
 func (s *TestAgentSuite) SetUpSuite(c *C) {
-	testHbs.InitDb(c)
+	db.DbInit(dbTest.GetDbConfig(c))
 }
 func (s *TestAgentSuite) TearDownSuite(c *C) {
-	testHbs.ReleaseDb(c)
+	db.Release()
 }
 func (s *TestAgentSuite) SetUpTest(c *C) {
 }

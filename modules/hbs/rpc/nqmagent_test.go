@@ -5,8 +5,9 @@ import (
 	"net/rpc"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	testJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
-	testHbs "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
 	. "gopkg.in/check.v1"
 )
 
@@ -109,10 +110,10 @@ func (suite *TestRpcNqmAgentSuite) TestTask(c *C) {
 }
 
 func (s *TestRpcNqmAgentSuite) SetUpSuite(c *C) {
-	testHbs.InitDb(c)
+	db.DbInit(dbTest.GetDbConfig(c))
 }
 func (s *TestRpcNqmAgentSuite) TearDownSuite(c *C) {
-	testHbs.ReleaseDb(c)
+	db.Release()
 }
 
 func (s *TestRpcNqmAgentSuite) SetUpTest(c *C) {

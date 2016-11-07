@@ -3,9 +3,10 @@ package basis
 import (
 	"database/sql"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
-	hbstesting "github.com/Cepave/open-falcon-backend/modules/hbs/testing"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 )
 
@@ -64,11 +65,11 @@ func assertUpdateAgent(c *C, testCase *testCaseOfUpdateAgent) {
 }
 
 func (s *TestAgentSuite) SetUpSuite(c *C) {
-	hbstesting.InitDb(c)
+	db.DbInit(dbTest.GetDbConfig(c))
 }
 
 func (s *TestAgentSuite) TearDownSuite(c *C) {
-	hbstesting.ReleaseDb(c)
+	db.Release()
 }
 
 func (s *TestAgentSuite) SetUpTest(c *C) {
