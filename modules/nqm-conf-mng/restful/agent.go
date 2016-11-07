@@ -3,6 +3,8 @@ package restful
 import (
 	"net/http"
 	"gopkg.in/gin-gonic/gin.v1"
+	"log"
+	"strconv"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
@@ -10,6 +12,44 @@ import (
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 )
 
+func addNewAgent(c *gin.Context) {
+	agentForAdding := &commonNqmModel.AgentForAdding{}
+
+	if err := c.BindJSON(agentForAdding); err != nil {
+		panic(err)
+	}
+
+	newAgent, err := commonNqmDb.AddAgent(agentForAdding)
+	if err != nil {
+		log.Printf("Go error: %v", err)
+
+		switch err.(type) {
+		case commonNqmDb.ErrDuplicatedNqmAgent:
+			commonGin.JsonConflictHandler(
+				c,
+				commonGin.DataConflictError {
+					ErrorCode: 1,
+					ErrorMessage: err.Error(),
+				},
+			)
+		default:
+			panic(err)
+		}
+
+		return
+	}
+
+	c.JSON(http.StatusOK, newAgent)
+}
+func getAgentById(c *gin.Context) {
+	agentId, err := strconv.Atoi(c.Param("agent_id"))
+	if err != nil {
+		commonGin.OutputJsonIfNotNil(c, nil)
+	}
+
+	agent := commonNqmDb.GetAgentById(int32(agentId))
+	commonGin.OutputJsonIfNotNil(c, agent)
+}
 func listAgents(c *gin.Context) {
 	/**
 	 * Set-up paging

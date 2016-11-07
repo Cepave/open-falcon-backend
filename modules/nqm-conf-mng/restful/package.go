@@ -28,4 +28,6 @@ func initApi() {
 	v1 := router.Group("/api/v1")
 
 	v1.GET("/nqm/agents", listAgents)
+	v1.GET("/nqm/agent/:agent_id", getAgentById)
+	v1.POST("/nqm/agent", addNewAgent)
 }
