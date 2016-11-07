@@ -30,10 +30,55 @@ func AddAgent(addedAgent *nqmModel.AgentForAdding) (*nqmModel.Agent, error) {
 		return nil, txProcessor.err
 	}
 
-	agent := txProcessor.loadAgent(addedAgent)
-	agent.AfterLoad()
+	agent := GetAgentById(addedAgent.Id)
 
 	return agent, nil
+}
+
+func GetAgentById(agentId int32) *nqmModel.Agent {
+	var selectAgent = DbFacade.GormDb.Model(&nqmModel.Agent{}).
+		Select(`
+			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
+			isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,
+			GROUP_CONCAT(gt.gt_id ORDER BY gt_name ASC SEPARATOR ',') AS gt_ids,
+			GROUP_CONCAT(gt.gt_name ORDER BY gt_name ASC SEPARATOR '\0') AS gt_names
+		`).
+		Joins(`
+			INNER JOIN
+			owl_isp AS isp
+			ON ag_isp_id = isp.isp_id
+			INNER JOIN
+			owl_province AS pv
+			ON ag_pv_id = pv.pv_id
+			INNER JOIN
+			owl_city AS ct
+			ON ag_ct_id = ct.ct_id
+			INNER JOIN
+			owl_name_tag AS nt
+			ON ag_nt_id = nt.nt_id
+			LEFT OUTER JOIN
+			nqm_agent_group_tag AS agt
+			ON ag_id = agt.agt_ag_id
+			LEFT OUTER JOIN
+			owl_group_tag AS gt
+			ON agt.agt_gt_id = gt.gt_id
+		`).
+		Where("ag_id = ?", agentId).
+		Group(`
+			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
+			isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
+		`)
+
+	var loadedAgent = &nqmModel.Agent{}
+	selectAgent = selectAgent.Find(loadedAgent)
+
+	if selectAgent.Error == gorm.ErrRecordNotFound {
+		return nil
+	}
+	gormExt.ToDefaultGormDbExt(selectAgent).PanicIfError()
+
+	loadedAgent.AfterLoad()
+	return loadedAgent
 }
 
 // Lists the agents by query condition
@@ -326,44 +371,4 @@ func (agentTx *addAgentTx) prepareGroupTags(tx *sqlx.Tx) {
 			groupTag,
 		)
 	}
-}
-func (agentTx *addAgentTx) loadAgent(addedAgent *nqmModel.AgentForAdding) *nqmModel.Agent {
-	var selectAgent = DbFacade.GormDb.Model(&nqmModel.Agent{}).
-		Select(`
-			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
-			isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,
-			GROUP_CONCAT(gt.gt_id ORDER BY gt_name ASC SEPARATOR ',') AS gt_ids,
-			GROUP_CONCAT(gt.gt_name ORDER BY gt_name ASC SEPARATOR '\0') AS gt_names
-		`).
-		Joins(`
-			INNER JOIN
-			owl_isp AS isp
-			ON ag_isp_id = isp.isp_id
-			INNER JOIN
-			owl_province AS pv
-			ON ag_pv_id = pv.pv_id
-			INNER JOIN
-			owl_city AS ct
-			ON ag_ct_id = ct.ct_id
-			INNER JOIN
-			owl_name_tag AS nt
-			ON ag_nt_id = nt.nt_id
-			LEFT OUTER JOIN
-			nqm_agent_group_tag AS agt
-			ON ag_id = agt.agt_ag_id
-			LEFT OUTER JOIN
-			owl_group_tag AS gt
-			ON agt.agt_gt_id = gt.gt_id
-		`).
-		Where("ag_id = ?", addedAgent.Id).
-		Group(`
-			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
-			isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
-		`)
-
-	var loadedAgent = &nqmModel.Agent{}
-
-	selectAgent.Find(loadedAgent)
-
-	return loadedAgent
 }

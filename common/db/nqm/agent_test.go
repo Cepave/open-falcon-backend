@@ -12,6 +12,28 @@ type TestAgentSuite struct{}
 
 var _ = Suite(&TestAgentSuite{})
 
+// Tests the getting of agent by id
+func (suite *TestAgentSuite) TestGetAgentById(c *C) {
+	testCases := []struct {
+		sampleIdOfAgent int32
+		hasFound bool
+	} {
+		{ 88971, true },
+		{ 88972, false },
+	}
+
+	for _, testCase := range testCases {
+		result := GetAgentById(testCase.sampleIdOfAgent)
+
+		if testCase.hasFound {
+			c.Logf("Found agent by id: %v", result)
+			c.Assert(result, NotNil)
+		} else {
+			c.Assert(result, IsNil)
+		}
+	}
+}
+
 // Tests the adding of new agent
 func (suite *TestAgentSuite) TestAddAgent(c *C) {
 	addedAgent := &nqmModel.AgentForAdding{
@@ -164,6 +186,21 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestAgentSuite.TestGetAgentById":
+		executeInTx(
+			`
+			INSERT INTO host(id, hostname, agent_version, plugin_version)
+			VALUES(12571, 'hn-get-1', '', '')
+			`,
+			`
+			-- IP: 87.90.6.55
+			INSERT INTO nqm_agent(
+				ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status,
+				ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id
+			)
+			VALUES(88971, 12571, 'ag-name-1', 'ag-get-1@87.90.6.55', 'ag-get-1.nohh.com', x'575A0637', 1, 3, 3, 5, -1)
+			`,
+		)
 	case "TestAgentSuite.TestListAgents":
 		executeInTx(
 			`
@@ -207,6 +244,17 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestAgentSuite.TestGetAgentById":
+		executeInTx(
+			`
+			DELETE FROM nqm_agent
+			WHERE ag_id = 88971
+			`,
+			`
+			DELETE FROM host
+			WHERE id = 12571
+			`,
+		)
 	case "TestAgentSuite.TestListAgents":
 		executeInTx(
 			`
@@ -230,6 +278,10 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			`
 			DELETE FROM nqm_agent
 			WHERE ag_connection_id = 'sample-agent@19.87.109.41'
+			`,
+			`
+			DELETE FROM host
+			WHERE hostname = 'sample-agent'
 			`,
 			`
 			DELETE FROM owl_name_tag
