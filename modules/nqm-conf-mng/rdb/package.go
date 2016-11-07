@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
@@ -8,7 +9,7 @@ import (
 
 var logger = log.NewDefaultLogger("INFO")
 
-var DbFacade *commonDb.DbFacade = &commonDb.DbFacade{}
+var DbFacade = &f.DbFacade{}
 
 func InitRdb(dbConfig *commonDb.DbConfig) {
 	logger.Infof("Open RDB: %s ...", dbConfig)

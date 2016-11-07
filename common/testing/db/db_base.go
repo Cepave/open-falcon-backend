@@ -5,6 +5,7 @@ import (
 	"fmt"
 	check "gopkg.in/check.v1"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 )
 
 // The base environment for RDB testing
@@ -39,8 +40,8 @@ func GetDbConfig(c *check.C) *commonDb.DbConfig {
 		MaxIdle: 2,
 	}
 }
-func InitDbFacade(c *check.C) *commonDb.DbFacade {
-	var dbFacade = &commonDb.DbFacade{}
+func InitDbFacade(c *check.C) *f.DbFacade {
+	var dbFacade = &f.DbFacade{}
 	dbConfig := GetDbConfig(c)
 
 	if dbConfig == nil {
@@ -52,7 +53,7 @@ func InitDbFacade(c *check.C) *commonDb.DbFacade {
 
 	return dbFacade
 }
-func ReleaseDbFacade(c *check.C, dbFacade *commonDb.DbFacade) {
+func ReleaseDbFacade(c *check.C, dbFacade *f.DbFacade) {
 	if dbFacade != nil {
 		dbFacade.Release()
 	}

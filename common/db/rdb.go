@@ -6,6 +6,16 @@ import (
 	"log"
 )
 
+// Configuration of database
+type DbConfig struct {
+	Dsn string
+	MaxIdle int
+}
+
+func (config *DbConfig) String() string {
+	return fmt.Sprintf("DSN: [%s]. Max Idle: [%d]", config.Dsn, config.MaxIdle)
+}
+
 // The main functions of this file is to gives IoC(Inverse of Control) of database(RDB) objects.
 //
 // For exception handling, all callback method should use panic() or log.Panicf() to release the error object.

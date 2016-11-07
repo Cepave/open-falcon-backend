@@ -1,7 +1,7 @@
 package nqm
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/db"
+	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 )
 
-var DbFacade *db.DbFacade
+var DbFacade *f.DbFacade

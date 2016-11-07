@@ -1,8 +1,11 @@
-package db
+package facade
 
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jmoiron/sqlx"
+	commonSqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	"github.com/jinzhu/gorm"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -15,24 +18,15 @@ import (
 // 	dbCtrl
 type DbFacade struct {
 	SqlDb *sql.DB
-	SqlDbCtrl *DbController
+	SqlDbCtrl *commonDb.DbController
 	GormDb *gorm.DB
+	SqlxDb *sqlx.DB
 
 	initialized bool
 }
 
-// Configuration of database
-type DbConfig struct {
-	Dsn string
-	MaxIdle int
-}
-
-func (config *DbConfig) String() string {
-	return fmt.Sprintf("DSN: [%s]. Max Idle: [%d]", config.Dsn, config.MaxIdle)
-}
-
 // Open this facade with ping()
-func (facade *DbFacade) Open(dbConfig *DbConfig) (err error) {
+func (facade *DbFacade) Open(dbConfig *commonDb.DbConfig) (err error) {
 	if facade.initialized {
 		return
 	}
@@ -53,7 +47,9 @@ func (facade *DbFacade) Open(dbConfig *DbConfig) (err error) {
 	facade.SqlDb.SetMaxIdleConns(dbConfig.MaxIdle)
 	// :~)
 
-	facade.SqlDbCtrl = NewDbController(facade.SqlDb)
+	facade.SqlxDb = sqlx.NewDb(facade.SqlDb, "mysql")
+
+	facade.SqlDbCtrl = commonDb.NewDbController(facade.SqlDb)
 	facade.initialized = true
 
 	return
@@ -69,10 +65,15 @@ func (facade *DbFacade) Release() {
 	facade.SqlDb = nil
 	facade.SqlDbCtrl = nil
 	facade.GormDb = nil
+	facade.SqlxDb = nil
 
 	facade.initialized = false
 }
 // Generates a new controller of sql.DB
-func (facade *DbFacade) NewDbCtrl() *DbController {
-	return NewDbController(facade.SqlDb)
+func (facade *DbFacade) NewDbCtrl() *commonDb.DbController {
+	return commonDb.NewDbController(facade.SqlDb)
+}
+// Generates a new controller of sqlx.DB
+func (facade *DbFacade) NewSqlxDbCtrl() *commonSqlx.DbController {
+	return commonSqlx.NewDbController(facade.SqlxDb)
 }

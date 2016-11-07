@@ -5,12 +5,13 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB
-var DbFacade = &commonDb.DbFacade{}
+var DbFacade = &f.DbFacade{}
 
 // Initialize the resource for RDB
 func Init() {
