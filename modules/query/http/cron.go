@@ -537,7 +537,7 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 	}
 
 	sql = "SELECT id FROM boss.ips WHERE exist = ?"
-	sql += " AND updated <= DATE_SUB(CONVERT_TZ(NOW(),'+00:00','+08:00'), "
+	sql += " AND updated <= DATE_SUB(CONVERT_TZ(NOW(),@@session.time_zone,'+08:00'),"
 	sql += " INTERVAL 10 MINUTE) LIMIT 30"
 	num, err = o.Raw(sql, 1).Values(&rows)
 	if err != nil {
@@ -641,7 +641,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	}
 
 	sql = "SELECT id FROM boss.hosts WHERE exist = ?"
-	sql += " AND updated <= DATE_SUB(CONVERT_TZ(NOW(),'+00:00','+08:00'), "
+	sql += " AND updated <= DATE_SUB(CONVERT_TZ(NOW(),@@session.time_zone,'+08:00'),"
 	sql += " INTERVAL 10 MINUTE) LIMIT 30"
 	num, err = o.Raw(sql, 1).Values(&rows)
 	if err != nil {
