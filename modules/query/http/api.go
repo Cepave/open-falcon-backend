@@ -1134,15 +1134,6 @@ func completeApolloFiltersData(hostsInput []map[string]string, result map[string
 				keywords[isp] = []string{id}
 			}
 		}
-		ip := host["ip"]
-		if len (ip) > 0 {
-			tags = appendUniqueString(tags, ip)
-			if _, ok := keywords[ip]; ok {
-				keywords[ip] = appendUniqueString(keywords[ip], id)
-			} else {
-				keywords[ip] = []string{id}
-			}
-		}
 		idc := host["idc"]
 		if len (idc) > 0 {
 			tags = appendUniqueString(tags, idc)
