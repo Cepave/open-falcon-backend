@@ -45,14 +45,37 @@ func BuildJsonPanicProcessor(panicProcessor PanicProcessor) gin.HandlerFunc {
 
 // Type of PanicProcessor, output 500 status with JSON message
 func DefaultPanicProcessor(c *gin.Context, panicObject interface{}) {
-	c.JSON(
-		http.StatusInternalServerError,
-		map[string]interface{} {
-			"http_status": http.StatusInternalServerError,
-			"error_code": -1,
-			"error_message": fmt.Sprintf("%v", panicObject),
-		},
-	)
+	switch panicObject.(type) {
+	case ValidationError:
+		validateErrors := panicObject.(ValidationError)
+		c.JSON(
+			http.StatusBadRequest,
+			map[string]interface{} {
+				"http_status": http.StatusBadRequest,
+				"error_code": -1,
+				"error_message": validateErrors.Error(),
+			},
+		)
+	case BindJsonError:
+		jsonError := panicObject.(BindJsonError)
+		c.JSON(
+			http.StatusBadRequest,
+			map[string]interface{} {
+				"http_status": http.StatusBadRequest,
+				"error_code": -101,
+				"error_message": jsonError.Error(),
+			},
+		)
+	default:
+		c.JSON(
+			http.StatusInternalServerError,
+			map[string]interface{} {
+				"http_status": http.StatusInternalServerError,
+				"error_code": -1,
+				"error_message": fmt.Sprintf("%v", panicObject),
+			},
+		)
+	}
 }
 
 // Output http.StatusConflict with JSON body

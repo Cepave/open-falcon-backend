@@ -17,6 +17,21 @@ const (
 	headerOrderBy = "order-by"
 )
 
+type BindJsonError struct {
+	sourceError error
+}
+
+func (err BindJsonError) Error() string {
+	return err.sourceError.Error()
+}
+
+// Binds JSON and panic with JsonBindError if there is error
+func BindJson(context *gin.Context, object interface{}) {
+	if err := context.BindJSON(object); err != nil {
+		panic(BindJsonError{ err })
+	}
+}
+
 // PagingByHeader would initialize paging object by header
 //
 // This funcion would load header value:

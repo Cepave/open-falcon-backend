@@ -68,8 +68,14 @@ func (self *CheckSlint) GetStringBody(expectedStatus int) string {
 	resp := self.GetResponse()
 	defer resp.Body.Close()
 
-	c.Assert(resp.StatusCode, checker.Equals, expectedStatus)
+	c.Check(resp.StatusCode, checker.Equals, expectedStatus)
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
+
+	if c.Failed() {
+		c.Logf("Has error. Response: %s. If ioutil.ReadAll() has error: %v", bodyBytes, err)
+		c.FailNow()
+	}
+
 	c.Assert(err, checker.IsNil)
 
 	return string(bodyBytes)
