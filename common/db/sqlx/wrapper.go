@@ -99,3 +99,48 @@ func (ctrl *DbController) InTx(txCallback TxCallback) {
 
 	tx.Commit()
 }
+
+func (ctrl *DbController) BindNamed(query string, arg interface{}) (string, []interface{}) {
+	r1, r2, err := ctrl.sqlxDb.BindNamed(query, arg)
+	db.PanicIfError(err)
+
+	return r1, r2
+}
+func (ctrl *DbController) Get(dest interface{}, query string, args ...interface{}) {
+	err := ctrl.sqlxDb.Get(dest, query, args...)
+	db.PanicIfError(err)
+}
+func (ctrl *DbController) NamedExec(query string, arg interface{}) sql.Result {
+	result, err := ctrl.sqlxDb.NamedExec(query, arg)
+	db.PanicIfError(err)
+
+	return result
+}
+func (ctrl *DbController) NamedQuery(query string, arg interface{}) *sqlx.Rows {
+	rows, err := ctrl.sqlxDb.NamedQuery(query, arg)
+	db.PanicIfError(err)
+
+	return rows
+}
+func (ctrl *DbController) PrepareNamed(query string) *sqlx.NamedStmt {
+	stmt, err := ctrl.sqlxDb.PrepareNamed(query)
+	db.PanicIfError(err)
+
+	return stmt
+}
+func (ctrl *DbController) Preparex(query string) *sqlx.Stmt {
+	stmt, err := ctrl.sqlxDb.Preparex(query)
+	db.PanicIfError(err)
+
+	return stmt
+}
+func (ctrl *DbController) Queryx(query string, args ...interface{}) *sqlx.Rows {
+	rows, err := ctrl.sqlxDb.Queryx(query, args...)
+	db.PanicIfError(err)
+
+	return rows
+}
+func (ctrl *DbController) Select(dest interface{}, query string, args ...interface{}) {
+	err := ctrl.sqlxDb.Select(dest, query, args...)
+	db.PanicIfError(err)
+}

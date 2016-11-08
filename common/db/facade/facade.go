@@ -22,6 +22,7 @@ type DbFacade struct {
 	SqlDbCtrl *commonDb.DbController
 	GormDb *gorm.DB
 	SqlxDb *sqlx.DB
+	SqlxDbCtrl *commonSqlx.DbController
 
 	initialized bool
 }
@@ -49,6 +50,7 @@ func (facade *DbFacade) Open(dbConfig *commonDb.DbConfig) (err error) {
 	// :~)
 
 	facade.SqlxDb = sqlx.NewDb(facade.SqlDb, "mysql")
+	facade.SqlxDbCtrl = commonSqlx.NewDbController(facade.SqlxDb)
 
 	facade.SqlDbCtrl = commonDb.NewDbController(facade.SqlDb)
 	facade.initialized = true
@@ -67,6 +69,7 @@ func (facade *DbFacade) Release() {
 	facade.SqlDbCtrl = nil
 	facade.GormDb = nil
 	facade.SqlxDb = nil
+	facade.SqlxDbCtrl = nil
 
 	facade.initialized = false
 }
