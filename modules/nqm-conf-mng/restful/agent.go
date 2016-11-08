@@ -3,7 +3,6 @@ package restful
 import (
 	"net/http"
 	"gopkg.in/gin-gonic/gin.v1"
-	"log"
 	"strconv"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
@@ -13,16 +12,13 @@ import (
 )
 
 func addNewAgent(c *gin.Context) {
-	agentForAdding := &commonNqmModel.AgentForAdding{}
+	agentForAdding := commonNqmModel.NewAgentForAdding()
 
-	if err := c.BindJSON(agentForAdding); err != nil {
-		panic(err)
-	}
+	commonGin.BindJson(c, agentForAdding)
+	commonGin.ConformAndValidateStruct(agentForAdding, commonNqmModel.Validator)
 
 	newAgent, err := commonNqmDb.AddAgent(agentForAdding)
 	if err != nil {
-		log.Printf("Go error: %v", err)
-
 		switch err.(type) {
 		case commonNqmDb.ErrDuplicatedNqmAgent:
 			commonGin.JsonConflictHandler(
@@ -48,6 +44,7 @@ func getAgentById(c *gin.Context) {
 	}
 
 	agent := commonNqmDb.GetAgentById(int32(agentId))
+
 	commonGin.OutputJsonIfNotNil(c, agent)
 }
 func listAgents(c *gin.Context) {

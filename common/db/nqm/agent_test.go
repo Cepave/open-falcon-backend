@@ -1,11 +1,13 @@
 package nqm
 
 import (
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 	"net"
+	"reflect"
 )
 
 type TestAgentSuite struct{}
@@ -36,28 +38,42 @@ func (suite *TestAgentSuite) TestGetAgentById(c *C) {
 
 // Tests the adding of new agent
 func (suite *TestAgentSuite) TestAddAgent(c *C) {
-	addedAgent := &nqmModel.AgentForAdding{
-		Name: "sample-agent",
-		ConnectionId: "sample-agent@19.87.109.41",
-		Hostname: "sample-agent-01",
-		IpAddress: net.ParseIP("19.87.109.41").To4(),
-		Status: true,
-		Comment: "This is sample agent",
-		IspId: 3,
-		ProvinceId: 20,
-		CityId: 6,
-		NameTagValue: "CISCO-617",
-		GroupTags: []string {
-			"TPE-03", "TPE-04", "TPE-05",
-		},
+	/**
+	 * sample agents
+	 */
+	defaultAgent_1 := nqmModel.NewAgentForAdding()
+	defaultAgent_1.ConnectionId = "def-agent-1"
+	defaultAgent_1.Hostname = "hs-def-agent-1"
+	defaultAgent_1.IpAddress = net.ParseIP("0.0.0.0")
+
+	defaultAgent_2 := nqmModel.NewAgentForAdding()
+	defaultAgent_2.ConnectionId = "def-agent-2"
+	defaultAgent_2.Hostname = "hs-def-agent-2"
+	defaultAgent_2.IpAddress = net.ParseIP("33.29.111.10")
+	defaultAgent_2.Status = false
+	defaultAgent_2.Name = "sample-agent"
+	defaultAgent_2.Comment = "This is sample agent"
+	defaultAgent_2.IspId = 3
+	defaultAgent_2.ProvinceId = 20
+	defaultAgent_2.CityId = 6
+	defaultAgent_2.NameTagValue = "CISCO-617"
+	defaultAgent_2.GroupTags = []string {
+		"TPE-03", "TPE-04", "TPE-05",
 	}
+
+	defaultAgent_3 := *defaultAgent_2
+	defaultAgent_3.CityId = 50
+	// :~)
 
 	testCases := []struct {
 		addedAgent *nqmModel.AgentForAdding
 		hasError bool
+		errorType reflect.Type
 	} {
-		{ addedAgent, false },
-		{ addedAgent, true }, // Duplicated connection id
+		{ defaultAgent_1, false, nil }, // Use the minimum value
+		{ defaultAgent_1, true, reflect.TypeOf(ErrDuplicatedNqmAgent{}) },
+		{ defaultAgent_2, false, nil }, // Use every properties
+		{ &defaultAgent_3, true, reflect.TypeOf(owlDb.ErrNotInSameHierarchy{}) }, // Duplicated connection id
 	}
 
 	for _, testCase := range testCases {
@@ -70,29 +86,26 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 		if testCase.hasError {
 			c.Assert(newAgent, IsNil)
 			c.Assert(err, NotNil)
+			c.Logf("Has error: %v", err)
 
-			typedErr, ok := err.(ErrDuplicatedNqmAgent)
-			c.Logf("Has error: %v", typedErr)
-			c.Assert(ok, Equals, true)
-			c.Assert(typedErr.ConnectionId, Equals, currentAddedAgent.ConnectionId)
+			c.Assert(reflect.TypeOf(err), Equals, testCase.errorType)
 			continue
 		}
 		// :~)
 
+		c.Assert(err, IsNil)
 		c.Logf("New Agent: %v", newAgent)
 		c.Logf("New Agent[Group Tags]: %v", newAgent.GroupTags)
-
-		c.Assert(err, IsNil)
 
 		c.Assert(newAgent.Name, Equals, currentAddedAgent.Name)
 		c.Assert(newAgent.ConnectionId, Equals, currentAddedAgent.ConnectionId)
 		c.Assert(newAgent.Hostname, Equals, currentAddedAgent.Hostname)
 		c.Assert(newAgent.IpAddress.String(), Equals, currentAddedAgent.IpAddress.String())
-		c.Assert(newAgent.IspName, Equals, "移动")
-		c.Assert(newAgent.ProvinceName, Equals, "广东")
-		c.Assert(newAgent.CityName, Equals, "深圳市")
-		c.Assert(newAgent.NameTagValue, Equals, currentAddedAgent.NameTagValue)
-		c.Assert(newAgent.GroupTags, HasLen, 3)
+		c.Assert(newAgent.IspId, Equals, currentAddedAgent.IspId)
+		c.Assert(newAgent.ProvinceId, Equals, currentAddedAgent.ProvinceId)
+		c.Assert(newAgent.CityId, Equals, currentAddedAgent.CityId)
+		c.Assert(newAgent.NameTagId, Equals, currentAddedAgent.NameTagId)
+		c.Assert(newAgent.GroupTags, HasLen, len(currentAddedAgent.GroupTags))
 	}
 }
 
@@ -176,10 +189,12 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 
 func (s *TestAgentSuite) SetUpSuite(c *C) {
 	DbFacade = dbTest.InitDbFacade(c)
+	owlDb.DbFacade = DbFacade
 }
 
 func (s *TestAgentSuite) TearDownSuite(c *C) {
 	dbTest.ReleaseDbFacade(c, DbFacade)
+	owlDb.DbFacade = nil
 }
 
 func (s *TestAgentSuite) SetUpTest(c *C) {
@@ -277,11 +292,11 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 		executeInTx(
 			`
 			DELETE FROM nqm_agent
-			WHERE ag_connection_id = 'sample-agent@19.87.109.41'
+			WHERE ag_connection_id LIKE 'def-agent-%'
 			`,
 			`
 			DELETE FROM host
-			WHERE hostname = 'sample-agent'
+			WHERE hostname LIKE 'hs-def-agent-%'
 			`,
 			`
 			DELETE FROM owl_name_tag
@@ -289,7 +304,7 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			`,
 			`
 			DELETE FROM owl_group_tag
-			WHERE gt_name LIKE 'TPE%'
+			WHERE gt_name LIKE 'TPE-%'
 			`,
 		)
 	}

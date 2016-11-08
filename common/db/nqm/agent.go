@@ -2,9 +2,11 @@ package nqm
 
 import (
 	"fmt"
+	"database/sql"
 	"github.com/jinzhu/gorm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
@@ -23,7 +25,17 @@ func (err ErrDuplicatedNqmAgent) Error() string {
 //
 // Errors:
 // 		ErrDuplicatedNqmAgent - The agent is existing with the same connection id
+//		ErrNotInSameHierarchy - The city is not belonging to the province
 func AddAgent(addedAgent *nqmModel.AgentForAdding) (*nqmModel.Agent, error) {
+	/**
+	 * Checks the hierarchy over administrative region
+	 */
+	err := owlDb.CheckHierarchyForCity(addedAgent.ProvinceId, addedAgent.CityId)
+	if err != nil {
+		return nil, err
+	}
+	// :~)
+
 	/**
 	 * Gets error message
 	 */
@@ -274,6 +286,15 @@ func (agentTx *addAgentTx) prepareNameTag(tx *sqlx.Tx) {
 		newAgent.NameTagValue,
 		newAgent.NameTagValue,
 	)
+
+	sqlxExt.ToTxExt(tx).Get(
+		&newAgent.NameTagId,
+		`
+		SELECT nt_id FROM owl_name_tag
+		WHERE nt_value = ?
+		`,
+		newAgent.NameTagValue,
+	)
 }
 func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 	txExt := sqlxExt.ToTxExt(tx)
@@ -284,23 +305,18 @@ func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 		INSERT INTO nqm_agent(
 			ag_name, ag_connection_id, ag_status,
 			ag_hostname, ag_ip_address,
-			ag_isp_id, ag_pv_id, ag_ct_id,
+			ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id,
 			ag_comment,
-			ag_hs_id, ag_nt_id
+			ag_hs_id
 		)
 		SELECT :name, :connection_id, :status,
 			:hostname, :ip_address,
-			:isp_id, :province_id, :city_id,
+			:isp_id, :province_id, :city_id, :name_tag_id,
 			:comment,
 			(
 				SELECT id
 				FROM host
 				WHERE hostname = :hostname
-			),
-			(
-				SELECT IFNULL(nt_id, -1)
-				FROM owl_name_tag
-				WHERE nt_value = :name_tag_value
 			)
 		FROM DUAL
 		WHERE NOT EXISTS (
@@ -310,16 +326,22 @@ func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 		)
 		`,
 		map[string]interface{} {
-			"name" : newAgent.Name,
 			"status" : newAgent.Status,
 			"hostname" : newAgent.Hostname,
 			"ip_address" : newAgent.GetIpAddressAsBytes(),
 			"isp_id" : newAgent.IspId,
 			"province_id" : newAgent.ProvinceId,
 			"city_id" : newAgent.CityId,
-			"name_tag_value" : newAgent.NameTagValue,
+			"name_tag_id" : newAgent.NameTagId,
 			"connection_id" : newAgent.ConnectionId,
-			"comment" : newAgent.Comment,
+			"name" : sql.NullString {
+				newAgent.Name,
+				newAgent.Name != "",
+			},
+			"comment" : sql.NullString {
+				newAgent.Comment,
+				newAgent.Comment != "",
+			},
 		},
 	)
 

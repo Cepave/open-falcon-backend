@@ -28,7 +28,7 @@ func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
 	prettyJson, err := jsonResult.EncodePretty()
 
 	c.Assert(err, IsNil)
-	c.Logf("Get agnet by id: %s", prettyJson)
+	c.Logf("Get agent by id: %s", prettyJson)
 	c.Assert(jsonResult.Get("id").MustInt(), Equals, 36771)
 }
 
@@ -49,7 +49,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 	} {
 		Name: "new-agent-ccc",
 		Status: true,
-		ConnectionId: "new-agnet@blue.12.91.33",
+		ConnectionId: "new-agent@blue.12.91.33",
 		Hostname: "new-agent-blue-1",
 		IpAddress: "191.12.91.33",
 		Comment: "This is new agent by blue 12.91 ***",
@@ -205,7 +205,7 @@ func (s *TestAgentItSuite) TearDownTest(c *C) {
 		)
 	case "TestAgentItSuite.TestAddNewAgent":
 		inTx(
-			"DELETE FROM nqm_agent WHERE ag_connection_id = 'new-agnet@blue.12.91.33'",
+			"DELETE FROM nqm_agent WHERE ag_connection_id = 'new-agent@blue.12.91.33'",
 			"DELETE FROM host WHERE hostname = 'new-agent-blue-1'",
 			"DELETE FROM owl_name_tag where nt_value = 'rest-nt-1'",
 			"DELETE FROM owl_group_tag where gt_name LIKE 'pp-rest-tag-%'",

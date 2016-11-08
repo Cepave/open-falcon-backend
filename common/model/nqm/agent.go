@@ -11,22 +11,34 @@ import (
 )
 
 type AgentForAdding struct {
-	Id int32
-	Name string `json:"name"`
-	ConnectionId string `json:"connection_id"`
-	Comment string `json:"comment"`
+	Id int32 `json:"-"`
+	Name string `json:"name" conform:"trim"`
+	ConnectionId string `json:"connection_id" conform:"trim" validate:"min=1"`
+	Comment string `json:"comment" conform:"trim"`
 	Status bool `json:"status"`
 
-	Hostname string `json:"hostname"`
+	Hostname string `json:"hostname" conform:"trim" validate:"min=1"`
 	IpAddress net.IP `json:"ip_address"`
 
-	IspId int16 `json:"isp_id"`
-	ProvinceId int16 `json:"province_id"`
-	CityId int16 `json:"city_id"`
+	IspId int16 `json:"isp_id" validate:"nonZeroId"`
+	ProvinceId int16 `json:"province_id" validate:"nonZeroId"`
+	CityId int16 `json:"city_id" validate:"nonZeroId"`
 
-	NameTagValue string `json:"name_tag"`
+	NameTagId int16 `json:"-"`
+	NameTagValue string `json:"name_tag" conform:"trim"`
 
-	GroupTags []string `json:"group_tags"`
+	GroupTags []string `json:"group_tags" conform:"trim"`
+}
+func NewAgentForAdding() *AgentForAdding {
+	return &AgentForAdding {
+		Status: true,
+		Hostname: "0.0.0.0",
+		IpAddress: net.ParseIP("0.0.0.0").To4(),
+		IspId: -1,
+		ProvinceId: -1,
+		CityId: -1,
+		NameTagId: -1,
+	}
 }
 func (agent *AgentForAdding) GetIpAddressAsBytes() []byte {
 	return ([]byte)(agent.IpAddress.To4())
@@ -70,11 +82,20 @@ func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonObject := json.New()
 
 	jsonObject.Set("id", agentView.Id)
-	jsonObject.Set("name", agentView.Name)
 	jsonObject.Set("connection_id", agentView.ConnectionId)
 	jsonObject.Set("hostname", agentView.Hostname)
 	jsonObject.Set("ip_address", agentView.IpAddress)
 	jsonObject.Set("status", agentView.Status)
+	if agentView.Name != "" {
+		jsonObject.Set("name", agentView.Name)
+	} else {
+		jsonObject.Set("name", nil)
+	}
+	if agentView.Comment != "" {
+		jsonObject.Set("comment", agentView.Comment)
+	} else {
+		jsonObject.Set("comment", nil)
+	}
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", agentView.IspId)
