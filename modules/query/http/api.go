@@ -1161,15 +1161,6 @@ func completeApolloFiltersData(hostsInput []map[string]string, result map[string
 				keywords[provinceCode] = []string{id}
 			}
 		}
-		hostname := host["name"]
-		if len (hostname) > 0 {
-			tags = appendUniqueString(tags, hostname)
-			if _, ok := keywords[hostname]; ok {
-				keywords[hostname] = appendUniqueString(keywords[hostname], id)
-			} else {
-				keywords[hostname] = []string{id}
-			}
-		}
 		host["tag"] = strings.Join(tags, ",")
 		delete(host, "id")
 		delete(host, "isp")
