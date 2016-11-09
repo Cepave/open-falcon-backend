@@ -57,14 +57,16 @@
         "maxIdle": 32,
         "addr": "root:@http(127.0.0.1:8086)/db"
     },
-    "nqmRpc": {
+    "nqmRest": {
         "enabled":false,
         "batch": 100,
         "connTimeout": 1000,
         "callTimeout": 5000,
         "maxConns": 32,
         "maxIdle": 32,
-        "addr": "127.0.0.1:8080/jsonrpc"
+        "fping": "http://127.0.0.1:8080/nqm/icmp",
+        "tcpping": "http://127.0.0.1:8080/nqm/tcp",
+        "tcpconn": "http://127.0.0.1:8080/nqm/tcpconn"
     },
     "staging": {
         "enabled": false,
@@ -79,4 +81,3 @@
         ]
     }
 }
-
