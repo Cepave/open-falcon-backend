@@ -1134,15 +1134,6 @@ func completeApolloFiltersData(hostsInput []map[string]string, result map[string
 				keywords[isp] = []string{id}
 			}
 		}
-		ip := host["ip"]
-		if len (ip) > 0 {
-			tags = appendUniqueString(tags, ip)
-			if _, ok := keywords[ip]; ok {
-				keywords[ip] = appendUniqueString(keywords[ip], id)
-			} else {
-				keywords[ip] = []string{id}
-			}
-		}
 		idc := host["idc"]
 		if len (idc) > 0 {
 			tags = appendUniqueString(tags, idc)
@@ -1168,15 +1159,6 @@ func completeApolloFiltersData(hostsInput []map[string]string, result map[string
 				keywords[provinceCode] = appendUniqueString(keywords[provinceCode], id)
 			} else {
 				keywords[provinceCode] = []string{id}
-			}
-		}
-		hostname := host["name"]
-		if len (hostname) > 0 {
-			tags = appendUniqueString(tags, hostname)
-			if _, ok := keywords[hostname]; ok {
-				keywords[hostname] = appendUniqueString(keywords[hostname], id)
-			} else {
-				keywords[hostname] = []string{id}
 			}
 		}
 		host["tag"] = strings.Join(tags, ",")
