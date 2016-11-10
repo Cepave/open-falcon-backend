@@ -569,21 +569,14 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	log.Debugf("func updateHostsTable()")
 	now := getNow()
 	idcMap := getIDCMap()
-	var hosts []Hosts
-	var host Hosts
+	hosts := []map[string]string{}
 	for _, hostname := range hostnames {
-		item := hostsMap[hostname]
-		activate, _ := strconv.Atoi(item["activate"])
-		host.Hostname = item["hostname"]
-		host.Activate = activate
-		host.Platform = item["platform"]
-		host.Platforms = item["platforms"]
-		if len(host.Platform) == 0 {
-			host.Platform = strings.Split(host.Platforms, ",")[0]
+		host := hostsMap[hostname]
+		if len(host["platform"]) == 0 {
+			host["platform"] = strings.Split(host["platforms"], ",")[0]
 		}
-		host.Ip = item["ip"]
 		ISP := ""
-		str := strings.Replace(item["hostname"], "_", "-", -1)
+		str := strings.Replace(host["hostname"], "_", "-", -1)
 		slice := strings.Split(str, "-")
 		if len(slice) >= 4 {
 			ISP = slice[0]
@@ -591,13 +584,12 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		if len(ISP) > 5 {
 			ISP = ""
 		}
-		host.Isp = ISP
-		idcID := item["idcID"]
-		if _, ok := idcMap[idcID]; ok {
-			idc := idcMap[idcID]
-			host.Idc = idc.(Idc).Name
-			host.Province = idc.(Idc).Province
-			host.City = idc.(Idc).City
+		host["ISP"] = ISP
+		idcID := host["idcID"]
+		if idc, ok := idcMap[idcID]; ok {
+			host["IDC"] = idc.(Idc).Name
+			host["province"] = idc.(Idc).Province
+			host["city"] = idc.(Idc).City
 		}
 		hosts = append(hosts, host)
 	}
@@ -620,15 +612,15 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		}
 	}
 
-	for _, item := range hosts {
+	for _, host := range hosts {
 		sql = "SELECT id FROM boss.hosts WHERE hostname = ? LIMIT 1"
-		num, err := o.Raw(sql, item.Hostname).Values(&rows)
+		num, err := o.Raw(sql, host["hostname"]).Values(&rows)
 		if num == 0 {
 			sql := "INSERT INTO boss.hosts("
 			sql += "hostname, exist, activate, platform, platforms, idc, ip, "
 			sql += "isp, province, city, updated) "
 			sql += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item.Hostname, 1, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, now).Exec()
+			_, err := o.Raw(sql, host["hostname"], 1, host["activate"], host["platform"], host["platforms"], host["IDC"], host["IP"], host["ISP"], host["province"], host["city"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -642,7 +634,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 			sql += " platforms = ?, idc = ?, ip = ?, isp = ?,"
 			sql += " province = ?, city = ?, updated = ?"
 			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, 1, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, now, ID).Exec()
+			_, err := o.Raw(sql, 1, host["activate"], host["platform"], host["platforms"], host["IDC"], host["IP"], host["ISP"], host["province"], host["city"], now, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
