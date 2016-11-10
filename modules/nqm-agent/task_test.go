@@ -68,7 +68,7 @@ func initJsonRpcServer(addr string) {
 }
 
 func initJsonRpcClient(srvAddr string) {
-	rpcClient.RpcServer = srvAddr
+	rpcServer = srvAddr
 	req = model.NqmTaskRequest{
 		Hostname:     "nqm-agent",
 		IpAddress:    "1.2.3.4",
@@ -77,12 +77,12 @@ func initJsonRpcClient(srvAddr string) {
 }
 
 func TestTask(t *testing.T) {
-	GetGeneralConfig().hbsResp.Store(model.NqmTaskResponse{})
+	SetHBSResp(model.NqmTaskResponse{})
 	initJsonRpcServer("127.0.0.1:65534")
 	initJsonRpcClient("127.0.0.1:65534")
 
 	query()
-	hbsResp := GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse)
+	hbsResp := HBSResp()
 	cmd, targets, agent, _, err := Task(new(Fping))
 	if err != nil {
 		t.Error(err)

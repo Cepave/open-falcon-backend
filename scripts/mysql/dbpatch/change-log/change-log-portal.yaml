@@ -133,3 +133,8 @@
     filename: "mike-26.sql",
     comment: "Add AUTO_INCREMENT to owl_group_tag(id)"
 }
+- {
+    id: "chyeh-25",
+    filename: "chyeh-25.sql",
+    comment: "[OWL-816] Add new entries to owl_city"
+}

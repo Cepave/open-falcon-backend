@@ -10,10 +10,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
-func tick() <-chan time.Time {
-	dur := time.Second * GetGeneralConfig().Hbs.Interval
-	return time.Tick(dur)
-}
+var hbsTicker *time.Ticker
+var hbsTickerUpdated chan bool
 
 func updatedMsg(old map[string]model.MeasurementsProperty, updated map[string]model.MeasurementsProperty) string {
 	msg := ""
@@ -47,13 +45,13 @@ func query() {
 	var resp model.NqmTaskResponse
 	err := RPCCall("NqmAgent.Task", req, &resp)
 	if err != nil {
-		log.Println("[ hbs ] Error on RPC call:", err)
+		log.Errorln("[ hbs ] Error on RPC call:", err)
 		return
 	}
 	log.Println("[ hbs ] Response received")
 	HbsRespTime = time.Now()
 
-	oldResp := GetGeneralConfig().hbsResp.Load().(model.NqmTaskResponse)
+	oldResp := HBSResp()
 	if !configFromHbsUpdated(resp, oldResp) {
 		return
 	}
@@ -65,13 +63,18 @@ func query() {
 		msg = msg + " - " + measMsg
 	}
 
-	GetGeneralConfig().hbsResp.Store(resp)
+	SetHBSResp(resp)
 	log.Println(msg)
 }
 
 func Query() {
-	query()
-	for _ = range tick() {
-		query()
+	for {
+		select {
+		case <-hbsTicker.C:
+			query()
+		case <-hbsTickerUpdated:
+			hbsTicker.Stop()
+			hbsTicker = time.NewTicker(Config().Hbs.Interval * time.Second)
+		}
 	}
 }

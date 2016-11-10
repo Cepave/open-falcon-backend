@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
+	"github.com/fsnotify/fsnotify"
 )
 
 func main() {
@@ -18,8 +20,23 @@ func main() {
 	}
 
 	vipercfg.Load()
-	InitGeneralConfig(vipercfg.Config().GetString("config"))
+	InitConfig()
 	logruslog.Init()
+
+	hbsTicker = time.NewTicker(Config().Hbs.Interval * time.Second)
+	hbsTickerUpdated = make(chan bool)
+
+	vipercfg.Config().WatchConfig()
+	vipercfg.Config().OnConfigChange(func(e fsnotify.Event) {
+		fmt.Println("Config file changed:", e.Name)
+		InitConfig()
+		logruslog.Init()
+		hbsTickerUpdated <- true
+		GenMeta()
+		InitRPC()
+	})
+
+	GenMeta()
 	InitRPC()
 
 	go Query()

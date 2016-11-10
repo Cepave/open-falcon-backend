@@ -32,7 +32,7 @@ func InitDatabase() {
 	orm.RegisterModel(new(Province), new(City), new(Idc))
 
 	orm.RegisterDataBase("boss", "mysql", config.BossDB.Addr, config.BossDB.Idle, config.BossDB.Max)
-	orm.RegisterModel(new(Contacts), new(Hosts), new(Platforms))
+	orm.RegisterModel(new(Contacts), new(Hosts), new(Idcs), new(Ips), new(Platforms))
 
 	orm.RegisterDataBase("gz_nqm", "mysql", config.Nqm.Addr, config.Nqm.Idle, config.Nqm.Max)
 	orm.RegisterModel(new(Nqm_node))

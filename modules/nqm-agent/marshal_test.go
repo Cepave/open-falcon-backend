@@ -1,6 +1,7 @@
 package main
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -38,40 +39,44 @@ func TestConvToKeyValueString(t *testing.T) {
 }
 
 func TestAssembleTags(t *testing.T) {
-	agent := nqmNodeData{
-		"-1", "-1", "-1", "-1", "-1",
+	agent := []nqmNodeData{
+		{"-1", "-1", "-1", "-1", "11", "12-13-14"},
+		{"-1", "-1", "-1", "-1", "-1", ""},
+		{"-1", "-1", "-1", "-1", "11", "12-13-14"},
+		{"-1", "-1", "-1", "-1", "-1", ""},
 	}
 	target := nqmNodeData{
-		"-2", "-2", "-2", "-2", "-2",
+		"-2", "-2", "-2", "-2", "21", "22-23-24",
 	}
 	tests := []map[string]string{
 		{"rttmax": "46.5", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8.61"},
+		{"rttmax": "46.5", "rttavg": "14.5", "rttmdev": "-1", "rttmedian": "-1", "pkttransmit": "100", "pktreceive": "100", "rttmin": "8.61"},
+		{"time": "13.6"},
 		{"time": "13.6"},
 	}
 
 	expecteds := []string{
-		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=-2,rttmin=8.61,rttmax=46.5,rttavg=14.5,rttmdev=-1,rttmedian=-1,pkttransmit=100,pktreceive=100,time=",
-		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=-2,rttmin=,rttmax=,rttavg=,rttmdev=,rttmedian=,pkttransmit=,pktreceive=,time=13.6",
+		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=11,agent-group-tag-ids=12-13-14,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=21,target-group-tag-ids=22-23-24,rttmin=8.61,rttmax=46.5,rttavg=14.5,rttmdev=-1,rttmedian=-1,pkttransmit=100,pktreceive=100,time=",
+		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,agent-group-tag-ids=,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=21,target-group-tag-ids=22-23-24,rttmin=8.61,rttmax=46.5,rttavg=14.5,rttmdev=-1,rttmedian=-1,pkttransmit=100,pktreceive=100,time=",
+		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=11,agent-group-tag-ids=12-13-14,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=21,target-group-tag-ids=22-23-24,rttmin=,rttmax=,rttavg=,rttmdev=,rttmedian=,pkttransmit=,pktreceive=,time=13.6",
+		"agent-id=-1,agent-isp-id=-1,agent-province-id=-1,agent-city-id=-1,agent-name-tag-id=-1,agent-group-tag-ids=,target-id=-2,target-isp-id=-2,target-province-id=-2,target-city-id=-2,target-name-tag-id=21,target-group-tag-ids=22-23-24,rttmin=,rttmax=,rttavg=,rttmdev=,rttmedian=,pkttransmit=,pktreceive=,time=13.6",
 	}
 
 	//t_out := nqmTagsAssembler(target, agent, tests)
 	for i, v := range tests {
-		kv := assembleTags(target, agent, v)
+		kv := assembleTags(target, agent[i], v)
 		strs := strings.Split(kv, ",")
 		for _, str := range strs {
 			if !strings.Contains(expecteds[i], str) {
-				t.Error(expecteds[i], str)
+				t.Error("case:", i, expecteds[i], str)
 			}
 		}
-		t.Log(assembleTags(target, agent, v))
+		t.Log(assembleTags(target, agent[i], v))
 	}
 }
 
 func TestMarshalStatsRow(t *testing.T) {
-	// Hostname is the config dependency which lies in func MarshalIntoParameters
-	var cfg GeneralConfig
-	generalConfig = &cfg
-	cfg.Hostname = "unit-test-hostname"
+	metadata.Hostname = "unit-test-hostname"
 
 	nqmAgent := model.NqmAgent{
 		Id: -1, IspId: -1, ProvinceId: -1, CityId: -1,
@@ -89,13 +94,13 @@ func TestMarshalStatsRow(t *testing.T) {
 		"tcpping": {false, []string{"tcpping", "-i", "0.01", "-c", "4"}, 300},
 		"tcpconn": {false, []string{"tcpconn"}, 300},
 	}
-	GetGeneralConfig().hbsResp.Store(resp)
+	SetHBSResp(resp)
 
 	agent := nqmNodeData{
-		"-1", "-1", "-1", "-1", "-1",
+		"-1", "-1", "-1", "-1", "11", "12-13-14",
 	}
 	target := nqmNodeData{
-		"-2", "-2", "-2", "-2", "-1",
+		"-2", "-2", "-2", "-2", "21", "22-23-24",
 	}
 
 	// fping, 4 JSON parameters, only test the 4th which is for Cassandra
@@ -138,5 +143,22 @@ func TestMarshalStatsRow(t *testing.T) {
 			t.Error(expecteds[i][1], params[1])
 		}
 		t.Log(expecteds[i][1], params[1])
+	}
+}
+
+func TestConvIntSlcToStr(t *testing.T) {
+	tests := []struct {
+		input    []int32
+		expected string
+	}{
+		{[]int32{1, 2, 3, 4, 5}, string("1-2-3-4-5")},
+	}
+	for i, v := range tests {
+		actual := convIntSlcToStr(v.input)
+		expected := v.expected
+		t.Logf("Check case %d: %s(actual) == %s(expected)", i, actual, expected)
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("Error on case %d: %s(actual) != %s(expected)", i, actual, expected)
+		}
 	}
 }

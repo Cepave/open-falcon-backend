@@ -5,7 +5,7 @@
         "listen": "0.0.0.0:6066"
     },
     "redis": {
-        "addr": "172.17.0.2:6379",
+        "addr": "%%REDIS%%",
         "maxIdle": 5
     },
     "queue": {
@@ -21,9 +21,9 @@
         "serverchan": 10
     },
     "api": {
-        "sms": "http://172.17.0.5:8000/sms",
-        "mail": "http://172.17.0.6:9000/mail",
-        "qq": "http://172.17.0.0:5010",
+        "sms": "http://0.0.0.0:8000/sms",
+        "mail": "http://0.0.0.0:9000/mail",
+        "qq": "http://0.0.0.0:5010",
         "serverchan": "http://sc.ftqq.com"
     }
 }

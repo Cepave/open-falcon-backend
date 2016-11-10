@@ -33,12 +33,14 @@ var (
 // 发送缓存队列
 // node -> queue_of_data
 var (
-	TsdbQueue      *nlist.SafeListLimited
-	JudgeQueues    = make(map[string]*nlist.SafeListLimited)
-	GraphQueues    = make(map[string]*nlist.SafeListLimited)
-	InfluxdbQueues = make(map[string]*nlist.SafeListLimited)
-	NqmRpcQueue    *nlist.SafeListLimited
-	StagingQueue   *nlist.SafeListLimited
+	TsdbQueue       *nlist.SafeListLimited
+	JudgeQueues     = make(map[string]*nlist.SafeListLimited)
+	GraphQueues     = make(map[string]*nlist.SafeListLimited)
+	InfluxdbQueues  = make(map[string]*nlist.SafeListLimited)
+	NqmIcmpQueue    *nlist.SafeListLimited
+	NqmTcpQueue     *nlist.SafeListLimited
+	NqmTcpconnQueue *nlist.SafeListLimited
+	StagingQueue    *nlist.SafeListLimited
 )
 
 // 连接池
@@ -48,7 +50,6 @@ var (
 	TsdbConnPoolHelper    *cpool.TsdbConnPoolHelper
 	GraphConnPools        *cpool.SafeRpcConnPools
 	InfluxdbConnPools     *cpool.InfluxdbConnPools
-	NqmRpcConnPoolHelper  *cpool.NqmRpcConnPoolHelper
 	StagingConnPoolHelper *cpool.StagingConnPoolHelper
 )
 
@@ -247,39 +248,78 @@ func Push2StagingSendQueue(items []*cmodel.MetricValue) {
 	}
 }
 
-// Push network quality metric pkt to the queue for RPC
-func Push2NqmRpcSendQueue(items []*cmodel.MetaData) {
-	for _, item := range items {
-		nqmitem, err := convert2NqmRpcItem(item)
+// Push metrics from fping to the queue for RESTful API
+func Push2NqmIcmpSendQueue(pingItems []*cmodel.MetaData) {
+	for _, item := range pingItems {
+		item, err := convert2NqmPingItem(item)
 		if err != nil {
-			log.Println("NqmRpc converting error:", err)
+			log.Println("NqmPing converting error:", err)
 			continue
 		}
-		isSuccess := NqmRpcQueue.PushFront(nqmitem)
+		isSuccess := NqmIcmpQueue.PushFront(item)
 
 		if !isSuccess {
-			proc.SendToNqmRpcDropCnt.Incr()
+			proc.SendToNqmIcmpDropCnt.Incr()
 		}
 	}
 }
 
-func Demultiplex(items []*cmodel.MetaData) ([]*cmodel.MetaData, []*cmodel.MetaData) {
-	nqms := []*cmodel.MetaData{}
+// Push metrics from tcpping to the queue for RESTful API
+func Push2NqmTcpSendQueue(pingItems []*cmodel.MetaData) {
+	for _, item := range pingItems {
+		item, err := convert2NqmPingItem(item)
+		if err != nil {
+			log.Println("NqmPing converting error:", err)
+			continue
+		}
+		isSuccess := NqmTcpQueue.PushFront(item)
+
+		if !isSuccess {
+			proc.SendToNqmTcpDropCnt.Incr()
+		}
+	}
+}
+
+// Push metrics from tcpconn to the queue for RESTful API
+func Push2NqmTcpconnSendQueue(connItems []*cmodel.MetaData) {
+	for _, item := range connItems {
+		nqmitem, err := convert2NqmConnItem(item)
+		if err != nil {
+			log.Println("NqmConn converting error:", err)
+			continue
+		}
+		isSuccess := NqmTcpconnQueue.PushFront(nqmitem)
+
+		if !isSuccess {
+			proc.SendToNqmTcpconnDropCnt.Incr()
+		}
+	}
+}
+
+func Demultiplex(items []*cmodel.MetaData) ([]*cmodel.MetaData, []*cmodel.MetaData, []*cmodel.MetaData, []*cmodel.MetaData) {
+	nqmFpings := []*cmodel.MetaData{}
+	nqmTcppings := []*cmodel.MetaData{}
+	nqmTcpconns := []*cmodel.MetaData{}
 	generics := []*cmodel.MetaData{}
 
 	for _, item := range items {
-		if strings.HasPrefix(item.Metric, "nqm-") {
-			nqms = append(nqms, item)
-		} else {
+		switch item.Metric {
+		case "nqm-fping":
+			nqmFpings = append(nqmFpings, item)
+		case "nqm-tcpping":
+			nqmTcppings = append(nqmTcppings, item)
+		case "nqm-tcpconn":
+			nqmTcpconns = append(nqmTcpconns, item)
+		default:
 			generics = append(generics, item)
 		}
 	}
 
-	return nqms, generics
+	return nqmFpings, nqmTcppings, nqmTcpconns, generics
 }
 
-func convert2NqmRpcItem(d *cmodel.MetaData) (*nqmRpcItem, error) {
-	var t nqmRpcItem
+func convert2NqmPingItem(d *cmodel.MetaData) (*nqmPingItem, error) {
+	var t nqmPingItem
 	agent, err := convert2NqmEndpoint(d, "agent")
 	if err != nil {
 		return &t, err
@@ -293,11 +333,36 @@ func convert2NqmRpcItem(d *cmodel.MetaData) (*nqmRpcItem, error) {
 		return &t, err
 	}
 
-	t = nqmRpcItem{
+	t = nqmPingItem{
 		Timestamp: d.Timestamp,
 		Agent:     *agent,
 		Target:    *target,
 		Metrics:   *metrics,
+	}
+
+	return &t, nil
+}
+
+func convert2NqmConnItem(d *cmodel.MetaData) (*nqmConnItem, error) {
+	var t nqmConnItem
+	var tt float32
+	t.Timestamp = d.Timestamp
+	agent, err := convert2NqmEndpoint(d, "agent")
+	if err != nil {
+		return &t, err
+	}
+	target, err := convert2NqmEndpoint(d, "target")
+	if err != nil {
+		return &t, err
+	}
+	if err := strToFloat32(&tt, "time", d.Tags); err != nil {
+		return nil, err
+	}
+	t = nqmConnItem{
+		Timestamp: d.Timestamp,
+		Agent:     *agent,
+		Target:    *target,
+		TotalTime: tt,
 	}
 
 	return &t, nil
@@ -329,6 +394,23 @@ func strToInt32(out *int32, index string, dict map[string]string) error {
 	return nil
 }
 
+func strToInt32Slc(out *[]int32, index string, dict map[string]string) error {
+	if v, ok := dict[index]; ok {
+		if v == "" {
+			return nil
+		}
+		strSlc := strings.Split(v, "-")
+		for _, str := range strSlc {
+			i, err := strconv.Atoi(str)
+			if err != nil {
+				return err
+			}
+			*out = append(*out, int32(i))
+		}
+	}
+	return nil
+}
+
 func strToInt16(out *int16, index string, dict map[string]string) error {
 	var err error
 	var ii int64
@@ -344,11 +426,12 @@ func strToInt16(out *int16, index string, dict map[string]string) error {
 
 func convert2NqmEndpoint(d *cmodel.MetaData, endType string) (*nqmEndpoint, error) {
 	t := nqmEndpoint{
-		Id:         -1,
-		IspId:      -1,
-		ProvinceId: -1,
-		CityId:     -1,
-		NameTagId:  -1,
+		Id:          -1,
+		IspId:       -1,
+		ProvinceId:  -1,
+		CityId:      -1,
+		NameTagId:   -1,
+		GroupTagIds: []int32{},
 	}
 
 	if err := strToInt32(&t.Id, endType+"-id", d.Tags); err != nil {
@@ -364,6 +447,9 @@ func convert2NqmEndpoint(d *cmodel.MetaData, endType string) (*nqmEndpoint, erro
 		return nil, err
 	}
 	if err := strToInt32(&t.NameTagId, endType+"-name-tag-id", d.Tags); err != nil {
+		return nil, err
+	}
+	if err := strToInt32Slc(&t.GroupTagIds, endType+"-group-tag-ids", d.Tags); err != nil {
 		return nil, err
 	}
 
