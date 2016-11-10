@@ -1085,8 +1085,16 @@ func getExistedHostnames(hostnames []string, result map[string]interface{}) []st
 }
 
 func appendUniqueString(slice []string, s string) []string {
-	sliceStr := strings.Join(slice, "','")
-	if !strings.Contains(sliceStr, s) {
+	if len(s) == 0 {
+		return slice
+	}
+	existed := false
+	for _, val := range slice {
+		if s == val {
+			existed = true
+		}
+	}
+	if !existed {
 		slice = append(slice, s)
 		sort.Strings(slice)
 	}
