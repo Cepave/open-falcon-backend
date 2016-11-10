@@ -524,7 +524,7 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			sql := "INSERT INTO boss.ips("
 			sql += "ip, exist, status, hostname, platform, updated) "
 			sql += "VALUES(?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item["ip"], 1, status, item["hostname"], item["platform"], now).Exec()
+			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -538,7 +538,7 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			sql += " SET ip = ?, exist = ?, status = ?,"
 			sql += " hostname = ?, platform = ?, updated = ?"
 			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, item["ip"], 1, status, item["hostname"], item["platform"], now, ID).Exec()
+			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
