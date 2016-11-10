@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"strconv"
+	csc "github.com/Cepave/open-falcon-backend/common/strconv"
 )
 
 var ipV4RegExp = regexp.MustCompile("^(?:[0-9]{1,3})(?:\\.[0-9]{1,3})?(?:\\.[0-9]{1,3})?(?:\\.[0-9]{1,3})?$")
@@ -64,37 +65,10 @@ func IpV4ToBytesForLike(ip string) ([]byte, error) {
 // seperator - The seperator
 func GroupedStringToIntArray(groupedValue sql.NullString, seperator string) []int64 {
 	if !groupedValue.Valid {
-		return nil
+		return make([]int64, 0)
 	}
 
-	return GroupedPlainStringToIntArray(groupedValue.String, seperator)
-}
-
-// Converts grouped string to array of int64
-//
-// groupedValue - The grouped value retrieved from database, could be null
-// seperator - The seperator
-func GroupedPlainStringToIntArray(groupedValue string, seperator string) []int64 {
-	if groupedValue == "" {
-		return nil
-	}
-
-	stringArray := strings.Split(groupedValue, seperator)
-	result := make([]int64, len(stringArray))
-
-	for i, v := range stringArray {
-		var intValue int64
-		var parseError error
-
-		if intValue, parseError = strconv.ParseInt(v, 10, 64)
-			parseError != nil {
-			panic(fmt.Errorf("Cannot parse value in array to Int. Index: [%d]. Value: [%v]", i, v))
-		}
-
-		result[i] = intValue
-	}
-
-	return result
+	return csc.SplitStringToIntArray(groupedValue.String, seperator)
 }
 
 // Converts grouped string to array of uint64
@@ -103,32 +77,10 @@ func GroupedPlainStringToIntArray(groupedValue string, seperator string) []int64
 // seperator - The seperator
 func GroupedStringToUintArray(groupedValue sql.NullString, seperator string) []uint64 {
 	if !groupedValue.Valid {
-		return nil
+		return make([]uint64, 0)
 	}
 
-	return GroupedPlainStringToUintArray(groupedValue.String, seperator)
-}
-func GroupedPlainStringToUintArray(groupedValue string, seperator string) []uint64 {
-	if groupedValue == "" {
-		return nil
-	}
-
-	stringArray := strings.Split(groupedValue, seperator)
-	result := make([]uint64, len(stringArray))
-
-	for i, v := range stringArray {
-		var uintValue uint64
-		var parseError error
-
-		if uintValue, parseError = strconv.ParseUint(v, 10, 64)
-			parseError != nil {
-			panic(fmt.Errorf("Cannot parse value in array to Uint. Index: [%d]. Value: [%v]", i, v))
-		}
-
-		result[i] = uintValue
-	}
-
-	return result
+	return csc.SplitStringToUintArray(groupedValue.String, seperator)
 }
 
 // Converts grouped string to array of string
@@ -137,7 +89,7 @@ func GroupedPlainStringToUintArray(groupedValue string, seperator string) []uint
 // seperator - The seperator
 func GroupedStringToStringArray(groupedValue sql.NullString, seperator string) []string {
 	if !groupedValue.Valid {
-		return nil
+		return make([]string, 0)
 	}
 
 	return strings.Split(groupedValue.String, seperator)

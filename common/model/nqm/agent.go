@@ -5,11 +5,9 @@ import (
 	"net"
 	"time"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	json "github.com/bitly/go-simplejson"
 	"reflect"
 	"sort"
-	"strings"
 )
 
 type AgentForAdding struct {
@@ -167,35 +165,16 @@ func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonNameTag.Set("value", agentView.NameTagValue)
 	jsonObject.Set("name_tag", jsonNameTag)
 
-	groupTags := make([]*json.Json, 0, len(agentView.GroupTags))
-	for _, groupTag := range agentView.GroupTags {
-		jsonGroupTag := json.New()
-		jsonGroupTag.Set("id", groupTag.Id)
-		jsonGroupTag.Set("name", groupTag.Name)
-
-		groupTags = append(groupTags, jsonGroupTag)
-	}
-	jsonObject.Set("group_tags", groupTags)
+	jsonGroupTags := owlModel.GroupTags(agentView.GroupTags).ToJson()
+	jsonObject.Set("group_tags", jsonGroupTags)
 
 	return jsonObject.MarshalJSON()
 }
 func (agentView *Agent) AfterLoad() {
-	if agentView.IdsOfGroupTags == "" {
-		return
-	}
-
-	allIds := commonDb.GroupedPlainStringToUintArray(agentView.IdsOfGroupTags, ",")
-	allNames := strings.Split(agentView.NamesOfGroupTags, "\000")
-
-	for i, groupTagId := range allIds {
-		agentView.GroupTags = append(
-			agentView.GroupTags,
-			&owlModel.GroupTag {
-				Id: int32(groupTagId),
-				Name: allNames[i],
-			},
-		)
-	}
+	agentView.GroupTags = owlModel.SplitToArrayOfGroupTags(
+		agentView.IdsOfGroupTags, ",",
+		agentView.NamesOfGroupTags, "\000",
+	)
 }
 func (agent *Agent) String() string {
 	return fmt.Sprintf(

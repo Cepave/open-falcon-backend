@@ -59,7 +59,7 @@ func (suite *DbUtilTestSuite) TestGroupedStringToStringArray(c *C) {
 			sql.NullString{
 				"<NULL_STRING>", false,
 			},
-			nil,
+			[]string{},
 		},
 	}
 
@@ -85,7 +85,7 @@ func (suite *DbUtilTestSuite) TestGroupedStringToIntArray(c *C) {
 			sql.NullString{
 				"<NULL_STRING>", false,
 			},
-			nil,
+			[]int64{},
 		},
 	}
 
@@ -111,7 +111,7 @@ func (suite *DbUtilTestSuite) TestGroupedStringToUintArray(c *C) {
 			sql.NullString{
 				"<NULL_STRING>", false,
 			},
-			nil,
+			[]uint64{},
 		},
 	}
 
