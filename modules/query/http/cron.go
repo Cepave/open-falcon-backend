@@ -259,18 +259,18 @@ func syncHostsTable() {
 		platformNames = appendUniqueString(platformNames, platformName)
 		for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 			hostname = device.(map[string]interface{})["hostname"].(string)
-			ip := device.(map[string]interface{})["ip"].(string)
+			IP := device.(map[string]interface{})["ip"].(string)
 			status := device.(map[string]interface{})["ip_status"].(string)
 			item := map[string]string{
-				"ip":       ip,
+				"IP":       IP,
 				"status":   status,
 				"hostname": hostname,
 				"platform": platformName,
 			}
-			IPs = append(IPs, ip)
-			IPKey := platformName + "_" + ip
+			IPs = append(IPs, IP)
+			IPKey := platformName + "_" + IP
 			IPKeys = append(IPKeys, IPKey)
-			if _, ok := IPsMap[ip]; !ok {
+			if _, ok := IPsMap[IP]; !ok {
 				IPsMap[IPKey] = item
 			}
 			if len(hostname) > 0 {
@@ -278,15 +278,21 @@ func syncHostsTable() {
 					hostnames = append(hostnames, hostname)
 					idcID := device.(map[string]interface{})["pop_id"].(string)
 					host := map[string]string{
-						"hostname": hostname,
-						"activate": "0",
-						"platforms": platformName,
-						"idcID":    idcID,
-						"ip":       ip,
+						"hostname":  hostname,
+						"activate":  "0",
+						"platforms": "",
+						"idcID":     idcID,
+						"IP":        IP,
 					}
-					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-						host["ip"] = ip
+					if len(IP) > 0 && IP == getIPFromHostname(hostname, result) {
+						host["IP"] = IP
 						host["platform"] = platformName
+						platforms := []string{}
+						if len(host["platforms"]) > 0 {
+							platforms = strings.Split(host["platforms"], ",")
+						}
+						platforms = appendUniqueString(platforms, platformName)
+						host["platforms"] = strings.Join(platforms, ",")
 					}
 					if status == "1" {
 						host["activate"] = "1"
@@ -294,12 +300,15 @@ func syncHostsTable() {
 					hostsMap[hostname] = host
 					idcIDs = appendUniqueString(idcIDs, idcID)
 				} else {
-					platforms := strings.Split(host["platforms"], ",")
-					platforms = appendUniqueString(platforms, platformName)
-					host["platforms"] = strings.Join(platforms, ",")
-					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-						host["ip"] = ip
+					if len(IP) > 0 && IP == getIPFromHostname(hostname, result) {
+						host["IP"] = IP
 						host["platform"] = platformName
+						platforms := []string{}
+						if len(host["platforms"]) > 0 {
+							platforms = strings.Split(host["platforms"], ",")
+						}
+						platforms = appendUniqueString(platforms, platformName)
+						host["platforms"] = strings.Join(platforms, ",")
 					}
 					if status == "1" {
 						host["activate"] = "1"
