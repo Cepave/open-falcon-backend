@@ -526,6 +526,62 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 	return IPs
 }
 
+func mergeIPsOfHost(groups map[string][]map[string]string, groupNames []string, hostnames []string, result map[string]interface{}) map[string][]map[string]string {
+	platforms := map[string][]map[string]string{}
+	hostsMap := map[string]string{}
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT hostname, activate FROM boss.hosts"
+	sql += " WHERE hostname IN ('" + strings.Join(hostnames, "','")
+	sql += "') AND exist = 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			activate := row["activate"].(string)
+			hostsMap[hostname] = activate
+		}
+	}
+	for _, groupName := range groupNames {
+		platform := []map[string]string{}
+		itemsMap := map[string][]map[string]string{}
+		itemNames := []string{}
+		group := groups[groupName]
+		for _, agent := range group {
+			hostname := agent["hostname"]
+			itemNames = appendUniqueString(itemNames, hostname)
+			if item, ok := itemsMap[hostname]; ok {
+				item = append(item, agent)
+			} else {
+				itemsMap[hostname] = []map[string]string{
+					agent,
+				}
+			}
+		}
+		for _, itemName := range itemNames {
+			slice := itemsMap[itemName]
+			index := 0
+			for key, item := range slice {
+				hostname := item["hostname"]
+				ip := item["ip"]
+				if ip == getIPFromHostname(hostname, result) {
+					index = key
+				}
+			}
+			host := slice[index]
+			if val, ok := hostsMap[itemName]; ok {
+				host["activate"] = val
+			}
+			platform = append(platform, host)
+		}
+		platforms[groupName] = platform
+	}
+	return platforms
+}
+
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
 	var queries []*cmodel.GraphLastParam
 	o := orm.NewOrm()
