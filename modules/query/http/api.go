@@ -864,6 +864,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	}
 	sort.Strings(hostnames)
 	sort.Strings(platformNames)
+	platforms = mergeIPsOfHost(platforms, platformNames, hostnames, result)
 	hostnamesExisted := []string{}
 	var versions = make(map[string]map[string]string)
 	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
