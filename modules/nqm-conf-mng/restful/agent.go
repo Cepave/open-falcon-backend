@@ -3,6 +3,7 @@ package restful
 import (
 	"net/http"
 	"gopkg.in/gin-gonic/gin.v1"
+	"log"
 	"strconv"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
@@ -12,10 +13,15 @@ import (
 )
 
 func addNewAgent(c *gin.Context) {
+	/**
+	 * Builds data from body of request
+	 */
 	agentForAdding := commonNqmModel.NewAgentForAdding()
 
 	commonGin.BindJson(c, agentForAdding)
 	commonGin.ConformAndValidateStruct(agentForAdding, commonNqmModel.Validator)
+	agentForAdding.UniqueGroupTags()
+	// :~)
 
 	newAgent, err := commonNqmDb.AddAgent(agentForAdding)
 	if err != nil {
@@ -36,6 +42,40 @@ func addNewAgent(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, newAgent)
+}
+func modifyAgent(c *gin.Context) {
+	/**
+	 * Loads agent from database
+	 */
+	agentId, agentIdErr := strconv.Atoi(c.Param("agent_id"))
+	if agentIdErr != nil {
+		panic(agentIdErr)
+	}
+
+	originalAgent := commonNqmDb.GetAgentById(int32(agentId))
+	if originalAgent == nil {
+		commonGin.JsonNoMethodHandler(c)
+		return
+	}
+	// :~)
+
+	/**
+	 * Binding JSON body to modified agent
+	 */
+	modifiedAgent := originalAgent.ToAgentForAdding()
+	commonGin.BindJson(c, modifiedAgent)
+	commonGin.ConformAndValidateStruct(modifiedAgent, commonNqmModel.Validator)
+	modifiedAgent.UniqueGroupTags()
+	// :~)
+
+	log.Printf("modifiedAgent: %v", modifiedAgent)
+
+	updatedAgent, err := commonNqmDb.UpdateAgent(originalAgent, modifiedAgent)
+	if err != nil {
+		panic(err)
+	}
+
+	c.JSON(http.StatusOK, updatedAgent)
 }
 func getAgentById(c *gin.Context) {
 	agentId, err := strconv.Atoi(c.Param("agent_id"))

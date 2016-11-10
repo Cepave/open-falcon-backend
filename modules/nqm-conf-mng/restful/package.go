@@ -30,4 +30,5 @@ func initApi() {
 	v1.GET("/nqm/agents", listAgents)
 	v1.GET("/nqm/agent/:agent_id", getAgentById)
 	v1.POST("/nqm/agent", addNewAgent)
+	v1.PUT("/nqm/agent/:agent_id", modifyAgent)
 }

@@ -7,6 +7,8 @@ import (
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	json "github.com/bitly/go-simplejson"
+	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -17,8 +19,8 @@ type AgentForAdding struct {
 	Comment string `json:"comment" conform:"trim"`
 	Status bool `json:"status"`
 
-	Hostname string `json:"hostname" conform:"trim" validate:"min=1"`
-	IpAddress net.IP `json:"ip_address"`
+	Hostname string `json:"-"`
+	IpAddress net.IP `json:"-"`
 
 	IspId int16 `json:"isp_id" validate:"nonZeroId"`
 	ProvinceId int16 `json:"province_id" validate:"nonZeroId"`
@@ -38,6 +40,29 @@ func NewAgentForAdding() *AgentForAdding {
 		ProvinceId: -1,
 		CityId: -1,
 		NameTagId: -1,
+	}
+}
+func (agent *AgentForAdding) AreGroupTagsSame(anotherAgent *AgentForAdding) bool {
+	leftGroupTags := make([]string, len(agent.GroupTags))
+	rightGroupTags := make([]string, len(anotherAgent.GroupTags))
+	copy(leftGroupTags, agent.GroupTags)
+	copy(rightGroupTags, anotherAgent.GroupTags)
+
+	sort.Strings(leftGroupTags)
+	sort.Strings(rightGroupTags)
+
+	return reflect.DeepEqual(leftGroupTags, rightGroupTags)
+}
+func (agent *AgentForAdding) UniqueGroupTags() {
+	mapOfGroupName := make(map[string]bool)
+
+	for _, groupTag := range agent.GroupTags {
+		mapOfGroupName[groupTag] = true
+	}
+
+	agent.GroupTags = make([]string, 0, len(mapOfGroupName))
+	for k := range mapOfGroupName {
+		agent.GroupTags = append(agent.GroupTags, k)
 	}
 }
 func (agent *AgentForAdding) GetIpAddressAsBytes() []byte {
@@ -77,6 +102,31 @@ type Agent struct {
 }
 func (Agent) TableName() string {
 	return "nqm_agent"
+}
+func (agentView *Agent) ToAgentForAdding() *AgentForAdding {
+	groupTags := make([]string, 0, len(agentView.GroupTags))
+	for _, groupTag := range agentView.GroupTags {
+		groupTags = append(groupTags, groupTag.Name)
+	}
+
+	return &AgentForAdding {
+		Id: agentView.Id,
+		Name: agentView.Name,
+		Comment: agentView.Comment,
+		Status: agentView.Status,
+
+		ConnectionId: agentView.ConnectionId,
+		Hostname: agentView.Hostname,
+		IpAddress: agentView.IpAddress,
+
+		IspId: agentView.IspId,
+		ProvinceId: agentView.ProvinceId,
+		CityId: agentView.CityId,
+
+		NameTagId: agentView.NameTagId,
+		NameTagValue: agentView.NameTagValue,
+		GroupTags: groupTags,
+	}
 }
 func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonObject := json.New()

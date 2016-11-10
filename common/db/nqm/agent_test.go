@@ -14,6 +14,36 @@ type TestAgentSuite struct{}
 
 var _ = Suite(&TestAgentSuite{})
 
+// Tests the updating of agent
+func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
+	modifiedAgent := &nqmModel.AgentForAdding {
+		Name: "new-name-1",
+		Comment: "new-comment-1",
+		Status: false,
+		ProvinceId: 27,
+		CityId: 205,
+		IspId: 8,
+		NameTagId: 9902,
+		GroupTags: []string{"ng-2", "ng-3", "ng-4"},
+	}
+
+	originalAgent := GetAgentById(10061)
+
+	testedAgent, err := UpdateAgent(originalAgent, modifiedAgent)
+
+	c.Assert(err, IsNil)
+	c.Assert(testedAgent.Name, Equals, modifiedAgent.Name)
+	c.Assert(testedAgent.Comment, Equals, modifiedAgent.Comment)
+	c.Assert(testedAgent.Status, Equals, modifiedAgent.Status)
+	c.Assert(testedAgent.ProvinceId, Equals, modifiedAgent.ProvinceId)
+	c.Assert(testedAgent.CityId, Equals, modifiedAgent.CityId)
+	c.Assert(testedAgent.IspId, Equals, modifiedAgent.IspId)
+	c.Assert(testedAgent.NameTagId, Equals, modifiedAgent.NameTagId)
+
+	testedAgentForAdding := testedAgent.ToAgentForAdding()
+	c.Assert(testedAgentForAdding.AreGroupTagsSame(modifiedAgent), Equals, true)
+}
+
 // Tests the getting of agent by id
 func (suite *TestAgentSuite) TestGetAgentById(c *C) {
 	testCases := []struct {
@@ -253,6 +283,29 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 			VALUES(7063, 67001, 'ag-list-3', 'hn-list-3', x'0C251630', 3, 1)
 			`,
 		)
+	case "TestAgentSuite.TestUpdateAgent":
+		executeInTx(
+			`
+			INSERT INTO owl_name_tag(nt_id, nt_value)
+			VALUES(9901, 'nt-1')
+			`,
+			`
+			INSERT INTO owl_group_tag(gt_id, gt_name)
+			VALUES(37201, "ng-1"), (37202, "ng-2")
+			`,
+			`
+			INSERT INTO host(id, hostname)
+			VALUES(98031, '187.99.81.11')
+			`,
+			`
+			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_connection_id, ag_hostname, ag_ip_address)
+			VALUES(10061, 98031, 'update-ag@187.99.81.11', '187.99.81.11', x'BB63510B')
+			`,
+			`
+			INSERT INTO nqm_agent_group_tag(agt_ag_id, agt_gt_id)
+			VALUES(10061, 37201),(10061, 37202)
+			`,
+		)
 	}
 }
 func (s *TestAgentSuite) TearDownTest(c *C) {
@@ -306,6 +359,13 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			DELETE FROM owl_group_tag
 			WHERE gt_name LIKE 'TPE-%'
 			`,
+		)
+	case "TestAgentSuite.TestUpdateAgent":
+		executeInTx(
+			"DELETE FROM nqm_agent WHERE ag_id = 10061",
+			"DELETE FROM host WHERE id = 98031",
+			"DELETE FROM owl_name_tag WHERE nt_value LIKE 'nt-%'",
+			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'ng-%'",
 		)
 	}
 }

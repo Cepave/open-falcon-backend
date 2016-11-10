@@ -53,6 +53,26 @@ func AddAgent(addedAgent *nqmModel.AgentForAdding) (*nqmModel.Agent, error) {
 	return GetAgentById(addedAgent.Id), nil
 }
 
+func UpdateAgent(oldAgent *nqmModel.Agent, updatedAgent *nqmModel.AgentForAdding) (*nqmModel.Agent, error) {
+	/**
+	 * Checks the hierarchy over administrative region
+	 */
+	err := owlDb.CheckHierarchyForCity(updatedAgent.ProvinceId, updatedAgent.CityId)
+	if err != nil {
+		return nil, err
+	}
+	// :~)
+
+	txProcessor := &updateAgentTx{
+		updatedAgent: updatedAgent,
+		oldAgent: oldAgent.ToAgentForAdding(),
+	}
+
+	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
+
+	return GetAgentById(oldAgent.Id), nil
+}
+
 func GetAgentById(agentId int32) *nqmModel.Agent {
 	var selectAgent = DbFacade.GormDb.Model(&nqmModel.Agent{}).
 		Select(`
@@ -231,13 +251,78 @@ func buildSortingClauseOfAgents(paging *commonModel.Paging) string {
 	return querySyntax
 }
 
+type updateAgentTx struct {
+	updatedAgent *nqmModel.AgentForAdding
+	oldAgent *nqmModel.AgentForAdding
+}
+func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) {
+	agentTx.loadNameTagId(tx)
+
+	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
+	tx.MustExec(
+		`
+		UPDATE nqm_agent
+		SET ag_name = ?,
+			ag_comment = ?,
+			ag_status = ?,
+			ag_isp_id = ?,
+			ag_pv_id = ?,
+			ag_ct_id = ?,
+			ag_nt_id = ?
+		WHERE ag_id = ?
+		`,
+		sql.NullString{ updatedAgent.Name, updatedAgent.Name != "" },
+		sql.NullString{ updatedAgent.Comment, updatedAgent.Comment != "" },
+		updatedAgent.Status,
+		updatedAgent.IspId,
+		updatedAgent.ProvinceId,
+		updatedAgent.CityId,
+		updatedAgent.NameTagId,
+		oldAgent.Id,
+	)
+
+	agentTx.updateGroupTags(tx)
+}
+func (agentTx *updateAgentTx) loadNameTagId(tx *sqlx.Tx) {
+	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
+
+	if updatedAgent.NameTagValue == oldAgent.NameTagValue {
+		return
+	}
+
+	updatedAgent.NameTagId = buildAndGetNameTagId(
+		tx, updatedAgent.NameTagValue,
+	)
+}
+func (agentTx *updateAgentTx) updateGroupTags(tx *sqlx.Tx) {
+	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
+	if updatedAgent.AreGroupTagsSame(oldAgent) {
+		return
+	}
+
+	tx.MustExec(
+		`
+		DELETE FROM nqm_agent_group_tag
+		WHERE agt_ag_id = ?
+		`,
+		oldAgent.Id,
+	)
+
+	buildGroupTagsForAgent(
+		tx, oldAgent.Id, updatedAgent.GroupTags,
+	)
+}
+
 type addAgentTx struct {
 	agent *nqmModel.AgentForAdding
 	err error
 }
 func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) {
 	agentTx.prepareHost(tx)
-	agentTx.prepareNameTag(tx)
+
+	agentTx.agent.NameTagId = buildAndGetNameTagId(
+		tx, agentTx.agent.NameTagValue,
+	)
 
 	agentTx.addAgent(tx)
 	if agentTx.err != nil {
@@ -263,37 +348,6 @@ func (agentTx *addAgentTx) prepareHost(tx *sqlx.Tx) {
 		newAgent.Hostname,
 		newAgent.GetIpAddressAsString(),
 		newAgent.Hostname,
-	)
-}
-func (agentTx *addAgentTx) prepareNameTag(tx *sqlx.Tx) {
-	newAgent := agentTx.agent
-
-	if newAgent.NameTagValue == "" {
-		return
-	}
-
-	tx.MustExec(
-		`
-		INSERT INTO owl_name_tag(nt_value)
-		SELECT ?
-		FROM DUAL
-		WHERE NOT EXISTS (
-			SELECT *
-			FROM owl_name_tag
-			WHERE nt_value = ?
-		)
-		`,
-		newAgent.NameTagValue,
-		newAgent.NameTagValue,
-	)
-
-	sqlxExt.ToTxExt(tx).Get(
-		&newAgent.NameTagId,
-		`
-		SELECT nt_id FROM owl_name_tag
-		WHERE nt_value = ?
-		`,
-		newAgent.NameTagValue,
 	)
 }
 func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
@@ -366,8 +420,45 @@ func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 }
 func (agentTx *addAgentTx) prepareGroupTags(tx *sqlx.Tx) {
 	newAgent := agentTx.agent
+	buildGroupTagsForAgent(
+		tx, newAgent.Id, newAgent.GroupTags,
+	)
+}
 
-	for _, groupTag := range newAgent.GroupTags {
+func buildAndGetNameTagId(tx *sqlx.Tx, valueOfNameTag string) int16 {
+	if valueOfNameTag == "" {
+		return -1
+	}
+
+	tx.MustExec(
+		`
+		INSERT INTO owl_name_tag(nt_value)
+		SELECT ?
+		FROM DUAL
+		WHERE NOT EXISTS (
+			SELECT *
+			FROM owl_name_tag
+			WHERE nt_value = ?
+		)
+		`,
+		valueOfNameTag, valueOfNameTag,
+	)
+
+	var nameTagId int16
+	sqlxExt.ToTxExt(tx).Get(
+		&nameTagId,
+		`
+		SELECT nt_id FROM owl_name_tag
+		WHERE nt_value = ?
+		`,
+		valueOfNameTag,
+	)
+
+	return nameTagId
+}
+
+func buildGroupTagsForAgent(tx *sqlx.Tx, agentId int32, groupTags []string) {
+	for _, groupTag := range groupTags {
 		tx.MustExec(
 			`
 			INSERT INTO owl_group_tag(gt_name)
@@ -395,7 +486,7 @@ func (agentTx *addAgentTx) prepareGroupTags(tx *sqlx.Tx) {
 				)
 			)
 			`,
-			newAgent.Id,
+			agentId,
 			groupTag,
 		)
 	}
