@@ -1383,7 +1383,7 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 	metrics := getMetricsByMetricType(metricType)
 	hostMap := map[string]interface{}{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data := getGraphQueryResponse(metrics, duration, hostnames, result)
+		data, _ := getGraphQueryResponse(metrics, duration, hostnames, result)
 		for _, series := range data {
 			values := []interface{}{}
 			for _, rrdObj := range series.Values {
