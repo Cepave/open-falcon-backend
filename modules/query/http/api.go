@@ -490,14 +490,27 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	}
 }
 
-func queryHostsData(result map[string]interface{}) []Hosts {
-	var hosts []Hosts
+func queryHostsData(result map[string]interface{}) []map[string]string {
+	hosts := []map[string]string{}
+	var rows []orm.Params
 	o := orm.NewOrm()
 	o.Using("boss")
-	sql := "SELECT hostname, activate, platform, idc, ip, isp, province, city FROM boss.hosts WHERE exist = 1 ORDER BY hostname ASC"
-	_, err := o.Raw(sql).QueryRows(&hosts)
+	sql := "SELECT hostname, activate, platforms, ip FROM boss.hosts"
+	sql += " WHERE exist = 1 AND platforms != '' ORDER BY hostname ASC"
+	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
+		return hosts
+	} else if num > 0 {
+		for _, row := range rows {
+			host := map[string]string{
+				"name":      row["hostname"].(string),
+				"platforms": row["platforms"].(string),
+				"ip":        row["ip"].(string),
+				"activate":  row["activate"].(string),
+			}
+			hosts = append(hosts, host)
+		}
 	}
 	return hosts
 }
