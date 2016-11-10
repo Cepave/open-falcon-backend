@@ -63,6 +63,10 @@ func (self *CheckSlint) AssertHasPaging() {
 //
 // The exepcted status is used to get expected status
 func (self *CheckSlint) GetStringBody(expectedStatus int) string {
+	return string(self.checkAndGetBody(expectedStatus))
+}
+
+func (self *CheckSlint) checkAndGetBody(expectedStatus int) []byte {
 	c := self.checker
 
 	resp := self.GetResponse()
@@ -72,13 +76,14 @@ func (self *CheckSlint) GetStringBody(expectedStatus int) string {
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 
 	if c.Failed() {
-		c.Logf("Has error. Response: %s. If ioutil.ReadAll() has error: %v", bodyBytes, err)
-		c.FailNow()
+		if err != nil {
+			c.Fatalf("Read response(ioutil.ReadAll()) has error: %v", err)
+		} else {
+			c.Fatalf("Status code not match. Response: %s.", bodyBytes)
+		}
 	}
 
-	c.Assert(err, checker.IsNil)
-
-	return string(bodyBytes)
+	return bodyBytes
 }
 
 // Gets body as JSON
@@ -87,11 +92,7 @@ func (self *CheckSlint) GetStringBody(expectedStatus int) string {
 func (self *CheckSlint) GetJsonBody(expectedStatus int) *json.Json {
 	c := self.checker
 
-	resp := self.GetResponse()
-	defer resp.Body.Close()
-
-	c.Assert(resp.StatusCode, checker.Equals, expectedStatus)
-	jsonResult, err := json.NewFromReader(resp.Body)
+	jsonResult, err := json.NewJson(self.checkAndGetBody(expectedStatus))
 	c.Assert(err, checker.IsNil)
 
 	return jsonResult
