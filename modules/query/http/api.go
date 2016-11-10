@@ -1301,8 +1301,11 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	if len(arguments) > 6 {
 		duration = arguments[6]
 	}
-	data := getGraphQueryResponse(metrics, duration, hostnames, result)
-	dataRecent := getGraphQueryResponse(metrics, "10min", hostnames, result)
+	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
+	dataRecent := []*cmodel.GraphQueryResponse{}
+	if diff > 43200 {
+		dataRecent, _ = getGraphQueryResponse(metrics, "10min", hostnames, result)
+	}
 	data = addRecentData(data, dataRecent)
 
 	for _, series := range data {
@@ -1311,6 +1314,9 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 			if len(series.Values) > 0 && series.Values[0].Value > 0 {
 				series.Counter = "net.transmission.limit.80%"
 				limit := series.Values[0].Value
+				if series.Values[len(series.Values)-1].Value > 0 {
+					limit = series.Values[len(series.Values)-1].Value
+				}
 				for _, item := range series.Values {
 					value := item.Value
 					if value > limit {
