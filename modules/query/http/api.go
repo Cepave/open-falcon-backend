@@ -490,14 +490,27 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	}
 }
 
-func queryHostsData(result map[string]interface{}) []Hosts {
-	var hosts []Hosts
+func queryHostsData(result map[string]interface{}) []map[string]string {
+	hosts := []map[string]string{}
+	var rows []orm.Params
 	o := orm.NewOrm()
 	o.Using("boss")
-	sql := "SELECT hostname, activate, platform, idc, ip, isp, province, city FROM boss.hosts WHERE exist = 1 ORDER BY hostname ASC"
-	_, err := o.Raw(sql).QueryRows(&hosts)
+	sql := "SELECT hostname, activate, platforms, ip FROM boss.hosts"
+	sql += " WHERE exist = 1 AND platforms != '' ORDER BY hostname ASC"
+	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
+		return hosts
+	} else if num > 0 {
+		for _, row := range rows {
+			host := map[string]string{
+				"name":      row["hostname"].(string),
+				"platforms": row["platforms"].(string),
+				"ip":        row["ip"].(string),
+				"activate":  row["activate"].(string),
+			}
+			hosts = append(hosts, host)
+		}
 	}
 	return hosts
 }
@@ -526,8 +539,28 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 	return IPs
 }
 
-func mergeIPsOfHost(groups map[string][]map[string]string, groupNames []string, hostnames []string, result map[string]interface{}) map[string][]map[string]string {
+func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (map[string][]map[string]string, []string, []string) {
 	platforms := map[string][]map[string]string{}
+	platformNames := []string{}
+	hostnames := []string{}
+	platformName := ""
+	for _, host := range data {
+		hostname := host["hostname"]
+		platformName = host["platform"]
+		hostnames = appendUniqueString(hostnames, hostname)
+		platformNames = appendUniqueString(platformNames, platformName)
+		if platform, ok := platforms[platformName]; ok {
+			platform = append(platform, host)
+			platforms[platformName] = platform
+		} else {
+			platforms[platformName] = []map[string]string{
+				host,
+			}
+		}
+	}
+	sort.Strings(hostnames)
+	sort.Strings(platformNames)
+
 	hostsMap := map[string]string{}
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -545,11 +578,11 @@ func mergeIPsOfHost(groups map[string][]map[string]string, groupNames []string, 
 			hostsMap[hostname] = activate
 		}
 	}
-	for _, groupName := range groupNames {
+	for _, groupName := range platformNames {
 		platform := []map[string]string{}
 		itemsMap := map[string][]map[string]string{}
 		itemNames := []string{}
-		group := groups[groupName]
+		group := platforms[groupName]
 		for _, agent := range group {
 			hostname := agent["hostname"]
 			itemNames = appendUniqueString(itemNames, hostname)
@@ -579,7 +612,7 @@ func mergeIPsOfHost(groups map[string][]map[string]string, groupNames []string, 
 		}
 		platforms[groupName] = platform
 	}
-	return platforms
+	return platforms, platformNames, hostnames
 }
 
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
@@ -843,28 +876,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	data := queryIPsData(result)
-	platforms := map[string][]map[string]string{}
-	platformNames := []string{}
-	hostnames := []string{}
-	hostname := ""
-	platformName := ""
-	for _, host := range data {
-		hostname = host["hostname"]
-		platformName = host["platform"]
-		hostnames = appendUniqueString(hostnames, hostname)
-		platformNames = appendUniqueString(platformNames, platformName)
-		if platform, ok := platforms[platformName]; ok {
-			platform = append(platform, host)
-			platforms[platformName] = platform
-		} else {
-			platforms[platformName] = []map[string]string{
-				host,
-			}
-		}
-	}
-	sort.Strings(hostnames)
-	sort.Strings(platformNames)
-	platforms = mergeIPsOfHost(platforms, platformNames, hostnames, result)
+	platforms, platformNames, hostnames := mergeIPsOfHost(data, result)
 	hostnamesExisted := []string{}
 	var versions = make(map[string]map[string]string)
 	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
@@ -2073,6 +2085,19 @@ func getHostsList(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getHostgroups(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	hosts := queryHostsData(result)
+	result["count"] = len(hosts)
+	result["items"] = hosts
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configAPIRoutes() {
 	http.HandleFunc("/api/info", queryInfo)
 	http.HandleFunc("/api/history", queryHistory)
@@ -2091,4 +2116,5 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/idcs/hosts", getIDCsHosts)
 	http.HandleFunc("/api/idcs/", getIDCsBandwidthsUpperLimit)
 	http.HandleFunc("/api/hosts", getHostsList)
+	http.HandleFunc("/api/hostgroups", getHostgroups)
 }
