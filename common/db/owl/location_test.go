@@ -14,22 +14,22 @@ var _ = Suite(&TestLocationSuite{})
 func (suite *TestLocationSuite) TestCheckHierarchyForCity(c *C) {
 	testCases := []struct {
 		provinceId int16
-		cityId int16
-		hasError bool
-	} {
-		{ 17, 27, false },
-		{ -1, 33, false },
-		{ 17, 20, true },
+		cityId     int16
+		hasError   bool
+	}{
+		{17, 27, false},
+		{17, -1, false},
+		{17, 20, true},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		err := CheckHierarchyForCity(testCase.provinceId, testCase.cityId)
 
 		if testCase.hasError {
 			c.Logf("Error: %v", err)
-			c.Assert(err, NotNil)
+			c.Assert(err, NotNil, Commentf("Test Case: [%d]", i+1))
 		} else {
-			c.Assert(err, IsNil)
+			c.Assert(err, IsNil, Commentf("Test Case: [%d]", i+1))
 		}
 	}
 }
