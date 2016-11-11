@@ -37,7 +37,7 @@ func AddAgent(addedAgent *nqmModel.AgentForAdding) (*nqmModel.Agent, error) {
 	// :~)
 
 	/**
-	 * Gets error message
+	 * Executes the insertion of agent and its related data
 	 */
 	txProcessor := &addAgentTx{
 		agent: addedAgent,
@@ -201,7 +201,7 @@ func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmMo
 	return result, &paging
 }
 
-var orderByDialect = commonModel.NewSqlOrderByDialect(
+var orderByDialectForAgents = commonModel.NewSqlOrderByDialect(
 	map[string]string {
 		"status": "ag_status",
 		"name": "ag_name",
@@ -214,15 +214,11 @@ var orderByDialect = commonModel.NewSqlOrderByDialect(
 	},
 )
 func init() {
-	originFunc := orderByDialect.FuncEntityToSyntax
-	orderByDialect.FuncEntityToSyntax = func(entity *commonModel.OrderByEntity) (string, error) {
+	originFunc := orderByDialectForAgents.FuncEntityToSyntax
+	orderByDialectForAgents.FuncEntityToSyntax = func(entity *commonModel.OrderByEntity) (string, error) {
 		switch entity.Expr {
 		case "group_tag":
-			var dirOfGroupTags = "DESC"
-			if entity.Direction == commonModel.Ascending {
-				dirOfGroupTags = "ASC"
-			}
-			return fmt.Sprintf("gt_number %s, gt_names %s", dirOfGroupTags, dirOfGroupTags), nil
+			return owlDb.GetSyntaxOfOrderByGroupTags(entity), nil
 		}
 
 		return originFunc(entity)
@@ -245,72 +241,10 @@ func buildSortingClauseOfAgents(paging *commonModel.Paging) string {
 		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "last_heartbeat_time", commonModel.Descending })
 	}
 
-	querySyntax, err := orderByDialect.ToQuerySyntax(paging.OrderBy)
+	querySyntax, err := orderByDialectForAgents.ToQuerySyntax(paging.OrderBy)
 	gormExt.DefaultGormErrorConverter.PanicIfError(err)
 
 	return querySyntax
-}
-
-type updateAgentTx struct {
-	updatedAgent *nqmModel.AgentForAdding
-	oldAgent *nqmModel.AgentForAdding
-}
-func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) {
-	agentTx.loadNameTagId(tx)
-
-	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
-	tx.MustExec(
-		`
-		UPDATE nqm_agent
-		SET ag_name = ?,
-			ag_comment = ?,
-			ag_status = ?,
-			ag_isp_id = ?,
-			ag_pv_id = ?,
-			ag_ct_id = ?,
-			ag_nt_id = ?
-		WHERE ag_id = ?
-		`,
-		sql.NullString{ updatedAgent.Name, updatedAgent.Name != "" },
-		sql.NullString{ updatedAgent.Comment, updatedAgent.Comment != "" },
-		updatedAgent.Status,
-		updatedAgent.IspId,
-		updatedAgent.ProvinceId,
-		updatedAgent.CityId,
-		updatedAgent.NameTagId,
-		oldAgent.Id,
-	)
-
-	agentTx.updateGroupTags(tx)
-}
-func (agentTx *updateAgentTx) loadNameTagId(tx *sqlx.Tx) {
-	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
-
-	if updatedAgent.NameTagValue == oldAgent.NameTagValue {
-		return
-	}
-
-	updatedAgent.NameTagId = buildAndGetNameTagId(
-		tx, updatedAgent.NameTagValue,
-	)
-}
-func (agentTx *updateAgentTx) updateGroupTags(tx *sqlx.Tx) {
-	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
-	if updatedAgent.AreGroupTagsSame(oldAgent) {
-		return
-	}
-
-	tx.MustExec(
-		`
-		DELETE FROM nqm_agent_group_tag
-		WHERE agt_ag_id = ?
-		`,
-		oldAgent.Id,
-	)
-
-	buildGroupTagsForAgent(
-		tx, oldAgent.Id, updatedAgent.GroupTags,
-	)
 }
 
 type addAgentTx struct {
@@ -320,7 +254,7 @@ type addAgentTx struct {
 func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) {
 	agentTx.prepareHost(tx)
 
-	agentTx.agent.NameTagId = buildAndGetNameTagId(
+	agentTx.agent.NameTagId = owlDb.BuildAndGetNameTagId(
 		tx, agentTx.agent.NameTagValue,
 	)
 
@@ -425,69 +359,87 @@ func (agentTx *addAgentTx) prepareGroupTags(tx *sqlx.Tx) {
 	)
 }
 
-func buildAndGetNameTagId(tx *sqlx.Tx, valueOfNameTag string) int16 {
-	if valueOfNameTag == "" {
-		return -1
+type updateAgentTx struct {
+	updatedAgent *nqmModel.AgentForAdding
+	oldAgent *nqmModel.AgentForAdding
+}
+func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) {
+	agentTx.loadNameTagId(tx)
+
+	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
+	tx.MustExec(
+		`
+		UPDATE nqm_agent
+		SET ag_name = ?,
+			ag_comment = ?,
+			ag_status = ?,
+			ag_isp_id = ?,
+			ag_pv_id = ?,
+			ag_ct_id = ?,
+			ag_nt_id = ?
+		WHERE ag_id = ?
+		`,
+		sql.NullString{ updatedAgent.Name, updatedAgent.Name != "" },
+		sql.NullString{ updatedAgent.Comment, updatedAgent.Comment != "" },
+		updatedAgent.Status,
+		updatedAgent.IspId,
+		updatedAgent.ProvinceId,
+		updatedAgent.CityId,
+		updatedAgent.NameTagId,
+		oldAgent.Id,
+	)
+
+	agentTx.updateGroupTags(tx)
+}
+func (agentTx *updateAgentTx) loadNameTagId(tx *sqlx.Tx) {
+	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
+
+	if updatedAgent.NameTagValue == oldAgent.NameTagValue {
+		return
+	}
+
+	updatedAgent.NameTagId = owlDb.BuildAndGetNameTagId(
+		tx, updatedAgent.NameTagValue,
+	)
+}
+func (agentTx *updateAgentTx) updateGroupTags(tx *sqlx.Tx) {
+	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
+	if updatedAgent.AreGroupTagsSame(oldAgent) {
+		return
 	}
 
 	tx.MustExec(
 		`
-		INSERT INTO owl_name_tag(nt_value)
-		SELECT ?
-		FROM DUAL
-		WHERE NOT EXISTS (
-			SELECT *
-			FROM owl_name_tag
-			WHERE nt_value = ?
-		)
+		DELETE FROM nqm_agent_group_tag
+		WHERE agt_ag_id = ?
 		`,
-		valueOfNameTag, valueOfNameTag,
+		oldAgent.Id,
 	)
 
-	var nameTagId int16
-	sqlxExt.ToTxExt(tx).Get(
-		&nameTagId,
-		`
-		SELECT nt_id FROM owl_name_tag
-		WHERE nt_value = ?
-		`,
-		valueOfNameTag,
+	buildGroupTagsForAgent(
+		tx, oldAgent.Id, updatedAgent.GroupTags,
 	)
-
-	return nameTagId
 }
 
 func buildGroupTagsForAgent(tx *sqlx.Tx, agentId int32, groupTags []string) {
-	for _, groupTag := range groupTags {
-		tx.MustExec(
-			`
-			INSERT INTO owl_group_tag(gt_name)
-			SELECT ?
-			FROM DUAL
-			WHERE NOT EXISTS (
-				SELECT *
-				FROM owl_group_tag
-				WHERE gt_name = ?
-			)
-			`,
-			groupTag,
-			groupTag,
-		)
-
-		tx.MustExec(
-			`
-			INSERT INTO nqm_agent_group_tag(agt_ag_id, agt_gt_id)
-			VALUES(
-				?,
-				(
-					SELECT gt_id
-					FROM owl_group_tag
-					WHERE gt_name = ?
+	owlDb.BuildGroupTags(
+		tx, groupTags,
+		func(tx *sqlx.Tx, groupTag string) {
+			tx.MustExec(
+				`
+				INSERT INTO nqm_agent_group_tag(agt_ag_id, agt_gt_id)
+				VALUES(
+					?,
+					(
+						SELECT gt_id
+						FROM owl_group_tag
+						WHERE gt_name = ?
+					)
 				)
+				`,
+				agentId,
+				groupTag,
 			)
-			`,
-			agentId,
-			groupTag,
-		)
-	}
+		},
+	)
 }

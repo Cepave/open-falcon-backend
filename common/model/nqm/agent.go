@@ -6,8 +6,7 @@ import (
 	"time"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	json "github.com/bitly/go-simplejson"
-	"reflect"
-	"sort"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 type AgentForAdding struct {
@@ -41,15 +40,9 @@ func NewAgentForAdding() *AgentForAdding {
 	}
 }
 func (agent *AgentForAdding) AreGroupTagsSame(anotherAgent *AgentForAdding) bool {
-	leftGroupTags := make([]string, len(agent.GroupTags))
-	rightGroupTags := make([]string, len(anotherAgent.GroupTags))
-	copy(leftGroupTags, agent.GroupTags)
-	copy(rightGroupTags, anotherAgent.GroupTags)
-
-	sort.Strings(leftGroupTags)
-	sort.Strings(rightGroupTags)
-
-	return reflect.DeepEqual(leftGroupTags, rightGroupTags)
+	return utils.AreArrayOfStringsSame(
+		agent.GroupTags, anotherAgent.GroupTags,
+	)
 }
 func (agent *AgentForAdding) UniqueGroupTags() {
 	mapOfGroupName := make(map[string]bool)
@@ -123,7 +116,7 @@ func (agentView *Agent) ToAgentForAdding() *AgentForAdding {
 
 		NameTagId: agentView.NameTagId,
 		NameTagValue: agentView.NameTagValue,
-		GroupTags: groupTags,
+		GroupTags: owlModel.GroupTags(agentView.GroupTags).ToNames(),
 	}
 }
 func (agentView *Agent) MarshalJSON() ([]byte, error) {

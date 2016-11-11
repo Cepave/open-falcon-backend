@@ -38,6 +38,14 @@ func (groupTags GroupTags) ToJson() []*json.Json {
 
 	return jsonGroupTags
 }
+func (groupTags GroupTags) ToNames() []string {
+	namesOfGroupTags := make([]string, len(groupTags))
+	for i, groupTag := range groupTags {
+		namesOfGroupTags[i] = groupTag.Name
+	}
+
+	return namesOfGroupTags
+}
 
 // Converts a string of ids and a string of names to a array of GroupTags
 func SplitToArrayOfGroupTags(

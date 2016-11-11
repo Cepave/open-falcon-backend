@@ -125,7 +125,7 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 
 			switch target.Id {
 			case 402001:
-				c.Assert(target.GroupTagIds, IsNil)
+				c.Assert(target.GroupTagIds, DeepEquals, []int32{})
 			case 402002:
 				c.Assert(target.GroupTagIds, DeepEquals, []int32 { 12021, 12022, 12023 })
 			case 402003:

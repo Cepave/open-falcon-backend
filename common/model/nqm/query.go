@@ -27,3 +27,15 @@ func (query *AgentQuery) GetIpForLikeCondition() []byte {
 
 	return bytes
 }
+
+// The query conditions of target
+type TargetQuery struct {
+	Name string
+	Host string
+
+	HasIspId bool
+	IspId int16
+
+	HasStatusCondition bool
+	Status bool
+}

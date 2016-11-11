@@ -23,7 +23,7 @@ func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
 		ProvinceId: 27,
 		CityId: 205,
 		IspId: 8,
-		NameTagId: 9902,
+		NameTagValue: "nt-2",
 		GroupTags: []string{"ng-2", "ng-3", "ng-4"},
 	}
 
@@ -38,7 +38,7 @@ func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
 	c.Assert(testedAgent.ProvinceId, Equals, modifiedAgent.ProvinceId)
 	c.Assert(testedAgent.CityId, Equals, modifiedAgent.CityId)
 	c.Assert(testedAgent.IspId, Equals, modifiedAgent.IspId)
-	c.Assert(testedAgent.NameTagId, Equals, modifiedAgent.NameTagId)
+	c.Assert(testedAgent.NameTagValue, Equals, modifiedAgent.NameTagValue)
 
 	testedAgentForAdding := testedAgent.ToAgentForAdding()
 	c.Assert(testedAgentForAdding.AreGroupTagsSame(modifiedAgent), Equals, true)
@@ -210,7 +210,6 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 
 		for _, agent := range testedResult {
 			c.Logf("[List] Agent: %v.", agent)
-			//c.Assert(agent.IspId, Equals, agent.Isp.Id)
 		}
 		c.Assert(testedResult, HasLen, testCase.expectedCountOfCurrentPage)
 		c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll)
@@ -221,7 +220,6 @@ func (s *TestAgentSuite) SetUpSuite(c *C) {
 	DbFacade = dbTest.InitDbFacade(c)
 	owlDb.DbFacade = DbFacade
 }
-
 func (s *TestAgentSuite) TearDownSuite(c *C) {
 	dbTest.ReleaseDbFacade(c, DbFacade)
 	owlDb.DbFacade = nil
