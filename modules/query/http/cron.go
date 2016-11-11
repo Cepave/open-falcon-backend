@@ -518,7 +518,7 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 	for _, IPName := range IPNames {
 		item := IPsMap[IPName]
 		sql := "SELECT id FROM boss.ips WHERE ip = ? AND platform = ? LIMIT 1"
-		num, err := o.Raw(sql, item["ip"], item["platform"]).Values(&rows)
+		num, err := o.Raw(sql, item["IP"], item["platform"]).Values(&rows)
 		if num == 0 {
 			status, _ := strconv.Atoi(item["status"])
 			sql := "INSERT INTO boss.ips("
