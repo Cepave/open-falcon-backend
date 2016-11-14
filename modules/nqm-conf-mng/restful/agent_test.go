@@ -37,9 +37,9 @@ func (suite *TestAgentSuite) TestBuildQueryForListAgents(c *C) {
 
 	sampleContext := &gin.Context{}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
 		sampleContext.Request, _ = http.NewRequest("GET", "/a?" + testCase.params, nil)
 
-		c.Assert(buildQueryForListAgents(sampleContext), DeepEquals, testCase.expectedQuery)
+		c.Assert(buildQueryForListAgents(sampleContext), DeepEquals, testCase.expectedQuery, Commentf("Test Case: %d", i + 1))
 	}
 }

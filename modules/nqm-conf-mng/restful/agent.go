@@ -3,7 +3,6 @@ package restful
 import (
 	"net/http"
 	"gopkg.in/gin-gonic/gin.v1"
-	"log"
 	"strconv"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
@@ -67,8 +66,6 @@ func modifyAgent(c *gin.Context) {
 	commonGin.ConformAndValidateStruct(modifiedAgent, commonNqmModel.Validator)
 	modifiedAgent.UniqueGroupTags()
 	// :~)
-
-	log.Printf("modifiedAgent: %v", modifiedAgent)
 
 	updatedAgent, err := commonNqmDb.UpdateAgent(originalAgent, modifiedAgent)
 	if err != nil {

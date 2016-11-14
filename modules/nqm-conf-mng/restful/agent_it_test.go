@@ -86,6 +86,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		c.Assert(jsonResp.Get("connection_id").MustString(), Equals, jsonBody.ConnectionId)
 		c.Assert(jsonResp.Get("ip_address").MustString(), Equals, "0.0.0.0")
 		c.Assert(jsonResp.Get("hostname").MustString(), Equals, "0.0.0.0")
+		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
 		c.Assert(jsonResp.Get("status").MustBool(), Equals, jsonBody.Status)
 		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
 		c.Assert(jsonResp.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)

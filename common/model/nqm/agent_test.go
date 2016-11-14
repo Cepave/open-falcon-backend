@@ -11,29 +11,6 @@ type TestAgentSuite struct{}
 
 var _ = Suite(&TestAgentSuite{})
 
-// Tests the unique of group tags
-func (suite *TestAgentSuite) TestUniqueGroupTagsOfAgentForAdding(c *C) {
-	testCases := []struct {
-		sampleGroupTags []string
-		expectedGroupTags []string
-	} {
-		{ []string{}, []string{} },
-		{ []string{ "T1", "T2" }, []string{ "T1", "T2" } },
-		{ []string{ "T1", "T2", "T1", "T2" }, []string{ "T1", "T2" } },
-		{ []string{ "T3", "T3", "T4", "T4" }, []string{ "T3", "T4" } },
-	}
-
-	for _, testCase := range testCases {
-		testAgent := &AgentForAdding {
-			GroupTags: testCase.sampleGroupTags,
-		}
-
-		testAgent.UniqueGroupTags()
-
-		c.Assert(testAgent.GroupTags, DeepEquals, testCase.expectedGroupTags)
-	}
-}
-
 // Tests validation of NQM agent
 func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 	testedAgent := &AgentForAdding {

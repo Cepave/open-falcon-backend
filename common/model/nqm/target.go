@@ -10,8 +10,8 @@ import (
 
 type TargetForAdding struct {
 	Id int32 `json:"-"`
-	Name string `json:"name" conform:"trim"`
-	Host string `json:"host" conform:"trim"`
+	Name string `json:"name" conform:"trim" validate:"min=1"`
+	Host string `json:"host" conform:"trim" validate:"min=1"`
 	ProbedByAll bool `json:"probed_by_all"`
 	Status bool `json:"status"`
 	Comment string `json:"comment" conform:"trim"`
@@ -28,6 +28,9 @@ func (target *TargetForAdding) AreGroupTagsSame(anotherTarget *TargetForAdding) 
 	return utils.AreArrayOfStringsSame(
 		target.GroupTags, anotherTarget.GroupTags,
 	)
+}
+func (target *TargetForAdding) UniqueGroupTags() {
+	target.GroupTags = utils.UniqueArrayOfStrings(target.GroupTags)
 }
 
 func NewTargetForAdding() *TargetForAdding {
@@ -82,10 +85,10 @@ func (target *Target) MarshalJSON() ([]byte, error) {
 	jsonObject.Set("id", target.Id)
 	jsonObject.Set("name", target.Name)
 	jsonObject.Set("host", target.Host)
-	jsonObject.Set("probe_by_all", target.ProbedByAll)
+	jsonObject.Set("probed_by_all", target.ProbedByAll)
 	jsonObject.Set("status", target.Status)
 	jsonObject.Set("available", target.Available)
-	jsonObject.Set("creation_time", target.CreationTime)
+	jsonObject.Set("creation_time", target.CreationTime.Unix())
 
 	if target.Comment != "" {
 		jsonObject.Set("comment", target.Comment)

@@ -45,16 +45,7 @@ func (agent *AgentForAdding) AreGroupTagsSame(anotherAgent *AgentForAdding) bool
 	)
 }
 func (agent *AgentForAdding) UniqueGroupTags() {
-	mapOfGroupName := make(map[string]bool)
-
-	for _, groupTag := range agent.GroupTags {
-		mapOfGroupName[groupTag] = true
-	}
-
-	agent.GroupTags = make([]string, 0, len(mapOfGroupName))
-	for k := range mapOfGroupName {
-		agent.GroupTags = append(agent.GroupTags, k)
-	}
+	agent.GroupTags = utils.UniqueArrayOfStrings(agent.GroupTags)
 }
 func (agent *AgentForAdding) GetIpAddressAsBytes() []byte {
 	return ([]byte)(agent.IpAddress.To4())
@@ -127,6 +118,12 @@ func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonObject.Set("hostname", agentView.Hostname)
 	jsonObject.Set("ip_address", agentView.IpAddress)
 	jsonObject.Set("status", agentView.Status)
+
+	if agentView.LastHeartBeat.IsZero() {
+		jsonObject.Set("last_heartbeat_time", nil)
+	} else {
+		jsonObject.Set("last_heartbeat_time", agentView.LastHeartBeat.Unix())
+	}
 	if agentView.Name != "" {
 		jsonObject.Set("name", agentView.Name)
 	} else {
