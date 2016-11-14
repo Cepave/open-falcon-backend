@@ -3,8 +3,8 @@ package restful
 import (
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 
-	"gopkg.in/gin-gonic/gin.v1"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -36,4 +36,8 @@ func initApi() {
 	v1.GET("/nqm/target/:target_id", getTargetById)
 	v1.POST("/nqm/target", addNewTarget)
 	v1.PUT("/nqm/target/:target_id", modifyTarget)
+
+	v1.GET("/owl/isps", listISPs)
+	v1.GET("/owl/provinces", listProvinces)
+	v1.GET("/owl/cities", listCities)
 }

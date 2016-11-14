@@ -3,6 +3,7 @@ package owl
 import (
 	"flag"
 	"testing"
+
 	. "gopkg.in/check.v1"
 )
 

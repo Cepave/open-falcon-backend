@@ -2,6 +2,9 @@ package owl
 
 import (
 	"fmt"
+
+	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
 type ErrNotInSameHierarchy struct {
@@ -13,10 +16,10 @@ func (err ErrNotInSameHierarchy) Error() string {
 }
 
 type cityInfo struct {
-	ProvinceId int16 `db:"pv_id"`
+	ProvinceId   int16  `db:"pv_id"`
 	ProvinceName string `db:"pv_name"`
-	CityId int16 `db:"ct_id"`
-	CityName string `db:"ct_name"`
+	CityId       int16  `db:"ct_id"`
+	CityName     string `db:"ct_name"`
 }
 
 // Checks if the hierarchy for province and city are in the same administrative region
@@ -40,7 +43,7 @@ func CheckHierarchyForCity(provinceId int16, cityId int16) error {
 	)
 
 	if cityInfo.ProvinceId != provinceId {
-		return ErrNotInSameHierarchy {
+		return ErrNotInSameHierarchy{
 			message: fmt.Sprintf(
 				"City[ID: %d][%s] should be belonging to province[ID: %d]. But got province[ID: %d][%s]",
 				cityInfo.CityId, cityInfo.CityName,
@@ -51,4 +54,56 @@ func CheckHierarchyForCity(provinceId int16, cityId int16) error {
 	}
 
 	return nil
+}
+
+func GetProvincesByName(name string) []string {
+	if name == "" {
+		return []string{}
+	}
+
+	var q = DbFacade.GormDb.Model(&owlModel.Province{}).
+		Select(`
+		pv_name
+	`).
+		Where(`
+		pv_name LIKE ?
+		`,
+		name+"%",
+	)
+
+	var results []*owlModel.Province
+	gormExt.ToDefaultGormDbExt(q.Find(&results))
+
+	var owlProvinceNames = []string{}
+	for _, v := range results {
+		owlProvinceNames = append(owlProvinceNames, v.Name)
+	}
+
+	return owlProvinceNames
+}
+
+func GetCitiesByName(name string) []string {
+	if name == "" {
+		return []string{}
+	}
+
+	var q = DbFacade.GormDb.Model(&owlModel.City{}).
+		Select(`
+		ct_name
+	`).
+		Where(`
+		ct_name LIKE ?
+		`,
+		name+"%",
+	)
+
+	var results []*owlModel.City
+	gormExt.ToDefaultGormDbExt(q.Find(&results))
+
+	var owlCityNames = []string{}
+	for _, v := range results {
+		owlCityNames = append(owlCityNames, v.Name)
+	}
+
+	return owlCityNames
 }

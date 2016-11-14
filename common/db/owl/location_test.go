@@ -1,8 +1,9 @@
 package owl
 
 import (
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	"reflect"
 
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 )
 
@@ -34,9 +35,50 @@ func (suite *TestLocationSuite) TestCheckHierarchyForCity(c *C) {
 	}
 }
 
+func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
+	testCases := []struct {
+		input    string
+		expected []string
+	}{
+		{"北", []string{"北京"}},
+		{"河", []string{"河北", "河南"}},
+		{"幹", []string{}},
+	}
+
+	for _, v := range testCases {
+		got := GetProvincesByName(v.input)
+		if !reflect.DeepEqual(got, v.expected) {
+			c.Error("Error:", got, "!=", v.expected)
+		} else {
+			c.Log(got, "==", v.expected)
+		}
+	}
+}
+
+func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
+	testCases := []struct {
+		input    string
+		expected []string
+	}{
+		{"北", []string{"北京市", "北海市"}},
+		{"海口市", []string{"海口市"}},
+		{"幹", []string{}},
+	}
+
+	for _, v := range testCases {
+		got := GetCitiesByName(v.input)
+		if !reflect.DeepEqual(got, v.expected) {
+			c.Error("Error:", got, "!=", v.expected)
+		} else {
+			c.Log(got, "==", v.expected)
+		}
+	}
+}
+
 func (s *TestLocationSuite) SetUpSuite(c *C) {
 	DbFacade = dbTest.InitDbFacade(c)
 }
+
 func (s *TestLocationSuite) TearDownSuite(c *C) {
 	dbTest.ReleaseDbFacade(c, DbFacade)
 }
