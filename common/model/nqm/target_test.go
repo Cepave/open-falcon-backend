@@ -43,7 +43,6 @@ func (suite *TestTargetSuite) TestValidateOfTargetForAdding(c *C) {
 		{ "CityId", int16(0) },
 	}
 
-
 	for _, testCase := range testCases {
 		sampleTarget := &TargetForAdding{
 			Name: "conn_id",

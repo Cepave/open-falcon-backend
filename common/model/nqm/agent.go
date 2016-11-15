@@ -16,7 +16,7 @@ type AgentForAdding struct {
 	Comment string `json:"comment" conform:"trim"`
 	Status bool `json:"status"`
 
-	Hostname string `json:"-"`
+	Hostname string `json:"-" conform:"trim" validate:"min=1"`
 	IpAddress net.IP `json:"-"`
 
 	IspId int16 `json:"isp_id" validate:"nonZeroId"`
