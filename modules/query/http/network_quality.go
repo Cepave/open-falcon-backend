@@ -111,7 +111,7 @@ func getPacketLossAndAveragePingTime(tableName string, timestamp int64, result m
 
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
-	sqlcmd := "SELECT send, receive, avg FROM gz_nqm." + tableName + " WHERE mtime = ?"
+	sqlcmd := "SELECT send, receive, avg FROM `gz_nqm`.`" + tableName + "` WHERE mtime = ?"
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestamp))).Values(&rows)
 	if err != nil {
