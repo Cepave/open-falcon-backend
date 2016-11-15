@@ -59,7 +59,7 @@ func getLatestTimestamp(tableName string, result map[string]interface{}) int64 {
 	timestamp := int64(0)
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
-	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName + " ORDER BY mtime DESC LIMIT 1"
+	sqlcmd := "SELECT mtime FROM `gz_nqm`.`" + tableName + "` ORDER BY mtime DESC LIMIT 1"
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
