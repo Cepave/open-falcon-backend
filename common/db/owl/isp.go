@@ -5,23 +5,19 @@ import (
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
-func GetISPsByName(name string) []string {
-	var result []*owlModel.Isp
-	var queryResults = DbFacade.GormDb.Model(&owlModel.Isp{}).
+func GetISPsByName(name string) []*owlModel.Isp {
+	var q = DbFacade.GormDb.Model(&owlModel.Isp{}).
 		Select(`
-		isp_name
+		*
 	`).
 		Where(`
 		isp_name LIKE ?
 		`,
 		name+"%",
 	)
-	gormExt.ToDefaultGormDbExt(queryResults.Find(&result))
 
-	var owlIspNames = []string{}
-	for _, v := range result {
-		owlIspNames = append(owlIspNames, v.Name)
-	}
+	var results []*owlModel.Isp
+	gormExt.ToDefaultGormDbExt(q.Find(&results))
 
-	return owlIspNames
+	return results
 }

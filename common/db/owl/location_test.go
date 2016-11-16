@@ -3,6 +3,7 @@ package owl
 import (
 	"reflect"
 
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 )
@@ -38,11 +39,11 @@ func (suite *TestLocationSuite) TestCheckHierarchyForCity(c *C) {
 func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
 	testCases := []struct {
 		input    string
-		expected []string
+		expected []*owlModel.Province
 	}{
-		{"北", []string{"北京"}},
-		{"河", []string{"河北", "河南"}},
-		{"幹", []string{}},
+		{"北", []*owlModel.Province{{Id: 4, Name: "北京"}}},
+		{"河", []*owlModel.Province{{Id: 3, Name: "河北"}, {Id: 19, Name: "河南"}}},
+		{"幹", []*owlModel.Province{}},
 	}
 
 	for _, v := range testCases {
@@ -66,11 +67,11 @@ func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
 func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
 	testCases := []struct {
 		input    string
-		expected []string
+		expected []*owlModel.City
 	}{
-		{"北", []string{"北京市", "北海市"}},
-		{"海口市", []string{"海口市"}},
-		{"幹", []string{}},
+		{"北", []*owlModel.City{{Id: 1, ProvinceId: 4, Name: "北京市", PostCode: "100000"}, {Id: 116, ProvinceId: 21, Name: "北海市", PostCode: "536000"}}},
+		{"海口市", []*owlModel.City{{Id: 71, ProvinceId: 23, Name: "海口市", PostCode: "570000"}}},
+		{"幹", []*owlModel.City{}},
 	}
 
 	for _, v := range testCases {

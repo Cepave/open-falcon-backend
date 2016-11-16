@@ -56,10 +56,10 @@ func CheckHierarchyForCity(provinceId int16, cityId int16) error {
 	return nil
 }
 
-func GetProvincesByName(name string) []string {
+func GetProvincesByName(name string) []*owlModel.Province {
 	var q = DbFacade.GormDb.Model(&owlModel.Province{}).
 		Select(`
-		pv_name
+		*
 	`).
 		Where(`
 		pv_name LIKE ?
@@ -70,18 +70,13 @@ func GetProvincesByName(name string) []string {
 	var results []*owlModel.Province
 	gormExt.ToDefaultGormDbExt(q.Find(&results))
 
-	var owlProvinceNames = []string{}
-	for _, v := range results {
-		owlProvinceNames = append(owlProvinceNames, v.Name)
-	}
-
-	return owlProvinceNames
+	return results
 }
 
-func GetCitiesByName(name string) []string {
+func GetCitiesByName(name string) []*owlModel.City {
 	var q = DbFacade.GormDb.Model(&owlModel.City{}).
 		Select(`
-		ct_name
+		*
 	`).
 		Where(`
 		ct_name LIKE ?
@@ -92,10 +87,5 @@ func GetCitiesByName(name string) []string {
 	var results []*owlModel.City
 	gormExt.ToDefaultGormDbExt(q.Find(&results))
 
-	var owlCityNames = []string{}
-	for _, v := range results {
-		owlCityNames = append(owlCityNames, v.Name)
-	}
-
-	return owlCityNames
+	return results
 }

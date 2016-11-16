@@ -3,6 +3,7 @@ package owl
 import (
 	"reflect"
 
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 )
@@ -14,11 +15,11 @@ var _ = Suite(&TestIspSuite{})
 func (suite *TestIspSuite) TestGetISPByName(c *C) {
 	testCases := []struct {
 		input    string
-		expected []string
+		expected []*owlModel.Isp
 	}{
-		{"北", []string{"北京三信时代", "北京宽捷"}},
-		{"方", []string{"方正宽带"}},
-		{"幹", []string{}},
+		{"北", []*owlModel.Isp{{Id: 1, Name: "北京三信时代"}, {Id: 13, Name: "北京宽捷"}}},
+		{"方", []*owlModel.Isp{{Id: 8, Name: "方正宽带"}}},
+		{"幹", []*owlModel.Isp{}},
 	}
 
 	for _, v := range testCases {
