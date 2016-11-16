@@ -43,7 +43,7 @@ func initApi() {
 	v1.GET("/owl/isps", listISPs)
 	v1.GET("/owl/provinces", listProvinces)
 	v1.GET("/owl/cities", listCities)
-	v1.GET("/owl/provinces/:province_id/cities", listCitiesInProvince)
+	v1.GET("/owl/province/:province_id/cities", listCitiesInProvince)
 
 	router.GET("/health", health)
 }
