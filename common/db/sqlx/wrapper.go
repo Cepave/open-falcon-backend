@@ -7,21 +7,14 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/db"
 )
 
-type TxFinale byte
-
-const (
-	TxCommit TxFinale = 1
-	TxRollback TxFinale = 2
-)
-
 // The interface of transaction callback for sqlx package
 type TxCallback interface {
-	InTx(tx *sqlx.Tx) TxFinale
+	InTx(tx *sqlx.Tx) db.TxFinale
 }
 
 // The function object delegates the TxCallback interface
-type TxCallbackFunc func(*sqlx.Tx) TxFinale
-func (callbackFunc TxCallbackFunc) InTx(tx *sqlx.Tx) TxFinale {
+type TxCallbackFunc func(*sqlx.Tx) db.TxFinale
+func (callbackFunc TxCallbackFunc) InTx(tx *sqlx.Tx) db.TxFinale {
 	return callbackFunc(tx)
 }
 
@@ -118,9 +111,9 @@ func (ctrl *DbController) InTx(txCallback TxCallback) {
 	}()
 
 	switch txCallback.InTx(tx) {
-	case TxCommit:
+	case db.TxCommit:
 		db.PanicIfError(tx.Commit())
-	case TxRollback:
+	case db.TxRollback:
 		db.PanicIfError(tx.Rollback())
 	}
 }

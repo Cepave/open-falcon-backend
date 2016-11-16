@@ -6,6 +6,13 @@ import (
 	"log"
 )
 
+type TxFinale byte
+
+const (
+	TxCommit TxFinale = 1
+	TxRollback TxFinale = 2
+)
+
 // Configuration of database
 type DbConfig struct {
 	Dsn string
@@ -63,23 +70,25 @@ func (callbackFunc RowCallbackFunc) ResultRow(row *sql.Row) {
 
 // The interface of transaction callback for sql package
 type TxCallback interface {
-	InTx(tx *sql.Tx)
+	InTx(tx *sql.Tx) TxFinale
 }
 
 // The function object delegates the TxCallback interface
-type TxCallbackFunc func(*sql.Tx)
-func (callbackFunc TxCallbackFunc) InTx(tx *sql.Tx) {
-	callbackFunc(tx)
+type TxCallbackFunc func(*sql.Tx) TxFinale
+func (callbackFunc TxCallbackFunc) InTx(tx *sql.Tx) TxFinale {
+	return callbackFunc(tx)
 }
 
 // BuildTxForSqls builds function for exeuction of multiple SQLs
 func BuildTxForSqls(queries... string) TxCallback {
-	return TxCallbackFunc(func(tx *sql.Tx) {
+	return TxCallbackFunc(func(tx *sql.Tx) TxFinale {
 		for _, v := range queries {
 			if _, err := tx.Exec(v); err != nil {
 				panic(err)
 			}
 		}
+
+		return TxCommit
 	})
 }
 
@@ -442,8 +451,12 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 		}()
 		// :~)
 
-		txCallback.InTx(tx)
-		PanicIfError(tx.Commit())
+		switch txCallback.InTx(tx) {
+		case TxCommit:
+			PanicIfError(tx.Commit())
+		case TxRollback:
+			PanicIfError(tx.Rollback())
+		}
 	}
 
 	dbController.OperateOnDb(dbFunc)
@@ -451,10 +464,12 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 
 // Executes the complex statement in transaction
 func (dbController *DbController) InTxForIf(ifCallbacks ExecuteIfByTx) {
-	var txFunc TxCallbackFunc = func(tx *sql.Tx) {
+	var txFunc TxCallbackFunc = func(tx *sql.Tx) TxFinale {
 		if ifCallbacks.BootCallback(tx) {
 			ifCallbacks.IfTrue(tx)
 		}
+
+		return TxCommit
 	}
 
 	dbController.InTx(txFunc)

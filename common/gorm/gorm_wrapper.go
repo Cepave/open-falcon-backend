@@ -17,13 +17,13 @@ type GormDbExt struct {
 
 // Callback function for transaction
 type TxCallback interface {
-	InTx(*gorm.DB)
+	InTx(*gorm.DB) db.TxFinale
 }
 
 // the function object delegates the TxCallback interface
-type TxCallbackFunc func(*gorm.DB)
-func (callbackFunc TxCallbackFunc) InTx(gormDB *gorm.DB) {
-	callbackFunc(gormDB)
+type TxCallbackFunc func(*gorm.DB) db.TxFinale
+func (callbackFunc TxCallbackFunc) InTx(gormDB *gorm.DB) db.TxFinale {
+	return callbackFunc(gormDB)
 }
 
 // Converter of error
@@ -95,19 +95,24 @@ func (self *GormDbExt) InTx(txCallback TxCallback) {
 		}
 	}()
 
-	txCallback.InTx(txGormDb)
-
-	self.ConvertError.PanicIfDbError(txGormDb.Commit())
+	switch txCallback.InTx(txGormDb) {
+	case db.TxCommit:
+		self.ConvertError.PanicIfDbError(txGormDb.Commit())
+	case db.TxRollback:
+		self.ConvertError.PanicIfDbError(txGormDb.Rollback())
+	}
 }
 
 // Selects the query by callback and perform "SELECT FOUND_ROWS()" to gets the total number of matched rows
 func (self *GormDbExt) SelectWithFoundRows(txCallback TxCallback, paging *commonModel.Paging) {
-	var finalFunc TxCallbackFunc = func(txGormDb *gorm.DB) {
-		txCallback.InTx(txGormDb)
+	var finalFunc TxCallbackFunc = func(txGormDb *gorm.DB) db.TxFinale {
+		txFinale := txCallback.InTx(txGormDb)
 
 		var selectFoundRows = txGormDb.Raw("SELECT FOUND_ROWS()")
 		err := selectFoundRows.Row().Scan(&paging.TotalCount)
 		self.ConvertError.PanicIfError(err)
+
+		return txFinale
 	}
 
 	self.InTx(finalFunc)
