@@ -123,7 +123,7 @@ func GetAgentById(agentId int32) *nqmModel.Agent {
 func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmModel.Agent, *commonModel.Paging) {
 	var result []*nqmModel.Agent
 
-	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) {
+	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
 		/**
 		 * Retrieves the page of data
 		 */
@@ -184,6 +184,8 @@ func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmMo
 		// :~)
 
 		gormExt.ToDefaultGormDbExt(selectAgent.Find(&result)).PanicIfError()
+
+		return commonDb.TxCommit
 	}
 
 	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
@@ -251,7 +253,7 @@ type addAgentTx struct {
 	agent *nqmModel.AgentForAdding
 	err error
 }
-func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) {
+func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	agentTx.prepareHost(tx)
 
 	agentTx.agent.NameTagId = owlDb.BuildAndGetNameTagId(
@@ -260,10 +262,11 @@ func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) {
 
 	agentTx.addAgent(tx)
 	if agentTx.err != nil {
-		return
+		return commonDb.TxRollback
 	}
 
 	agentTx.prepareGroupTags(tx)
+	return commonDb.TxCommit
 }
 func (agentTx *addAgentTx) prepareHost(tx *sqlx.Tx) {
 	newAgent := agentTx.agent
@@ -338,7 +341,6 @@ func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 	 */
 	if commonDb.ToResultExt(addedNqmAgent).RowsAffected() == 0 {
 		agentTx.err = ErrDuplicatedNqmAgent{ newAgent.ConnectionId }
-		commonDb.PanicIfError(tx.Rollback())
 		return
 	}
 	// :~)
@@ -363,7 +365,7 @@ type updateAgentTx struct {
 	updatedAgent *nqmModel.AgentForAdding
 	oldAgent *nqmModel.AgentForAdding
 }
-func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) {
+func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	agentTx.loadNameTagId(tx)
 
 	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
@@ -390,6 +392,7 @@ func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) {
 	)
 
 	agentTx.updateGroupTags(tx)
+	return commonDb.TxCommit
 }
 func (agentTx *updateAgentTx) loadNameTagId(tx *sqlx.Tx) {
 	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent

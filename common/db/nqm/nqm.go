@@ -117,8 +117,9 @@ func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (resul
 	result = &commonModel.NqmAgent{}
 
 	dbCtrl.InTx(commonDb.TxCallbackFunc(
-		func (tx *sql.Tx) {
+		func (tx *sql.Tx) commonDb.TxFinale {
 			txRefreshAgent(tx, agentId, checkedTime, result)
+			return commonDb.TxCommit
 		},
 	))
 

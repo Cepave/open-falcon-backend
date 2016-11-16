@@ -11,6 +11,7 @@ import (
 var logger = log.NewDefaultLogger("INFO")
 
 var DbFacade = &f.DbFacade{}
+var DbConfig *commonDb.DbConfig = &commonDb.DbConfig{}
 
 func InitRdb(dbConfig *commonDb.DbConfig) {
 	logger.Infof("Open RDB: %s ...", dbConfig)
@@ -22,6 +23,8 @@ func InitRdb(dbConfig *commonDb.DbConfig) {
 
 	nqmDb.DbFacade = DbFacade
 	owlDb.DbFacade = DbFacade
+
+	*DbConfig = *dbConfig
 
 	logger.Info("[FINISH] Open RDB.")
 }

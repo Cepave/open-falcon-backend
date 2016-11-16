@@ -9,6 +9,7 @@ import (
 
 var logger = log.NewDefaultLogger("INFO")
 var router *gin.Engine = nil
+var GinConfig *commonGin.GinConfig = &commonGin.GinConfig{}
 
 func InitGin(config *commonGin.GinConfig) {
 	if router != nil {
@@ -22,6 +23,8 @@ func InitGin(config *commonGin.GinConfig) {
 	initApi()
 
 	go commonGin.StartServiceOrExit(router, config)
+
+	*GinConfig = *config
 }
 
 func initApi() {
@@ -41,4 +44,6 @@ func initApi() {
 	v1.GET("/owl/provinces", listProvinces)
 	v1.GET("/owl/cities", listCities)
 	v1.GET("/owl/provinces/:province_id/cities", listCitiesInProvince)
+
+	router.GET("/health", health)
 }

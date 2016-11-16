@@ -118,7 +118,7 @@ func GetTargetById(targetId int32) *nqmModel.Target {
 func ListTargets(query *nqmModel.TargetQuery, paging commonModel.Paging) ([]*nqmModel.Target, *commonModel.Paging) {
 	var result []*nqmModel.Target
 
-	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) {
+	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
 		/**
 		 * Retrieves the page of data
 		 */
@@ -173,6 +173,8 @@ func ListTargets(query *nqmModel.TargetQuery, paging commonModel.Paging) ([]*nqm
 		// :~)
 
 		gormExt.ToDefaultGormDbExt(dbListTargets.Find(&result)).PanicIfError()
+
+		return commonDb.TxCommit
 	}
 
 	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
@@ -245,17 +247,18 @@ type addTargetTx struct {
 	target *nqmModel.TargetForAdding
 	err error
 }
-func (targetTx *addTargetTx) InTx(tx *sqlx.Tx) {
+func (targetTx *addTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	targetTx.target.NameTagId = owlDb.BuildAndGetNameTagId(
 		tx, targetTx.target.NameTagValue,
 	)
 
 	targetTx.addTarget(tx)
 	if targetTx.err != nil {
-		return
+		return commonDb.TxRollback
 	}
 
 	targetTx.prepareGroupTags(tx)
+	return commonDb.TxCommit
 }
 func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 	txExt := sqlxExt.ToTxExt(tx)
@@ -297,11 +300,10 @@ func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 	)
 
 	/**
-	 * Rollback if the NQM target is existing(duplicated by connection id)
+	 * Rollback if the NQM target is existing(duplicated by host)
 	 */
 	if commonDb.ToResultExt(addedNqmTarget).RowsAffected() == 0 {
 		targetTx.err = ErrDuplicatedNqmTarget{ newTarget.Host }
-		commonDb.PanicIfError(tx.Rollback())
 		return
 	}
 	// :~)
@@ -349,7 +351,7 @@ type updateTargetTx struct {
 	updatedTarget *nqmModel.TargetForAdding
 	oldTarget *nqmModel.TargetForAdding
 }
-func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) {
+func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	agentTx.loadNameTagId(tx)
 
 	updatedTarget, oldTarget := agentTx.updatedTarget, agentTx.oldTarget
@@ -376,6 +378,7 @@ func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) {
 	)
 
 	agentTx.updateGroupTags(tx)
+	return commonDb.TxCommit
 }
 func (agentTx *updateTargetTx) loadNameTagId(tx *sqlx.Tx) {
 	updatedTarget, oldTarget := agentTx.updatedTarget, agentTx.oldTarget

@@ -1,5 +1,8 @@
+DELETE FROM nqm_agent
+WHERE ag_hostname LIKE '%.cdn.fastweb.com.cn';
+
 INSERT INTO `host`(hostname, ip, agent_version, plugin_version)
-SELECT nqm_agent.ag_name, INET_NTOA(CONV(HEX(ag_ip_address), 16, 10)), '', ''
+SELECT DISTINCT nqm_agent.ag_hostname, INET_NTOA(CONV(HEX(ag_ip_address), 16, 10)), '', ''
 FROM nqm_agent
 	LEFT OUTER JOIN
 	`host`

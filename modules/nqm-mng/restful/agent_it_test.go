@@ -5,9 +5,9 @@ import (
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/testing"
+	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
 
-	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/rdb"
+	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
 	"github.com/dghubble/sling"
 
@@ -34,6 +34,7 @@ func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
 func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 	jsonBody := &struct {
 		Name string `json:"name"`
+		Hostname string `json:"hostname"`
 		ConnectionId string `json:"connection_id"`
 		Status bool `json:status`
 		Comment string `json:"comment"`
@@ -44,6 +45,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		GroupTags []string `json:"group_tags"`
 	} {
 		Name: "new-agent-ccc",
+		Hostname: "new-host-cccc",
 		Status: true,
 		ConnectionId: "new-agent@blue.12.91.33",
 		Comment: "This is new agent by blue 12.91 ***",
@@ -85,7 +87,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		c.Assert(jsonResp.Get("name").MustString(), Equals, jsonBody.Name)
 		c.Assert(jsonResp.Get("connection_id").MustString(), Equals, jsonBody.ConnectionId)
 		c.Assert(jsonResp.Get("ip_address").MustString(), Equals, "0.0.0.0")
-		c.Assert(jsonResp.Get("hostname").MustString(), Equals, "0.0.0.0")
+		c.Assert(jsonResp.Get("hostname").MustString(), Equals, jsonBody.Hostname)
 		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
 		c.Assert(jsonResp.Get("status").MustBool(), Equals, jsonBody.Status)
 		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)

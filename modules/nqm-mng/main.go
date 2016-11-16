@@ -13,8 +13,8 @@ import (
 	commonOs "github.com/Cepave/open-falcon-backend/common/os"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/restful"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/restful"
 )
 
 var logger = log.NewDefaultLogger("INFO")

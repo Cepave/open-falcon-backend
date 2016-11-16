@@ -103,6 +103,7 @@ func (suite *TestRpcNqmAgentSuite) TestTask(c *C) {
 				ProvinceId: 4, ProvinceName: "北京",
 				CityId: model.UNDEFINED_CITY_ID, CityName: model.UNDEFINED_STRING,
 				NameTagId: model.UNDEFINED_NAME_TAG_ID, NameTag: model.UNDEFINED_STRING,
+				GroupTagIds: []int32{},
 			},
 		)
 		// :~)

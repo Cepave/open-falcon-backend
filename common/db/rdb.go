@@ -6,6 +6,13 @@ import (
 	"log"
 )
 
+type TxFinale byte
+
+const (
+	TxCommit TxFinale = 1
+	TxRollback TxFinale = 2
+)
+
 // Configuration of database
 type DbConfig struct {
 	Dsn string
@@ -63,23 +70,25 @@ func (callbackFunc RowCallbackFunc) ResultRow(row *sql.Row) {
 
 // The interface of transaction callback for sql package
 type TxCallback interface {
-	InTx(tx *sql.Tx)
+	InTx(tx *sql.Tx) TxFinale
 }
 
 // The function object delegates the TxCallback interface
-type TxCallbackFunc func(*sql.Tx)
-func (callbackFunc TxCallbackFunc) InTx(tx *sql.Tx) {
-	callbackFunc(tx)
+type TxCallbackFunc func(*sql.Tx) TxFinale
+func (callbackFunc TxCallbackFunc) InTx(tx *sql.Tx) TxFinale {
+	return callbackFunc(tx)
 }
 
 // BuildTxForSqls builds function for exeuction of multiple SQLs
 func BuildTxForSqls(queries... string) TxCallback {
-	return TxCallbackFunc(func(tx *sql.Tx) {
+	return TxCallbackFunc(func(tx *sql.Tx) TxFinale {
 		for _, v := range queries {
 			if _, err := tx.Exec(v); err != nil {
 				panic(err)
 			}
 		}
+
+		return TxCommit
 	})
 }
 
@@ -423,9 +432,7 @@ func (dbController *DbController) QueryForRow(
 func (dbController *DbController) InTx(txCallback TxCallback) {
 	var dbFunc DbCallbackFunc = func(db *sql.DB) {
 		tx, err := db.Begin()
-		if err != nil {
-			log.Panicf("Cannot create transaction: %v", err)
-		}
+		PanicIfError(err)
 
 		/**
 		 * Rollback the transaction when panic is rised
@@ -436,18 +443,19 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 				return
 			}
 
-			err := tx.Rollback()
-			if err != nil {
-				p = fmt.Errorf("Has Panic[%v]. But rollback has error: %v", p, err)
+			rollbackError := tx.Rollback()
+			if rollbackError != nil {
+				p = fmt.Errorf("Transaction has Error: %v. Rollback has error too: %v", p, rollbackError)
 			}
 			panic(p)
 		}()
 		// :~)
 
-		txCallback.InTx(tx)
-		err = tx.Commit()
-		if err != nil {
-			panic(err)
+		switch txCallback.InTx(tx) {
+		case TxCommit:
+			PanicIfError(tx.Commit())
+		case TxRollback:
+			PanicIfError(tx.Rollback())
 		}
 	}
 
@@ -456,10 +464,12 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 
 // Executes the complex statement in transaction
 func (dbController *DbController) InTxForIf(ifCallbacks ExecuteIfByTx) {
-	var txFunc TxCallbackFunc = func(tx *sql.Tx) {
+	var txFunc TxCallbackFunc = func(tx *sql.Tx) TxFinale {
 		if ifCallbacks.BootCallback(tx) {
 			ifCallbacks.IfTrue(tx)
 		}
+
+		return TxCommit
 	}
 
 	dbController.InTx(txFunc)
