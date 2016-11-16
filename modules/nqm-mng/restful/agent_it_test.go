@@ -5,9 +5,9 @@ import (
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/testing"
+	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
 
-	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/rdb"
+	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
 	"github.com/dghubble/sling"
 

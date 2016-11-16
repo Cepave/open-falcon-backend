@@ -1,7 +1,7 @@
 package testing
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	check "gopkg.in/check.v1"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 )

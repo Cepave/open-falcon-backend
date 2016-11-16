@@ -4,7 +4,7 @@ import (
 	"net/http"
 	gin "gopkg.in/gin-gonic/gin.v1"
 	json "gopkg.in/bitly/go-simplejson.v0"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-conf-mng/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/common/diag"
 )
 
