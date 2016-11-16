@@ -60,7 +60,7 @@ func GetProvincesByName(name string) []*owlModel.Province {
 	var q = DbFacade.GormDb.Model(&owlModel.Province{}).
 		Select(`
 		*
-	`).
+		`).
 		Where(`
 		pv_name LIKE ?
 		`,
@@ -77,10 +77,30 @@ func GetCitiesByName(name string) []*owlModel.City {
 	var q = DbFacade.GormDb.Model(&owlModel.City{}).
 		Select(`
 		*
-	`).
+		`).
 		Where(`
 		ct_name LIKE ?
 		`,
+		name+"%",
+	)
+
+	var results []*owlModel.City
+	gormExt.ToDefaultGormDbExt(q.Find(&results))
+
+	return results
+}
+
+func GetCitiesInProvinceByName(pvId int, name string) []*owlModel.City {
+	var q = DbFacade.GormDb.Model(&owlModel.City{}).
+		Select(`
+		*
+		`).
+		Where(`
+		ct_pv_id = ?
+		AND
+		ct_name LIKE ?
+		`,
+		pvId,
 		name+"%",
 	)
 

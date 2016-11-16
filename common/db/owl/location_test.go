@@ -91,6 +91,39 @@ func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
 	}
 }
 
+func (suite *TestLocationSuite) TestGetCitiesInProvinceByName(c *C) {
+	testCases := []struct {
+		inputPvId int
+		inputName string
+		expected  []*owlModel.City
+	}{
+		{24, "广", []*owlModel.City{{Id: 74, ProvinceId: 24, Name: "广元市", PostCode: "628000"}, {Id: 81, ProvinceId: 24, Name: "广安市", PostCode: "638000"}}},
+		{20, "茂名市", []*owlModel.City{{Id: 20, ProvinceId: 20, Name: "茂名市", PostCode: "525000"}}},
+		{20, "幹", []*owlModel.City{}},
+		{0, "", []*owlModel.City{}},
+		{2, "", []*owlModel.City{}},
+	}
+
+	for i, v := range testCases {
+		if i > 3 {
+			break
+		}
+		got := GetCitiesInProvinceByName(v.inputPvId, v.inputName)
+		if !reflect.DeepEqual(got, v.expected) {
+			c.Error("Error:", got, "!=", v.expected)
+		} else {
+			c.Log(got, "==", v.expected)
+		}
+	}
+
+	got := GetCitiesInProvinceByName(testCases[4].inputPvId, testCases[4].inputName)
+	if len(got) >= 11 {
+		c.Log("Case ct_pv_id=2, ct_name=\"\": PASS")
+	} else {
+		c.Error("Case ct_pv_id=2, ct_name=\"\": Checking len(got) >= 11...FAIL")
+	}
+}
+
 func (s *TestLocationSuite) SetUpSuite(c *C) {
 	DbFacade = dbTest.InitDbFacade(c)
 }
