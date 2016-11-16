@@ -6,16 +6,16 @@ import (
 
 // The query conditions of agent
 type AgentQuery struct {
-	Name string
+	Name         string
 	ConnectionId string
-	Hostname string
-	IpAddress string
+	Hostname     string
+	IpAddress    string
 
 	HasIspId bool
-	IspId int16
+	IspId    int16
 
 	HasStatusCondition bool
-	Status bool
+	Status             bool
 }
 
 // Gets the []byte used to perform like in MySql
@@ -34,8 +34,8 @@ type TargetQuery struct {
 	Host string
 
 	HasIspId bool
-	IspId int16
+	IspId    int16
 
 	HasStatusCondition bool
-	Status bool
+	Status             bool
 }

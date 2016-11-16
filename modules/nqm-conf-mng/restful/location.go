@@ -8,13 +8,19 @@ import (
 )
 
 func listProvinces(c *gin.Context) {
-	ProvinceName := c.Param("name")
-	provinces := commonOwlDb.GetProvincesByName(ProvinceName)
+	var provinceName string
+	if v, ok := c.GetQuery("name"); ok {
+		provinceName = v
+	}
+	provinces := commonOwlDb.GetProvincesByName(provinceName)
 	c.JSON(http.StatusOK, provinces)
 }
 
 func listCities(c *gin.Context) {
-	CityName := c.Param("name")
-	cities := commonOwlDb.GetCitiesByName(CityName)
+	var cityName string
+	if v, ok := c.GetQuery("name"); ok {
+		cityName = v
+	}
+	cities := commonOwlDb.GetCitiesByName(cityName)
 	c.JSON(http.StatusOK, cities)
 }

@@ -6,10 +6,6 @@ import (
 )
 
 func GetISPsByName(name string) []string {
-	if name == "" {
-		return []string{}
-	}
-
 	var result []*owlModel.Isp
 	var queryResults = DbFacade.GormDb.Model(&owlModel.Isp{}).
 		Select(`
@@ -26,14 +22,6 @@ func GetISPsByName(name string) []string {
 	for _, v := range result {
 		owlIspNames = append(owlIspNames, v.Name)
 	}
-	//DbFacade.SqlxDbCtrl.Get(
-	//	&owlCityNames,
-	//	`
-	//  SELECT ct_name
-	//  FROM owl_city
-	//  WHERE ct_name Like ?
-	//  `,
-	//	name+"%",
-	//)
+
 	return owlIspNames
 }

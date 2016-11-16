@@ -8,7 +8,10 @@ import (
 )
 
 func listISPs(c *gin.Context) {
-	IspName := c.Param("name")
-	ISPs := commonOwlDb.GetISPsByName(IspName)
+	var ispName string
+	if v, ok := c.GetQuery("name"); ok {
+		ispName = v
+	}
+	ISPs := commonOwlDb.GetISPsByName(ispName)
 	c.JSON(http.StatusOK, ISPs)
 }

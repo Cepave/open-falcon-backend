@@ -57,10 +57,6 @@ func CheckHierarchyForCity(provinceId int16, cityId int16) error {
 }
 
 func GetProvincesByName(name string) []string {
-	if name == "" {
-		return []string{}
-	}
-
 	var q = DbFacade.GormDb.Model(&owlModel.Province{}).
 		Select(`
 		pv_name
@@ -83,10 +79,6 @@ func GetProvincesByName(name string) []string {
 }
 
 func GetCitiesByName(name string) []string {
-	if name == "" {
-		return []string{}
-	}
-
 	var q = DbFacade.GormDb.Model(&owlModel.City{}).
 		Select(`
 		ct_name

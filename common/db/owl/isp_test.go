@@ -29,6 +29,13 @@ func (suite *TestIspSuite) TestGetISPByName(c *C) {
 			c.Log(got, "==", v.expected)
 		}
 	}
+
+	got := GetISPsByName("")
+	if len(got) >= 32 {
+		c.Log("Case for \"\": PASS")
+	} else {
+		c.Error("Case for \"\": Checking len(got) >= 32...FAIL")
+	}
 }
 
 func (s *TestIspSuite) SetUpSuite(c *C) {

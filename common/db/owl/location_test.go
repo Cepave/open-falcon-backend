@@ -53,6 +53,14 @@ func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
 			c.Log(got, "==", v.expected)
 		}
 	}
+
+	got := GetProvincesByName("")
+	if len(got) >= 37 {
+		c.Log("Case for \"\": PASS")
+	} else {
+		c.Error("Case for \"\": Checking len(got) >= 37...FAIL")
+	}
+
 }
 
 func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
@@ -72,6 +80,13 @@ func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
 		} else {
 			c.Log(got, "==", v.expected)
 		}
+	}
+
+	got := GetCitiesByName("")
+	if len(got) >= 295 {
+		c.Log("Case for \"\": PASS")
+	} else {
+		c.Error("Case for \"\": Checking len(got) >= 295...FAIL")
 	}
 }
 
