@@ -251,7 +251,7 @@ type addAgentTx struct {
 	agent *nqmModel.AgentForAdding
 	err error
 }
-func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) {
+func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) sqlxExt.TxFinale {
 	agentTx.prepareHost(tx)
 
 	agentTx.agent.NameTagId = owlDb.BuildAndGetNameTagId(
@@ -260,10 +260,11 @@ func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) {
 
 	agentTx.addAgent(tx)
 	if agentTx.err != nil {
-		return
+		return sqlxExt.TxRollback
 	}
 
 	agentTx.prepareGroupTags(tx)
+	return sqlxExt.TxCommit
 }
 func (agentTx *addAgentTx) prepareHost(tx *sqlx.Tx) {
 	newAgent := agentTx.agent
@@ -338,7 +339,6 @@ func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 	 */
 	if commonDb.ToResultExt(addedNqmAgent).RowsAffected() == 0 {
 		agentTx.err = ErrDuplicatedNqmAgent{ newAgent.ConnectionId }
-		commonDb.PanicIfError(tx.Rollback())
 		return
 	}
 	// :~)
@@ -363,7 +363,7 @@ type updateAgentTx struct {
 	updatedAgent *nqmModel.AgentForAdding
 	oldAgent *nqmModel.AgentForAdding
 }
-func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) {
+func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) sqlxExt.TxFinale {
 	agentTx.loadNameTagId(tx)
 
 	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
@@ -390,6 +390,7 @@ func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) {
 	)
 
 	agentTx.updateGroupTags(tx)
+	return sqlxExt.TxCommit
 }
 func (agentTx *updateAgentTx) loadNameTagId(tx *sqlx.Tx) {
 	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent

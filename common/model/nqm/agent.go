@@ -16,7 +16,7 @@ type AgentForAdding struct {
 	Comment string `json:"comment" conform:"trim"`
 	Status bool `json:"status"`
 
-	Hostname string `json:"-" conform:"trim" validate:"min=1"`
+	Hostname string `json:"hostname" conform:"trim" validate:"min=1"`
 	IpAddress net.IP `json:"-"`
 
 	IspId int16 `json:"isp_id" validate:"nonZeroId"`
@@ -31,7 +31,7 @@ type AgentForAdding struct {
 func NewAgentForAdding() *AgentForAdding {
 	return &AgentForAdding {
 		Status: true,
-		Hostname: "0.0.0.0",
+		Hostname: "",
 		IpAddress: net.ParseIP("0.0.0.0").To4(),
 		IspId: -1,
 		ProvinceId: -1,
