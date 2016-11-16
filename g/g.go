@@ -17,7 +17,6 @@ func init() {
 	//	}
 	Modules = map[string]bool{
 		"agent":      true,
-		"nqm-agent":  true,
 		"aggregator": true,
 		"alarm":      true,
 		"fe":         true,
@@ -25,6 +24,7 @@ func init() {
 		"hbs":        true,
 		"judge":      true,
 		"nodata":     true,
+		"nqm-mng":    true,
 		"query":      true,
 		"sender":     true,
 		"task":       true,
@@ -33,7 +33,6 @@ func init() {
 
 	BinOf = map[string]string{
 		"agent":      "./agent/bin/falcon-agent",
-		"nqm-agent":  "./agent/bin/falcon-nqm-agent",
 		"aggregator": "./aggregator/bin/falcon-aggregator",
 		"alarm":      "./alarm/bin/falcon-alarm",
 		"fe":         "./fe/bin/falcon-fe",
@@ -41,6 +40,7 @@ func init() {
 		"hbs":        "./hbs/bin/falcon-hbs",
 		"judge":      "./judge/bin/falcon-judge",
 		"nodata":     "./nodata/bin/falcon-nodata",
+		"nqm-mng":    "./nqm-mng/bin/falcon-nqm-mng",
 		"query":      "./query/bin/falcon-query",
 		"sender":     "./sender/bin/falcon-sender",
 		"task":       "./task/bin/falcon-task",
@@ -49,7 +49,6 @@ func init() {
 
 	cfgOf = map[string]string{
 		"agent":      "./agent/config/cfg.json",
-		"nqm-agent":  "./nqm-agent/config/cfg.json",
 		"aggregator": "./aggregator/config/cfg.json",
 		"alarm":      "./alarm/config/cfg.json",
 		"fe":         "./fe/config/cfg.json",
@@ -57,6 +56,7 @@ func init() {
 		"hbs":        "./hbs/config/cfg.json",
 		"judge":      "./judge/config/cfg.json",
 		"nodata":     "./nodata/config/cfg.json",
+		"nqm-mng":    "./nqm-mng/config/cfg.json",
 		"query":      "./query/config/cfg.json",
 		"sender":     "./sender/config/cfg.json",
 		"task":       "./task/config/cfg.json",
@@ -65,7 +65,6 @@ func init() {
 
 	ModuleApps = map[string]string{
 		"agent":      "falcon-agent",
-		"nqm-agent":  "falcon-nqm-agent",
 		"aggregator": "falcon-aggregator",
 		"alarm":      "falcon-alarm",
 		"graph":      "falcon-graph",
@@ -73,6 +72,7 @@ func init() {
 		"hbs":        "falcon-hbs",
 		"judge":      "falcon-judge",
 		"nodata":     "falcon-nodata",
+		"nqm-mng":    "falcon-nqm-mng",
 		"query":      "falcon-query",
 		"sender":     "falcon-sender",
 		"task":       "falcon-task",
@@ -81,7 +81,6 @@ func init() {
 
 	logpathOf = map[string]string{
 		"agent":      "./agent/logs/agent.log",
-		"nqm-agent":  "./nqm-agent/logs/nqm-agent.log",
 		"aggregator": "./aggregator/logs/aggregator.log",
 		"alarm":      "./alarm/logs/alarm.log",
 		"fe":         "./fe/logs/fe.log",
@@ -89,6 +88,7 @@ func init() {
 		"hbs":        "./hbs/logs/hbs.log",
 		"judge":      "./judge/logs/judge.log",
 		"nodata":     "./nodata/logs/nodata.log",
+		"nqm-mng":    "./nqm-mng/logs/nqm-mng.log",
 		"query":      "./query/logs/query.log",
 		"sender":     "./sender/logs/sender.log",
 		"task":       "./task/logs/task.log",
@@ -97,7 +97,6 @@ func init() {
 
 	PidOf = map[string]string{
 		"agent":      "<NOT SET>",
-		"nqm-agent":  "<NOT SET>",
 		"aggregator": "<NOT SET>",
 		"alarm":      "<NOT SET>",
 		"graph":      "<NOT SET>",
@@ -105,6 +104,7 @@ func init() {
 		"hbs":        "<NOT SET>",
 		"judge":      "<NOT SET>",
 		"nodata":     "<NOT SET>",
+		"nqm-mng":    "<NOT SET>",
 		"query":      "<NOT SET>",
 		"sender":     "<NOT SET>",
 		"task":       "<NOT SET>",
@@ -122,10 +122,10 @@ func init() {
 		"judge",
 		"transfer",
 		"nodata",
+		"nqm-mng",
 		"task",
 		"aggregator",
 		"agent",
-		"nqm-agent",
 	}
 }
 

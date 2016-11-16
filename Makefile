@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g cmd -name '*.go')
-CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent
+CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng
 TARGET = open-falcon
 
 VERSION := $(shell cat VERSION)

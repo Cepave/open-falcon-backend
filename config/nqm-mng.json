@@ -1,0 +1,15 @@
+{
+	"rdb" : {
+		"dsn" : "%%MYSQL%%/falcon_portal?loc=Local&parseTime=true",
+		"maxIdle" : 8
+	},
+	"restful" : {
+		"listen" : {
+			"host": "",
+			"port": 6040
+		}
+	},
+	"logLevel" : {
+		"ROOT" : "INFO"
+	}
+}
