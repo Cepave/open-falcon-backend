@@ -2,19 +2,27 @@ package sqlx
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/Cepave/open-falcon-backend/common/db"
 )
 
+type TxFinale byte
+
+const (
+	TxCommit TxFinale = 1
+	TxRollback TxFinale = 2
+)
+
 // The interface of transaction callback for sqlx package
 type TxCallback interface {
-	InTx(tx *sqlx.Tx)
+	InTx(tx *sqlx.Tx) TxFinale
 }
 
 // The function object delegates the TxCallback interface
-type TxCallbackFunc func(*sqlx.Tx)
-func (callbackFunc TxCallbackFunc) InTx(tx *sqlx.Tx) {
-	callbackFunc(tx)
+type TxCallbackFunc func(*sqlx.Tx) TxFinale
+func (callbackFunc TxCallbackFunc) InTx(tx *sqlx.Tx) TxFinale {
+	return callbackFunc(tx)
 }
 
 type DbController struct {
@@ -95,9 +103,26 @@ func NewDbController(newSqlxDb *sqlx.DB) *DbController {
 func (ctrl *DbController) InTx(txCallback TxCallback) {
 	tx := ctrl.sqlxDb.MustBegin()
 
-	txCallback.InTx(tx)
+	defer func() {
+		p := recover()
+		if p == nil {
+			return
+		}
 
-	tx.Commit()
+		rollbackError := tx.Rollback()
+		if rollbackError != nil {
+			p = fmt.Errorf("Transaction has error: %v. Rollback has error too: %v", rollbackError)
+		}
+
+		panic(p)
+	}()
+
+	switch txCallback.InTx(tx) {
+	case TxCommit:
+		db.PanicIfError(tx.Commit())
+	case TxRollback:
+		db.PanicIfError(tx.Rollback())
+	}
 }
 
 func (ctrl *DbController) BindNamed(query string, arg interface{}) (string, []interface{}) {

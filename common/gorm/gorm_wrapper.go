@@ -2,6 +2,7 @@ package gorm
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/Cepave/open-falcon-backend/common/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
@@ -85,7 +86,11 @@ func (self *GormDbExt) InTx(txCallback TxCallback) {
 	defer func() {
 		p := recover()
 		if p != nil {
-			txGormDb.Rollback()
+			txGormDb = txGormDb.Rollback()
+			if txGormDb.Error != nil{
+				p = fmt.Errorf("Transaction has error: %v. Rollback has error too: %v", p, txGormDb.Error)
+			}
+
 			panic(p)
 		}
 	}()

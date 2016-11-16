@@ -423,9 +423,7 @@ func (dbController *DbController) QueryForRow(
 func (dbController *DbController) InTx(txCallback TxCallback) {
 	var dbFunc DbCallbackFunc = func(db *sql.DB) {
 		tx, err := db.Begin()
-		if err != nil {
-			log.Panicf("Cannot create transaction: %v", err)
-		}
+		PanicIfError(err)
 
 		/**
 		 * Rollback the transaction when panic is rised
@@ -436,19 +434,16 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 				return
 			}
 
-			err := tx.Rollback()
-			if err != nil {
-				p = fmt.Errorf("Has Panic[%v]. But rollback has error: %v", p, err)
+			rollbackError := tx.Rollback()
+			if rollbackError != nil {
+				p = fmt.Errorf("Transaction has Error: %v. Rollback has error too: %v", p, rollbackError)
 			}
 			panic(p)
 		}()
 		// :~)
 
 		txCallback.InTx(tx)
-		err = tx.Commit()
-		if err != nil {
-			panic(err)
-		}
+		PanicIfError(tx.Commit())
 	}
 
 	dbController.OperateOnDb(dbFunc)
