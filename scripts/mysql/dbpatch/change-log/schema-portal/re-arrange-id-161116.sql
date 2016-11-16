@@ -5,6 +5,9 @@
  * 因為 HBS 的版本為更新，造成 ID 持續跳號的問題
  */
 
+DELETE FROM nqm_agent
+WHERE ag_hostname LIKE '%.cdn.fastweb.com.cn';
+
 /**
  * 移除上一次重整的 ID 留存欄位
  */
