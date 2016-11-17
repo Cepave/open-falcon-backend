@@ -8,5 +8,10 @@
         id: "laurence-2",
         filename: "laurence-2.sql",
         comment: "[OWL-1205][scripts] add boss.idcs and boss.ips tables"
+    },
+    {
+        id: "laurence-3",
+        filename: "laurence-3.sql",
+        comment: "[OWL-1242][scripts] add two columns in  boss.hosts tables"
     }
 ]
