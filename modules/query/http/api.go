@@ -1139,7 +1139,6 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 	sqlcmd += " WHERE hostname IN ('" + hostnameStr + "')"
 	sqlcmd += " AND exist = 1"
 	sqlcmd += " ORDER BY hostname ASC"
-
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
@@ -1168,15 +1167,17 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 		}
 	}
 	for key, host := range hosts {
-		hostname := host["name"]
+		hostname := host["hostname"]
+		host["name"] = hostname
 		if val, ok := hostsMap[hostname]; ok {
 			host["idc"] = val["idc"]
 			host["isp"] = val["isp"]
 			host["province"] = val["province"]
 			host["provinceCode"] = val["provinceCode"]
 			host["city"] = val["city"]
-			hosts[key] = host
 		}
+		delete(host, "hostname")
+		hosts[key] = host
 	}
 	return hosts, hostnames
 }
