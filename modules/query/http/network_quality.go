@@ -232,7 +232,7 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	var NQMNodes []*Nqm_node
-	_, err = o.Raw("SELECT nid, pname, cname, iname FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err = o.Raw("SELECT nid, pname, cname, iname FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
 		setError(err.Error(), result)
 	} else {
@@ -248,7 +248,7 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 			nodeNames = append(nodeNames, nodeName)
 		}
 	}
-	sqlcmd := "SELECT nid, ip, note FROM gz_nqm.nqm_dev WHERE nid IN ('"
+	sqlcmd := "SELECT nid, ip, note FROM `gz_nqm`.`nqm_dev` WHERE nid IN ('"
 	sqlcmd += strings.Join(nodeNames, "','") + "')"
 	var rows []orm.Params
 	_, err = o.Raw(sqlcmd).Values(&rows)
