@@ -526,8 +526,28 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 	return IPs
 }
 
-func mergeIPsOfHost(groups map[string][]map[string]string, groupNames []string, hostnames []string, result map[string]interface{}) map[string][]map[string]string {
+func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (map[string][]map[string]string, []string, []string) {
 	platforms := map[string][]map[string]string{}
+	platformNames := []string{}
+	hostnames := []string{}
+	platformName := ""
+	for _, host := range data {
+		hostname := host["hostname"]
+		platformName = host["platform"]
+		hostnames = appendUniqueString(hostnames, hostname)
+		platformNames = appendUniqueString(platformNames, platformName)
+		if platform, ok := platforms[platformName]; ok {
+			platform = append(platform, host)
+			platforms[platformName] = platform
+		} else {
+			platforms[platformName] = []map[string]string{
+				host,
+			}
+		}
+	}
+	sort.Strings(hostnames)
+	sort.Strings(platformNames)
+
 	hostsMap := map[string]string{}
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -545,11 +565,11 @@ func mergeIPsOfHost(groups map[string][]map[string]string, groupNames []string, 
 			hostsMap[hostname] = activate
 		}
 	}
-	for _, groupName := range groupNames {
+	for _, groupName := range platformNames {
 		platform := []map[string]string{}
 		itemsMap := map[string][]map[string]string{}
 		itemNames := []string{}
-		group := groups[groupName]
+		group := platforms[groupName]
 		for _, agent := range group {
 			hostname := agent["hostname"]
 			itemNames = appendUniqueString(itemNames, hostname)
@@ -579,7 +599,7 @@ func mergeIPsOfHost(groups map[string][]map[string]string, groupNames []string, 
 		}
 		platforms[groupName] = platform
 	}
-	return platforms
+	return platforms, platformNames, hostnames
 }
 
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
