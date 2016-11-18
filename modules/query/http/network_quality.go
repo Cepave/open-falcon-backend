@@ -34,7 +34,7 @@ func getNQMNodes(rw http.ResponseWriter, req *http.Request) {
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	var NQMNodes []*Nqm_node
-	_, err := o.Raw("SELECT nid, pname, cname, status, note FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err := o.Raw("SELECT nid, pname, cname, status, note FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
 		setError(err.Error(), result)
 	} else {
