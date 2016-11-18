@@ -5,8 +5,8 @@
         comment: "The initialization of existing database schema"
     },
     {
-        id: "masato-1",
-        filename: "masato-1.sql",
+        id: "masato-2",
+        filename: "masato-2.sql",
         comment: "add placard & readpath table"
     }
 ]
