@@ -1215,22 +1215,15 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	result["error"] = errors
 	count := 0
 	data := queryIPsData(result)
+	platforms, _, hostnames := mergeIPsOfHost(data, result)
 	hosts := []map[string]string{}
-	hostnames := []string{}
-	hostname := ""
-	for _, item := range data {
-		hostname = item["hostname"]
-		hostnames = append(hostnames, hostname)
-		host := map[string]string{
-			"name":     hostname,
-			"platform": item["platform"],
-			"ip":       item["ip"],
+	for _, platform := range platforms {
+		for _, host := range platform {
+			hosts = append(hosts, host)
 		}
-		hosts = append(hosts, host)
 	}
-	sort.Strings(hostnames)
 	hosts, hostnames = getHostsLocations(hosts, hostnames, result)
-	count = len(hostnames)
+	count = len(hosts)
 	completeApolloFiltersData(hosts, result)
 	nodes["count"] = count
 	nodes["result"] = result
