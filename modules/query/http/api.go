@@ -863,28 +863,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	data := queryIPsData(result)
-	platforms := map[string][]map[string]string{}
-	platformNames := []string{}
-	hostnames := []string{}
-	hostname := ""
-	platformName := ""
-	for _, host := range data {
-		hostname = host["hostname"]
-		platformName = host["platform"]
-		hostnames = appendUniqueString(hostnames, hostname)
-		platformNames = appendUniqueString(platformNames, platformName)
-		if platform, ok := platforms[platformName]; ok {
-			platform = append(platform, host)
-			platforms[platformName] = platform
-		} else {
-			platforms[platformName] = []map[string]string{
-				host,
-			}
-		}
-	}
-	sort.Strings(hostnames)
-	sort.Strings(platformNames)
-	platforms = mergeIPsOfHost(platforms, platformNames, hostnames, result)
+	platforms, platformNames, hostnames := mergeIPsOfHost(data, result)
 	hostnamesExisted := []string{}
 	var versions = make(map[string]map[string]string)
 	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
