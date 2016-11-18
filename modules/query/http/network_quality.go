@@ -175,7 +175,7 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	nids := []string{}
 	pidMap := map[string]interface{}{}
 	var NQMNodes []*Nqm_node
-	_, err = o.Raw("SELECT nid, pid, status FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err = o.Raw("SELECT nid, pid, status FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
 		setError(err.Error(), result)
 	} else {
