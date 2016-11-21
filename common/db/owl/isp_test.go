@@ -17,8 +17,8 @@ func (suite *TestIspSuite) TestGetISPByName(c *C) {
 		input    string
 		expected []*owlModel.Isp
 	}{
-		{"北", []*owlModel.Isp{{Id: 1, Name: "北京三信时代"}, {Id: 13, Name: "北京宽捷"}}},
-		{"方", []*owlModel.Isp{{Id: 8, Name: "方正宽带"}}},
+		{"北", []*owlModel.Isp{{Id: 1, Name: "北京三信时代", Acronym: "BJCIII"}, {Id: 13, Name: "北京宽捷", Acronym: "KJNET"}}},
+		{"方", []*owlModel.Isp{{Id: 8, Name: "方正宽带", Acronym: "FBN"}}},
 		{"幹", []*owlModel.Isp{}},
 	}
 

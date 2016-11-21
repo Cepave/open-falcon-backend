@@ -67,11 +67,11 @@ func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
 func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
 	testCases := []struct {
 		input    string
-		expected []*owlModel.City
+		expected []*city1view
 	}{
-		{"北", []*owlModel.City{{Id: 1, ProvinceId: 4, Name: "北京市", PostCode: "100000"}, {Id: 116, ProvinceId: 21, Name: "北海市", PostCode: "536000"}}},
-		{"海口市", []*owlModel.City{{Id: 71, ProvinceId: 23, Name: "海口市", PostCode: "570000"}}},
-		{"幹", []*owlModel.City{}},
+		{"北", []*city1view{&city1view{Id: 1, Name: "北京市", PostCode: "100000", Province: &owlModel.Province{Id: 4, Name: "北京"}}, &city1view{Id: 116, Name: "北海市", PostCode: "536000", Province: &owlModel.Province{Id: 21, Name: "广西"}}}},
+		{"海口市", []*city1view{&city1view{Id: 71, Name: "海口市", PostCode: "570000", Province: &owlModel.Province{Id: 23, Name: "海南"}}}},
+		{"幹", []*city1view{}},
 	}
 
 	for _, v := range testCases {
@@ -95,13 +95,13 @@ func (suite *TestLocationSuite) TestGetCitiesInProvinceByName(c *C) {
 	testCases := []struct {
 		inputPvId int
 		inputName string
-		expected  []*owlModel.City
+		expected  []*owlModel.City2
 	}{
-		{24, "广", []*owlModel.City{{Id: 74, ProvinceId: 24, Name: "广元市", PostCode: "628000"}, {Id: 81, ProvinceId: 24, Name: "广安市", PostCode: "638000"}}},
-		{20, "茂名市", []*owlModel.City{{Id: 20, ProvinceId: 20, Name: "茂名市", PostCode: "525000"}}},
-		{20, "幹", []*owlModel.City{}},
-		{0, "", []*owlModel.City{}},
-		{2, "", []*owlModel.City{}},
+		{24, "广", []*owlModel.City2{{Id: 74, Name: "广元市", PostCode: "628000"}, {Id: 81, Name: "广安市", PostCode: "638000"}}},
+		{20, "茂名市", []*owlModel.City2{{Id: 20, Name: "茂名市", PostCode: "525000"}}},
+		{20, "幹", []*owlModel.City2{}},
+		{0, "", []*owlModel.City2{}},
+		{2, "", []*owlModel.City2{}},
 	}
 
 	for i, v := range testCases {

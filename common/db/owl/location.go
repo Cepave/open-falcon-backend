@@ -22,6 +22,13 @@ type cityInfo struct {
 	CityName     string `db:"ct_name"`
 }
 
+type city1view struct {
+	Id       int16              `json:"id"`
+	Name     string             `json:"name"`
+	PostCode string             `json:"post_code"`
+	Province *owlModel.Province `json:"province"`
+}
+
 // Checks if the hierarchy for province and city are in the same administrative region
 func CheckHierarchyForCity(provinceId int16, cityId int16) error {
 	if cityId == -1 {
@@ -73,27 +80,43 @@ func GetProvincesByName(name string) []*owlModel.Province {
 	return results
 }
 
-func GetCitiesByName(name string) []*owlModel.City {
-	var q = DbFacade.GormDb.Model(&owlModel.City{}).
+func GetCitiesByName(name string) []*city1view {
+	var q = DbFacade.GormDb.Model(&owlModel.City1{}).
 		Select(`
-		*
+		ct_id, ct_name, ct_post_code, pv_id, pv_name
 		`).
-		Where(`
-		ct_name LIKE ?
+		Joins(`
+		INNER JOIN
+		owl_province
+		ON ct_pv_id = pv_id
+		AND ct_name LIKE ?
 		`,
 		name+"%",
 	)
 
-	var results []*owlModel.City
+	var results []*owlModel.City1
 	gormExt.ToDefaultGormDbExt(q.Find(&results))
 
-	return results
+	var views = []*city1view{}
+	for _, r := range results {
+		v := &city1view{
+			Id:       r.Id,
+			Name:     r.Name,
+			PostCode: r.PostCode,
+			Province: &owlModel.Province{
+				Id:   r.ProvinceId,
+				Name: r.ProvinceName,
+			},
+		}
+		views = append(views, v)
+	}
+	return views
 }
 
-func GetCitiesInProvinceByName(pvId int, name string) []*owlModel.City {
-	var q = DbFacade.GormDb.Model(&owlModel.City{}).
+func GetCitiesInProvinceByName(pvId int, name string) []*owlModel.City2 {
+	var q = DbFacade.GormDb.Model(&owlModel.City2{}).
 		Select(`
-		*
+		ct_id, ct_name, ct_post_code
 		`).
 		Where(`
 		ct_pv_id = ?
@@ -104,7 +127,7 @@ func GetCitiesInProvinceByName(pvId int, name string) []*owlModel.City {
 		name+"%",
 	)
 
-	var results []*owlModel.City
+	var results []*owlModel.City2
 	gormExt.ToDefaultGormDbExt(q.Find(&results))
 
 	return results
