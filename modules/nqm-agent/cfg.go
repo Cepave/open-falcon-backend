@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"strings"
@@ -41,13 +43,19 @@ var (
 	metadata   = Metadata{}
 )
 
-func publicIP() (string, error) {
+func digPublicIP() (net.IP, error) {
 	output, err := exec.Command("dig", "+short", "myip.opendns.com", "@resolver1.opendns.com").Output()
 	if err != nil {
-		return "UNKNOWN", err
+		return nil, err
 	}
+
 	ipStr := strings.TrimSpace(string(output))
-	return ipStr, nil
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return nil, fmt.Errorf("Cannot parse IP Address from dig's output: [%s]", output)
+	}
+
+	return ip, nil
 }
 
 func Config() JSONConfig {
@@ -87,20 +95,20 @@ func hostname() string {
 }
 
 func ip() string {
-	ip := Config().IPAddress
-	if ip != "" {
+	ip := net.ParseIP(Config().IPAddress)
+	if ip != nil {
 		log.Println("IP set in config: [", ip, "]")
-		return ip
+		return ip.String()
 	}
+	log.Errorln("Invalid IP in config")
 
-	ip, err := publicIP()
+	ip, err := digPublicIP()
 	if err != nil {
-		log.Fatalln("IP not set in config, getting public IP...failed:", err)
-
-	} else {
-		log.Println("IP not set in config, getting public IP...succeeded: [", ip, "]")
+		log.Fatalln("Getting public IP...failed:", err)
 	}
-	return ip
+	log.Println("Getting public IP...succeeded: [", ip, "]")
+
+	return ip.String()
 }
 
 func connectionID() string {
