@@ -34,7 +34,7 @@ func getNQMNodes(rw http.ResponseWriter, req *http.Request) {
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	var NQMNodes []*Nqm_node
-	_, err := o.Raw("SELECT nid, pname, cname, status, note FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err := o.Raw("SELECT nid, pname, cname, status, note FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
 		setError(err.Error(), result)
 	} else {
@@ -77,8 +77,8 @@ func getNearestTimestamp(tableName string, bound int64, result map[string]interf
 	timestamp := int64(0)
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
-	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName
-	sqlcmd += " WHERE mtime <= ? ORDER BY mtime DESC LIMIT 1"
+	sqlcmd := "SELECT mtime FROM `gz_nqm`.`" + tableName
+	sqlcmd += "` WHERE mtime <= ? ORDER BY mtime DESC LIMIT 1"
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd, bound).Values(&rows)
 	if err != nil {
@@ -175,7 +175,7 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	nids := []string{}
 	pidMap := map[string]interface{}{}
 	var NQMNodes []*Nqm_node
-	_, err = o.Raw("SELECT nid, pid, status FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err = o.Raw("SELECT nid, pid, status FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
 		setError(err.Error(), result)
 	} else {
@@ -232,7 +232,7 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	var NQMNodes []*Nqm_node
-	_, err = o.Raw("SELECT nid, pname, cname, iname FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err = o.Raw("SELECT nid, pname, cname, iname FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
 		setError(err.Error(), result)
 	} else {
@@ -248,7 +248,7 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 			nodeNames = append(nodeNames, nodeName)
 		}
 	}
-	sqlcmd := "SELECT nid, ip, note FROM gz_nqm.nqm_dev WHERE nid IN ('"
+	sqlcmd := "SELECT nid, ip, note FROM `gz_nqm`.`nqm_dev` WHERE nid IN ('"
 	sqlcmd += strings.Join(nodeNames, "','") + "')"
 	var rows []orm.Params
 	_, err = o.Raw(sqlcmd).Values(&rows)
