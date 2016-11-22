@@ -944,15 +944,28 @@ func getMetricsByMetricType(metricType string) []string {
 }
 
 func convertDurationToPoint(duration string, result map[string]interface{}) (timestampFrom int64, timestampTo int64) {
+	timestampFrom = int64(0)
+	timestampTo = int64(0)
 	if strings.Index(duration, ",") > -1 {
-		var e error
-		timestampFrom, e = strconv.ParseInt(strings.Split(duration, ",")[0], 10, 64)
-		if e != nil {
-			setError(e.Error(), result)
+		from := strings.Split(duration, ",")[0]
+		to := strings.Split(duration, ",")[1]
+		timestampFrom, err := strconv.ParseInt(from, 10, 64)
+		if err != nil {
+			loc, err := time.LoadLocation("Asia/Taipei")
+			if err != nil {
+				loc = time.Local
+			}
+			timeFormat := "2006-01-02 15:04:05"
+			date, err := time.ParseInLocation(timeFormat, from, loc)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				timestampFrom = date.Unix()
+			}
 		}
-		timestampTo, e = strconv.ParseInt(strings.Split(duration, ",")[1], 10, 64)
-		if e != nil {
-			setError(e.Error(), result)
+		timestampTo, err := strconv.ParseInt(to, 10, 64)
+		if err != nil {
+			timestampTo = time.Now().UTC().Unix()
 		}
 		if timestampFrom >= timestampTo {
 			setError("Value of timestampFrom should be less than value of timestampTo.", result)
@@ -960,6 +973,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		if timestampTo > time.Now().Unix() {
 			setError("Value of timestampTo should be equal to or less than value of now.", result)
 		}
+		return timestampFrom, timestampTo
 	} else if strings.Index(duration, "d") > -1 || strings.Index(duration, "min") > -1 {
 		unit := ""
 		seconds := int64(0)
@@ -979,7 +993,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		timestampFrom = now - offset
 		timestampTo = now + int64(5 * 60)
 	}
-	return
+	return timestampFrom, timestampTo
 }
 
 func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
