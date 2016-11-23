@@ -29,6 +29,8 @@ CREATE TABLE `hosts` (
   `province` varchar(10) CHARACTER SET utf8 DEFAULT NULL,
   `city` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
   `status` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
+  `bonding` int(3) UNSIGNED DEFAULT NULL,
+  `speed` int(8) UNSIGNED DEFAULT NULL,
   `remark` varchar(256) CHARACTER SET utf8 DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)

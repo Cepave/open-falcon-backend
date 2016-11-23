@@ -490,14 +490,27 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	}
 }
 
-func queryHostsData(result map[string]interface{}) []Hosts {
-	var hosts []Hosts
+func queryHostsData(result map[string]interface{}) []map[string]string {
+	hosts := []map[string]string{}
+	var rows []orm.Params
 	o := orm.NewOrm()
 	o.Using("boss")
-	sql := "SELECT hostname, activate, platform, idc, ip, isp, province, city FROM boss.hosts WHERE exist = 1 ORDER BY hostname ASC"
-	_, err := o.Raw(sql).QueryRows(&hosts)
+	sql := "SELECT hostname, activate, platforms, ip FROM boss.hosts"
+	sql += " WHERE exist = 1 AND platforms != '' ORDER BY hostname ASC"
+	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
+		return hosts
+	} else if num > 0 {
+		for _, row := range rows {
+			host := map[string]string{
+				"name":      row["hostname"].(string),
+				"platforms": row["platforms"].(string),
+				"ip":        row["ip"].(string),
+				"activate":  row["activate"].(string),
+			}
+			hosts = append(hosts, host)
+		}
 	}
 	return hosts
 }
@@ -524,6 +537,82 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 		}
 	}
 	return IPs
+}
+
+func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (map[string][]map[string]string, []string, []string) {
+	platforms := map[string][]map[string]string{}
+	platformNames := []string{}
+	hostnames := []string{}
+	platformName := ""
+	for _, host := range data {
+		hostname := host["hostname"]
+		platformName = host["platform"]
+		hostnames = appendUniqueString(hostnames, hostname)
+		platformNames = appendUniqueString(platformNames, platformName)
+		if platform, ok := platforms[platformName]; ok {
+			platform = append(platform, host)
+			platforms[platformName] = platform
+		} else {
+			platforms[platformName] = []map[string]string{
+				host,
+			}
+		}
+	}
+	sort.Strings(hostnames)
+	sort.Strings(platformNames)
+
+	hostsMap := map[string]string{}
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT hostname, activate FROM boss.hosts"
+	sql += " WHERE hostname IN ('" + strings.Join(hostnames, "','")
+	sql += "') AND exist = 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			activate := row["activate"].(string)
+			hostsMap[hostname] = activate
+		}
+	}
+	for _, groupName := range platformNames {
+		platform := []map[string]string{}
+		itemsMap := map[string][]map[string]string{}
+		itemNames := []string{}
+		group := platforms[groupName]
+		for _, agent := range group {
+			hostname := agent["hostname"]
+			itemNames = appendUniqueString(itemNames, hostname)
+			if item, ok := itemsMap[hostname]; ok {
+				item = append(item, agent)
+			} else {
+				itemsMap[hostname] = []map[string]string{
+					agent,
+				}
+			}
+		}
+		for _, itemName := range itemNames {
+			slice := itemsMap[itemName]
+			index := 0
+			for key, item := range slice {
+				hostname := item["hostname"]
+				ip := item["ip"]
+				if ip == getIPFromHostname(hostname, result) {
+					index = key
+				}
+			}
+			host := slice[index]
+			if val, ok := hostsMap[itemName]; ok {
+				host["activate"] = val
+			}
+			platform = append(platform, host)
+		}
+		platforms[groupName] = platform
+	}
+	return platforms, platformNames, hostnames
 }
 
 func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
@@ -787,27 +876,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	var result = make(map[string]interface{})
 	result["error"] = errors
 	data := queryIPsData(result)
-	platforms := map[string][]map[string]string{}
-	platformNames := []string{}
-	hostnames := []string{}
-	hostname := ""
-	platformName := ""
-	for _, host := range data {
-		hostname = host["hostname"]
-		platformName = host["platform"]
-		hostnames = appendUniqueString(hostnames, hostname)
-		platformNames = appendUniqueString(platformNames, platformName)
-		if platform, ok := platforms[platformName]; ok {
-			platform = append(platform, host)
-			platforms[platformName] = platform
-		} else {
-			platforms[platformName] = []map[string]string{
-				host,
-			}
-		}
-	}
-	sort.Strings(hostnames)
-	sort.Strings(platformNames)
+	platforms, platformNames, hostnames := mergeIPsOfHost(data, result)
 	hostnamesExisted := []string{}
 	var versions = make(map[string]map[string]string)
 	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
@@ -875,15 +944,28 @@ func getMetricsByMetricType(metricType string) []string {
 }
 
 func convertDurationToPoint(duration string, result map[string]interface{}) (timestampFrom int64, timestampTo int64) {
+	timestampFrom = int64(0)
+	timestampTo = int64(0)
 	if strings.Index(duration, ",") > -1 {
-		var e error
-		timestampFrom, e = strconv.ParseInt(strings.Split(duration, ",")[0], 10, 64)
-		if e != nil {
-			setError(e.Error(), result)
+		from := strings.Split(duration, ",")[0]
+		to := strings.Split(duration, ",")[1]
+		timestampFrom, err := strconv.ParseInt(from, 10, 64)
+		if err != nil {
+			loc, err := time.LoadLocation("Asia/Taipei")
+			if err != nil {
+				loc = time.Local
+			}
+			timeFormat := "2006-01-02 15:04:05"
+			date, err := time.ParseInLocation(timeFormat, from, loc)
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				timestampFrom = date.Unix()
+			}
 		}
-		timestampTo, e = strconv.ParseInt(strings.Split(duration, ",")[1], 10, 64)
-		if e != nil {
-			setError(e.Error(), result)
+		timestampTo, err := strconv.ParseInt(to, 10, 64)
+		if err != nil {
+			timestampTo = time.Now().UTC().Unix()
 		}
 		if timestampFrom >= timestampTo {
 			setError("Value of timestampFrom should be less than value of timestampTo.", result)
@@ -891,6 +973,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		if timestampTo > time.Now().Unix() {
 			setError("Value of timestampTo should be equal to or less than value of now.", result)
 		}
+		return timestampFrom, timestampTo
 	} else if strings.Index(duration, "d") > -1 || strings.Index(duration, "min") > -1 {
 		unit := ""
 		seconds := int64(0)
@@ -910,7 +993,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		timestampFrom = now - offset
 		timestampTo = now + int64(5 * 60)
 	}
-	return
+	return timestampFrom, timestampTo
 }
 
 func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
@@ -1070,7 +1153,6 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 	sqlcmd += " WHERE hostname IN ('" + hostnameStr + "')"
 	sqlcmd += " AND exist = 1"
 	sqlcmd += " ORDER BY hostname ASC"
-
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
@@ -1099,15 +1181,17 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 		}
 	}
 	for key, host := range hosts {
-		hostname := host["name"]
+		hostname := host["hostname"]
+		host["name"] = hostname
 		if val, ok := hostsMap[hostname]; ok {
 			host["idc"] = val["idc"]
 			host["isp"] = val["isp"]
 			host["province"] = val["province"]
 			host["provinceCode"] = val["provinceCode"]
 			host["city"] = val["city"]
-			hosts[key] = host
 		}
+		delete(host, "hostname")
+		hosts[key] = host
 	}
 	return hosts, hostnames
 }
@@ -1125,62 +1209,10 @@ func completeApolloFiltersData(hostsInput []map[string]string, result map[string
 		} else {
 			keywords[platform] = []string{id}
 		}
-		isp := host["isp"]
-		if len (isp) > 0 {
-			tags = appendUniqueString(tags, isp)
-			if _, ok := keywords[isp]; ok {
-				keywords[isp] = appendUniqueString(keywords[isp], id)
-			} else {
-				keywords[isp] = []string{id}
-			}
-		}
-		ip := host["ip"]
-		if len (ip) > 0 {
-			tags = appendUniqueString(tags, ip)
-			if _, ok := keywords[ip]; ok {
-				keywords[ip] = appendUniqueString(keywords[ip], id)
-			} else {
-				keywords[ip] = []string{id}
-			}
-		}
-		idc := host["idc"]
-		if len (idc) > 0 {
-			tags = appendUniqueString(tags, idc)
-			if _, ok := keywords[idc]; ok {
-				keywords[idc] = appendUniqueString(keywords[idc], id)
-			} else {
-				keywords[idc] = []string{id}
-			}
-		}
-		province := host["province"]
-		if len (province) > 0 {
-			tags = appendUniqueString(tags, province)
-			if _, ok := keywords[province]; ok {
-				keywords[province] = appendUniqueString(keywords[province], id)
-			} else {
-				keywords[province] = []string{id}
-			}
-		}
-		provinceCode := host["provinceCode"]
-		if len (provinceCode) > 0 {
-			tags = appendUniqueString(tags, provinceCode)
-			if _, ok := keywords[provinceCode]; ok {
-				keywords[provinceCode] = appendUniqueString(keywords[provinceCode], id)
-			} else {
-				keywords[provinceCode] = []string{id}
-			}
-		}
-		hostname := host["name"]
-		if len (hostname) > 0 {
-			tags = appendUniqueString(tags, hostname)
-			if _, ok := keywords[hostname]; ok {
-				keywords[hostname] = appendUniqueString(keywords[hostname], id)
-			} else {
-				keywords[hostname] = []string{id}
-			}
-		}
 		host["tag"] = strings.Join(tags, ",")
-		delete(host, "id")
+		delete(host, "activate")
+		delete(host, "city")
+		delete(host, "platform")
 		delete(host, "isp")
 		delete(host, "province")
 		delete(host, "provinceCode")
@@ -1197,22 +1229,15 @@ func getApolloFilters(rw http.ResponseWriter, req *http.Request) {
 	result["error"] = errors
 	count := 0
 	data := queryIPsData(result)
+	platforms, _, hostnames := mergeIPsOfHost(data, result)
 	hosts := []map[string]string{}
-	hostnames := []string{}
-	hostname := ""
-	for _, item := range data {
-		hostname = item["hostname"]
-		hostnames = append(hostnames, hostname)
-		host := map[string]string{
-			"name":     hostname,
-			"platform": item["platform"],
-			"ip":       item["ip"],
+	for _, platform := range platforms {
+		for _, host := range platform {
+			hosts = append(hosts, host)
 		}
-		hosts = append(hosts, host)
 	}
-	sort.Strings(hostnames)
 	hosts, hostnames = getHostsLocations(hosts, hostnames, result)
-	count = len(hostnames)
+	count = len(hosts)
 	completeApolloFiltersData(hosts, result)
 	nodes["count"] = count
 	nodes["result"] = result

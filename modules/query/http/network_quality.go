@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	log "github.com/Sirupsen/logrus"
 )
 
 type Nqm_node struct {
@@ -34,9 +35,9 @@ func getNQMNodes(rw http.ResponseWriter, req *http.Request) {
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	var NQMNodes []*Nqm_node
-	_, err := o.Raw("SELECT nid, pname, cname, status, note FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err := o.Raw("SELECT nid, pname, cname, status, note FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else {
 		for _, node := range NQMNodes {
 			idc := map[string]string{
@@ -59,11 +60,11 @@ func getLatestTimestamp(tableName string, result map[string]interface{}) int64 {
 	timestamp := int64(0)
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
-	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName + " ORDER BY mtime DESC LIMIT 1"
+	sqlcmd := "SELECT mtime FROM `gz_nqm`.`" + tableName + "` ORDER BY mtime DESC LIMIT 1"
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else if num > 0 {
 		mtime, err := strconv.Atoi(rows[0]["mtime"].(string))
 		if err == nil {
@@ -77,12 +78,12 @@ func getNearestTimestamp(tableName string, bound int64, result map[string]interf
 	timestamp := int64(0)
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
-	sqlcmd := "SELECT mtime FROM gz_nqm." + tableName
-	sqlcmd += " WHERE mtime <= ? ORDER BY mtime DESC LIMIT 1"
+	sqlcmd := "SELECT mtime FROM `gz_nqm`.`" + tableName
+	sqlcmd += "` WHERE mtime <= ? ORDER BY mtime DESC LIMIT 1"
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd, bound).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else if num > 0 {
 		mtime, err := strconv.Atoi(rows[0]["mtime"].(string))
 		if err == nil {
@@ -111,28 +112,28 @@ func getPacketLossAndAveragePingTime(tableName string, timestamp int64, result m
 
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
-	sqlcmd := "SELECT send, receive, avg FROM gz_nqm." + tableName + " WHERE mtime = ?"
+	sqlcmd := "SELECT send, receive, avg FROM `gz_nqm`.`" + tableName + "` WHERE mtime = ?"
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestamp))).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else if num > 0 {
 		for _, row := range rows {
 			send, err := strconv.ParseFloat(row["send"].(string), 64)
 			if err != nil {
-				setError(err.Error(), result)
+				log.Debugf("Error = %v", err.Error())
 			} else {
 				sends = append(sends, send)
 			}
 			receive, err := strconv.ParseFloat(row["receive"].(string), 64)
 			if err != nil {
-				setError(err.Error(), result)
+				log.Debugf("Error = %v", err.Error())
 			} else {
 				receives = append(receives, receive)
 			}
 			avg, err := strconv.ParseFloat(row["avg"].(string), 64)
 			if err != nil {
-				setError(err.Error(), result)
+				log.Debugf("Error = %v", err.Error())
 			} else {
 				averages = append(averages, avg)
 			}
@@ -165,7 +166,7 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else if num > 0 {
 		for _, row := range rows {
 			tablesMap[row["table_name"].(string)] = ""
@@ -175,9 +176,9 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 	nids := []string{}
 	pidMap := map[string]interface{}{}
 	var NQMNodes []*Nqm_node
-	_, err = o.Raw("SELECT nid, pid, status FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err = o.Raw("SELECT nid, pid, status FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else {
 		for _, node := range NQMNodes {
 			if node.Status > 0 {
@@ -232,9 +233,9 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 	o := orm.NewOrm()
 	o.Using("gz_nqm")
 	var NQMNodes []*Nqm_node
-	_, err = o.Raw("SELECT nid, pname, cname, iname FROM gz_nqm.nqm_node ORDER BY nid ASC").QueryRows(&NQMNodes)
+	_, err = o.Raw("SELECT nid, pname, cname, iname FROM `gz_nqm`.`nqm_node` ORDER BY nid ASC").QueryRows(&NQMNodes)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else {
 		for _, node := range NQMNodes {
 			nodeName := node.Nid
@@ -248,12 +249,12 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 			nodeNames = append(nodeNames, nodeName)
 		}
 	}
-	sqlcmd := "SELECT nid, ip, note FROM gz_nqm.nqm_dev WHERE nid IN ('"
+	sqlcmd := "SELECT nid, ip, note FROM `gz_nqm`.`nqm_dev` WHERE nid IN ('"
 	sqlcmd += strings.Join(nodeNames, "','") + "')"
 	var rows []orm.Params
 	_, err = o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		log.Debugf("Error = %v", err.Error())
 	} else {
 		for _, row := range rows {
 			nodeName := row["nid"].(string)

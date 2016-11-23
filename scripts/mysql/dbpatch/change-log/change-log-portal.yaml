@@ -103,3 +103,28 @@
     filename: "laurence-20.sql",
     comment: "[OWL-1046] add primary key to table common_config."
 }
+- {
+    id: "mike-21",
+    filename: "mike-21.sql",
+    comment: "Re-arrange id of NQM agents"
+}
+- {
+    id: "mike-22",
+    filename: "mike-22.sql",
+    comment: "Re-arrange id of host"
+}
+- {
+    id: "mike-23",
+    filename: "mike-23.sql",
+    comment: "Fix the view of filtering targets for ping task"
+}
+- {
+    id: "mike-24",
+    filename: "mike-24.sql",
+    comment: "Fix the view of filtering targets for ping task"
+}
+- {
+    id: "chyeh-25",
+    filename: "chyeh-25.sql",
+    comment: "[OWL-816] Add new entries to owl_city"
+}

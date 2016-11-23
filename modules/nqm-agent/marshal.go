@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
@@ -32,11 +33,12 @@ func (p ParamToAgent) String() string {
 }
 
 type nqmNodeData struct {
-	Id         string
-	IspId      string
-	ProvinceId string
-	CityId     string
-	NameTagId  string
+	Id          string
+	IspId       string
+	ProvinceId  string
+	CityId      string
+	NameTagId   string
+	GroupTagIds string
 }
 
 func marshalJSONParamsToCassandra(nqmDataGram string, metric string) ParamToAgent {
@@ -65,31 +67,43 @@ func assembleTags(target nqmNodeData, agent nqmNodeData, dataMap map[string]stri
 		",agent-province-id=" + agent.ProvinceId +
 		",agent-city-id=" + agent.CityId +
 		",agent-name-tag-id=" + agent.NameTagId +
+		",agent-group-tag-ids=" + agent.GroupTagIds +
 		",target-id=" + target.Id +
 		",target-isp-id=" + target.IspId +
 		",target-province-id=" + target.ProvinceId +
 		",target-city-id=" + target.CityId +
 		",target-name-tag-id=" + target.NameTagId +
+		",target-group-tag-ids=" + target.GroupTagIds +
 		convToKeyValueString(dataMap)
+}
+
+func convIntSlcToStr(args []int32) string {
+	strSlc := []string{}
+	for _, arg := range args {
+		strSlc = append(strSlc, strconv.Itoa(int(arg)))
+	}
+	return strings.Join(strSlc, "-")
 }
 
 func convToNqmAgent(s model.NqmAgent) nqmNodeData {
 	return nqmNodeData{
-		Id:         strconv.Itoa(s.Id),
-		IspId:      strconv.Itoa(int(s.IspId)),
-		ProvinceId: strconv.Itoa(int(s.ProvinceId)),
-		CityId:     strconv.Itoa(int(s.CityId)),
-		NameTagId:  strconv.Itoa(-1),
+		Id:          strconv.Itoa(s.Id),
+		IspId:       strconv.Itoa(int(s.IspId)),
+		ProvinceId:  strconv.Itoa(int(s.ProvinceId)),
+		CityId:      strconv.Itoa(int(s.CityId)),
+		NameTagId:   strconv.Itoa(int(s.NameTagId)),
+		GroupTagIds: convIntSlcToStr(s.GroupTagIds),
 	}
 }
 
 func convToNqmTarget(s model.NqmTarget) nqmNodeData {
 	return nqmNodeData{
-		Id:         strconv.Itoa(s.Id),
-		IspId:      strconv.Itoa(int(s.IspId)),
-		ProvinceId: strconv.Itoa(int(s.ProvinceId)),
-		CityId:     strconv.Itoa(int(s.CityId)),
-		NameTagId:  strconv.Itoa(-1),
+		Id:          strconv.Itoa(s.Id),
+		IspId:       strconv.Itoa(int(s.IspId)),
+		ProvinceId:  strconv.Itoa(int(s.ProvinceId)),
+		CityId:      strconv.Itoa(int(s.CityId)),
+		NameTagId:   strconv.Itoa(int(s.NameTagId)),
+		GroupTagIds: convIntSlcToStr(s.GroupTagIds),
 	}
 }
 

@@ -44,7 +44,7 @@ function conn_pool_status(){
 
 ## trace
 function trace_recv(){
-    e="test.endpoint.niean.1" 
+    e="test.endpoint.niean.1"
     m="test.metric.niean.1"
     t="tag0=tag0-niean-1,tag1=tag1-niean-1,tag2=tag2-niean-1"
     curl -s "$httpprex/trace/$e/$m/$t" | python -m json.tool
@@ -52,7 +52,7 @@ function trace_recv(){
 
 ## filter
 function filter_recv(){
-    e="test.endpoint.niean.1" 
+    e="test.endpoint.niean.1"
     m="test.metric.niean.1"
     opt="lt"
     val="5"
@@ -62,7 +62,7 @@ function filter_recv(){
 
 ## api
 function http_post(){
-    e="test.endpoint.niean.1" 
+    e="test.endpoint.niean.1"
     m="test.metric.niean.1"
     t="tag0=tag0-niean-1,tag1=tag1-niean-1,tag2=tag2-niean-1"
     ts=`date +%s`
@@ -71,9 +71,9 @@ function http_post(){
 }
 
 function nqm(){
-    e="test.endpoint.niean.2"
+    e="test.endpoint.chyeh.1"
     m="nqm-fping"
-    t="rttmin=18.64, rttavg=21.5, rttmax=26.9, rttmdev=4.7, pkttransmit=13, pktreceive=11, agent-id=1334, agent-isp-id=12, agent-province-id=13, agent-city-id=14, agent-name-tag-id=123, target-id=2334, target-isp-id=22, target-province-id=23, target-city-id=24, target-name-tag-id=223"
+    t="rttmin=18.64, rttavg=21.5, rttmax=26.9, rttmdev=4.7, pkttransmit=13, pktreceive=11, agent-id=1334, agent-isp-id=12, agent-province-id=13, agent-city-id=14, agent-name-tag-id=123, agent-group-tag-id=145-167-189-101, target-id=2334, target-isp-id=22, target-province-id=23, target-city-id=24, target-name-tag-id=223, target-group-tag-id=245-267-289-201"
     ts=`date +%s`
     val=`expr $ts / 60 % 10`
     curl -s -X POST -d "[{\"metric\":\"$m\", \"endpoint\":\"$e\", \"timestamp\":$ts,\"step\":60, \"value\":$val, \"counterType\":\"GAUGE\",\"tags\":\"$t\"}]" "$httpprex/api/push" | python -m json.tool
@@ -81,12 +81,12 @@ function nqm(){
 
 
 function nqm_copy(){
-    e="test.endpoint.niean.2"
+    e="test.endpoint.chyeh.1"
     m="nqm-fping"
     ts=`date +%s`
     val=`expr $ts / 60 % 10`
     rand=$RANDOM
-    t="rttmin=18.64, rttavg=21.5, rttmax=26.9, rttmdev=4.7, pkttransmit=13, pktreceive=11, agent-id=1334$rand, agent-isp-id=12, agent-province-id=13, agent-city-id=14, agent-name-tag-id=123, target-id=6969, target-isp-id=22, target-province-id=23, target-city-id=24, target-name-tag-id=223"
+    t="rttmin=18.64, rttavg=21.5, rttmax=26.9, rttmdev=4.7, pkttransmit=13, pktreceive=11, agent-id=1334$rand, agent-isp-id=12, agent-province-id=13, agent-city-id=14, agent-name-tag-id=123, agent-group-tag-id=145-167-189-101, target-id=6969, target-isp-id=22, target-province-id=23, target-city-id=24, target-name-tag-id=223, target-group-tag-id=245-267-289-201"
     curl -s -X POST -d "[{\"metric\":\"$m\", \"endpoint\":\"$e\", \"timestamp\":$ts,\"step\":60, \"value\":$val, \"counterType\":\"GAUGE\",\"tags\":\"$t\"}]" "$httpprex/api/push" | python -m json.tool
 }
 
@@ -99,14 +99,14 @@ function nqmbatch(){
     done
 }
 
-## telnet 
+## telnet
 function telnet_send(){
     cnt=$1
     if [ "X$cnt" == "X" ];then
         cnt=1
     fi
 
-    e="test.endpoint.niean.1" 
+    e="test.endpoint.niean.1"
     m="test.metric.niean.1"
     type="GAUGE"
     step=60
@@ -151,7 +151,7 @@ function build_mockagent(){
 }
 
 function clean_mockagent(){
-    rm -rf $builddir  
+    rm -rf $builddir
     ec=$?
     [ $ec -eq 0 ] && echo -e "clean mockagent, ok" || { echo -e "clean mockagent, error"; exit $ec; }
 }
@@ -163,7 +163,7 @@ function kill_mockagent(){
         kill -9  $pid &>/dev/null
         echo -e "kill mockagent, $pid"
         sleep 0.01
-    done 
+    done
     echo -e "kill mockagent ok"
 }
 
@@ -172,7 +172,7 @@ function start_mockagent(){
     if [ "X$cnt" == "X" ];then
         cnt=1
     fi
-    
+
     for i in `seq 1 $cnt`
     do
         id=malog.`date +%s`
@@ -203,16 +203,16 @@ case $action in
         tail_log
         ;;
     "trace")
-        trace_recv 
+        trace_recv
         ;;
     "filter")
-        filter_recv 
+        filter_recv
         ;;
     "conn")
         conn_pool_status $2
         ;;
     "post")
-        http_post 
+        http_post
         ;;
     "nqm")
         nqm
@@ -230,13 +230,12 @@ case $action in
         kill_mockagent
         ;;
     "cleanm")
-        clean_mockagent 
+        clean_mockagent
         ;;
     "buildm")
         build_mockagent
         ;;
     *)
-        statistics 
+        statistics
         ;;
 esac
-

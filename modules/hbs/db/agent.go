@@ -39,7 +39,8 @@ func (self *refreshHostProcessor) BootCallback(tx *sql.Tx) bool {
 		UPDATE host
 		SET ip = ?,
 			agent_version = ?,
-			plugin_version = ?
+			plugin_version = ?,
+			update_at = NOW()
 		WHERE hostname = ?
 		`,
 		self.IP,

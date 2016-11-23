@@ -3,5 +3,10 @@
         id: "mike-1",
         filename: "mike-1.sql",
         comment: "The initialization of existing database schema"
+    },
+    {
+        id: "masato-2",
+        filename: "masato-2.sql",
+        comment: "add placard & readpath table"
     }
 ]

@@ -10,10 +10,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 )
 
-func tick() <-chan time.Time {
-	dur := time.Second * Config().Hbs.Interval
-	return time.Tick(dur)
-}
+var hbsTicker *time.Ticker
+var hbsTickerUpdated chan bool
 
 func updatedMsg(old map[string]model.MeasurementsProperty, updated map[string]model.MeasurementsProperty) string {
 	msg := ""
@@ -70,8 +68,13 @@ func query() {
 }
 
 func Query() {
-	query()
-	for _ = range tick() {
-		query()
+	for {
+		select {
+		case <-hbsTicker.C:
+			query()
+		case <-hbsTickerUpdated:
+			hbsTicker.Stop()
+			hbsTicker = time.NewTicker(Config().Hbs.Interval * time.Second)
+		}
 	}
 }

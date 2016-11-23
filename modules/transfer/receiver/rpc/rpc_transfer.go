@@ -157,7 +157,7 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 	}
 
 	// demultiplexing
-	nqmItems, genericItems := sender.Demultiplex(items)
+	nqmFpingItems, nqmTcppingItems, nqmTcpconnItems, genericItems := sender.Demultiplex(items)
 
 	if cfg.Staging.Enabled {
 		sender.Push2StagingSendQueue(stagingItems)
@@ -179,8 +179,10 @@ func RecvMetricValues(args []*cmodel.MetricValue, reply *cmodel.TransferResponse
 		sender.Push2InfluxdbSendQueue(genericItems)
 	}
 
-	if cfg.NqmRpc.Enabled {
-		sender.Push2NqmRpcSendQueue(nqmItems)
+	if cfg.NqmRest.Enabled {
+		sender.Push2NqmIcmpSendQueue(nqmFpingItems)
+		sender.Push2NqmTcpSendQueue(nqmTcppingItems)
+		sender.Push2NqmTcpconnSendQueue(nqmTcpconnItems)
 	}
 
 	reply.Message = "ok"
