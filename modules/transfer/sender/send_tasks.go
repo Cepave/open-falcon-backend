@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"path"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -263,11 +262,18 @@ func forward2InfluxdbTask(Q *list.SafeListLimited, concurrent int) {
 	}
 }
 
-func forwardNqmItems(p []byte, nqmUrl string, s *nsema.Semaphore) {
+func forwardNqmItems(nqmItem interface{}, nqmUrl string, s *nsema.Semaphore) {
 	defer s.Release()
 
-	log.Debugf("[ Cassandra ] JSON data to %s: %s", nqmUrl, string(p))
-	postReq, err := http.NewRequest("POST", nqmUrl, bytes.NewBuffer(p))
+	jsonItem, jsonErr := json.Marshal(nqmItem)
+	if jsonErr != nil {
+		log.Errorf("Error on serialization for nqm item(ICMP, TCP, or TCPCONN): %v", jsonErr)
+		proc.SendToNqmIcmpFailCnt.IncrBy(1)
+		return
+	}
+
+	log.Debugf("[ Cassandra ] JSON data to %s: %s", nqmUrl, string(jsonItem))
+	postReq, err := http.NewRequest("POST", nqmUrl, bytes.NewBuffer(jsonItem))
 
 	postReq.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	postReq.Header.Set("Connection", "close")
@@ -293,25 +299,11 @@ func forward2NqmTask(Q *list.SafeListLimited, apiUrl string) {
 			time.Sleep(DefaultSendTaskSleepInterval)
 			continue
 		}
-		var paramsBody []byte
-		switch path.Base(apiUrl) {
-		case "icmp", "tcp":
-			nqmItems := []*nqmPingItem{}
-			for _, v := range items {
-				nqmItems = append(nqmItems, v.(*nqmPingItem))
-			}
-			paramsBody, _ = json.Marshal(nqmItems)
-		case "tcpconn":
-			nqmItems := []*nqmConnItem{}
-			for _, v := range items {
-				nqmItems = append(nqmItems, v.(*nqmConnItem))
-			}
-			paramsBody, _ = json.Marshal(nqmItems)
+
+		for _, v := range items {
+			sema.Acquire()
+			go forwardNqmItems(v, apiUrl, sema)
 		}
-
-		sema.Acquire()
-		go forwardNqmItems(paramsBody, apiUrl, sema)
-
 	}
 }
 
