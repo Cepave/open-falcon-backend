@@ -59,3 +59,27 @@ CREATE TABLE `session` (
 /*900150983cd24fb0d6963f7d28e17f72*/
 /*insert into `user`(`name`, `passwd`, `role`, `created`) values('root', md5('abc'), 2, now());*/
 
+DROP TABLE if exists `placard`
+CREATE TABLE uic.placard (
+  id INT NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (id),
+  title varchar(100) NOT NULL,
+  content varchar(1000) NOT NULL,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  authorId int(10) unsigned NOT NULL,
+  FOREIGN KEY (authorId)
+  REFERENCES uic.user(id)
+  ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE=INNODB;
+
+
+DROP TABLE if exists `readpath`
+CREATE TABLE uic.readpath (
+  id int(10) unsigned NOT NULL,
+  PRIMARY KEY(id),
+  readAt DATETIME ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (id)
+  REFERENCES uic.user(id)
+  ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE=INNODB;
