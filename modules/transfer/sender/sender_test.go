@@ -15,7 +15,7 @@ func TestDemultiplex(t *testing.T) {
 	for i := 0; i < size; i++ {
 		if i%3 == 0 {
 			fv := &cmodel.MetaData{
-				Metric: "nqm-metrics",
+				Metric: "nqm-fping",
 				Step:   int64(i),
 			}
 			caseIn = append(caseIn, fv)
@@ -48,7 +48,7 @@ func TestDemultiplex(t *testing.T) {
 
 func createMetaData() *cmodel.MetaData {
 	in := cmodel.MetaData{
-		Metric:      "nqm-metrics",
+		Metric:      "nqm-fping",
 		Timestamp:   1460366463,
 		Step:        60,
 		Value:       0.000000,

@@ -3,7 +3,6 @@ package sender
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	log "github.com/Sirupsen/logrus"
 
@@ -268,10 +267,13 @@ func Demultiplex(items []*cmodel.MetaData) ([]*cmodel.MetaData, []*cmodel.MetaDa
 	generics := []*cmodel.MetaData{}
 
 	for _, item := range items {
-		if strings.HasPrefix(item.Metric, "nqm-") {
-			nqms = append(nqms, item)
-		} else {
+		switch item.Metric {
+		default:
 			generics = append(generics, item)
+		case "nqm-fping":
+			nqms = append(nqms, item)
+		case "nqm-tcpping":
+		case "nqm-tcpconn":
 		}
 	}
 

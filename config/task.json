@@ -6,7 +6,7 @@
     },
     "index": {
         "enabled": true,
-        "dsn": "root:password@tcp(172.17.0.3:3306)/graph?loc=Local&parseTime=true",
+        "dsn": "%%MYSQL%%/graph?loc=Local&parseTime=true",
         "maxIdle": 4,
         "autoDelete": true,
         "cluster": {
@@ -15,12 +15,12 @@
     },
     "collector":{
         "enabled": true,
-        "destUrl" : "http://10.20.30.40:1988/v1/push",
+        "destUrl" : "http://127.0.0.1:1988/v1/push",
         "srcUrlFmt" : "http://%s/statistics/all",
         "cluster" : [
-            "transfer,10.20.30.40:6060",
-            "graph,10.20.30.40:6071",
-            "task,10.20.30.40:8002"
+            "transfer,%%TRANSFER_HTTP%%",
+            "graph,%%GRAPH_HTTP%%",
+            "task,127.0.0.1:8002"
         ]
     }
 }
