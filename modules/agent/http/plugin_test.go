@@ -1,11 +1,10 @@
 package http
 
 import (
+	"github.com/toolkits/sys"
 	"os/exec"
 	"testing"
 	"time"
-
-	"github.com/toolkits/sys"
 )
 
 func TestDeleteAndCloneRepo(t *testing.T) {
@@ -15,32 +14,34 @@ func TestDeleteAndCloneRepo(t *testing.T) {
 	t.Log("test deleteAndCloneRepo: ", out)
 }
 
-func TestRunCmdWithTimeout(t *testing.T) {
-	cmd := exec.Command("sleep", "500")
+func TestRunCmdFamilyWithTimeout(t *testing.T) {
 	t1 := time.Now()
-	err := cmd.Start()
-	if err != nil {
-		t.Log("cmd start fails: ", err)
-	}
-	err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(3)*time.Second)
+	cmd := exec.Command("/bin/sh", "-c", "watch date > date.txt")
+	err, isTimeout := cmdSessionRunWithTimeout(cmd, time.Duration(3)*time.Second)
 	t2 := time.Now()
 	t.Log("Time spent should less than 4 second: ", t2.Sub(t1))
 	t.Log("error message is:", err)
 	t.Log("Timeout happens: ", isTimeout)
 	time.Sleep(3 * time.Second)
 	if err != nil || isTimeout != true {
-		t.Error("failed in sys.CmdRunWithTimeout")
+		t.Error("failed in cmdSessionRunWithTimeout")
 	}
+	t.Log("verify with: ps aux | head -1;ps aux| grep watch")
+	t.Log("There should not be any 'watch date' existing.")
 
 	cmd2 := exec.Command("sleep", "1")
-	err2 := cmd2.Start()
-	if err2 != nil {
-		t.Log("cmd start fails: ", err2)
-	}
-	err2, isTimeout2 := sys.CmdRunWithTimeout(cmd, time.Duration(3)*time.Second)
+	err2, isTimeout2 := cmdSessionRunWithTimeout(cmd2, time.Duration(3)*time.Second)
 	t.Log("error message is:", err2)
 	t.Log("Timeout happens: ", isTimeout2)
 	if isTimeout2 != false {
-		t.Error("failed in sys.CmdRunWithTimeout")
+		t.Error("failed in cmdSessionRunWithTimeout")
 	}
+
+	cmd3 := exec.Command("/bin/sh", "-c", "watch ls > cmd3.txt")
+	cmd3.Start()
+	err3, isTimeout3 := sys.CmdRunWithTimeout(cmd3, time.Duration(3)*time.Second)
+	t.Log("error message is:", err3)
+	t.Log("Timeout happens: ", isTimeout3)
+	t.Log("verify with: ps aux | head -1;ps aux| grep watch")
+	t.Log("There should be 'watch ls' existing")
 }
