@@ -25,6 +25,7 @@ func sessionKill(cmd *exec.Cmd) error {
 // cmdSessionRunWithTimeout runs cmd, and kills the children on timeout
 func cmdSessionRunWithTimeout(cmd *exec.Cmd, timeout time.Duration) (error, bool) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	log.Debugln("show cmd sysProcAttr.Setsid", cmd.SysProcAttr.Setsid)
 	if err := cmd.Start(); err != nil {
 		log.Errorln(cmd.Path, " start fails: ", err)
 		return err, false

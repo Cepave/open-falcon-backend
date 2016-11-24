@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"testing"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 func TestDeleteAndCloneRepo(t *testing.T) {
@@ -15,6 +17,7 @@ func TestDeleteAndCloneRepo(t *testing.T) {
 }
 
 func TestRunCmdFamilyWithTimeout(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
 	t1 := time.Now()
 	cmd := exec.Command("/bin/sh", "-c", "watch date > date.txt")
 	err, isTimeout := cmdSessionRunWithTimeout(cmd, time.Duration(3)*time.Second)
