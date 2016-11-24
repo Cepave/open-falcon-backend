@@ -2,18 +2,47 @@ package http
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"time"
-
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
-	"github.com/toolkits/sys"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"syscall"
+	"time"
 )
+
+func sessionKill(cmd *exec.Cmd) error {
+	if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != nil {
+		log.Println("failed to kill processes of the same session: ", err)
+		return err
+	}
+	return nil
+}
+
+// cmdSessionRunWithTimeout runs cmd, and kills the children on timeout
+func cmdSessionRunWithTimeout(cmd *exec.Cmd, timeout time.Duration) (error, bool) {
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	log.Debugln("show cmd sysProcAttr.Setsid", cmd.SysProcAttr.Setsid)
+	if err := cmd.Start(); err != nil {
+		log.Errorln(cmd.Path, " start fails: ", err)
+		return err, false
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+
+	select {
+	case <-time.After(timeout):
+		log.Printf("timeout, process:%s will be killed", cmd.Path)
+		err := sessionKill(cmd)
+		return err, true
+	case err := <-done:
+		return err, false
+	}
+}
 
 func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
 	parentDir := file.Dir(pluginDir)
@@ -35,12 +64,7 @@ func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
 
 	cmd := exec.Command("git", "clone", gitRemoteAddr, file.Basename(pluginDir))
 	cmd.Dir = parentDir
-	err := cmd.Start()
-	if err != nil {
-		log.Errorln("git clone start fails: ", err)
-	}
-
-	err2, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+	err2, isTimeout := cmdSessionRunWithTimeout(cmd, time.Duration(600)*time.Second)
 	if isTimeout {
 		// has be killed
 		if err2 == nil {
@@ -75,11 +99,7 @@ func configPluginRoutes() {
 			// git pull
 			cmd := exec.Command("git", "pull")
 			cmd.Dir = dir
-			err := cmd.Start()
-			if err != nil {
-				log.Errorln("git pull start fails: ", err)
-			}
-			err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+			err, isTimeout := cmdSessionRunWithTimeout(cmd, time.Duration(600)*time.Second)
 			if isTimeout {
 				// has be killed
 				if err == nil {
@@ -100,11 +120,7 @@ func configPluginRoutes() {
 			// git clone
 			cmd := exec.Command("git", "clone", plugins.GitRepo, file.Basename(dir))
 			cmd.Dir = parentDir
-			err := cmd.Start()
-			if err != nil {
-				log.Errorln("git clone start fails: ", err)
-			}
-			err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(600)*time.Second)
+			err, isTimeout := cmdSessionRunWithTimeout(cmd, time.Duration(600)*time.Second)
 			if isTimeout {
 				// has be killed
 				if err == nil {
