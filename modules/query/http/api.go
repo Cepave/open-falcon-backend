@@ -524,7 +524,8 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT ip, hostname, platform, status FROM boss.ips WHERE exist = 1 AND hostname != ''"
+	sql := "SELECT ip, hostname, platform, status FROM boss.ips"
+	sql += " WHERE exist = 1 AND hostname != '' AND platform != ''"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
