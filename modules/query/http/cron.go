@@ -259,18 +259,18 @@ func syncHostsTable() {
 		platformNames = appendUniqueString(platformNames, platformName)
 		for _, device := range platform.(map[string]interface{})["ip_list"].([]interface{}) {
 			hostname = device.(map[string]interface{})["hostname"].(string)
-			ip := device.(map[string]interface{})["ip"].(string)
+			IP := device.(map[string]interface{})["ip"].(string)
 			status := device.(map[string]interface{})["ip_status"].(string)
 			item := map[string]string{
-				"ip":       ip,
+				"IP":       IP,
 				"status":   status,
 				"hostname": hostname,
 				"platform": platformName,
 			}
-			IPs = append(IPs, ip)
-			IPKey := platformName + "_" + ip
+			IPs = append(IPs, IP)
+			IPKey := platformName + "_" + IP
 			IPKeys = append(IPKeys, IPKey)
-			if _, ok := IPsMap[ip]; !ok {
+			if _, ok := IPsMap[IP]; !ok {
 				IPsMap[IPKey] = item
 			}
 			if len(hostname) > 0 {
@@ -278,15 +278,21 @@ func syncHostsTable() {
 					hostnames = append(hostnames, hostname)
 					idcID := device.(map[string]interface{})["pop_id"].(string)
 					host := map[string]string{
-						"hostname": hostname,
-						"activate": "0",
-						"platforms": platformName,
-						"idcID":    idcID,
-						"ip":       ip,
+						"hostname":  hostname,
+						"activate":  "0",
+						"platforms": "",
+						"idcID":     idcID,
+						"IP":        IP,
 					}
-					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-						host["ip"] = ip
+					if len(IP) > 0 && IP == getIPFromHostname(hostname, result) {
+						host["IP"] = IP
 						host["platform"] = platformName
+						platforms := []string{}
+						if len(host["platforms"]) > 0 {
+							platforms = strings.Split(host["platforms"], ",")
+						}
+						platforms = appendUniqueString(platforms, platformName)
+						host["platforms"] = strings.Join(platforms, ",")
 					}
 					if status == "1" {
 						host["activate"] = "1"
@@ -294,12 +300,15 @@ func syncHostsTable() {
 					hostsMap[hostname] = host
 					idcIDs = appendUniqueString(idcIDs, idcID)
 				} else {
-					platforms := strings.Split(host["platforms"], ",")
-					platforms = appendUniqueString(platforms, platformName)
-					host["platforms"] = strings.Join(platforms, ",")
-					if len(ip) > 0 && ip == getIPFromHostname(hostname, result) {
-						host["ip"] = ip
+					if len(IP) > 0 && IP == getIPFromHostname(hostname, result) {
+						host["IP"] = IP
 						host["platform"] = platformName
+						platforms := []string{}
+						if len(host["platforms"]) > 0 {
+							platforms = strings.Split(host["platforms"], ",")
+						}
+						platforms = appendUniqueString(platforms, platformName)
+						host["platforms"] = strings.Join(platforms, ",")
 					}
 					if status == "1" {
 						host["activate"] = "1"
@@ -509,13 +518,13 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 	for _, IPName := range IPNames {
 		item := IPsMap[IPName]
 		sql := "SELECT id FROM boss.ips WHERE ip = ? AND platform = ? LIMIT 1"
-		num, err := o.Raw(sql, item["ip"], item["platform"]).Values(&rows)
+		num, err := o.Raw(sql, item["IP"], item["platform"]).Values(&rows)
 		if num == 0 {
 			status, _ := strconv.Atoi(item["status"])
 			sql := "INSERT INTO boss.ips("
 			sql += "ip, exist, status, hostname, platform, updated) "
 			sql += "VALUES(?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item["ip"], 1, status, item["hostname"], item["platform"], now).Exec()
+			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -529,7 +538,7 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			sql += " SET ip = ?, exist = ?, status = ?,"
 			sql += " hostname = ?, platform = ?, updated = ?"
 			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, item["ip"], 1, status, item["hostname"], item["platform"], now, ID).Exec()
+			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -560,21 +569,14 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	log.Debugf("func updateHostsTable()")
 	now := getNow()
 	idcMap := getIDCMap()
-	var hosts []Hosts
-	var host Hosts
+	hosts := []map[string]string{}
 	for _, hostname := range hostnames {
-		item := hostsMap[hostname]
-		activate, _ := strconv.Atoi(item["activate"])
-		host.Hostname = item["hostname"]
-		host.Activate = activate
-		host.Platform = item["platform"]
-		host.Platforms = item["platforms"]
-		if len(host.Platform) == 0 {
-			host.Platform = strings.Split(host.Platforms, ",")[0]
+		host := hostsMap[hostname]
+		if len(host["platform"]) == 0 {
+			host["platform"] = strings.Split(host["platforms"], ",")[0]
 		}
-		host.Ip = item["ip"]
 		ISP := ""
-		str := strings.Replace(item["hostname"], "_", "-", -1)
+		str := strings.Replace(host["hostname"], "_", "-", -1)
 		slice := strings.Split(str, "-")
 		if len(slice) >= 4 {
 			ISP = slice[0]
@@ -582,13 +584,12 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		if len(ISP) > 5 {
 			ISP = ""
 		}
-		host.Isp = ISP
-		idcID := item["idcID"]
-		if _, ok := idcMap[idcID]; ok {
-			idc := idcMap[idcID]
-			host.Idc = idc.(Idc).Name
-			host.Province = idc.(Idc).Province
-			host.City = idc.(Idc).City
+		host["ISP"] = ISP
+		idcID := host["idcID"]
+		if idc, ok := idcMap[idcID]; ok {
+			host["IDC"] = idc.(Idc).Name
+			host["province"] = idc.(Idc).Province
+			host["city"] = idc.(Idc).City
 		}
 		hosts = append(hosts, host)
 	}
@@ -611,15 +612,15 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		}
 	}
 
-	for _, item := range hosts {
+	for _, host := range hosts {
 		sql = "SELECT id FROM boss.hosts WHERE hostname = ? LIMIT 1"
-		num, err := o.Raw(sql, item.Hostname).Values(&rows)
+		num, err := o.Raw(sql, host["hostname"]).Values(&rows)
 		if num == 0 {
 			sql := "INSERT INTO boss.hosts("
 			sql += "hostname, exist, activate, platform, platforms, idc, ip, "
 			sql += "isp, province, city, updated) "
 			sql += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item.Hostname, 1, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, now).Exec()
+			_, err := o.Raw(sql, host["hostname"], 1, host["activate"], host["platform"], host["platforms"], host["IDC"], host["IP"], host["ISP"], host["province"], host["city"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -633,7 +634,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 			sql += " platforms = ?, idc = ?, ip = ?, isp = ?,"
 			sql += " province = ?, city = ?, updated = ?"
 			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, 1, item.Activate, item.Platform, item.Platforms, item.Idc, item.Ip, item.Isp, item.Province, item.City, now, ID).Exec()
+			_, err := o.Raw(sql, 1, host["activate"], host["platform"], host["platforms"], host["IDC"], host["IP"], host["ISP"], host["province"], host["city"], now, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}

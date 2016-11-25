@@ -1,6 +1,8 @@
 package rpc
 
 import (
+	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -81,5 +83,17 @@ func validatePingTask(request *commonModel.NqmTaskRequest) (err error) {
 	request.IpAddress = strings.TrimSpace(request.IpAddress)
 
 	_, err = govalidator.ValidateStruct(request)
+
+	/**
+	 * Checks the validation of IP address
+	 */
+	if err == nil {
+		if ipAddress := net.ParseIP(request.IpAddress)
+			ipAddress == nil {
+			err = fmt.Errorf("Cannot parse IP address: [%v]", request.IpAddress)
+		}
+	}
+	// :~)
+
 	return
 }
