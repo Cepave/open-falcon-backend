@@ -1396,9 +1396,9 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 func getIPFromHostname(hostname string, result map[string]interface{}) string {
 	ip := ""
 	fragments := strings.Split(hostname, "-")
-	slice := []string{}
 	if len(fragments) == 6 {
-		fragments := fragments[2:]
+		slice := []string{}
+		fragments = fragments[2:]
 		for _, fragment := range fragments {
 			num, err := strconv.Atoi(fragment)
 			if err != nil {
