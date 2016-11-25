@@ -495,21 +495,25 @@ func queryHostsData(result map[string]interface{}) []map[string]string {
 	var rows []orm.Params
 	o := orm.NewOrm()
 	o.Using("boss")
-	sql := "SELECT hostname, activate, platforms, ip FROM boss.hosts"
-	sql += " WHERE exist = 1 AND platforms != '' ORDER BY hostname ASC"
+	sql := "SELECT hostname, activate, platform, ip FROM boss.hosts"
+	sql += " WHERE exist = 1 AND platform != '' ORDER BY hostname ASC"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
 		return hosts
 	} else if num > 0 {
 		for _, row := range rows {
-			host := map[string]string{
-				"name":      row["hostname"].(string),
-				"platforms": row["platforms"].(string),
-				"ip":        row["ip"].(string),
-				"activate":  row["activate"].(string),
+			hostname := row["hostname"].(string)
+			IP := row["ip"].(string)
+			if IP != "" && IP == getIPFromHostname(hostname, result) {
+				host := map[string]string{
+					"hostname":     row["hostname"].(string),
+					"platform": row["platform"].(string),
+					"ip":       row["ip"].(string),
+					"activate": row["activate"].(string),
+				}
+				hosts = append(hosts, host)
 			}
-			hosts = append(hosts, host)
 		}
 	}
 	return hosts
