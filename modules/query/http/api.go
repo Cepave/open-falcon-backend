@@ -495,21 +495,25 @@ func queryHostsData(result map[string]interface{}) []map[string]string {
 	var rows []orm.Params
 	o := orm.NewOrm()
 	o.Using("boss")
-	sql := "SELECT hostname, activate, platforms, ip FROM boss.hosts"
-	sql += " WHERE exist = 1 AND platforms != '' ORDER BY hostname ASC"
+	sql := "SELECT hostname, activate, platform, ip FROM boss.hosts"
+	sql += " WHERE exist = 1 AND platform != '' ORDER BY hostname ASC"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
 		return hosts
 	} else if num > 0 {
 		for _, row := range rows {
-			host := map[string]string{
-				"name":      row["hostname"].(string),
-				"platforms": row["platforms"].(string),
-				"ip":        row["ip"].(string),
-				"activate":  row["activate"].(string),
+			hostname := row["hostname"].(string)
+			IP := row["ip"].(string)
+			if IP != "" && IP == getIPFromHostname(hostname, result) {
+				host := map[string]string{
+					"hostname":     row["hostname"].(string),
+					"platform": row["platform"].(string),
+					"ip":       row["ip"].(string),
+					"activate": row["activate"].(string),
+				}
+				hosts = append(hosts, host)
 			}
-			hosts = append(hosts, host)
 		}
 	}
 	return hosts
@@ -520,7 +524,8 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT ip, hostname, platform, status FROM boss.ips WHERE exist = 1 AND hostname != ''"
+	sql := "SELECT ip, hostname, platform, status FROM boss.ips"
+	sql += " WHERE exist = 1 AND hostname != '' AND platform != ''"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		setError(err.Error(), result)
@@ -875,8 +880,24 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	errors := []string{}
 	var result = make(map[string]interface{})
 	result["error"] = errors
-	data := queryIPsData(result)
-	platforms, platformNames, hostnames := mergeIPsOfHost(data, result)
+	data := queryHostsData(result)
+	platforms := map[string][]map[string]string{}
+	platformNames := []string{}
+	hostnames := []string{}
+	for _, host := range data {
+		hostname := host["hostname"]
+		platformName := host["platform"]
+		hostnames = appendUniqueString(hostnames, hostname)
+		platformNames = appendUniqueString(platformNames, platformName)
+		if platform, ok := platforms[platformName]; ok {
+			platform = append(platform, host)
+			platforms[platformName] = platform
+		} else {
+			platforms[platformName] = []map[string]string{
+				host,
+			}
+		}
+	}
 	hostnamesExisted := []string{}
 	var versions = make(map[string]map[string]string)
 	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
@@ -1396,9 +1417,9 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 func getIPFromHostname(hostname string, result map[string]interface{}) string {
 	ip := ""
 	fragments := strings.Split(hostname, "-")
-	slice := []string{}
 	if len(fragments) == 6 {
-		fragments := fragments[2:]
+		slice := []string{}
+		fragments = fragments[2:]
 		for _, fragment := range fragments {
 			num, err := strconv.Atoi(fragment)
 			if err != nil {
