@@ -275,19 +275,23 @@ func (s *TestNqmRdbSuite) SetUpTest(c *C) {
 	case "TestNqmRdbSuite.TestListAgentsInCityByProvinceId":
 		qtest.ExecuteQueriesOrFailInTx(
 			`
+			INSERT INTO host(id, hostname, agent_version, plugin_version)
+			VALUES(23401, 'agent-1', '', '')
+			`,
+			`
 			INSERT INTO nqm_agent(
-				ag_id, ag_name, ag_connection_id,
+				ag_id, ag_hs_id, ag_name, ag_connection_id,
 				ag_hostname, ag_ip_address,
 				ag_isp_id, ag_pv_id, ag_ct_id, ag_status
 			) VALUES
-			(14301, 'agent-1', '92.20.50.1', 'ag-1-host', 0x5A143201, -1, 3, 2, true),
-			(14302, 'agent-2', '92.20.50.2', 'ag-2-host', 0x5A143202, -1, 3, 2, true),
-			(14303, 'agent-3', '92.20.50.3', 'ag-3-host', 0x5A143203, -1, 3, 3, true),
-			(14304, 'agent-4', '92.20.50.4', 'ag-4-host', 0x5A143204, -1, 3, 3, true),
-			(14305, 'agent-5', '92.20.50.5', 'ag-5-host', 0x5A143205, -1, 3, 3, false), # Agent disabled
-			(14306, 'agent-6', '92.20.50.6', 'ag-6-host', 0x5A143206, -1, 3, 3, false), # Task disabled
-			(14311, 'agent-11', '92.20.50.11', 'ag-11-host', 0x5A14320B, -1, 3, 3, true), # Has no task
-			(14312, 'agent-12', '92.20.50.12', 'ag-12-host', 0x5A14320C, -1, 4, 3, true) # Not-matched province
+			(14301, 23401, 'agent-1', '92.20.50.1', 'ag-1-host', 0x5A143201, -1, 3, 2, true),
+			(14302, 23401, 'agent-2', '92.20.50.2', 'ag-2-host', 0x5A143202, -1, 3, 2, true),
+			(14303, 23401, 'agent-3', '92.20.50.3', 'ag-3-host', 0x5A143203, -1, 3, 3, true),
+			(14304, 23401, 'agent-4', '92.20.50.4', 'ag-4-host', 0x5A143204, -1, 3, 3, true),
+			(14305, 23401, 'agent-5', '92.20.50.5', 'ag-5-host', 0x5A143205, -1, 3, 3, false), # Agent disabled
+			(14306, 23401, 'agent-6', '92.20.50.6', 'ag-6-host', 0x5A143206, -1, 3, 3, false), # Task disabled
+			(14311, 23401, 'agent-11', '92.20.50.11', 'ag-11-host', 0x5A14320B, -1, 3, 3, true), # Has no task
+			(14312, 23401, 'agent-12', '92.20.50.12', 'ag-12-host', 0x5A14320C, -1, 4, 3, true) # Not-matched province
 			`,
 			`
 			INSERT INTO nqm_ping_task(pt_id, pt_period, pt_enable)
@@ -328,6 +332,7 @@ func (s *TestNqmRdbSuite) TearDownTest(c *C) {
 			`DELETE FROM nqm_agent_ping_task WHERE apt_ag_id >= 14301 AND apt_ag_id <= 14320`,
 			`DELETE FROM nqm_ping_task WHERE pt_id >= 7701 AND pt_id <= 7706`,
 			`DELETE FROM nqm_agent WHERE ag_id >= 14301 AND ag_id <= 14320`,
+			`DELETE FROM host WHERE id = 23401`,
 		)
 	}
 }

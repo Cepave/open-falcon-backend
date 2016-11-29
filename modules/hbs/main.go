@@ -40,7 +40,7 @@ func main() {
 	go func() {
 		<-sigs
 		fmt.Println()
-		db.DB.Close()
+		db.Release()
 		os.Exit(0)
 	}()
 

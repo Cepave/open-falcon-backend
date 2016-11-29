@@ -345,7 +345,7 @@ CREATE TABLE IF NOT EXISTS owl_name_tag(
   COLLATE =utf8_general_ci;
 
 CREATE TABLE IF NOT EXISTS owl_group_tag (
-	gt_id INTEGER,
+	gt_id INTEGER AUTO_INCREMENT,
 	gt_name VARCHAR(64) NOT NULL,
 	CONSTRAINT pk_owl_group_tag PRIMARY KEY(gt_id),
 	CONSTRAINT unq_owl_group_tag__gt_name UNIQUE INDEX(gt_name)
@@ -355,6 +355,7 @@ CREATE TABLE IF NOT EXISTS owl_group_tag (
 
 CREATE TABLE IF NOT EXISTS nqm_agent(
 	ag_id INT PRIMARY KEY AUTO_INCREMENT,
+	ag_hs_id INT NOT NULL,
 	ag_name VARCHAR(128),
 	ag_connection_id VARCHAR(128) NOT NULL,
 	ag_hostname VARCHAR(256) NOT NULL,
@@ -366,6 +367,10 @@ CREATE TABLE IF NOT EXISTS nqm_agent(
 	ag_status BOOLEAN NOT NULL DEFAULT true,
 	ag_last_heartbeat DATETIME,
 	ag_comment VARCHAR(2048),
+	CONSTRAINT fk_nqm_agent__host FOREIGN KEY
+		(ag_hs_id) REFERENCES host(id)
+			ON DELETE RESTRICT
+			ON UPDATE RESTRICT,
 	CONSTRAINT fk_nqm_agent__owl_isp FOREIGN KEY
 		(ag_isp_id) REFERENCES owl_isp(isp_id)
 			ON DELETE RESTRICT

@@ -10,6 +10,59 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+const RootLoggerName = "ROOT"
+const DefaultLoggerLevel = "INFO"
+
+// Mapping between logger name and level
+type LoggerLevelMapping map[string]string
+
+type LoggerFactory struct {
+	LoggerLevels LoggerLevelMapping
+}
+
+// Gets logger with pre-configured level
+func (factory *LoggerFactory) GetLogger(name string) *log.Logger {
+	level, ok := factory.LoggerLevels[name]
+	if ok {
+		return NewDefaultLogger(level)
+	}
+
+	rootLevel, rootOk := factory.LoggerLevels[RootLoggerName]
+	if rootOk {
+		return NewDefaultLogger(rootLevel)
+	}
+
+	return NewDefaultLogger(DefaultLoggerLevel)
+}
+
+// Initialize a logger with string value of level
+func NewDefaultLogger(logLevelValue string) *log.Logger {
+	newLogger := log.New()
+	newLogger.Formatter = newDefulatFormatter()
+	newLogger.Level = logLevel(logLevelValue)
+
+	return newLogger
+}
+
+// Sets log level by various string
+//
+// "debug", "Debug", "DEBUG"
+// "info", "Info", "INFO"
+// "warn", "Warn", "WARN"
+// "error", "Error", "ERROR"
+// "fatal", "Fatal", "FATAL"
+// "panic", "Panic", "PANIC"
+//
+// Otherwise, use **INFO** level
+func SetLogLevelByString(logLevelValue string) {
+	log.SetFormatter(newDefulatFormatter())
+	log.SetLevel(logLevel(logLevelValue))
+}
+
+func newDefulatFormatter() *log.TextFormatter {
+	return &log.TextFormatter{FullTimestamp: true}
+}
+
 type funcInfo struct {
 	file string
 	line int
@@ -56,28 +109,25 @@ func (hook stackHook) Fire(entry *log.Entry) error {
 }
 
 func logLevel(l string) log.Level {
-	switch l {
-	case "debug", "Debug", "DEBUG":
+	switch strings.ToLower(l) {
+	case "debug":
 		return log.DebugLevel
-	case "info", "Info", "INFO":
+	case "info":
 		return log.InfoLevel
-	case "warn", "Warn", "WARN":
+	case "warn":
 		return log.WarnLevel
-	case "error", "Error", "ERROR":
+	case "error":
 		return log.ErrorLevel
-	case "fatal", "Fatal", "FATAL":
+	case "fatal":
 		return log.FatalLevel
-	case "panic", "Panic", "PANIC":
+	case "panic":
 		return log.PanicLevel
 	default:
 		return log.InfoLevel
-
 	}
 }
 
 func Init() {
-	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
-	logLevelStr := vipercfg.Config().GetString("logLevel")
-	log.SetLevel(logLevel(logLevelStr))
+	SetLogLevelByString(vipercfg.Config().GetString("logLevel"))
 	log.AddHook(stackHook{})
 }

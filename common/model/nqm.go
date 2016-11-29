@@ -118,22 +118,23 @@ type NqmTarget struct {
 
 func (target *NqmTarget) String() string {
 	return fmt.Sprintf(
-		"Id: [%d] Host: [%s] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: [%s](%d)",
+		"Id: [%d] Host: [%s] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: [%s](%d), Group Tags: %v",
 		target.Id, target.Host,
 		target.IspName, target.IspId,
 		target.ProvinceName, target.ProvinceId,
 		target.CityName, target.CityId,
 		target.NameTag, target.NameTagId,
+		target.GroupTagIds,
 	)
 }
 
 func (agent *NqmAgent) String() string {
 	return fmt.Sprintf(
-		"Id: [%d] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: (%d)",
+		"Id: [%d] Isp: \"%s\"(%d) Province: \"%s\"(%d), City: \"%s\"[%d], Name tag: (%d), Group Tag: %v",
 		agent.Id,
 		agent.IspName, agent.IspId,
 		agent.ProvinceName, agent.ProvinceId,
 		agent.CityName, agent.CityId,
-		agent.NameTagId,
+		agent.NameTagId, agent.GroupTagIds,
 	)
 }

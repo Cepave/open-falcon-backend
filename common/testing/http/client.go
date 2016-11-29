@@ -13,6 +13,8 @@ import (
 // Slint with checker
 type CheckSlint struct {
 	Slint *sling.Sling
+	LastResponse *http.Response
+
 	checker *checker.C
 }
 
@@ -33,29 +35,55 @@ func (self *CheckSlint) Request() *http.Request {
 
 // Gets the response for current request
 func (self *CheckSlint) GetResponse() *http.Response {
+	if self.LastResponse != nil {
+		return self.LastResponse
+	}
+
 	c := self.checker
 	client := &http.Client{}
 
-	resp, err := client.Do(self.Request())
+	var err error
+	self.LastResponse, err = client.Do(self.Request())
 	c.Assert(err, checker.IsNil)
 
-	return resp
+	return self.LastResponse
+}
+
+// Asserts the existing of paging header
+func (self *CheckSlint) AssertHasPaging() {
+	c := self.checker
+	resp := self.GetResponse()
+
+	c.Assert(resp.Header.Get("page-size"), checker.Matches, "\\d+")
+	c.Assert(resp.Header.Get("page-pos"), checker.Matches, "\\d+")
+	c.Assert(resp.Header.Get("total-count"), checker.Matches, "\\d+")
 }
 
 // Gets body as string
 //
 // The exepcted status is used to get expected status
 func (self *CheckSlint) GetStringBody(expectedStatus int) string {
+	return string(self.checkAndGetBody(expectedStatus))
+}
+
+func (self *CheckSlint) checkAndGetBody(expectedStatus int) []byte {
 	c := self.checker
 
 	resp := self.GetResponse()
 	defer resp.Body.Close()
 
-	c.Assert(resp.StatusCode, checker.Equals, expectedStatus)
+	c.Check(resp.StatusCode, checker.Equals, expectedStatus)
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	c.Assert(err, checker.IsNil)
 
-	return string(bodyBytes)
+	if c.Failed() {
+		if err != nil {
+			c.Fatalf("Read response(ioutil.ReadAll()) has error: %v", err)
+		} else {
+			c.Fatalf("Status code not match. Response: %s.", bodyBytes)
+		}
+	}
+
+	return bodyBytes
 }
 
 // Gets body as JSON
@@ -64,11 +92,7 @@ func (self *CheckSlint) GetStringBody(expectedStatus int) string {
 func (self *CheckSlint) GetJsonBody(expectedStatus int) *json.Json {
 	c := self.checker
 
-	resp := self.GetResponse()
-	defer resp.Body.Close()
-
-	c.Assert(resp.StatusCode, checker.Equals, expectedStatus)
-	jsonResult, err := json.NewFromReader(resp.Body)
+	jsonResult, err := json.NewJson(self.checkAndGetBody(expectedStatus))
 	c.Assert(err, checker.IsNil)
 
 	return jsonResult

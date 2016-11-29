@@ -2,32 +2,45 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB
+var DbFacade = &f.DbFacade{}
 
+// Initialize the resource for RDB
 func Init() {
-	err := dbInit(g.Config().Database)
+	err := DbInit(
+		&commonDb.DbConfig {
+			Dsn: g.Config().Database,
+			MaxIdle: g.Config().MaxIdle,
+		},
+	)
 
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	DB.SetMaxIdleConns(g.Config().MaxIdle)
 }
 
-func dbInit(dsn string) (err error) {
-	if DB, err = sql.Open("mysql", dsn); err != nil {
-		return fmt.Errorf("Open DB error: %v", err)
+// Initialize the resource for RDB
+func Release() {
+	DbFacade.Release()
+	DB = DbFacade.SqlDb
+}
+
+func DbInit(dbConfig *commonDb.DbConfig) (err error) {
+	err = DbFacade.Open(dbConfig)
+	if err != nil {
+		return
 	}
 
-	if err = DB.Ping(); err != nil {
-		return fmt.Errorf("Ping DB error: %v", err)
-	}
+	DB = DbFacade.SqlDb
+	dbNqm.DbFacade = DbFacade
 
 	return
 }
@@ -36,7 +49,7 @@ func dbInit(dsn string) (err error) {
 func inTx(txCallback func(tx *sql.Tx) error) (err error) {
 	var tx *sql.Tx
 
-	if tx, err = DB.Begin(); err != nil {
+	if tx, err = DbFacade.SqlDb.Begin(); err != nil {
 		return
 	}
 
