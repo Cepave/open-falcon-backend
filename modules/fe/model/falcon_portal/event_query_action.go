@@ -72,7 +72,7 @@ func GetEventCases(includeEvents bool, startTime int64, endTime int64, priority 
 	if !isadmin {
 		whereConditions = append(whereConditions, fmt.Sprintf("(tpl_creator = '%s' OR template_id in (%s))", username, tplids))
 	}
-	_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` %s limit %d", genSqlFilterTemplete(whereConditions), limit)).QueryRows(&result)
+	_, err = q.Raw(fmt.Sprintf("SELECT * FROM `event_cases` %s ORDER BY update_at DESC limit %d", genSqlFilterTemplete(whereConditions), limit)).QueryRows(&result)
 
 	if len(result) == 0 {
 		result = []EventCases{}
