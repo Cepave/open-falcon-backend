@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"io"
 	"net/http"
 	"os"
@@ -14,14 +15,19 @@ type tailReq struct {
 }
 
 func configTailRoutes() {
-	http.HandleFunc("/v1/tail", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/v1/tail", func(w http.ResponseWriter, r *http.Request) {
+		if !g.IsTrustable(r.RemoteAddr) {
+			w.Write([]byte("no privilege"))
+			return
+		}
+
 		var reqData tailReq
 		reqData.MaxLineNumber = -1
-		err := json.NewDecoder(req.Body).Decode(&reqData)
+		err := json.NewDecoder(r.Body).Decode(&reqData)
 		switch {
 		case err == io.EOF:
 			// empty body
-			reqData.MaxLineNumber = 10
+			reqData.MaxLineNumber = 100
 		case err != nil:
 			// parsing error
 			http.Error(w, "connot decode body", http.StatusBadRequest)
