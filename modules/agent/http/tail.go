@@ -16,14 +16,19 @@ type tailReq struct {
 func configTailRoutes() {
 	http.HandleFunc("/v1/tail", func(w http.ResponseWriter, req *http.Request) {
 		var reqData tailReq
+		reqData.MaxLineNumber = -1
 		err := json.NewDecoder(req.Body).Decode(&reqData)
 		switch {
 		case err == io.EOF:
 			// empty body
 			reqData.MaxLineNumber = 10
 		case err != nil:
-			// other error
+			// parsing error
 			http.Error(w, "connot decode body", http.StatusBadRequest)
+			return
+		}
+		if reqData.MaxLineNumber < 0 {
+			http.Error(w, "Need positive integer of MaxLineNumber", http.StatusBadRequest)
 			return
 		}
 
