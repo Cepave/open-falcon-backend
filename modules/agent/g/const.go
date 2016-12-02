@@ -17,8 +17,9 @@ import (
 // 5.1.8: Fix failure of plugin updating.
 // 5.1.9: Fix command syntax error when collecting port status.
 // 5.1.10: Fix and modify builtin metrics.
+// 5.2.0: Fix agent orphan processes problem and add /v1/tail API
 const (
-	VERSION          = "5.1.10"
+	VERSION          = "5.2.0"
 	COLLECT_INTERVAL = time.Second
 	URL_CHECK_HEALTH = "url.check.health"
 	NET_PORT_LISTEN  = "net.port.listen"
