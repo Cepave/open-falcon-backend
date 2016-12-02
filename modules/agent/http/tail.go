@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -15,15 +16,15 @@ type tailReq struct {
 func configTailRoutes() {
 	http.HandleFunc("/v1/tail", func(w http.ResponseWriter, req *http.Request) {
 		var reqData tailReq
-		if req.ContentLength == 0 {
+		err := json.NewDecoder(req.Body).Decode(&reqData)
+		switch {
+		case err == io.EOF:
+			// empty body
 			reqData.MaxLineNumber = 10
-		} else {
-			decoder := json.NewDecoder(req.Body)
-			err := decoder.Decode(&reqData)
-			if err != nil {
-				http.Error(w, "connot decode body", http.StatusBadRequest)
-				return
-			}
+		case err != nil:
+			// other error
+			http.Error(w, "connot decode body", http.StatusBadRequest)
+			return
 		}
 
 		pwd, err := os.Getwd()
@@ -32,8 +33,6 @@ func configTailRoutes() {
 			return
 		}
 		filepath := pwd + "/var/app.log"
-		//Debug use only
-		//w.Write([]byte("log file is: " + filepath + "\n"))
 
 		cmd := exec.Command("tail", "-n", strconv.Itoa(reqData.MaxLineNumber), filepath)
 		out, err := cmd.CombinedOutput()
