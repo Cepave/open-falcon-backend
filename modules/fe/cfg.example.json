@@ -63,6 +63,7 @@
         "name": "example_name",
         "token": "example_token",
         "contact": "https://example.com/example_contact",
+        "cookie": "example_cookie_key",
         "map": "https://example.com/example_get_ip",
         "key": "yourKey",
         "redirect": "yourId||http://example.com/path_to_redirect/__TOKEN__",

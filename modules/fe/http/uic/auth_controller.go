@@ -1,7 +1,6 @@
 package uic
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
@@ -26,7 +25,7 @@ func (this *AuthController) Logout() {
 	if len(token) > 0 {
 		url := g.Config().Api.Logout + "/" + token
 		log.Println("logout url =", url)
-		result := sendHttpGetRequest(url)
+		result := sendHttpGetRequest(url, []string{})
 		log.Println("logout result =", result)
 		this.Ctx.SetCookie("token", "", 0, "/")
 		this.Ctx.SetCookie("token", "", 0, "/", g.Config().Http.Cookie)
@@ -242,10 +241,9 @@ func (this *AuthController) CreateSession(uid int64, maxAge int) int {
  */
 func (this *AuthController) LoginThirdParty() {
 	s := g.Config().Api.Redirect
-	s = base64.StdEncoding.EncodeToString([]byte(s))
 	strEncoded := url.QueryEscape(s)
-	loginUrl := g.Config().Api.Login + "/" + strEncoded
-	this.ServeDataJson(loginUrl)
+	loginURL := g.Config().Api.Login + "?returnUrl=" + strEncoded
+	this.ServeDataJson(loginURL)
 }
 
 /**
@@ -260,10 +258,14 @@ func (this *AuthController) LoginThirdParty() {
  * @called by:       func (this *AuthController) LoginWithToken()
  *                    in fe/http/uic/auth_controller.go
  */
-func sendHttpGetRequest(url string) map[string]interface{} {
+func sendHttpGetRequest(url string, cookie []string) map[string]interface{} {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Println("Error =", err.Error())
+	}
+	if (len(cookie) > 0) {
+		cookie := http.Cookie{Name: cookie[0], Value: cookie[1]}
+		req.AddCookie(&cookie)
 	}
 
 	client := &http.Client{}
@@ -287,33 +289,29 @@ func setUserInfo(nodes map[string]interface{}, userInfo map[string]string) {
 	if status, ok := nodes["status"]; ok {
 		if int(status.(float64)) == 1 {
 			data := nodes["data"].(map[string]interface{})
-			access_key := data["access_key"].(string)
-			username := data["username"].(string)
-			email := data["email"].(string)
-			log.Println("access_key =", access_key)
-			userInfo["username"] = username
-			userInfo["email"] = email
-			userInfo["access_key"] = access_key
+			userInfo["name"] = data["realname"].(string)
+			userInfo["username"] = data["username"].(string)
+			userInfo["email"] = data["email"].(string)
+			userInfo["phone"] = data["cell"].(string)
+			userInfo["position"] = data["position"].(string)
+			userInfo["departmentID"] = data["department_id"].(string)
+			roles := data["roles"].([]interface{})
+			role := roles[0].(string)
+			userInfo["role"] = role
 		}
 	}
 }
 
-func getUserRole(access_key string) int {
-	urlRole := g.Config().Api.Role + "/" + access_key
-	nodes := sendHttpGetRequest(urlRole)
+func getUserRole(permission string) int {
 	role := -1
-	if int(nodes["status"].(float64)) == 1 {
-		permission := nodes["data"]
-		log.Println("permission =", permission)
-		if permission == "admin" {
-			role = 0
-		} else if permission == "operator" {
-			role = 1
-		} else if permission == "observer" {
-			role = 2
-		} else if permission == "deny" {
-			role = 3
-		}
+	if permission == "admin" {
+		role = 0
+	} else if permission == "operator" {
+		role = 1
+	} else if permission == "observer" {
+		role = 2
+	} else if permission == "deny" {
+		role = 3
 	}
 
 	// TODO: The role should be able to be changed on BOSS in the future.
@@ -334,65 +332,58 @@ func getUserRole(access_key string) int {
  *                    in fe/http/uic/uic_routes.go
  */
 func (this *AuthController) LoginWithToken() {
-	log.Println("func (this *AuthController) LoginWithToken()")
-	token := this.Ctx.Input.Param(":token")
-	log.Println("token =", token)
-	key := g.Config().Api.Key
-	authUrl := g.Config().Api.Access + "/" + token + "/" + key
-
-	nodes := sendHttpGetRequest(authUrl)
+	token := this.Ctx.GetCookie(g.Config().Api.Cookie)
+	log.Debug("func LoginWithToken() token =", token)
+	cookie := []string{
+		g.Config().Api.Cookie,
+		token,
+	}
+	authURL := g.Config().Api.Access
+	nodes := sendHttpGetRequest(authURL, cookie)
 	if nodes == nil {
-		nodes = sendHttpGetRequest(authUrl)
+		nodes = sendHttpGetRequest(authURL, cookie)
 	}
-	log.Println("nodes =", nodes)
-
-	var userInfo = make(map[string]string)
-	userInfo["username"] = ""
-	userInfo["email"] = ""
-	userInfo["access_key"] = ""
-	if nodes != nil {
-		setUserInfo(nodes, userInfo)
-	}
-	log.Println("userInfo =", userInfo)
-
-	username := userInfo["username"]
-	if len(username) > 0 {
-		access_key := userInfo["access_key"]
-		user := ReadUserByName(username)
-		if user == nil { // create third party user
-			InsertRegisterUser(username, "", "")
-			user = ReadUserByName(username)
-		}
-		if len(user.Passwd) == 0 {
-			role := getUserRole(access_key)
-			if role < 1 {
-				role = getUserRole(access_key)
-			}
-			email := userInfo["email"]
-			user.Email = email
-			user.Role = role
-			user.Update()
-		}
-		maxAge := 3600 * 24 * 30
-		this.Ctx.SetCookie("token", access_key, maxAge, "/")
-		this.Ctx.SetCookie("token", access_key, maxAge, "/", g.Config().Http.Cookie)
-
-		appSig := this.GetString("sig", "")
-		callback := this.GetString("callback", "")
-		if appSig != "" && callback != "" {
-			SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
-		} else {
-			this.CreateSession(user.Id, 3600*24*30)
-		}
-		if callback != "" {
-			this.Redirect(callback, 302)
-		} else {
-			this.Redirect("/me/info", 302)
-		}
-	} else {
-		// not logged in. redirect to login page.
-		appSig := this.GetString("sig", "")
-		callback := this.GetString("callback", "")
+	appSig := this.GetString("sig", "")
+	callback := this.GetString("callback", "")
+	if _, ok := nodes["data"]; !ok {
+		this.Ctx.SetCookie("sig", "", 0, "/")
+		this.Ctx.SetCookie("sig", "", 0, "/", g.Config().Http.Cookie)
+		this.Ctx.SetCookie("name", "", 0, "/")
+		this.Ctx.SetCookie("name", "", 0, "/", g.Config().Http.Cookie)
 		this.renderLoginPage(appSig, callback)
+	} else {
+		userInfo := map[string]string{
+			"username": "",
+			"email": "",
+		}
+		setUserInfo(nodes, userInfo)
+		username := userInfo["username"]
+		if len(username) > 0 {
+			user := ReadUserByName(username)
+			if user == nil {
+				InsertRegisterUser(username, "", "")
+				user = ReadUserByName(username)
+			}
+			if len(user.Passwd) == 0 {
+				role := getUserRole(userInfo["role"])
+				if role < 1 {
+					role = getUserRole(userInfo["role"])
+				}
+				email := userInfo["email"]
+				user.Email = email
+				user.Role = role
+				user.Update()
+			}
+			if appSig != "" && callback != "" {
+				SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
+			} else {
+				this.CreateSession(user.Id, 3600*24*30)
+			}
+			if callback != "" {
+				this.Redirect(callback, 302)
+			} else {
+				this.Redirect("/me/info", 302)
+			}
+		}
 	}
 }
