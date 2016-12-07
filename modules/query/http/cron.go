@@ -329,6 +329,7 @@ func syncHostsTable() {
 	updateIPsTable(IPKeys, IPsMap)
 	updateHostsTable(hostnames, hostsMap)
 	updatePlatformsTable(platformNames, platformsMap)
+	muteFalconHostTable(hostnames, hostsMap)
 }
 
 func syncContactsTable() {
