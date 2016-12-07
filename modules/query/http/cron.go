@@ -661,6 +661,43 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	}
 }
 
+func muteFalconHostTable(hostnames []string, hostsMap map[string]map[string]string) {
+	log.Debugf("func muteFalconHostTable()")
+	o := orm.NewOrm()
+	var rows []orm.Params
+	now := getNow()
+	for _, hostname := range hostnames {
+		host := hostsMap[hostname]
+		sql := "SELECT id FROM falcon_portal.host WHERE hostname = ? LIMIT 1"
+		num, err := o.Raw(sql, host["hostname"]).Values(&rows)
+		if err != nil {
+			log.Errorf(err.Error())
+		} else if num > 0 {
+			activate := host["activate"]
+			begin := int64(1)
+			end := int64(1)
+			if activate == "0" {
+				begin = int64(946684800) // Sat, 01 Jan 2000 00:00:00 GMT
+				end = int64(4292329420)  // Thu, 07 Jan 2106 17:43:40 GMT
+			} else if activate == "1" {
+				begin = int64(0)
+				end = int64(0)
+			}
+			if begin != int64(1) {
+				row := rows[0]
+				ID := row["id"]
+				sql = "UPDATE falcon_portal.host"
+				sql += " SET maintain_begin = ?, maintain_end = ?, update_at = ?"
+				sql += " WHERE id = ?"
+				_, err := o.Raw(sql, begin, end, now, ID).Exec()
+				if err != nil {
+					log.Errorf(err.Error())
+				}
+			}
+		}
+	}
+}
+
 func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
 	log.Debugf("func updatePlatformsTable()")
 	now := getNow()
