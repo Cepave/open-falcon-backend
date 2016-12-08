@@ -201,7 +201,8 @@ func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
 		tableName := "nqm_log_" + strings.Replace(idcName, "-", "_", -1)
 		timestamp := getLatestTimestamp(tableName, result)
 		if timestamp > 0 {
-			idc := getPacketLossAndAveragePingTime(tableName, timestamp, result)
+			result := getPacketLossAndAveragePingTime(idcName, []int64{timestamp})
+			idc := result[0]
 			idc["nodeName"] = idcName
 			idc["pid"] = pidMap[idcName]
 			items = append(items, idc)
