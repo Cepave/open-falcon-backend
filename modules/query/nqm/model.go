@@ -10,10 +10,10 @@ import (
 type Metrics struct {
 	Max                     int16   `json:"max"`
 	Min                     int16   `json:"min"`
-	Avg                     float32 `json:"avg"`
+	Avg                     float64 `json:"avg"`
 	Med                     int16   `json:"med"`
-	Mdev                    float32 `json:"mdev"`
-	Loss                    float32 `json:"loss"`
+	Mdev                    float64 `json:"mdev"`
+	Loss                    float64 `json:"loss"`
 	Count                   int32   `json:"count"`
 	NumberOfSentPackets     uint64  `json:"number_of_sent_packets"`
 	NumberOfReceivedPackets uint64  `json:"number_of_received_packets"`

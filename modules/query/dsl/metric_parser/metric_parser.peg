@@ -1,0 +1,7 @@
+{
+package metric_parser
+}
+
+Term = [0-9]+ {
+	return "number", nil
+}

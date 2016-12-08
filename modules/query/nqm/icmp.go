@@ -30,10 +30,10 @@ func (icmpResult *IcmpResult) UnmarshalJSON(p []byte) error {
 	icmpResult.metrics = &Metrics{
 		Max:                     int16(jsonObj.Get("max").MustInt()),
 		Min:                     int16(jsonObj.Get("min").MustInt()),
-		Avg:                     float32(jsonObj.Get("avg").MustFloat64()),
+		Avg:                     jsonObj.Get("avg").MustFloat64(),
 		Med:                     int16(jsonObj.Get("med").MustInt()),
-		Mdev:                    float32(jsonObj.Get("mdev").MustFloat64()),
-		Loss:                    float32(jsonObj.Get("loss").MustFloat64()),
+		Mdev:                    jsonObj.Get("mdev").MustFloat64(),
+		Loss:                    jsonObj.Get("loss").MustFloat64(),
 		Count:                   int32(jsonObj.Get("count").MustInt()),
 		NumberOfSentPackets:     uint64(jsonObj.Get("number_of_sent_packets").MustUint64()),
 		NumberOfReceivedPackets: uint64(jsonObj.Get("number_of_received_packets").MustUint64()),

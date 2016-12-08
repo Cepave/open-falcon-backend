@@ -47,7 +47,7 @@ func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 		c.Assert(len(testedResult), Equals, testCase.expectedNumberOfResult)
 		if testCase.expectedNumberOfResult > 0 {
 			c.Assert(testedResult[0].grouping, DeepEquals, []int32{20, 40})
-			c.Assert(testedResult[0].metrics.Avg, Equals, float32(45.78))
+			c.Assert(testedResult[0].metrics.Avg, Equals, float64(45.78))
 			c.Assert(testedResult[0].metrics.Max, Equals, int16(88))
 			c.Assert(testedResult[0].metrics.NumberOfAgents, Equals, int32(50))
 			c.Assert(testedResult[0].metrics.NumberOfTargets, Equals, int32(37))
