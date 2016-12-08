@@ -303,6 +303,29 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getTimestamps(tableName string, timestampFrom int64, timestampTo int64) []int64 {
+	timestamps := []int64{}
+	o := orm.NewOrm()
+	o.Using("gz_nqm")
+	sqlcmd := "SELECT DISTINCT mtime FROM `gz_nqm`.`" + tableName
+	sqlcmd += "` WHERE mtime BETWEEN ? AND ? ORDER BY mtime ASC"
+	var rows []orm.Params
+	num, err := o.Raw(sqlcmd, timestampFrom, timestampTo).Values(&rows)
+	if err != nil {
+		log.Debugf("Error = %v", err.Error())
+	} else if num > 0 {
+		for _, row := range rows {
+			timestamp, err := strconv.ParseInt(row["mtime"].(string), 10, 64)
+			if err != nil {
+				log.Debugf("Error = %v", err.Error())
+			} else {
+				timestamps = append(timestamps, timestamp)
+			}
+		}
+	}
+	return timestamps
+}
+
 func configNQMRoutes() {
 	http.HandleFunc("/api/nqm/nodes", getNQMNodes)
 	http.HandleFunc("/api/nqm/loss", getNQMPacketLoss)
