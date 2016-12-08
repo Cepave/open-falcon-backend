@@ -104,7 +104,7 @@ func (ctrl *DbController) InTx(txCallback TxCallback) {
 
 		rollbackError := tx.Rollback()
 		if rollbackError != nil {
-			p = fmt.Errorf("Transaction has error: %v. Rollback has error too: %v", rollbackError)
+			p = fmt.Errorf("Transaction has error: %v. Rollback has error too: %v", p, rollbackError)
 		}
 
 		panic(p)
