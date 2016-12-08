@@ -127,3 +127,47 @@ func (suite *TestIntTypeSuite) TestIntTo8(c *C) {
 		)
 	}
 }
+
+// Tests the sorting and unique for int64
+func (suite *TestIntTypeSuite) TestSortAndUniqueInt64(c *C) {
+	testCases := []struct {
+		source []int64
+		expectedResult []int64
+	} {
+		{
+			[]int64 { 30, 30, -10, 10, -7, 22, },
+			[]int64 { -10, -7, 10, 22, 30, },
+		},
+		{ nil, nil },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := SortAndUniqueInt64(testCase.source)
+
+		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
+	}
+}
+
+// Tests the sorting and unique for uint64
+func (suite *TestIntTypeSuite) TestSortAndUniqueUint64(c *C) {
+	testCases := []struct {
+		source []uint64
+		expectedResult []uint64
+	} {
+		{
+			[]uint64 { 30, 30, 10, 10, 7, 22 },
+			[]uint64 { 7, 10, 22, 30 },
+		},
+		{ nil, nil },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := SortAndUniqueUint64(testCase.source)
+
+		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
+	}
+}
