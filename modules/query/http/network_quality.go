@@ -326,6 +326,76 @@ func getTimestamps(tableName string, timestampFrom int64, timestampTo int64) []i
 	return timestamps
 }
 
+func getSnorlax(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []map[string]interface{}{}
+	countOfTimestamps := 0
+	nodeName := req.URL.Query().Get("node")
+	from := req.URL.Query().Get("from")
+	to := req.URL.Query().Get("to")
+	page := 1
+	if len(req.URL.Query().Get("page")) > 0 {
+		pageInput, err := strconv.Atoi(req.URL.Query().Get("page"))
+		if err == nil && pageInput > 0 {
+			page = pageInput
+		}
+	}
+	o := orm.NewOrm()
+	o.Using("gz_nqm")
+	tableName := "nqm_log_" + strings.Replace(nodeName, "-", "_", -1)
+	timestampFrom := int64(0)
+	timestampTo := int64(0)
+	timestampLatest := getLatestTimestamp(tableName, result)
+	if timestampLatest > 0 {
+		timestampTo = timestampLatest
+		loc, err := time.LoadLocation("Asia/Taipei")
+		if err != nil {
+			loc = time.Local
+		}
+		timeFormat := "2006-01-02 15:04"
+		date, err := time.ParseInLocation(timeFormat, to, loc)
+		if err == nil {
+			timestampTo = date.Unix()
+		}
+		if timestampTo > 0 {
+			timestampTo = getNearestTimestamp(tableName, timestampTo, result)
+		}
+
+		date, err = time.ParseInLocation(timeFormat, from, loc)
+		if err == nil {
+			timestampFrom = date.Unix()
+		}
+		if timestampFrom > 0 {
+			timestampFrom = getNearestTimestamp(tableName, timestampFrom, result)
+		}
+		timestamps := getTimestamps(tableName, timestampFrom, timestampTo)
+		countOfTimestamps = len(timestamps)
+		rowsPerPage := 20
+		begin := 0
+		end := 19
+		begin = (page - 1) * rowsPerPage
+		end =  begin + rowsPerPage
+		lastIndex := len(timestamps)
+		if (begin > lastIndex) {
+			begin = lastIndex
+		}
+		if (end > lastIndex) {
+			end = lastIndex
+		}
+		timestamps = timestamps[begin:end]
+		items = getPacketLossAndAveragePingTime(nodeName, timestamps)
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	nodes["countOfTimestamps"] = countOfTimestamps
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configNQMRoutes() {
 	http.HandleFunc("/api/nqm/nodes", getNQMNodes)
 	http.HandleFunc("/api/nqm/loss", getNQMPacketLoss)
