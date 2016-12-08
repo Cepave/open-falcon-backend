@@ -101,55 +101,58 @@ func getSum(slice []float64) float64 {
 	return sum
 }
 
-func getPacketLossAndAveragePingTime(tableName string, timestamp int64, result map[string]interface{}) map[string]interface{} {
-	idc := map[string]interface{}{}
-	if timestamp == int64(0) {
-		return idc
-	}
-	sends := []float64{}
-	receives := []float64{}
-	averages := []float64{}
-
-	o := orm.NewOrm()
-	o.Using("gz_nqm")
-	sqlcmd := "SELECT send, receive, avg FROM `gz_nqm`.`" + tableName + "` WHERE mtime = ?"
-	var rows []orm.Params
-	num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestamp))).Values(&rows)
-	if err != nil {
-		log.Debugf("Error = %v", err.Error())
-	} else if num > 0 {
-		for _, row := range rows {
-			send, err := strconv.ParseFloat(row["send"].(string), 64)
-			if err != nil {
-				log.Debugf("Error = %v", err.Error())
-			} else {
-				sends = append(sends, send)
-			}
-			receive, err := strconv.ParseFloat(row["receive"].(string), 64)
-			if err != nil {
-				log.Debugf("Error = %v", err.Error())
-			} else {
-				receives = append(receives, receive)
-			}
-			avg, err := strconv.ParseFloat(row["avg"].(string), 64)
-			if err != nil {
-				log.Debugf("Error = %v", err.Error())
-			} else {
-				averages = append(averages, avg)
+func getPacketLossAndAveragePingTime(nodeName string, timestamps []int64) []map[string]interface{} {
+	result := []map[string]interface{}{}
+	tableName := "nqm_log_" + strings.Replace(nodeName, "-", "_", -1)
+	for _, timestamp := range timestamps {
+		sends := []float64{}
+		receives := []float64{}
+		averages := []float64{}
+		o := orm.NewOrm()
+		o.Using("gz_nqm")
+		sqlcmd := "SELECT send, receive, avg FROM `gz_nqm`.`" + tableName + "` WHERE mtime = ?"
+		var rows []orm.Params
+		num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestamp))).Values(&rows)
+		if err != nil {
+			log.Debugf("Error = %v", err.Error())
+		} else if num > 0 {
+			for _, row := range rows {
+				send, err := strconv.ParseFloat(row["send"].(string), 64)
+				if err != nil {
+					log.Debugf("Error = %v", err.Error())
+				} else {
+					sends = append(sends, send)
+				}
+				receive, err := strconv.ParseFloat(row["receive"].(string), 64)
+				if err != nil {
+					log.Debugf("Error = %v", err.Error())
+				} else {
+					receives = append(receives, receive)
+				}
+				avg, err := strconv.ParseFloat(row["avg"].(string), 64)
+				if err != nil {
+					log.Debugf("Error = %v", err.Error())
+				} else {
+					averages = append(averages, avg)
+				}
 			}
 		}
-	}
-	divider := float64(len(sends))
-	if divider > 0 {
-		packetLossRate := 1 - (getSum(receives) / getSum(sends))
-		averagePingTimeMilliseconds := getSum(averages) / divider
-		idc = map[string]interface{}{
-			"packetLossRate":              packetLossRate,
-			"averagePingTimeMilliseconds": averagePingTimeMilliseconds,
+		item := map[string]interface{}{
+			"node":                        nodeName,
+			"packetLossRate":              "",
+			"averagePingTimeMilliseconds": "",
 			"time": time.Unix(timestamp, 0).Format("2006-01-02 15:04"),
 		}
+		divider := float64(len(sends))
+		if divider > 0 {
+			packetLossRate := 1 - (getSum(receives) / getSum(sends))
+			averagePingTimeMilliseconds := getSum(averages) / divider
+			item["packetLossRate"] = packetLossRate
+			item["averagePingTimeMilliseconds"] = averagePingTimeMilliseconds
+		}
+		result = append(result, item)
 	}
-	return idc
+	return result
 }
 
 func getNQMPacketLoss(rw http.ResponseWriter, req *http.Request) {
