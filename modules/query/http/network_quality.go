@@ -400,4 +400,5 @@ func configNQMRoutes() {
 	http.HandleFunc("/api/nqm/nodes", getNQMNodes)
 	http.HandleFunc("/api/nqm/loss", getNQMPacketLoss)
 	http.HandleFunc("/api/nqm/jaguar", getJaguar)
+	http.HandleFunc("/api/snorlax", getSnorlax)
 }
