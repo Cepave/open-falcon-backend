@@ -286,7 +286,8 @@ func getJaguar(rw http.ResponseWriter, req *http.Request) {
 			if timestamp > 0 {
 				timestampNearest = getNearestTimestamp(tableName, timestamp, result)
 			}
-			resp := getPacketLossAndAveragePingTime(tableName, timestampNearest, result)
+			result := getPacketLossAndAveragePingTime(nodeName, []int64{timestampNearest})
+			resp := result[0]
 			if _, ok := resp["packetLossRate"]; ok {
 				item["loss"] = resp["packetLossRate"]
 				item["ping.ms"] = resp["averagePingTimeMilliseconds"]
