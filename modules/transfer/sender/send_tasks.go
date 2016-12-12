@@ -13,6 +13,7 @@ import (
 	cmodel "github.com/open-falcon/common/model"
 	nsema "github.com/toolkits/concurrent/semaphore"
 	"github.com/toolkits/container/list"
+	nproc "github.com/toolkits/proc"
 )
 
 // send
@@ -64,9 +65,9 @@ func startSendTasks() {
 	go forward2InfluxdbTask(InfluxdbQueues["default"], influxdbConcurrent)
 
 	if cfg.NqmRest.Enabled {
-		go forward2NqmTask(NqmIcmpQueue, g.Config().NqmRest.Fping)
-		go forward2NqmTask(NqmTcpQueue, g.Config().NqmRest.Tcpping)
-		go forward2NqmTask(NqmTcpconnQueue, g.Config().NqmRest.Tcpconn)
+		go forward2NqmTask(NqmIcmpQueue, g.Config().NqmRest.Fping, proc.SendToNqmIcmpCnt, proc.SendToNqmIcmpFailCnt)
+		go forward2NqmTask(NqmTcpQueue, g.Config().NqmRest.Tcpping, proc.SendToNqmTcpCnt, proc.SendToNqmTcpFailCnt)
+		go forward2NqmTask(NqmTcpconnQueue, g.Config().NqmRest.Tcpconn, proc.SendToNqmTcpconnCnt, proc.SendToNqmTcpconnFailCnt)
 	}
 
 	if cfg.Staging.Enabled {
@@ -262,13 +263,13 @@ func forward2InfluxdbTask(Q *list.SafeListLimited, concurrent int) {
 	}
 }
 
-func forwardNqmItems(nqmItem interface{}, nqmUrl string, s *nsema.Semaphore) {
+func forwardNqmItems(nqmItem interface{}, nqmUrl string, s *nsema.Semaphore, cnt *nproc.SCounterQps, failCnt *nproc.SCounterQps) {
 	defer s.Release()
 
 	jsonItem, jsonErr := json.Marshal(nqmItem)
 	if jsonErr != nil {
 		log.Errorf("Error on serialization for nqm item(ICMP, TCP, or TCPCONN): %v", jsonErr)
-		proc.SendToNqmIcmpFailCnt.IncrBy(1)
+		failCnt.IncrBy(1)
 		return
 	}
 
@@ -281,14 +282,14 @@ func forwardNqmItems(nqmItem interface{}, nqmUrl string, s *nsema.Semaphore) {
 	postResp, err := httpClient.Do(postReq)
 	if err != nil {
 		log.Errorln("[ Cassandra ] Error on push:", err)
-		proc.SendToNqmIcmpFailCnt.IncrBy(1)
+		failCnt.IncrBy(1)
 		return
 	}
 	defer postResp.Body.Close()
-	proc.SendToNqmIcmpCnt.IncrBy(1)
+	cnt.IncrBy(1)
 }
 
-func forward2NqmTask(Q *list.SafeListLimited, apiUrl string) {
+func forward2NqmTask(Q *list.SafeListLimited, apiUrl string, cnt *nproc.SCounterQps, failCnt *nproc.SCounterQps) {
 	batch := g.Config().NqmRest.Batch // 一次发送,最多batch条数据
 	concurrent := g.Config().NqmRest.MaxConns
 	sema := nsema.NewSemaphore(concurrent)
@@ -302,7 +303,7 @@ func forward2NqmTask(Q *list.SafeListLimited, apiUrl string) {
 
 		for _, v := range items {
 			sema.Acquire()
-			go forwardNqmItems(v, apiUrl, sema)
+			go forwardNqmItems(v, apiUrl, sema, cnt, failCnt)
 		}
 	}
 }
