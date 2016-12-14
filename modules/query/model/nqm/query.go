@@ -2,183 +2,218 @@ package nqm
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"sort"
 	"strings"
 	"time"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/Cepave/open-falcon-backend/common/compress"
+	"github.com/Cepave/open-falcon-backend/common/digest"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	sjson "github.com/bitly/go-simplejson"
 )
 
+var flateCompressor = compress.NewDefaultFlateCompressor()
+
 const (
-	METRICS_MAX = "max"
-    METRICS_MIN = "min"
-    METRICS_AVG = "avg"
-    METRICS_MED = "med"
-    METRICS_MDEV = "mdev"
-    METRICS_LOSS = "loss"
-    METRICS_COUNT = "count"
-    METRICS_PCK_SENT = "pck_sent"
-    METRICS_PCK_RECEIVED = "pck_received"
-    METRICS_NUM_AGENT = "num_agent"
-    METRICS_NUM_TARGET = "num_target"
+	MetricMax = "max"
+    MetricMin = "min"
+    MetricAvg = "avg"
+    MetricMed = "med"
+    MetricMdev = "mdev"
+    MetricLoss = "loss"
+    MetricCount = "count"
+    MetricPckSent = "pck_sent"
+    MetricPckReceived = "pck_received"
+    MetricNumAgent = "num_agent"
+    MetricNumTarget = "num_target"
 
-	AGENT_GP_NAME = "name"
-	AGENT_GP_IP_ADDRESS = "ip_address"
-	AGENT_GP_HOSTNAME = "hostname"
+	AgentGroupingName = "name"
+	AgentGroupingIpAddress = "ip_address"
+	AgentGroupingHostname = "hostname"
 
-	TARGET_GP_NAME = "name"
-	TARGET_GP_HOST = "host"
+	TargetGroupingName = "name"
+	TargetGroupingHost = "host"
 
-	GROUPING_PROVINCE = "province"
-	GROUPING_CITY = "city"
-	GROUPING_ISP = "isp"
-	GROUPING_NAME_TAG = "name_tag"
+	GroupingProvince = "province"
+	GroupingCity = "city"
+	GroupingIsp = "isp"
+	GroupingName_tag = "name_tag"
 
-	TIME_RANGE_ABSOLUTE byte = 1
-	TIME_RANGE_RELATIVE byte = 2
+	TimeRangeAbsolute byte = 1
+	TimeRangeRelative byte = 2
 
-	TU_YEAR byte = 6
-	TU_MONTH byte = 5
-	TU_WEEK byte = 4
-	TU_DAY byte = 3
-	TU_HOUR byte = 2
-	TU_MINUTE byte = 1
+	TimeUnitYear = "y"
+	TimeUnitMonth = "m"
+	TimeUnitWeek = "w"
+	TimeUnitDay = "d"
+	TimeUnitHour = "h"
+	TimeUnitMinute = "n"
 )
 
 type MetricsFilterParseError struct {
+	error
 }
 
-func (e *MetricsFilterParseError) Error() string {
-	return ""
-}
-
-var supportingTimeUnit = map[string]byte {
-	"y": TU_YEAR,
-	"m": TU_MONTH,
-	"w": TU_WEEK,
-	"d": TU_DAY,
-	"h": TU_HOUR,
-	"n": TU_MINUTE,
+var supportingTimeUnit = map[string]bool {
+	TimeUnitYear: false,
+	TimeUnitMonth: false,
+	TimeUnitWeek: false,
+	TimeUnitDay: false,
+	TimeUnitHour: false,
+	TimeUnitMinute: false,
 }
 
 var supportingOutput = map[string]bool {
-	METRICS_MAX: true,
-    METRICS_MIN: true,
-    METRICS_AVG: true,
-    METRICS_MED: true,
-    METRICS_MDEV: true,
-    METRICS_LOSS: true,
-    METRICS_COUNT: true,
-    METRICS_PCK_SENT: true,
-    METRICS_PCK_RECEIVED: true,
-    METRICS_NUM_AGENT: true,
-    METRICS_NUM_TARGET: true,
+	MetricMax: true,
+    MetricMin: true,
+    MetricAvg: true,
+    MetricMed: true,
+    MetricMdev: true,
+    MetricLoss: true,
+    MetricCount: true,
+    MetricPckSent: true,
+    MetricPckReceived: true,
+    MetricNumAgent: true,
+    MetricNumTarget: true,
 }
 
 var supportingAgentGrouping = map[string]bool {
-	AGENT_GP_NAME: true,
-	AGENT_GP_IP_ADDRESS: true,
-	AGENT_GP_HOSTNAME: true,
-	GROUPING_PROVINCE: true,
-	GROUPING_CITY: true,
-	GROUPING_ISP: true,
-	GROUPING_NAME_TAG: true,
+	AgentGroupingName: true,
+	AgentGroupingIpAddress: true,
+	AgentGroupingHostname: true,
+	GroupingProvince: true,
+	GroupingCity: true,
+	GroupingIsp: true,
+	GroupingName_tag: true,
 }
 
 var supportingTargetGrouping = map[string]bool {
-	TARGET_GP_NAME: true,
-	TARGET_GP_HOST: true,
-	GROUPING_PROVINCE: true,
-	GROUPING_CITY: true,
-	GROUPING_ISP: true,
-	GROUPING_NAME_TAG: true,
+	TargetGroupingName: true,
+	TargetGroupingHost: true,
+	GroupingProvince: true,
+	GroupingCity: true,
+	GroupingIsp: true,
+	GroupingName_tag: true,
 }
 
 // The main object of query for compound report
 type CompoundQuery struct {
-	// Output content of report
-	Output *struct {
-		Metrics []string
-	}
+	Filters *CompoundQueryFilter `json:"filters" digest:"1"`
 
 	// Grouping content of report
-	Grouping *struct {
-		Agent []string
-		Target []string
-	}
+	Grouping *QueryGrouping `json:"grouping" digest:"11"`
 
-	Filters *CompoundQueryFilter
+	// Output content of report
+	Output *QueryOutput `json:"output" digest:"21"`
 
 	jsonObject *sjson.Json
 }
-
-type CompoundQueryFilter struct {
-	Time *TimeFilter
-	Agent *AgentFilter
-	Target *TargetFilter
-	Metrics string
-}
-
-type TimeFilter struct {
-	TimeRangeType byte
-	StartTime time.Time
-	EndTime time.Time
-	ToNow *TimeWithUnit
-}
-
-func NewTimeFilter() *TimeFilter {
-	return &TimeFilter {
-		TimeRangeType: 0,
-		StartTime: time.Unix(0, 0),
-		EndTime: time.Unix(0, 0),
-		ToNow: &TimeWithUnit{},
-	}
-}
-
-type TimeWithUnit struct {
-	Unit byte
-	Value int
-}
-
-type AgentFilter struct {
-	Name []string
-	Hostname []string
-	IpAddress []string
-	ConnectionId []string
-	IspIds []int16
-	ProvinceIds []int16
-	CityIds []int16
-	NameTagIds []int16
-	GroupTagIds []int32
-}
-
-type TargetFilter struct {
-	Name []string
-	Host []string
-	IspIds []int16
-	ProvinceIds []int16
-	CityIds []int16
-	NameTagIds []int16
-	GroupTagIds []int32
+func (q *CompoundQuery) GetDigestValue() []byte {
+	return digest.DigestStruct(q, digest.Md5SumFunc)
 }
 
 func NewCompoundQuery() *CompoundQuery {
 	return &CompoundQuery {
-		Output: &struct {
-			Metrics []string
-		} {},
-		Grouping: &struct {
-			Agent []string
-			Target []string
-		} {},
+		Output: &QueryOutput { },
+		Grouping: &QueryGrouping { },
 		Filters: &CompoundQueryFilter {
 			Time: NewTimeFilter(),
 			Agent: &AgentFilter{},
 			Target: &TargetFilter{},
 		},
 	}
+}
+
+type CompoundQueryFilter struct {
+	Time *TimeFilter `json:"time" digest:"1"`
+	Agent *AgentFilter `json:"agent" digest:"2"`
+	Target *TargetFilter `json:"target" digest:"3"`
+	Metrics string `json:"metrics" digest:"4"`
+}
+
+type TimeFilter struct {
+	StartTime ojson.JsonTime `json:"start_time"`
+	EndTime ojson.JsonTime `json:"end_time"`
+	ToNow *TimeWithUnit `json:"to_now"`
+
+	timeRangeType byte
+}
+func (f *TimeFilter) GetDigest() []byte {
+	switch f.timeRangeType {
+	case TimeRangeAbsolute:
+		bytesOfRange := make([]byte, 0)
+		bytesOfRange = append(bytesOfRange, digest.DigestableTime(f.StartTime).GetDigest()...)
+		bytesOfRange = append(bytesOfRange, digest.DigestableTime(f.EndTime).GetDigest()...)
+		return digest.Md5SumFunc(bytesOfRange)
+	case TimeRangeRelative:
+		return digest.GetBytesGetter(f.ToNow, digest.Md5SumFunc)()
+	}
+
+	panic("Unknown type of time filter for digesting")
+}
+
+func NewTimeFilter() *TimeFilter {
+	return &TimeFilter {
+		timeRangeType: 0,
+		ToNow: &TimeWithUnit { "", 0 },
+	}
+}
+
+type TimeWithUnit struct {
+	Unit string `json:"unit" digest:"1"`
+	Value int `json:"value" digest:"2"`
+}
+
+type QueryOutput struct {
+	Metrics []string `json:"metrics" digest:"1"`
+}
+
+type QueryGrouping struct {
+	Agent []string `json:"agent" digest:"1"`
+	Target []string `json:"target" digest:"2"`
+}
+
+type AgentFilter struct {
+	Name []string `json:"name" digest:"1"`
+	Hostname []string `json:"hostname" digest:"2"`
+	IpAddress []string `json:"ip_address" digest:"3"`
+	ConnectionId []string `json:"connection_id" digest:"4"`
+	IspIds []int16 `json:"isp_ids" digest:"21"`
+	ProvinceIds []int16 `json:"province_ids" digest:"22"`
+	CityIds []int16 `json:"city_ids" digest:"23"`
+	NameTagIds []int16 `json:"name_tag_ids" digest:"24"`
+	GroupTagIds []int32 `json:"group_tag_ids" digest:"25"`
+}
+
+type TargetFilter struct {
+	Name []string `json:"name" digest:"1"`
+	Host []string `json:"host" digest:"2"`
+	IspIds []int16 `json:"isp_ids" digest:"21"`
+	ProvinceIds []int16 `json:"province_ids" digest:"22"`
+	CityIds []int16 `json:"city_ids" digest:"23"`
+	NameTagIds []int16 `json:"name_tag_ids" digest:"24"`
+	GroupTagIds []int32 `json:"group_tag_ids" digest:"25"`
+}
+
+// Converts this query object to compressed query
+func (q *CompoundQuery) GetCompressedQuery() []byte {
+	json, jsonErr := json.Marshal(q)
+	if jsonErr != nil {
+		panic(jsonErr)
+	}
+
+	return flateCompressor.MustCompressString(string(json))
+}
+
+func (q *CompoundQuery) UnmarshalFromCompressedQuery(compressedQuery []byte) {
+	json := flateCompressor.MustDecompressToString(compressedQuery)
+	q.UnmarshalJSON([]byte(json))
+}
+
+// Converts this query object to compressed query
+func (q *CompoundQuery) GetQueryDigest() []byte {
+	return nil
 }
 
 // Processes the source of JSON to initialize query object
@@ -206,6 +241,30 @@ func (query *CompoundQuery) UnmarshalJSON(jsonSource []byte) error {
 	return nil
 }
 
+func (query *CompoundQuery) SetupDefault() {
+	if len(query.Output.Metrics) == 0 {
+		query.Output.Metrics = []string{
+			MetricMax, MetricMin, MetricAvg, MetricLoss, MetricCount,
+		}
+	}
+
+	if len(query.Grouping.Agent) + len(query.Grouping.Target) == 0 {
+		query.Grouping.Agent = []string {
+			AgentGroupingName, AgentGroupingIpAddress,
+			GroupingProvince, GroupingCity, GroupingIsp, GroupingName_tag,
+		}
+	}
+
+	timeRange := query.Filters.Time
+	if timeRange.timeRangeType == 0 {
+		timeRange.timeRangeType = TimeRangeRelative
+		timeRange.ToNow = &TimeWithUnit {
+			Unit: TimeUnitHour,
+			Value: 1,
+		}
+	}
+}
+
 func (query *CompoundQuery) loadFilters() (err error) {
 	query.Filters.Metrics = purifyStringOfJson(
 		query.jsonObject.GetPath("filters", "metrics"),
@@ -229,41 +288,52 @@ func (query *CompoundQuery) loadFiltersOfTime() error {
 
 	jsonTime := jsonObject.GetPath("filters", "time")
 
-	jsonStartTime, hasStartTime := jsonTime.CheckGet("start_time")
-	jsonEndTime, hasEndTime := jsonTime.CheckGet("end_time")
-	jsonToNow, hasToNow := jsonTime.CheckGet("to_now")
-
-	/**
-	 * Parse time range of absolute
-	 */
-	if hasStartTime && hasEndTime {
-		timeFilter.TimeRangeType = TIME_RANGE_ABSOLUTE
-		timeFilter.StartTime = time.Unix(jsonStartTime.MustInt64(), 0)
-		timeFilter.EndTime = time.Unix(jsonEndTime.MustInt64(), 0)
-		return nil
+	if startTime, endTime := query.loadAbsoluteTimeRange(jsonTime)
+		!startTime.IsZero() && !endTime.IsZero() {
+		timeFilter.timeRangeType = TimeRangeAbsolute
+		timeFilter.StartTime = ojson.JsonTime(startTime)
+		timeFilter.EndTime = ojson.JsonTime(endTime)
 	}
-	// :~)
 
+	if timeWithUnit := query.loadRelativeTimeRange(jsonTime)
+		timeWithUnit != nil {
+		timeFilter.timeRangeType = TimeRangeRelative
+		timeFilter.ToNow = timeWithUnit
+	}
+
+	return nil
+}
+func (query *CompoundQuery) loadRelativeTimeRange(jsonTime *sjson.Json) *TimeWithUnit {
+	jsonToNow, hasToNow := jsonTime.CheckGet("to_now")
 	if !hasToNow {
 		return nil
 	}
 
-	/**
-	 * Parse tiem range of relative
-	 */
-	timeFilter.TimeRangeType = TIME_RANGE_RELATIVE
-	timeFilter.ToNow.Value = jsonToNow.Get("value").MustInt()
-
-	stringOfTimeUnit := strings.ToLower(jsonToNow.GetPath("unit").MustString())
-	valueOfTimeUnit, ok := supportingTimeUnit[stringOfTimeUnit]
-	if !ok {
-		return fmt.Errorf("Unknown time unit: [%s](\"filters.time.to_now.unit\").", stringOfTimeUnit)
+	stringOfTimeUnit := strings.ToLower(
+		strings.TrimSpace(jsonToNow.GetPath("unit").MustString()),
+	)
+	if _, ok := supportingTimeUnit[stringOfTimeUnit]; !ok {
+		return nil
 	}
 
-	timeFilter.ToNow.Unit = valueOfTimeUnit
-	// :~)
+	return &TimeWithUnit{
+		Unit: stringOfTimeUnit,
+		Value: jsonToNow.Get("value").MustInt(),
+	}
+}
+func (query *CompoundQuery) loadAbsoluteTimeRange(jsonTime *sjson.Json) (time.Time, time.Time) {
+	jsonStartTime := jsonTime.Get("start_time")
+	jsonEndTime := jsonTime.Get("end_time")
 
-	return nil
+	var startTime, endTime time.Time
+	if jsonStartTime.Interface() != nil {
+		startTime = time.Unix(jsonStartTime.MustInt64(), 0)
+	}
+	if jsonStartTime.Interface() != nil {
+		endTime = time.Unix(jsonEndTime.MustInt64(), 0)
+	}
+
+	return startTime, endTime
 }
 func (query *CompoundQuery) loadFiltersOfAgent() error {
 	agentFilter := query.Filters.Agent
@@ -364,7 +434,7 @@ func purifyNumberArrayOfJsonToInt32(jsonObject *sjson.Json) []int32 {
 
 func purifyNumberArrayOfJson(jsonObject *sjson.Json, targetType reflect.Type) interface{} {
 	if jsonObject == nil {
-		return nil
+		utils.MakeAbstractArray([]int{}).GetArrayAsType(targetType)
 	}
 
 	uniqueFilter := utils.NewUniqueFilter(utils.TypeOfInt)
@@ -400,7 +470,7 @@ func purifyStringOfJson(jsonObject *sjson.Json) string {
 
 func purifyStringArrayOfJsonForDomain(jsonObject *sjson.Json, domain map[string]bool) []string {
 	if jsonObject == nil {
-		return nil
+		return []string{}
 	}
 
 	uniqueFilter := utils.NewUniqueFilter(utils.TypeOfString)
@@ -424,7 +494,7 @@ func purifyStringArrayOfJsonForDomain(jsonObject *sjson.Json, domain map[string]
 }
 func purifyStringArrayOfJsonForValues(jsonObject *sjson.Json) []string {
 	if jsonObject == nil {
-		return nil
+		return []string{}
 	}
 
 	uniqueFilter := utils.NewUniqueFilter(utils.TypeOfString)
