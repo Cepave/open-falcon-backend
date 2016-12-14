@@ -620,10 +620,10 @@ func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (ma
 	return platforms, platformNames, hostnames
 }
 
-func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
-	var queries []*cmodel.GraphLastParam
+func setGraphQueries(hostnames []string, hostnamesExisted []string, result map[string]interface{}) (queries []*cmodel.GraphLastParam, versions map[string]map[string]string) {
 	o := orm.NewOrm()
 	var hosts []*Host
+	versions = make(map[string]map[string]string)
 	hostnamesStr := strings.Join(hostnames, "','")
 	sqlcommand := "SELECT hostname, agent_version, plugin_version FROM falcon_portal.host WHERE hostname IN ('"
 	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
@@ -646,7 +646,7 @@ func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map
 			}
 		}
 	}
-	return queries
+	return
 }
 
 func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result map[string]interface{}) []cmodel.GraphLastResp {
@@ -699,13 +699,13 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 	return data
 }
 
-func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) {
+func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]map[string]string) (out_versions map[string]map[string]string) {
 	name := ""
 	status := ""
 	alive := 0
 	var diff int64
 	var timestamp int64
-	items := map[string]interface{}{}
+	out_versions = make(map[string]map[string]string)
 	for key, row := range data {
 		name = row.Endpoint
 		alive = 0
@@ -728,14 +728,14 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 				status = "normal"
 			}
 		}
-		item := map[string]interface{}{
+		item := map[string]string{
 			"status":  status,
 			"version": version["agent"],
 			"plugin":  version["plugin"],
 		}
-		items[name] = item
+		out_versions[name] = item
 	}
-	result["items"] = items
+	return
 }
 
 func getAnomalies(errorHosts []map[string]string, result map[string]interface{}) map[string]interface{} {
@@ -768,7 +768,7 @@ func getAnomalies(errorHosts []map[string]string, result map[string]interface{})
 	return anomalies
 }
 
-func completeAgentAliveData(groups map[string][]map[string]string, groupNames []string, result map[string]interface{}) {
+func completeAgentAliveData(groups map[string][]map[string]string, groupNames []string, versions map[string]map[string]string, result map[string]interface{}) {
 	errorHosts := []map[string]string{}
 	platforms := []interface{}{}
 	count := map[string]int{}
@@ -783,7 +783,6 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 	version := ""
 	plugin := ""
 	status := ""
-	items := result["items"].(map[string]interface{})
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
@@ -801,13 +800,16 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 		for _, agent := range group {
 			hostname = agent["hostname"]
 			activate = agent["activate"]
-			status = ""
 			version = ""
+			plugin = ""
+			if item, ok := versions[hostname]; ok {
+				version = item["version"]
+				plugin = item["plugin"]
+			}
+			status = ""
 			if activate == "1" {
-				if item, ok := items[hostname]; ok {
-					status = item.(map[string]interface{})["status"].(string)
-					version = item.(map[string]interface{})["version"].(string)
-					plugin = item.(map[string]interface{})["plugin"].(string)
+				if item, ok := versions[hostname]; ok {
+					status = item["status"]
 				} else {
 					status = "miss"
 					countOfMiss++
@@ -830,6 +832,7 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 				"status":   status,
 				"ip":       agent["ip"],
 				"version":  version,
+				"plugin":   plugin,
 			}
 			if host["status"] == "error" {
 				num, err := o.Raw(sql, hostname).Values(&rows)
@@ -842,8 +845,6 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 					host["province"] = row["province"].(string)
 				}
 				errorHosts = append(errorHosts, host)
-			} else {
-				host["plugin"] = plugin
 			}
 			hosts = append(hosts, host)
 			hostId++
@@ -899,11 +900,10 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	hostnamesExisted := []string{}
-	var versions = make(map[string]map[string]string)
-	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
+	queries, versions := setGraphQueries(hostnames, hostnamesExisted, result)
 	agentAliveData := queryAgentAlive(queries, req.Host, result)
-	classifyAgentAliveResponse(agentAliveData, hostnamesExisted, versions, result)
-	completeAgentAliveData(platforms, platformNames, result)
+	status_versions := classifyAgentAliveResponse(agentAliveData, hostnamesExisted, versions)
+	completeAgentAliveData(platforms, platformNames, status_versions, result)
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	setResponse(rw, nodes)
