@@ -1350,18 +1350,24 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	arguments := strings.Split(req.URL.Path, "/")
 	metricType := arguments[4]
 	hostnames := strings.Split(arguments[5], ",")
-	metrics := getMetricsByMetricType(metricType)
-	if metricType == "bandwidths" {
-		metrics = append(metrics, "nic.bond.mode")
-		metrics = append(metrics, "nic.default.out.speed")
+	metrics := []string{}
+	if metricType == "customized" {
+		metrics = strings.Split(req.URL.Query()["metrics"][0], ",")
+	} else {
+		metrics = getMetricsByMetricType(metricType)
+		if metricType == "bandwidths" {
+			metrics = append(metrics, "nic.bond.mode")
+			metrics = append(metrics, "nic.default.out.speed")
+		}
 	}
 	duration := "1d"
+
 	if len(arguments) > 6 {
 		duration = arguments[6]
 	}
 	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
 	dataRecent := []*cmodel.GraphQueryResponse{}
-	if diff > 43200 {
+	if diff > 43200 && strings.Index(duration, ",") == -1 {
 		dataRecent, _ = getGraphQueryResponse(metrics, "10min", hostnames, result)
 	}
 	data = addRecentData(data, dataRecent)
