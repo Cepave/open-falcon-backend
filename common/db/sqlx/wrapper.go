@@ -37,6 +37,34 @@ func (txExt *TxExt) QueryRowAndScan(query string, args []interface{}, dest []int
 	db.PanicIfError(err)
 }
 
+func (txExt *TxExt) QueryRowxAndMapScan(dest map[string]interface{}, query string, args ...interface{}) {
+	tx := (*sqlx.Tx)(txExt)
+
+	row := tx.QueryRowx(query, args...)
+	db.PanicIfError(row.MapScan(dest))
+}
+func (txExt *TxExt) QueryRowxAndScan(query string, args []interface{}, dest ...interface{}) {
+	tx := (*sqlx.Tx)(txExt)
+
+	row := tx.QueryRowx(query, args...)
+	db.PanicIfError(row.Scan(dest...))
+}
+func (txExt *TxExt) QueryRowxAndSliceScan(query string, args ...interface{}) []interface{} {
+	tx := (*sqlx.Tx)(txExt)
+
+	row := tx.QueryRowx(query, args...)
+	result, err := row.SliceScan()
+	db.PanicIfError(err)
+
+	return result
+}
+func (txExt *TxExt) QueryRowxAndStructScan(dest interface{}, query string, args ...interface{}) {
+	tx := (*sqlx.Tx)(txExt)
+
+	row := tx.QueryRowx(query, args...)
+	db.PanicIfError(row.StructScan(dest))
+}
+
 func (txExt *TxExt) NamedExec(query string, arg interface{}) sql.Result {
 	tx := (*sqlx.Tx)(txExt)
 
@@ -161,4 +189,24 @@ func (ctrl *DbController) Queryx(query string, args ...interface{}) *sqlx.Rows {
 func (ctrl *DbController) Select(dest interface{}, query string, args ...interface{}) {
 	err := ctrl.sqlxDb.Select(dest, query, args...)
 	db.PanicIfError(err)
+}
+
+func (ctrl *DbController) QueryRowxAndMapScan(dest map[string]interface{}, query string, args ...interface{}) {
+	row := ctrl.sqlxDb.QueryRowx(query, args...)
+	db.PanicIfError(row.MapScan(dest))
+}
+func (ctrl *DbController) QueryRowxAndScan(query string, args []interface{}, dest ...interface{}) {
+	row := ctrl.sqlxDb.QueryRowx(query, args...)
+	db.PanicIfError(row.Scan(dest...))
+}
+func (ctrl *DbController) QueryRowxAndSliceScan(query string, args ...interface{}) []interface{} {
+	row := ctrl.sqlxDb.QueryRowx(query, args...)
+	result, err := row.SliceScan()
+	db.PanicIfError(err)
+
+	return result
+}
+func (ctrl *DbController) QueryRowxAndStructScan(dest interface{}, query string, args ...interface{}) {
+	row := ctrl.sqlxDb.QueryRowx(query, args...)
+	db.PanicIfError(row.StructScan(dest))
 }
