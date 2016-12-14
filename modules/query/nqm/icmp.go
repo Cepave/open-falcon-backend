@@ -1,11 +1,12 @@
 package nqm
 
 import (
+	"net/http"
 	"encoding/json"
-	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	"github.com/Cepave/open-falcon-backend/modules/query/jsonrpc"
+	osling "github.com/Cepave/open-falcon-backend/common/sling"
 	"github.com/bitly/go-simplejson"
+	"github.com/dghubble/sling"
 )
 
 // As the DSL arguments for calling JSONRPC
@@ -58,21 +59,20 @@ func toGroupingIds(srcArray []interface{}) []int32 {
 	return result
 }
 
-var rpcServiceCaller *jsonrpc.JsonRpcService = nil
+var rootClient *sling.Sling
 
 func initIcmp() {
 	config := g.Config()
-	rpcServiceCaller = jsonrpc.NewService(config.NqmLog.JsonrpcUrl)
+
+	rootClient = sling.New().Base(config.NqmLog.ServiceUrl)
 }
 
 // Retrieves the statistics of ICMP log by DSL
-func getStatisticsOfIcmpByDsl(queryParams *NqmDsl) ([]IcmpResult, error) {
-	var result = make([]IcmpResult, 0)
+func getStatisticsOfIcmpByDsl(queryParams *NqmDsl) (result []IcmpResult, err error) {
+	err = osling.ToSlintExt(
+		rootClient.New().Post("/nqm/icmp/query/by-dsl").
+			BodyJSON(queryParams),
+	).DoReceive(http.StatusOK, &result)
 
-	httpInfo, err := rpcServiceCaller.CallMethod("NqmEndpoint.QueryIcmpByDsl", &IcmpDslArgs{Dsl: queryParams}, &result)
-	if err != nil {
-		return nil, fmt.Errorf("Call JSONRPC \"NqmEndpoint.QueryIcmpByDsl\" has error: %v. HTTP: %v ", err, httpInfo)
-	}
-
-	return result, nil
+	return
 }

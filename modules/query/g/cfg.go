@@ -61,7 +61,7 @@ type DbConfig struct {
 }
 
 type NqmLogConfig struct {
-	JsonrpcUrl string `json:"jsonrpcUrl"`
+	ServiceUrl string `json:"serviceUrl"`
 }
 
 type NqmConfig struct {
