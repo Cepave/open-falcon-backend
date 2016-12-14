@@ -507,7 +507,7 @@ func queryHostsData(result map[string]interface{}) []map[string]string {
 			IP := row["ip"].(string)
 			if IP != "" && IP == getIPFromHostname(hostname, result) {
 				host := map[string]string{
-					"hostname":     row["hostname"].(string),
+					"hostname": row["hostname"].(string),
 					"platform": row["platform"].(string),
 					"ip":       row["ip"].(string),
 					"activate": row["activate"].(string),
@@ -636,7 +636,7 @@ func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map
 			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
 				hostnamesExisted = append(hostnamesExisted, host.Hostname)
 				version := map[string]string{
-					"agent": host.Agent_version,
+					"agent":  host.Agent_version,
 					"plugin": host.Plugin_version,
 				}
 				versions[host.Hostname] = version
@@ -729,9 +729,9 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 			}
 		}
 		item := map[string]interface{}{
-			"status": status,
+			"status":  status,
 			"version": version["agent"],
-			"plugin": version["plugin"],
+			"plugin":  version["plugin"],
 		}
 		items[name] = item
 	}
@@ -1012,7 +1012,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		offset := int64(multiplier) * seconds
 		now := time.Now().Unix()
 		timestampFrom = now - offset
-		timestampTo = now + int64(5 * 60)
+		timestampTo = now + int64(5*60)
 	}
 	return timestampFrom, timestampTo
 }
@@ -1199,11 +1199,11 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 					provinceCode = ""
 				}
 				host := map[string]string{
-					"idc": row["idc"].(string),
-					"isp": row["isp"].(string),
-					"province": row["province"].(string),
+					"idc":          row["idc"].(string),
+					"isp":          row["isp"].(string),
+					"province":     row["province"].(string),
 					"provinceCode": provinceCode,
-					"city": row["city"].(string),
+					"city":         row["city"].(string),
 				}
 				hostsMap[hostname] = host
 				hostnames = append(hostnames, hostname)
@@ -1584,7 +1584,7 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 								"phone": person.(map[string]interface{})["cell"].(string),
 								"email": person.(map[string]interface{})["email"].(string),
 							}
-							if (role == "backuper") {
+							if role == "backuper" {
 								items["deputy"] = item
 							} else {
 								items[role] = item
@@ -1798,7 +1798,7 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 			if strings.Index(hostname, "-") > -1 {
 				NICOutSpeed := getNICOutSpeed(hostname, result)
 				item := map[string]interface{}{
-					"hostname": hostname,
+					"hostname":           hostname,
 					"nic.out.speed.bits": NICOutSpeed,
 				}
 				items = append(items, item)
