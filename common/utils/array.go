@@ -126,6 +126,7 @@ func (a *AbstractArray) GetArray() interface{} {
 	return a.GetArrayAsType(a.arrayElementType)
 }
 
+// Gets the result array as desired type(element)
 func (a *AbstractArray) GetArrayAsType(targetType reflect.Type) interface{} {
 	valueOfAnyArray := a.anyArrayValue
 	size := valueOfAnyArray.Len()
