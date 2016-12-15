@@ -210,3 +210,26 @@ func (ctrl *DbController) QueryRowxAndStructScan(dest interface{}, query string,
 	row := ctrl.sqlxDb.QueryRowx(query, args...)
 	db.PanicIfError(row.StructScan(dest))
 }
+
+type RowsExt sqlx.Rows
+
+func ToRowsExt(row *sqlx.Rows) *RowsExt {
+	return (*RowsExt)(row)
+}
+
+func (r *RowsExt) MapScan(dest map[string]interface{}) {
+	rows := (*sqlx.Rows)(r)
+	db.PanicIfError(rows.MapScan(dest))
+}
+func (r *RowsExt) SliceScan() []interface{} {
+	rows := (*sqlx.Rows)(r)
+
+	result, err := rows.SliceScan()
+	db.PanicIfError(err)
+
+	return result
+}
+func (r *RowsExt) StructScan(dest interface{}) {
+	rows := (*sqlx.Rows)(r)
+	db.PanicIfError(rows.StructScan(dest))
+}
