@@ -675,16 +675,13 @@ func muteFalconHostTable(hostnames []string, hostsMap map[string]map[string]stri
 			log.Errorf(err.Error())
 		} else if num > 0 {
 			activate := host["activate"]
-			begin := int64(1)
-			end := int64(1)
-			if activate == "0" {
-				begin = int64(946684800) // Sat, 01 Jan 2000 00:00:00 GMT
-				end = int64(4292329420)  // Thu, 07 Jan 2106 17:43:40 GMT
-			} else if activate == "1" {
-				begin = int64(0)
-				end = int64(0)
-			}
-			if begin != int64(1) {
+			if activate == "0" || activate == "1" {
+				begin := int64(0)
+				end := int64(0)
+				if activate == "0" {
+					begin = int64(946684800) // Sat, 01 Jan 2000 00:00:00 GMT
+					end = int64(4292329420)  // Thu, 07 Jan 2106 17:43:40 GMT
+				}
 				row := rows[0]
 				ID := row["id"]
 				sql = "UPDATE falcon_portal.host"
