@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/json"
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
-	"github.com/astaxie/beego"
 	"github.com/bitly/go-simplejson"
 	. "gopkg.in/check.v1"
 	"net/http"
@@ -111,8 +110,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 
 // Tests the error message rendered as JSON
 func (suite *TestNqmSuite) TestErrorMessage(c *C) {
-	testedService := beego.NewControllerRegister()
-	setupUrlMappingAndHandler(testedService)
+	engine := getGinRouter()
 
 	/**
 	 * Sets-up HTTP request and response
@@ -122,7 +120,7 @@ func (suite *TestNqmSuite) TestErrorMessage(c *C) {
 	respRecorder := httptest.NewRecorder()
 	// :~)
 
-	testedService.ServeHTTP(respRecorder, sampleRequest)
+	engine.ServeHTTP(respRecorder, sampleRequest)
 	c.Logf("Response: %v", respRecorder)
 
 	/**

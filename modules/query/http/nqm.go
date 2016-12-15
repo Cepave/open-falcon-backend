@@ -1,20 +1,16 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
 
+	"gopkg.in/gin-gonic/gin.v1"
+	ogin "github.com/Cepave/open-falcon-backend/common/gin"
+
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
 	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
-	log "github.com/Sirupsen/logrus"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/plugins/cors"
 	"github.com/bitly/go-simplejson"
 )
 
@@ -24,40 +20,24 @@ const (
 )
 
 var nqmService nqm.ServiceController
+
+// Although these services use Gin framework, the configuration depends on "http.listen" property,
+// not "gin_http.listen"
 func configNqmRoutes() {
 	nqmService = nqm.GetDefaultServiceController()
 	nqmService.Init()
 
-	/**
-	 * Registers the handler of RESTful service on beego
-	 */
-	serviceController := beego.NewControllerRegister()
-	serviceController.InsertFilter(
-		"*",
-		beego.BeforeRouter,
-		cors.Allow(&cors.Options{
-			AllowAllOrigins: true,
-		}),
-	)
-	setupUrlMappingAndHandler(serviceController)
-	// :~)
-
-	http.Handle("/nqm/", serviceController)
+	http.Handle("/nqm/", getGinRouter())
 }
 
-func setupUrlMappingAndHandler(serviceRegister *beego.ControllerRegister) {
-	serviceRegister.AddMethod(
-		"get", "/nqm/icmp/list/by-provinces",
-		listIcmpByProvinces,
-	)
-	serviceRegister.AddMethod(
-		"get", "/nqm/icmp/province/:province_id([0-9]+)/list/by-targets",
-		listIcmpByTargetsForAProvince,
-	)
-	serviceRegister.AddMethod(
-		"get", "/nqm/province/:province_id([0-9]+)/agents",
-		listAgentsInProvince,
-	)
+func getGinRouter() *gin.Engine {
+	engine := ogin.NewDefaultJsonEngine(&ogin.GinConfig{ Mode: gin.ReleaseMode })
+
+	engine.GET("/nqm/icmp/list/by-provinces", listIcmpByProvinces)
+	engine.GET("/nqm/icmp/province/:province_id/list/by-targets", listIcmpByTargetsForAProvince)
+	engine.GET("/nqm/province/:province_id/agents", listAgentsInProvince)
+
+	return engine
 }
 
 type resultWithDsl struct {
@@ -76,83 +56,75 @@ func (result *resultWithDsl) MarshalJSON() ([]byte, error) {
 }
 
 // Lists agents(grouped by city) for a province
-func listAgentsInProvince(ctx *context.Context) {
-	provinceId, _ := strconv.ParseInt(ctx.Input.Param(":province_id"), 10, 16)
-	ctx.Output.JSON(nqm.ListAgentsInCityByProvinceId(int32(provinceId)), jsonIndent, jsonCoding)
+func listAgentsInProvince(context *gin.Context) {
+	provinceId, err := strconv.ParseInt(context.Param("province_id"), 10, 16)
+	if err != nil {
+		panic(err)
+	}
+
+	context.JSON(
+		http.StatusOK,
+		nqm.ListAgentsInCityByProvinceId(int32(provinceId)),
+	)
 }
 
 // Lists statistics data of ICMP, which would be grouped by provinces
-func listIcmpByProvinces(ctx *context.Context) {
-	defer outputJsonForPanic(ctx)
-
-	dslParams, isValid := processDslAndOutputError(ctx, ctx.Input.Query("dsl"))
+func listIcmpByProvinces(context *gin.Context) {
+	dslParams, isValid := processDslAndOutputError(context, context.Query("dsl"))
 	if !isValid {
 		return
 	}
 
-	listResult := nqmService.ListByProvinces(dslParams)
-
-	ctx.Output.JSON(&resultWithDsl{ queryParams: dslParams, resultData: listResult }, jsonIndent, jsonCoding)
+	context.JSON(
+		http.StatusOK,
+		&resultWithDsl{
+			queryParams: dslParams,
+			resultData: nqmService.ListByProvinces(dslParams),
+		},
+	)
 }
 
 // Lists data of targets, which would be grouped by cities
-func listIcmpByTargetsForAProvince(ctx *context.Context) {
-	defer outputJsonForPanic(ctx)
-
-	dslParams, isValid := processDslAndOutputError(ctx, ctx.Input.Query("dsl"))
+func listIcmpByTargetsForAProvince(context *gin.Context) {
+	dslParams, isValid := processDslAndOutputError(context, context.Query("dsl"))
 	if !isValid {
 		return
 	}
 
 	dslParams.AgentFilter.MatchProvinces = make([]string, 0) // Ignores the province of agent
 
-	provinceId, _ := strconv.ParseInt(ctx.Input.Param(":province_id"), 10, 16)
+	provinceId, _ := strconv.ParseInt(context.Param("province_id"), 10, 16)
 	dslParams.AgentFilterById.MatchProvinces = []int16 { int16(provinceId) } // Use the id as the filter of agent
 
-	if agentId, parseErrForAgentId := strconv.ParseInt(ctx.Input.Query("agent_id"), 10, 16)
+	if agentId, parseErrForAgentId := strconv.ParseInt(context.Query("agent_id"), 10, 16)
 		parseErrForAgentId == nil {
 		dslParams.AgentFilterById.MatchIds = []int32 { int32(agentId) } // Set the filter by agent's id
-	} else if cityId, parseErrForCityId := strconv.ParseInt(ctx.Input.Query("city_id_of_agent"), 10, 16)
+	} else if cityId, parseErrForCityId := strconv.ParseInt(context.Query("city_id_of_agent"), 10, 16)
 		parseErrForCityId == nil {
 		dslParams.AgentFilterById.MatchCities = []int16 { int16(cityId) } // Set the filter by city's id
 	}
 
-	listResult := nqmService.ListTargetsWithCityDetail(dslParams)
-	ctx.Output.JSON(&resultWithDsl{ queryParams: dslParams, resultData: listResult }, jsonIndent, jsonCoding)
+	context.JSON(
+		http.StatusOK,
+		&resultWithDsl{
+			queryParams: dslParams,
+			resultData: nqmService.ListTargetsWithCityDetail(dslParams),
+		},
+	)
 }
 
 type jsonDslError struct {
 	Code int `json:"error_code"`
 	Message string `json:"error_message"`
 }
-func outputDslError(ctx *context.Context, err error) {
-	ctx.Output.SetStatus(http.StatusBadRequest)
-	ctx.Output.JSON(
+func outputDslError(context *gin.Context, err error) {
+	context.JSON(
+		http.StatusBadRequest,
 		&jsonDslError {
 			Code: 1,
 			Message: err.Error(),
-		}, jsonIndent, jsonCoding,
+		},
 	)
-}
-
-// Used to output JSON message even if the execution is panic
-func outputJsonForPanic(ctx *context.Context) {
-	r := recover()
-	if r == nil {
-		return
-	}
-
-	if g.Config().Debug {
-		debug.PrintStack()
-	}
-
-	log.Errorf("Error on HTTP Request[%v/%v]. Error: %v", ctx.Input.Method(), ctx.Input.URI(), r)
-
-	ctx.Output.SetStatus(http.StatusBadRequest)
-	ctx.Output.JSON(&jsonDslError{
-		Code: -1,
-		Message: fmt.Sprintf("%v", r),
-	}, jsonIndent, jsonCoding)
 }
 
 const (
@@ -163,15 +135,24 @@ const (
 
 // Process DSL and output error
 // Returns: true if the DSL is valid
-func processDslAndOutputError(ctx *context.Context, dslText string) (*dsl.QueryParams, bool) {
+func processDslAndOutputError(context *gin.Context, dslText string) (*dsl.QueryParams, bool) {
 	dslParams, err := processDsl(dslText)
-
-	if err != nil {
-		outputDslError(ctx, err)
-		return nil, false
+	if err == nil {
+		return dslParams, true
 	}
 
-	return dslParams, true
+	context.JSON(
+		http.StatusBadRequest,
+		&struct {
+			Code int `json:"error_code"`
+			Message string `json:"error_message"`
+		} {
+			Code: 1,
+			Message: err.Error(),
+		},
+	)
+
+	return nil, false
 }
 
 // The query of DSL would be inner-province(used for phase 1)
