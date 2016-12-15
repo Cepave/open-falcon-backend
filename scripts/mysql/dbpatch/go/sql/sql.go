@@ -3,11 +3,16 @@ package sql
 
 import (
 	dbsql "database/sql"
+	"github.com/jmoiron/sqlx"
+	osqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"fmt"
 )
 
 // Represents the connection information to database
 type DatabaseConfig struct {
+	SqlxDb *sqlx.DB
+	SqlxDbCtrl *osqlx.DbController
+
 	driverName string
 	dsn string
 	db *dbsql.DB
@@ -31,7 +36,10 @@ func NewDatabaseConfig(driverName string, dsn string) (dbConfig *DatabaseConfig,
 	}
 	// :~)
 
+	sqlxDb := sqlx.NewDb(openedDb, driverName)
 	dbConfig = &DatabaseConfig{
+		SqlxDb: sqlxDb,
+		SqlxDbCtrl: osqlx.NewDbController(sqlxDb),
 		driverName: driverName,
 		dsn: dsn,
 		db: openedDb,
@@ -41,10 +49,12 @@ func NewDatabaseConfig(driverName string, dsn string) (dbConfig *DatabaseConfig,
 
 // Close the db resource hold by the DatabaseConfig
 func (databaseConfig *DatabaseConfig) Close() error {
-	var oldDb = databaseConfig.db
+	var dbObject = databaseConfig.db
 	databaseConfig.db = nil
+	databaseConfig.SqlxDbCtrl = nil
+	databaseConfig.SqlxDb = nil
 
-	return oldDb.Close()
+	return dbObject.Close()
 }
 
 // Execute a callback which accepts "database/sql.DB" object
@@ -57,4 +67,14 @@ func (databaseConfig *DatabaseConfig) Execute(
 	}
 
 	return dbCallback(databaseConfig.db)
+}
+
+func (c *DatabaseConfig) GetDatabaseName() string {
+	var dbName string
+
+	c.SqlxDbCtrl.QueryRowxAndScan(
+		`SELECT DATABASE()`, nil, &dbName,
+	)
+
+	return dbName
 }
