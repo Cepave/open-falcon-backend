@@ -318,7 +318,7 @@ func checkChangeLogSchema(db *dbsql.DB) (err error) {
 			dcl_time_update DATETIME,
 			dcl_message VARCHAR(1024),
 			dcl_comment VARCHAR(1024)
-		) DEFAULT CHARSET=UTF-8
+		) DEFAULT CHARSET=UTF8
 		`,
 	)
 		err != nil {
