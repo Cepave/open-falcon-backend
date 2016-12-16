@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"os"
-	"os/exec"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -12,6 +10,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	log "github.com/Sirupsen/logrus"
+	"github.com/chyeh/pubip"
 )
 
 type AgentConfig struct {
@@ -42,21 +41,6 @@ var (
 	hbsResp    atomic.Value // for receiving model.NqmTaskResponse
 	metadata   = Metadata{}
 )
-
-func digPublicIP() (net.IP, error) {
-	output, err := exec.Command("dig", "+short", "myip.opendns.com", "@resolver1.opendns.com").Output()
-	if err != nil {
-		return nil, err
-	}
-
-	ipStr := strings.TrimSpace(string(output))
-	ip := net.ParseIP(ipStr)
-	if ip == nil {
-		return nil, fmt.Errorf("Cannot parse IP Address from dig's output: [%s]", output)
-	}
-
-	return ip, nil
-}
 
 func Config() JSONConfig {
 	return jsonConfig.Load().(JSONConfig)
@@ -102,7 +86,7 @@ func ip() string {
 	}
 	log.Errorln("Invalid IP in config")
 
-	ip, err := digPublicIP()
+	ip, err := pubip.Get()
 	if err != nil {
 		log.Fatalln("Getting public IP...failed:", err)
 	}
