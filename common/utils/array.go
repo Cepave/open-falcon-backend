@@ -26,6 +26,25 @@ func IdentityMapper(v interface{}) interface{} {
 	return v
 }
 
+func AppendToAny(arrayOfAny []interface{}, any interface{}) []interface{} {
+	valueOfAppended := reflect.ValueOf(any)
+
+	switch valueOfAppended.Kind() {
+	case reflect.Array, reflect.Slice:
+		for i := 0; i < valueOfAppended.Len(); i++ {
+			arrayOfAny = append(arrayOfAny, valueOfAppended.Index(i).Interface())
+		}
+	case reflect.Map:
+		for _, k := range valueOfAppended.MapKeys() {
+			arrayOfAny = append(arrayOfAny, valueOfAppended.MapIndex(k).Interface())
+		}
+	default:
+		arrayOfAny = append(arrayOfAny, any)
+	}
+
+	return arrayOfAny
+}
+
 // Converts typed function(for filter) to FilterFunc
 func TypedFuncToFilter(anyFunc interface{}) FilterFunc {
 	valueOfFunc := reflect.ValueOf(anyFunc)
@@ -39,7 +58,7 @@ func TypedFuncToFilter(anyFunc interface{}) FilterFunc {
 	return func(v interface{}) bool {
 		funcInputType := typeOfFunc.In(0)
 
-		inputValue := convertGenericValue(v, funcInputType)
+		inputValue := ConvertToByReflect(reflect.ValueOf(v), funcInputType)
 		outputValue := valueOfFunc.Call([]reflect.Value{ inputValue })[0]
 
 		return outputValue.Bool()
@@ -95,7 +114,7 @@ func TypedFuncToMapper(anyFunc interface{}) MapperFunc {
 
 	funcValue := reflect.ValueOf(anyFunc)
 	return func(v interface{}) interface{} {
-		inputValue := convertGenericValue(v, mapperTypes[0])
+		inputValue := ConvertToByReflect(reflect.ValueOf(v), mapperTypes[0])
 		outputValue := funcValue.Call([]reflect.Value{ inputValue })[0]
 
 		return outputValue.Interface()
@@ -139,7 +158,7 @@ func (a *AbstractArray) GetArrayAsType(targetType reflect.Type) interface{} {
 	} else {
 		newArrayType = reflect.SliceOf(targetType)
 		convertValue = func(srcValue reflect.Value) reflect.Value {
-			return convertAnyValue(srcValue, targetType)
+			return ConvertToByReflect(srcValue, targetType)
 		}
 	}
 
@@ -152,6 +171,17 @@ func (a *AbstractArray) GetArrayAsType(targetType reflect.Type) interface{} {
 	}
 
 	return newArrayValue.Interface()
+}
+
+func (a *AbstractArray) GetArrayOfAny() []interface{} {
+	arrayLen := a.anyArrayValue.Len()
+	var result = make([]interface{}, arrayLen)
+
+	for i := 0; i < arrayLen; i++ {
+		result[i] = a.anyArrayValue.Index(i).Interface()
+	}
+
+	return result
 }
 
 // Filters elements in the array
@@ -186,7 +216,7 @@ func (a *AbstractArray) MapTo(mapper MapperFunc, eleType reflect.Type) *Abstract
 		currentValue := valueOfAnyArray.Index(i)
 
 		transferedValue := reflect.ValueOf(mapper(currentValue.Interface()))
-		transferedValue = convertAnyValue(transferedValue, eleType)
+		transferedValue = ConvertToByReflect(transferedValue, eleType)
 
 		newArray.Index(i).Set(transferedValue)
 	}
@@ -202,19 +232,4 @@ func getMapperTypes(mapperFunc interface{}) []reflect.Type {
 	}
 
 	return []reflect.Type{ funcType.In(0), funcType.Out(0) }
-}
-func convertAnyValue(value reflect.Value, targetType reflect.Type) reflect.Value {
-	if value.Type() == targetType {
-		return value
-	}
-
-	if !value.Type().ConvertibleTo(targetType) {
-		panic(fmt.Errorf("Cannot convert type of [%v] to type of [%v]", value.Type(), targetType))
-	}
-
-	return value.Convert(targetType)
-}
-
-func convertGenericValue(v interface{}, targetType reflect.Type) reflect.Value {
-	return convertAnyValue(reflect.ValueOf(v), targetType)
 }
