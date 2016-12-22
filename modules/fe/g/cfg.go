@@ -76,7 +76,6 @@ type LdapConfig struct {
 }
 
 type ApiConfig struct {
-	Cookie   string `json:"cookie"`
 	Key      string `json:"key"`
 	Redirect string `json:"redirect"`
 	Login    string `json:"login"`
