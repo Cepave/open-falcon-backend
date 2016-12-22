@@ -1676,6 +1676,15 @@ func getTimestampFromTicker(ticker string) int64 {
 	return timestamp
 }
 
+func getGraphQueryData(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
+	if diff > 43200 {
+		dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
+		data = addRecentData(data, dataRecent)
+	}
+	return data
+}
+
 func getBandwidthsSum(metricType string, duration string, hostnames []string, filter string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
