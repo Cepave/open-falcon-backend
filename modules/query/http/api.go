@@ -1640,6 +1640,28 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getTicker(timestamp int64) string {
+	now := time.Now().Unix()
+	diff := now - timestamp
+	if diff <= 600 {
+		return time.Unix(timestamp, 0).Format("2006-01-02 15:04")
+	}
+	ticker := ""
+	date := time.Unix(timestamp, 0)
+	minute := date.Format("04")
+	value, err := strconv.Atoi(minute)
+	if err == nil {
+		residue := int(math.Mod(float64(value), 5))
+		value -= residue
+		minute = strconv.Itoa(value)
+		if len(minute) == 1 {
+			minute = "0" + minute
+		}
+		ticker = date.Format("2006-01-02 15:") + minute
+	}
+	return ticker
+}
+
 func getBandwidthsSum(metricType string, duration string, hostnames []string, filter string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
