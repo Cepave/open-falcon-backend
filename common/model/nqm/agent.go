@@ -172,3 +172,15 @@ func (agent *Agent) String() string {
 		agent.Id, agent.Name, agent.ConnectionId, agent.IpAddress, agent.Hostname, agent.Status,
 	)
 }
+
+type SimpleAgent1 struct {
+	Id int32 `json:"id" db:"ag_id"`
+	Name string `json:"name" db:"ag_name"`
+	Hostname string `json:"hostname" db:"ag_hostname"`
+	IpAddress net.IP `json:"ip_address" db:"ag_ip_address"`
+}
+
+type SimpleAgent1InCity struct {
+	City   *owlModel.City2 `json:"city"`
+	Agents []*SimpleAgent1 `json:"agents"`
+}

@@ -145,3 +145,8 @@ func (target *Target) ToTargetForAdding() *TargetForAdding {
 		GroupTags: owlModel.GroupTags(target.GroupTags).ToNames(),
 	}
 }
+
+type SimpleTarget1 struct {
+	Id   int32  `json:"id" db:"tg_id"`
+	Host string `json:"host" db:"tg_host"`
+}

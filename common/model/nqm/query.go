@@ -39,3 +39,25 @@ type TargetQuery struct {
 	HasStatusCondition bool
 	Status             bool
 }
+
+type AgentFilter struct {
+	Name []string `json:"name" digest:"1"`
+	Hostname []string `json:"hostname" digest:"2"`
+	IpAddress []string `json:"ip_address" digest:"3"`
+	ConnectionId []string `json:"connection_id" digest:"4"`
+	IspIds []int16 `json:"isp_ids" digest:"21"`
+	ProvinceIds []int16 `json:"province_ids" digest:"22"`
+	CityIds []int16 `json:"city_ids" digest:"23"`
+	NameTagIds []int16 `json:"name_tag_ids" digest:"24"`
+	GroupTagIds []int32 `json:"group_tag_ids" digest:"25"`
+}
+
+type TargetFilter struct {
+	Name []string `json:"name" digest:"1"`
+	Host []string `json:"host" digest:"2"`
+	IspIds []int16 `json:"isp_ids" digest:"21"`
+	ProvinceIds []int16 `json:"province_ids" digest:"22"`
+	CityIds []int16 `json:"city_ids" digest:"23"`
+	NameTagIds []int16 `json:"name_tag_ids" digest:"24"`
+	GroupTagIds []int32 `json:"group_tag_ids" digest:"25"`
+}

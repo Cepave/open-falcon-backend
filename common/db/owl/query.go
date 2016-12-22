@@ -1,6 +1,8 @@
 package owl
 
 import (
+	"database/sql"
+	"github.com/satori/go.uuid"
 	model "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
@@ -30,6 +32,42 @@ func UpdateAccessTimeOrAddNewOne(query *model.Query, accessTime time.Time) {
 	if result.RowsAffected() == 0 {
 		AddOrRefreshQuery(query, accessTime)
 	}
+}
+
+func LoadQueryByUuidAndUpdateAccessTime(name string, uuid uuid.UUID, accessTime time.Time) *model.Query {
+	result := db.ToResultExt(DbFacade.SqlxDbCtrl.NamedExec(
+		`
+		UPDATE owl_query
+		SET qr_time_access = :access_time
+		WHERE qr_uuid = :uuid
+		`,
+		map[string]interface{} {
+			"access_time": accessTime,
+			"uuid": db.DbUuid(uuid),
+		},
+	))
+
+	if result.RowsAffected() == 0 {
+		return nil
+	}
+
+	var queryData model.Query
+	err := DbFacade.SqlxDb.QueryRowx(
+		`
+		SELECT qr_uuid, qr_named_id, qr_content, qr_md5_content
+		FROM owl_query
+		WHERE qr_uuid = ?
+		`,
+		db.DbUuid(uuid),
+	).StructScan(&queryData)
+
+	if err == sql.ErrNoRows {
+		return nil
+	}
+
+	db.PanicIfError(err)
+
+	return &queryData
 }
 
 type addOrRefreshQueryTx struct {
@@ -69,7 +107,7 @@ func (queryTx *addOrRefreshQueryTx) performAddOrUpdate(txExt *sqlxExt.TxExt) {
 			"uuid": queryObject.Uuid,
 			"named_id": queryObject.NamedId,
 			"content": queryObject.Content,
-			"md5_content": queryObject.Md5Content[:],
+			"md5_content": queryObject.Md5Content,
 			"access_time": queryTx.accessTime,
 		},
 	)
@@ -86,7 +124,7 @@ func (queryTx *addOrRefreshQueryTx) loadUuid(txExt *sqlxExt.TxExt) {
 		`,
 		[]interface{} {
 			queryObject.NamedId,
-			queryObject.Md5Content[:],
+			queryObject.Md5Content,
 		},
 		&queryObject.Uuid,
 	)

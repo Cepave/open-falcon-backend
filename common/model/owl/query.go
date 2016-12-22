@@ -7,11 +7,11 @@ import (
 
 // Represents the query object
 type Query struct {
-	Uuid db.DbUuid
+	Uuid db.DbUuid `db:"qr_uuid"`
 
-	NamedId string
-	Content []byte
-	Md5Content [16]byte
+	NamedId string `db:"qr_named_id"`
+	Content []byte `db:"qr_content"`
+	Md5Content db.Bytes16 `db:"qr_md5_content"`
 }
 
 // Generate UUID v4 for this object
