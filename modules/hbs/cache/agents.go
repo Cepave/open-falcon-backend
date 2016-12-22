@@ -6,7 +6,7 @@ package cache
 
 import (
 	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+	basis "github.com/Cepave/open-falcon-backend/modules/hbs/db/basis"
 	"sync"
 	"time"
 )
@@ -28,7 +28,7 @@ func (this *SafeAgents) Put(req *model.AgentReportRequest) {
 		ReportRequest: req,
 	}
 
-	db.UpdateAgent(val)
+	basis.UpdateAgent(val)
 
 	this.Lock()
 	defer this.Unlock()

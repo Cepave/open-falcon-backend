@@ -2,7 +2,7 @@ package http
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 	"net/http"
 )
 
