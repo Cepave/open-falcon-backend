@@ -9,6 +9,8 @@ import (
 	"gopkg.in/gin-gonic/gin.v1"
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
 	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
 	"github.com/bitly/go-simplejson"
@@ -19,7 +21,7 @@ const (
 	jsonCoding = false
 )
 
-var nqmService nqm.ServiceController
+var nqmService *nqm.ServiceController
 
 // Although these services use Gin framework, the configuration depends on "http.listen" property,
 // not "gin_http.listen"
@@ -35,9 +37,17 @@ func getGinRouter() *gin.Engine {
 
 	engine.GET("/nqm/icmp/list/by-provinces", listIcmpByProvinces)
 	engine.GET("/nqm/icmp/province/:province_id/list/by-targets", listIcmpByTargetsForAProvince)
-	engine.GET("/nqm/province/:province_id/agents", listAgentsInProvince)
+	engine.GET("/nqm/province/:province_id/agents", listEffectiveAgentsInProvince)
+
+	engine.GET("/nqm/icmp/compound-report/:query_id", outputCompondReportOfIcmp)
+	engine.POST("/nqm/icmp/compound-report", setupCompondReportOfIcmp)
 
 	return engine
+}
+
+func setupCompondReportOfIcmp(context *gin.Context) {
+}
+func outputCompondReportOfIcmp(context *gin.Context) {
 }
 
 type resultWithDsl struct {
@@ -56,7 +66,7 @@ func (result *resultWithDsl) MarshalJSON() ([]byte, error) {
 }
 
 // Lists agents(grouped by city) for a province
-func listAgentsInProvince(context *gin.Context) {
+func listEffectiveAgentsInProvince(context *gin.Context) {
 	provinceId, err := strconv.ParseInt(context.Param("province_id"), 10, 16)
 	if err != nil {
 		panic(err)
@@ -64,7 +74,7 @@ func listAgentsInProvince(context *gin.Context) {
 
 	context.JSON(
 		http.StatusOK,
-		nqm.ListAgentsInCityByProvinceId(int32(provinceId)),
+		nqmDb.LoadEffectiveAgentsInProvince(int16(provinceId)),
 	)
 }
 

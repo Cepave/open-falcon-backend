@@ -7,6 +7,7 @@ import (
 	osling "github.com/Cepave/open-falcon-backend/common/sling"
 	"github.com/bitly/go-simplejson"
 	"github.com/dghubble/sling"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
 )
 
 // As the DSL arguments for calling JSONRPC
@@ -22,24 +23,26 @@ type IcmpResult struct {
 
 // Used to unmarshal JSON with specific structure of IcmpResult(because of reusing struct)
 func (icmpResult *IcmpResult) UnmarshalJSON(p []byte) error {
-	jsonObj, err := simplejson.NewJson(p)
+	sjson, err := simplejson.NewJson(p)
 	if err != nil {
 		return err
 	}
 
+	jsonObj := ojson.ToJsonExt(sjson)
+
 	icmpResult.grouping = toGroupingIds(jsonObj.Get("grouping").MustArray())
 	icmpResult.metrics = &Metrics{
-		Max:                     int16(jsonObj.Get("max").MustInt()),
-		Min:                     int16(jsonObj.Get("min").MustInt()),
+		Max:                     jsonObj.GetExt("max").MustInt16(),
+		Min:                     jsonObj.GetExt("min").MustInt16(),
 		Avg:                     jsonObj.Get("avg").MustFloat64(),
-		Med:                     int16(jsonObj.Get("med").MustInt()),
+		Med:                     jsonObj.GetExt("med").MustInt16(),
 		Mdev:                    jsonObj.Get("mdev").MustFloat64(),
 		Loss:                    jsonObj.Get("loss").MustFloat64(),
-		Count:                   int32(jsonObj.Get("count").MustInt()),
-		NumberOfSentPackets:     uint64(jsonObj.Get("number_of_sent_packets").MustUint64()),
-		NumberOfReceivedPackets: uint64(jsonObj.Get("number_of_received_packets").MustUint64()),
-		NumberOfAgents:          int32(jsonObj.Get("number_of_agents").MustUint64()),
-		NumberOfTargets:         int32(jsonObj.Get("number_of_targets").MustUint64()),
+		Count:                   jsonObj.GetExt("count").MustInt32(),
+		NumberOfSentPackets:     jsonObj.Get("number_of_sent_packets").MustUint64(),
+		NumberOfReceivedPackets: jsonObj.Get("number_of_received_packets").MustUint64(),
+		NumberOfAgents:          jsonObj.GetExt("number_of_agents").MustInt32(),
+		NumberOfTargets:         jsonObj.GetExt("number_of_targets").MustInt32(),
 	}
 
 	return nil

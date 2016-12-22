@@ -17,7 +17,7 @@ var _ = Suite(&TestNqmLogSuite{})
 // Tests the query(calling of JSONRPC) by DSL for ICMP log
 func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 	testCases := []struct {
-		sampleIdOfAgentProvince Id2Bytes
+		sampleIdOfAgentProvince int16
 		expectedNumberOfResult  int
 	} {
 		{15, 1},
@@ -32,10 +32,10 @@ func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 			GroupingColumns:      []string{"ag_pv_id"},
 			StartTime:            1328407200,
 			EndTime:              1328493600,
-			IdsOfAgentProvinces:  []Id2Bytes{testCase.sampleIdOfAgentProvince},
-			IdsOfAgentIsps:       []Id2Bytes{16},
-			IdsOfTargetProvinces: []Id2Bytes{31},
-			IdsOfTargetIsps:      []Id2Bytes{87},
+			IdsOfAgentProvinces:  []int16{testCase.sampleIdOfAgentProvince},
+			IdsOfAgentIsps:       []int16{16},
+			IdsOfTargetProvinces: []int16{31},
+			IdsOfTargetIsps:      []int16{87},
 			ProvinceRelation:     -1,
 		}
 

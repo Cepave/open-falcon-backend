@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	sjson "github.com/bitly/go-simplejson"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	. "gopkg.in/check.v1"
 	"reflect"
@@ -62,7 +63,7 @@ func buildSampleQuery(timeFilter *TimeFilter) *CompoundQuery {
 	return &CompoundQuery {
 		Filters: &CompoundQueryFilter {
 			Time: timeFilter,
-			Agent: &AgentFilter{
+			Agent: &nqmModel.AgentFilter{
 				Name: []string { "CB1", "KC2" },
 				Hostname: []string { "GA3", "ZC0" },
 				IpAddress: []string { "10.9", "11.56.71.89" },
@@ -73,7 +74,7 @@ func buildSampleQuery(timeFilter *TimeFilter) *CompoundQuery {
 				NameTagIds: []int16 { 10, 19 },
 				GroupTagIds: []int32 { 45, 51 },
 			},
-			Target: &TargetFilter{
+			Target: &nqmModel.TargetFilter{
 				Name: []string { "CB1", "KC2" },
 				Host: []string { "GA3", "ZC0" },
 				IspIds: []int16 { 13, 17 },
@@ -212,7 +213,7 @@ func (suite *TestQuerySuite) TestLoadFiltersOfTime(c *C) {
 func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 	testCases := []struct {
 		jsonSource string
-		expectedFilter *AgentFilter
+		expectedFilter *nqmModel.AgentFilter
 	} {
 		{
 			`
@@ -230,7 +231,7 @@ func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 				}
 			} }
 			`,
-			&AgentFilter {
+			&nqmModel.AgentFilter {
 				Name: []string { "C2", "G1", "K3" },
 				Hostname: []string{ "hs-1", "hs-3" },
 				IpAddress: []string{ "10.20", "9.7" },
@@ -256,7 +257,7 @@ func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 func (suite *TestQuerySuite) TestLoadFiltersOfTarget(c *C) {
 	testCases := []struct {
 		jsonSource string
-		expectedFilter *TargetFilter
+		expectedFilter *nqmModel.TargetFilter
 	} {
 		{
 			`
@@ -272,7 +273,7 @@ func (suite *TestQuerySuite) TestLoadFiltersOfTarget(c *C) {
 				}
 			} }
 			`,
-			&TargetFilter {
+			&nqmModel.TargetFilter {
 				Name: []string { "C2", "G1", "K3" },
 				Host: []string{ "hs-1", "hs-3" },
 				IspIds: []int16{ 17, 20 },
@@ -457,7 +458,7 @@ func (suite *TestQuerySuite) TestGetDigestValue(c *C) {
 	hexValue := hex.EncodeToString(sampleQuery.GetDigestValue())
 	c.Logf("Query digest: [%s]", hexValue)
 
-	c.Assert(hexValue, Equals, "c4d2969dbc50f936f8a07b2a04044532")
+	c.Assert(hexValue, Equals, "a70a2928c1d5226f9ba262aafc910f4c")
 }
 
 // Tests the digesting for time filter

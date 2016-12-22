@@ -5,8 +5,18 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/jinzhu/gorm"
+
+
+	"github.com/Cepave/open-falcon-backend/common/db/facade"
+
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	cdb "github.com/Cepave/open-falcon-backend/common/db"
+
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
+
+var PortalDbFacade *facade.DbFacade
 
 var (
 	db  *gorm.DB
@@ -19,8 +29,25 @@ func DBConn() *gorm.DB {
 
 func Init() {
 	conf := g.Config()
-	db, err = gorm.Open("mysql", conf.GraphDB.Addr)
+
+	/**
+	 * Use Db Facade to initialize related service
+	 */
+	PortalDbFacade = &facade.DbFacade{}
+	err = PortalDbFacade.Open(
+		&cdb.DbConfig {
+			Dsn: conf.Db.Addr,
+			MaxIdle: conf.Db.Idle,
+		},
+	)
+
 	if err != nil {
-		log.Println(err.Error())
+		log.Printf("%v\n", err)
 	}
+
+	owlDb.DbFacade = PortalDbFacade
+	nqmDb.DbFacade = PortalDbFacade
+	// :~)
+
+	db = PortalDbFacade.GormDb
 }
