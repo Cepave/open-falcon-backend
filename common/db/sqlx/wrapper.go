@@ -65,6 +65,11 @@ func (txExt *TxExt) QueryRowxAndStructScan(dest interface{}, query string, args 
 	db.PanicIfError(row.StructScan(dest))
 }
 
+func (txExt *TxExt) QueryRowxExt(query string, args ...interface{}) *RowExt {
+	tx := (*sqlx.Tx)(txExt)
+	return ToRowExt(tx.QueryRowx(query, args...))
+}
+
 func (txExt *TxExt) NamedExec(query string, arg interface{}) sql.Result {
 	tx := (*sqlx.Tx)(txExt)
 
@@ -96,6 +101,17 @@ func (txExt *TxExt) Get(dest interface{}, query string, args ...interface{}) {
 
 	err := tx.Get(dest, query, args...)
 	db.PanicIfError(err)
+}
+func (txExt *TxExt) GetOrNoRow(dest interface{}, query string, args ...interface{}) bool {
+	tx := (*sqlx.Tx)(txExt)
+
+	err := tx.Get(dest, query, args...)
+	if err == sql.ErrNoRows {
+		return false
+	}
+
+	db.PanicIfError(err)
+	return true
 }
 
 func (txExt *TxExt) Select(dest interface{}, query string, args ...interface{}) {
@@ -156,6 +172,15 @@ func (ctrl *DbController) Get(dest interface{}, query string, args ...interface{
 	err := ctrl.sqlxDb.Get(dest, query, args...)
 	db.PanicIfError(err)
 }
+func (ctrl *DbController) GetOrNoRow(dest interface{}, query string, args ...interface{}) bool {
+	err := ctrl.sqlxDb.Get(dest, query, args...)
+	if err == sql.ErrNoRows {
+		return false
+	}
+
+	db.PanicIfError(err)
+	return true
+}
 func (ctrl *DbController) NamedExec(query string, arg interface{}) sql.Result {
 	result, err := ctrl.sqlxDb.NamedExec(query, arg)
 	db.PanicIfError(err)
@@ -209,6 +234,60 @@ func (ctrl *DbController) QueryRowxAndSliceScan(query string, args ...interface{
 func (ctrl *DbController) QueryRowxAndStructScan(dest interface{}, query string, args ...interface{}) {
 	row := ctrl.sqlxDb.QueryRowx(query, args...)
 	db.PanicIfError(row.StructScan(dest))
+}
+
+func (ctrl *DbController) QueryRowxExt(query string, args ...interface{}) *RowExt {
+	return ToRowExt(ctrl.sqlxDb.QueryRowx(query, args...))
+}
+
+type RowExt sqlx.Row
+func ToRowExt(row *sqlx.Row) *RowExt {
+	return (*RowExt)(row)
+}
+
+func (r *RowExt) MapScanOrNoRow(dest map[string]interface{}) bool {
+	row := (*sqlx.Row)(r)
+
+	err := row.MapScan(dest)
+	if err == sql.ErrNoRows {
+		return false
+	}
+
+	db.PanicIfError(err)
+	return true
+}
+func (r *RowExt) ScanOrNoRow(dest ...interface{}) bool {
+	row := (*sqlx.Row)(r)
+
+	err := row.Scan(dest...)
+	if err == sql.ErrNoRows {
+		return false
+	}
+
+	db.PanicIfError(err)
+	return true
+}
+func (r *RowExt) SliceScanOrNoRow() ([]interface{}, bool) {
+	row := (*sqlx.Row)(r)
+
+	result, err := row.SliceScan()
+	if err == sql.ErrNoRows {
+		return result, false
+	}
+
+	db.PanicIfError(err)
+	return result, true
+}
+func (r *RowExt) StructScanOrNoRow(dest interface{}) bool {
+	row := (*sqlx.Row)(r)
+
+	err := row.StructScan(dest)
+	if err == sql.ErrNoRows {
+		return false
+	}
+
+	db.PanicIfError(err)
+	return true
 }
 
 type RowsExt sqlx.Rows
