@@ -1662,6 +1662,20 @@ func getTicker(timestamp int64) string {
 	return ticker
 }
 
+func getTimestampFromTicker(ticker string) int64 {
+	timestamp := int64(0)
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	timeFormat := "2006-01-02 15:04"
+	date, err := time.ParseInLocation(timeFormat, ticker, loc)
+	if err == nil {
+		timestamp = date.Unix()
+	}
+	return timestamp
+}
+
 func getBandwidthsSum(metricType string, duration string, hostnames []string, filter string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
