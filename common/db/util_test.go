@@ -16,9 +16,9 @@ func (suite *DbUtilTestSuite) TestIpV4ToBytesForLike(c *C) {
 		expectedResult []byte
 	} {
 		{
-			"10.20.30.40",
+			"210.20.30.40",
 			[]byte {
-				0x0A, 0x14, 0x1E, 0x28, 0x25,
+				0xD2, 0x14, 0x1E, 0x28, 0x25,
 			},
 		},
 		{
