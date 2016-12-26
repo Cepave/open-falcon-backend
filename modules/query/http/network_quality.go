@@ -396,6 +396,76 @@ func getSnorlax(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getPhoenix(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	node := map[string]string{}
+	items := []map[string]string{}
+	nodeName := req.URL.Query().Get("node")
+
+	timestamp := int64(0)
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	timeFormat := "2006-01-02 15:04"
+	timeInput := req.URL.Query().Get("time")
+	date, err := time.ParseInLocation(timeFormat, timeInput, loc)
+	if err == nil {
+		timestamp = date.Unix()
+	}
+	tableName := "nqm_log_" + strings.Replace(nodeName, "-", "_", -1)
+	log.Debugf("tableName = %v", tableName)
+	timestampLatest := getLatestTimestamp(tableName, result)
+	timestampNearest := int64(0)
+	if timestampLatest > 0 {
+		timestampNearest = timestampLatest
+		if timestamp > 0 {
+			timestampNearest = getNearestTimestamp(tableName, timestamp, result)
+		}
+	}
+
+	if timestampNearest > 0 {
+		log.Debugf("timestampNearest = %v", timestampNearest)
+		o := orm.NewOrm()
+		o.Using("gz_nqm")
+		sqlcmd := "SELECT ip, dest_ip, dest_id, loss, max, min, avg FROM `gz_nqm`.`" + tableName + "` WHERE mtime = ?"
+		log.Debugf("sqlcmd = %v", sqlcmd)
+		var rows []orm.Params
+		num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestampNearest))).Values(&rows)
+		if err != nil {
+			log.Debugf("Error = %v", err.Error())
+		} else if num > 0 {
+			row := rows[0]
+			node = map[string]string{
+				"node": nodeName,
+				"IP": row["ip"].(string),
+			}
+			for _, row := range rows {
+				IP := row["dest_ip"].(string)
+				destination := map[string]string{
+					"IDC": row["dest_id"].(string),
+					"IP": IP,
+					"max": row["max"].(string),
+					"min": row["min"].(string),
+					"avg": row["avg"].(string),
+					"loss": row["loss"].(string),
+					"time": time.Unix(timestampNearest, 0).Format("2006-01-02 15:04"),
+				}
+				items = append(items, destination)
+			}
+		}
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	nodes["node"] = node
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func configNQMRoutes() {
 	http.HandleFunc("/api/nqm/nodes", getNQMNodes)
 	http.HandleFunc("/api/nqm/loss", getNQMPacketLoss)
