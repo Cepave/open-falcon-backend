@@ -1,15 +1,35 @@
 package json
 
 import (
-	json "github.com/bitly/go-simplejson"
+	gjson "encoding/json"
+	sjson "github.com/bitly/go-simplejson"
 )
 
 type JsonExt struct {
-	*json.Json
+	*sjson.Json
 }
 
-func ToJsonExt(json *json.Json) *JsonExt {
-	return &JsonExt{ json }
+func MarshalToJsonExt(v interface{}) *JsonExt {
+	switch jsonObj := v.(type) {
+	case *sjson.Json:
+		return ToJsonExt(jsonObj)
+	}
+
+	jsonString, err := gjson.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+
+	sjsonObject, err := sjson.NewJson([]byte(jsonString))
+	if err != nil {
+		panic(err)
+	}
+
+	return ToJsonExt(sjsonObject)
+}
+
+func ToJsonExt(sjson *sjson.Json) *JsonExt {
+	return &JsonExt{ sjson }
 }
 
 func (j *JsonExt) MustInt8() int8 {
@@ -42,15 +62,35 @@ func (j *JsonExt) GetPathExt(branch ...string) *JsonExt {
 	return &JsonExt{ j.GetPath(branch...) }
 }
 func (j *JsonExt) CheckGetExt(key string) (*JsonExt, bool) {
-	json, check := j.CheckGet(key)
-	return &JsonExt{ json }, check
+	sjson, check := j.CheckGet(key)
+	return &JsonExt{ sjson }, check
 }
 
 // Gets the JSON
 //
 // This method would panic if the JSON cannot be marshalled
-func MarshalJSON(jsonContent *json.Json) string {
-	jsonByte, err := jsonContent.Encode()
+func MarshalJSON(jsonContent *sjson.Json) string {
+	return MarshalGoJson(jsonContent)
+}
+
+func MarshalAny(v interface{}) string {
+	switch jsonObj := v.(type) {
+	case *sjson.Json:
+		return MarshalJSON(jsonObj)
+	case gjson.Marshaler:
+		return MarshalGoJson(jsonObj)
+	}
+
+	jsonString, err := gjson.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(jsonString)
+}
+
+func MarshalGoJson(jsonMarshaler gjson.Marshaler) string {
+	jsonByte, err := jsonMarshaler.MarshalJSON()
 	if err != nil {
 		panic(err)
 	}
@@ -61,7 +101,7 @@ func MarshalJSON(jsonContent *json.Json) string {
 // Gets the JSON(pretty)
 //
 // This method would panic if the JSON cannot be marshalled
-func MarshalPrettyJSON(jsonContent *json.Json) string {
+func MarshalPrettyJSON(jsonContent *sjson.Json) string {
 	jsonByte, err := jsonContent.EncodePretty()
 	if err != nil {
 		panic(err)
