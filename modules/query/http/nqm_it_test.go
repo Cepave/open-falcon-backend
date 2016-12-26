@@ -1,12 +1,14 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"github.com/dghubble/sling"
 	httpT "github.com/Cepave/open-falcon-backend/common/testing/http"
 	t "github.com/Cepave/open-falcon-backend/modules/query/test"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	sjson "github.com/bitly/go-simplejson"
 	. "gopkg.in/check.v1"
 )
 
@@ -18,31 +20,57 @@ var httpClientConfig = httpT.NewHttpClientConfigByFlag()
 
 // Tests the building of ICMP query
 func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
-	slingObject := sling.New().
-			Post(httpClientConfig.String()).
-			Path("/nqm/icmp/compound-report").
-			BodyJSON(ojson.RawJsonForm(
-				 // Uses default conditions
-				`
-				{
-					"filters": {
-						"time": {
-							"start_time": 209807000,
-							"end_time": 209847000
-						}
-					}
+	testCases := []struct {
+		metricFilter string
+		expectedStatus int
+	} {
+		{ "$min >= 55", http.StatusOK },
+		{ "$min >= invalid", http.StatusBadRequest },
+	}
+
+	var loadFunc = func(metricFilter string, expectedStatus int) *sjson.Json {
+		jsonBody := ojson.RawJsonForm(fmt.Sprintf(
+			 // Uses default conditions
+			`
+			{
+				"filters": {
+					"time": {
+						"start_time": 209807000,
+						"end_time": 209847000
+					},
+					"metrics": "%s"
 				}
-				`,
-			))
+			}
+			`, metricFilter,
+		))
 
-	clientChecker := httpT.NewCheckSlint(c, slingObject)
-	jsonBody := clientChecker.GetJsonBody(http.StatusOK)
+		return httpT.NewCheckSlint(
+			c,
+			sling.New().
+				Post(httpClientConfig.String()).
+				Path("/nqm/icmp/compound-report").
+				BodyJSON(jsonBody),
+		).
+			GetJsonBody(expectedStatus)
+	}
 
-	jsonString, _ := jsonBody.MarshalJSON()
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
 
-	c.Logf("JSON Response: %s", jsonString)
+		testedJson := loadFunc(testCase.metricFilter, testCase.expectedStatus)
+		testedJsonString, _ := testedJson.MarshalJSON()
 
-	c.Assert(len(jsonBody.Get("query_id").MustString()), Equals, 36)
+		c.Logf("JSON Response: %s", testedJsonString)
+
+		switch testCase.expectedStatus {
+		case http.StatusOK:
+			c.Assert(testedJson.Get("query_id").MustString(), HasLen, 36, comment)
+		case http.StatusBadRequest:
+			c.Assert(testedJson.Get("error_code").MustInt(), Equals, 1, comment)
+		default:
+			c.Fail()
+		}
+	}
 }
 // Tests the getting of content for a query by UUID
 func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
@@ -62,9 +90,8 @@ func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
 		/**
 		 * Calls RESTful service and retrieve data
 		 */
-		slingObject := sling.New().
-				Get(httpClientConfig.String()).
-				Path("/nqm/icmp/compound-report/query").
+		slingObject := sling.New().Base(httpClientConfig.String()).
+				Path("/nqm/icmp/compound-report/query/").
 				Path(testCase.sampleUuid)
 
 		clientChecker := httpT.NewCheckSlint(c, slingObject)

@@ -19,25 +19,21 @@ var _ = Suite(&TestQuerySuite{})
 
 // Tests the refreshing of query object
 func (suite *TestQuerySuite) TestAddOrRefreshQuery(c *C) {
+	query1 := &owlModel.Query{
+		NamedId: "test.query.g1",
+		Content: []byte { 29, 87, 61, 4, 5, 78, 91, 11, 91 },
+		Md5Content: md5.Sum([]byte("This is test - 1")),
+	}
+
 	testCases := []struct {
 		sampleQuery *owlModel.Query
 		sampleTime string
 	} {
 		{ // Adds a new onw
-			&owlModel.Query{
-				NamedId: "test.query.g1",
-				Content: []byte { 29, 87, 61, 4, 5, 78, 91, 11, 91 },
-				Md5Content: md5.Sum([]byte("This is test - 1")),
-			},
-			"2015-07-01T07:36:55+08:00",
+			query1, "2015-07-01T07:36:55+08:00",
 		},
 		{ // Updates an existing one
-			&owlModel.Query{
-				NamedId: "test.query.g1",
-				Content: []byte { 29, 87, 61, 4, 5, 78, 91, 11, 91 },
-				Md5Content: md5.Sum([]byte("This is test - 1")),
-			},
-			"2015-07-01T08:36:55+08:00",
+			query1, "2015-07-01T08:36:55+08:00",
 		},
 	}
 
@@ -49,7 +45,11 @@ func (suite *TestQuerySuite) TestAddOrRefreshQuery(c *C) {
 		AddOrRefreshQuery(sampleQuery, sampleTime)
 
 		var testedTime = getAccessTimeByUuid(sampleQuery.Uuid)
+
 		c.Assert(testedTime, owlCheck.TimeEquals, sampleTime, comment)
+
+		c.Assert(sampleQuery.Md5Content, DeepEquals, query1.Md5Content)
+		c.Assert(sampleQuery.Content, DeepEquals, query1.Content)
 	}
 }
 

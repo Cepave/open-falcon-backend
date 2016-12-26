@@ -97,6 +97,18 @@ func (suite *TestQuerySuite) TestCreateOrLoadQuery(c *C) {
 		testedQueryService.cache.Get(KeyByDbUuid(sampleQuery.Uuid)),
 		NotNil,
 	)
+
+	/**
+	 * Trying to loads the same query with the same md5 value
+	 */
+	sampleQuery_2 := &owlModel.Query{
+		NamedId: "gp-query-1",
+		Md5Content: md5Value,
+		Content: md5Value[:],
+	}
+	testedQueryService.CreateOrLoadQuery(sampleQuery_2)
+	c.Assert(sampleQuery_2.Uuid, DeepEquals, sampleQuery.Uuid)
+	// :~)
 }
 
 func getAccessTimeByUuid(uuid db.DbUuid) time.Time {

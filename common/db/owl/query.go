@@ -100,7 +100,6 @@ func (queryTx *addOrRefreshQueryTx) performAddOrUpdate(txExt *sqlxExt.TxExt) {
 			:access_time, :access_time
 		)
 		ON DUPLICATE KEY UPDATE
-			qr_content = :md5_content,
 			qr_time_access = :access_time
 		`,
 		map[string]interface{} {

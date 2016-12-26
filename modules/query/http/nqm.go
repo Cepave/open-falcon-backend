@@ -47,7 +47,7 @@ func getGinRouter() *gin.Engine {
 		compoundReport.GET("", outputCompondReportOfIcmp)
 		compoundReport.POST("", buildQueryOfIcmp)
 
-		compoundReport.GET("/:query_id", getQueryContentOfIcmp)
+		compoundReport.GET("/query/:query_id", getQueryContentOfIcmp)
 	}
 
 	return engine
