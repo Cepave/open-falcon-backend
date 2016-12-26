@@ -69,6 +69,16 @@ func (s *IspService) GetIspsByName(name string) []*owlModel.Isp {
 	return isps
 }
 
+func (s *IspService) GetIspsByIds(ids ...int16) []*owlModel.Isp {
+	result := make([]*owlModel.Isp, 0)
+
+	for _, id := range ids {
+		result = append(result, s.GetIspById(id))
+	}
+
+	return result
+}
+
 func ispKeyByName(name string) string {
 	return fmt.Sprintf("!pname!%s", name)
 }

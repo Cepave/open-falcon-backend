@@ -31,25 +31,27 @@ func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
 	} {
 		{ "890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", false }, // Load data into cache
 		{ "120818a7d438495bb79a1ac0abf1eae2", "", false }, // Nothing found
+		{ "120818a7d438495bb79a1ac0abf1eae2", "", false }, // Nothing found
 		{ "890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", true }, // Update access time
 	}
 
 	var lastAccessTime time.Time = time.Now()
 	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
 		sampleUuid := t.ParseUuid(c, testCase.sampleUuid)
 
 		/**
 		 * Asserts the existence itme in cache
 		 */
 		if testCase.inCache {
-			c.Assert(testedQueryService.cache.Get(sampleUuid.String()), NotNil)
+			c.Assert(testedQueryService.cache.Get(sampleUuid.String()), NotNil, comment)
 		} else {
-			c.Assert(testedQueryService.cache.Get(sampleUuid.String()), IsNil)
+			c.Assert(testedQueryService.cache.Get(sampleUuid.String()), IsNil, comment)
 		}
 		// :~)
 
 		time.Sleep(1 * time.Second)
-		comment := Commentf("Test Case: %d", i + 1)
 
 		testedQuery := testedQueryService.LoadQueryByUuid(sampleUuid)
 

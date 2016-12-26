@@ -75,33 +75,18 @@ func (s *QueryService) LoadQueryByUuid(uuid uuid.UUID) *model.Query {
 	// :~)
 
 	/**
-	 * Loads cache from database
+	 * Loads query from database
 	 */
-	item, err := s.cache.Fetch(
-		key, s.config.CacheDuration,
-		func() (interface{}, error) {
-			return owlDb.LoadQueryByUuidAndUpdateAccessTime(
-				s.config.Name, uuid, now,
-			), nil
-		},
+	queryFromDatabase := owlDb.LoadQueryByUuidAndUpdateAccessTime(
+		s.config.Name, uuid, now,
 	)
-	// :~)
-
-	if err != nil {
-		panic(err)
-	}
-
-	/**
-	 * If there is no such query(by uuid) in database,
-	 * gives nil value
-	 */
-	if item.Value() == nil {
-		item.Release()
+	if queryFromDatabase == nil {
 		return nil
 	}
 	// :~)
 
-	return item.Value().(*model.Query)
+	s.cache.Set(key, queryFromDatabase, s.config.CacheDuration)
+	return s.cache.Get(key).Value().(*model.Query)
 }
 
 // Loads object of query or creating one

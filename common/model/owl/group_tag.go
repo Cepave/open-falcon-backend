@@ -8,8 +8,8 @@ import (
 )
 
 type GroupTag struct {
-	Id int32 `gorm:"primary_key:true;column:gt_id"`
-	Name string `gorm:"column:gt_name"`
+	Id int32 `gorm:"primary_key:true;column:gt_id" json:"id" db:"gt_id"`
+	Name string `gorm:"column:gt_name" json:"name" db:"gt_name"`
 }
 
 func (GroupTag) TableName() string {

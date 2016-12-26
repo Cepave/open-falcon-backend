@@ -37,6 +37,17 @@ func (s *ProvinceService) GetProvinceById(provinceId int16) *owlModel.Province {
 
 	return v.(*owlModel.Province)
 }
+
+func (s *ProvinceService) GetProvincesByIds(provinceIds ...int16) []*owlModel.Province {
+	result := make([]*owlModel.Province, 0)
+
+	for _, id := range provinceIds {
+		result = append(result, s.GetProvinceById(id))
+	}
+
+	return result
+}
+
 // Loads province by name(or from cache)
 //
 // The name, which cannot find any data, would not be put into cache.
@@ -106,6 +117,17 @@ func (s *CityService) GetCity2ById(cityId int16) *owlModel.City2 {
 
 	return v.(*owlModel.City2)
 }
+
+func (s *CityService) GetCity2sByIds(cityIds ...int16) []*owlModel.City2 {
+	result := make([]*owlModel.City2, 0)
+
+	for _, id := range cityIds {
+		result = append(result, s.GetCity2ById(id))
+	}
+
+	return result
+}
+
 // Loads city by name(or from cache)
 //
 // The name, which cannot find any data, would not be put into cache.

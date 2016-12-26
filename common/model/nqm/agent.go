@@ -6,6 +6,7 @@ import (
 	"time"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	json "github.com/bitly/go-simplejson"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
@@ -119,21 +120,9 @@ func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonObject.Set("ip_address", agentView.IpAddress)
 	jsonObject.Set("status", agentView.Status)
 
-	if agentView.LastHeartBeat.IsZero() {
-		jsonObject.Set("last_heartbeat_time", nil)
-	} else {
-		jsonObject.Set("last_heartbeat_time", agentView.LastHeartBeat.Unix())
-	}
-	if agentView.Name != "" {
-		jsonObject.Set("name", agentView.Name)
-	} else {
-		jsonObject.Set("name", nil)
-	}
-	if agentView.Comment != "" {
-		jsonObject.Set("comment", agentView.Comment)
-	} else {
-		jsonObject.Set("comment", nil)
-	}
+	jsonObject.Set("last_heartbeat_time", ojson.JsonTime(agentView.LastHeartBeat))
+	jsonObject.Set("name", ojson.JsonString(agentView.Name))
+	jsonObject.Set("comment", ojson.JsonString(agentView.Comment))
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", agentView.IspId)
