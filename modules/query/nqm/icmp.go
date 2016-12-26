@@ -8,6 +8,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/dghubble/sling"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
 
 // As the DSL arguments for calling JSONRPC
@@ -18,7 +19,7 @@ type IcmpDslArgs struct {
 // The raw result returned from JSONRPC
 type IcmpResult struct {
 	grouping []int32
-	metrics  *Metrics
+	metrics  *model.Metrics
 }
 
 // Used to unmarshal JSON with specific structure of IcmpResult(because of reusing struct)
@@ -31,7 +32,7 @@ func (icmpResult *IcmpResult) UnmarshalJSON(p []byte) error {
 	jsonObj := ojson.ToJsonExt(sjson)
 
 	icmpResult.grouping = toGroupingIds(jsonObj.Get("grouping").MustArray())
-	icmpResult.metrics = &Metrics{
+	icmpResult.metrics = &model.Metrics{
 		Max:                     jsonObj.GetExt("max").MustInt16(),
 		Min:                     jsonObj.GetExt("min").MustInt16(),
 		Avg:                     jsonObj.Get("avg").MustFloat64(),

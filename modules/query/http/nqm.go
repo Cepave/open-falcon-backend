@@ -10,10 +10,13 @@ import (
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	nqmModel "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
+	metricDsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/metric_parser"
 	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
 	"github.com/bitly/go-simplejson"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -39,15 +42,98 @@ func getGinRouter() *gin.Engine {
 	engine.GET("/nqm/icmp/province/:province_id/list/by-targets", listIcmpByTargetsForAProvince)
 	engine.GET("/nqm/province/:province_id/agents", listEffectiveAgentsInProvince)
 
-	engine.GET("/nqm/icmp/compound-report/:query_id", outputCompondReportOfIcmp)
-	engine.POST("/nqm/icmp/compound-report", setupCompondReportOfIcmp)
+	compoundReport := engine.Group("/nqm/icmp/compound-report")
+	{
+		compoundReport.GET("", outputCompondReportOfIcmp)
+		compoundReport.POST("", buildQueryOfIcmp)
+
+		compoundReport.GET("/:query_id", getQueryContentOfIcmp)
+	}
 
 	return engine
 }
 
-func setupCompondReportOfIcmp(context *gin.Context) {
+func buildQueryOfIcmp(context *gin.Context) {
+	compoundQuery, err := buildCompoundQueryOfIcmp(context)
+
+	/**
+	 * Output status(400) for error of metric DSL
+	 */
+	if err != nil {
+		switch err.(type) {
+		case dslError:
+			context.JSON(http.StatusBadRequest, err)
+			return
+		}
+	}
+	// :~)
+
+	compoundQuery.SetupDefault()
+	query := nqm.BuildQuery(compoundQuery)
+	context.JSON(http.StatusOK, query.ToJson())
+}
+func getQueryContentOfIcmp(context *gin.Context) {
+	queryId := context.Param("query_id")
+	uuidValue := uuid.FromStringOrNil(queryId)
+
+	/**
+	 * Outputs 404 error for invalid id of query
+	 */
+	var showNotFound = func(queryId string) {
+		context.JSON(
+			http.StatusNotFound,
+			map[string] interface{} {
+			  "http_status": http.StatusNotFound,
+			  "uri": "/nqm/icmp/compound-report?query_id=" + queryId,
+			  "error_code": 1,
+			  "error_message": "Query id cannot be fetched",
+			},
+		)
+	}
+	// :~)
+
+	if uuidValue == uuid.Nil {
+		showNotFound(queryId)
+		return
+	}
+
+	compoundQuery := nqm.GetCompoundQueryByUuid(uuidValue)
+	if compoundQuery == nil {
+		showNotFound(queryId)
+		return
+	}
+
+	context.JSON(http.StatusOK, nqm.ToQueryDetail(compoundQuery))
 }
 func outputCompondReportOfIcmp(context *gin.Context) {
+}
+
+type dslError struct {
+	ErrorCode int `json:"error_code"`
+	Message string `json:"error_message"`
+}
+
+func (e dslError) Error() string {
+	return e.Message
+}
+
+// Parses the JSON to query object and checks values
+func buildCompoundQueryOfIcmp(context *gin.Context) (*nqmModel.CompoundQuery, error) {
+	query := nqmModel.NewCompoundQuery()
+	jsonErr := context.BindJSON(query)
+	if jsonErr != nil {
+		return nil, jsonErr
+	}
+
+	filter, parseError := metricDsl.ParseToMetricFilter(query.Filters.Metrics)
+	if parseError != nil {
+		return nil, dslError {
+			1, parseError.Error(),
+		}
+	}
+
+	query.SetMetricFilter(filter)
+	return query, nil
 }
 
 type resultWithDsl struct {

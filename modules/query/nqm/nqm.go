@@ -35,6 +35,9 @@ var ispService *owlService.IspService
 var provinceService *owlService.ProvinceService
 var cityService *owlService.CityService
 var targetService *nqmService.TargetService
+var groupTagService *owlService.GroupTagService
+var nameTagService *owlService.NameTagService
+var queryService *owlService.QueryService
 
 // Initilaize the service
 func (srv *ServiceController) Init() {
@@ -48,20 +51,39 @@ func (srv *ServiceController) Init() {
 	srv.GetTargetById = targetService.GetSimpleTarget1ById
 }
 
+const queryNamedId = "nqm.compound.report"
+
 func initServices() {
+	queryService = owlService.NewQueryService(
+		owlService.QueryServiceConfig {
+			queryNamedId,
+			8,
+			time.Hour * 8,
+		},
+	)
+
 	// Cache for ISPs: Maximum 16 entities with 6 hours live time
 	ispService = owlService.NewIspService(cache.DataCacheConfig{
-		MaxSize: 16, Duration: time.Hour * 6,
+		MaxSize: 16, Duration: time.Hour * 8,
 	})
 
 	// Cache for Provinces: Maximum 16 entities with 6 hours live time
 	provinceService = owlService.NewProvinceService(cache.DataCacheConfig{
-		MaxSize: 16, Duration: time.Hour * 6,
+		MaxSize: 16, Duration: time.Hour * 16,
 	})
 
 	// Cache for Cities: Maximum 32 entities with 6 hours live time
 	cityService = owlService.NewCityService(cache.DataCacheConfig{
-		MaxSize: 32, Duration: time.Hour * 6,
+		MaxSize: 32, Duration: time.Hour * 16,
+	})
+
+	// Cache for Targets: Maximum 150 entities with 2 hours live time
+	nameTagService = owlService.NewNameTagService(cache.DataCacheConfig{
+		MaxSize: 32, Duration: time.Hour * 8,
+	})
+
+	groupTagService = owlService.NewGroupTagService(cache.DataCacheConfig{
+		MaxSize: 8, Duration: time.Hour * 8,
 	})
 
 	// Cache for Targets: Maximum 150 entities with 2 hours live time

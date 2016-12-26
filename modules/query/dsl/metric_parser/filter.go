@@ -2,22 +2,16 @@ package metric_parser
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	"reflect"
 	"strconv"
 )
 
-// Defines the interface for process a instance of metrics
-type MetricFilter interface {
-	// Checks whether or not the metrics matches conditions of filter
-	IsMatch(model *nqm.Metrics) bool
-}
-
 type boolFilterImpl struct {
 	expectedResult bool
-	matchers []MetricFilter
+	matchers []model.MetricFilter
 }
-func (boolFilter *boolFilterImpl) IsMatch(model *nqm.Metrics) bool {
+func (boolFilter *boolFilterImpl) IsMatch(model *model.Metrics) bool {
 	for _, filter := range boolFilter.matchers {
 		if filter.IsMatch(model) == boolFilter.expectedResult {
 			return boolFilter.expectedResult
@@ -27,11 +21,11 @@ func (boolFilter *boolFilterImpl) IsMatch(model *nqm.Metrics) bool {
 	return !boolFilter.expectedResult
 }
 func newBoolFilterImpl(checkResult bool, leftTerm interface{}, restTerms interface{}) *boolFilterImpl {
-	matchers := make([]MetricFilter, 0)
+	matchers := make([]model.MetricFilter, 0)
 
-	matchers = append(matchers, leftTerm.(MetricFilter))
+	matchers = append(matchers, leftTerm.(model.MetricFilter))
 	for _, restFilter := range restTerms.([]interface{}) {
-		matchers = append(matchers, restFilter.(MetricFilter))
+		matchers = append(matchers, restFilter.(model.MetricFilter))
 	}
 
 	return &boolFilterImpl {
@@ -55,7 +49,7 @@ func newFilterImpl(leftFactor interface{}, op string, rightFactor interface{}) *
 	}
 }
 
-func (f *filterImpl) IsMatch(model *nqm.Metrics) bool {
+func (f *filterImpl) IsMatch(model *model.Metrics) bool {
 	leftValue := f.getValue(f.leftFactor, model)
 	rightValue := f.getValue(f.rightFactor, model)
 
@@ -76,7 +70,7 @@ func (f *filterImpl) IsMatch(model *nqm.Metrics) bool {
 
 	panic(fmt.Errorf("Unsupported operator: [%s]", f.op))
 }
-func (f *filterImpl) getValue(factor interface{}, model *nqm.Metrics) float64 {
+func (f *filterImpl) getValue(factor interface{}, model *model.Metrics) float64 {
 	switch factor.(type) {
 	case metricType:
 		switch factor.(metricType) {

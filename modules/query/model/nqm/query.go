@@ -2,6 +2,7 @@ package nqm
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"sort"
 	"strings"
@@ -39,7 +40,7 @@ const (
 	GroupingProvince = "province"
 	GroupingCity = "city"
 	GroupingIsp = "isp"
-	GroupingName_tag = "name_tag"
+	GroupingNameTag = "name_tag"
 
 	TimeRangeAbsolute byte = 1
 	TimeRangeRelative byte = 2
@@ -86,7 +87,7 @@ var supportingAgentGrouping = map[string]bool {
 	GroupingProvince: true,
 	GroupingCity: true,
 	GroupingIsp: true,
-	GroupingName_tag: true,
+	GroupingNameTag: true,
 }
 
 var supportingTargetGrouping = map[string]bool {
@@ -95,7 +96,7 @@ var supportingTargetGrouping = map[string]bool {
 	GroupingProvince: true,
 	GroupingCity: true,
 	GroupingIsp: true,
-	GroupingName_tag: true,
+	GroupingNameTag: true,
 }
 
 // The main object of query for compound report
@@ -109,9 +110,7 @@ type CompoundQuery struct {
 	Output *QueryOutput `json:"output" digest:"21"`
 
 	jsonObject *sjson.Json
-}
-func (q *CompoundQuery) GetDigestValue() []byte {
-	return digest.DigestStruct(q, digest.Md5SumFunc)
+	metricFilter MetricFilter
 }
 
 func NewCompoundQuery() *CompoundQuery {
@@ -126,6 +125,14 @@ func NewCompoundQuery() *CompoundQuery {
 	}
 }
 
+func (q *CompoundQuery) GetDigestValue() []byte {
+	return digest.DigestStruct(q, digest.Md5SumFunc)
+}
+
+func (q *CompoundQuery) SetMetricFilter(filter MetricFilter) {
+	q.metricFilter = filter
+}
+
 type CompoundQueryFilter struct {
 	Time *TimeFilter `json:"time" digest:"1"`
 	Agent *nqmModel.AgentFilter `json:"agent" digest:"2"`
@@ -137,6 +144,9 @@ type TimeFilter struct {
 	StartTime ojson.JsonTime `json:"start_time"`
 	EndTime ojson.JsonTime `json:"end_time"`
 	ToNow *TimeWithUnit `json:"to_now"`
+
+	netStartTime time.Time
+	netEndTime time.Time
 
 	timeRangeType byte
 }
@@ -153,6 +163,66 @@ func (f *TimeFilter) GetDigest() []byte {
 
 	panic("Unknown type of time filter for digesting")
 }
+// Retrieves the start time of net(whether or not the time is absolute or relative)
+func (f *TimeFilter) GetNetTimeRange() (time.Time, time.Time) {
+	switch f.timeRangeType {
+	case TimeRangeAbsolute:
+		return time.Time(f.StartTime), time.Time(f.EndTime)
+	case TimeRangeRelative:
+		if f.netStartTime.IsZero() {
+			f.netStartTime, f.netEndTime = f.getRelativeTimeRangeOfNet(time.Now())
+		}
+		return f.netStartTime, f.netEndTime
+	default:
+		panic("Unknown time type")
+	}
+}
+func (f *TimeFilter) getRelativeTimeRangeOfNet(baseTime time.Time) (time.Time, time.Time) {
+	var startTime, endTime time.Time
+
+	startTimeValue, endTimeValue := f.ToNow.Value, f.ToNow.Value
+	if endTimeValue == 0 {
+		endTimeValue = 1
+	}
+
+	durationStartTime, durationEndTime := time.Duration(startTimeValue), time.Duration(endTimeValue)
+
+	switch f.ToNow.Unit {
+	case TimeUnitYear:
+		startTime = time.Date(
+			baseTime.Year(), 1, 1, 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(-startTimeValue, 0, 0)
+		endTime = startTime.AddDate(endTimeValue, 0, 0)
+	case TimeUnitMonth:
+		startTime = time.Date(
+			baseTime.Year(), baseTime.Month(), 1, 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(0, -startTimeValue, 0)
+		endTime = startTime.AddDate(0, endTimeValue, 0)
+	case TimeUnitWeek:
+		minusDays := -((int(baseTime.Weekday()) + 6) % 7)
+		startTime = time.Date(
+			baseTime.Year(), baseTime.Month(), baseTime.Day(), 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(0, 0, minusDays).AddDate(0, 0, -startTimeValue * 7)
+		endTime = startTime.AddDate(0, 0, endTimeValue * 7)
+	case TimeUnitDay:
+		startTime = time.Date(
+			baseTime.Year(), baseTime.Month(), baseTime.Day(), 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(0, 0, -startTimeValue)
+		endTime = startTime.AddDate(0, 0, endTimeValue)
+	case TimeUnitHour:
+		startTime = time.Date(
+			baseTime.Year(), baseTime.Month(), baseTime.Day(), baseTime.Hour(), 0, 0, 0, baseTime.Location(),
+		).Add(-durationStartTime * time.Hour)
+		endTime = startTime.Add(durationEndTime * time.Hour)
+	case TimeUnitMinute:
+		startTime = time.Date(
+			baseTime.Year(), baseTime.Month(), baseTime.Day(), baseTime.Hour(), baseTime.Minute(), 0, 0, baseTime.Location(),
+		).Add(-durationStartTime * time.Minute)
+		endTime = startTime.Add(durationEndTime * time.Minute)
+	}
+
+	return startTime, endTime
+}
 
 func NewTimeFilter() *TimeFilter {
 	return &TimeFilter {
@@ -165,34 +235,56 @@ type TimeWithUnit struct {
 	Unit string `json:"unit" digest:"1"`
 	Value int `json:"value" digest:"2"`
 }
+func (tu *TimeWithUnit) String() string {
+	return fmt.Sprintf("%d %s", tu.Value, tu.Unit)
+}
 
 type QueryOutput struct {
 	Metrics []string `json:"metrics" digest:"1"`
 }
 
+var eachAgentGrouping = map[string]bool {
+	AgentGroupingName: true,
+	AgentGroupingIpAddress: true,
+	AgentGroupingHostname: true,
+}
+var eachTargetGrouping = map[string]bool {
+	TargetGroupingName: true,
+	TargetGroupingHost: true,
+}
 type QueryGrouping struct {
 	Agent []string `json:"agent" digest:"1"`
 	Target []string `json:"target" digest:"2"`
 }
+func (q *QueryGrouping) IsForEachAgent() bool {
+	for _, agentGroup := range q.Agent {
+		if _, ok := eachAgentGrouping[agentGroup]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+func (q *QueryGrouping) IsForEachTarget() bool {
+	for _, targetGroup := range q.Target {
+		if _, ok := eachTargetGrouping[targetGroup]; ok {
+			return true
+		}
+	}
+
+	return false
+}
 
 // Converts this query object to compressed query
 func (q *CompoundQuery) GetCompressedQuery() []byte {
-	json, jsonErr := json.Marshal(q)
-	if jsonErr != nil {
-		panic(jsonErr)
-	}
-
-	return flateCompressor.MustCompressString(string(json))
+	return flateCompressor.MustCompressString(
+		ojson.MarshalAny(q),
+	)
 }
 
 func (q *CompoundQuery) UnmarshalFromCompressedQuery(compressedQuery []byte) {
 	json := flateCompressor.MustDecompressToString(compressedQuery)
 	q.UnmarshalJSON([]byte(json))
-}
-
-// Converts this query object to compressed query
-func (q *CompoundQuery) GetQueryDigest() []byte {
-	return nil
 }
 
 // Processes the source of JSON to initialize query object
@@ -230,7 +322,7 @@ func (query *CompoundQuery) SetupDefault() {
 	if len(query.Grouping.Agent) + len(query.Grouping.Target) == 0 {
 		query.Grouping.Agent = []string {
 			AgentGroupingName, AgentGroupingIpAddress,
-			GroupingProvince, GroupingCity, GroupingIsp, GroupingName_tag,
+			GroupingProvince, GroupingCity, GroupingIsp, GroupingNameTag,
 		}
 	}
 

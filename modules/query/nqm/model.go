@@ -3,24 +3,8 @@ package nqm
 import (
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
-
-/**
- * Macro-struct re-used by various data
- */
-type Metrics struct {
-	Max                     int16   `json:"max"`
-	Min                     int16   `json:"min"`
-	Avg                     float64 `json:"avg"`
-	Med                     int16   `json:"med"`
-	Mdev                    float64 `json:"mdev"`
-	Loss                    float64 `json:"loss"`
-	Count                   int32   `json:"count"`
-	NumberOfSentPackets     uint64  `json:"number_of_sent_packets"`
-	NumberOfReceivedPackets uint64  `json:"number_of_received_packets"`
-	NumberOfAgents          int32   `json:"number_of_agents"`
-	NumberOfTargets         int32   `json:"number_of_targets"`
-}
 
 /**
  * Aliases of type for DSL
@@ -58,13 +42,13 @@ type NqmDsl struct {
 // The data used for reporting of ICMP statistics(grouping by provinces of agents)
 type ProvinceMetric struct {
 	Province *owlModel.Province `json:"province"`
-	Metrics *Metrics `json:"metrics"`
+	Metrics *model.Metrics `json:"metrics"`
 }
 
 // The data used for reporting of ICMP statistics, which contains detail of target node(grouping by city)
 type CityMetric struct {
 	City *owlModel.City2 `json:"city"`
-	Metrics *Metrics `json:"metrics"`
+	Metrics *model.Metrics `json:"metrics"`
 	Targets []TargetMetric `json:"targets"`
 }
 
@@ -73,5 +57,5 @@ type TargetMetric struct {
 	Id int32 `json:"id"`
 	Host string `json:"host"`
 	Isp *owlModel.Isp `json:"isp"`
-	Metrics *Metrics `json:"metrics"`
+	Metrics *model.Metrics `json:"metrics"`
 }

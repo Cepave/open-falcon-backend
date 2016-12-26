@@ -6,6 +6,8 @@ import (
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	sjson "github.com/bitly/go-simplejson"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	t "github.com/Cepave/open-falcon-backend/common/testing"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	. "gopkg.in/check.v1"
 	"reflect"
@@ -243,6 +245,20 @@ func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 				GroupTagIds: []int32{ 8, 16 },
 			},
 		},
+		{
+			`{ "filters": { "agent": {} } }`,
+			&nqmModel.AgentFilter {
+				Name: []string {},
+				Hostname: []string{},
+				IpAddress: []string{},
+				ConnectionId: []string{},
+				IspIds: []int16{},
+				ProvinceIds: []int16{},
+				CityIds: []int16{},
+				NameTagIds: []int16{},
+				GroupTagIds: []int32{},
+			},
+		},
 	}
 
 	for i, testCase := range testCases {
@@ -281,6 +297,18 @@ func (suite *TestQuerySuite) TestLoadFiltersOfTarget(c *C) {
 				CityIds: []int16{ 7, 32 },
 				NameTagIds: []int16{ 9, 77 },
 				GroupTagIds: []int32{ 8, 16 },
+			},
+		},
+		{
+			`{ "filters": {"target": {} } }`,
+			&nqmModel.TargetFilter {
+				Name: []string {},
+				Host: []string{},
+				IspIds: []int16{},
+				ProvinceIds: []int16{},
+				CityIds: []int16{},
+				NameTagIds: []int16{},
+				GroupTagIds: []int32{},
 			},
 		},
 	}
@@ -491,6 +519,148 @@ func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
 		c.Logf("Time filter: [%v]. Digest value: [%s]", testCase.sampleFilter, testedDigestValue)
 
 		c.Assert(testedDigestValue, Equals, testCase.expectedDigest, comment)
+	}
+}
+
+// Tests the getting of time range of net
+func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
+	testCases := []struct {
+		sampleTimeWithUnit *TimeWithUnit
+		expectedStartTime string
+		expectedEndTime string
+	} {
+		{
+			&TimeWithUnit{ Unit: TimeUnitYear, Value: 2 },
+			"2012-01-01T00:00:00Z", "2014-01-01T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitYear, Value: 0 },
+			"2014-01-01T00:00:00Z", "2015-01-01T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitMonth, Value: 2 },
+			"2014-04-01T00:00:00Z", "2014-06-01T00:00:00Z",
+		},
+		{ // Cross year for months
+			&TimeWithUnit{ Unit: TimeUnitMonth, Value: 6 },
+			"2013-12-01T00:00:00Z", "2014-06-01T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitMonth, Value: 0 },
+			"2014-06-01T00:00:00Z", "2014-07-01T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitWeek, Value: 2 },
+			"2014-05-26T00:00:00Z", "2014-06-09T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitWeek, Value: 0 },
+			"2014-06-09T00:00:00Z", "2014-06-16T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitDay, Value: 2 },
+			"2014-06-08T00:00:00Z", "2014-06-10T00:00:00Z",
+		},
+		{ // Cross month for days
+			&TimeWithUnit{ Unit: TimeUnitDay, Value: 10 },
+			"2014-05-31T00:00:00Z", "2014-06-10T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitDay, Value: 0 },
+			"2014-06-10T00:00:00Z", "2014-06-11T00:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitHour, Value: 2 },
+			"2014-06-10T08:00:00Z", "2014-06-10T10:00:00Z",
+		},
+		{ // Cross day for hours
+			&TimeWithUnit{ Unit: TimeUnitHour, Value: 11 },
+			"2014-06-09T23:00:00Z", "2014-06-10T10:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitHour, Value: 0 },
+			"2014-06-10T10:00:00Z", "2014-06-10T11:00:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitMinute, Value: 7 },
+			"2014-06-10T10:13:00Z", "2014-06-10T10:20:00Z",
+		},
+		{ // Corss hour for minutes
+			&TimeWithUnit{ Unit: TimeUnitMinute, Value: 25 },
+			"2014-06-10T09:55:00Z", "2014-06-10T10:20:00Z",
+		},
+		{
+			&TimeWithUnit{ Unit: TimeUnitMinute, Value: 0 },
+			"2014-06-10T10:20:00Z", "2014-06-10T10:21:00Z",
+		},
+	}
+
+	baseTime := t.ParseTime(c, "2014-06-10T10:20:30Z")
+	c.Logf("Base time: %s", baseTime.Format(time.RFC3339))
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d.", i + 1)
+
+		testedTime := &TimeFilter {
+			ToNow: testCase.sampleTimeWithUnit,
+		}
+
+		expectedStartTime, expectedEndTime :=
+			t.ParseTime(c, testCase.expectedStartTime),
+			t.ParseTime(c, testCase.expectedEndTime)
+		testedStartTime, testedEndTime := testedTime.getRelativeTimeRangeOfNet(baseTime)
+
+		c.Logf(
+			"Case [%d]. [%v] Start time: %s. End time: %s",
+			i + 1, testedTime.ToNow,
+			testedStartTime.Format(time.RFC3339), testedEndTime.Format(time.RFC3339),
+		)
+		c.Assert(
+			testedStartTime, ocheck.TimeEquals, expectedStartTime,
+			Commentf("%s Start time.", comment.CheckCommentString()),
+		)
+		c.Assert(
+			testedEndTime, ocheck.TimeEquals, expectedEndTime,
+			Commentf("%s End time.", comment.CheckCommentString()),
+		)
+	}
+}
+
+// Tests the whether the grouping is for each agent
+func (suite *TestQuerySuite) TestIsForEachAgentOfGrouping(c *C) {
+	testCases := []struct {
+		agentGrouping []string
+		expected bool
+	} {
+		{ []string { GroupingIsp, GroupingCity, GroupingProvince, GroupingNameTag }, false, },
+		{ []string { GroupingCity, AgentGroupingName }, true, },
+		{ []string { GroupingCity, AgentGroupingHostname }, true, },
+		{ []string { GroupingCity, AgentGroupingIpAddress }, true, },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := (&QueryGrouping{ Agent: testCase.agentGrouping }).IsForEachAgent()
+		c.Assert(testedResult, Equals, testCase.expected, comment)
+	}
+}
+
+// Tests the whether the grouping is for each target
+func (suite *TestQuerySuite) TestIsForEachTargetOfGrouping(c *C) {
+	testCases := []struct {
+		targetGrouping []string
+		expected bool
+	} {
+		{ []string { GroupingIsp, GroupingCity, GroupingProvince, GroupingNameTag }, false, },
+		{ []string { GroupingCity, TargetGroupingName }, true, },
+		{ []string { GroupingCity, TargetGroupingHost }, true, },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := (&QueryGrouping{ Target: testCase.targetGrouping }).IsForEachTarget()
+		c.Assert(testedResult, Equals, testCase.expected, comment)
 	}
 }
 

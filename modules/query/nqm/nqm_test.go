@@ -7,6 +7,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
 	. "gopkg.in/check.v1"
 )
@@ -27,15 +28,15 @@ func (suite *TestNqmSuite) TestListByProvincesByMockData(c *C) {
 			return []IcmpResult{
 				IcmpResult{
 					grouping: []int32{11},
-					metrics:  &Metrics{Max: 31},
+					metrics:  &model.Metrics{Max: 31},
 				},
 				IcmpResult{
 					grouping: []int32{12},
-					metrics:  &Metrics{Max: 32},
+					metrics:  &model.Metrics{Max: 32},
 				},
 				IcmpResult{
 					grouping: []int32{13},
-					metrics:  &Metrics{Max: 33},
+					metrics:  &model.Metrics{Max: 33},
 				},
 			}, nil
 		},
@@ -75,11 +76,11 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 				return []IcmpResult{
 					IcmpResult{
 						grouping: []int32{41},
-						metrics:  &Metrics{Max: 87},
+						metrics:  &model.Metrics{Max: 87},
 					},
 					IcmpResult{
 						grouping: []int32{42},
-						metrics:  &Metrics{Max: 62},
+						metrics:  &model.Metrics{Max: 62},
 					},
 				}, nil
 			// :~)
@@ -90,19 +91,19 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 				return []IcmpResult{
 					IcmpResult{
 						grouping: []int32{2001, 41, 81},
-						metrics:  &Metrics{Max: 79},
+						metrics:  &model.Metrics{Max: 79},
 					},
 					IcmpResult{
 						grouping: []int32{2002, 41, 81},
-						metrics:  &Metrics{Max: 62},
+						metrics:  &model.Metrics{Max: 62},
 					},
 					IcmpResult{
 						grouping: []int32{2003, 42, 81},
-						metrics:  &Metrics{Max: 71},
+						metrics:  &model.Metrics{Max: 71},
 					},
 					IcmpResult{
 						grouping: []int32{2004, 42, 81},
-						metrics:  &Metrics{Max: 68},
+						metrics:  &model.Metrics{Max: 68},
 					},
 				}, nil
 				// :~)
@@ -180,11 +181,11 @@ func (suite *TestNqmSuite) TestJsonOfProvinceMetric(c *C) {
 	sampleData := []ProvinceMetric{
 		ProvinceMetric{
 			Province: &owlModel.Province{Id: 20, Name: "Dog-1"},
-			Metrics:  &Metrics{Max: 40, Min: 30, Avg: 33.45},
+			Metrics:  &model.Metrics{Max: 40, Min: 30, Avg: 33.45},
 		},
 		ProvinceMetric{
 			Province: &owlModel.Province{Id: 21, Name: "Dog-2"},
-			Metrics:  &Metrics{Max: 50, Min: 43, Avg: 44.5},
+			Metrics:  &model.Metrics{Max: 50, Min: 43, Avg: 44.5},
 		},
 	}
 
@@ -204,29 +205,29 @@ func (suite *TestNqmSuite) TestJsonOfCityMetric(c *C) {
 	sampleData := []CityMetric{
 		CityMetric{
 			City:    &owlModel.City2{Id: 51, Name: "小黃瓜城市"},
-			Metrics: &Metrics{Max: 82, Min: 33, Avg: 62.81},
+			Metrics: &model.Metrics{Max: 82, Min: 33, Avg: 62.81},
 			Targets: []TargetMetric{
 				TargetMetric{
 					Id: 4021, Host: "h1.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 101, Min: 63, Avg: 77.3},
+					Metrics: &model.Metrics{Max: 101, Min: 63, Avg: 77.3},
 				},
 				TargetMetric{
 					Id: 4022, Host: "h2.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 93, Min: 77, Avg: 82.5},
+					Metrics: &model.Metrics{Max: 93, Min: 77, Avg: 82.5},
 				},
 			},
 		},
 		CityMetric{
 			City:    &owlModel.City2{Id: 52, Name: "高麗菜城市"},
-			Metrics: &Metrics{Max: 32, Min: 12, Avg: 22.3},
+			Metrics: &model.Metrics{Max: 32, Min: 12, Avg: 22.3},
 			Targets: []TargetMetric{
 				TargetMetric{
 					Id: 4031, Host: "g1.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 62, Min: 37, Avg: 40.25},
+					Metrics: &model.Metrics{Max: 62, Min: 37, Avg: 40.25},
 				},
 				TargetMetric{
 					Id: 4032, Host: "g2.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 35, Min: 22, Avg: 29.1},
+					Metrics: &model.Metrics{Max: 35, Min: 22, Avg: 29.1},
 				},
 			},
 		},

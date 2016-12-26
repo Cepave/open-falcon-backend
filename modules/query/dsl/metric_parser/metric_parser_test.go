@@ -2,7 +2,7 @@ package metric_parser
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
+	"github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	. "gopkg.in/check.v1"
 )
 
@@ -46,7 +46,7 @@ func (suite *TestMetricGrammarSuite) TestParse(c *C) {
 		c.Logf("Curret Code: %s", testCase.code)
 		result, err := Parse("Metrics", ([]byte)(testCase.code))
 		c.Assert(err, IsNil, comment)
-		resultFilter := result.(MetricFilter)
+		resultFilter := result.(nqm.MetricFilter)
 		// :~)
 
 		c.Assert(resultFilter.IsMatch(sampleMetrics), Equals, testCase.expectedResult, comment)
