@@ -24,7 +24,7 @@ func (suite *TestStringsSuite) TestMarshalJSONOfJsonString(c *C) {
 	for i, testCase := range testCases {
 		comment := Commentf("Test Case: %d", i + 1)
 
-		testedResult := MarshalAny(testCase.sample)
+		testedResult := MarshalJSON(testCase.sample)
 		c.Logf("JSON Result: %s", testedResult)
 
 		c.Assert(testedResult, ocheck.JsonEquals, testCase.expected, comment)

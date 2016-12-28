@@ -9,23 +9,51 @@ type JsonExt struct {
 	*sjson.Json
 }
 
-func MarshalToJsonExt(v interface{}) *JsonExt {
-	switch jsonObj := v.(type) {
-	case *sjson.Json:
-		return ToJsonExt(jsonObj)
+func UnmarshalToJson(v interface{}) *sjson.Json {
+	var jsonString []byte
+
+	switch typedJson := v.(type) {
+	case []byte:
+		jsonString = typedJson
+	case string:
+		jsonString = []byte(typedJson)
+	case gjson.Marshaler:
+		marshalerJson, err := typedJson.MarshalJSON()
+		if err != nil {
+			panic(err)
+		}
+
+		jsonString = marshalerJson
+	default:
+		anyJson, err := gjson.Marshal(typedJson)
+		if err != nil {
+			panic(err)
+		}
+
+		jsonString = anyJson
 	}
 
-	jsonString, err := gjson.Marshal(v)
+	jsonObject := sjson.New()
+
+	if len(jsonString) == 0 {
+		return nil
+	}
+
+	err := jsonObject.UnmarshalJSON(jsonString)
 	if err != nil {
 		panic(err)
 	}
 
-	sjsonObject, err := sjson.NewJson([]byte(jsonString))
-	if err != nil {
-		panic(err)
+	return jsonObject
+}
+
+func UnmarshalToJsonExt(v interface{}) *JsonExt {
+	jsonObject := UnmarshalToJson(v)
+	if jsonObject == nil {
+		return nil
 	}
 
-	return ToJsonExt(sjsonObject)
+	return ToJsonExt(jsonObject)
 }
 
 func ToJsonExt(sjson *sjson.Json) *JsonExt {
@@ -69,19 +97,8 @@ func (j *JsonExt) CheckGetExt(key string) (*JsonExt, bool) {
 // Gets the JSON
 //
 // This method would panic if the JSON cannot be marshalled
-func MarshalJSON(jsonContent *sjson.Json) string {
-	return MarshalGoJson(jsonContent)
-}
-
-func MarshalAny(v interface{}) string {
-	switch jsonObj := v.(type) {
-	case *sjson.Json:
-		return MarshalJSON(jsonObj)
-	case gjson.Marshaler:
-		return MarshalGoJson(jsonObj)
-	}
-
-	jsonString, err := gjson.Marshal(v)
+func MarshalJSON(anyObject interface{}) string {
+	jsonString, err := gjson.Marshal(anyObject)
 	if err != nil {
 		panic(err)
 	}
@@ -89,23 +106,21 @@ func MarshalAny(v interface{}) string {
 	return string(jsonString)
 }
 
-func MarshalGoJson(jsonMarshaler gjson.Marshaler) string {
-	jsonByte, err := jsonMarshaler.MarshalJSON()
-	if err != nil {
-		panic(err)
-	}
-
-	return string(jsonByte)
-}
-
 // Gets the JSON(pretty)
 //
 // This method would panic if the JSON cannot be marshalled
-func MarshalPrettyJSON(jsonContent *sjson.Json) string {
-	jsonByte, err := jsonContent.EncodePretty()
+func MarshalPrettyJSON(anyObject interface{}) string {
+	jsonString := MarshalJSON(anyObject)
+
+	jsonObject, err := sjson.NewJson([]byte(jsonString))
 	if err != nil {
 		panic(err)
 	}
 
-	return string(jsonByte)
+	prettyJson, jsonError := jsonObject.EncodePretty()
+	if jsonError != nil {
+		panic(jsonError)
+	}
+
+	return string(prettyJson)
 }
