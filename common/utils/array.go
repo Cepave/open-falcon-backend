@@ -146,31 +146,41 @@ func (a *AbstractArray) GetArray() interface{} {
 }
 
 // Gets the result array as desired type(element)
-func (a *AbstractArray) GetArrayAsType(targetType reflect.Type) interface{} {
+func (a *AbstractArray) GetArrayAsType(elemTypeOfTarget reflect.Type) interface{} {
 	valueOfAnyArray := a.anyArrayValue
 	size := valueOfAnyArray.Len()
 
-	var newArrayType reflect.Type
-	var convertValue func(srcValue reflect.Value) reflect.Value
-	if a.arrayElementType == targetType {
-		newArrayType = valueOfAnyArray.Type()
-		convertValue = func(srcValue reflect.Value) reflect.Value { return srcValue }
-	} else {
-		newArrayType = reflect.SliceOf(targetType)
-		convertValue = func(srcValue reflect.Value) reflect.Value {
-			return ConvertToByReflect(srcValue, targetType)
-		}
-	}
+	/**
+	 * Copy the array of same type
+	 */
+	if a.arrayElementType == elemTypeOfTarget {
+		valueOfCopyTarget := reflect.MakeSlice(
+			valueOfAnyArray.Type(), size, size,
+		)
 
-	newArrayValue := reflect.MakeSlice(newArrayType, size, size)
+		reflect.Copy(valueOfCopyTarget, valueOfAnyArray)
+		return valueOfCopyTarget.Interface()
+	}
+	// :~)
+
+	newArrayValue := reflect.MakeSlice(
+		reflect.SliceOf(elemTypeOfTarget), 0, size,
+	)
 
 	for i := 0; i < size; i++ {
-		newArrayValue.Index(i).Set(
-			convertValue(valueOfAnyArray.Index(i)),
+		newArrayValue = reflect.Append(
+			newArrayValue,
+			ConvertToByReflect(
+				valueOfAnyArray.Index(i), elemTypeOfTarget,
+			),
 		)
 	}
 
 	return newArrayValue.Interface()
+}
+
+func (a *AbstractArray) GetArrayAsTargetType(targetValue interface{}) interface{} {
+	return a.GetArrayAsType(reflect.TypeOf(targetValue))
 }
 
 func (a *AbstractArray) GetArrayOfAny() []interface{} {

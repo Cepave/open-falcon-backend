@@ -156,3 +156,27 @@ func (suite *TestArraySuite) TestNewDomainFilter(c *C) {
 		c.Assert(testedResult.GetArray(), DeepEquals, testCase.expectedData, comment)
 	}
 }
+
+// Tests the getting array by type convertion
+func (suite *TestArraySuite) TestGetArrayAsType(c *C) {
+	testCases := []struct {
+		sourceArray interface{}
+		targetValue interface{}
+		expectedResult interface{}
+	} {
+		{ []int16 { 11, 16 }, uint32(0), []uint32 { 11, 16 }, },
+		{ []int64 { -1, -11 }, int8(0), []int8 { -1, -11 }, },
+		{ []int32 { -13, 109 }, int32(0), []int32 { -13, 109 }, },
+		{ []int32 {}, int8(0), []int8 {}, },
+		{ []int32(nil), int16(0), []int16 {}, },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := MakeAbstractArray(testCase.sourceArray).
+			GetArrayAsTargetType(testCase.targetValue)
+
+		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
+	}
+}

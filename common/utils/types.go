@@ -73,7 +73,7 @@ func ConvertToByReflect(sourceValue reflect.Value, targetType reflect.Type) refl
 	switch sourceType.Kind() {
 	case reflect.Ptr:
 		if targetType.Kind() != reflect.Ptr {
-			panic(fmt.Sprintf("Target type is not pointer:[%v]. Source type:[%v]", targetType, sourceType))
+			panic(fmt.Sprintf("Target type is not pointer:[%s]. Source type:[%s]", targetType, sourceType))
 		}
 
 		if sourceValue.IsNil() {
@@ -81,12 +81,12 @@ func ConvertToByReflect(sourceValue reflect.Value, targetType reflect.Type) refl
 		}
 
 		if !sourceType.ConvertibleTo(targetType) {
-			panic(fmt.Sprintf("Type of source[%v] cannot be converted to type of target[%v]", sourceType, targetType))
+			panic(fmt.Sprintf("Type of source[%s] cannot be converted to type of target[%s]", sourceType, targetType))
 		}
 	}
 
 	if !sourceType.ConvertibleTo(targetType) {
-		panic(fmt.Sprintf("Cannot convert type of [%v] to another type: [%v]", sourceType, targetType))
+		panic(fmt.Sprintf("Cannot convert type of [%s] to another type: [%s]", sourceType, targetType))
 	}
 
 	return sourceValue.Convert(targetType)
