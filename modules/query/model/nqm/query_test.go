@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"encoding/hex"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
-	sjson "github.com/bitly/go-simplejson"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	t "github.com/Cepave/open-falcon-backend/common/testing"
@@ -386,11 +385,19 @@ func (suite *TestQuerySuite) TestLoadGrouping(c *C) {
 
 // Tests the purifying of json's array of numbers
 func (suite *TestQuerySuite) TestPurifyNumberArrayOfJson(c *C) {
+	// Asserts the nil value
+	c.Assert(purifyNumberArrayOfJson(nil, utils.TypeOfUint8).([]uint8), DeepEquals, []uint8{})
+
 	testCases := []struct {
 		jsonSource string
 		targetType reflect.Type
 		expectedResult interface{}
 	} {
+		{
+			"null",
+			utils.TypeOfInt8,
+			[]int8 {},
+		},
 		{
 			`[ 38, 29, 40, 38, 29 ]`,
 			utils.TypeOfInt8,
@@ -407,7 +414,7 @@ func (suite *TestQuerySuite) TestPurifyNumberArrayOfJson(c *C) {
 		comment := Commentf("Test Case: %d", i + 1)
 
 		testedResult := purifyNumberArrayOfJson(
-			loadJson(c, testCase.jsonSource),
+			ojson.UnmarshalToJson(testCase.jsonSource),
 			testCase.targetType,
 		)
 		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
@@ -438,7 +445,7 @@ func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForDomain(c *C) {
 		comment := Commentf("Test Case: %d", i + 1)
 
 		testedResult := purifyStringArrayOfJsonForDomain(
-			loadJson(c, testCase.jsonSource),
+			ojson.UnmarshalToJson(testCase.jsonSource),
 			testCase.sampleDomain,
 		)
 
@@ -465,7 +472,7 @@ func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForValues(c *C) {
 		comment := Commentf("Test Case: %d", i + 1)
 
 		testedResult := purifyStringArrayOfJsonForValues(
-			loadJson(c, testCase.jsonSource),
+			ojson.UnmarshalToJson(testCase.jsonSource),
 		)
 		c.Assert(testedResult, DeepEquals, testCase.exepctedResult, comment)
 	}
@@ -664,15 +671,69 @@ func (suite *TestQuerySuite) TestIsForEachTargetOfGrouping(c *C) {
 	}
 }
 
-func loadJson(c *C, jsonSource string) *sjson.Json {
-	if jsonSource == "" {
-		return nil
+// Tests the getting functions for reation
+func (suite *TestQuerySuite) TestGetPropRelation(c *C) {
+	testCases := []struct {
+		agentFilter *nqmModel.AgentFilter
+		targetFilter *nqmModel.TargetFilter
+		expected []PropRelation
+	} {
+		{ // By agent
+			&nqmModel.AgentFilter { IspIds: []int16 { 20, 21 }, ProvinceIds: []int16 { 3 }, CityIds: []int16{ 101, 102 }, NameTagIds: []int16{ 10, 11 } },
+			&nqmModel.TargetFilter {},
+			[]PropRelation { NoCondition, NoCondition, NoCondition, NoCondition },
+		},
+		{ // By target
+			&nqmModel.AgentFilter {},
+			&nqmModel.TargetFilter { IspIds: []int16 { 20, 21 }, ProvinceIds: []int16 { 3 }, CityIds: []int16{ 101, 102 }, NameTagIds: []int16{ 10, 11 } },
+			[]PropRelation { NoCondition, NoCondition, NoCondition, NoCondition },
+		},
+		{ // No filters
+			&nqmModel.AgentFilter {},
+			&nqmModel.TargetFilter {},
+			[]PropRelation { NoCondition, NoCondition, NoCondition, NoCondition },
+		},
+		{ // Same realtion(by agent)
+			&nqmModel.AgentFilter { IspIds: []int16 { RelationSame }, ProvinceIds: []int16 { RelationSame }, CityIds: []int16{ RelationSame }, NameTagIds: []int16{RelationSame } },
+			&nqmModel.TargetFilter {},
+			[]PropRelation { SameValue, SameValue, SameValue, SameValue },
+		},
+		{ // Same realtion(by target)
+			&nqmModel.AgentFilter {},
+			&nqmModel.TargetFilter { IspIds: []int16 { RelationSame }, ProvinceIds: []int16 { RelationSame }, CityIds: []int16{ RelationSame }, NameTagIds: []int16{RelationSame } },
+			[]PropRelation { SameValue, SameValue, SameValue, SameValue },
+		},
+		{ // Not same(by agent)
+			&nqmModel.AgentFilter { IspIds: []int16 { RelationNotSame }, ProvinceIds: []int16 { RelationNotSame }, CityIds: []int16{ RelationNotSame }, NameTagIds: []int16{RelationNotSame } },
+			&nqmModel.TargetFilter {},
+			[]PropRelation { NotSameValue, NotSameValue, NotSameValue, NotSameValue },
+		},
+		{ // Not same(by target)
+			&nqmModel.AgentFilter {},
+			&nqmModel.TargetFilter { IspIds: []int16 { RelationNotSame }, ProvinceIds: []int16 { RelationNotSame }, CityIds: []int16{ RelationNotSame }, NameTagIds: []int16{RelationNotSame } },
+			[]PropRelation { NotSameValue, NotSameValue, NotSameValue, NotSameValue },
+		},
 	}
 
-	sampleJson, err := sjson.NewJson(([]byte)(jsonSource))
-	c.Assert(err, IsNil)
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
 
-	return sampleJson
+		sampleQuery := NewCompoundQuery()
+		sampleQuery.Filters.Agent = testCase.agentFilter
+		sampleQuery.Filters.Target = testCase.targetFilter
+
+		c.Assert(
+			[]PropRelation{
+				sampleQuery.GetIspRelation(),
+				sampleQuery.GetProvinceRelation(),
+				sampleQuery.GetCityRelation(),
+				sampleQuery.GetNameTagRelation(),
+			},
+			DeepEquals,
+			testCase.expected,
+			comment,
+		)
+	}
 }
 
 func loadQueryObject(c *C, json string, comment CommentInterface) *CompoundQuery {

@@ -1,7 +1,6 @@
 package nqm
 
 import (
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
@@ -28,15 +27,20 @@ type NqmDsl struct {
 	IdsOfAgentIsps []int16 `json:"ids_of_agent_isps"`
 	IdsOfAgentProvinces []int16 `json:"ids_of_agent_provinces"`
 	IdsOfAgentCities []int16 `json:"ids_of_agent_cities"`
+	IdsOfAgentNameTags []int16 `json:"ids_of_agent_name_tags"`
+	IdsOfAgentGroupTags []int32 `json:"ids_of_agent_group_tags"`
 
 	IdsOfTargets []int32 `json:"ids_of_targets"`
 	IdsOfTargetProvinces []int16 `json:"ids_of_target_provinces"`
 	IdsOfTargetIsps []int16 `json:"ids_of_target_isps"`
 	IdsOfTargetCities []int16 `json:"ids_of_target_cities"`
+	IdsOfTargetNameTags []int16 `json:"ids_of_target_name_tags"`
+	IdsOfTargetGroupTags []int32 `json:"ids_of_target_group_tags"`
 
-	IspRelation dsl.HostRelation `json:"isp_relation"`
-	ProvinceRelation dsl.HostRelation `json:"province_relation"`
-	CityRelation dsl.HostRelation `json:"city_relation"`
+	IspRelation model.PropRelation `json:"isp_relation"`
+	ProvinceRelation model.PropRelation `json:"province_relation"`
+	CityRelation model.PropRelation `json:"city_relation"`
+	NameTagRelation model.PropRelation `json:"name_tag_relation"`
 }
 
 // The data used for reporting of ICMP statistics(grouping by provinces of agents)

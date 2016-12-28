@@ -5,6 +5,8 @@ import (
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
+	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	"github.com/satori/go.uuid"
 	. "gopkg.in/check.v1"
 )
@@ -154,10 +156,358 @@ func (suite *TestCompoundReportSuite) TestGetCompoundQueryByUuid(c *C) {
 	c.Assert(testedQuery.Output, DeepEquals, sampleQuery.Output)
 }
 
+// Tests the building of group columns for DSL
+func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *C) {
+	testCases := []*struct {
+		sampleGrouping *model.QueryGrouping
+		expected []string
+	} {
+		{ // Agent + Target
+			&model.QueryGrouping{
+				Agent: []string { model.AgentGroupingName, model.AgentGroupingHostname, model.AgentGroupingIpAddress },
+				Target: []string { model.TargetGroupingName, model.TargetGroupingHost },
+			},
+			[]string { "ag_id", "tg_id" },
+		},
+		{ // Other properties
+			&model.QueryGrouping{
+				Agent: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
+				Target: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
+			},
+			[]string {
+				"ag_isp_id", "ag_pv_id", "ag_ct_id", "ag_nt_id",
+				"tg_isp_id", "tg_pv_id", "tg_ct_id", "tg_nt_id",
+			},
+		},
+		{ // Agent + other property of target
+			&model.QueryGrouping{
+				Agent: []string { model.AgentGroupingName, model.GroupingIsp },
+				Target: []string { model.GroupingIsp },
+			},
+			[]string { "ag_id", "tg_isp_id" },
+		},
+		{ // Other property of agent + target
+			&model.QueryGrouping{
+				Agent: []string { model.GroupingNameTag },
+				Target: []string { model.TargetGroupingName, model.GroupingIsp },
+			},
+			[]string { "ag_nt_id", "tg_id" },
+		},
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedGrouping := buildGroupingColumnOfDsl(testCase.sampleGrouping)
+		c.Assert(testedGrouping, DeepEquals, testCase.expected, comment)
+	}
+}
+
+// Tests the building of NQM dsl by compound query
+func (suite *TestCompoundReportSuite) TestBuildNqmDslByCompoundQuery(c *C) {
+	type subCase [][2]interface{}
+
+	allTestCases := []*struct {
+		nodeProperty string
+		queryProperty string
+		testedProperty string
+
+		sampleAndExpected subCase
+	} {
+		// For agents
+
+		{
+			"Agent", "Name", "IdsOfAgents",
+			subCase {
+				{ []string{}, []int32{}, },
+				{ []string{ "GC-01" }, []int32{ 1041 }, },
+				{ []string{ "No-1" }, []int32{ -2 }, },
+			},
+		},
+		{
+			"Agent", "ConnectionId", "IdsOfAgents",
+			subCase {
+				{ []string{}, []int32{}, },
+				{ []string{ "eth3-gc-01" }, []int32{ 1041 }, },
+				{ []string{ "No-1" }, []int32{ -2 }, },
+			},
+		},
+		{
+			"Agent", "Hostname", "IdsOfAgents",
+			subCase {
+				{ []string{}, []int32{}, },
+				{ []string{ "KCB-01" }, []int32{ 1041 }, },
+				{ []string{ "No-1" }, []int32{ -2 }, },
+			},
+		},
+		{
+			"Agent", "IpAddress", "IdsOfAgents",
+			subCase {
+				{ []string{}, []int32{}, },
+				{ []string{ "10.91.8.33" }, []int32{ 1041 }, },
+				{ []string{ "90.11.76.2" }, []int32{ -2 }, },
+			},
+		},
+		{
+			"Agent", "IspIds", "IdsOfAgentIsps",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 10, 20 }, []int16{ 10, 20 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Agent", "IspIds", "IspRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 10, 20 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Agent", "ProvinceIds", "IdsOfAgentProvinces",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 32, 31 }, []int16{ 32, 31 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Agent", "ProvinceIds", "ProvinceRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 7 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Agent", "CityIds", "IdsOfAgentCities",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 65, 72 }, []int16{ 65, 72 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Agent", "CityIds", "CityRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 80 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Agent", "NameTagIds", "IdsOfAgentNameTags",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 101, 114 }, []int16{ 101, 114 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Agent", "NameTagIds", "NameTagRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 29 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Agent", "GroupTagIds", "IdsOfAgentGroupTags",
+			subCase {
+				{ []int32{}, []int32{}, },
+				{ []int32{ 1291, 1309 }, []int32{ 1291, 1309 }, },
+				{ []int32{ model.RelationSame }, []int32{}, },
+				{ []int32{ model.RelationNotSame }, []int32{}, },
+			},
+		},
+
+		// For targets
+		{
+			"Target", "Name", "IdsOfTargets",
+			subCase {
+				{ []string{}, []int32{}, },
+				{ []string{ "ZKP-01" }, []int32{ 2301 }, },
+				{ []string{ "No-1" }, []int32{ -2 }, },
+			},
+		},
+		{
+			"Target", "Host", "IdsOfTargets",
+			subCase {
+				{ []string{}, []int32{}, },
+				{ []string{ "ZKP-TTC-33" }, []int32{ 2301 }, },
+				{ []string{ "No-1" }, []int32{ -2 }, },
+			},
+		},
+		{
+			"Target", "IspIds", "IdsOfTargetIsps",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 10, 20 }, []int16{ 10, 20 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Target", "IspIds", "IspRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 10, 20 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Target", "ProvinceIds", "IdsOfTargetProvinces",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 32, 31 }, []int16{ 32, 31 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Target", "ProvinceIds", "ProvinceRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 7 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Target", "CityIds", "IdsOfTargetCities",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 65, 72 }, []int16{ 65, 72 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Target", "CityIds", "CityRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 80 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Target", "NameTagIds", "IdsOfTargetNameTags",
+			subCase {
+				{ []int16{}, []int16{}, },
+				{ []int16{ 101, 114 }, []int16{ 101, 114 }, },
+				{ []int16{ model.RelationSame }, []int16{}, },
+				{ []int16{ model.RelationNotSame }, []int16{}, },
+			},
+		},
+		{
+			"Target", "NameTagIds", "NameTagRelation",
+			subCase {
+				{ []int16{}, model.NoCondition, },
+				{ []int16{ 29 }, model.NoCondition, },
+				{ []int16{ model.RelationSame }, model.SameValue, },
+				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
+			},
+		},
+		{
+			"Target", "GroupTagIds", "IdsOfTargetGroupTags",
+			subCase {
+				{ []int32{}, []int32{}, },
+				{ []int32{ 1291, 1309 }, []int32{ 1291, 1309 }, },
+				{ []int32{ model.RelationSame }, []int32{}, },
+				{ []int32{ model.RelationNotSame }, []int32{}, },
+			},
+		},
+	}
+
+	var newSampleQuery = func() *model.CompoundQuery {
+		/**
+		 * Prepares compound query of sample
+		 */
+		query := model.NewCompoundQuery()
+		err := query.UnmarshalJSON(
+			[]byte(`
+			{
+				"filters": {
+					"time": {
+						"start_time": 12088600,
+						"end_time": 12088800
+					}
+				}
+			}
+			`),
+		)
+		c.Assert(err, IsNil)
+
+		return query
+	}
+
+	for i, testCase := range allTestCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		sampleQuery := newSampleQuery()
+
+		for _, subCase := range testCase.sampleAndExpected {
+			c.Logf("\tSubCase sample: %v", subCase[0])
+
+			oreflect.SetValueOfField(
+				sampleQuery, subCase[0],
+				"Filters", testCase.nodeProperty, testCase.queryProperty,
+			)
+
+			testedDsl := buildNqmDslByCompoundQuery(sampleQuery)
+
+			/**
+			 * Asserts time data
+			 */
+			c.Assert(testedDsl.StartTime, Equals, EpochTime(12088600), comment)
+			c.Assert(testedDsl.EndTime, Equals, EpochTime(12088800), comment)
+			// :~)
+
+			/**
+			 * Asserts the tested property
+			 */
+			c.Assert(
+				oreflect.GetValueOfField(testedDsl, testCase.testedProperty),
+				DeepEquals,
+				subCase[1],
+				comment,
+			)
+			// :~)
+		}
+	}
+}
+
 func (s *TestCompoundReportSuite) SetUpTest(c *C) {
 	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestCompoundReportSuite.TestBuildNqmDslByCompoundQuery":
+		inTx(
+			`
+			INSERT INTO host(id, ip)
+			VALUES(77621, '10.91.8.33')
+			`,
+			`
+			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address)
+			VALUES(1041, 77621, 'GC-01@10.91.8.33', 'eth3-gc-01@10.91.8.33', 'KCB-01.com.cn', x'0A5B0821')
+			`,
+			`
+			INSERT INTO nqm_target(tg_id, tg_name, tg_host)
+			VALUES(2301, 'ZKP-01@abc.org', 'ZKP-TTC-33.easy.com.fr')
+			`,
+		)
 	case "TestCompoundReportSuite.TestToQueryDetail":
 		inTx(
 			`
@@ -175,6 +525,12 @@ func (s *TestCompoundReportSuite) TearDownTest(c *C) {
 	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestCompoundReportSuite.TestBuildNqmDslByCompoundQuery":
+		inTx(
+			`DELETE FROM nqm_agent WHERE ag_id = 1041`,
+			`DELETE FROM host WHERE id = 77621`,
+			`DELETE FROM nqm_target WHERE tg_id = 2301`,
+		)
 	case "TestCompoundReportSuite.TestToQueryDetail":
 		inTx(
 			`DELETE FROM owl_group_tag WHERE gt_id >= 90801 AND gt_id <= 90803`,

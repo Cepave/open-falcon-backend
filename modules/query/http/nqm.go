@@ -1,27 +1,23 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"gopkg.in/gin-gonic/gin.v1"
-	ogin "github.com/Cepave/open-falcon-backend/common/gin"
-
-	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
-	nqmModel "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
-
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
-	metricDsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/metric_parser"
-	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
 	"github.com/bitly/go-simplejson"
 	"github.com/satori/go.uuid"
-)
 
-const (
-	jsonIndent = false
-	jsonCoding = false
+	ogin "github.com/Cepave/open-falcon-backend/common/gin"
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+
+	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
+	metricDsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/metric_parser"
 )
 
 var nqmService *nqm.ServiceController
@@ -72,40 +68,57 @@ func buildQueryOfIcmp(context *gin.Context) {
 	query := nqm.BuildQuery(compoundQuery)
 	context.JSON(http.StatusOK, query.ToJson())
 }
+
 func getQueryContentOfIcmp(context *gin.Context) {
-	queryId := context.Param("query_id")
-	uuidValue := uuid.FromStringOrNil(queryId)
-
-	/**
-	 * Outputs 404 error for invalid id of query
-	 */
-	var showNotFound = func(queryId string) {
-		context.JSON(
-			http.StatusNotFound,
-			map[string] interface{} {
-			  "http_status": http.StatusNotFound,
-			  "uri": "/nqm/icmp/compound-report?query_id=" + queryId,
-			  "error_code": 1,
-			  "error_message": "Query id cannot be fetched",
-			},
-		)
-	}
-	// :~)
-
-	if uuidValue == uuid.Nil {
-		showNotFound(queryId)
-		return
-	}
-
-	compoundQuery := nqm.GetCompoundQueryByUuid(uuidValue)
-	if compoundQuery == nil {
-		showNotFound(queryId)
+	compoundQuery, hasQuery := loadCompoundQueryByUuid(
+		context,
+		context.Param("query_id"), "/nqm/icmp/compound-report/query/%s",
+	)
+	if !hasQuery {
 		return
 	}
 
 	context.JSON(http.StatusOK, nqm.ToQueryDetail(compoundQuery))
 }
 func outputCompondReportOfIcmp(context *gin.Context) {
+	compoundQuery, hasQuery := loadCompoundQueryByUuid(
+		context,
+		context.Query("query_id"), "/nqm/icmp/compound-report?query_id=%s",
+	)
+	if !hasQuery {
+		return
+	}
+
+	context.JSON(http.StatusOK, nqm.LoadIcmpRecordsOfCompoundQuery(compoundQuery))
+}
+
+func loadCompoundQueryByUuid(context *gin.Context, queryId string, errorFormatter string) (*model.CompoundQuery, bool) {
+	uuidValue := uuid.FromStringOrNil(queryId)
+
+	var showNotFound = func() {
+		context.JSON(
+			http.StatusNotFound,
+			map[string] interface{} {
+			  "http_status": http.StatusNotFound,
+			  "uri": fmt.Sprintf(errorFormatter, queryId),
+			  "error_code": 1,
+			  "error_message": "Query id cannot be fetched",
+			},
+		)
+	}
+
+	if uuidValue == uuid.Nil {
+		showNotFound()
+		return nil, false
+	}
+
+	compoundQuery := nqm.GetCompoundQueryByUuid(uuidValue)
+	if compoundQuery == nil {
+		showNotFound()
+		return nil, false
+	}
+
+	return compoundQuery, true
 }
 
 type dslError struct {
@@ -118,8 +131,8 @@ func (e dslError) Error() string {
 }
 
 // Parses the JSON to query object and checks values
-func buildCompoundQueryOfIcmp(context *gin.Context) (*nqmModel.CompoundQuery, error) {
-	query := nqmModel.NewCompoundQuery()
+func buildCompoundQueryOfIcmp(context *gin.Context) (*model.CompoundQuery, error) {
+	query := model.NewCompoundQuery()
 	jsonErr := context.BindJSON(query)
 	if jsonErr != nil {
 		return nil, jsonErr
@@ -313,5 +326,5 @@ func setupTimeRange(queryParams *dsl.QueryParams) {
  * This default value is just used in phase 1 funcion of NQM reporting(inner-province)
  */
 func setupInnerProvince(queryParams *dsl.QueryParams) {
-	queryParams.ProvinceRelation = dsl.SAME_VALUE
+	queryParams.ProvinceRelation = model.SameValue
 }

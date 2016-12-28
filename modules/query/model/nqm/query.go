@@ -17,6 +17,25 @@ import (
 
 var flateCompressor = compress.NewDefaultFlateCompressor()
 
+// Defines the IR for relation of hosts(between agent and target)
+type PropRelation int8
+
+const (
+	/**
+	 * Input value of realtion
+	 */
+	RelationSame = -11
+	RelationNotSame = -12
+	// :~)
+
+	// The relation is unknown
+	NoCondition PropRelation = -1
+	// Means a property of agent and target must be same
+	SameValue PropRelation = 1
+	// Means a property of agent and target may not be same
+	NotSameValue PropRelation = 2
+)
+
 const (
 	MetricMax = "max"
     MetricMin = "min"
@@ -125,14 +144,6 @@ func NewCompoundQuery() *CompoundQuery {
 	}
 }
 
-func (q *CompoundQuery) GetDigestValue() []byte {
-	return digest.DigestStruct(q, digest.Md5SumFunc)
-}
-
-func (q *CompoundQuery) SetMetricFilter(filter MetricFilter) {
-	q.metricFilter = filter
-}
-
 type CompoundQueryFilter struct {
 	Time *TimeFilter `json:"time" digest:"1"`
 	Agent *nqmModel.AgentFilter `json:"agent" digest:"2"`
@@ -150,6 +161,257 @@ type TimeFilter struct {
 
 	timeRangeType byte
 }
+
+func NewTimeFilter() *TimeFilter {
+	return &TimeFilter {
+		timeRangeType: 0,
+		ToNow: &TimeWithUnit { "", 0 },
+	}
+}
+
+type TimeWithUnit struct {
+	Unit string `json:"unit" digest:"1"`
+	Value int `json:"value" digest:"2"`
+}
+
+type QueryOutput struct {
+	Metrics []string `json:"metrics" digest:"1"`
+}
+
+type QueryGrouping struct {
+	Agent []string `json:"agent" digest:"1"`
+	Target []string `json:"target" digest:"2"`
+}
+
+func (q *CompoundQuery) GetDigestValue() []byte {
+	return digest.DigestStruct(q, digest.Md5SumFunc)
+}
+func (q *CompoundQuery) SetMetricFilter(filter MetricFilter) {
+	q.metricFilter = filter
+}
+
+func (q *CompoundQuery) GetIspRelation() PropRelation {
+	filters := q.Filters
+	return getRelation(append(filters.Agent.IspIds, filters.Target.IspIds...))
+}
+func (q *CompoundQuery) GetProvinceRelation() PropRelation {
+	filters := q.Filters
+	return getRelation(append(filters.Agent.ProvinceIds, filters.Target.ProvinceIds...))
+}
+func (q *CompoundQuery) GetCityRelation() PropRelation {
+	filters := q.Filters
+	return getRelation(append(filters.Agent.CityIds, filters.Target.CityIds...))
+}
+func (q *CompoundQuery) GetNameTagRelation() PropRelation {
+	filters := q.Filters
+	return getRelation(append(filters.Agent.NameTagIds, filters.Target.NameTagIds...))
+}
+
+// Converts this query object to compressed query
+func (q *CompoundQuery) GetCompressedQuery() []byte {
+	return flateCompressor.MustCompressString(
+		ojson.MarshalJSON(q),
+	)
+}
+
+func (q *CompoundQuery) UnmarshalFromCompressedQuery(compressedQuery []byte) {
+	json := flateCompressor.MustDecompressToString(compressedQuery)
+	q.UnmarshalJSON([]byte(json))
+}
+
+// Processes the source of JSON to initialize query object
+func (query *CompoundQuery) UnmarshalJSON(jsonSource []byte) (err error) {
+	json, jsonErr := sjson.NewJson(jsonSource)
+	if jsonErr != nil {
+		return jsonErr
+	}
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			switch errValue := r.(type) {
+			case error:
+				err = errValue
+			default:
+				err = fmt.Errorf("Umarshal JSON of query has error. %v", errValue)
+			}
+		}
+	}()
+
+	query.jsonObject = json
+
+	// Loads "filters" property
+	query.loadFilters()
+	// Loads "grouping" property
+	query.loadGrouping()
+	// Loads "output" property
+	query.loadOutput()
+
+	return nil
+}
+
+func (query *CompoundQuery) SetupDefault() {
+	if len(query.Output.Metrics) == 0 {
+		query.Output.Metrics = []string{
+			MetricMax, MetricMin, MetricAvg, MetricLoss, MetricCount,
+		}
+	}
+
+	if len(query.Grouping.Agent) + len(query.Grouping.Target) == 0 {
+		query.Grouping.Agent = []string {
+			AgentGroupingName, AgentGroupingIpAddress,
+			GroupingProvince, GroupingCity, GroupingIsp, GroupingNameTag,
+		}
+	}
+
+	timeRange := query.Filters.Time
+	if timeRange.timeRangeType == 0 {
+		timeRange.timeRangeType = TimeRangeRelative
+		timeRange.ToNow = &TimeWithUnit {
+			Unit: TimeUnitHour,
+			Value: 1,
+		}
+	}
+}
+
+func (query *CompoundQuery) loadFilters() {
+	query.Filters.Metrics = purifyStringOfJson(
+		query.jsonObject.GetPath("filters", "metrics"),
+	)
+
+	query.loadFiltersOfTime()
+	query.loadFiltersOfAgent()
+	query.loadFiltersOfTarget()
+}
+func (query *CompoundQuery) loadFiltersOfTime() {
+	jsonObject := query.jsonObject
+	timeFilter := query.Filters.Time
+
+	jsonTime := jsonObject.GetPath("filters", "time")
+
+	if startTime, endTime := query.loadAbsoluteTimeRange(jsonTime)
+		!startTime.IsZero() && !endTime.IsZero() {
+		timeFilter.timeRangeType = TimeRangeAbsolute
+		timeFilter.StartTime = ojson.JsonTime(startTime)
+		timeFilter.EndTime = ojson.JsonTime(endTime)
+	}
+
+	if timeWithUnit := query.loadRelativeTimeRange(jsonTime)
+		timeWithUnit != nil {
+		timeFilter.timeRangeType = TimeRangeRelative
+		timeFilter.ToNow = timeWithUnit
+	}
+}
+func (query *CompoundQuery) loadRelativeTimeRange(jsonTime *sjson.Json) *TimeWithUnit {
+	jsonToNow, hasToNow := jsonTime.CheckGet("to_now")
+	if !hasToNow {
+		return nil
+	}
+
+	stringOfTimeUnit := strings.ToLower(
+		strings.TrimSpace(jsonToNow.GetPath("unit").MustString()),
+	)
+	if _, ok := supportingTimeUnit[stringOfTimeUnit]; !ok {
+		return nil
+	}
+
+	return &TimeWithUnit{
+		Unit: stringOfTimeUnit,
+		Value: jsonToNow.Get("value").MustInt(),
+	}
+}
+func (query *CompoundQuery) loadAbsoluteTimeRange(jsonTime *sjson.Json) (time.Time, time.Time) {
+	jsonStartTime := jsonTime.Get("start_time")
+	jsonEndTime := jsonTime.Get("end_time")
+
+	var startTime, endTime time.Time
+	if jsonStartTime.Interface() != nil {
+		startTime = time.Unix(jsonStartTime.MustInt64(), 0)
+	}
+	if jsonStartTime.Interface() != nil {
+		endTime = time.Unix(jsonEndTime.MustInt64(), 0)
+	}
+
+	return startTime, endTime
+}
+func (query *CompoundQuery) loadFiltersOfAgent() {
+	agentFilter := query.Filters.Agent
+	jsonObject := query.jsonObject
+
+	agentFilter.Name = purifyStringArrayOfJsonForValues(
+		jsonObject.GetPath("filters", "agent", "name"),
+	)
+	agentFilter.Hostname = purifyStringArrayOfJsonForValues(
+		jsonObject.GetPath("filters", "agent", "hostname"),
+	)
+	agentFilter.IpAddress = purifyStringArrayOfJsonForValues(
+		jsonObject.GetPath("filters", "agent", "ip_address"),
+	)
+	agentFilter.ConnectionId = purifyStringArrayOfJsonForValues(
+		jsonObject.GetPath("filters", "agent", "connection_id"),
+	)
+
+	agentFilter.IspIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "agent", "isp_ids"),
+	)
+	agentFilter.ProvinceIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "agent", "province_ids"),
+	)
+	agentFilter.CityIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "agent", "city_ids"),
+	)
+	agentFilter.NameTagIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "agent", "name_tag_ids"),
+	)
+	agentFilter.GroupTagIds = purifyNumberArrayOfJsonToInt32(
+		jsonObject.GetPath("filters", "agent", "group_tag_ids"),
+	)
+}
+func (query *CompoundQuery) loadFiltersOfTarget() {
+	targetFilter := query.Filters.Target
+	jsonObject := query.jsonObject
+
+	targetFilter.Name = purifyStringArrayOfJsonForValues(
+		jsonObject.GetPath("filters", "target", "name"),
+	)
+	targetFilter.Host = purifyStringArrayOfJsonForValues(
+		jsonObject.GetPath("filters", "target", "host"),
+	)
+
+	targetFilter.IspIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "target", "isp_ids"),
+	)
+	targetFilter.ProvinceIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "target", "province_ids"),
+	)
+	targetFilter.CityIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "target", "city_ids"),
+	)
+	targetFilter.NameTagIds = purifyNumberArrayOfJsonToInt16(
+		jsonObject.GetPath("filters", "target", "name_tag_ids"),
+	)
+	targetFilter.GroupTagIds = purifyNumberArrayOfJsonToInt32(
+		jsonObject.GetPath("filters", "target", "group_tag_ids"),
+	)
+}
+func (query *CompoundQuery) loadGrouping() {
+	query.Grouping.Agent = purifyStringArrayOfJsonForDomain(
+		query.jsonObject.GetPath("grouping", "agent"),
+		supportingAgentGrouping,
+	)
+
+	query.Grouping.Target = purifyStringArrayOfJsonForDomain(
+		query.jsonObject.GetPath("grouping", "target"),
+		supportingTargetGrouping,
+	)
+}
+func (query *CompoundQuery) loadOutput() {
+	query.Output.Metrics = purifyStringArrayOfJsonForDomain(
+		query.jsonObject.GetPath("output", "metrics"),
+		supportingOutput,
+	)
+}
+
 func (f *TimeFilter) GetDigest() []byte {
 	switch f.timeRangeType {
 	case TimeRangeAbsolute:
@@ -224,23 +486,8 @@ func (f *TimeFilter) getRelativeTimeRangeOfNet(baseTime time.Time) (time.Time, t
 	return startTime, endTime
 }
 
-func NewTimeFilter() *TimeFilter {
-	return &TimeFilter {
-		timeRangeType: 0,
-		ToNow: &TimeWithUnit { "", 0 },
-	}
-}
-
-type TimeWithUnit struct {
-	Unit string `json:"unit" digest:"1"`
-	Value int `json:"value" digest:"2"`
-}
 func (tu *TimeWithUnit) String() string {
 	return fmt.Sprintf("%d %s", tu.Value, tu.Unit)
-}
-
-type QueryOutput struct {
-	Metrics []string `json:"metrics" digest:"1"`
 }
 
 var eachAgentGrouping = map[string]bool {
@@ -252,10 +499,7 @@ var eachTargetGrouping = map[string]bool {
 	TargetGroupingName: true,
 	TargetGroupingHost: true,
 }
-type QueryGrouping struct {
-	Agent []string `json:"agent" digest:"1"`
-	Target []string `json:"target" digest:"2"`
-}
+
 func (q *QueryGrouping) IsForEachAgent() bool {
 	for _, agentGroup := range q.Agent {
 		if _, ok := eachAgentGrouping[agentGroup]; ok {
@@ -275,223 +519,6 @@ func (q *QueryGrouping) IsForEachTarget() bool {
 	return false
 }
 
-// Converts this query object to compressed query
-func (q *CompoundQuery) GetCompressedQuery() []byte {
-	return flateCompressor.MustCompressString(
-		ojson.MarshalAny(q),
-	)
-}
-
-func (q *CompoundQuery) UnmarshalFromCompressedQuery(compressedQuery []byte) {
-	json := flateCompressor.MustDecompressToString(compressedQuery)
-	q.UnmarshalJSON([]byte(json))
-}
-
-// Processes the source of JSON to initialize query object
-func (query *CompoundQuery) UnmarshalJSON(jsonSource []byte) error {
-	json, err := sjson.NewJson(jsonSource)
-	if err != nil {
-		return err
-	}
-
-	query.jsonObject = json
-
-	// Loads "filters" property
-	if err = query.loadFilters(); err != nil {
-		return err
-	}
-	// Loads "grouping" property
-	if err = query.loadGrouping(); err != nil {
-		return err
-	}
-	// Loads "output" property
-	if err = query.loadOutput(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (query *CompoundQuery) SetupDefault() {
-	if len(query.Output.Metrics) == 0 {
-		query.Output.Metrics = []string{
-			MetricMax, MetricMin, MetricAvg, MetricLoss, MetricCount,
-		}
-	}
-
-	if len(query.Grouping.Agent) + len(query.Grouping.Target) == 0 {
-		query.Grouping.Agent = []string {
-			AgentGroupingName, AgentGroupingIpAddress,
-			GroupingProvince, GroupingCity, GroupingIsp, GroupingNameTag,
-		}
-	}
-
-	timeRange := query.Filters.Time
-	if timeRange.timeRangeType == 0 {
-		timeRange.timeRangeType = TimeRangeRelative
-		timeRange.ToNow = &TimeWithUnit {
-			Unit: TimeUnitHour,
-			Value: 1,
-		}
-	}
-}
-
-func (query *CompoundQuery) loadFilters() (err error) {
-	query.Filters.Metrics = purifyStringOfJson(
-		query.jsonObject.GetPath("filters", "metrics"),
-	)
-
-	if err = query.loadFiltersOfTime(); err != nil {
-		return
-	}
-	if err = query.loadFiltersOfAgent(); err != nil {
-		return
-	}
-	if err = query.loadFiltersOfTarget(); err != nil {
-		return
-	}
-
-	return
-}
-func (query *CompoundQuery) loadFiltersOfTime() error {
-	jsonObject := query.jsonObject
-	timeFilter := query.Filters.Time
-
-	jsonTime := jsonObject.GetPath("filters", "time")
-
-	if startTime, endTime := query.loadAbsoluteTimeRange(jsonTime)
-		!startTime.IsZero() && !endTime.IsZero() {
-		timeFilter.timeRangeType = TimeRangeAbsolute
-		timeFilter.StartTime = ojson.JsonTime(startTime)
-		timeFilter.EndTime = ojson.JsonTime(endTime)
-	}
-
-	if timeWithUnit := query.loadRelativeTimeRange(jsonTime)
-		timeWithUnit != nil {
-		timeFilter.timeRangeType = TimeRangeRelative
-		timeFilter.ToNow = timeWithUnit
-	}
-
-	return nil
-}
-func (query *CompoundQuery) loadRelativeTimeRange(jsonTime *sjson.Json) *TimeWithUnit {
-	jsonToNow, hasToNow := jsonTime.CheckGet("to_now")
-	if !hasToNow {
-		return nil
-	}
-
-	stringOfTimeUnit := strings.ToLower(
-		strings.TrimSpace(jsonToNow.GetPath("unit").MustString()),
-	)
-	if _, ok := supportingTimeUnit[stringOfTimeUnit]; !ok {
-		return nil
-	}
-
-	return &TimeWithUnit{
-		Unit: stringOfTimeUnit,
-		Value: jsonToNow.Get("value").MustInt(),
-	}
-}
-func (query *CompoundQuery) loadAbsoluteTimeRange(jsonTime *sjson.Json) (time.Time, time.Time) {
-	jsonStartTime := jsonTime.Get("start_time")
-	jsonEndTime := jsonTime.Get("end_time")
-
-	var startTime, endTime time.Time
-	if jsonStartTime.Interface() != nil {
-		startTime = time.Unix(jsonStartTime.MustInt64(), 0)
-	}
-	if jsonStartTime.Interface() != nil {
-		endTime = time.Unix(jsonEndTime.MustInt64(), 0)
-	}
-
-	return startTime, endTime
-}
-func (query *CompoundQuery) loadFiltersOfAgent() error {
-	agentFilter := query.Filters.Agent
-	jsonObject := query.jsonObject
-
-	agentFilter.Name = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "name"),
-	)
-	agentFilter.Hostname = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "hostname"),
-	)
-	agentFilter.IpAddress = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "ip_address"),
-	)
-	agentFilter.ConnectionId = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "connection_id"),
-	)
-
-	agentFilter.IspIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "isp_ids"),
-	)
-	agentFilter.ProvinceIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "province_ids"),
-	)
-	agentFilter.CityIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "city_ids"),
-	)
-	agentFilter.NameTagIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "name_tag_ids"),
-	)
-	agentFilter.GroupTagIds = purifyNumberArrayOfJsonToInt32(
-		jsonObject.GetPath("filters", "agent", "group_tag_ids"),
-	)
-
-	return nil
-}
-func (query *CompoundQuery) loadFiltersOfTarget() error {
-	targetFilter := query.Filters.Target
-	jsonObject := query.jsonObject
-
-	targetFilter.Name = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "target", "name"),
-	)
-	targetFilter.Host = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "target", "host"),
-	)
-
-	targetFilter.IspIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "isp_ids"),
-	)
-	targetFilter.ProvinceIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "province_ids"),
-	)
-	targetFilter.CityIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "city_ids"),
-	)
-	targetFilter.NameTagIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "name_tag_ids"),
-	)
-	targetFilter.GroupTagIds = purifyNumberArrayOfJsonToInt32(
-		jsonObject.GetPath("filters", "target", "group_tag_ids"),
-	)
-
-	return nil
-}
-func (query *CompoundQuery) loadGrouping() error {
-	query.Grouping.Agent = purifyStringArrayOfJsonForDomain(
-		query.jsonObject.GetPath("grouping", "agent"),
-		supportingAgentGrouping,
-	)
-
-	query.Grouping.Target = purifyStringArrayOfJsonForDomain(
-		query.jsonObject.GetPath("grouping", "target"),
-		supportingTargetGrouping,
-	)
-
-	return nil
-}
-func (query *CompoundQuery) loadOutput() error {
-	query.Output.Metrics = purifyStringArrayOfJsonForDomain(
-		query.jsonObject.GetPath("output", "metrics"),
-		supportingOutput,
-	)
-
-	return nil
-}
-
 func purifyNumberArrayOfJsonToInt16(jsonObject *sjson.Json) []int16 {
 	return purifyNumberArrayOfJson(
 		jsonObject, utils.TypeOfInt16,
@@ -502,10 +529,9 @@ func purifyNumberArrayOfJsonToInt32(jsonObject *sjson.Json) []int32 {
 		jsonObject, utils.TypeOfInt32,
 	).([]int32)
 }
-
 func purifyNumberArrayOfJson(jsonObject *sjson.Json, targetType reflect.Type) interface{} {
 	if jsonObject == nil {
-		utils.MakeAbstractArray([]int{}).GetArrayAsType(targetType)
+		return reflect.MakeSlice(reflect.SliceOf(targetType), 0, 0).Interface()
 	}
 
 	uniqueFilter := utils.NewUniqueFilter(utils.TypeOfInt)
@@ -538,7 +564,6 @@ func purifyStringOfJson(jsonObject *sjson.Json) string {
 		jsonObject.MustString(),
 	))
 }
-
 func purifyStringArrayOfJsonForDomain(jsonObject *sjson.Json, domain map[string]bool) []string {
 	if jsonObject == nil {
 		return []string{}
@@ -580,4 +605,21 @@ func purifyStringArrayOfJsonForValues(jsonObject *sjson.Json) []string {
 	sort.Strings(resultArray)
 
 	return resultArray
+}
+
+func getRelation(arrayOfNumber interface{}) PropRelation {
+	newIntArray := utils.MakeAbstractArray(arrayOfNumber).
+		GetArrayAsType(utils.TypeOfInt).([]int)
+
+	for _, v := range newIntArray {
+		if v == RelationNotSame {
+			return NotSameValue
+		}
+
+		if v == RelationSame {
+			return SameValue
+		}
+	}
+
+	return NoCondition
 }

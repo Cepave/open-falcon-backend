@@ -3,6 +3,7 @@ package nqm
 import (
 	"fmt"
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"reflect"
@@ -31,13 +32,16 @@ func GetDefaultServiceController() *ServiceController {
 }
 // :~)
 
+var queryService *owlService.QueryService
+
 var ispService *owlService.IspService
 var provinceService *owlService.ProvinceService
 var cityService *owlService.CityService
-var targetService *nqmService.TargetService
 var groupTagService *owlService.GroupTagService
 var nameTagService *owlService.NameTagService
-var queryService *owlService.QueryService
+
+var agentService *nqmService.AgentService
+var targetService *nqmService.TargetService
 
 // Initilaize the service
 func (srv *ServiceController) Init() {
@@ -87,6 +91,11 @@ func initServices() {
 	})
 
 	// Cache for Targets: Maximum 150 entities with 2 hours live time
+	agentService = nqmService.NewAgentService(cache.DataCacheConfig{
+		MaxSize: 150, Duration: time.Hour * 2,
+	})
+
+	// Cache for Targets: Maximum 150 entities with 2 hours live time
 	targetService = nqmService.NewTargetService(cache.DataCacheConfig{
 		MaxSize: 150, Duration: time.Hour * 2,
 	})
@@ -100,7 +109,7 @@ func (srv *ServiceController) ListByProvinces(dslParams *dsl.QueryParams) []Prov
 	 */
 	nqmDsl := toNqmDsl(dslParams)
 	nqmDsl.GroupingColumns = []string { "ag_pv_id" }
-	nqmDsl.ProvinceRelation = dsl.SAME_VALUE
+	nqmDsl.ProvinceRelation = model.SameValue
 	// :~)
 
 	/**
@@ -136,7 +145,7 @@ func (srv *ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryPara
 	 */
 	dslGroupByCity := toNqmDsl(dslParams)
 	dslGroupByCity.GroupingColumns = []string { "tg_ct_id" }
-	dslGroupByCity.ProvinceRelation = dsl.SAME_VALUE
+	dslGroupByCity.ProvinceRelation = model.SameValue
 	rawIcmpGroupByCity, errForCityReport := srv.GetStatisticsOfIcmpByDsl(dslGroupByCity)
 	if errForCityReport != nil {
 		panic(errForCityReport)

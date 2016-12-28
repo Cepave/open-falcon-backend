@@ -1,6 +1,7 @@
 package nqm_parser
 
 import (
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	. "gopkg.in/check.v1"
 )
 
@@ -37,9 +38,9 @@ func (suite *TestParseProcessorSuite) TestNodeParams(c *C) {
 						testedQueryParam.AgentFilter.MatchCities[1],
 					},
 				)
-				c.Assert(testedQueryParam.IspRelation, Equals, UNKNOWN_RELATION)
-				c.Assert(testedQueryParam.ProvinceRelation, Equals, UNKNOWN_RELATION)
-				c.Assert(testedQueryParam.CityRelation, Equals, UNKNOWN_RELATION)
+				c.Assert(testedQueryParam.IspRelation, Equals, model.NoCondition)
+				c.Assert(testedQueryParam.ProvinceRelation, Equals, model.NoCondition)
+				c.Assert(testedQueryParam.CityRelation, Equals, model.NoCondition)
 			},
 		},
 		&nodeParamsTestCase{ // Tests normal value of target's property
@@ -57,31 +58,31 @@ func (suite *TestParseProcessorSuite) TestNodeParams(c *C) {
 						testedQueryParam.TargetFilter.MatchCities[1],
 					},
 				)
-				c.Assert(testedQueryParam.IspRelation, Equals, UNKNOWN_RELATION)
-				c.Assert(testedQueryParam.ProvinceRelation, Equals, UNKNOWN_RELATION)
-				c.Assert(testedQueryParam.CityRelation, Equals, UNKNOWN_RELATION)
+				c.Assert(testedQueryParam.IspRelation, Equals, model.NoCondition)
+				c.Assert(testedQueryParam.ProvinceRelation, Equals, model.NoCondition)
+				c.Assert(testedQueryParam.CityRelation, Equals, model.NoCondition)
 			},
 		},
 		&nodeParamsTestCase{ // Agent's auto-condition
 			"agent.isp=%NOT_MATCH_ANOTHER% agent.province=%MATCH_ANOTHER% agent.city=%MATCH_ANOTHER%",
 			func (testedQueryParam *QueryParams) {
-				c.Assert(testedQueryParam.IspRelation, Equals, NOT_SAME_VALUE)
-				c.Assert(testedQueryParam.ProvinceRelation, Equals, SAME_VALUE)
-				c.Assert(testedQueryParam.CityRelation, Equals, SAME_VALUE)
+				c.Assert(testedQueryParam.IspRelation, Equals, model.NotSameValue)
+				c.Assert(testedQueryParam.ProvinceRelation, Equals, model.SameValue)
+				c.Assert(testedQueryParam.CityRelation, Equals, model.SameValue)
 			},
 		},
 		&nodeParamsTestCase{ // Agent's auto-condition
 			"target.isp=%NOT_MATCH_ANOTHER% target.province=%MATCH_ANOTHER% target.city=%MATCH_ANOTHER%",
 			func (testedQueryParam *QueryParams) {
-				c.Assert(testedQueryParam.IspRelation, Equals, NOT_SAME_VALUE)
-				c.Assert(testedQueryParam.ProvinceRelation, Equals, SAME_VALUE)
-				c.Assert(testedQueryParam.CityRelation, Equals, SAME_VALUE)
+				c.Assert(testedQueryParam.IspRelation, Equals, model.NotSameValue)
+				c.Assert(testedQueryParam.ProvinceRelation, Equals, model.SameValue)
+				c.Assert(testedQueryParam.CityRelation, Equals, model.SameValue)
 			},
 		},
 		&nodeParamsTestCase{ // Duplicated condition
 			"agent.isp=%NOT_MATCH_ANOTHER% target.isp=%MATCH_ANOTHER%",
 			func (testedQueryParam *QueryParams) {
-				c.Assert(testedQueryParam.IspRelation, Equals, SAME_VALUE)
+				c.Assert(testedQueryParam.IspRelation, Equals, model.SameValue)
 			},
 		},
 	}

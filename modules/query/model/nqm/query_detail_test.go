@@ -50,7 +50,7 @@ func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
 	for i, testCase := range testCases {
 		comment := Commentf("Test Case: %d", i + 1)
 
-		c.Logf("JSON: %s", ojson.MarshalGoJson(testCase.timeFilter))
+		c.Logf("JSON: %s", ojson.MarshalJSON(testCase.timeFilter))
 		c.Assert(testCase.timeFilter, ocheck.JsonEquals, testCase.expectedJson, comment)
 	}
 }
@@ -108,9 +108,9 @@ func (suite *TestQueryDetailSuite) TestCompoundQueryDetail(c *C) {
 		},
 	}
 
-	c.Logf("Source JSON: %s", ojson.MarshalAny(sampleQuery))
+	c.Logf("Source JSON: %s", ojson.MarshalJSON(sampleQuery))
 
-	testedJson := ojson.MarshalToJsonExt(sampleQuery)
+	testedJson := ojson.UnmarshalToJsonExt(sampleQuery)
 
 	c.Assert(testedJson.GetPath("time", "start_time"), ocheck.JsonEquals, "897060500", Commentf("\"time.start_time\" is not as expected"))
 	c.Assert(testedJson.GetPath("time", "end_time"), ocheck.JsonEquals, "897064500", Commentf("\"time.start_time\" is not as expected"))

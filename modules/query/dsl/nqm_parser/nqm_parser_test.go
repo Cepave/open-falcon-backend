@@ -3,10 +3,11 @@ package nqm_parser
 import (
 	"fmt"
 	"testing"
-	. "gopkg.in/check.v1"
 	"log"
 	"strings"
 	"time"
+
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
