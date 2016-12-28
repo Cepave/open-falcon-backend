@@ -37,6 +37,7 @@ type PostProcessor interface {
 	Surrounding(prefix TextGetter, suffix TextGetter) PostProcessor
 	Repeat(times int) TextList
 	RepeatByLen(lenObject interface{}) TextList
+	Viable(v bool) PostProcessor
 }
 
 // Initialize a new instance of post processor with default operations
