@@ -133,7 +133,8 @@ func GetSimpleAgent1ById(agentId int32) *nqmModel.SimpleAgent1 {
 	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
 		&result,
 		`
-		SELECT ag_id, ag_name, ag_hostname, ag_ip_address
+		SELECT ag_id, ag_name, ag_hostname, ag_ip_address,
+			ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id
 		FROM nqm_agent
 		WHERE ag_id = ?
 		`,
@@ -197,7 +198,8 @@ func LoadSimpleAgent1sByFilter(filter *nqmModel.AgentFilter) []*nqmModel.SimpleA
 	DbFacade.SqlxDbCtrl.Select(
 		&result,
 		`
-		SELECT ag_id, ag_name, ag_hostname, ag_ip_address
+		SELECT ag_id, ag_name, ag_hostname, ag_ip_address,
+			ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id
 		FROM nqm_agent
 		` +
 		sqlb.Where(

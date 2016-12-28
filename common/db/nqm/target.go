@@ -202,7 +202,8 @@ func GetSimpleTarget1ById(targetId int32) *nqmModel.SimpleTarget1 {
 	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
 		&result,
 		`
-		SELECT tg_id, tg_host
+		SELECT tg_id, tg_host, tg_name,
+			tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 		FROM nqm_target
 		WHERE tg_id = ?
 		`,
@@ -248,7 +249,8 @@ func LoadSimpleTarget1sByFilter(filter *nqmModel.TargetFilter) []*nqmModel.Simpl
 	DbFacade.SqlxDbCtrl.Select(
 		&result,
 		`
-		SELECT tg_id, tg_host
+		SELECT tg_id, tg_name, tg_host,
+			tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 		FROM nqm_target
 		` +
 		sqlb.Where(

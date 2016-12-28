@@ -232,7 +232,7 @@ func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 
 		testedResult := GetSimpleAgent1ById(testCase.sampleId)
 
-		c.Logf("Found agent: %v", testedResult)
+		c.Logf("Found agent: %#v", testedResult)
 		c.Assert(testedResult, ocheck.ViableValue, testCase.hasFound, comment)
 	}
 }

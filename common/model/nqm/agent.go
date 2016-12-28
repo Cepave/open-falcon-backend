@@ -167,6 +167,22 @@ type SimpleAgent1 struct {
 	Name string `json:"name" db:"ag_name"`
 	Hostname string `json:"hostname" db:"ag_hostname"`
 	IpAddress net.IP `json:"ip_address" db:"ag_ip_address"`
+
+	IspId int16 `json:"isp_id" db:"ag_isp_id"`
+	ProvinceId int16 `json:"province_id" db:"ag_pv_id"`
+	CityId int16 `json:"city_id" db:"ag_ct_id"`
+	NameTagId int16 `json:"name_tag_id" db:"ag_nt_id"`
+}
+
+type SimpleAgent1s []*SimpleAgent1
+func (as SimpleAgent1s) GetInt32s() []int32 {
+	result := make([]int32, 0)
+
+	for _, a := range as {
+		result = append(result, a.Id)
+	}
+
+	return result
 }
 
 type SimpleAgent1InCity struct {
