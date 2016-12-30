@@ -507,7 +507,7 @@ func queryHostsData(result map[string]interface{}) []map[string]string {
 			IP := row["ip"].(string)
 			if IP != "" && IP == getIPFromHostname(hostname, result) {
 				host := map[string]string{
-					"hostname":     row["hostname"].(string),
+					"hostname": row["hostname"].(string),
 					"platform": row["platform"].(string),
 					"ip":       row["ip"].(string),
 					"activate": row["activate"].(string),
@@ -620,10 +620,10 @@ func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (ma
 	return platforms, platformNames, hostnames
 }
 
-func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) []*cmodel.GraphLastParam {
-	var queries []*cmodel.GraphLastParam
+func setGraphQueries(hostnames []string, hostnamesExisted []string, result map[string]interface{}) (queries []*cmodel.GraphLastParam, versions map[string]map[string]string) {
 	o := orm.NewOrm()
 	var hosts []*Host
+	versions = make(map[string]map[string]string)
 	hostnamesStr := strings.Join(hostnames, "','")
 	sqlcommand := "SELECT hostname, agent_version, plugin_version FROM falcon_portal.host WHERE hostname IN ('"
 	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
@@ -636,7 +636,7 @@ func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map
 			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
 				hostnamesExisted = append(hostnamesExisted, host.Hostname)
 				version := map[string]string{
-					"agent": host.Agent_version,
+					"agent":  host.Agent_version,
 					"plugin": host.Plugin_version,
 				}
 				versions[host.Hostname] = version
@@ -646,7 +646,7 @@ func setGraphQueries(hostnames []string, hostnamesExisted []string, versions map
 			}
 		}
 	}
-	return queries
+	return
 }
 
 func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result map[string]interface{}) []cmodel.GraphLastResp {
@@ -699,13 +699,13 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 	return data
 }
 
-func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]map[string]string, result map[string]interface{}) {
+func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []string, versions map[string]map[string]string) (out_versions map[string]map[string]string) {
 	name := ""
 	status := ""
 	alive := 0
 	var diff int64
 	var timestamp int64
-	items := map[string]interface{}{}
+	out_versions = make(map[string]map[string]string)
 	for key, row := range data {
 		name = row.Endpoint
 		alive = 0
@@ -728,14 +728,14 @@ func classifyAgentAliveResponse(data []cmodel.GraphLastResp, hostnamesExisted []
 				status = "normal"
 			}
 		}
-		item := map[string]interface{}{
-			"status": status,
+		item := map[string]string{
+			"status":  status,
 			"version": version["agent"],
-			"plugin": version["plugin"],
+			"plugin":  version["plugin"],
 		}
-		items[name] = item
+		out_versions[name] = item
 	}
-	result["items"] = items
+	return
 }
 
 func getAnomalies(errorHosts []map[string]string, result map[string]interface{}) map[string]interface{} {
@@ -768,7 +768,7 @@ func getAnomalies(errorHosts []map[string]string, result map[string]interface{})
 	return anomalies
 }
 
-func completeAgentAliveData(groups map[string][]map[string]string, groupNames []string, result map[string]interface{}) {
+func completeAgentAliveData(groups map[string][]map[string]string, groupNames []string, versions map[string]map[string]string, result map[string]interface{}) {
 	errorHosts := []map[string]string{}
 	platforms := []interface{}{}
 	count := map[string]int{}
@@ -783,7 +783,6 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 	version := ""
 	plugin := ""
 	status := ""
-	items := result["items"].(map[string]interface{})
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
@@ -801,13 +800,16 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 		for _, agent := range group {
 			hostname = agent["hostname"]
 			activate = agent["activate"]
-			status = ""
 			version = ""
+			plugin = ""
+			if item, ok := versions[hostname]; ok {
+				version = item["version"]
+				plugin = item["plugin"]
+			}
+			status = ""
 			if activate == "1" {
-				if item, ok := items[hostname]; ok {
-					status = item.(map[string]interface{})["status"].(string)
-					version = item.(map[string]interface{})["version"].(string)
-					plugin = item.(map[string]interface{})["plugin"].(string)
+				if item, ok := versions[hostname]; ok {
+					status = item["status"]
 				} else {
 					status = "miss"
 					countOfMiss++
@@ -830,6 +832,7 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 				"status":   status,
 				"ip":       agent["ip"],
 				"version":  version,
+				"plugin":   plugin,
 			}
 			if host["status"] == "error" {
 				num, err := o.Raw(sql, hostname).Values(&rows)
@@ -842,8 +845,6 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 					host["province"] = row["province"].(string)
 				}
 				errorHosts = append(errorHosts, host)
-			} else {
-				host["plugin"] = plugin
 			}
 			hosts = append(hosts, host)
 			hostId++
@@ -899,11 +900,10 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	hostnamesExisted := []string{}
-	var versions = make(map[string]map[string]string)
-	queries := setGraphQueries(hostnames, hostnamesExisted, versions, result)
+	queries, versions := setGraphQueries(hostnames, hostnamesExisted, result)
 	agentAliveData := queryAgentAlive(queries, req.Host, result)
-	classifyAgentAliveResponse(agentAliveData, hostnamesExisted, versions, result)
-	completeAgentAliveData(platforms, platformNames, result)
+	status_versions := classifyAgentAliveResponse(agentAliveData, hostnamesExisted, versions)
+	completeAgentAliveData(platforms, platformNames, status_versions, result)
 	nodes["result"] = result
 	rw.Header().Set("Access-Control-Allow-Origin", "*")
 	setResponse(rw, nodes)
@@ -1012,7 +1012,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		offset := int64(multiplier) * seconds
 		now := time.Now().Unix()
 		timestampFrom = now - offset
-		timestampTo = now + int64(5 * 60)
+		timestampTo = now + int64(5*60)
 	}
 	return timestampFrom, timestampTo
 }
@@ -1199,11 +1199,11 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 					provinceCode = ""
 				}
 				host := map[string]string{
-					"idc": row["idc"].(string),
-					"isp": row["isp"].(string),
-					"province": row["province"].(string),
+					"idc":          row["idc"].(string),
+					"isp":          row["isp"].(string),
+					"province":     row["province"].(string),
 					"provinceCode": provinceCode,
-					"city": row["city"].(string),
+					"city":         row["city"].(string),
 				}
 				hostsMap[hostname] = host
 				hostnames = append(hostnames, hostname)
@@ -1350,18 +1350,24 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	arguments := strings.Split(req.URL.Path, "/")
 	metricType := arguments[4]
 	hostnames := strings.Split(arguments[5], ",")
-	metrics := getMetricsByMetricType(metricType)
-	if metricType == "bandwidths" {
-		metrics = append(metrics, "nic.bond.mode")
-		metrics = append(metrics, "nic.default.out.speed")
+	metrics := []string{}
+	if metricType == "customized" {
+		metrics = strings.Split(req.URL.Query()["metrics"][0], ",")
+	} else {
+		metrics = getMetricsByMetricType(metricType)
+		if metricType == "bandwidths" {
+			metrics = append(metrics, "nic.bond.mode")
+			metrics = append(metrics, "nic.default.out.speed")
+		}
 	}
 	duration := "1d"
+
 	if len(arguments) > 6 {
 		duration = arguments[6]
 	}
 	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
 	dataRecent := []*cmodel.GraphQueryResponse{}
-	if diff > 43200 {
+	if diff > 43200 && strings.Index(duration, ",") == -1 {
 		dataRecent, _ = getGraphQueryResponse(metrics, "10min", hostnames, result)
 	}
 	data = addRecentData(data, dataRecent)
@@ -1584,7 +1590,7 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 								"phone": person.(map[string]interface{})["cell"].(string),
 								"email": person.(map[string]interface{})["email"].(string),
 							}
-							if (role == "backuper") {
+							if role == "backuper" {
 								items["deputy"] = item
 							} else {
 								items[role] = item
@@ -1634,19 +1640,62 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getTicker(timestamp int64) string {
+	now := time.Now().Unix()
+	diff := now - timestamp
+	if diff <= 600 {
+		return time.Unix(timestamp, 0).Format("2006-01-02 15:04")
+	}
+	ticker := ""
+	date := time.Unix(timestamp, 0)
+	minute := date.Format("04")
+	value, err := strconv.Atoi(minute)
+	if err == nil {
+		residue := int(math.Mod(float64(value), 5))
+		value -= residue
+		minute = strconv.Itoa(value)
+		if len(minute) == 1 {
+			minute = "0" + minute
+		}
+		ticker = date.Format("2006-01-02 15:") + minute
+	}
+	return ticker
+}
+
+func getTimestampFromTicker(ticker string) int64 {
+	timestamp := int64(0)
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	timeFormat := "2006-01-02 15:04"
+	date, err := time.ParseInLocation(timeFormat, ticker, loc)
+	if err == nil {
+		timestamp = date.Unix()
+	}
+	return timestamp
+}
+
+func getGraphQueryData(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
+	if diff > 43200 {
+		dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
+		data = addRecentData(data, dataRecent)
+	}
+	return data
+}
+
 func getBandwidthsSum(metricType string, duration string, hostnames []string, filter string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
 	metricMap := map[string]interface{}{}
-	valuesMap := map[string]map[float64]float64{}
-	timestamps := []float64{}
+	valuesMap := map[string]map[string]float64{}
+	timestamps := []int64{}
+	tickers := []string{}
+	tickersMap := map[string]float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
-		if diff > 43200 {
-			dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
-			data = addRecentData(data, dataRecent)
-		}
+		data := getGraphQueryData(metrics, duration, hostnames, result)
 		index := -1
 		max := 0
 		for key, item := range data {
@@ -1656,43 +1705,58 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 			}
 		}
 		for _, rrdObj := range data[index].Values {
-			timestamps = append(timestamps, float64(rrdObj.Timestamp))
-		}
-		if len(timestamps) > 0 {
-			for _, metric := range metrics {
-				valuesPair := map[float64]float64{}
-				for _, timestamp := range timestamps {
-					valuesPair[timestamp] = float64(0)
+			ticker := getTicker(rrdObj.Timestamp)
+			if _, ok := tickersMap[ticker]; !ok {
+				if len(ticker) > 0 {
+					tickersMap[ticker] = float64(0)
+					tickers = append(tickers, ticker)
 				}
-				valuesMap[metric] = valuesPair
+			}
+			timestamps = append(timestamps, rrdObj.Timestamp)
+		}
+		if len(tickers) > 0 {
+			for _, metric := range metrics {
+				tickerMap := map[string]float64{}
+				for _, ticker := range tickers {
+					tickerMap[ticker] = float64(0)
+				}
+				valuesMap[metric] = tickerMap
 			}
 			for _, series := range data {
-				valuesPair := valuesMap[series.Counter]
+				metric := series.Counter
+				tickerMap := valuesMap[metric]
 				for _, rrdObj := range series.Values {
 					if !math.IsNaN(float64(rrdObj.Value)) {
-						valuesPair[float64(rrdObj.Timestamp)] += float64(rrdObj.Value)
+						ticker := getTicker(rrdObj.Timestamp)
+						tickerMap[ticker] += float64(rrdObj.Value)
 					}
 				}
-				values := []float64{}
-				for _, timestamp := range timestamps {
-					if valuesPair[timestamp] >= 0 {
-						values = append(values, valuesPair[timestamp])
-					}
-				}
-				metricMap[series.Counter] = values
+				metricMap[metric] = tickerMap
 			}
 		}
 	}
-	if len(timestamps) > 0 {
+	if len(tickers) > 0 {
 		for _, metric := range metrics {
-			slice := metricMap[metric].([]float64)
-			data := []interface{}{}
-			for key, value := range slice {
-				datum := []interface{}{
-					timestamps[key] * 1000,
-					value,
+			tickerMap := metricMap[metric].(map[string]float64)
+			max := float64(0)
+			for _, ticker := range tickers {
+				value := tickerMap[ticker]
+				if max < value {
+					max = value
 				}
-				data = append(data, datum)
+			}
+			threshold := max * 0.02
+			data := [][]float64{}
+			for _, ticker := range tickers {
+				timestamp := getTimestampFromTicker(ticker)
+				value := tickerMap[ticker]
+				if value > threshold {
+					datum := []float64{
+						float64(timestamp * 1000),
+						value,
+					}
+					data = append(data, datum)
+				}
 			}
 			item := map[string]interface{}{
 				"host":   strings.Join(hostnames, ","),
@@ -1798,7 +1862,7 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 			if strings.Index(hostname, "-") > -1 {
 				NICOutSpeed := getNICOutSpeed(hostname, result)
 				item := map[string]interface{}{
-					"hostname": hostname,
+					"hostname":           hostname,
 					"nic.out.speed.bits": NICOutSpeed,
 				}
 				items = append(items, item)

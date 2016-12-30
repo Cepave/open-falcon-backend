@@ -1,0 +1,31 @@
+language: go
+
+go:
+  - 1.6
+
+before_install:
+  - go get github.com/rancher/trash
+
+install:
+  - go get -t -v ./...
+#  - make
+
+script:
+  - go build -o open-falcon
+  - go build ./modules/aggregator
+  - go build ./modules/graph
+  - go build ./modules/hbs
+  - go build ./modules/judge
+  - go build ./modules/nodata
+  - go build ./modules/query
+  - go build ./modules/sender
+  - go build ./modules/task
+  - go build ./modules/transfer
+  - go build ./modules/fe
+  - go build ./modules/alarm
+  - go build ./modules/agent
+  - go build ./modules/nqm-mng
+
+after_success:
+  - go test -race -coverprofile=coverage.txt -covermode=atomic github.com/Cepave/open-falcon-backend/modules/query/http
+  - bash <(curl -s https://codecov.io/bash)
