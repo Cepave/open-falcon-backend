@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Deprecated: use utils instead
 const (
 	DefaultDirection byte = 0
 	// Sorting by ascending
