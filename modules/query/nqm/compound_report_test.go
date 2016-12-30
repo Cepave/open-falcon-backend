@@ -4,9 +4,12 @@ import (
 	"fmt"
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/satori/go.uuid"
 	. "gopkg.in/check.v1"
 )
@@ -487,6 +490,219 @@ func (suite *TestCompoundReportSuite) TestBuildNqmDslByCompoundQuery(c *C) {
 			// :~)
 		}
 	}
+}
+
+// Tests the setup of sorting properties
+func (suite *TestCompoundReportSuite) TestSetupSorting(c *C) {
+	testCases := []*struct {
+		sampleEntities []*commonModel.OrderByEntity
+		outputMetrics []string
+		expectedResult []*commonModel.OrderByEntity
+	} {
+		{
+			[]*commonModel.OrderByEntity{ { "agent_isp", commonModel.Descending } },
+			[]string { "max", "min" },
+			[]*commonModel.OrderByEntity{ { "agent_isp", commonModel.Descending }, { "loss", commonModel.Descending } },
+		},
+		{
+			[]*commonModel.OrderByEntity{},
+			[]string { "max", "min" },
+			[]*commonModel.OrderByEntity{
+				{ "max", commonModel.Descending },
+				{ "min", commonModel.Descending },
+				{ "loss", commonModel.Descending },
+			},
+		},
+		{
+			[]*commonModel.OrderByEntity{},
+			[]string { "max", "avg", "loss" },
+			[]*commonModel.OrderByEntity{
+				{ "avg", commonModel.Descending },
+				{ "loss", commonModel.Descending },
+			},
+		},
+		{
+			[]*commonModel.OrderByEntity{},
+			[]string { "num_agent", "num_target" },
+			[]*commonModel.OrderByEntity{
+				{ "num_agent", commonModel.Descending },
+				{ "num_target", commonModel.Descending },
+				{ "loss", commonModel.Descending },
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		sampleOutput := &model.QueryOutput{}
+		sampleOutput.Metrics = testCase.outputMetrics
+
+		samplePaging := commonModel.NewUndefinedPaging()
+		samplePaging.OrderBy = testCase.sampleEntities
+
+		setupSorting(samplePaging, sampleOutput)
+
+		c.Assert(samplePaging.OrderBy, DeepEquals, testCase.expectedResult, comment)
+	}
+}
+
+// Tests the less funcion on list of OrderByEntities
+func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
+	testCases := []*struct {
+		agentName []string
+		targetIsp []string
+		metricMax []int16
+		expected bool
+	} {
+		{
+			[]string{ "AG-1", "AG-2" },
+			[]string{ "ISP-2", "ISP-1" },
+			[]int16{ 10, 15 },
+			true,
+		},
+		{
+			[]string{ "AG-2", "AG-1" },
+			[]string{ "ISP-2", "ISP-1" },
+			[]int16{ 10, 15 },
+			false,
+		},
+		{
+			[]string{ "AG-2", "AG-2" },
+			[]string{ "ISP-2", "ISP-1" },
+			[]int16{ 10, 15 },
+			true,
+		},
+		{
+			[]string{ "AG-2", "AG-2" },
+			[]string{ "ISP-2", "ISP-2" },
+			[]int16{ 15, 10 },
+			true,
+		},
+		{
+			[]string{ "AG-2", "AG-2" },
+			[]string{ "ISP-2", "ISP-2" },
+			[]int16{ 10, 15 },
+			false,
+		},
+	}
+
+	sampleLessFunc := lessByOrderByEntities(
+		[]*commonModel.OrderByEntity{
+			{ "agent_name", utils.Ascending },
+			{ "target_isp", utils.Descending },
+			{ "max", utils.Descending },
+		},
+	)
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		testedResult := sampleLessFunc.lessImpl(
+			&model.DynamicRecord {
+				Agent: &model.DynamicAgentProps {
+					Name: testCase.agentName[0],
+				},
+				Target: &model.DynamicTargetProps {
+					Isp: &owlModel.Isp {
+						Name: testCase.targetIsp[0],
+					},
+				},
+				Metrics: &model.DynamicMetrics {
+					Metrics: &model.Metrics {
+						Max: testCase.metricMax[0],
+					},
+				},
+			},
+			&model.DynamicRecord {
+				Agent: &model.DynamicAgentProps {
+					Name: testCase.agentName[1],
+				},
+				Target: &model.DynamicTargetProps {
+					Isp: &owlModel.Isp {
+						Name: testCase.targetIsp[1],
+					},
+				},
+				Metrics: &model.DynamicMetrics {
+					Metrics: &model.Metrics {
+						Max: testCase.metricMax[1],
+					},
+				},
+			},
+		)
+
+		c.Assert(testedResult, Equals, testCase.expected, comment)
+	}
+}
+
+// Tests the filter of records
+func (suite *TestCompoundReportSuite) TestFilterRecords(c *C) {
+	testCases := []*struct {
+		filter string
+		expectedNumber int
+	} {
+		{ "", 3 },
+		{ "$max >= 70", 3 },
+		{ "$min > 25", 2 },
+		{ "$max == 80 and $avg > 40", 1 },
+		{ "$max == 70 or $avg < 25", 2 },
+	}
+
+	sampleRecords := []*model.DynamicRecord {
+		{
+			Metrics: &model.DynamicMetrics{
+				Metrics: &model.Metrics {
+					Max: 80, Min: 30, Avg: 45.59,
+				},
+			},
+		},
+		{
+			Metrics: &model.DynamicMetrics{
+				Metrics: &model.Metrics {
+					Max: 70, Min: 30, Avg: 30.10,
+				},
+			},
+		},
+		{
+			Metrics: &model.DynamicMetrics{
+				Metrics: &model.Metrics {
+					Max: 80, Min: 22, Avg: 22.33,
+				},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		testedResult := filterRecords(sampleRecords, testCase.filter)
+		c.Assert(testedResult, HasLen, testCase.expectedNumber, comment)
+	}
+}
+
+// Tests the retrieving of page(with sorted result)
+func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
+	sampleRecords := []*model.DynamicRecord {
+		{ Agent: &model.DynamicAgentProps{ Name: "AG-5" } },
+		{ Agent: &model.DynamicAgentProps{ Name: "AG-4" } },
+		{ Agent: &model.DynamicAgentProps{ Name: "AG-3" } },
+		{ Agent: &model.DynamicAgentProps{ Name: "AG-2" } },
+		{ Agent: &model.DynamicAgentProps{ Name: "AG-1" } },
+	}
+
+	samplePaging := &commonModel.Paging {
+		Size: 2,
+		Position: 2,
+		OrderBy: []*commonModel.OrderByEntity {
+			{ "agent_name", utils.DefaultDirection },
+		},
+	}
+
+	testedResult := retrievePage(sampleRecords, samplePaging)
+	c.Assert(testedResult[0].Agent.Name, Equals, "AG-3")
+	c.Assert(testedResult[1].Agent.Name, Equals, "AG-4")
 }
 
 func (s *TestCompoundReportSuite) SetUpTest(c *C) {

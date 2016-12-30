@@ -13,6 +13,7 @@ import (
 
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
@@ -89,7 +90,22 @@ func outputCompondReportOfIcmp(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, nqm.LoadIcmpRecordsOfCompoundQuery(compoundQuery))
+	/**
+	 * Set-up paging
+	 */
+	paging := ogin.PagingByHeader(
+		context,
+		&commonModel.Paging {
+			Size: 500,
+			Position: 1,
+		},
+	)
+
+	result := nqm.LoadIcmpRecordsOfCompoundQuery(compoundQuery, paging)
+	ogin.HeaderWithPaging(context, paging)
+	// :~)
+
+	context.JSON(http.StatusOK, result)
 }
 
 func loadCompoundQueryByUuid(context *gin.Context, queryId string, errorFormatter string) (*model.CompoundQuery, bool) {
@@ -138,14 +154,13 @@ func buildCompoundQueryOfIcmp(context *gin.Context) (*model.CompoundQuery, error
 		return nil, jsonErr
 	}
 
-	filter, parseError := metricDsl.ParseToMetricFilter(query.Filters.Metrics)
+	_, parseError := metricDsl.ParseToMetricFilter(query.Filters.Metrics)
 	if parseError != nil {
 		return nil, dslError {
 			1, parseError.Error(),
 		}
 	}
 
-	query.SetMetricFilter(filter)
 	return query, nil
 }
 

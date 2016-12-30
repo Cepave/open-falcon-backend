@@ -3,6 +3,7 @@ package nqm
 import (
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	. "gopkg.in/check.v1"
 )
 
@@ -53,5 +54,39 @@ func (suite *TestCompountReportSuite) TestMarshalJSONOnDynamicMetrics(c *C) {
 
 		c.Logf("Result JSON: %s", ojson.MarshalJSON(sampleMetrics))
 		c.Assert(sampleMetrics, ocheck.JsonEquals, ojson.RawJsonForm(testCase.expectedResult), comment)
+	}
+}
+
+// Tests the comparison of host of targets
+func (suite *TestCompountReportSuite) TestCompareForHostOfTargets(c *C) {
+	testCases := []*struct {
+		leftHost string
+		rightHost string
+		expected int
+	} {
+		{ "22.20.30.40", "103.20.30.40", utils.SeqHigher },
+		{ "10.20.30.40", "google.com", utils.SeqHigher },
+		{ "10.20.30.40", "10.20.30.40", utils.SeqEqual },
+		{ "wine.com.cn", "wine.com.cn", utils.SeqEqual },
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		testedResult := CompareFunctions["target_host"](
+			&DynamicRecord {
+				Target: &DynamicTargetProps {
+					Host: testCase.leftHost,
+				},
+			},
+			&DynamicRecord {
+				Target: &DynamicTargetProps {
+					Host: testCase.rightHost,
+				},
+			},
+			utils.Ascending,
+		)
+		c.Assert(testedResult, Equals, testCase.expected, comment)
 	}
 }

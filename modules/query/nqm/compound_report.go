@@ -2,6 +2,7 @@ package nqm
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/satori/go.uuid"
 
@@ -10,6 +11,7 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	metricDsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/metric_parser"
@@ -18,7 +20,94 @@ import (
 // Loads data by compound query.
 //
 // This function do not filter the data with metric DSL.
-func LoadIcmpRecordsOfCompoundQuery(q *model.CompoundQuery) []*model.DynamicRecord {
+func LoadIcmpRecordsOfCompoundQuery(q *model.CompoundQuery, paging *commonModel.Paging) []*model.DynamicRecord {
+	records := loadIcmpRecords(q)
+	records = filterRecords(records, q.Filters.Metrics)
+
+	paging.SetTotalCount(int32(len(records)))
+
+	setupSorting(paging, q.Output)
+	return retrievePage(records, paging)
+}
+
+func filterRecords(source []*model.DynamicRecord, metricFilter string) []*model.DynamicRecord {
+	if metricFilter == "" {
+		return source
+	}
+
+	filter, err := metricDsl.ParseToMetricFilter(metricFilter)
+	if err != nil {
+		panic(fmt.Errorf("Parse filter of metrics has error[%s]. Error: %v", metricFilter, err))
+	}
+
+	result := make([]*model.DynamicRecord, 0)
+
+	for _, origRecord := range source {
+		if !filter.IsMatch(origRecord.Metrics.Metrics) {
+			continue
+		}
+
+		result = append(result, origRecord)
+	}
+
+	return result
+}
+func setupSorting(paging *commonModel.Paging, output *model.QueryOutput) {
+	orderByEntities := paging.OrderBy
+
+	/**
+	 * Puts AVG as first sorting rule if nothing defined
+	 */
+	if len(orderByEntities) == 0 {
+		if output.HasMetric(model.MetricAvg) {
+			orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ model.MetricAvg, commonModel.Descending })
+		}
+		if output.HasMetric(model.MetricLoss) {
+			orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ model.MetricLoss, commonModel.Descending })
+		}
+
+		/**
+		 * Neither AVG nor LOSS is defined in sorting
+		 *
+		 * Uses output columns of metrics
+		 */
+		if len(orderByEntities) == 0 {
+			for _, outputColumn := range output.Metrics {
+				orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ outputColumn, commonModel.Descending })
+
+				/**
+				 * Maximum 2 columns for sorting
+				 */
+				if len(orderByEntities) >= 2 {
+					break
+				}
+				// :~)
+			}
+		}
+		// :~)
+	}
+	// :~)
+
+	/**
+	 * Adds LOSS metric to last sorting rule
+	 */
+	if orderByEntities[len(orderByEntities) - 1].Expr != model.MetricLoss {
+		orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ model.MetricLoss, commonModel.Descending })
+	}
+	// :~)
+
+	paging.OrderBy = orderByEntities
+}
+func retrievePage(records []*model.DynamicRecord, paging *commonModel.Paging) []*model.DynamicRecord {
+	sortableRecords := &sortableRecords {
+		records, lessByOrderByEntities(paging.OrderBy).lessImpl,
+	}
+	sort.Sort(sortableRecords)
+
+	return commonModel.ExtractPage(sortableRecords.records, paging).
+		([]*model.DynamicRecord)
+}
+func loadIcmpRecords(q *model.CompoundQuery) []*model.DynamicRecord {
 	result := make([]*model.DynamicRecord, 0)
 
 	/**
@@ -95,6 +184,54 @@ func LoadIcmpRecordsOfCompoundQuery(q *model.CompoundQuery) []*model.DynamicReco
 	return result
 }
 
+type sortRecordFunc func(*model.DynamicRecord, *model.DynamicRecord) bool
+
+// Implementation of less function used to sort *model.DynamicRecord
+type lessByOrderByEntities []*commonModel.OrderByEntity
+func (o lessByOrderByEntities) lessImpl(left *model.DynamicRecord, right *model.DynamicRecord) bool {
+	compareResult := 0
+
+	for _, orderEntity := range o {
+		compareFunc, hasCompareFunc := model.CompareFunctions[orderEntity.Expr]
+		if !hasCompareFunc {
+			continue
+		}
+
+		/**
+		 * Performs comparison by function defined in model
+		 */
+		compareResult = compareFunc(
+			left, right,
+			orderEntity.Direction,
+		)
+		// :~)
+
+		/**
+		 * The comparison is decided
+		 */
+		if compareResult != utils.SeqEqual {
+			break;
+		}
+		// :~)
+	}
+
+	return compareResult == utils.SeqHigher
+}
+
+// Used to sort records with implementation of sortRecordFunc
+type sortableRecords struct {
+	records []*model.DynamicRecord
+	lessFunc sortRecordFunc
+}
+func (r *sortableRecords) Len() int { return len(r.records) }
+func (r *sortableRecords) Swap(i, j int) {
+	allData := r.records
+	allData[i], allData[j] = allData[j], allData[i]
+}
+func (r sortableRecords) Less(i, j int) bool {
+	return r.lessFunc(r.records[i], r.records[j])
+}
+
 func BuildQuery(q *model.CompoundQuery) *owlModel.Query {
 	var digestValue [16]byte
 	copy(digestValue[:], q.GetDigestValue())
@@ -115,12 +252,6 @@ func GetCompoundQueryByUuid(uuid uuid.UUID) *model.CompoundQuery {
 
 	compoundQuery := model.NewCompoundQuery()
 	compoundQuery.UnmarshalFromCompressedQuery(queryObject.Content)
-
-	filter, err := metricDsl.ParseToMetricFilter(compoundQuery.Filters.Metrics)
-	if err != nil {
-		panic(fmt.Errorf("Loads query by UUID has error on metric DSL: %v", err))
-	}
-	compoundQuery.SetMetricFilter(filter)
 
 	return compoundQuery
 }

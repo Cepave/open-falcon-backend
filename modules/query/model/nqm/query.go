@@ -486,6 +486,16 @@ func (f *TimeFilter) getRelativeTimeRangeOfNet(baseTime time.Time) (time.Time, t
 	return startTime, endTime
 }
 
+func (f *QueryOutput) HasMetric(metricName string) bool {
+	for _, metric := range f.Metrics {
+		if metricName == metric {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (tu *TimeWithUnit) String() string {
 	return fmt.Sprintf("%d %s", tu.Value, tu.Unit)
 }
