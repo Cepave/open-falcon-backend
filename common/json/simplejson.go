@@ -5,6 +5,13 @@ import (
 	sjson "github.com/bitly/go-simplejson"
 )
 
+type SimpleJsonMarshaler interface {
+	MarshalSimpleJSON() (*sjson.Json, error)
+}
+type SimpleJsonUnmarshaler interface {
+	UnmarshalSimpleJSON(*sjson.Json) error
+}
+
 type JsonExt struct {
 	*sjson.Json
 }

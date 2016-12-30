@@ -72,6 +72,9 @@ func convertToSimpleJson(v interface{}) *sjson.Json {
 	for {
 		switch jsonValue := v.(type) {
 		case string:
+			if v == "" {
+				return nil
+			}
 			v = []byte(jsonValue)
 		case []byte:
 			jsonObj, objErr := sjson.NewJson(jsonValue)
