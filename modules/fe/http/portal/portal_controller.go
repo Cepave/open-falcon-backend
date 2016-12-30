@@ -1,6 +1,7 @@
 package portal
 
 import (
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
 	event "github.com/Cepave/open-falcon-backend/modules/fe/model/falcon_portal"
 )
@@ -56,7 +57,7 @@ func (this *PortalController) GetEventCasesV2() {
 	limitNum, _ := this.GetInt("limit", 0)
 	elimit, _ := this.GetInt("elimit", 0)
 	caseId := this.GetString("caseId", "")
-	showAll, _ := this.GetBool("show_all", false)
+	showAll, _ := this.GetBool("show_all", g.Config().BossDB.ShowAll)
 	includeEvents, _ := this.GetBool("includeEvents", false)
 	events, err := event.GetEventCases(includeEvents, startTime, endTime, prioprity, status, processStatus, limitNum, elimit, username, metrics, caseId)
 	if err != nil {
