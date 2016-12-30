@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -60,8 +61,11 @@ func buildQueryOfIcmp(context *gin.Context) {
 		switch err.(type) {
 		case dslError:
 			context.JSON(http.StatusBadRequest, err)
-			return
+		default:
+			panic(err)
 		}
+
+		return
 	}
 	// :~)
 
@@ -149,8 +153,11 @@ func (e dslError) Error() string {
 // Parses the JSON to query object and checks values
 func buildCompoundQueryOfIcmp(context *gin.Context) (*model.CompoundQuery, error) {
 	query := model.NewCompoundQuery()
+
 	jsonErr := context.BindJSON(query)
-	if jsonErr != nil {
+	if jsonErr == io.EOF {
+		query.UnmarshalJSON([]byte("{}"))
+	} else if jsonErr != nil {
 		return nil, jsonErr
 	}
 
