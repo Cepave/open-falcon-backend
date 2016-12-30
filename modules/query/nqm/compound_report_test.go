@@ -5,7 +5,6 @@ import (
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
@@ -15,11 +14,17 @@ import (
 )
 
 type TestCompoundReportSuite struct{}
+type TestCompoundReportSuiteOnDb struct{
+	*dbTestSuite
+}
 
-var _ = Suite(&TestCompoundReportSuite{})
+var (
+	_ = Suite(&TestCompoundReportSuite{})
+	_ = Suite(&TestCompoundReportSuiteOnDb{ &dbTestSuite{} })
+)
 
 // Tests the convertion of query to detail information
-func (suite *TestCompoundReportSuite) TestToQueryDetail(c *C) {
+func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	/**
 	 * Sets-up sample query
 	 */
@@ -96,7 +101,7 @@ func (suite *TestCompoundReportSuite) TestToQueryDetail(c *C) {
 }
 
 // Tests the building of query object
-func (suite *TestCompoundReportSuite) TestBuildQuery(c *C) {
+func (suite *TestCompoundReportSuiteOnDb) TestBuildQuery(c *C) {
 	sampleQuery := model.NewCompoundQuery()
 
 	sampleJson := []byte(`
@@ -131,7 +136,7 @@ func (suite *TestCompoundReportSuite) TestBuildQuery(c *C) {
 }
 
 // Tests the loading of compound query by UUID
-func (suite *TestCompoundReportSuite) TestGetCompoundQueryByUuid(c *C) {
+func (suite *TestCompoundReportSuiteOnDb) TestGetCompoundQueryByUuid(c *C) {
 	sampleQuery := model.NewCompoundQuery()
 	err := sampleQuery.UnmarshalJSON([]byte(`
 	{
@@ -159,55 +164,8 @@ func (suite *TestCompoundReportSuite) TestGetCompoundQueryByUuid(c *C) {
 	c.Assert(testedQuery.Output, DeepEquals, sampleQuery.Output)
 }
 
-// Tests the building of group columns for DSL
-func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *C) {
-	testCases := []*struct {
-		sampleGrouping *model.QueryGrouping
-		expected []string
-	} {
-		{ // Agent + Target
-			&model.QueryGrouping{
-				Agent: []string { model.AgentGroupingName, model.AgentGroupingHostname, model.AgentGroupingIpAddress },
-				Target: []string { model.TargetGroupingName, model.TargetGroupingHost },
-			},
-			[]string { "ag_id", "tg_id" },
-		},
-		{ // Other properties
-			&model.QueryGrouping{
-				Agent: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
-				Target: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
-			},
-			[]string {
-				"ag_isp_id", "ag_pv_id", "ag_ct_id", "ag_nt_id",
-				"tg_isp_id", "tg_pv_id", "tg_ct_id", "tg_nt_id",
-			},
-		},
-		{ // Agent + other property of target
-			&model.QueryGrouping{
-				Agent: []string { model.AgentGroupingName, model.GroupingIsp },
-				Target: []string { model.GroupingIsp },
-			},
-			[]string { "ag_id", "tg_isp_id" },
-		},
-		{ // Other property of agent + target
-			&model.QueryGrouping{
-				Agent: []string { model.GroupingNameTag },
-				Target: []string { model.TargetGroupingName, model.GroupingIsp },
-			},
-			[]string { "ag_nt_id", "tg_id" },
-		},
-	}
-
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
-
-		testedGrouping := buildGroupingColumnOfDsl(testCase.sampleGrouping)
-		c.Assert(testedGrouping, DeepEquals, testCase.expected, comment)
-	}
-}
-
 // Tests the building of NQM dsl by compound query
-func (suite *TestCompoundReportSuite) TestBuildNqmDslByCompoundQuery(c *C) {
+func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 	type subCase [][2]interface{}
 
 	allTestCases := []*struct {
@@ -492,6 +450,53 @@ func (suite *TestCompoundReportSuite) TestBuildNqmDslByCompoundQuery(c *C) {
 	}
 }
 
+// Tests the building of group columns for DSL
+func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *C) {
+	testCases := []*struct {
+		sampleGrouping *model.QueryGrouping
+		expected []string
+	} {
+		{ // Agent + Target
+			&model.QueryGrouping{
+				Agent: []string { model.AgentGroupingName, model.AgentGroupingHostname, model.AgentGroupingIpAddress },
+				Target: []string { model.TargetGroupingName, model.TargetGroupingHost },
+			},
+			[]string { "ag_id", "tg_id" },
+		},
+		{ // Other properties
+			&model.QueryGrouping{
+				Agent: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
+				Target: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
+			},
+			[]string {
+				"ag_isp_id", "ag_pv_id", "ag_ct_id", "ag_nt_id",
+				"tg_isp_id", "tg_pv_id", "tg_ct_id", "tg_nt_id",
+			},
+		},
+		{ // Agent + other property of target
+			&model.QueryGrouping{
+				Agent: []string { model.AgentGroupingName, model.GroupingIsp },
+				Target: []string { model.GroupingIsp },
+			},
+			[]string { "ag_id", "tg_isp_id" },
+		},
+		{ // Other property of agent + target
+			&model.QueryGrouping{
+				Agent: []string { model.GroupingNameTag },
+				Target: []string { model.TargetGroupingName, model.GroupingIsp },
+			},
+			[]string { "ag_nt_id", "tg_id" },
+		},
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedGrouping := buildGroupingColumnOfDsl(testCase.sampleGrouping)
+		c.Assert(testedGrouping, DeepEquals, testCase.expected, comment)
+	}
+}
+
 // Tests the setup of sorting properties
 func (suite *TestCompoundReportSuite) TestSetupSorting(c *C) {
 	testCases := []*struct {
@@ -705,11 +710,11 @@ func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
 	c.Assert(testedResult[1].Agent.Name, Equals, "AG-4")
 }
 
-func (s *TestCompoundReportSuite) SetUpTest(c *C) {
+func (s *TestCompoundReportSuiteOnDb) SetUpTest(c *C) {
 	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
-	case "TestCompoundReportSuite.TestBuildNqmDslByCompoundQuery":
+	case "TestCompoundReportSuiteOnDb.TestBuildNqmDslByCompoundQuery":
 		inTx(
 			`
 			INSERT INTO host(id, ip)
@@ -724,7 +729,7 @@ func (s *TestCompoundReportSuite) SetUpTest(c *C) {
 			VALUES(2301, 'ZKP-01@abc.org', 'ZKP-TTC-33.easy.com.fr')
 			`,
 		)
-	case "TestCompoundReportSuite.TestToQueryDetail":
+	case "TestCompoundReportSuiteOnDb.TestToQueryDetail":
 		inTx(
 			`
 			INSERT INTO owl_group_tag(gt_id, gt_name)
@@ -737,36 +742,35 @@ func (s *TestCompoundReportSuite) SetUpTest(c *C) {
 		)
 	}
 }
-func (s *TestCompoundReportSuite) TearDownTest(c *C) {
+func (s *TestCompoundReportSuiteOnDb) TearDownTest(c *C) {
 	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
-	case "TestCompoundReportSuite.TestBuildNqmDslByCompoundQuery":
+	case "TestCompoundReportSuiteOnDb.TestBuildNqmDslByCompoundQuery":
 		inTx(
 			`DELETE FROM nqm_agent WHERE ag_id = 1041`,
 			`DELETE FROM host WHERE id = 77621`,
 			`DELETE FROM nqm_target WHERE tg_id = 2301`,
 		)
-	case "TestCompoundReportSuite.TestToQueryDetail":
+	case "TestCompoundReportSuiteOnDb.TestToQueryDetail":
 		inTx(
 			`DELETE FROM owl_group_tag WHERE gt_id >= 90801 AND gt_id <= 90803`,
 			`DELETE FROM owl_name_tag WHERE nt_id >= 3375 AND nt_id <= 3376`,
 		)
-	case "TestCompoundReportSuite.TestGetCompoundQueryByUuid":
+	case "TestCompoundReportSuiteOnDb.TestGetCompoundQueryByUuid":
 		inTx(
 			fmt.Sprintf(`DELETE FROM owl_query WHERE qr_named_id = '%s'`, queryNamedId),
 		)
-	case "TestCompoundReportSuite.TestBuildQuery":
+	case "TestCompoundReportSuiteOnDb.TestBuildQuery":
 		inTx(
 			fmt.Sprintf(`DELETE FROM owl_query WHERE qr_named_id = '%s'`, queryNamedId),
 		)
 	}
 }
 
-func (s *TestCompoundReportSuite) SetUpSuite(c *C) {
-	qtest.InitDb(c)
-	initServices()
+func (s *TestCompoundReportSuiteOnDb) SetUpSuite(c *C) {
+	s.dbTestSuite.SetUpSuite(c)
 }
-func (s *TestCompoundReportSuite) TearDownSuite(c *C) {
-	qtest.ReleaseDb(c)
+func (s *TestCompoundReportSuiteOnDb) TearDownSuite(c *C) {
+	s.dbTestSuite.TearDownSuite(c)
 }

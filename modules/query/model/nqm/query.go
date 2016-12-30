@@ -128,7 +128,6 @@ type CompoundQuery struct {
 	// Output content of report
 	Output *QueryOutput `json:"output" digest:"21"`
 
-	jsonObject *sjson.Json
 	metricFilter MetricFilter
 }
 
@@ -165,7 +164,6 @@ type TimeFilter struct {
 func NewTimeFilter() *TimeFilter {
 	return &TimeFilter {
 		timeRangeType: 0,
-		ToNow: &TimeWithUnit { "", 0 },
 	}
 }
 
@@ -238,16 +236,25 @@ func (query *CompoundQuery) UnmarshalJSON(jsonSource []byte) (err error) {
 		}
 	}()
 
-	query.jsonObject = json
-
 	// Loads "filters" property
-	query.loadFilters()
-	// Loads "grouping" property
-	query.loadGrouping()
-	// Loads "output" property
-	query.loadOutput()
+	err = query.Filters.UnmarshalSimpleJSON(json.Get("filters"))
+	if err != nil {
+		return
+	}
 
-	return nil
+	// Loads "grouping" property
+	err = query.Grouping.UnmarshalSimpleJSON(json.Get("grouping"))
+	if err != nil {
+		return
+	}
+
+	// Loads "output" property
+	err = query.Output.UnmarshalSimpleJSON(json.Get("output"))
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func (query *CompoundQuery) SetupDefault() {
@@ -274,142 +281,78 @@ func (query *CompoundQuery) SetupDefault() {
 	}
 }
 
-func (query *CompoundQuery) loadFilters() {
-	query.Filters.Metrics = purifyStringOfJson(
-		query.jsonObject.GetPath("filters", "metrics"),
-	)
+func (f *CompoundQueryFilter) UnmarshalSimpleJSON(jsonObject *sjson.Json) (err error) {
+	if err = f.Time.UnmarshalSimpleJSON(jsonObject.Get("time"))
+		err != nil {
+		return
+	}
 
-	query.loadFiltersOfTime()
-	query.loadFiltersOfAgent()
-	query.loadFiltersOfTarget()
+	f.loadFilterOfAgent(jsonObject.Get("agent"))
+	f.loadFilterOfTarget(jsonObject.Get("target"))
+	f.loadFilterOfMetrics(jsonObject.Get("metrics"))
+
+	return
 }
-func (query *CompoundQuery) loadFiltersOfTime() {
-	jsonObject := query.jsonObject
-	timeFilter := query.Filters.Time
-
-	jsonTime := jsonObject.GetPath("filters", "time")
-
-	if startTime, endTime := query.loadAbsoluteTimeRange(jsonTime)
-		!startTime.IsZero() && !endTime.IsZero() {
-		timeFilter.timeRangeType = TimeRangeAbsolute
-		timeFilter.StartTime = ojson.JsonTime(startTime)
-		timeFilter.EndTime = ojson.JsonTime(endTime)
-	}
-
-	if timeWithUnit := query.loadRelativeTimeRange(jsonTime)
-		timeWithUnit != nil {
-		timeFilter.timeRangeType = TimeRangeRelative
-		timeFilter.ToNow = timeWithUnit
-	}
-}
-func (query *CompoundQuery) loadRelativeTimeRange(jsonTime *sjson.Json) *TimeWithUnit {
-	jsonToNow, hasToNow := jsonTime.CheckGet("to_now")
-	if !hasToNow {
-		return nil
-	}
-
-	stringOfTimeUnit := strings.ToLower(
-		strings.TrimSpace(jsonToNow.GetPath("unit").MustString()),
-	)
-	if _, ok := supportingTimeUnit[stringOfTimeUnit]; !ok {
-		return nil
-	}
-
-	return &TimeWithUnit{
-		Unit: stringOfTimeUnit,
-		Value: jsonToNow.Get("value").MustInt(),
-	}
-}
-func (query *CompoundQuery) loadAbsoluteTimeRange(jsonTime *sjson.Json) (time.Time, time.Time) {
-	jsonStartTime := jsonTime.Get("start_time")
-	jsonEndTime := jsonTime.Get("end_time")
-
-	var startTime, endTime time.Time
-	if jsonStartTime.Interface() != nil {
-		startTime = time.Unix(jsonStartTime.MustInt64(), 0)
-	}
-	if jsonStartTime.Interface() != nil {
-		endTime = time.Unix(jsonEndTime.MustInt64(), 0)
-	}
-
-	return startTime, endTime
-}
-func (query *CompoundQuery) loadFiltersOfAgent() {
-	agentFilter := query.Filters.Agent
-	jsonObject := query.jsonObject
+func (f *CompoundQueryFilter) loadFilterOfAgent(jsonObject *sjson.Json) {
+	agentFilter := f.Agent
 
 	agentFilter.Name = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "name"),
+		jsonObject.Get("name"),
 	)
 	agentFilter.Hostname = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "hostname"),
+		jsonObject.Get("hostname"),
 	)
 	agentFilter.IpAddress = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "ip_address"),
+		jsonObject.Get("ip_address"),
 	)
 	agentFilter.ConnectionId = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "agent", "connection_id"),
+		jsonObject.Get("connection_id"),
 	)
 
 	agentFilter.IspIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "isp_ids"),
+		jsonObject.Get("isp_ids"),
 	)
 	agentFilter.ProvinceIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "province_ids"),
+		jsonObject.Get("province_ids"),
 	)
 	agentFilter.CityIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "city_ids"),
+		jsonObject.Get("city_ids"),
 	)
 	agentFilter.NameTagIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "agent", "name_tag_ids"),
+		jsonObject.Get("name_tag_ids"),
 	)
 	agentFilter.GroupTagIds = purifyNumberArrayOfJsonToInt32(
-		jsonObject.GetPath("filters", "agent", "group_tag_ids"),
+		jsonObject.Get("group_tag_ids"),
 	)
 }
-func (query *CompoundQuery) loadFiltersOfTarget() {
-	targetFilter := query.Filters.Target
-	jsonObject := query.jsonObject
+func (f *CompoundQueryFilter) loadFilterOfTarget(jsonObject *sjson.Json) {
+	targetFilter := f.Target
 
 	targetFilter.Name = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "target", "name"),
+		jsonObject.Get("name"),
 	)
 	targetFilter.Host = purifyStringArrayOfJsonForValues(
-		jsonObject.GetPath("filters", "target", "host"),
+		jsonObject.Get("host"),
 	)
 
 	targetFilter.IspIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "isp_ids"),
+		jsonObject.Get("isp_ids"),
 	)
 	targetFilter.ProvinceIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "province_ids"),
+		jsonObject.Get("province_ids"),
 	)
 	targetFilter.CityIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "city_ids"),
+		jsonObject.Get("city_ids"),
 	)
 	targetFilter.NameTagIds = purifyNumberArrayOfJsonToInt16(
-		jsonObject.GetPath("filters", "target", "name_tag_ids"),
+		jsonObject.Get("name_tag_ids"),
 	)
 	targetFilter.GroupTagIds = purifyNumberArrayOfJsonToInt32(
-		jsonObject.GetPath("filters", "target", "group_tag_ids"),
+		jsonObject.Get("group_tag_ids"),
 	)
 }
-func (query *CompoundQuery) loadGrouping() {
-	query.Grouping.Agent = purifyStringArrayOfJsonForDomain(
-		query.jsonObject.GetPath("grouping", "agent"),
-		supportingAgentGrouping,
-	)
-
-	query.Grouping.Target = purifyStringArrayOfJsonForDomain(
-		query.jsonObject.GetPath("grouping", "target"),
-		supportingTargetGrouping,
-	)
-}
-func (query *CompoundQuery) loadOutput() {
-	query.Output.Metrics = purifyStringArrayOfJsonForDomain(
-		query.jsonObject.GetPath("output", "metrics"),
-		supportingOutput,
-	)
+func (f *CompoundQueryFilter) loadFilterOfMetrics(jsonObject *sjson.Json) {
+	f.Metrics = purifyStringOfJson(jsonObject)
 }
 
 func (f *TimeFilter) GetDigest() []byte {
@@ -423,7 +366,7 @@ func (f *TimeFilter) GetDigest() []byte {
 		return digest.GetBytesGetter(f.ToNow, digest.Md5SumFunc)()
 	}
 
-	panic("Unknown type of time filter for digesting")
+	panic(fmt.Sprintf("Unknown type of time filter for digesting: %#v", f))
 }
 // Retrieves the start time of net(whether or not the time is absolute or relative)
 func (f *TimeFilter) GetNetTimeRange() (time.Time, time.Time) {
@@ -485,9 +428,68 @@ func (f *TimeFilter) getRelativeTimeRangeOfNet(baseTime time.Time) (time.Time, t
 
 	return startTime, endTime
 }
+func (f *TimeFilter) UnmarshalSimpleJSON(jsonObject *sjson.Json) error {
+	if jsonObject == nil {
+		return nil
+	}
 
-func (f *QueryOutput) HasMetric(metricName string) bool {
-	for _, metric := range f.Metrics {
+	if startTime, endTime := f.loadAbsoluteTimeRange(jsonObject)
+		!startTime.IsZero() && !endTime.IsZero() {
+		f.timeRangeType = TimeRangeAbsolute
+		f.StartTime = ojson.JsonTime(startTime)
+		f.EndTime = ojson.JsonTime(endTime)
+		f.ToNow = nil
+	} else if timeWithUnit := f.loadRelativeTimeRange(jsonObject)
+		timeWithUnit != nil {
+		f.timeRangeType = TimeRangeRelative
+		f.ToNow = timeWithUnit
+	}
+
+	return nil
+}
+func (f *TimeFilter) loadRelativeTimeRange(jsonTime *sjson.Json) *TimeWithUnit {
+	jsonToNow, hasToNow := jsonTime.CheckGet("to_now")
+	if !hasToNow {
+		return nil
+	}
+
+	stringOfTimeUnit := strings.ToLower(
+		strings.TrimSpace(jsonToNow.GetPath("unit").MustString()),
+	)
+	if _, ok := supportingTimeUnit[stringOfTimeUnit]; !ok {
+		return nil
+	}
+
+	return &TimeWithUnit{
+		Unit: stringOfTimeUnit,
+		Value: jsonToNow.Get("value").MustInt(),
+	}
+}
+func (f *TimeFilter) loadAbsoluteTimeRange(jsonTime *sjson.Json) (time.Time, time.Time) {
+	jsonStartTime := jsonTime.Get("start_time")
+	jsonEndTime := jsonTime.Get("end_time")
+
+	var startTime, endTime time.Time
+	if jsonStartTime.Interface() != nil {
+		startTime = time.Unix(jsonStartTime.MustInt64(), 0)
+	}
+	if jsonStartTime.Interface() != nil {
+		endTime = time.Unix(jsonEndTime.MustInt64(), 0)
+	}
+
+	return startTime, endTime
+}
+
+func (o *QueryOutput) UnmarshalSimpleJSON(jsonObject *sjson.Json) error {
+	o.Metrics = purifyStringArrayOfJsonForDomain(
+		jsonObject.Get("metrics"),
+		supportingOutput,
+	)
+
+	return nil
+}
+func (o *QueryOutput) HasMetric(metricName string) bool {
+	for _, metric := range o.Metrics {
 		if metricName == metric {
 			return true
 		}
@@ -510,8 +512,21 @@ var eachTargetGrouping = map[string]bool {
 	TargetGroupingHost: true,
 }
 
-func (q *QueryGrouping) IsForEachAgent() bool {
-	for _, agentGroup := range q.Agent {
+func (g *QueryGrouping) UnmarshalSimpleJSON(jsonObject *sjson.Json) error {
+	g.Agent = purifyStringArrayOfJsonForDomain(
+		jsonObject.Get("agent"),
+		supportingAgentGrouping,
+	)
+
+	g.Target = purifyStringArrayOfJsonForDomain(
+		jsonObject.Get("target"),
+		supportingTargetGrouping,
+	)
+
+	return nil
+}
+func (g *QueryGrouping) IsForEachAgent() bool {
+	for _, agentGroup := range g.Agent {
 		if _, ok := eachAgentGrouping[agentGroup]; ok {
 			return true
 		}
@@ -519,8 +534,8 @@ func (q *QueryGrouping) IsForEachAgent() bool {
 
 	return false
 }
-func (q *QueryGrouping) IsForEachTarget() bool {
-	for _, targetGroup := range q.Target {
+func (g *QueryGrouping) IsForEachTarget() bool {
+	for _, targetGroup := range g.Target {
 		if _, ok := eachTargetGrouping[targetGroup]; ok {
 			return true
 		}

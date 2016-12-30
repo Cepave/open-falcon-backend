@@ -1,7 +1,6 @@
 package nqm
 
 import (
-	"encoding/json"
 	"encoding/hex"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
@@ -16,49 +15,6 @@ import (
 type TestQuerySuite struct{}
 
 var _ = Suite(&TestQuerySuite{})
-
-// Tests marshalling of JSON
-func (suite *TestQuerySuite) TestJsonMarshal(c *C) {
-	testCases := []*struct {
-		sampleTimeFilter *TimeFilter
-	} {
-		{
-			&TimeFilter{
-				timeRangeType: TimeRangeAbsolute,
-				StartTime: ojson.JsonTime(time.Unix(2908001, 0)),
-				EndTime: ojson.JsonTime(time.Unix(2909001, 0)),
-				ToNow: &TimeWithUnit { "", 0 },
-			},
-		},
-		{
-			&TimeFilter{
-				timeRangeType: TimeRangeRelative,
-				StartTime: ojson.JsonTime{},
-				EndTime: ojson.JsonTime{},
-				ToNow: &TimeWithUnit { "d", 17 },
-			},
-		},
-	}
-
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
-
-		sampleQuery := buildSampleQuery(testCase.sampleTimeFilter)
-
-		jsonResult, e := json.Marshal(sampleQuery)
-		c.Assert(e, IsNil, comment)
-
-		c.Logf("[Case %d] JSON: %s", i + 1, string(jsonResult))
-
-		testedQuery := NewCompoundQuery()
-		testedQuery.UnmarshalJSON(jsonResult)
-		testedQuery.SetupDefault()
-
-		c.Assert(testedQuery.Filters.Time, DeepEquals, sampleQuery.Filters.Time, Commentf("query.filters is not equal"))
-		c.Assert(testedQuery.Grouping, DeepEquals, sampleQuery.Grouping, Commentf("query.grouping is not equal"))
-		c.Assert(testedQuery.Output, DeepEquals, sampleQuery.Output, Commentf("query.output is not equal"))
-	}
-}
 
 func buildSampleQuery(timeFilter *TimeFilter) *CompoundQuery {
 	return &CompoundQuery {
@@ -110,103 +66,51 @@ func (suite *TestQuerySuite) TestGetCompressedQuery(c *C) {
 	c.Assert(testedQuery, DeepEquals, testedQuery)
 }
 
-// Tests the loading of filters.metrics
-func (suite *TestQuerySuite) TestLoadMetricsOfFilters(c *C) {
+// Tests the loading of filters.time
+func (suite *TestQuerySuite) TestUnmarshalSimpleJSONOfTimeFilter(c *C) {
 	testCases := []*struct {
-		sampleJson string
+		jsonSource string
+		expectedTimeRangeType byte
 		expectedResult string
 	} {
 		{
-			`{ "filters": { "metrics": " $mAx > 20 aNd $min < 40 " } }`,
-			"$max > 20 and $min < 40",
+			`{ "start_time": 8977123, "end_time": 19082711 }`,
+			TimeRangeAbsolute,
+			`{ "start_time": 8977123, "end_time": 19082711, "to_now" : null}`,
 		},
 		{
-			`{ "filters": { "metrics": "" } }`, "",
-		},
-		{
-			`{}`, "",
-		},
-	}
-
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
-
-		testedQuery := loadQueryObject(c, testCase.sampleJson, comment)
-		c.Assert(testedQuery.Filters.Metrics, DeepEquals, testCase.expectedResult, comment)
-	}
-}
-
-// Tests the loading of filters.time
-func (suite *TestQuerySuite) TestLoadFiltersOfTime(c *C) {
-	testCases := []*struct {
-		jsonSource string
-		expectedResult *TimeFilter
-	} {
-		{
-			`
-			{
-				"filters": {
-					"time": {
-						"start_time": 8977123,
-						"end_time": 19082711
-					}
-				}
-			}
+			`{ "to_now": { "unit": "m", "value": 3 } }
 			`,
-			&TimeFilter {
-				timeRangeType: TimeRangeAbsolute,
-				StartTime: ojson.JsonTime(time.Unix(8977123, 0)),
-				EndTime: ojson.JsonTime(time.Unix(19082711, 0)),
-			},
+			TimeRangeRelative,
+			`{
+				"start_time": null, "end_time": null,
+				"to_now": { "unit": "m", "value": 3 }
+			}`,
 		},
-		{
-			`
-			{
-				"filters": {
-					"time": {
-						"to_now": {
-							"unit": "m",
-							"value": 3
-						}
-					}
-				}
-			}
-			`,
-			&TimeFilter {
-				timeRangeType: TimeRangeRelative,
-				ToNow: &TimeWithUnit{
-					Unit: TimeUnitMonth,
-					Value: 3,
-				},
-			},
-		},
-		{ `{ "filters": {} }`, &TimeFilter{ timeRangeType: 0 }, },
 		{ // "Zero" value of time.Time
-			`{ "filters": { "start_time": -62135596800, "end_time": -62135596800, "to_now": { "unit": "", "value": -1 } } }`,
-			&TimeFilter{ timeRangeType: 0 },
+			`{ "start_time": -62135596800, "end_time": -62135596800, "to_now": { "unit": "", "value": -1 } }`,
+			0, `{ "start_time": null, "end_time": null, "to_now": null }`,
 		},
-		{ //
-			`{ "filters": { "to_now": {} } }`,
-			&TimeFilter{ timeRangeType: 0 },
+		{ // Empty JSON of source
+			`{}`, 0, `{ "start_time": null, "end_time": null, "to_now": null }`,
+		},
+		{ // Empty JSON of source
+			`{ "to_now": {} } }`, 0, `{ "start_time": null, "end_time": null, "to_now": null }`,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-		testedResult := loadQueryObject(c, testCase.jsonSource, comment).Filters.Time
-		expectedResult := testCase.expectedResult
+		sourceJsonObject := ojson.UnmarshalToJson(testCase.jsonSource)
 
-		c.Assert(testedResult.timeRangeType, Equals, expectedResult.timeRangeType, comment)
-		switch testedResult.timeRangeType {
-		case TimeRangeAbsolute:
-			c.Assert(testedResult.StartTime, Equals, expectedResult.StartTime, comment)
-			c.Assert(testedResult.EndTime, Equals, expectedResult.EndTime, comment)
-		case TimeRangeRelative:
-			testedTimeWithUnit := testedResult.ToNow
-			c.Assert(testedTimeWithUnit.Unit, Equals, expectedResult.ToNow.Unit, comment)
-			c.Assert(testedTimeWithUnit.Value, Equals, expectedResult.ToNow.Value, comment)
-		}
+		timeFilter := NewTimeFilter()
+		err := timeFilter.UnmarshalSimpleJSON(sourceJsonObject)
+		c.Assert(err, IsNil)
+
+		c.Assert(timeFilter.timeRangeType, Equals, testCase.expectedTimeRangeType, comment)
+		c.Assert(timeFilter, ocheck.JsonEquals, testCase.expectedResult, comment)
 	}
 }
 
@@ -214,109 +118,135 @@ func (suite *TestQuerySuite) TestLoadFiltersOfTime(c *C) {
 func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 	testCases := []*struct {
 		jsonSource string
-		expectedFilter *nqmModel.AgentFilter
+		expectedJson string
 	} {
 		{
-			`
-			{ "filters": {
-				"agent": {
-					"name": [ "G1", "C2", "K3", "G1"],
-					"hostname": [ "hs-3", "hs-1", "hs-3" ],
-					"ip_address": [ "10.20", "9.7", "10.20" ],
-					"connection_id": [ "conn-id-3", "conn-id-1", "conn-id-3" ],
-					"isp_ids": [ 20, 17, 20 ],
-					"province_ids": [ 31, 22, 31 ],
-					"city_ids": [ 32, 7, 32 ],
-					"name_tag_ids": [ 77, 9, 77 ],
-					"group_tag_ids": [ 16, 8, 16 ]
-				}
-			} }
-			`,
-			&nqmModel.AgentFilter {
-				Name: []string { "C2", "G1", "K3" },
-				Hostname: []string{ "hs-1", "hs-3" },
-				IpAddress: []string{ "10.20", "9.7" },
-				ConnectionId: []string{ "conn-id-1", "conn-id-3" },
-				IspIds: []int16{ 17, 20 },
-				ProvinceIds: []int16{ 22, 31 },
-				CityIds: []int16{ 7, 32 },
-				NameTagIds: []int16{ 9, 77 },
-				GroupTagIds: []int32{ 8, 16 },
-			},
+			`{
+				"name": [ "G1", "C2", "K3", "G1"],
+				"hostname": [ "hs-3", "hs-1", "hs-3" ],
+				"ip_address": [ "10.20", "9.7", "10.20" ],
+				"connection_id": [ "conn-id-3", "conn-id-1", "conn-id-3" ],
+				"isp_ids": [ 20, 17, 20 ],
+				"province_ids": [ 31, 22, 31 ],
+				"city_ids": [ 32, 7, 32 ],
+				"name_tag_ids": [ 77, 9, 77 ],
+				"group_tag_ids": [ 16, 8, 16 ]
+			}`,
+			`{
+				"name": [ "C2", "G1", "K3"],
+				"hostname": [ "hs-1", "hs-3" ],
+				"ip_address": [ "10.20", "9.7" ],
+				"connection_id": [ "conn-id-1", "conn-id-3" ],
+				"isp_ids": [ 17, 20 ],
+				"province_ids": [ 22, 31 ],
+				"city_ids": [ 7, 32 ],
+				"name_tag_ids": [ 9, 77 ],
+				"group_tag_ids": [ 8, 16 ]
+			}`,
 		},
 		{
-			`{ "filters": { "agent": {} } }`,
-			&nqmModel.AgentFilter {
-				Name: []string {},
-				Hostname: []string{},
-				IpAddress: []string{},
-				ConnectionId: []string{},
-				IspIds: []int16{},
-				ProvinceIds: []int16{},
-				CityIds: []int16{},
-				NameTagIds: []int16{},
-				GroupTagIds: []int32{},
-			},
+			`{}`,
+			`{
+				"name": [],
+				"hostname": [],
+				"ip_address": [],
+				"connection_id": [],
+				"isp_ids": [],
+				"province_ids": [],
+				"city_ids": [],
+				"name_tag_ids": [],
+				"group_tag_ids": []
+			}`,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-		testedResult := loadQueryObject(c, testCase.jsonSource, comment)
-		c.Assert(testedResult.Filters.Agent, DeepEquals, testCase.expectedFilter, comment)
+		filter := &CompoundQueryFilter{ Agent: &nqmModel.AgentFilter{} }
+		filter.loadFilterOfAgent(
+			ojson.UnmarshalToJson(testCase.jsonSource),
+		)
+
+		c.Assert(filter.Agent, ocheck.JsonEquals, testCase.expectedJson, comment)
 	}
 }
 
 // Tests the loading of filters.target
-func (suite *TestQuerySuite) TestLoadFiltersOfTarget(c *C) {
+func (suite *TestQuerySuite) TestLoadFilterOfTarget(c *C) {
 	testCases := []*struct {
 		jsonSource string
-		expectedFilter *nqmModel.TargetFilter
+		expectedJson string
 	} {
 		{
-			`
-			{ "filters": {
-				"target": {
-					"name": [ "G1", "C2", "K3", "G1"],
-					"host": [ "hs-3", "hs-1", "hs-3" ],
-					"isp_ids": [ 20, 17, 20 ],
-					"province_ids": [ 31, 22, 31 ],
-					"city_ids": [ 32, 7, 32 ],
-					"name_tag_ids": [ 77, 9, 77 ],
-					"group_tag_ids": [ 16, 8, 16 ]
-				}
-			} }
-			`,
-			&nqmModel.TargetFilter {
-				Name: []string { "C2", "G1", "K3" },
-				Host: []string{ "hs-1", "hs-3" },
-				IspIds: []int16{ 17, 20 },
-				ProvinceIds: []int16{ 22, 31 },
-				CityIds: []int16{ 7, 32 },
-				NameTagIds: []int16{ 9, 77 },
-				GroupTagIds: []int32{ 8, 16 },
-			},
+			`{
+				"name": [ "G1", "C2", "K3", "G1"],
+				"host": [ "hs-3", "hs-1", "hs-3" ],
+				"isp_ids": [ 20, 17, 20 ],
+				"province_ids": [ 31, 22, 31 ],
+				"city_ids": [ 32, 7, 32 ],
+				"name_tag_ids": [ 77, 9, 77 ],
+				"group_tag_ids": [ 16, 8, 16 ]
+			}`,
+			`{
+				"name": [ "C2", "G1", "K3" ],
+				"host": [ "hs-1", "hs-3" ],
+				"isp_ids": [ 17, 20 ],
+				"province_ids": [ 22, 31 ],
+				"city_ids": [ 7, 32 ],
+				"name_tag_ids": [ 9, 77 ],
+				"group_tag_ids": [ 8, 16 ]
+			}`,
 		},
 		{
-			`{ "filters": {"target": {} } }`,
-			&nqmModel.TargetFilter {
-				Name: []string {},
-				Host: []string{},
-				IspIds: []int16{},
-				ProvinceIds: []int16{},
-				CityIds: []int16{},
-				NameTagIds: []int16{},
-				GroupTagIds: []int32{},
-			},
+			`{}`,
+			`{
+				"name": [],
+				"host": [],
+				"isp_ids": [],
+				"province_ids": [],
+				"city_ids": [],
+				"name_tag_ids": [],
+				"group_tag_ids": []
+			}`,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-		testedResult := loadQueryObject(c, testCase.jsonSource, comment)
-		c.Assert(testedResult.Filters.Target, DeepEquals, testCase.expectedFilter, comment)
+		filter := &CompoundQueryFilter{ Target: &nqmModel.TargetFilter{} }
+		filter.loadFilterOfTarget(
+			ojson.UnmarshalToJson(testCase.jsonSource),
+		)
+
+		c.Assert(filter.Target, ocheck.JsonEquals, testCase.expectedJson, comment)
+	}
+}
+
+// Tests the loading of filters.metrics
+func (suite *TestQuerySuite) TestLoadFilterOfMetrics(c *C) {
+	testCases := []*struct {
+		sampleJson string
+		expectedResult string
+	} {
+		{ `{ "metrics": " $mAx > 20 aNd $min < 40 " }`, "$max > 20 and $min < 40", },
+		{ `{ "metrics": "" }`, "", },
+		{ `{}`, "", },
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		filter := &CompoundQueryFilter{}
+		filter.loadFilterOfMetrics(
+			ojson.UnmarshalToJson(testCase.sampleJson).Get("metrics"),
+		)
+
+		c.Assert(filter.Metrics, Equals, testCase.expectedResult, comment)
 	}
 }
 
@@ -327,11 +257,11 @@ func (suite *TestQuerySuite) TestLoadOutput(c *C) {
 		expectedResult []string
 	} {
 		{
-			`{ "output": { "metrics": [ "max", "min", "avg" ] } }`,
+			`{ "metrics": [ "max", "no-such-1", "min", "avg" ] }`,
 			[]string { "max", "min", "avg" },
 		},
 		{
-			`{ "output": { "metrics": [] } }`,
+			`{ "metrics": [] }`,
 			[]string {},
 		},
 		{ // No output property
@@ -341,11 +271,15 @@ func (suite *TestQuerySuite) TestLoadOutput(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-		testedQuery := loadQueryObject(c, testCase.sampleJson, comment)
+		output := &QueryOutput{}
+		output.UnmarshalSimpleJSON(
+			ojson.UnmarshalToJson(testCase.sampleJson),
+		)
 
-		c.Assert(testedQuery.Output.Metrics, DeepEquals, testCase.expectedResult, comment)
+		c.Assert(output.Metrics, DeepEquals, testCase.expectedResult, comment)
 	}
 }
 
@@ -357,7 +291,7 @@ func (suite *TestQuerySuite) TestLoadGrouping(c *C) {
 		expectedTargetGrouping []string
 	} {
 		{
-			`{ "grouping": { "agent": [ "isp", "province" ], "target": [ "name_tag"] } }`,
+			`{ "agent": [ "isp", "province", "no-such-1" ], "target": [ "name_tag", "no-such-1" ] }`,
 			[]string{ "isp", "province" },
 			[]string{ "name_tag" },
 		},
@@ -374,12 +308,16 @@ func (suite *TestQuerySuite) TestLoadGrouping(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-		testedQuery := loadQueryObject(c, testCase.sampleJson, comment)
+		grouping := &QueryGrouping{}
+		grouping.UnmarshalSimpleJSON(
+			ojson.UnmarshalToJson(testCase.sampleJson),
+		)
 
-		c.Assert(testedQuery.Grouping.Agent, DeepEquals, testCase.expectedAgentGrouping, comment)
-		c.Assert(testedQuery.Grouping.Target, DeepEquals, testCase.expectedTargetGrouping, comment)
+		c.Assert(grouping.Agent, DeepEquals, testCase.expectedAgentGrouping, comment)
+		c.Assert(grouping.Target, DeepEquals, testCase.expectedTargetGrouping, comment)
 	}
 }
 
