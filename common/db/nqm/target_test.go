@@ -40,7 +40,7 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 	defaultTarget_3.CityId = 50
 	// :~)
 
-	testCases := []struct {
+	testCases := []*struct {
 		addedTarget *nqmModel.TargetForAdding
 		hasError bool
 		errorType reflect.Type
@@ -114,7 +114,7 @@ func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 
 // Tests the retrieving of data for a target by id
 func (suite *TestTargetSuite) TestGetTargetById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleIdOfTarget int32
 		hasFound bool
 	} {
@@ -136,7 +136,7 @@ func (suite *TestTargetSuite) TestGetTargetById(c *C) {
 
 // Tests the listing of targets
 func (suite *TestTargetSuite) TestListTargets(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		query *nqmModel.TargetQuery
 		pageSize int32
 		pagePosition int32
@@ -213,7 +213,7 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 
 // Tests the getting of a target by id
 func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int32
 		hasFound bool
 	} {
@@ -230,7 +230,7 @@ func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
 
 // Tests the loading of targets by filter
 func (suite *TestTargetSuite) TestLoadSimpleTarget1sByFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleFilter *nqmModel.TargetFilter
 		expectedNumber int
 	} {

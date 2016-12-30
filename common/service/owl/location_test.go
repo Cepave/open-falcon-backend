@@ -21,7 +21,7 @@ var testedProvinceService = NewProvinceService(
 
 // Tests the loading of province by id
 func (suite *TestLocationSuite) TestGetProvinceById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasFound bool
 	} {
@@ -44,7 +44,7 @@ func (suite *TestLocationSuite) TestGetProvinceById(c *C) {
 
 // Tests the loading of provinces by name
 func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleName string
 		expectedFound int
 	} {
@@ -73,7 +73,7 @@ var testedCityService = NewCityService(
 
 // Tests the loading of city by id
 func (suite *TestLocationSuite) TestGetCity2ById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasFound bool
 	} {
@@ -96,7 +96,7 @@ func (suite *TestLocationSuite) TestGetCity2ById(c *C) {
 
 // Tests the loading of citys by name
 func (suite *TestLocationSuite) TestGetCity2sByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleName string
 		expectedFound int
 	} {

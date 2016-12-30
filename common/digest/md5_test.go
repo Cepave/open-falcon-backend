@@ -11,7 +11,7 @@ var _ = Suite(&TestMd5Suite{})
 
 // Tests the digesting of MD5 from multiple Digestor
 func (suite *TestMd5Suite) TestSumAllToMd5(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sourceData []StringMd5Digestor
 		expectedMd5 string
 	} {

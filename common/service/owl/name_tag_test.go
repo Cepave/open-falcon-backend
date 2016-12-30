@@ -21,7 +21,7 @@ var testedNameTagService = NewNameTagService(
 
 // Tests the loading of name tag by id
 func (suite *TestNameTagSuite) TestGetNameTagById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasFound bool
 	} {

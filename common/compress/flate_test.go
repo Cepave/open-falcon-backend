@@ -11,7 +11,7 @@ var _ = Suite(&TestFlateSuite{})
 
 // Tests the compression(and decompress of data
 func (suite *TestFlateSuite) TestMustCompressString(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleString string
 	} {
 		{ "{}" },

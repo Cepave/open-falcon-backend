@@ -13,7 +13,7 @@ var _ = Suite(&TestCompountReportSuite{})
 
 // Tests the marshalling of JSON on metrics
 func (suite *TestCompountReportSuite) TestMarshalJSONOnDynamicMetrics(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		columns []string
 		expectedResult string
 	} {

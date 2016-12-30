@@ -12,7 +12,7 @@ var _ = Suite(&TestMetricGrammarSuite{})
 
 // Tests the grammar
 func (suite *TestMetricGrammarSuite) TestParse(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		code string
 		expectedResult bool
 	} {
@@ -55,7 +55,7 @@ func (suite *TestMetricGrammarSuite) TestParse(c *C) {
 
 // Tests the error for factor
 func (suite *TestMetricGrammarSuite) TestError(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		code string
 		matchError string
 	} {

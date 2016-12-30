@@ -23,7 +23,7 @@ var testedAgentService = NewAgentService(
 
 // Tests the getting of simple agent by id
 func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int32
 		hasFound bool
 	} {
@@ -53,7 +53,7 @@ func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 
 // Tests the loading of SimpleAgent1 by filter
 func (suite *TestAgentSuite) TestGetSimpleAgent1sByFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleFilter *nqmModel.AgentFilter
 		expectedCache []int32
 		expectedNumber int

@@ -16,7 +16,7 @@ var _ = Suite(&TestNqmLogSuite{})
 
 // Tests the query(calling of JSONRPC) by DSL for ICMP log
 func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleIdOfAgentProvince int16
 		expectedNumberOfResult  int
 	} {

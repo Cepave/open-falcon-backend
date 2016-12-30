@@ -42,7 +42,7 @@ func (suite *TestArraySuite) TestMapperTo(c *C) {
 
 // Tests the convertion from typed function to filter
 func (suite *TestArraySuite) TestTypedFuncToFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		testedFunc FilterFunc
 		sampleData interface{}
 		expectedData interface{}
@@ -69,7 +69,7 @@ func (suite *TestArraySuite) TestTypedFuncToFilter(c *C) {
 
 // Tests the convertion from typed function to mapper
 func (suite *TestArraySuite) TestTypedFuncToMapper(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		testedFunc MapperFunc
 		targetType reflect.Type
 		sampleData interface{}
@@ -103,7 +103,7 @@ func (suite *TestArraySuite) TestTypedFuncToMapper(c *C) {
 
 // Tests the unique filter
 func (suite *TestArraySuite) TestNewUniqueFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		targetType reflect.Type
 		sampleData interface{}
 		expectedData interface{}
@@ -131,7 +131,7 @@ func (suite *TestArraySuite) TestNewUniqueFilter(c *C) {
 
 // Tests the domain filter
 func (suite *TestArraySuite) TestNewDomainFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		domain interface{}
 		sampleData interface{}
 		expectedData interface{}
@@ -159,7 +159,7 @@ func (suite *TestArraySuite) TestNewDomainFilter(c *C) {
 
 // Tests the getting array by type convertion
 func (suite *TestArraySuite) TestGetArrayAsType(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sourceArray interface{}
 		targetValue interface{}
 		expectedResult interface{}

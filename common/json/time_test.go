@@ -11,7 +11,7 @@ var _ = Suite(&TestTimeSuite{})
 
 // Tests the serialization of JSON time
 func (suite *TestTimeSuite) TestMarshalJSON(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleTime time.Time
 		expectedResult string
 	} {

@@ -11,7 +11,7 @@ var _ = Suite(&TestSetSuite{})
 
 // Tests the unique processing for a array of types which are valid as a key of map
 func (suite *TestSetSuite) TestUniqueElements(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		source interface{}
 		expectedResult interface{}
 	} {
@@ -36,7 +36,7 @@ func (suite *TestSetSuite) TestUniqueElements(c *C) {
 
 // Tests the unique prcessing for a array of strings
 func (suite *TestSetSuite) TestUniqueArrayOfString(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleStrings []string
 		expectedResult []string
 	} {

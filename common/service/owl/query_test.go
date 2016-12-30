@@ -24,7 +24,7 @@ var testedQueryService = NewQueryService(
 
 // Tests the loading of query by uuid
 func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleUuid string
 		expectedMd5Content string
 		inCache bool

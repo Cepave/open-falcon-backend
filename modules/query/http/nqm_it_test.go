@@ -20,7 +20,7 @@ var httpClientConfig = httpT.NewHttpClientConfigByFlag()
 
 // Tests the building of ICMP query
 func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		metricFilter string
 		expectedStatus int
 	} {
@@ -74,7 +74,7 @@ func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
 }
 // Tests the getting of content for a query by UUID
 func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleUuid string
 		expectedStatus int
 	} {

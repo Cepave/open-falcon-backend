@@ -13,7 +13,7 @@ var _ = Suite(&TestLocationSuite{})
 
 // Tests the check for city over hierarchy of administrative region
 func (suite *TestLocationSuite) TestCheckHierarchyForCity(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		provinceId int16
 		cityId     int16
 		hasError   bool
@@ -38,7 +38,7 @@ func (suite *TestLocationSuite) TestCheckHierarchyForCity(c *C) {
 
 // Tests the loading of province by id
 func (suite *TestLocationSuite) TestGetProviceById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasFound bool
 	} {
@@ -60,7 +60,7 @@ func (suite *TestLocationSuite) TestGetProviceById(c *C) {
 }
 
 func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		input    string
 		expected []*owlModel.Province
 	} {
@@ -78,7 +78,7 @@ func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
 }
 
 func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		input    string
 		expected []*city1view
 	} {
@@ -106,7 +106,7 @@ func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
 }
 
 func (suite *TestLocationSuite) TestGetCitiesInProvinceByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		inputPvId int
 		inputName string
 		expected  []*owlModel.City2
@@ -129,7 +129,7 @@ func (suite *TestLocationSuite) TestGetCitiesInProvinceByName(c *C) {
 
 // Tests the getting of City2 by id
 func (suite *TestLocationSuite) TestGetCity2ById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasFound bool
 	} {
@@ -152,7 +152,7 @@ func (suite *TestLocationSuite) TestGetCity2ById(c *C) {
 
 // Tests getting of cities by name prefix
 func (suite *TestLocationSuite) TestGetCit2sByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleNamePrefix string
 		leastNumber int
 	} {

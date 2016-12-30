@@ -23,7 +23,7 @@ var testedTargetService = NewTargetService(
 
 // Tests the getting of simple target by id
 func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int32
 		hasFound bool
 	} {
@@ -53,7 +53,7 @@ func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
 
 // Tests the loading of SimpleTarget1 by filter
 func (suite *TestTargetSuite) TestGetSimpleTarget1sByFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleFilter *nqmModel.TargetFilter
 		expectedCache []int32
 		expectedNumber int

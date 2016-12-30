@@ -56,7 +56,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		GroupTags: []string{ "pp-rest-tag-1", "pp-rest-tag-2" },
 	}
 
-	testCases := []struct {
+	testCases := []*struct {
 		expectedStatus int
 		expectedErrorCode int
 	} {

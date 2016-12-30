@@ -11,7 +11,7 @@ type TestIspSuite struct{}
 var _ = Suite(&TestIspSuite{})
 
 func (suite *TestIspSuite) TestGetISPByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		input    string
 		expected []*owlModel.Isp
 	} {
@@ -35,7 +35,7 @@ func (suite *TestIspSuite) TestGetISPByName(c *C) {
 
 // Tests the getting of ISP by id
 func (suite *TestIspSuite) TestGetIspById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasData bool
 	} {

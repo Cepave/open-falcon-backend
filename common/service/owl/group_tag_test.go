@@ -21,7 +21,7 @@ var testedGroupTagService = NewGroupTagService(
 
 // Tests the loading of name tag by id
 func (suite *TestGroupTagSuite) TestGetGroupTagById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int32
 		hasFound bool
 	} {

@@ -19,7 +19,7 @@ var _ = Suite(&TestQuerySuite{})
 
 // Tests marshalling of JSON
 func (suite *TestQuerySuite) TestJsonMarshal(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleTimeFilter *TimeFilter
 	} {
 		{
@@ -112,7 +112,7 @@ func (suite *TestQuerySuite) TestGetCompressedQuery(c *C) {
 
 // Tests the loading of filters.metrics
 func (suite *TestQuerySuite) TestLoadMetricsOfFilters(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleJson string
 		expectedResult string
 	} {
@@ -138,7 +138,7 @@ func (suite *TestQuerySuite) TestLoadMetricsOfFilters(c *C) {
 
 // Tests the loading of filters.time
 func (suite *TestQuerySuite) TestLoadFiltersOfTime(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		jsonSource string
 		expectedResult *TimeFilter
 	} {
@@ -212,7 +212,7 @@ func (suite *TestQuerySuite) TestLoadFiltersOfTime(c *C) {
 
 // Tests the loading of filters.agent
 func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		jsonSource string
 		expectedFilter *nqmModel.AgentFilter
 	} {
@@ -270,7 +270,7 @@ func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 
 // Tests the loading of filters.target
 func (suite *TestQuerySuite) TestLoadFiltersOfTarget(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		jsonSource string
 		expectedFilter *nqmModel.TargetFilter
 	} {
@@ -351,7 +351,7 @@ func (suite *TestQuerySuite) TestLoadOutput(c *C) {
 
 // Tests the loading of grouping
 func (suite *TestQuerySuite) TestLoadGrouping(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleJson string
 		expectedAgentGrouping []string
 		expectedTargetGrouping []string
@@ -388,7 +388,7 @@ func (suite *TestQuerySuite) TestPurifyNumberArrayOfJson(c *C) {
 	// Asserts the nil value
 	c.Assert(purifyNumberArrayOfJson(nil, utils.TypeOfUint8).([]uint8), DeepEquals, []uint8{})
 
-	testCases := []struct {
+	testCases := []*struct {
 		jsonSource string
 		targetType reflect.Type
 		expectedResult interface{}
@@ -423,7 +423,7 @@ func (suite *TestQuerySuite) TestPurifyNumberArrayOfJson(c *C) {
 
 // Tests the purifying for array of strings(by doamin)
 func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForDomain(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		jsonSource string
 		sampleDomain map[string]bool
 		expectedData []string
@@ -455,7 +455,7 @@ func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForDomain(c *C) {
 
 // Tests the purifying for array of strings(for values)
 func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForValues(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		jsonSource string
 		exepctedResult []string
 	} {
@@ -498,7 +498,7 @@ func (suite *TestQuerySuite) TestGetDigestValue(c *C) {
 
 // Tests the digesting for time filter
 func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleFilter *TimeFilter
 		expectedDigest string
 	} {
@@ -531,7 +531,7 @@ func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
 
 // Tests the getting of time range of net
 func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleTimeWithUnit *TimeWithUnit
 		expectedStartTime string
 		expectedEndTime string
@@ -634,7 +634,7 @@ func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
 
 // Tests the whether the grouping is for each agent
 func (suite *TestQuerySuite) TestIsForEachAgentOfGrouping(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		agentGrouping []string
 		expected bool
 	} {
@@ -654,7 +654,7 @@ func (suite *TestQuerySuite) TestIsForEachAgentOfGrouping(c *C) {
 
 // Tests the whether the grouping is for each target
 func (suite *TestQuerySuite) TestIsForEachTargetOfGrouping(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		targetGrouping []string
 		expected bool
 	} {
@@ -673,7 +673,7 @@ func (suite *TestQuerySuite) TestIsForEachTargetOfGrouping(c *C) {
 
 // Tests the getting functions for reation
 func (suite *TestQuerySuite) TestGetPropRelation(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		agentFilter *nqmModel.AgentFilter
 		targetFilter *nqmModel.TargetFilter
 		expected []PropRelation

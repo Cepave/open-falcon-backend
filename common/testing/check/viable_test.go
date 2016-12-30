@@ -12,7 +12,7 @@ type car struct{}
 
 // Tests the Viable check for various type of objects
 func (suite *TestViableSuite) TestViableValue(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue interface{}
 		expected bool
 	} {

@@ -10,7 +10,7 @@ var _ = Suite(&TestJsonSuite{})
 
 // Tests the checking of JSON
 func (suite *TestJsonSuite) Test(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		obtainedJson interface{}
 		expectedJson interface{}
 		expectedResult bool

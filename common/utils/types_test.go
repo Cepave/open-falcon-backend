@@ -17,7 +17,7 @@ func (suite *TestTypesSuite) TestIsViable(c *C) {
 	ch1, ch2 := make(chan bool, 1), make(chan bool, 1)
 	ch1 <- true
 
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue interface{}
 		expected bool
 	} {
@@ -68,7 +68,7 @@ func (suite *TestTypesSuite) TestConvertToForPointer(c *C) {
 
 // Tests the convertion for integer types
 func (suite *TestTypesSuite) TestConvertToForReal(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sourceValue interface{}
 		targetValue interface{}
 	} {

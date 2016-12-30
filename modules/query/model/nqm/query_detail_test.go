@@ -25,7 +25,7 @@ func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
 	}
 	relativeStartValue, relativeEndValue := sampleRelative.GetNetTimeRange()
 
-	testCases := []struct {
+	testCases := []*struct {
 		timeFilter *TimeFilterDetail
 		expectedJson string
 	} {

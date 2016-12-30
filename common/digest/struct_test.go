@@ -32,7 +32,7 @@ func (suite *TestStructSuite) TestDigestDirectVariable(c *C) {
 	type float64Alias float64
 	type complex128Alias complex128
 
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue interface{}
 		expectedHash string
 	} {
@@ -97,7 +97,7 @@ func (suite *TestStructSuite) TestDigestInterface(c *C) {
 		"AB": 20, "GD": 344, "KS": 901,
 	}
 
-	testCases := []struct {
+	testCases := []*struct {
 		sampleData interface{} `digest:"1"`
 		expectedHash string
 	} {
@@ -180,7 +180,7 @@ func (suite *TestStructSuite) TestDigestArray(c *C) {
 	var s1, s2, s3 = "cg-1", "bk-2", "zc-3"
 	var w1, w2, w3 = sampleWheel { 2, "ZK-1" }, sampleWheel { 38, "PO-99" }, sampleWheel { 76801, "II-78" }
 
-	testCases := []struct {
+	testCases := []*struct {
 		sampleArray interface{}
 		expectedHash string
 	} {
@@ -280,7 +280,7 @@ func (suite *TestStructSuite) TestSameDigestWithDifferentForms(c *C) {
 		&arrayOfValues[2],
 	}
 
-	testCases := []struct {
+	testCases := []*struct {
 		leftData interface{}
 		rightData interface{}
 	} {

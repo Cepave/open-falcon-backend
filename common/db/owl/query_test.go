@@ -25,7 +25,7 @@ func (suite *TestQuerySuite) TestAddOrRefreshQuery(c *C) {
 		Md5Content: md5.Sum([]byte("This is test - 1")),
 	}
 
-	testCases := []struct {
+	testCases := []*struct {
 		sampleQuery *owlModel.Query
 		sampleTime string
 	} {
@@ -55,7 +55,7 @@ func (suite *TestQuerySuite) TestAddOrRefreshQuery(c *C) {
 
 // Tests the updateing of access time by UUID(or adding new one)
 func (suite *TestQuerySuite) TestUpdateAccessTimeOrAddNewOne(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleUuid string
 		sampleTime string
 	} {
@@ -84,7 +84,7 @@ func (suite *TestQuerySuite) TestUpdateAccessTimeOrAddNewOne(c *C) {
 
 // Tests the load ing query by UUID
 func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleUuid string
 		expectedMd5Content string
 		expectedContent string

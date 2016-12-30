@@ -12,7 +12,7 @@ var _ = Suite(&TestNameTagSuite{})
 
 // Tests the getting of name tag by id
 func (suite *TestNameTagSuite) TestGetNameTagById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasFound bool
 	} {

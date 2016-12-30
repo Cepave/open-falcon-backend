@@ -47,7 +47,7 @@ func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
 
 // Tests the getting of agent by id
 func (suite *TestAgentSuite) TestGetAgentById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleIdOfAgent int32
 		hasFound bool
 	} {
@@ -96,7 +96,7 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 	defaultAgent_3.CityId = 50
 	// :~)
 
-	testCases := []struct {
+	testCases := []*struct {
 		addedAgent *nqmModel.AgentForAdding
 		hasError bool
 		errorType reflect.Type
@@ -142,7 +142,7 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 
 // Tests the list of agents with various conditions
 func (suite *TestAgentSuite) TestListAgents(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		query *nqmModel.AgentQuery
 		pageSize int32
 		pagePosition int32
@@ -219,7 +219,7 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 
 // Tests the getting data of agent by id
 func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int32
 		hasFound bool
 	} {
@@ -239,7 +239,7 @@ func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 
 // Tests the loading of agents by filter
 func (suite *TestAgentSuite) TestLoadSimpleAgent1sByFilter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleFitler *nqmModel.AgentFilter
 		expectedNumber int
 	} {
@@ -275,7 +275,7 @@ func (suite *TestAgentSuite) TestLoadSimpleAgent1sByFilter(c *C) {
 
 // Testes the loading of agents(in a province) and they are grouped by city
 func (suite *TestAgentSuite) TestLoadEffectiveAgentsInProvince(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		provinceId int16
 		expectedNumberOfAgentsInCity map[int16]int
 	} {

@@ -12,7 +12,7 @@ var _ = Suite(&TestTimeSuite{})
 
 // Tests the getting of digest for time object
 func (suite *TestTimeSuite) TestGetDigest(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleTime time.Time
 		expectedDigest string
 	} {

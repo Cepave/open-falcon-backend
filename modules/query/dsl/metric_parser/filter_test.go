@@ -11,7 +11,7 @@ var _ = Suite(&TestFilterSuite{})
 
 // Tests the general filter
 func (suite *TestFilterSuite) TestFilterImpl(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		testedFilter *filterImpl
 		expectedResult bool
 	} {
@@ -74,7 +74,7 @@ func (suite *TestFilterSuite) TestFilterImpl(c *C) {
 
 // Tests the filter of boolean
 func (suite *TestFilterSuite) TestBoolFilterImpl(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		boolOperator bool
 		firstFactor bool
 		restFactors []bool

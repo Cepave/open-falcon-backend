@@ -32,7 +32,7 @@ func (suite *TestTargetSuite) TestConformOfTargetForAdding(c *C) {
 
 // Tests the data validation of TargetForAdding
 func (suite *TestTargetSuite) TestValidateOfTargetForAdding(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		fieldName string
 		fieldValue interface{}
 	} {

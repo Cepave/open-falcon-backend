@@ -10,7 +10,7 @@ var _ = Suite(&TestQuerySuite{})
 
 // Tests the checking if the filter has descriptive information of agent
 func (suite *TestQuerySuite) TestHasAgentDescriptive(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleFilter *AgentFilter
 		expected bool
 	} {
@@ -53,7 +53,7 @@ func (suite *TestQuerySuite) TestHasAgentDescriptive(c *C) {
 
 // Tests the checking if the filter has descriptive information of target
 func (suite *TestQuerySuite) TestHasTargetDescriptive(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleFilter *TargetFilter
 		expected bool
 	} {

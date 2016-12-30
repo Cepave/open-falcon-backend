@@ -21,7 +21,7 @@ var testedIspService = NewIspService(
 
 // Tests the loading of isp by id
 func (suite *TestIspSuite) TestGetIspById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleId int16
 		hasFound bool
 	} {
@@ -44,7 +44,7 @@ func (suite *TestIspSuite) TestGetIspById(c *C) {
 
 // Tests the loading of isps by name
 func (suite *TestIspSuite) TestGetIspsByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleName string
 		expectedFound int
 	} {

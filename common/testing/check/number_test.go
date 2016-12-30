@@ -10,7 +10,7 @@ var _ = Suite(&TestNumberSuite{})
 
 // Tests the larger than checker
 func (suite *TestNumberSuite) TestLargerThan(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleLeft, sampleRight int
 		expectedResult bool
 	} {
@@ -33,7 +33,7 @@ func (suite *TestNumberSuite) TestLargerThan(c *C) {
 
 // Tests the larger than or equal checker
 func (suite *TestNumberSuite) TestLargerThanOrEqualTo(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleLeft, sampleRight int
 		expectedResult bool
 	} {
@@ -56,7 +56,7 @@ func (suite *TestNumberSuite) TestLargerThanOrEqualTo(c *C) {
 
 // Tests the smaller than checker
 func (suite *TestNumberSuite) TestSmallerThan(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleLeft, sampleRight int
 		expectedResult bool
 	} {
@@ -79,7 +79,7 @@ func (suite *TestNumberSuite) TestSmallerThan(c *C) {
 
 // Tests the smaller than or equal checker
 func (suite *TestNumberSuite) TestSmallerThanOrEqualTo(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleLeft, sampleRight int
 		expectedResult bool
 	} {
@@ -102,7 +102,7 @@ func (suite *TestNumberSuite) TestSmallerThanOrEqualTo(c *C) {
 
 // Tests the compare for different types
 func (suite *TestNumberSuite) TestPerformCompare(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		leftValue, rightValue interface{}
 		expectedResult bool
 	} {

@@ -11,7 +11,7 @@ var _ = Suite(&TestStringsSuite{})
 
 // Tests the marshalling of JSON
 func (suite *TestStringsSuite) TestMarshalJSONOfJsonString(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sample []JsonString
 		expected string
 	} {

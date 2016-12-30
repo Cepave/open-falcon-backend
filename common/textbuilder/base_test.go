@@ -23,7 +23,7 @@ func (suite *TestBaseSuite) TestIsViable(c *C) {
 	sampleChan <- true
 	emptyChan := make(chan bool, 2)
 
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue interface{}
 		expectedResult bool
 	} {
@@ -62,7 +62,7 @@ func (suite *TestBaseSuite) TestTextGetterPrintf(c *C) {
 
 // Tests the building of getter from various type
 func (suite *TestBaseSuite) TestToTextGetter(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue interface{}
 		expectedResult string
 	} {
@@ -82,7 +82,7 @@ func (suite *TestBaseSuite) TestToTextGetter(c *C) {
 
 // Tests the prefixing function
 func (suite *TestBaseSuite) TestPrefix(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue string
 		expected string
 	} {
@@ -103,7 +103,7 @@ func (suite *TestBaseSuite) TestPrefix(c *C) {
 
 // Tests the suffixing function
 func (suite *TestBaseSuite) TestSuffix(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue string
 		expected string
 	} {
@@ -124,7 +124,7 @@ func (suite *TestBaseSuite) TestSuffix(c *C) {
 
 // Tests the suffixing function
 func (suite *TestBaseSuite) TestSurrounding(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		prefixString StringGetter
 		sampleValue StringGetter
 		suffixString StringGetter
@@ -161,7 +161,7 @@ func (s stringGetters) Post() ListPostProcessor {
 
 // Tests the join function
 func (suite *TestBaseSuite) TestJoin(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValues stringGetters
 		expected string
 	} {
@@ -199,7 +199,7 @@ func (suite *TestBaseSuite) TestRepeatByLen(c *C) {
 	sampleChan <- true
 	emptyChan := make(chan bool, 2)
 
-	testCases := []struct {
+	testCases := []*struct {
 		sampleLenObject interface{}
 		expectedLen int
 	} {
@@ -226,7 +226,7 @@ func (suite *TestBaseSuite) TestRepeatByLen(c *C) {
 
 // Tests the post function
 func (suite *TestBaseSuite) TestPost(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sample TextGetter
 		expected string
 	} {
