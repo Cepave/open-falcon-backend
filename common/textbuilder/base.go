@@ -1,3 +1,44 @@
+//
+// This package provides lazy-loading and postfix binding for text building.
+//
+// Abstract
+//
+// When we are generating complex SQL statement,
+// the final code of SQL is decided by query parameters:
+// 		SELECT *
+// 		FROM tab_car
+// 		WHERE car_name = ?
+//
+// For 'car_name = ?', it is only shown if and only if user has input "viable" value on search field of UI.
+//
+// Text by condition
+//
+// You could use post-condition to decide whether or not a text should be shown:
+// 	t := StringGetter("Hello! If you are happy.").Post().Viable(false)
+//
+// 	fmt.Sprintf("%s", t) // Nothing shown
+//
+// With SQL syntax, you could decide whether or not to generate "WHERE" by variable:
+// 	where := Prefix(
+// 		StringGetter("WHERE "),
+// 		StrinGetter("car_name = ?").
+// 			Post().Viable(carName != ""),
+// 	)
+//
+// Breeds multiple text
+//
+// You could use some built-in functions to generate multiple text by array/slice.
+// 	arrayData := []int { 1, 3, 5 }
+//
+// 	// Generates "?, ?, ?"
+// 	conditions := RepeatAndJoinByLen("?", StringGetter(", "), arrayData)
+//
+// Short term DSL
+//
+// There are some pre-defined, short-typed DSLs to make code shorter:
+// 	where := Prefix(Dsl.S("WHERE "), Dsl.S("car_name = ?").
+// 		Post().Viable(carName != ""))
+//
 package textbuilder
 
 import (
@@ -6,24 +47,28 @@ import (
 	"reflect"
 )
 
+// This instance provides string of empty("")
 const EmptyGetter = StringGetter("")
 
+// Defines the common interface for a text object,
+// which is evaluated lazily.
 type TextGetter interface {
 	fmt.Stringer
 	Post
 }
 
-// Used to transform TextGetter
+// Defines the transformation of a TextGetter to another
 type Transformer func(TextGetter) TextGetter
 
-// Used to generates TextList
+// Defines the function to generate TextList from a TextGetter
 type Breeder func(TextGetter) TextList
 
-// Converts a list of text to TextGetter
+// Defines the function to reduce a TextList to a TextGetter
 type Distiller func(TextList) TextGetter
 
 // Gets posting processor of a TextGetter
 type Post interface {
+	// Retrieves the PostProcessor, which defines interfaces for postfix on TextGetter
 	Post() PostProcessor
 }
 
@@ -44,7 +89,7 @@ type PostProcessor interface {
 func NewPost(content TextGetter) *DefaultPost {
 	return &DefaultPost{ content }
 }
-// Implements default post prcessor
+// Implements default post processor
 type DefaultPost struct {
 	content TextGetter
 }
@@ -176,6 +221,8 @@ func ToTextGetter(v interface{}) TextGetter {
 		return castedValue
 	case fmt.Stringer:
 		return NewStringerGetter(v.(fmt.Stringer))
+	case []byte:
+		return StringGetter(string(castedValue))
 	case string:
 		return StringGetter(castedValue)
 	}

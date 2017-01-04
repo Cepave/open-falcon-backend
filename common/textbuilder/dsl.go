@@ -14,22 +14,25 @@ var QQ = map[string]Transformer {
 	"'" : BuildSameSurrounding(Dsl.S("'")),
 }
 
+// Common characters for distiller
 var J = map[string]Distiller {
 	"," : BuildJoin(Dsl.S(",")),
 	", " : BuildJoin(Dsl.S(", ")),
 }
 
 // Short name of building blocks for text builder(DSL)
+//
+// 	A - Any value to StringGetter
+// 	AL - Any list of objects to TextList
+// 	S - String value to StringGetter
+// 	S - object of "fmt.Stringer" to StringerGetter
+// 	PF - "fmt.Sprintf" talk to TextGetter
 var Dsl = &dsl{
-	// Any value to StringGetter
 	A: ToTextGetter,
-	// Any objects of list ot TextList
 	AL: ToTextList,
-	// String value to StringGetter
 	S: func(v string) TextGetter {
 		return StringGetter(v)
 	},
-	// object of fmt.Stringer to StringGetter
 	SER: NewStringerGetter,
 	PF: TextGetterPrintf,
 }
