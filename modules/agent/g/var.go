@@ -5,7 +5,6 @@ import (
 	n "github.com/Cepave/open-falcon-backend/common/net"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/net"
-	"github.com/toolkits/net/httplib"
 	"github.com/toolkits/slice"
 	"os"
 	"strings"
@@ -53,17 +52,6 @@ func InitRpcClients() {
 			RpcServer: Config().Heartbeat.Addr,
 			Timeout:   time.Duration(Config().Heartbeat.Timeout) * time.Millisecond,
 		}
-	}
-}
-
-func SendToMQ(metrics []*model.MetricValue) {
-	for _, val := range metrics {
-		url := "http://10.20.30.40:5000/"
-		res, err := httplib.PostJSON(url, val)
-		if err != nil {
-			log.Println("SendtoMQ failed", err, res)
-		}
-		log.Debugln("SendtoMQ success.", res)
 	}
 }
 
