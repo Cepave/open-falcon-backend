@@ -53,9 +53,10 @@ type FalconPortalConfig struct {
 }
 
 type BossConfig struct {
-	Addr string `json:"addr"`
-	Idle int    `json:"idle"`
-	Max  int    `json:"max"`
+	Addr    string `json:"addr"`
+	Idle    int    `json:"idle"`
+	Max     int    `json:"max"`
+	ShowAll bool   `json:"show_all"`
 }
 
 type ShortcutConfig struct {
