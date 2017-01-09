@@ -13,7 +13,7 @@ var _ = Suite(&TestGinUtilSuite{})
 
 // Tests the paging parameters by header
 func (suite *TestGinUtilSuite) TestPagingByHeader(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		pageSize string
 		pagePos string
 		orderBy string
@@ -50,7 +50,7 @@ func (suite *TestGinUtilSuite) TestPagingByHeader(c *C) {
 }
 
 func (suite *TestGinUtilSuite) TestParseOrderBy(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleValue string
 		expectedOrderBy []*model.OrderByEntity
 		hasError bool

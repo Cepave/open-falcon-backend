@@ -5,6 +5,7 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 	"reflect"
 )
@@ -39,7 +40,7 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 	defaultTarget_3.CityId = 50
 	// :~)
 
-	testCases := []struct {
+	testCases := []*struct {
 		addedTarget *nqmModel.TargetForAdding
 		hasError bool
 		errorType reflect.Type
@@ -113,7 +114,7 @@ func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 
 // Tests the retrieving of data for a target by id
 func (suite *TestTargetSuite) TestGetTargetById(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleIdOfTarget int32
 		hasFound bool
 	} {
@@ -135,7 +136,7 @@ func (suite *TestTargetSuite) TestGetTargetById(c *C) {
 
 // Tests the listing of targets
 func (suite *TestTargetSuite) TestListTargets(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		query *nqmModel.TargetQuery
 		pageSize int32
 		pagePosition int32
@@ -210,12 +211,75 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 	}
 }
 
+// Tests the getting of a target by id
+func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
+	testCases := []*struct {
+		sampleId int32
+		hasFound bool
+	} {
+		{ 6981, true },
+		{ 6982, false },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		c.Assert(GetSimpleTarget1ById(testCase.sampleId), ocheck.ViableValue, testCase.hasFound, comment)
+	}
+}
+
+// Tests the loading of targets by filter
+func (suite *TestTargetSuite) TestLoadSimpleTarget1sByFilter(c *C) {
+	testCases := []*struct {
+		sampleFilter *nqmModel.TargetFilter
+		expectedNumber int
+	} {
+		{ // List all of data
+			&nqmModel.TargetFilter {}, 3,
+		},
+		{ // Matches some of data
+			&nqmModel.TargetFilter {
+				Name: []string{ "ftg-1", "ftg-1-C01" },
+				Host: []string{ "20.45" },
+			}, 2,
+		},
+		{ // Matches nothing
+			&nqmModel.TargetFilter {
+				Name: []string{ "no-such-tt" },
+			}, 0,
+		},
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := LoadSimpleTarget1sByFilter(testCase.sampleFilter)
+		c.Assert(testedResult, HasLen, testCase.expectedNumber, comment)
+	}
+}
+
 func (s *TestTargetSuite) SetUpTest(c *C) {
-	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
+	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestTargetSuite.TestGetSimpleTarget1ById":
+		inTx(
+			`
+			INSERT INTO nqm_target(tg_id, tg_name, tg_host)
+			VALUES (6981, 'get-by-id-1', 'get-by-id-1')
+			`,
+		)
+	case "TestTargetSuite.TestLoadSimpleTarget1sByFilter":
+		inTx(
+			`
+			INSERT INTO nqm_target(tg_id, tg_name, tg_host)
+			VALUES (15071, 'ftg-1-C01', '20.45.71.91'),
+				(15072, 'ftg-1-C02', '20.45.71.92'),
+				(15073, 'ftg-2-C01', '120.33.27.23')
+			`,
+		)
 	case "TestTargetSuite.TestUpdateTarget":
-		executeInTx(
+		inTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
 			VALUES(3341, 'tg-nt-1')
@@ -234,7 +298,7 @@ func (s *TestTargetSuite) SetUpTest(c *C) {
 			`,
 		)
 	case "TestTargetSuite.TestListTargets":
-		executeInTx(
+		inTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
 			VALUES(3081, '美國 IP 群')
@@ -256,7 +320,7 @@ func (s *TestTargetSuite) SetUpTest(c *C) {
 			`,
 		)
 	case "TestTargetSuite.TestGetTargetById":
-		executeInTx(
+		inTx(
 			`
 			INSERT INTO nqm_target(
 				tg_id, tg_name, tg_host, tg_available, tg_status, tg_comment,
@@ -268,27 +332,35 @@ func (s *TestTargetSuite) SetUpTest(c *C) {
 	}
 }
 func (s *TestTargetSuite) TearDownTest(c *C) {
-	var executeInTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
+	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestTargetSuite.TestGetSimpleTarget1ById":
+		inTx(
+			"DELETE FROM nqm_target WHERE tg_id = 6981",
+		)
+	case "TestTargetSuite.TestLoadSimpleTarget1sByFilter":
+		inTx(
+			"DELETE FROM nqm_target WHERE tg_id >= 15071 AND tg_id <= 15073",
+		)
 	case "TestTargetSuite.TestGetTargetById":
-		executeInTx(
+		inTx(
 			"DELETE FROM nqm_target WHERE tg_id = 23041",
 		)
 	case "TestTargetSuite.TestAddTarget":
-		executeInTx(
+		inTx(
 			"DELETE FROM nqm_target WHERE tg_name LIKE 'def-target-%'",
 			"DELETE FROM owl_name_tag WHERE nt_value LIKE 'IBM-%'",
 			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'KSC-%'",
 		)
 	case "TestTargetSuite.TestUpdateTarget":
-		executeInTx(
+		inTx(
 			"DELETE FROM nqm_target WHERE tg_id = 34091",
 			"DELETE FROM owl_name_tag WHERE nt_value LIKE 'tg-nt-%'",
 			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'tg-gt-%'",
 		)
 	case "TestTargetSuite.TestListTargets":
-		executeInTx(
+		inTx(
 			`
 			DELETE FROM nqm_target
 			WHERE tg_id >= 40201 AND tg_id <= 40203

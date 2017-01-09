@@ -1257,3 +1257,35 @@ VALUES('git_repo', 'https://gitlab.com/Cepave/OwlPlugin.git');
 
 INSERT INTO `common_config`(`key`, `value`)
 VALUES('atom_addr', 'https://gitlab.com/Cepave/OwlPlugin/commits/master.atom');
+
+CREATE TABLE IF NOT EXISTS owl_query (
+	qr_uuid	BINARY(16) PRIMARY KEY,
+	qr_named_id	VARCHAR(32),
+	qr_md5_content BINARY(16),
+	qr_content VARBINARY(20480) NOT NULL,
+	qr_time_creation DATETIME NOT NULL,
+	qr_time_access DATETIME NOT NULL,
+	CONSTRAINT unq_owl_query__qr_named_id_qr_md5_content UNIQUE(
+		qr_named_id, qr_md5_content
+	),
+	INDEX ix_owl_query__qr_time_access (qr_time_access ASC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+  DEFAULT CHARSET =utf8
+  COLLATE =utf8_general_ci;
+
+DROP TABLE IF EXISTS `sysdb_change_log`;
+CREATE TABLE `sysdb_change_log` (
+  `dcl_id` int(11) NOT NULL AUTO_INCREMENT,
+  `dcl_named_id` varchar(128) NOT NULL,
+  `dcl_file_name` varchar(512) NOT NULL,
+  `dcl_result` tinyint(4) NOT NULL DEFAULT '1',
+  `dcl_time_creation` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `dcl_time_update` datetime DEFAULT NULL,
+  `dcl_message` varchar(1024) DEFAULT NULL,
+  `dcl_comment` varchar(1024) DEFAULT NULL,
+  PRIMARY KEY (`dcl_id`),
+  UNIQUE KEY `ix_sysdb_change_log__result` (`dcl_named_id`,`dcl_result`,`dcl_time_update`)
+) DEFAULT CHARSET=utf8;
+
+INSERT INTO `sysdb_change_log` VALUES (1,'mike-1','mike-1.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','The initialization of existing database schema'),(2,'mike-2','mike-2.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','NQM database schema'),(3,'mike-3','mike-3.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','Buildin data of ISP, province, and city'),(4,'mike-4','mike-4.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','Add name of agent'),(5,'masato-5','masato-5.sql',2,'2016-03-17 10:54:19','2016-03-17 10:54:19','','Add event of alram in portal'),(6,'myhung-6','myhung-6.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','Change city, isp, and province name english into chinese'),(7,'don-7','don-7.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-302] add CREATE TABLE tags'),(8,'chyeh-8','chyeh-8.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-451] Change the schemas for Fastbat'),(9,'masato-9','masato-9.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-468] Alarm Case database
+table script change'),(10,'masato-10','masato-10.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','add status column for alarm'),(11,'chyeh-11','chyeh-11.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','utf8_unicode_ci -> utf8_general_ci'),(12,'masato-12','masato-12.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','note feture support'),(13,'laurence-13','laurence-13.sql',2,'2016-09-05 07:34:54','2016-09-05 07:34:54','','[OWL-480] git repo address move to mysql.'),(14,'mike-13','mike-13.sql',2,'2016-09-05 07:34:54','2016-09-05 07:34:55','','Refactory to id for name tag'),(15,'mike-14','mike-14.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Refacotry between agent and ping task to M-to-N relationship'),(16,'mike-15','mike-15.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add view for ping tasks'),(17,'mike-16','mike-16.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add comment column for agent/target/ping task'),(18,'mike-17','mike-17.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add group tag'),(19,'mike-18','mike-18.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add name of ping task'),(20,'mike-19','mike-19.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add filter of ping task for group tag'),(21,'laurence-20','laurence-20.sql',2,'2016-09-13 06:23:23','2016-09-13 06:23:23','','[OWL-1046] add primary key to table common_config.'),(22,'mike-21','mike-21.sql',2,'2016-09-13 06:23:23','2016-09-13 06:23:23','','Re-arrange id of NQM agents'),(23,'mike-22','mike-22.sql',2,'2016-09-13 06:23:23','2016-09-13 06:23:23','','Re-arrange id of host'),(24,'mike-23','mike-23.sql',2,'2016-12-15 03:57:56','2016-12-15 03:57:56','','Fix the view of filtering targets for ping task'),(25,'mike-24','mike-24.sql',2,'2016-12-15 03:57:56','2016-12-15 03:57:56','','Fix the view of filtering targets for ping task'),(26,'mike-25','mike-25.sql',2,'2016-12-15 03:57:56','2016-12-15 03:57:56','','Add FK to host from nqm_agent'),(27,'mike-26','mike-26.sql',2,'2016-12-15 03:57:56','2016-12-15 03:57:56','','Add AUTO_INCREMENT to owl_group_tag(id)'),(28,'chyeh-25','chyeh-25.sql',2,'2016-12-15 03:57:56','2016-12-15 03:57:56','','[OWL-816] Add new entries to owl_city'),(29,'mike-27','mike-27.sql',2,'2016-12-15 03:57:56','2016-12-15 03:57:56','','[OWL-1120] Add table for persistence of query conditions');

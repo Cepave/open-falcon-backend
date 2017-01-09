@@ -10,7 +10,7 @@ var _ = Suite(&TestSortingSuite{})
 
 // Tests the omitting of syntax for SQL
 func (suite *TestSortingSuite) TestNewSqlOrderByDialect(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		sampleEntities []*OrderByEntity
 		expectedSyntax string
 		hasError bool

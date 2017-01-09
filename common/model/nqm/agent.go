@@ -6,6 +6,7 @@ import (
 	"time"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	json "github.com/bitly/go-simplejson"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
@@ -119,21 +120,9 @@ func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonObject.Set("ip_address", agentView.IpAddress)
 	jsonObject.Set("status", agentView.Status)
 
-	if agentView.LastHeartBeat.IsZero() {
-		jsonObject.Set("last_heartbeat_time", nil)
-	} else {
-		jsonObject.Set("last_heartbeat_time", agentView.LastHeartBeat.Unix())
-	}
-	if agentView.Name != "" {
-		jsonObject.Set("name", agentView.Name)
-	} else {
-		jsonObject.Set("name", nil)
-	}
-	if agentView.Comment != "" {
-		jsonObject.Set("comment", agentView.Comment)
-	} else {
-		jsonObject.Set("comment", nil)
-	}
+	jsonObject.Set("last_heartbeat_time", ojson.JsonTime(agentView.LastHeartBeat))
+	jsonObject.Set("name", ojson.JsonString(agentView.Name))
+	jsonObject.Set("comment", ojson.JsonString(agentView.Comment))
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", agentView.IspId)
@@ -171,4 +160,32 @@ func (agent *Agent) String() string {
 		"Id: [%d]. Name: [%s]. Connection Id: [%s]. IpAddress: [%s]. Hostname: [%s]. Status: [%v]",
 		agent.Id, agent.Name, agent.ConnectionId, agent.IpAddress, agent.Hostname, agent.Status,
 	)
+}
+
+type SimpleAgent1 struct {
+	Id int32 `json:"id" db:"ag_id"`
+	Name string `json:"name" db:"ag_name"`
+	Hostname string `json:"hostname" db:"ag_hostname"`
+	IpAddress net.IP `json:"ip_address" db:"ag_ip_address"`
+
+	IspId int16 `json:"isp_id" db:"ag_isp_id"`
+	ProvinceId int16 `json:"province_id" db:"ag_pv_id"`
+	CityId int16 `json:"city_id" db:"ag_ct_id"`
+	NameTagId int16 `json:"name_tag_id" db:"ag_nt_id"`
+}
+
+type SimpleAgent1s []*SimpleAgent1
+func (as SimpleAgent1s) GetInt32s() []int32 {
+	result := make([]int32, 0)
+
+	for _, a := range as {
+		result = append(result, a.Id)
+	}
+
+	return result
+}
+
+type SimpleAgent1InCity struct {
+	City   *owlModel.City2 `json:"city"`
+	Agents []*SimpleAgent1 `json:"agents"`
 }

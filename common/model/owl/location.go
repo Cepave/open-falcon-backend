@@ -29,6 +29,9 @@ type City2 struct {
 	Name     string `gorm:"column:ct_name" json:"name"`
 	PostCode string `gorm:"column:ct_post_code" json:"post_code"`
 }
+func (c *City2) GetKey() interface{} {
+	return c.Id
+}
 
 func (City2) TableName() string {
 	return "owl_city"

@@ -1,105 +1,65 @@
 package nqm
 
 import (
-	"fmt"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
 
 /**
- * Macro-struct re-used by various data
+ * Aliases of type for DSL
  */
-type Metrics struct {
-	Max                     int16   `json:"max"`
-	Min                     int16   `json:"min"`
-	Avg                     float32 `json:"avg"`
-	Med                     int16   `json:"med"`
-	Mdev                    float32 `json:"mdev"`
-	Loss                    float32 `json:"loss"`
-	Count                   int32   `json:"count"`
-	NumberOfSentPackets     uint64  `json:"number_of_sent_packets"`
-	NumberOfReceivedPackets uint64  `json:"number_of_received_packets"`
-	NumberOfAgents          int32   `json:"number_of_agents"`
-	NumberOfTargets         int32   `json:"number_of_targets"`
-}
-
+type EpochTime int64
 // :~)
 
-// Represents the agents in city
-type AgentsInCity struct {
-	City   *City   `json:"city"`
-	Agents []Agent `json:"agents"`
+// This value is used to indicate the non-existing id for data(province, city, or ISP)
+// Instead of -1(e.x. A agent doesn't has information of ISP), this value is used in query.
+const UNKNOWN_ID_FOR_QUERY = -2
+const UNKNOWN_NAME_FOR_QUERY = "<UNKNOWN>"
+
+// Represents the DSL for query over Icmp log
+type NqmDsl struct {
+	GroupingColumns []string `json:"grouping_columns"`
+
+    StartTime EpochTime `json:"start_time"`
+	EndTime EpochTime `json:"end_time"`
+
+	IdsOfAgents []int32 `json:"ids_of_agents"`
+	IdsOfAgentIsps []int16 `json:"ids_of_agent_isps"`
+	IdsOfAgentProvinces []int16 `json:"ids_of_agent_provinces"`
+	IdsOfAgentCities []int16 `json:"ids_of_agent_cities"`
+	IdsOfAgentNameTags []int16 `json:"ids_of_agent_name_tags"`
+	IdsOfAgentGroupTags []int32 `json:"ids_of_agent_group_tags"`
+
+	IdsOfTargets []int32 `json:"ids_of_targets"`
+	IdsOfTargetProvinces []int16 `json:"ids_of_target_provinces"`
+	IdsOfTargetIsps []int16 `json:"ids_of_target_isps"`
+	IdsOfTargetCities []int16 `json:"ids_of_target_cities"`
+	IdsOfTargetNameTags []int16 `json:"ids_of_target_name_tags"`
+	IdsOfTargetGroupTags []int32 `json:"ids_of_target_group_tags"`
+
+	IspRelation model.PropRelation `json:"isp_relation"`
+	ProvinceRelation model.PropRelation `json:"province_relation"`
+	CityRelation model.PropRelation `json:"city_relation"`
+	NameTagRelation model.PropRelation `json:"name_tag_relation"`
 }
 
-// Represents the data of NQM agent
-type Agent struct {
-	Id        int32  `json:"id"`
-	Name      string `json:"name"`
-	Hostname  string `json:"hostname"`
-	IpAddress string `json:"ip_address"`
+// The data used for reporting of ICMP statistics(grouping by provinces of agents)
+type ProvinceMetric struct {
+	Province *owlModel.Province `json:"province"`
+	Metrics *model.Metrics `json:"metrics"`
 }
 
-func (agent *Agent) TableName() string {
-	return "nqm_agent"
+// The data used for reporting of ICMP statistics, which contains detail of target node(grouping by city)
+type CityMetric struct {
+	City *owlModel.City2 `json:"city"`
+	Metrics *model.Metrics `json:"metrics"`
+	Targets []TargetMetric `json:"targets"`
 }
 
-/**
- * ORM/JSON Models
- */
-
-var nilProvince = (*Province)(nil)
-
-type Province struct {
-	Id   int16  `orm:"pk;column(pv_id)" json:"id"`
-	Name string `orm:"column(pv_name)" json:"name"`
+// The data used for reporting of ICMP statistics target node
+type TargetMetric struct {
+	Id int32 `json:"id"`
+	Host string `json:"host"`
+	Isp *owlModel.Isp `json:"isp"`
+	Metrics *model.Metrics `json:"metrics"`
 }
-
-func (province *Province) TableName() string {
-	return "owl_province"
-}
-func (province *Province) getCacheKeyWithId() string {
-	return fmt.Sprintf("!id!%d", province.Id)
-}
-
-var nilTarget = (*Target)(nil)
-
-type Target struct {
-	Id   int32  `orm:"pk;column(tg_id)"`
-	Host string `orm:"column(tg_host)"`
-}
-
-func (target *Target) TableName() string {
-	return "nqm_target"
-}
-func (target *Target) getCacheKeyWithId() string {
-	return fmt.Sprintf("!id!%d", target.Id)
-}
-
-var nilIsp = (*Isp)(nil)
-
-type Isp struct {
-	Id   int16  `orm:"pk;column(isp_id)" json:"id"`
-	Name string `orm:"column(isp_name)" json:"name"`
-}
-
-func (isp *Isp) TableName() string {
-	return "owl_isp"
-}
-func (isp *Isp) getCacheKeyWithId() string {
-	return fmt.Sprintf("!id!%d", isp.Id)
-}
-
-var nilCity = (*City)(nil)
-
-type City struct {
-	Id       int16  `orm:"pk;column(ct_id)" json:"id"`
-	Name     string `orm:"column(ct_name)" json:"name"`
-	PostCode string `orm:"column(ct_post_code)" json:"post_code"`
-}
-
-func (city *City) TableName() string {
-	return "owl_city"
-}
-func (city *City) getCacheKeyWithId() string {
-	return fmt.Sprintf("!id!%d", city.Id)
-}
-
-// :~)

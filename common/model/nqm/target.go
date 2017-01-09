@@ -145,3 +145,25 @@ func (target *Target) ToTargetForAdding() *TargetForAdding {
 		GroupTags: owlModel.GroupTags(target.GroupTags).ToNames(),
 	}
 }
+
+type SimpleTarget1 struct {
+	Id   int32  `json:"id" db:"tg_id"`
+	Name string `json:"name" db:"tg_name"`
+	Host string `json:"host" db:"tg_host"`
+
+	IspId int16 `json:"isp_id" db:"tg_isp_id"`
+	ProvinceId int16 `json:"province_id" db:"tg_pv_id"`
+	CityId int16 `json:"city_id" db:"tg_ct_id"`
+	NameTagId int16 `json:"name_tag_id" db:"tg_nt_id"`
+}
+
+type SimpleTarget1s []*SimpleTarget1
+func (as SimpleTarget1s) GetInt32s() []int32 {
+	result := make([]int32, 0)
+
+	for _, a := range as {
+		result = append(result, a.Id)
+	}
+
+	return result
+}

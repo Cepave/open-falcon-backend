@@ -2,9 +2,9 @@ package nqm_parser
 
 import (
 	"fmt"
-	"reflect"
 	"strconv"
 	"time"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
 
 const (
@@ -56,15 +56,15 @@ func toSetters(finalResult interface{}) []paramSetter {
 func buildSetterFunc(paramName interface{}, srcParamValue interface{}) (newSetter paramSetter, err error) {
 	paramNameAsString := paramName.(string)
 
-	switch srcParamValue.(type) {
+	switch typedValue := srcParamValue.(type) {
 	case time.Time:
-		newSetter, err = buildSetterFuncForTime(paramNameAsString, srcParamValue.(time.Time))
+		newSetter, err = buildSetterFuncForTime(paramNameAsString, typedValue)
 	case []string:
-		newSetter, err = buildSetterFuncForStringArray(paramNameAsString, srcParamValue.([]string))
-	case HostRelation:
-		newSetter, err = buildSetterFuncForHostRelation(paramNameAsString, srcParamValue.(HostRelation))
+		newSetter, err = buildSetterFuncForStringArray(paramNameAsString, typedValue)
+	case model.PropRelation:
+		newSetter, err = buildSetterFuncForPropRelation(paramNameAsString, typedValue)
 	default:
-		err = fmt.Errorf("Unsupported for type of param[%v]. Param name: [%v]", reflect.TypeOf(srcParamValue), paramNameAsString)
+		err = fmt.Errorf("Unsupported for type of param[%T]. Param name: [%v]", srcParamValue, paramNameAsString)
 	}
 
 	return
@@ -130,7 +130,7 @@ func buildSetterFuncForStringArray(paramName string, values []string) (newSetter
 
 // If multiple %<AUTO_COND>% has set on the same properties of agent/target,
 // this building would apply the last one
-func buildSetterFuncForHostRelation(paramName string, relationValue HostRelation) (newSetter paramSetter, err error) {
+func buildSetterFuncForPropRelation(paramName string, relationValue model.PropRelation) (newSetter paramSetter, err error) {
 	newSetter = nil
 
 	switch paramName {
@@ -161,7 +161,7 @@ func buildSetterFuncForHostRelation(paramName string, relationValue HostRelation
 	}
 
 	if newSetter == nil {
-		err = fmt.Errorf("Unsupported \"HostRelation\" value for property: [%v]", paramName)
+		err = fmt.Errorf("Unsupported \"PropRelation\" value for property: [%v]", paramName)
 	}
 
 	return
@@ -195,16 +195,16 @@ func parseUnixTime(c *current) (time.Time, error) {
 	return time.Unix(unixTimeInt64, 0), nil
 }
 
-func parseAutoCondition(autoConditionValue interface{}) (HostRelation, error) {
+func parseAutoCondition(autoConditionValue interface{}) (model.PropRelation, error) {
 	stringValue := autoConditionValue.(string)
 
 	switch stringValue {
 	case "MATCH_ANOTHER":
-		return SAME_VALUE, nil
+		return model.SameValue, nil
 	case "NOT_MATCH_ANOTHER":
-		return NOT_SAME_VALUE, nil
+		return model.NotSameValue, nil
 	default:
-		return UNKNOWN_RELATION, fmt.Errorf("Unknown auto-condition: %%%v%%", stringValue);
+		return model.NoCondition, fmt.Errorf("Unknown auto-condition: %%%v%%", stringValue);
 	}
 }
 

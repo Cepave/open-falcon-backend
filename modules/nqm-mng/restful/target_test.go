@@ -14,7 +14,7 @@ var _ = Suite(&TestTargetSuite{})
 
 // Tests the building of query for targets
 func (suite *TestTargetSuite) TestBuildQueryForList(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		params string
 		expectedQuery *commonNqmModel.TargetQuery
 	} {

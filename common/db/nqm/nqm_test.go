@@ -326,7 +326,7 @@ func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
 }
 
 func (suite *TestDbNqmSuite) Test_vw_enabled_targets_by_ping_task(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		pingTaskId int
 		expectedNumberOfData int
 	} {

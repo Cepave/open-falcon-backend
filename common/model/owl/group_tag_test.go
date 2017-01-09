@@ -10,7 +10,7 @@ var _ = Suite(&TestGroupTagSuite{})
 
 // Tests the splitting for group tags
 func (suite *TestGroupTagSuite) TestSplitToArryOfGroupTags(c *C) {
-	testCases := []struct{
+	testCases := []*struct{
 		sampleIds string
 		sampleNames string
 		expectedResult []*GroupTag

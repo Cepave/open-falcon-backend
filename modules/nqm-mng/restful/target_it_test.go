@@ -56,7 +56,7 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 		GroupTags: []string{ "tg-rest-tag-1", "tg-rest-tag-2" },
 	}
 
-	testCases := []struct {
+	testCases := []*struct {
 		expectedStatus int
 		expectedErrorCode int
 	} {

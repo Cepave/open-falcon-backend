@@ -12,7 +12,7 @@ var _ = Suite(&TestGinQuerySuite{})
 
 // Tests the getting of int64 with default value
 func (suite *TestGinQuerySuite) TestGetInt64Default(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		queryValue string
 		expectedValue int64
 		expectedViable bool
@@ -44,7 +44,7 @@ func (suite *TestGinQuerySuite) TestGetInt64Default(c *C) {
 
 // Tests the getting of uint64 with default value
 func (suite *TestGinQuerySuite) TestGetUint64Default(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		queryValue string
 		expectedValue uint64
 		expectedViable bool
@@ -75,7 +75,7 @@ func (suite *TestGinQuerySuite) TestGetUint64Default(c *C) {
 
 // Tests the getting of uint64 with default value
 func (suite *TestGinQuerySuite) TestGetBoolDefault(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		queryValue string
 		expectedValue bool
 		expectedViable bool
@@ -107,7 +107,7 @@ func (suite *TestGinQuerySuite) TestGetBoolDefault(c *C) {
 
 // Tests the getting of uint64 with default value
 func (suite *TestGinQuerySuite) TestGetFloat64Default(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		queryValue string
 		expectedValue float64
 		expectedViable bool

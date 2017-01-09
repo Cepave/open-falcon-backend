@@ -37,7 +37,7 @@ func IpV4ToBytesForLike(ip string) ([]byte, error) {
 		/**
 		 * Converts value to byte
 		 */
-		currentValue, err := strconv.ParseInt(v, 10, 8)
+		currentValue, err := strconv.ParseUint(v, 10, 8)
 		if err != nil {
 			return nil, fmt.Errorf("Cannot parse [%s] for IPv4: %v", v, err)
 		}

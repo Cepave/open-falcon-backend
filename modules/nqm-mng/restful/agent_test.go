@@ -15,7 +15,7 @@ var _ = Suite(&TestAgentSuite{})
 
 // Tests building of query parameters
 func (suite *TestAgentSuite) TestBuildQueryForListAgents(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		params string
 		expectedQuery *commonNqmModel.AgentQuery
 	} {
