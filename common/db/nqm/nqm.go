@@ -276,10 +276,10 @@ const (
 )
 
 // Gets the targets(to be probed) for RPC
-func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err error) {
+func GetTargetsByAgentForRpc(agent *nqmModel.NqmAgent) (targets []commonModel.NqmTarget, err error) {
 	var taskState int
 
-	if taskState, err = getPingTaskState(agentId); err != nil {
+	if taskState, err = getPingTaskState(agent.Id); err != nil {
 		return
 	}
 
@@ -294,7 +294,7 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 	case HAS_PING_TASK_MATCH_ANY_TARGET:
 		rows ,err = loadAllEnabledTargets()
 	case HAS_PING_TASK:
-		rows, err = loadTargetsByFilter(agentId)
+		rows, err = loadTargetsByFilter(agent.Id)
 	}
 
 	if err != nil {
@@ -307,9 +307,7 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 	 */
 	targets = make([]commonModel.NqmTarget, 0, 32)
 	for rows.Next() {
-		targets = append(targets, commonModel.NqmTarget{})
-
-		var currentTarget *commonModel.NqmTarget = &targets[len(targets)-1]
+		currentTarget := commonModel.NqmTarget{}
 		var concatedIdsOfGroupTags sql.NullString
 
 		rows.Scan(
@@ -326,6 +324,14 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 			&concatedIdsOfGroupTags,
 		)
 
+		/**
+		 * Skips the same IP address with agent
+		 */
+		if currentTarget.Host == agent.IpAddress.String() {
+			continue;
+		}
+		// :~)
+
 		currentTarget.GroupTagIds = utils.IntTo32(
 			commonDb.GroupedStringToIntArray(concatedIdsOfGroupTags, ","),
 		)
@@ -333,6 +339,8 @@ func GetTargetsByAgentForRpc(agentId int) (targets []commonModel.NqmTarget, err 
 		if currentTarget.NameTagId == commonModel.UNDEFINED_NAME_TAG_ID {
 			currentTarget.NameTag = commonModel.UNDEFINED_STRING
 		}
+
+		targets = append(targets, currentTarget)
 	}
 	// :~)
 
