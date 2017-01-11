@@ -31,7 +31,7 @@ CREATE TABLE `hosts` (
   `status` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
   `bonding` int(3) UNSIGNED DEFAULT NULL,
   `speed` int(8) UNSIGNED DEFAULT NULL,
-  `remark` varchar(512) CHARACTER SET utf8 DEFAULT NULL,
+  `remark` varchar(256) CHARACTER SET utf8 DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
@@ -58,7 +58,6 @@ CREATE TABLE `ips` (
   `status` boolean DEFAULT NULL,
   `hostname` varchar(30) CHARACTER SET utf8 NOT NULL,
   `platform` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
-  `type`     varchar(10) CHARACTER SET utf8 DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
@@ -73,10 +72,8 @@ CREATE TABLE `nodes` (
   `city` varchar(15) CHARACTER SET utf8 NOT NULL,
   `idc` varchar(50) CHARACTER SET utf8 NOT NULL,
   `isp` varchar(15) CHARACTER SET utf8 NOT NULL,
-  `send` tinyint(3) UNSIGNED DEFAULT NULL,
-  `receive` tinyint(3) UNSIGNED DEFAULT NULL,
-  `ping` float(6,2) UNSIGNED DEFAULT NULL,
-  `loss` float(6,2) UNSIGNED DEFAULT NULL,
+  `ping` FLOAT DEFAULT NULL,
+  `loss` FLOAT DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
