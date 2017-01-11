@@ -58,8 +58,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	 * Loads matched targets
 	 */
 	var targets []commonModel.NqmTarget
-	if targets, err = dbNqm.GetTargetsByAgentForRpc(currentAgent.Id); err != nil {
-
+	if targets, err = dbNqm.GetTargetsByAgentForRpc(currentAgent); err != nil {
 		return
 	}
 	// :~)

@@ -8,6 +8,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	testJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -19,7 +21,7 @@ var _ = Suite(&TestRpcNqmAgentSuite{})
  * Tests the data validation for ping task
  */
 func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
-	var testeCases = []struct {
+	var testCases = []*struct {
 		connectionId string
 		hostname     string
 		ipAddress    string
@@ -28,21 +30,23 @@ func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
 		{"120.49.58.19", "localhost.localdomain", "120.49.58.19", IsNil},
 		{"", "localhost.localdomain", "120.49.58.19", NotNil},
 		{"120.49.58.19", "", "120.49.58.19", NotNil},
-		{"120.49.58.19", "host1.com.cn", "990.49.58.19", NotNil}, // IP address cannot be parsed
+		{"120.49.58.19", "host1.com.cn", "900.49.58.19", NotNil}, // IP address cannot be parsed
 		{"120.49.58.19", "localhost.localdomain", "", NotNil},
 	}
 
-	for _, v := range testeCases {
+	for i, testCase := range testCases {
+		ocheck.LogTestCase(c, testCase)
+		comment := ocheck.TestCaseComment(i)
+
 		err := validatePingTask(
 			&model.NqmTaskRequest{
-				ConnectionId: v.connectionId,
-				Hostname:     v.hostname,
-				IpAddress:    v.ipAddress,
+				ConnectionId: testCase.connectionId,
+				Hostname:     testCase.hostname,
+				IpAddress:    testCase.ipAddress,
 			},
 		)
 
-		c.Logf("Validation error(expected): %v", err)
-		c.Assert(err, v.checker)
+		c.Assert(err, testCase.checker, comment)
 	}
 }
 
