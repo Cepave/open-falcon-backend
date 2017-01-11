@@ -13,10 +13,5 @@
         id: "laurence-3",
         filename: "laurence-3.sql",
         comment: "[OWL-1242][scripts] add two columns in  boss.hosts tables"
-    },
-    {
-        id: "laurence-4",
-        filename: "laurence-4.sql",
-        comment: "[OWL-1243][scripts] modify boss.hosts, boss.ips, boss.nodes tables"
     }
 ]
