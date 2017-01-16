@@ -21,7 +21,7 @@ function load_params()
 			DATABASE_NAME=${key#-db-name=}
 			;;
 			*)
-			MYSQLDUMP_OPTIONS="$MYSQLDUMP_OPTIONS $key"
+			MYSQLDUMP_OPTIONS="$key $MYSQLDUMP_OPTIONS"
 			;;
 		esac
 		shift
