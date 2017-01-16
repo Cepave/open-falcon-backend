@@ -9,6 +9,7 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	"github.com/Cepave/open-falcon-backend/common/rpc"
 	"github.com/asaskevich/govalidator"
 )
 
@@ -17,6 +18,8 @@ import (
 // If the NqmTaskRequest.ConnectionId is not existing in database,
 // this function would create one, but the NqmTiskResponse.NeedPing would be value of false.
 func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonModel.NqmTaskResponse) (err error) {
+	defer rpc.HandleError(&err)()
+
 	/**
 	 * Validates data
 	 */
