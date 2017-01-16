@@ -991,9 +991,6 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		if timestampFrom >= timestampTo {
 			setError("Value of timestampFrom should be less than value of timestampTo.", result)
 		}
-		if timestampTo > time.Now().Unix() {
-			setError("Value of timestampTo should be equal to or less than value of now.", result)
-		}
 		return timestampFrom, timestampTo
 	} else if strings.Index(duration, "d") > -1 || strings.Index(duration, "min") > -1 {
 		unit := ""
