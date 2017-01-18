@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	cutils "github.com/Cepave/common/utils"
+	"github.com/Cepave/open-falcon-backend/common/model"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/consumer/g"
 	log "github.com/Sirupsen/logrus"
 	"github.com/influxdata/influxdb/client/v2"
@@ -41,16 +42,12 @@ func transfer(msg []byte) {
 	}
 
 	// Create a point and add to batch from msg
-	v := metricValue{}
+	v := model.MetricValueExtend{}
 	err = json.Unmarshal(msg, &v)
 
 	tags := cutils.DictedTagstring(v.Tags)
 	tags["endpoint"] = v.Endpoint
-	fields := map[string]interface{}{
-		"idle":   10.1,
-		"system": 53.3,
-		"user":   46.6,
-	}
+	fields := cutils.DictedFieldstring(v.Fields)
 	fields["value"] = v.Value
 
 	pt, err := client.NewPoint(
