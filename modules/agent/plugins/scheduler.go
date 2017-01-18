@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
@@ -169,7 +170,7 @@ func PluginRun(plugin *Plugin) {
 		return
 	}
 
-	var metrics []*g.MetricValueExtend
+	var metrics []*model.MetricValueExtend
 	err = json.Unmarshal(data, &metrics)
 	if err != nil {
 		log.Errorf("json.Unmarshal stdout of %s fail. error:%s stdout: \n%s\n", fpath, err, stdout.String())

@@ -65,7 +65,7 @@ func hasMQType(vType string) bool {
 	return false
 }
 
-func DemultiplexMetrics(metrics []*MetricValueExtend) (metricsToTransfer []*model.MetricValue, metricsToMQ []*MetricValueExtend) {
+func DemultiplexMetrics(metrics []*model.MetricValueExtend) (metricsToTransfer []*model.MetricValue, metricsToMQ []*model.MetricValueExtend) {
 	for _, value := range metrics {
 		if hasMQType(value.Type) {
 			metricsToMQ = append(metricsToMQ, value)

@@ -15,16 +15,17 @@ payload = [
         "value": 1,
         "counterType": "GAUGE",
         "tags": "idc=lg,loc=beijing",
+        "fields": "strfield1='Mike has a 170mm penis',nonstrfield2=7777"
     },
-
     {
         "endpoint": "test-endpoint",
         "metric": "mike",
         "timestamp": ts,
         "step": 60,
-        "value": "Mike has a 170mm penis",
+        "value": 12345,
         "counterType": "MQ,KEYWORD",
         "tags": "idc=lg,loc=beijing",
+        "fields": "strfield1='Mike has a 170mm penis',nonstrfield2=7777"
     },
 ]
 

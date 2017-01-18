@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"net/http"
 )
@@ -14,7 +15,7 @@ func configPushRoutes() {
 		}
 
 		decoder := json.NewDecoder(req.Body)
-		var metrics []*g.MetricValueExtend
+		var metrics []*model.MetricValueExtend
 		err := decoder.Decode(&metrics)
 		if err != nil {
 			http.Error(w, "connot decode body", http.StatusBadRequest)
