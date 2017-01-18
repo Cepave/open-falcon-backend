@@ -1,6 +1,7 @@
 package owl
 
 import (
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -25,4 +26,22 @@ func BuildGroupTags(tx *sqlx.Tx, groupTags []string, handleFunc ProcessGroupTagF
 
 		handleFunc(tx, groupTag)
 	}
+}
+
+func GetGroupTagById(id int32) *owlModel.GroupTag {
+	groupTag := &owlModel.GroupTag{}
+
+	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
+		groupTag,
+		`
+		SELECT gt_id, gt_name
+		FROM owl_group_tag
+		WHERE gt_id = ?
+		`,
+		id,
+	) {
+		return nil
+	}
+
+	return groupTag
 }

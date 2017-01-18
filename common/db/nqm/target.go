@@ -7,6 +7,9 @@ import (
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	tb "github.com/Cepave/open-falcon-backend/common/textbuilder"
+	sqlb "github.com/Cepave/open-falcon-backend/common/textbuilder/sql"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/jmoiron/sqlx"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"github.com/jinzhu/gorm"
@@ -192,6 +195,76 @@ func ListTargets(query *nqmModel.TargetQuery, paging commonModel.Paging) ([]*nqm
 	return result, &paging
 }
 
+// Gets the target object or nil if the id is not existing
+func GetSimpleTarget1ById(targetId int32) *nqmModel.SimpleTarget1 {
+	var result nqmModel.SimpleTarget1
+
+	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
+		&result,
+		`
+		SELECT tg_id, tg_host, tg_name,
+			tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+		FROM nqm_target
+		WHERE tg_id = ?
+		`,
+		targetId,
+	) {
+		return nil
+	}
+
+	return &result
+}
+// Gets the targets by filter
+func LoadSimpleTarget1sByFilter(filter *nqmModel.TargetFilter) []*nqmModel.SimpleTarget1 {
+	var result []*nqmModel.SimpleTarget1
+
+	/**
+	 * Builds ( <expr> OR <expr> OR ... ) of SQL
+	 */
+	var buildRepeatOr = func(syntax string, arrayObject interface{}) tb.TextGetter {
+		return tb.Surrounding(
+			t.S("( "),
+			tb.RepeatAndJoinByLen(t.S(syntax), sqlb.C["or"], arrayObject),
+			t.S(" )"),
+		)
+	}
+	// :~)
+
+	/**
+	 * Processes the arguments used in query
+	 */
+	var sqlArgs []interface{}
+	sqlArgs = utils.AppendToAny(sqlArgs, filter.Name)
+	sqlArgs = utils.AppendToAny(sqlArgs, filter.Host)
+
+	sqlArgs = utils.MakeAbstractArray(sqlArgs).
+		MapTo(
+			utils.TypedFuncToMapper(func(v string) string {
+				return v + "%"
+			}),
+			utils.TypeOfString,
+		).GetArrayOfAny()
+	// :~)
+
+	DbFacade.SqlxDbCtrl.Select(
+		&result,
+		`
+		SELECT tg_id, tg_name, tg_host,
+			tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+		FROM nqm_target
+		` +
+		sqlb.Where(
+			sqlb.And(
+				buildRepeatOr("tg_name LIKE ?", filter.Name),
+				buildRepeatOr("tg_host LIKE ?", filter.Host),
+			),
+		).String(),
+		sqlArgs...,
+	)
+
+	return result
+}
+
 var orderByDialectForTagets = commonModel.NewSqlOrderByDialect(
 	map[string]string {
 		"name": "tg_name",
@@ -241,7 +314,6 @@ func init() {
 		return originFunc(entity)
 	}
 }
-
 
 type addTargetTx struct {
 	target *nqmModel.TargetForAdding

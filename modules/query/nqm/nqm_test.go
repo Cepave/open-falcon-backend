@@ -2,24 +2,23 @@ package nqm
 
 import (
 	"encoding/json"
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
-	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
-	"github.com/bitly/go-simplejson"
-	. "gopkg.in/check.v1"
 	"sort"
-	"testing"
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
+	"github.com/bitly/go-simplejson"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
+	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
+	. "gopkg.in/check.v1"
 )
-
-func Test(t *testing.T) { TestingT(t) }
 
 type TestNqmSuite struct{}
 
 var _ = Suite(&TestNqmSuite{})
 
-func (s *TestNqmSuite) SetUpSuite(c *C) {
-	qtest.InitOrm()
-}
+type targetType nqmModel.SimpleTarget1
 
+func (s *TestNqmSuite) SetUpSuite(c *C) {}
 func (s *TestNqmSuite) TearDownSuite(c *C) {}
 
 // Tests the merging of data for provinces(by mocked data source)
@@ -29,27 +28,27 @@ func (suite *TestNqmSuite) TestListByProvincesByMockData(c *C) {
 			return []IcmpResult{
 				IcmpResult{
 					grouping: []int32{11},
-					metrics:  &Metrics{Max: 31},
+					metrics:  &model.Metrics{Max: 31},
 				},
 				IcmpResult{
 					grouping: []int32{12},
-					metrics:  &Metrics{Max: 32},
+					metrics:  &model.Metrics{Max: 32},
 				},
 				IcmpResult{
 					grouping: []int32{13},
-					metrics:  &Metrics{Max: 33},
+					metrics:  &model.Metrics{Max: 33},
 				},
 			}, nil
 		},
-		GetProvinceById: func(provinceId int16) *Province {
+		GetProvinceById: func(provinceId int16) *owlModel.Province {
 			switch provinceId {
 			case 11:
-				return &Province{Id: 11, Name: "PV-11"}
+				return &owlModel.Province{Id: 11, Name: "PV-11"}
 			case 12:
-				return &Province{Id: 12, Name: "PV-12"}
+				return &owlModel.Province{Id: 12, Name: "PV-12"}
 			}
 
-			return &Province{Id: 99, Name: "PV-99"}
+			return &owlModel.Province{Id: 99, Name: "PV-99"}
 		},
 	}
 
@@ -77,11 +76,11 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 				return []IcmpResult{
 					IcmpResult{
 						grouping: []int32{41},
-						metrics:  &Metrics{Max: 87},
+						metrics:  &model.Metrics{Max: 87},
 					},
 					IcmpResult{
 						grouping: []int32{42},
-						metrics:  &Metrics{Max: 62},
+						metrics:  &model.Metrics{Max: 62},
 					},
 				}, nil
 			// :~)
@@ -92,19 +91,19 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 				return []IcmpResult{
 					IcmpResult{
 						grouping: []int32{2001, 41, 81},
-						metrics:  &Metrics{Max: 79},
+						metrics:  &model.Metrics{Max: 79},
 					},
 					IcmpResult{
 						grouping: []int32{2002, 41, 81},
-						metrics:  &Metrics{Max: 62},
+						metrics:  &model.Metrics{Max: 62},
 					},
 					IcmpResult{
 						grouping: []int32{2003, 42, 81},
-						metrics:  &Metrics{Max: 71},
+						metrics:  &model.Metrics{Max: 71},
 					},
 					IcmpResult{
 						grouping: []int32{2004, 42, 81},
-						metrics:  &Metrics{Max: 68},
+						metrics:  &model.Metrics{Max: 68},
 					},
 				}, nil
 				// :~)
@@ -113,37 +112,41 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 				return nil, nil
 			}
 		},
-		GetCityById: func(cityId int16) *City {
+		GetCityById: func(cityId int16) *owlModel.City2 {
 			switch cityId {
 			case 41:
-				return &City{Id: cityId, Name: "葡萄城市"}
+				return &owlModel.City2{Id: cityId, Name: "葡萄城市"}
 			case 42:
-				return &City{Id: cityId, Name: "香蕉城市"}
+				return &owlModel.City2{Id: cityId, Name: "香蕉城市"}
 			}
 
-			return &City{Id: 99, Name: "PV-99"}
+			return &owlModel.City2{Id: 99, Name: "PV-99"}
 		},
-		GetIspById: func(ispId int16) *Isp {
+		GetIspById: func(ispId int16) *owlModel.Isp {
 			switch ispId {
 			case 81:
-				return &Isp{Id: ispId, Name: "金牌快網"}
+				return &owlModel.Isp{Id: ispId, Name: "金牌快網"}
 			}
 
-			return &Isp{Id: 99, Name: "ISP-99"}
+			return &owlModel.Isp{Id: 99, Name: "ISP-99"}
 		},
-		GetTargetById: func(targetId int32) *Target {
+		GetTargetById: func(targetId int32) *nqmModel.SimpleTarget1 {
+			var sampleTarget *targetType
+
 			switch targetId {
 			case 2001:
-				return &Target{Id: targetId, Host: "98.20.50.1"}
+				sampleTarget = &targetType{Id: targetId, Host: "98.20.50.1"}
 			case 2002:
-				return &Target{Id: targetId, Host: "98.20.50.2"}
+				sampleTarget = &targetType{Id: targetId, Host: "98.20.50.2"}
 			case 2003:
-				return &Target{Id: targetId, Host: "98.20.50.3"}
+				sampleTarget = &targetType{Id: targetId, Host: "98.20.50.3"}
 			case 2004:
-				return &Target{Id: targetId, Host: "98.20.50.4"}
+				sampleTarget = &targetType{Id: targetId, Host: "98.20.50.4"}
+			default:
+				sampleTarget = &targetType{Id: 99, Host: "UNKNOWN_TARGET"}
 			}
 
-			return &Target{Id: 99, Host: "UNKNOWN_TARGET"}
+			return (*nqmModel.SimpleTarget1)(sampleTarget)
 		},
 	}
 
@@ -177,12 +180,12 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 func (suite *TestNqmSuite) TestJsonOfProvinceMetric(c *C) {
 	sampleData := []ProvinceMetric{
 		ProvinceMetric{
-			Province: &Province{Id: 20, Name: "Dog-1"},
-			Metrics:  &Metrics{Max: 40, Min: 30, Avg: 33.45},
+			Province: &owlModel.Province{Id: 20, Name: "Dog-1"},
+			Metrics:  &model.Metrics{Max: 40, Min: 30, Avg: 33.45},
 		},
 		ProvinceMetric{
-			Province: &Province{Id: 21, Name: "Dog-2"},
-			Metrics:  &Metrics{Max: 50, Min: 43, Avg: 44.5},
+			Province: &owlModel.Province{Id: 21, Name: "Dog-2"},
+			Metrics:  &model.Metrics{Max: 50, Min: 43, Avg: 44.5},
 		},
 	}
 
@@ -201,30 +204,30 @@ func (suite *TestNqmSuite) TestJsonOfProvinceMetric(c *C) {
 func (suite *TestNqmSuite) TestJsonOfCityMetric(c *C) {
 	sampleData := []CityMetric{
 		CityMetric{
-			City:    &City{Id: 51, Name: "小黃瓜城市"},
-			Metrics: &Metrics{Max: 82, Min: 33, Avg: 62.81},
+			City:    &owlModel.City2{Id: 51, Name: "小黃瓜城市"},
+			Metrics: &model.Metrics{Max: 82, Min: 33, Avg: 62.81},
 			Targets: []TargetMetric{
 				TargetMetric{
-					Id: 4021, Host: "h1.ping.org", Isp: &Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 101, Min: 63, Avg: 77.3},
+					Id: 4021, Host: "h1.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
+					Metrics: &model.Metrics{Max: 101, Min: 63, Avg: 77.3},
 				},
 				TargetMetric{
-					Id: 4022, Host: "h2.ping.org", Isp: &Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 93, Min: 77, Avg: 82.5},
+					Id: 4022, Host: "h2.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
+					Metrics: &model.Metrics{Max: 93, Min: 77, Avg: 82.5},
 				},
 			},
 		},
 		CityMetric{
-			City:    &City{Id: 52, Name: "高麗菜城市"},
-			Metrics: &Metrics{Max: 32, Min: 12, Avg: 22.3},
+			City:    &owlModel.City2{Id: 52, Name: "高麗菜城市"},
+			Metrics: &model.Metrics{Max: 32, Min: 12, Avg: 22.3},
 			Targets: []TargetMetric{
 				TargetMetric{
-					Id: 4031, Host: "g1.ping.org", Isp: &Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 62, Min: 37, Avg: 40.25},
+					Id: 4031, Host: "g1.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
+					Metrics: &model.Metrics{Max: 62, Min: 37, Avg: 40.25},
 				},
 				TargetMetric{
-					Id: 4032, Host: "g2.ping.org", Isp: &Isp{Id: 91, Name: "山東網路"},
-					Metrics: &Metrics{Max: 35, Min: 22, Avg: 29.1},
+					Id: 4032, Host: "g2.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
+					Metrics: &model.Metrics{Max: 35, Min: 22, Avg: 29.1},
 				},
 			},
 		},
@@ -282,23 +285,23 @@ func (suite *TestNqmSuite) TestToNqmDsl(c *C) {
 	testedDslParams := toNqmDsl(&sampleQueryParam)
 
 	sort.Sort(idArray(testedDslParams.IdsOfAgentProvinces))
-	c.Assert(testedDslParams.IdsOfAgentProvinces, DeepEquals, []Id2Bytes{UNKNOWN_ID_FOR_QUERY, 18, 29, 34})
+	c.Assert(testedDslParams.IdsOfAgentProvinces, DeepEquals, []int16{UNKNOWN_ID_FOR_QUERY, 18, 29, 34})
 	sort.Sort(idArray(testedDslParams.IdsOfAgentIsps))
-	c.Assert(testedDslParams.IdsOfAgentIsps, DeepEquals, []Id2Bytes{UNKNOWN_ID_FOR_QUERY, 7, 29, 51, 52})
+	c.Assert(testedDslParams.IdsOfAgentIsps, DeepEquals, []int16{UNKNOWN_ID_FOR_QUERY, 7, 29, 51, 52})
 	sort.Sort(idArray(testedDslParams.IdsOfAgentCities))
-	c.Assert(testedDslParams.IdsOfAgentCities, DeepEquals, []Id2Bytes{63, 64})
+	c.Assert(testedDslParams.IdsOfAgentCities, DeepEquals, []int16{63, 64})
 	sort.Sort(idArray(testedDslParams.IdsOfTargetProvinces))
-	c.Assert(testedDslParams.IdsOfTargetProvinces, DeepEquals, []Id2Bytes{UNKNOWN_ID_FOR_QUERY, 11, 28, 36})
+	c.Assert(testedDslParams.IdsOfTargetProvinces, DeepEquals, []int16{UNKNOWN_ID_FOR_QUERY, 11, 28, 36})
 	sort.Sort(idArray(testedDslParams.IdsOfTargetIsps))
-	c.Assert(testedDslParams.IdsOfTargetIsps, DeepEquals, []Id2Bytes{UNKNOWN_ID_FOR_QUERY, 18, 23, 53, 54})
+	c.Assert(testedDslParams.IdsOfTargetIsps, DeepEquals, []int16{UNKNOWN_ID_FOR_QUERY, 18, 23, 53, 54})
 	sort.Sort(idArray(testedDslParams.IdsOfTargetCities))
-	c.Assert(testedDslParams.IdsOfTargetCities, DeepEquals, []Id2Bytes{66, 67})
+	c.Assert(testedDslParams.IdsOfTargetCities, DeepEquals, []int16{66, 67})
 
 	c.Assert(testedDslParams.IdsOfAgents, DeepEquals, []int32{1021, 1022})
 	c.Assert(testedDslParams.IdsOfTargets, DeepEquals, []int32{1081, 1082})
 }
 
-type idArray []Id2Bytes
+type idArray []int16
 
 func (a idArray) Len() int           { return len(a) }
 func (a idArray) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
@@ -307,8 +310,13 @@ func (a idArray) Less(i, j int) bool { return a[i] < a[j] }
 func (s *TestNqmSuite) SetUpTest(c *C) {
 	switch c.TestName() {
 	case "TestNqmSuite.TestToNqmDsl":
-		if !qtest.HasDefaultOrmOnPortal(c) {
-			return
-		}
+		qtest.InitDb(c)
+		initServices()
+	}
+}
+func (s *TestNqmSuite) TearDownTest(c *C) {
+	switch c.TestName() {
+	case "TestNqmSuite.TestToNqmDsl":
+		qtest.ReleaseDb(c)
 	}
 }

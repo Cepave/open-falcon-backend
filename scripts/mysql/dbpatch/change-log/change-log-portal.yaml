@@ -138,3 +138,8 @@
     filename: "chyeh-25.sql",
     comment: "[OWL-816] Add new entries to owl_city"
 }
+- {
+    id: "mike-27",
+    filename: "mike-27.sql",
+    comment: "[OWL-1120] Add table for persistence of query conditions"
+}

@@ -1,10 +1,9 @@
 package owl
 
 import (
-	"reflect"
-
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 )
 
@@ -14,7 +13,7 @@ var _ = Suite(&TestLocationSuite{})
 
 // Tests the check for city over hierarchy of administrative region
 func (suite *TestLocationSuite) TestCheckHierarchyForCity(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		provinceId int16
 		cityId     int16
 		hasError   bool
@@ -25,102 +24,152 @@ func (suite *TestLocationSuite) TestCheckHierarchyForCity(c *C) {
 	}
 
 	for i, testCase := range testCases {
+		comment := Commentf("Test Case : [%d]", i + 1)
 		err := CheckHierarchyForCity(testCase.provinceId, testCase.cityId)
 
 		if testCase.hasError {
 			c.Logf("Error: %v", err)
-			c.Assert(err, NotNil, Commentf("Test Case: [%d]", i+1))
+			c.Assert(err, NotNil, comment)
 		} else {
-			c.Assert(err, IsNil, Commentf("Test Case: [%d]", i+1))
+			c.Assert(err, IsNil, comment)
+		}
+	}
+}
+
+// Tests the loading of province by id
+func (suite *TestLocationSuite) TestGetProviceById(c *C) {
+	testCases := []*struct {
+		sampleId int16
+		hasFound bool
+	} {
+		{ 3, true },
+		{ -3, false },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := GetProvinceById(testCase.sampleId)
+
+		if testCase.hasFound {
+			c.Assert(testedResult, NotNil, comment)
+		} else {
+			c.Assert(testedResult, IsNil, comment)
 		}
 	}
 }
 
 func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		input    string
 		expected []*owlModel.Province
-	}{
+	} {
 		{"北", []*owlModel.Province{{Id: 4, Name: "北京"}}},
 		{"河", []*owlModel.Province{{Id: 3, Name: "河北"}, {Id: 19, Name: "河南"}}},
 		{"幹", []*owlModel.Province{}},
 	}
 
-	for _, v := range testCases {
-		got := GetProvincesByName(v.input)
-		if !reflect.DeepEqual(got, v.expected) {
-			c.Error("Error:", got, "!=", v.expected)
-		} else {
-			c.Log(got, "==", v.expected)
-		}
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case : [%d]", i + 1)
+		c.Assert(GetProvincesByName(testCase.input), DeepEquals, testCase.expected, comment)
 	}
 
-	got := GetProvincesByName("")
-	if len(got) >= 37 {
-		c.Log("Case for \"\": PASS")
-	} else {
-		c.Error("Case for \"\": Checking len(got) >= 37...FAIL")
-	}
-
+	c.Assert(len(GetProvincesByName("")), ocheck.LargerThanOrEqualTo, 37, Commentf("Needs 37 provinces at least"))
 }
 
 func (suite *TestLocationSuite) TestGetCitiesByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		input    string
 		expected []*city1view
-	}{
-		{"北", []*city1view{&city1view{Id: 1, Name: "北京市", PostCode: "100000", Province: &owlModel.Province{Id: 4, Name: "北京"}}, &city1view{Id: 116, Name: "北海市", PostCode: "536000", Province: &owlModel.Province{Id: 21, Name: "广西"}}}},
-		{"海口市", []*city1view{&city1view{Id: 71, Name: "海口市", PostCode: "570000", Province: &owlModel.Province{Id: 23, Name: "海南"}}}},
+	} {
+		{"北",
+			[]*city1view{
+				{Id: 1, Name: "北京市", PostCode: "100000", Province: &owlModel.Province{Id: 4, Name: "北京"}},
+				{Id: 116, Name: "北海市", PostCode: "536000", Province: &owlModel.Province{Id: 21, Name: "广西"}},
+			},
+		},
+		{"海口市",
+			[]*city1view{
+				{Id: 71, Name: "海口市", PostCode: "570000", Province: &owlModel.Province{Id: 23, Name: "海南"}},
+			},
+		},
 		{"幹", []*city1view{}},
 	}
 
-	for _, v := range testCases {
-		got := GetCitiesByName(v.input)
-		if !reflect.DeepEqual(got, v.expected) {
-			c.Error("Error:", got, "!=", v.expected)
-		} else {
-			c.Log(got, "==", v.expected)
-		}
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case : [%d]", i + 1)
+
+		c.Assert(GetCitiesByName(testCase.input), DeepEquals, testCase.expected, comment)
 	}
 
-	got := GetCitiesByName("")
-	if len(got) >= 295 {
-		c.Log("Case for \"\": PASS")
-	} else {
-		c.Error("Case for \"\": Checking len(got) >= 295...FAIL")
-	}
+	c.Assert(len(GetCitiesByName("")), ocheck.LargerThanOrEqualTo, 295, Commentf("Needs 295 provinces at least"))
 }
 
 func (suite *TestLocationSuite) TestGetCitiesInProvinceByName(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		inputPvId int
 		inputName string
 		expected  []*owlModel.City2
-	}{
+	} {
 		{24, "广", []*owlModel.City2{{Id: 74, Name: "广元市", PostCode: "628000"}, {Id: 81, Name: "广安市", PostCode: "638000"}}},
 		{20, "茂名市", []*owlModel.City2{{Id: 20, Name: "茂名市", PostCode: "525000"}}},
 		{20, "幹", []*owlModel.City2{}},
 		{0, "", []*owlModel.City2{}},
-		{2, "", []*owlModel.City2{}},
 	}
 
-	for i, v := range testCases {
-		if i > 3 {
-			break
-		}
-		got := GetCitiesInProvinceByName(v.inputPvId, v.inputName)
-		if !reflect.DeepEqual(got, v.expected) {
-			c.Error("Error:", got, "!=", v.expected)
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case : [%d]", i + 1)
+
+		c.Assert(GetCitiesInProvinceByName(testCase.inputPvId, testCase.inputName), DeepEquals, testCase.expected, comment)
+	}
+
+	// Asserts the loading of cities of a province without any query condition
+	c.Assert(len(GetCitiesInProvinceByName(2, "")), ocheck.LargerThanOrEqualTo, 11, Commentf("Needs 11 cities at least"))
+}
+
+// Tests the getting of City2 by id
+func (suite *TestLocationSuite) TestGetCity2ById(c *C) {
+	testCases := []*struct {
+		sampleId int16
+		hasFound bool
+	} {
+		{ 3, true },
+		{ -3, false },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := GetCity2ById(testCase.sampleId)
+
+		if testCase.hasFound {
+			c.Assert(testedResult, NotNil, comment)
 		} else {
-			c.Log(got, "==", v.expected)
+			c.Assert(testedResult, IsNil, comment)
 		}
 	}
+}
 
-	got := GetCitiesInProvinceByName(testCases[4].inputPvId, testCases[4].inputName)
-	if len(got) >= 11 {
-		c.Log("Case ct_pv_id=2, ct_name=\"\": PASS")
-	} else {
-		c.Error("Case ct_pv_id=2, ct_name=\"\": Checking len(got) >= 11...FAIL")
+// Tests getting of cities by name prefix
+func (suite *TestLocationSuite) TestGetCit2sByName(c *C) {
+	testCases := []*struct {
+		sampleNamePrefix string
+		leastNumber int
+	} {
+		{ "大", 3 },
+		{ "NO!!", 0 },
+		{ "", 295 },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := GetCity2sByName(testCase.sampleNamePrefix)
+
+		c.Assert(
+			len(testedResult), ocheck.LargerThanOrEqualTo, testCase.leastNumber,
+			comment,
+		)
 	}
 }
 

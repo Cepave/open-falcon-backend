@@ -145,10 +145,12 @@ func (suite *TestRdbSuite) TestInTx(c *C) {
 	/**
 	 * Builds committed data
 	 */
-	testedCtrl.InTx(TxCallbackFunc(func(tx *sql.Tx) {
+	testedCtrl.InTx(TxCallbackFunc(func(tx *sql.Tx) TxFinale {
 		tx.Exec("INSERT INTO test_in_tx VALUES(21, 'v-21')")
 		tx.Exec("INSERT INTO test_in_tx VALUES(22, 'v-22')")
 		tx.Exec("INSERT INTO test_in_tx VALUES(23, 'v-23')")
+
+		return TxCommit
 	}))
 	assertNumberOfDataInTx(c, testedCtrl, 3)
 	// :~)
@@ -158,11 +160,13 @@ func (suite *TestRdbSuite) TestInTx(c *C) {
 	 * Builds rollbacked data
 	 */
 	var testedFunc = func() {
-		testedCtrl.InTx(TxCallbackFunc(func(tx *sql.Tx) {
+		testedCtrl.InTx(TxCallbackFunc(func(tx *sql.Tx) TxFinale {
 			tx.Exec("INSERT INTO test_in_tx VALUES(123, 'v-123')")
 			tx.Exec("INSERT INTO test_in_tx VALUES(124, 'v-124')")
 			_, err := tx.Exec("INSERT INTO test_in_tx VALUES(21, 'v-21')")
 			DbPanic(err)
+
+			return TxCommit
 		}))
 	}
 

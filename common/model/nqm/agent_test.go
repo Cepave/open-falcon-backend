@@ -34,7 +34,7 @@ func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 
 // Tests the data validation of AgentForAdding
 func (suite *TestAgentSuite) TestValidateOfAgentForAdding(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		fieldName string
 		fieldValue interface{}
 	} {

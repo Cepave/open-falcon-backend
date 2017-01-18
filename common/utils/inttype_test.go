@@ -10,7 +10,7 @@ var _ = Suite(&TestIntTypeSuite{})
 
 // Tests the convertion from array of uint64 to uint32
 func (suite *TestIntTypeSuite) TestUintTo32(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		source []uint64
 		expectedResult []uint32
 	} {
@@ -30,7 +30,7 @@ func (suite *TestIntTypeSuite) TestUintTo32(c *C) {
 
 // Tests the convertion from array of uint64 to uint16
 func (suite *TestIntTypeSuite) TestUintTo16(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		source []uint64
 		expectedResult []uint16
 	} {
@@ -50,7 +50,7 @@ func (suite *TestIntTypeSuite) TestUintTo16(c *C) {
 
 // Tests the convertion from array of uint64 to uint8
 func (suite *TestIntTypeSuite) TestUintTo8(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		source []uint64
 		expectedResult []uint8
 	} {
@@ -70,7 +70,7 @@ func (suite *TestIntTypeSuite) TestUintTo8(c *C) {
 
 // Tests the convertion from array of int64 to int32
 func (suite *TestIntTypeSuite) TestIntTo32(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		source []int64
 		expectedResult []int32
 	} {
@@ -90,7 +90,7 @@ func (suite *TestIntTypeSuite) TestIntTo32(c *C) {
 
 // Tests the convertion from array of int64 to int16
 func (suite *TestIntTypeSuite) TestIntTo16(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		source []int64
 		expectedResult []int16
 	} {
@@ -110,7 +110,7 @@ func (suite *TestIntTypeSuite) TestIntTo16(c *C) {
 
 // Tests the convertion from array of int64 to int8
 func (suite *TestIntTypeSuite) TestIntTo8(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		source []int64
 		expectedResult []int8
 	} {
@@ -125,5 +125,49 @@ func (suite *TestIntTypeSuite) TestIntTo8(c *C) {
 		c.Assert(
 			IntTo8(testCase.source), DeepEquals, testCase.expectedResult,
 		)
+	}
+}
+
+// Tests the sorting and unique for int64
+func (suite *TestIntTypeSuite) TestSortAndUniqueInt64(c *C) {
+	testCases := []*struct {
+		source []int64
+		expectedResult []int64
+	} {
+		{
+			[]int64 { 30, 30, -10, 10, -7, 22, },
+			[]int64 { -10, -7, 10, 22, 30, },
+		},
+		{ nil, nil },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := SortAndUniqueInt64(testCase.source)
+
+		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
+	}
+}
+
+// Tests the sorting and unique for uint64
+func (suite *TestIntTypeSuite) TestSortAndUniqueUint64(c *C) {
+	testCases := []*struct {
+		source []uint64
+		expectedResult []uint64
+	} {
+		{
+			[]uint64 { 30, 30, 10, 10, 7, 22 },
+			[]uint64 { 7, 10, 22, 30 },
+		},
+		{ nil, nil },
+	}
+
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
+		testedResult := SortAndUniqueUint64(testCase.source)
+
+		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
 	}
 }

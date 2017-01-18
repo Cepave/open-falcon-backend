@@ -3,14 +3,22 @@ package nqm
 import (
 	"fmt"
 	"database/sql"
+	"net"
+	"reflect"
+
 	"github.com/jinzhu/gorm"
+	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/jmoiron/sqlx"
+
+	tb "github.com/Cepave/open-falcon-backend/common/textbuilder"
+	sqlb "github.com/Cepave/open-falcon-backend/common/textbuilder/sql"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
-	"github.com/jmoiron/sqlx"
 )
 
 type ErrDuplicatedNqmAgent struct {
@@ -117,6 +125,183 @@ func GetAgentById(agentId int32) *nqmModel.Agent {
 
 	loadedAgent.AfterLoad()
 	return loadedAgent
+}
+
+func GetSimpleAgent1ById(agentId int32) *nqmModel.SimpleAgent1 {
+	var result nqmModel.SimpleAgent1
+
+	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
+		&result,
+		`
+		SELECT ag_id, ag_name, ag_hostname, ag_ip_address,
+			ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id
+		FROM nqm_agent
+		WHERE ag_id = ?
+		`,
+		agentId,
+	) {
+		return nil
+	}
+
+	return &result
+}
+
+func LoadSimpleAgent1sByFilter(filter *nqmModel.AgentFilter) []*nqmModel.SimpleAgent1 {
+	var result []*nqmModel.SimpleAgent1
+
+	/**
+	 * Builds ( <expr> OR <expr> OR ... ) of SQL
+	 */
+	var buildRepeatOr = func(syntax string, arrayObject interface{}) tb.TextGetter {
+		return tb.Surrounding(
+			t.S("( "),
+			tb.RepeatAndJoinByLen(t.S(syntax), sqlb.C["or"], arrayObject),
+			t.S(" )"),
+		)
+	}
+	// :~)
+
+	/**
+	 * Processes the arguments used in query
+	 */
+	var sqlArgs []interface{}
+	sqlArgs = utils.AppendToAny(sqlArgs, filter.Name)
+	sqlArgs = utils.AppendToAny(sqlArgs, filter.Hostname)
+	sqlArgs = utils.AppendToAny(sqlArgs, filter.ConnectionId)
+
+	sqlArgs = utils.MakeAbstractArray(sqlArgs).
+		MapTo(
+			utils.TypedFuncToMapper(func(v string) string {
+				return v + "%"
+			}),
+			utils.TypeOfString,
+		).GetArrayOfAny()
+
+	// Process ip address
+	sqlArgs = append(
+		sqlArgs,
+		utils.MakeAbstractArray(filter.IpAddress).
+			MapTo(
+				utils.TypedFuncToMapper(func(v string) []byte {
+					bytes, err := commonDb.IpV4ToBytesForLike(v)
+					if err != nil {
+						panic(err)
+					}
+
+					return bytes
+				}),
+				utils.ATypeOfByte,
+			).GetArrayOfAny()...,
+	)
+	// :~)
+
+	DbFacade.SqlxDbCtrl.Select(
+		&result,
+		`
+		SELECT ag_id, ag_name, ag_hostname, ag_ip_address,
+			ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id
+		FROM nqm_agent
+		` +
+		sqlb.Where(
+			sqlb.And(
+				buildRepeatOr("ag_name LIKE ?", filter.Name),
+				buildRepeatOr("ag_hostname LIKE ?", filter.Hostname),
+				buildRepeatOr("ag_connection_id LIKE ?", filter.ConnectionId),
+				buildRepeatOr("ag_ip_address LIKE ?", filter.IpAddress),
+			),
+		).String(),
+		sqlArgs...,
+	)
+
+	return result
+}
+
+type agentInCity struct {
+	AgentId int32 `db:"ag_id"`
+	AgentName string `db:"ag_name"`
+	AgentHostname string `db:"ag_hostname"`
+	AgentIpAddress net.IP `db:"ag_ip_address"`
+	CityId int16 `db:"ct_id"`
+	CityName string `db:"ct_name"`
+	CityPostCode string `db:"ct_post_code"`
+}
+func (a *agentInCity) getCity2() *owlModel.City2 {
+	return &owlModel.City2 {
+		Id: a.CityId,
+		Name: a.CityName,
+		PostCode: a.CityPostCode,
+	}
+}
+func (a *agentInCity) getSimpleAgent1() *nqmModel.SimpleAgent1 {
+	return &nqmModel.SimpleAgent1 {
+		Id: a.AgentId,
+		Name: a.AgentName,
+		Hostname: a.AgentName,
+		IpAddress: a.AgentIpAddress,
+	}
+}
+
+var typeOfSimpleAgent1 = reflect.TypeOf(&nqmModel.SimpleAgent1{})
+func LoadEffectiveAgentsInProvince(provinceId int16) []*nqmModel.SimpleAgent1InCity {
+	var rawResult []*agentInCity
+
+	/**
+	 * Query data from database
+	 */
+	DbFacade.SqlxDbCtrl.Select(
+		&rawResult,
+		`
+		SELECT DISTINCT ag.ag_id, ag.ag_name, ag.ag_hostname, ag.ag_ip_address,
+			ct.ct_id, ct.ct_name, ct.ct_post_code
+		FROM nqm_agent AS ag
+			/**
+			 * Only lists the agents(enabled) has ping task(enabled)
+			 */
+			INNER JOIN
+			nqm_agent_ping_task AS apt
+			ON ag.ag_id = apt.apt_ag_id
+				AND ag.ag_status = TRUE
+			INNER JOIN
+			nqm_ping_task AS pt
+			ON pt.pt_id = apt.apt_pt_id
+				AND pt.pt_enable = TRUE
+			# //:~)
+			INNER JOIN
+			owl_city AS ct
+			ON ag.ag_ct_id = ct.ct_id
+				AND ct.ct_pv_id = ?
+		`,
+		provinceId,
+	)
+	// :~)
+
+	/**
+	 * Grouping data
+	 */
+	grouping := utils.NewGroupingProcessor(typeOfSimpleAgent1)
+	for _, agent := range rawResult {
+		grouping.Put(agent.getCity2(), agent.getSimpleAgent1())
+	}
+	// :~)
+
+	keys := grouping.Keys()
+	result := make([]*nqmModel.SimpleAgent1InCity, len(keys))
+
+	/**
+	 * Builds the result list of agents grouped by city
+	 */
+	i := 0
+	for _, key := range keys {
+		result[i] = &nqmModel.SimpleAgent1InCity {
+			City: grouping.KeyObject(key).(*owlModel.City2),
+			Agents: grouping.Children(key).([]*nqmModel.SimpleAgent1),
+		}
+
+		i++
+	}
+	// :~)
+
+	return result
 }
 
 // Lists the agents by query condition

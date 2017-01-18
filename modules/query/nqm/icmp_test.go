@@ -1,40 +1,41 @@
 package nqm
 
 import (
+	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	rpctest "github.com/Cepave/open-falcon-backend/modules/query/test"
-	"github.com/bitly/go-simplejson"
-	"github.com/gorilla/rpc/v2"
-	. "gopkg.in/check.v1"
+	testHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	sjson "github.com/bitly/go-simplejson"
+	"gopkg.in/gin-gonic/gin.v1"
 	"net/http"
+	. "gopkg.in/check.v1"
 )
 
 type TestNqmLogSuite struct{}
 
 var _ = Suite(&TestNqmLogSuite{})
 
-type queryIcmpByDslTestCase struct {
-	sampleIdOfAgentProvince Id2Bytes
-	expectedNumberOfResult  int
-}
-
 // Tests the query(calling of JSONRPC) by DSL for ICMP log
 func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
-	testCases := []queryIcmpByDslTestCase{
+	testCases := []*struct {
+		sampleIdOfAgentProvince int16
+		expectedNumberOfResult  int
+	} {
 		{15, 1},
 		{20, 2},
 		{23, 0}, // No data
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
+		comment := Commentf("Test Case: %d", i + 1)
+
 		icmpParams := &NqmDsl{
-			GroupingColumns:      []string{"ib_ag_pv_id"},
+			GroupingColumns:      []string{"ag_pv_id"},
 			StartTime:            1328407200,
 			EndTime:              1328493600,
-			IdsOfAgentProvinces:  []Id2Bytes{testCase.sampleIdOfAgentProvince},
-			IdsOfAgentIsps:       []Id2Bytes{16},
-			IdsOfTargetProvinces: []Id2Bytes{31},
-			IdsOfTargetIsps:      []Id2Bytes{87},
+			IdsOfAgentProvinces:  []int16{testCase.sampleIdOfAgentProvince},
+			IdsOfAgentIsps:       []int16{16},
+			IdsOfTargetProvinces: []int16{31},
+			IdsOfTargetIsps:      []int16{87},
 			ProvinceRelation:     -1,
 		}
 
@@ -43,44 +44,49 @@ func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 		/**
 		 * Asserts the content of data
 		 */
-		c.Assert(err, IsNil)
-		c.Assert(len(testedResult), Equals, testCase.expectedNumberOfResult)
+		c.Assert(err, IsNil, comment)
+		c.Assert(len(testedResult), Equals, testCase.expectedNumberOfResult, comment)
 		if testCase.expectedNumberOfResult > 0 {
-			c.Assert(testedResult[0].grouping, DeepEquals, []int32{20, 40})
-			c.Assert(testedResult[0].metrics.Avg, Equals, float32(45.78))
-			c.Assert(testedResult[0].metrics.Max, Equals, int16(88))
-			c.Assert(testedResult[0].metrics.NumberOfAgents, Equals, int32(50))
-			c.Assert(testedResult[0].metrics.NumberOfTargets, Equals, int32(37))
+			c.Assert(testedResult[0].grouping, DeepEquals, []int32{20, 40}, comment)
+			c.Assert(testedResult[0].metrics.Avg, Equals, float64(45.78), comment)
+			c.Assert(testedResult[0].metrics.Max, Equals, int16(88), comment)
+			c.Assert(testedResult[0].metrics.NumberOfAgents, Equals, int32(50), comment)
+			c.Assert(testedResult[0].metrics.NumberOfTargets, Equals, int32(37), comment)
 		}
 		// :~)
 	}
 }
 
 func (s *TestNqmLogSuite) SetUpSuite(c *C) {
-	rpctest.StartMockJsonRpcServer(
+	if !testHttp.HasWebConfigOrSkip(c) {
+		return
+	}
+
+	testHttp.StartGinWebServer(
 		c,
-		func(server *rpc.Server) {
-			server.RegisterService(new(mockNqmService), "NqmEndpoint")
+		func(engine *gin.Engine) {
+			engine.POST("/nqm/icmp/query/by-dsl", mockIcmpService)
 		},
 	)
 
 	g.SetConfig(
 		&g.GlobalConfig{
 			NqmLog: &g.NqmLogConfig{
-				JsonrpcUrl: rpctest.GetUrlOfMockedServer(),
+				ServiceUrl: testHttp.GetWebUrl(),
 			},
 		},
 	)
+
 	initIcmp()
 }
-func (s *TestNqmLogSuite) TearDownSuite(c *C) {
-	rpctest.StopMockJsonRpcServer(c)
-}
 
-type mockNqmService struct{}
+func mockIcmpService(c *gin.Context) {
+	jsonRequestBody := sjson.New()
+	if err := c.BindJSON(jsonRequestBody); err != nil {
+		panic(err)
+	}
 
-func (srv *mockNqmService) QueryIcmpByDsl(r *http.Request, args *IcmpDslArgs, replyResult **[]*simplejson.Json) error {
-	jsonIcmpStatistics := simplejson.New()
+	jsonIcmpStatistics := sjson.New()
 
 	jsonIcmpStatistics.Set("grouping", []int32{20, 40})
 	jsonIcmpStatistics.Set("max", 88)
@@ -95,10 +101,16 @@ func (srv *mockNqmService) QueryIcmpByDsl(r *http.Request, args *IcmpDslArgs, re
 	jsonIcmpStatistics.Set("number_of_agents", 50)
 	jsonIcmpStatistics.Set("number_of_targets", 37)
 
-	dsl := args.Dsl
+	resultList := make([]*sjson.Json, 0)
 
-	resultList := make([]*simplejson.Json, 0)
-	switch dsl.IdsOfAgentProvinces[0] {
+	sampleCondition, err := jsonRequestBody.Get("ids_of_agent_provinces").
+		MustArray()[0].(json.Number).Int64()
+
+	if err != nil {
+		panic(err)
+	}
+
+	switch sampleCondition {
 	case 15:
 		resultList = append(resultList, jsonIcmpStatistics)
 	case 20:
@@ -106,7 +118,5 @@ func (srv *mockNqmService) QueryIcmpByDsl(r *http.Request, args *IcmpDslArgs, re
 		resultList = append(resultList, jsonIcmpStatistics)
 	}
 
-	*replyResult = &resultList
-
-	return nil
+	c.JSON(http.StatusOK, resultList)
 }

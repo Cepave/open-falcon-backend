@@ -51,7 +51,8 @@
     "boss": {
         "addr": "root@tcp(127.0.0.1:3306)/boss?charset=utf8&loc=Asia%2FChongqing",
         "idle": 10,
-        "max": 100
+        "max": 100,
+        "showAll": true
     },
     "shortcut": {
         "falconPortal": "http://11.11.11.11:5050/",

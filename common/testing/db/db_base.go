@@ -2,7 +2,6 @@ package db
 
 import (
 	"flag"
-	"fmt"
 	check "gopkg.in/check.v1"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
@@ -31,7 +30,7 @@ func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
 
 func GetDbConfig(c *check.C) *commonDb.DbConfig {
 	if *dsnMysql == "" {
-		c.Skip(fmt.Sprintf("Skip database testing. Needs \"-dsn_mysql=<MySQL DSN>\""))
+		c.Skip("Skip database testing. Needs \"-dsn_mysql=<MySQL DSN>\"")
 		return nil
 	}
 

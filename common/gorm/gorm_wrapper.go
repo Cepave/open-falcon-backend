@@ -57,6 +57,23 @@ func (self *GormDbExt) PanicIfError() {
 	self.ConvertError.PanicIfDbError(self.gormDb)
 }
 
+func (self *GormDbExt) IsRecordNotFound() bool {
+	return self.gormDb.Error == gorm.ErrRecordNotFound
+}
+
+// Gets the foundValue if there is no error.
+// Or gets notFoundValue if the error is gorm.ErrRecordNotFound
+//
+// This function also calls PanicIfError(
+func (self *GormDbExt) IfRecordNotFound(foundValue interface{}, notFoundValue interface{}) interface{} {
+	if self.IsRecordNotFound() {
+		return notFoundValue
+	}
+
+	self.PanicIfError()
+	return foundValue
+}
+
 // Iterate rows(and close it) with callback
 func (self *GormDbExt) IterateRows(
 	rowsCallback db.RowsCallback,

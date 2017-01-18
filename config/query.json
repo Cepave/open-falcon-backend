@@ -64,7 +64,7 @@
     },
     "local": "%%QUERY_HTTP%%",
     "nqmlog": {
-        "jsonrpcUrl": "http://127.0.0.1:6171/jsonrpc"
+		"serviceUrl": "http://%%CASSANDRA_SERVICE%%"
     },
     "fe": "%%FE%%"
 }

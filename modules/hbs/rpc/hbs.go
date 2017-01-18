@@ -6,14 +6,19 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
+	"github.com/Cepave/open-falcon-backend/common/rpc"
 )
 
-func (t *Hbs) GetExpressions(req model.NullRpcRequest, reply *model.ExpressionResponse) error {
+func (t *Hbs) GetExpressions(req model.NullRpcRequest, reply *model.ExpressionResponse) (err error) {
+	defer rpc.HandleError(&err)()
+
 	reply.Expressions = cache.ExpressionCache.Get()
 	return nil
 }
 
-func (t *Hbs) GetStrategies(req model.NullRpcRequest, reply *model.StrategiesResponse) error {
+func (t *Hbs) GetStrategies(req model.NullRpcRequest, reply *model.StrategiesResponse) (err error) {
+	defer rpc.HandleError(&err)()
+
 	reply.HostStrategies = []*model.HostStrategy{}
 	// 一个机器ID对应多个模板ID
 	hidTids := cache.HostTemplateIds.GetMap()

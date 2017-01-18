@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	event "github.com/Cepave/open-falcon-backend/modules/fe/model/falcon_portal"
 	log "github.com/Sirupsen/logrus"
 )
@@ -64,7 +65,7 @@ func (this *PortalController) OnTimeFeeding() {
 		events = eventsTmp
 	}
 	alertTmpStore, endpoints, err := event.AlertsConvert(events)
-	alertswithInfo := event.GetAlertInfoFromDB(alertTmpStore, endpoints, false)
+	alertswithInfo := event.GetAlertInfoFromDB(alertTmpStore, endpoints, g.Config().BossDB.ShowAll)
 	notes := storeEvents.Enotes
 	anyNew := false
 	if len(events) != 0 || len(notes) != 0 {

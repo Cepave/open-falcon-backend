@@ -2,7 +2,7 @@ package changelog
 
 import (
 	dbsql "database/sql"
-	patchsql "github.com/Cepave/scripts/dbpatch/go/sql"
+	psql "github.com/Cepave/open-falcon-backend/scripts/mysql/dbpatch/go/sql"
 	"fmt"
 	"log"
 )
@@ -58,8 +58,8 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 	/**
 	 * Connect to database
 	 */
-	var dbConfig *patchsql.DatabaseConfig
-	if dbConfig, err = patchsql.NewDatabaseConfig(
+	var dbConfig *psql.DatabaseConfig
+	if dbConfig, err = psql.NewDatabaseConfig(
 		changeLogConfig.DriverName,
 		changeLogConfig.Dsn,
 	)
@@ -73,8 +73,10 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 	/**
 	 * Checking the schema for change log
 	 */
-	if err = dbConfig.Execute(checkChangeLogSchema)
-		err != nil {
+	if err = dbConfig.Execute(checkChangeLogSchema); err != nil {
+		return
+	}
+	if err = fixCharset(dbConfig); err != nil {
 		return
 	}
 	// :~)
@@ -132,7 +134,7 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 // 2. Applies patch to database
 // 3. Update result patching on log in database
 func applyPatch(
-	dbConfig *patchsql.DatabaseConfig,
+	dbConfig *psql.DatabaseConfig,
 	patchConfig *PatchConfig,
 	scripts []string,
 ) (err error) {
@@ -193,7 +195,7 @@ func applyPatch(
 }
 
 // Checks whether or not a patch has been applied on database
-func hasPatchApplied(dbConfig *patchsql.DatabaseConfig, patchConfig *PatchConfig) (result bool, err error) {
+func hasPatchApplied(dbConfig *psql.DatabaseConfig, patchConfig *PatchConfig) (result bool, err error) {
 	result = false
 
 	err = dbConfig.Execute(
@@ -316,7 +318,7 @@ func checkChangeLogSchema(db *dbsql.DB) (err error) {
 			dcl_time_update DATETIME,
 			dcl_message VARCHAR(1024),
 			dcl_comment VARCHAR(1024)
-		)
+		) DEFAULT CHARSET=UTF8
 		`,
 	)
 		err != nil {
@@ -330,6 +332,52 @@ func checkChangeLogSchema(db *dbsql.DB) (err error) {
 		`,
 	)
 	// :~)
+
+	return
+}
+
+// Fix the charset of sysdb_change_log table
+func fixCharset(dbConfig *psql.DatabaseConfig) (err error) {
+	defer func() {
+		p := recover()
+		if p != nil {
+			switch p.(type) {
+			case error:
+				err = p.(error)
+			default:
+				err = fmt.Errorf("Fix charset(sysdb_change_log) error: %v", p)
+			}
+		}
+	}()
+
+	dbName := dbConfig.GetDatabaseName()
+
+	var nonUtf8Count uint
+	dbConfig.SqlxDbCtrl.QueryRowxAndScan(
+		`
+		SELECT COUNT(column_name)
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_SCHEMA = ?
+			AND TABLE_NAME='sysdb_change_log'
+			AND CHARACTER_SET_NAME != 'utf8'
+			AND (COLUMN_TYPE LIKE 'CHAR%' OR COLUMN_TYPE LIKE 'VARCHAR%')
+		`,
+		[]interface{} { dbName },
+		&nonUtf8Count,
+	)
+
+	if nonUtf8Count == 0 {
+		return
+	}
+
+	log.Printf("Modify charset of `sysdb_change_log` for database: [%s]", dbName)
+
+	dbConfig.SqlxDb.MustExec(
+		`
+		ALTER TABLE sysdb_change_log
+		CONVERT TO CHARACTER SET UTF8
+		`,
+	)
 
 	return
 }

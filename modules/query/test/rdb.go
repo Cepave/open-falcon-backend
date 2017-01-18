@@ -4,65 +4,33 @@ import (
 	"database/sql"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/astaxie/beego/orm"
-	"flag"
 	tknet "github.com/toolkits/net"
-	. "gopkg.in/check.v1"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	testDb "github.com/Cepave/open-falcon-backend/common/testing/db"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"time"
+	"gopkg.in/check.v1"
 )
-
-var dsnMysql = flag.String("dsn_mysql", "", "Dsn of Mysql")
 
 var DbForTest *sql.DB
 
-func InitDb() {
-	if *dsnMysql == "" {
-		return
-	}
+func InitDb(c *check.C) {
+	dbFacade := testDb.InitDbFacade(c)
+	owlDb.DbFacade = dbFacade
+	nqmDb.DbFacade = dbFacade
 
-	var err error
-	if DbForTest, err = sql.Open("mysql", *dsnMysql); err != nil {
-
-		log.Fatalf("Cannot connect to database: %v", err)
-	}
+	DbForTest = dbFacade.SqlDb
 }
 
-func ReleaseDb() {
-	if DbForTest != nil {
-		DbForTest.Close()
-		DbForTest = nil
-	}
-}
+func ReleaseDb(c *check.C) {
+	testDb.ReleaseDbFacade(c, owlDb.DbFacade)
 
-var hasInitOrm = false
-
-func InitOrm() {
-
-	if hasInitOrm {
-		return
-	}
-
-	if HasTestDbConfig() && !hasInitOrm {
-		hasInitOrm = true
-		orm.RegisterDataBase("default", "mysql", *dsnMysql)
-	}
-}
-
-// Checks whether or not skipping testing by viable arguments
-func HasDefaultOrmOnPortal(c *C) bool {
-	if !HasTestDbConfig() {
-		c.Skip("Skip Mysql Test: -dsn_mysql=<dsn>")
-	}
-
-	return HasTestDbConfig()
-}
-
-// Checks if the config of database is set
-func HasTestDbConfig() bool {
-	return *dsnMysql != ""
+	DbForTest = nil
+	owlDb.DbFacade = nil
+	nqmDb.DbFacade = nil
 }
 
 // IoC Callback for rows

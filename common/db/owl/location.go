@@ -63,21 +63,51 @@ func CheckHierarchyForCity(provinceId int16, cityId int16) error {
 	return nil
 }
 
-func GetProvincesByName(name string) []*owlModel.Province {
-	var q = DbFacade.GormDb.Model(&owlModel.Province{}).
-		Select(`
-		*
-		`).
-		Where(`
-		pv_name LIKE ?
-		`,
-		name+"%",
+func GetProvinceById(provinceId int16) *owlModel.Province {
+	var result owlModel.Province
+
+	gormDbExt := gormExt.ToDefaultGormDbExt(
+		DbFacade.GormDb.First(&result, provinceId),
 	)
 
-	var results []*owlModel.Province
-	gormExt.ToDefaultGormDbExt(q.Find(&results))
+	return gormDbExt.IfRecordNotFound(&result, (*owlModel.Province)(nil)).
+		(*owlModel.Province)
+}
 
-	return results
+func GetProvincesByName(name string) []*owlModel.Province {
+	var results []*owlModel.Province
+
+	var gormDbExt =	gormExt.ToDefaultGormDbExt(
+		DbFacade.GormDb.Model(&owlModel.Province{}).
+			Where("pv_name LIKE ?", name + "%").
+			Find(&results),
+	)
+
+	return gormDbExt.IfRecordNotFound(results, results).
+		([]*owlModel.Province)
+}
+
+func GetCity2ById(cityId int16) *owlModel.City2 {
+	var result owlModel.City2
+
+	gormDbExt := gormExt.ToDefaultGormDbExt(
+		DbFacade.GormDb.First(&result, cityId),
+	)
+
+	return gormDbExt.IfRecordNotFound(&result, (*owlModel.City2)(nil)).
+		(*owlModel.City2)
+}
+func GetCity2sByName(prefixName string) []*owlModel.City2 {
+	var result []*owlModel.City2
+
+	gormDbExt := gormExt.ToDefaultGormDbExt(
+		DbFacade.GormDb.Model(&owlModel.City2{}).
+			Where("ct_name LIKE ?", prefixName + "%").
+			Find(&result),
+	)
+
+	return gormDbExt.IfRecordNotFound(result, result).
+		([]*owlModel.City2)
 }
 
 func GetCitiesByName(name string) []*city1view {
@@ -115,20 +145,19 @@ func GetCitiesByName(name string) []*city1view {
 
 func GetCitiesInProvinceByName(pvId int, name string) []*owlModel.City2 {
 	var q = DbFacade.GormDb.Model(&owlModel.City2{}).
-		Select(`
-		ct_id, ct_name, ct_post_code
-		`).
-		Where(`
-		ct_pv_id = ?
-		AND
-		ct_name LIKE ?
-		`,
-		pvId,
-		name+"%",
-	)
+		Select("ct_id, ct_name, ct_post_code").
+		Where(
+			`
+			ct_pv_id = ?
+			AND ct_name LIKE ?
+			`,
+			pvId, name + "%",
+		)
 
 	var results []*owlModel.City2
-	gormExt.ToDefaultGormDbExt(q.Find(&results))
+	gormDbExt := gormExt.ToDefaultGormDbExt(q.Find(&results))
 
-	return results
+	return gormDbExt.IfRecordNotFound(
+		results, results,
+	).([]*owlModel.City2)
 }

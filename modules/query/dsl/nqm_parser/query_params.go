@@ -3,18 +3,7 @@ package nqm_parser
 import (
 	"fmt"
 	"time"
-)
-
-// Defines the IR for relation of hosts(between agent and target)
-type HostRelation int8
-
-const (
-	// The relation is unknown
-	UNKNOWN_RELATION HostRelation = -1
-	// Means a property of agent and target must be same
-	SAME_VALUE HostRelation = 1
-	// Means a property of agent and target may not be same
-	NOT_SAME_VALUE HostRelation = 2
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
 
 // The parameters for query
@@ -25,9 +14,9 @@ type QueryParams struct {
 	TargetFilter NodeFilter
 	AgentFilterById NodeFilterById
 	TargetFilterById NodeFilterById
-	IspRelation HostRelation
-	ProvinceRelation HostRelation
-	CityRelation HostRelation
+	IspRelation model.PropRelation
+	ProvinceRelation model.PropRelation
+	CityRelation model.PropRelation
 }
 
 // The filter of node
@@ -49,9 +38,9 @@ type NodeFilterById struct {
 func NewQueryParams() *QueryParams {
 	queryParams := &QueryParams{}
 
-	queryParams.IspRelation = UNKNOWN_RELATION
-	queryParams.ProvinceRelation = UNKNOWN_RELATION
-	queryParams.CityRelation = UNKNOWN_RELATION
+	queryParams.IspRelation = model.NoCondition
+	queryParams.ProvinceRelation = model.NoCondition
+	queryParams.CityRelation = model.NoCondition
 
 	return queryParams
 }

@@ -991,9 +991,6 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 		if timestampFrom >= timestampTo {
 			setError("Value of timestampFrom should be less than value of timestampTo.", result)
 		}
-		if timestampTo > time.Now().Unix() {
-			setError("Value of timestampTo should be equal to or less than value of now.", result)
-		}
 		return timestampFrom, timestampTo
 	} else if strings.Index(duration, "d") > -1 || strings.Index(duration, "min") > -1 {
 		unit := ""
@@ -1640,19 +1637,62 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getTicker(timestamp int64) string {
+	now := time.Now().Unix()
+	diff := now - timestamp
+	if diff <= 600 {
+		return time.Unix(timestamp, 0).Format("2006-01-02 15:04")
+	}
+	ticker := ""
+	date := time.Unix(timestamp, 0)
+	minute := date.Format("04")
+	value, err := strconv.Atoi(minute)
+	if err == nil {
+		residue := int(math.Mod(float64(value), 5))
+		value -= residue
+		minute = strconv.Itoa(value)
+		if len(minute) == 1 {
+			minute = "0" + minute
+		}
+		ticker = date.Format("2006-01-02 15:") + minute
+	}
+	return ticker
+}
+
+func getTimestampFromTicker(ticker string) int64 {
+	timestamp := int64(0)
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	timeFormat := "2006-01-02 15:04"
+	date, err := time.ParseInLocation(timeFormat, ticker, loc)
+	if err == nil {
+		timestamp = date.Unix()
+	}
+	return timestamp
+}
+
+func getGraphQueryData(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
+	if diff > 43200 {
+		dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
+		data = addRecentData(data, dataRecent)
+	}
+	return data
+}
+
 func getBandwidthsSum(metricType string, duration string, hostnames []string, filter string, result map[string]interface{}) []interface{} {
 	items := []interface{}{}
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
 	metricMap := map[string]interface{}{}
-	valuesMap := map[string]map[float64]float64{}
-	timestamps := []float64{}
+	valuesMap := map[string]map[string]float64{}
+	timestamps := []int64{}
+	tickers := []string{}
+	tickersMap := map[string]float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
-		if diff > 43200 {
-			dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
-			data = addRecentData(data, dataRecent)
-		}
+		data := getGraphQueryData(metrics, duration, hostnames, result)
 		index := -1
 		max := 0
 		for key, item := range data {
@@ -1662,43 +1702,58 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 			}
 		}
 		for _, rrdObj := range data[index].Values {
-			timestamps = append(timestamps, float64(rrdObj.Timestamp))
-		}
-		if len(timestamps) > 0 {
-			for _, metric := range metrics {
-				valuesPair := map[float64]float64{}
-				for _, timestamp := range timestamps {
-					valuesPair[timestamp] = float64(0)
+			ticker := getTicker(rrdObj.Timestamp)
+			if _, ok := tickersMap[ticker]; !ok {
+				if len(ticker) > 0 {
+					tickersMap[ticker] = float64(0)
+					tickers = append(tickers, ticker)
 				}
-				valuesMap[metric] = valuesPair
+			}
+			timestamps = append(timestamps, rrdObj.Timestamp)
+		}
+		if len(tickers) > 0 {
+			for _, metric := range metrics {
+				tickerMap := map[string]float64{}
+				for _, ticker := range tickers {
+					tickerMap[ticker] = float64(0)
+				}
+				valuesMap[metric] = tickerMap
 			}
 			for _, series := range data {
-				valuesPair := valuesMap[series.Counter]
+				metric := series.Counter
+				tickerMap := valuesMap[metric]
 				for _, rrdObj := range series.Values {
 					if !math.IsNaN(float64(rrdObj.Value)) {
-						valuesPair[float64(rrdObj.Timestamp)] += float64(rrdObj.Value)
+						ticker := getTicker(rrdObj.Timestamp)
+						tickerMap[ticker] += float64(rrdObj.Value)
 					}
 				}
-				values := []float64{}
-				for _, timestamp := range timestamps {
-					if valuesPair[timestamp] >= 0 {
-						values = append(values, valuesPair[timestamp])
-					}
-				}
-				metricMap[series.Counter] = values
+				metricMap[metric] = tickerMap
 			}
 		}
 	}
-	if len(timestamps) > 0 {
+	if len(tickers) > 0 {
 		for _, metric := range metrics {
-			slice := metricMap[metric].([]float64)
-			data := []interface{}{}
-			for key, value := range slice {
-				datum := []interface{}{
-					timestamps[key] * 1000,
-					value,
+			tickerMap := metricMap[metric].(map[string]float64)
+			max := float64(0)
+			for _, ticker := range tickers {
+				value := tickerMap[ticker]
+				if max < value {
+					max = value
 				}
-				data = append(data, datum)
+			}
+			threshold := max * 0.02
+			data := [][]float64{}
+			for _, ticker := range tickers {
+				timestamp := getTimestampFromTicker(ticker)
+				value := tickerMap[ticker]
+				if value > threshold {
+					datum := []float64{
+						float64(timestamp * 1000),
+						value,
+					}
+					data = append(data, datum)
+				}
 			}
 			item := map[string]interface{}{
 				"host":   strings.Join(hostnames, ","),

@@ -1,0 +1,79 @@
+{
+package metric_parser
+}
+
+MetricFilter = e:Expr EOF {
+	return e, nil
+}
+
+Expr = _ t:OrTerm orTerms:OrClause* _ {
+	return newBoolFilterImpl(true, t, orTerms), nil
+}
+
+OrClause = _ "or" EMPTY_CHAR+ t:OrTerm {
+	return t, nil
+} / _ "or" !(EMPTY_CHAR+ OrTerm) {
+	panic(fmt.Errorf("OR what? \"%v\"", string(c.text)))
+}
+
+OrTerm = t:Term andTerms:AndClause* {
+	return newBoolFilterImpl(false, t, andTerms), nil
+}
+
+AndClause = _ "and" EMPTY_CHAR+ t:Term {
+	return t, nil
+} / _ "and" !(EMPTY_CHAR+ OrTerm) {
+	panic(fmt.Errorf("AND what? \"%v\"", string(c.text)))
+}
+
+Term = t:(QuoteExpr / FactorOp) {
+	return t, nil
+}
+
+QuoteExpr = '(' _ e:Expr rightParen:')'? {
+	if rightParen == nil {
+		panic(fmt.Errorf("Need right parenthese ')' for: \"%v\"", string(c.text)))
+	}
+
+	return e, nil
+}
+FactorOp = left:Factor _ op:Op _ right:Factor {
+	return newFilterImpl(left, string(op.([]byte)), right), nil
+} / left:Factor _ Op {
+	panic(fmt.Errorf("Need right factor: [%s]", string(c.text)))
+}
+
+Op = VIABLE_CHARS {
+	op := string(c.text)
+
+	switch op {
+	case ">=", "<=", "==", "!=", ">", "<":
+		return c.text, nil
+	}
+
+	panic(fmt.Errorf("Unknown operator: [%s]", op))
+}
+
+Factor = v:(Metric / NUMBER) &END_WORD {
+	return v, nil
+} / VIABLE_CHARS {
+	panic(fmt.Errorf("Unknown factor: [%s]", string(c.text)))
+}
+
+Metric = '$' metric:("max" / "min" / "avg" / "med" / "mdev" / "loss" / "count" / "pck_sent" / "pck_received" / "num_agent" / "num_target") {
+	metricName := string(metric.([]byte))
+	return mapOfMetric[metricName], nil
+}
+
+NUMBER = [0-9]+ ('.' [0-9]+)? {
+	return string(c.text), nil
+}
+
+VIABLE_CHARS = [^ \t\n\r]+ {
+	return string(c.text), nil
+}
+
+_ = EMPTY_CHAR*
+END_WORD = EOF / EMPTY_CHAR+ / ')'
+EMPTY_CHAR = [ \t\n\r]
+EOF = !.

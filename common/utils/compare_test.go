@@ -10,7 +10,7 @@ var _ = Suite(&TestCompareSuite{})
 
 // Tests the compare of two arrays
 func (suite *TestCompareSuite) TestAreArrayOfStringsSame(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		leftArray []string
 		rightArray []string
 		expectedResult bool

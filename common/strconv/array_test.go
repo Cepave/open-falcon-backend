@@ -10,7 +10,7 @@ var _ = Suite(&TestArraySuite{})
 
 // Tests the spliting of a string to int array
 func (suite *TestArraySuite) TestSplitStringToIntArray(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		values string
 		expectedResult []int64
 	} {
@@ -25,7 +25,7 @@ func (suite *TestArraySuite) TestSplitStringToIntArray(c *C) {
 }
 // Tests the spliting of a string to uint array
 func (suite *TestArraySuite) TestSplitStringToUintArray(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		values string
 		expectedResult []uint64
 	} {

@@ -10,6 +10,7 @@ import (
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 
 	. "gopkg.in/check.v1"
 )
@@ -100,20 +101,34 @@ func (targets byId) Swap(i, j int)      { targets[i], targets[j] = targets[j], t
 func (targets byId) Less(i, j int) bool { return targets[i].Id < targets[j].Id }
 
 func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
-	testedCases := []struct {
+	testedCases := []*struct {
 		agentId             int
 		expectedIdOfTargets []int
-	}{
+	} {
 		{230001, []int{ 402001, 402002, 402003 }}, // All of the targets
 		{230002, []int{ 402001, 402002 }}, // Targets are matched by ISP(other matchings are tested on vw_enabled_targets_by_ping_task)
 		{230003, []int{ 402001 }}, // Nothing matched except probed by all
 	}
 
-	for _, testCase := range testedCases {
-		testedTargets, err := GetTargetsByAgentForRpc(testCase.agentId)
+	expectedIdOfGroupTags := map[int][]int32 {
+		402001: []int32{},
+		402002: []int32{ 12021, 12022, 12023 },
+		402003: []int32{ 12023, 12024 },
+	}
 
-		c.Assert(err, IsNil)
-		c.Assert(len(testedTargets), Equals, len(testCase.expectedIdOfTargets))
+	for i, testCase := range testedCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		testedTargets, err := GetTargetsByAgentForRpc(
+			&nqmModel.NqmAgent{
+				Id: testCase.agentId,
+				IpAddress: net.ParseIP("10.29.34.11"),
+			},
+		)
+
+		c.Assert(err, IsNil, comment)
+		c.Assert(len(testedTargets), Equals, len(testCase.expectedIdOfTargets), comment)
 
 		sort.Sort(byId(testedTargets))
 
@@ -121,18 +136,18 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 		 * Asserts the matching for concise id of targets
 		 */
 		for i, target := range testedTargets {
-			c.Assert(target.Id, Equals, testCase.expectedIdOfTargets[i])
+			c.Assert(target.Id, Equals, testCase.expectedIdOfTargets[i], comment)
 
-			switch target.Id {
-			case 402001:
-				c.Assert(target.GroupTagIds, DeepEquals, []int32{})
-			case 402002:
-				c.Assert(target.GroupTagIds, DeepEquals, []int32 { 12021, 12022, 12023 })
-			case 402003:
-				c.Assert(target.GroupTagIds, DeepEquals, []int32 { 12023, 12024 })
-			default:
+			/**
+			 * Asserts the group tags of target
+			 */
+			expectedIdsOfGroupTags, ok := expectedIdOfGroupTags[target.Id]
+			if !ok {
 				c.Fatalf("Unknown id of target: [%v]", target.Id)
 			}
+
+			c.Assert(target.GroupTagIds, DeepEquals, expectedIdsOfGroupTags, comment)
+			// :~)
 		}
 		// :~)
 	}
@@ -217,7 +232,7 @@ func assertRefreshedPingTask(c *C, testCase *getAndRefreshNeedPingAgentTestCase)
  * Tests the state of ping task
  */
 func (suite *TestDbNqmSuite) TestGetPingTaskState(c *C) {
-	testedCases := []struct {
+	testedCases := []*struct {
 		agentId        int
 		expectedStatus int
 	} {
@@ -243,7 +258,7 @@ func (suite *TestDbNqmSuite) TestGetPingTaskState(c *C) {
  * Tests the triggers for filters of PING TASK
  */
 func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
-	testedCases := []struct {
+	testedCases := []*struct {
 		sqls []string
 		expectedNumberOfIspFilters int
 		expectedNumberOfProvinceFilters int
@@ -326,7 +341,7 @@ func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
 }
 
 func (suite *TestDbNqmSuite) Test_vw_enabled_targets_by_ping_task(c *C) {
-	testCases := []struct {
+	testCases := []*struct {
 		pingTaskId int
 		expectedNumberOfData int
 	} {
@@ -609,9 +624,9 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_connection_id, ag_hostname, ag_ip_address)
 			VALUES
-				(230001, 40091, 'tl-01', 'ccb1.ccc', 0x12345678),
-				(230002, 40091, 'tl-02', 'ccb2.ccc', 0x22345678),
-				(230003, 40091, 'tl-03', 'ccb3.ccc', 0x32345678)
+				(230001, 40091, 'tl-01', 'ccb1.ccc', 0x0A193D4B),
+				(230002, 40091, 'tl-02', 'ccb2.ccc', 0x0A193D4C),
+				(230003, 40091, 'tl-03', 'ccb3.ccc', 0x0A193D4D)
 			`,
 			`
 			INSERT INTO nqm_target(
@@ -630,8 +645,14 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 				 * Disabled target
 				 */
 				(402005, 'tgn-4', '1.2.3.11', 5, -1, -1, true, -1, false, true),
-				(402006, 'tgn-5', '1.2.3.12', 5, -1, -1, true, -1, true, false)
+				(402006, 'tgn-5', '1.2.3.12', 5, -1, -1, true, -1, true, false),
 				# :~)
+				/**
+				 * The ip of target is as same as IP of agent
+				 *
+				 * Probed by all
+				 */
+				(402008, 'tg-same-agent', '10.29.34.11', -1, -1, -1, true, -1, true, true)
 			`,
 			`
 			INSERT INTO nqm_target_group_tag(tgt_tg_id, tgt_gt_id)

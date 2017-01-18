@@ -3,7 +3,7 @@ package changelog
 import (
 	"testing"
 	dbsql "database/sql"
-	patchsql "github.com/Cepave/scripts/dbpatch/go/sql"
+	patchsql "github.com/Cepave/open-falcon-backend/scripts/mysql/dbpatch/go/sql"
 	"flag"
 	. "gopkg.in/check.v1"
 )
@@ -93,7 +93,7 @@ func (s *ChangeLogSuite) SetUpSuite(c *C) {
 	flag.Parse()
 
 	if *driverName == "" {
-		c.Log("No database assigned, some tests would be skipped")
+		c.Log("No database assigned, some tests would be skipped. -driverName=<> -dsn=<>")
 		return
 	}
 
