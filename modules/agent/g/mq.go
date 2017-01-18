@@ -3,7 +3,6 @@ package g
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/common/model"
 	log "github.com/Sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -14,7 +13,7 @@ func logOnError(err error, msg string) {
 	}
 }
 
-func SendToMQ(metrics []*model.MetricValue) {
+func SendToMQ(metrics []*MetricValueExtend) {
 	if len(metrics) == 0 {
 		return
 	}
