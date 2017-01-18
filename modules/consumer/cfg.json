@@ -1,4 +1,5 @@
 {
+    "logLevel": "debug",
     "mq": {
       "user": "mq",
       "pass": "password",

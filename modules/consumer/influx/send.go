@@ -60,6 +60,7 @@ func transfer(msg []byte) {
 		log.Println("Influx marshalling Error: ", err)
 	}
 
+	log.Debugf("send datapoint %s to influx database", pt)
 	bp.AddPoint(pt)
 
 	// Write the batch
