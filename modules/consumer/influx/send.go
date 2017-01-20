@@ -38,7 +38,7 @@ func transfer(msg []byte) {
 	})
 
 	if err != nil {
-		log.Println("Influx create batch points error: ", err)
+		log.Errorf("Influx create batch points error: %v", err)
 	}
 
 	// Create a point and add to batch from msg
@@ -57,7 +57,7 @@ func transfer(msg []byte) {
 		time.Unix(v.Timestamp, 0))
 
 	if err != nil {
-		log.Println("Influx marshalling Error: ", err)
+		log.Printf("Influx marshalling Error: %v", err)
 	}
 
 	log.Debugf("send datapoint %s to influx database", pt)
@@ -66,9 +66,14 @@ func transfer(msg []byte) {
 	// Write the batch
 	err = conn.Write(bp)
 	if err != nil {
-		log.Println("Influx write to database error: ", err)
-		// if client cannot write, close it.
-		conn.Close()
-		conn = nil
+		log.Errorf("Influx write to database error: %v", err)
+		duration, version, err := conn.Ping(time.Duration(10) * time.Second)
+		log.Printf("Influx ping result -> duration: %v, version: %v", duration, version)
+		if err != nil {
+			// if client ping error, then close connection.
+			log.Errorf("Influx ping database error: %v", err)
+			conn.Close()
+			conn = nil
+		}
 	}
 }

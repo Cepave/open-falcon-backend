@@ -4,8 +4,8 @@ host="localhost"
 id=root
 pw=password
 AUTH=$(echo -u $id:$pw)
-DB=owl
-MEASUREMENT="mike"
+DB=extend
+MEASUREMENT="service.http.lvs.443.port"
 
 createdb(){
     echo "create database $DB"
@@ -17,11 +17,10 @@ database(){
 }
 
 measurement(){
-    curl -G "http://$host:8086/query" $AUTH --data-urlencode "db=owl" --data-urlencode "q=SHOW MEASUREMENTS"
+    curl -G "http://$host:8086/query" $AUTH --data-urlencode "db=$DB" --data-urlencode "q=SHOW MEASUREMENTS"
 }
 
 query(){
-#    curl -G "http://$host:8086/query?pretty=true" $AUTH --data-urlencode "db=square_holes" --data-urlencode "q=SELECT MEAN(value) FROM cpu_wait" 
     curl -G "http://$host:8086/query?pretty=true" $AUTH --data-urlencode "db=$DB" --data-urlencode "q=SELECT * FROM \"$MEASUREMENT\""
 }
 

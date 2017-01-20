@@ -8,7 +8,7 @@
     "influx": {
       "user": "root",
       "pass": "password",
-      "db": "owl",
+      "db": "extend",
       "addr": "http://10.20.30.40:8086"
     }
 }
