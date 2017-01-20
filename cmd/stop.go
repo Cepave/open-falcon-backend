@@ -16,9 +16,7 @@ var Stop = &cobra.Command{
 	Long: `
 Stop the specified Open-Falcon modules.
 A module represents a single node in a cluster.
-
 Modules:
-
   ` + "all " + strings.Join(g.AllModulesInOrder, " "),
 	RunE: stop,
 }

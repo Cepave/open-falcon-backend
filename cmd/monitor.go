@@ -16,9 +16,7 @@ var Monitor = &cobra.Command{
 	Long: `
 Display the log of the specified Open-Falcon module.
 A module represents a single node in a cluster.
-
 Modules:
-
   ` + strings.Join(g.AllModulesInOrder, " "),
 	RunE: monitor,
 }
