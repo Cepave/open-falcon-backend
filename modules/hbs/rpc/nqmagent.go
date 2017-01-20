@@ -45,13 +45,9 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	/**
 	 * Checks and loads agent which is needing performing ping task
 	 */
-	var nqmAgent *commonModel.NqmAgent
-	if nqmAgent, err = dbNqm.GetAndRefreshNeedPingAgentForRpc(
+	nqmAgent := dbNqm.GetAndRefreshNeedPingAgentForRpc(
 		currentAgent.Id, time.Now(),
-	); err != nil {
-		return
-	}
-
+	);
 	if nqmAgent == nil {
 		return
 	}

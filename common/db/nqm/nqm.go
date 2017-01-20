@@ -3,7 +3,6 @@ package nqm
 import (
 	"database/sql"
 	"time"
-	"fmt"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
@@ -110,34 +109,16 @@ func RefreshAgentInfo(agent *nqmModel.NqmAgent) (dbError error) {
 // Reasons for not doing ping task:
 // 1) No ping task configuration
 // 2) The period is overed yet
-func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) (result *commonModel.NqmAgent, err error) {
-	dbCtrl := commonDb.NewDbController(DbFacade.SqlDb)
-	dbCtrl.RegisterPanicHandler(commonDb.NewDbErrorCapture(&err))
-
-	result = &commonModel.NqmAgent{}
-
-	dbCtrl.InTx(commonDb.TxCallbackFunc(
-		func (tx *sql.Tx) commonDb.TxFinale {
-			txRefreshAgent(tx, agentId, checkedTime, result)
-			return commonDb.TxCommit
-		},
-	))
-
-	if err != nil {
-		result = nil
+func GetAndRefreshNeedPingAgentForRpc(agentId int, checkedTime time.Time) *commonModel.NqmAgent {
+	if updateEffectivePingTask(agentId, checkedTime) {
+		return loadAgentDetail(agentId)
 	}
 
-	return
+	return nil
 }
 
-func txRefreshAgent(tx *sql.Tx, agentId int, checkedTime time.Time, result *commonModel.NqmAgent) {
-	var temporaryTableName = fmt.Sprintf("tmp_effective_ping_task_%d", agentId)
-
-	tx.Exec(fmt.Sprintf(
-		"DROP TEMPORARY TABLE %s IF EXISTS", temporaryTableName,
-	));
-
-	tx.Exec(
+func updateEffectivePingTask(agentId int, checkedTime time.Time) bool {
+	result := DbFacade.SqlDbCtrl.Exec(
 		/**
 		 * Creates temporary table for matched ping task
 		 *
@@ -146,58 +127,61 @@ func txRefreshAgent(tx *sql.Tx, agentId int, checkedTime time.Time, result *comm
 		 * 2) The ping task is enabled
 		 * 3) The period of time is elapsed or the ping task is never executed
 		 */
-		fmt.Sprintf(`
-			CREATE TEMPORARY TABLE IF NOT EXISTS %s
-			AS
-			SELECT apt.apt_pt_id AS pt_id
-			FROM nqm_agent AS ag
-				INNER JOIN
-				nqm_agent_ping_task AS apt
-				ON apt.apt_ag_id = ?
-					AND ag.ag_id = apt.apt_ag_id
-					AND ag.ag_status = TRUE # Agent must be enabled
-				INNER JOIN
-				nqm_ping_task AS pt
-				ON apt.apt_pt_id = pt.pt_id
-					AND pt.pt_enable = TRUE # Task must be enabled
-					AND TIMESTAMPDIFF(
-						MINUTE,
-						IFNULL(apt.apt_time_last_execute, FROM_UNIXTIME(0)), /* Use the very first time */
-						FROM_UNIXTIME(?)
-					) >= pt.pt_period
-			`,
-			temporaryTableName,
-		),
-		// :~)
-		agentId, checkedTime.Unix(),
-	);
-
-	var numberOfPingTasks int
-
-	/**
-	 * If There is no ping task, this function gives no data
-	 */
-	rowForNumberOfPingTask := tx.QueryRow(fmt.Sprintf(
 		`
-		SELECT COUNT(pt_id) AS number_of_ping_task
-		FROM %s
+		UPDATE
+			nqm_agent AS ag
+			INNER JOIN
+			nqm_agent_ping_task AS apt
+			ON apt.apt_ag_id = ?
+				AND ag.ag_id = apt.apt_ag_id
+				AND ag.ag_status = TRUE # Agent must be enabled
+			INNER JOIN
+			nqm_ping_task AS pt
+			ON apt.apt_pt_id = pt.pt_id
+				AND pt.pt_enable = TRUE # Task must be enabled
+				AND TIMESTAMPDIFF(
+					MINUTE,
+					IFNULL(apt.apt_time_last_execute, FROM_UNIXTIME(0)), /* Use the very first time */
+					FROM_UNIXTIME(?)
+				) >= pt.pt_period
+		SET apt_time_last_execute = FROM_UNIXTIME(?)
 		`,
-		temporaryTableName,
-	))
+		// :~)
+		agentId, checkedTime.Unix(), checkedTime.Unix(),
+	)
 
-	commonDb.ToRowExt(rowForNumberOfPingTask).Scan(&numberOfPingTasks);
-
-	if numberOfPingTasks == 0 {
-		return
-	}
-	// :~)
-
+	return commonDb.ToResultExt(result).RowsAffected() > 0
+}
+func loadAgentDetail(agentId int) *commonModel.NqmAgent {
 	var dbAgentName sql.NullString
 	var concatedIdsOfGroupTag sql.NullString
 
-	result.Id = agentId
+	loadedAgent := &commonModel.NqmAgent{}
+	DbFacade.SqlDbCtrl.QueryForRow(
+		commonDb.RowCallbackFunc(func(row *sql.Row) {
+			loadedAgent.Id = agentId
+			commonDb.ToRowExt(row).Scan(
+				&dbAgentName,
+				&loadedAgent.IspId, &loadedAgent.IspName,
+				&loadedAgent.ProvinceId, &loadedAgent.ProvinceName,
+				&loadedAgent.CityId, &loadedAgent.CityName,
+				&loadedAgent.NameTagId, &concatedIdsOfGroupTag,
+			)
 
-	rowOfAgent := tx.QueryRow(
+			loadedAgent.GroupTagIds = utils.IntTo32(
+				commonDb.GroupedStringToIntArray(concatedIdsOfGroupTag, ","),
+			)
+
+			/**
+			 * Loads name of agent
+			 */
+			if dbAgentName.Valid {
+				loadedAgent.Name = dbAgentName.String
+			} else {
+				loadedAgent.Name = commonModel.UNDEFINED_STRING
+			}
+			// :~)
+		}),
 		/**
 		 * Gets data of agent if any of the ping task need to be executed
 		 */
@@ -228,45 +212,8 @@ func txRefreshAgent(tx *sql.Tx, agentId int, checkedTime time.Time, result *comm
 		agentId,
 	)
 
-	commonDb.ToRowExt(rowOfAgent).Scan(
-		&dbAgentName,
-		&result.IspId, &result.IspName,
-		&result.ProvinceId, &result.ProvinceName,
-		&result.CityId, &result.CityName,
-		&result.NameTagId, &concatedIdsOfGroupTag,
-	)
 
-	result.GroupTagIds = utils.IntTo32(
-		commonDb.GroupedStringToIntArray(concatedIdsOfGroupTag, ","),
-	)
-
-	/**
-	 * Loads name of agent
-	 */
-	if dbAgentName.Valid {
-		result.Name = dbAgentName.String
-	} else {
-		result.Name = commonModel.UNDEFINED_STRING
-	}
-	// :~)
-
-	/**
-	 * Updates the time of last executed
-	 */
-	commonDb.ToTxExt(tx).Exec(
-		fmt.Sprintf(
-			`
-			UPDATE nqm_agent_ping_task AS apt,
-				%s AS effective_pt
-			SET apt_time_last_execute = FROM_UNIXTIME(?)
-			WHERE apt.apt_pt_id = effective_pt.pt_id
-				AND apt_ag_id = ?
-			`,
-			temporaryTableName,
-		),
-		checkedTime.Unix(), agentId,
-	)
-	// :~)
+	return loadedAgent
 }
 
 const (

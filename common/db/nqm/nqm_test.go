@@ -164,11 +164,10 @@ type getAndRefreshNeedPingAgentTestCase struct {
 
 	testedAgent *commonModel.NqmAgent
 	checkTimeAsTime time.Time
-	testedErr error
 }
 
 func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
-	testedCases := []getAndRefreshNeedPingAgentTestCase{
+	testedCases := []*getAndRefreshNeedPingAgentTestCase{
 		{
 			agentId: 130001, checkTimeAsString: "2010-05-05T11:00:00+08:00",
 			expectedUpdatedPingTask: 3,
@@ -182,16 +181,14 @@ func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
 	for _, testCase := range testedCases {
 		testCase.checkTimeAsTime, _ = time.Parse(time.RFC3339, testCase.checkTimeAsString)
 
-		testCase.testedAgent, testCase.testedErr = GetAndRefreshNeedPingAgentForRpc(
+		testCase.testedAgent = GetAndRefreshNeedPingAgentForRpc(
 			testCase.agentId, testCase.checkTimeAsTime,
 		)
 
-		assertRefreshedPingTask(c, &testCase);
+		assertRefreshedPingTask(c, testCase);
 	}
 }
 func assertRefreshedPingTask(c *C, testCase *getAndRefreshNeedPingAgentTestCase) {
-	c.Assert(testCase.testedErr, IsNil)
-
 	/**
 	 * Asserts the number of modified time of last executed
 	 */
@@ -216,16 +213,19 @@ func assertRefreshedPingTask(c *C, testCase *getAndRefreshNeedPingAgentTestCase)
 	/**
 	 * Asserts the result data of agent
 	 */
-	if testCase.expectedUpdatedPingTask > 0 {
-		agentData := testCase.testedAgent
-
-		c.Assert(agentData.IspId, Equals, int16(3))
-		c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
-		c.Assert(agentData.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
-		c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_CITY_ID)
-		c.Assert(agentData.NameTagId, Equals, commonModel.UNDEFINED_NAME_TAG_ID)
-		c.Assert(agentData.GroupTagIds, DeepEquals, []int32 { 9931, 9932, 9933 })
+	if testCase.expectedUpdatedPingTask == 0 {
+		c.Assert(testCase.testedAgent, IsNil)
+		return
 	}
+
+	agentData := testCase.testedAgent
+
+	c.Assert(agentData.IspId, Equals, int16(3))
+	c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
+	c.Assert(agentData.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
+	c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_CITY_ID)
+	c.Assert(agentData.NameTagId, Equals, commonModel.UNDEFINED_NAME_TAG_ID)
+	c.Assert(agentData.GroupTagIds, DeepEquals, []int32 { 9931, 9932, 9933 })
 	// :~)
 }
 
@@ -532,7 +532,7 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 				# :~)
 				/**
 				 * 1. The agent is disabled
-				 * 2. Two of the ping task should be executed if the agent is enabled
+				 * 2. Both of the ping tasks should be executed if the agent is enabled
 				 */
 				(130002, 9404, NULL),
 				(130002, 9405, '2012-05-05 09:58:00')
