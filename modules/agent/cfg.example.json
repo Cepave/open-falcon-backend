@@ -1,4 +1,5 @@
 {
+    "logLevel": "debug",
     "debug": true,
     "hostname": "",
     "ip": "",
@@ -50,6 +51,7 @@
         "mem.swapfree": true
     },
     "mq": {
+      "enabled": true,
       "user": "mq",
       "pass": "password",
       "addr": "10.20.30.40:5672"

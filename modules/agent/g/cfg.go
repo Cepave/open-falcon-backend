@@ -12,9 +12,10 @@ import (
 )
 
 type MqConfig struct {
-	User string `json:user`
-	Pass string `json:pass`
-	Addr string `json:addr`
+	Enabled bool   `json:"enabled"`
+	User    string `json:"user"`
+	Pass    string `json:"pass"`
+	Addr    string `json:"addr"`
 }
 
 type PluginConfig struct {

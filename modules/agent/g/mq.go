@@ -15,6 +15,10 @@ func logOnError(err error, msg string) {
 }
 
 func SendToMQ(metrics []*model.MetricValueExtend) {
+	if !Config().Mq.Enabled {
+		log.Debugln("Message Queue is not enabled")
+		return
+	}
 	if len(metrics) == 0 {
 		return
 	}

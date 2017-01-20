@@ -8,44 +8,54 @@ import json
 ts = int(time.time())
 payload = [
     {
-        "endpoint": "test-endpoint",
+        "endpoint": "ctl-js-AAA",
         "metric": "mike",
         "timestamp": ts,
         "step": 60,
-        "value": 1,
+        "value": 6,
         "counterType": "GAUGE",
-        "tags": "tag1=lg,tag2=beijing",
+        "tags": "tag3=lg,tag4=beijing",
         "fields": "field1=This metric will not enter influxdb because conterType"
     },
     {
-        "endpoint": "test-endpoint",
-        "metric": "mike",
+        "endpoint": "ctl-js-AAA",
+        "metric": "service.http.lvs.443.port",
         "timestamp": ts,
         "step": 60,
-        "value": 12345,
-        "counterType": "MQ,KEYWORD",
-        "tags": "tag3=lg,tag4=beijing",
-        "fields": "field1=Mike does not have a 170mm penis!, field2=7777"
+        "value": 6,
+        "counterType": "GAUGE",
+        "tags": "",
+        "fields": "field1=This metric will not enter influxdb because conterType"
     },
     {
-        "endpoint": "test-endpoint",
+        "endpoint": "ctl-js-AAA",
         "metric": "mike",
         "timestamp": ts,
         "step": 60,
-        "value": 678910,
+        "value": 4,
         "counterType": "MQ,KEYWORD",
-        "tags": "tag3=lg,tag4=beijing",
-        "fields": "field1=Mike does not have a 175mm penis!, field2=This metric will overwrite previous value because the (metric - tags - endpoint) are the same."
+        "tags": "",
+        "fields": "lvsvip=www.google.com, field2=This metric will be overwritten"
     },
     {
-        "endpoint": "test-endpoint-2",
-        "metric": "mike",
+        "endpoint": "ctl-js-AAA",
+        "metric": "service.http.lvs.443.port",
         "timestamp": ts,
         "step": 60,
-        "value": 12345,
+        "value": 3,
         "counterType": "MQ,KEYWORD",
-        "tags": "tag3=lg,tag4=beijing",
-        "fields": "field1=Mike does not have a 170mm penis!, field2=This metric will not overwrite."
+        "tags": "",
+        "fields": "lvsvip=www.google.com, field2=This metric will overwrite previous value because the (metric - tags - endpoint) are the same."
+    },
+    {
+        "endpoint": "ctl-js-AAA",
+        "metric": "service.http.lvs.443.port",
+        "timestamp": ts,
+        "step": 60,
+        "value": 2,
+        "counterType": "MQ,KEYWORD",
+        "tags": "",
+        "fields": "lvsvip=www.google.com, field2=This metric will not overwrite."
     },
 ]
 

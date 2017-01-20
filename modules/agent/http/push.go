@@ -24,7 +24,7 @@ func configPushRoutes() {
 
 		toTransfer, toMQ := g.DemultiplexMetrics(metrics)
 		g.SendToTransfer(toTransfer)
-		g.SendToMQ(toMQ)
+		go g.SendToMQ(toMQ)
 		w.Write([]byte("success"))
 	})
 }
