@@ -127,6 +127,7 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 			},
 		)
 
+		c.Logf("Match targets: %#v", testedTargets)
 		c.Assert(err, IsNil, comment)
 		c.Assert(len(testedTargets), Equals, len(testCase.expectedIdOfTargets), comment)
 
