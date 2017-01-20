@@ -21,12 +21,12 @@ func (self *refreshAgentProcessor) BootCallback(tx *sql.Tx) bool {
 		UPDATE nqm_agent
 		SET ag_hostname = ?,
 			ag_ip_address = ?,
-			ag_last_heartbeat = ?
+			ag_last_heartbeat = FROM_UNIXTIME(?)
 		WHERE ag_connection_id = ?
 		`,
 		self.agent.Hostname(),
 		[]byte(self.agent.IpAddress),
-		time.Now(),
+		time.Now().Unix(),
 		self.agent.ConnectionId(),
 	)
 
@@ -51,7 +51,7 @@ func (self *refreshAgentProcessor) IfTrue(tx *sql.Tx) {
 		`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)
 		VALUES(
-			?, ?, ?, ?,
+			?, ?, ?, FROM_UNIXTIME(?),
 			(
 				SELECT id
 				FROM host
@@ -61,16 +61,16 @@ func (self *refreshAgentProcessor) IfTrue(tx *sql.Tx) {
 		ON DUPLICATE KEY UPDATE
 			ag_hostname = ?,
 			ag_ip_address = ?,
-			ag_last_heartbeat = ?
+			ag_last_heartbeat = FROM_UNIXTIME(?)
 		`,
 		self.agent.ConnectionId(),
 		self.agent.Hostname(),
 		ipAddress,
-		now,
+		now.Unix(),
 		self.agent.Hostname(),
 		self.agent.Hostname(),
 		ipAddress,
-		now,
+		now.Unix(),
 	)
 }
 func (self *refreshAgentProcessor) ResultRow(row *sql.Row) {
@@ -223,10 +223,10 @@ const (
 )
 
 // Gets the targets(to be probed) for RPC
-func GetTargetsByAgentForRpc(agent *nqmModel.NqmAgent) (targets []commonModel.NqmTarget, err error) {
+func GetTargetsByAgentForRpc(agent *nqmModel.NqmAgent, updatedTime time.Time) (targets []commonModel.NqmTarget, err error) {
 	var taskState int
 
-	if taskState, err = getPingTaskState(agent.Id); err != nil {
+	if taskState, err = getPingTaskState(agent.Id, updatedTime); err != nil {
 		return
 	}
 
@@ -241,7 +241,7 @@ func GetTargetsByAgentForRpc(agent *nqmModel.NqmAgent) (targets []commonModel.Nq
 	case HAS_PING_TASK_MATCH_ANY_TARGET:
 		rows ,err = loadAllEnabledTargets()
 	case HAS_PING_TASK:
-		rows, err = loadTargetsByFilter(agent.Id)
+		rows, err = loadTargetsByFilter(agent.Id, updatedTime)
 	}
 
 	if err != nil {
@@ -327,7 +327,7 @@ func loadAllEnabledTargets() (*sql.Rows, error) {
 	);
 }
 
-func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
+func loadTargetsByFilter(agentId int, checkedTime time.Time) (*sql.Rows, error) {
 	return DbFacade.SqlDb.Query(
 		`
 		SELECT
@@ -346,6 +346,7 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 					nqm_ping_task AS pt
 					ON pt.pt_id = apt.apt_pt_id
 						AND apt.apt_ag_id = ?
+						AND apt.apt_time_last_execute = FROM_UNIXTIME(?)
 					INNER JOIN
 					vw_enabled_targets_by_ping_task AS vw_tg
 					ON pt.pt_id = vw_tg.tg_pt_id
@@ -376,11 +377,11 @@ func loadTargetsByFilter(agentId int) (*sql.Rows, error) {
 			ON tg.tg_id = tgt.tgt_tg_id
 		GROUP BY tg_id, tg_host, isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
 		`,
-		agentId,
+		agentId, checkedTime.Unix(),
 	)
 }
 
-func getPingTaskState(agentId int) (result int, err error) {
+func getPingTaskState(agentId int, checkedTime time.Time) (result int, err error) {
 	result = NO_PING_TASK
 
 	var numberOfViablePingTasks int
@@ -416,9 +417,10 @@ func getPingTaskState(agentId int) (result int, err error) {
 				ON apt.apt_pt_id = pt.pt_id
 					AND pt.pt_enable = TRUE
 					AND apt_ag_id = ?
+					AND apt_time_last_execute = FROM_UNIXTIME(?)
 		) AS pt_filter_counter
 		`,
-		agentId,
+		agentId, checkedTime.Unix(),
 	).Scan(&numberOfViablePingTasks, &numberOfEmptyPingTasks); err != nil {
 		return
 	}

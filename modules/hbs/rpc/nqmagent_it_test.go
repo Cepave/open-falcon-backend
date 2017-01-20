@@ -44,6 +44,14 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 			},
 			false,
 		},
+		{ // The period is not elapsed yet
+			model.NqmTaskRequest{
+				ConnectionId: "ag-rpc-1",
+				Hostname:     "rpc-1.org",
+				IpAddress:    "45.65.0.1",
+			},
+			false,
+		},
 	}
 
 	for i, testCase := range testCases {
