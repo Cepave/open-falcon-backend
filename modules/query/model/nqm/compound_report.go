@@ -206,35 +206,35 @@ var CompareFunctions = map[string]CompareDynamicRecord {
 	},
 
 	MetricMax: func(left *DynamicRecord, right *DynamicRecord, direction byte) int {
-		return utils.CompareInt(
+		return compareIntWithNoData(
 			int64(left.Metrics.Metrics.Max),
 			int64(right.Metrics.Metrics.Max),
 			direction,
 		)
 	},
 	MetricMin: func(left *DynamicRecord, right *DynamicRecord, direction byte) int {
-		return utils.CompareInt(
+		return compareIntWithNoData(
 			int64(left.Metrics.Metrics.Min),
 			int64(right.Metrics.Metrics.Min),
 			direction,
 		)
 	},
 	MetricAvg: func(left *DynamicRecord, right *DynamicRecord, direction byte) int {
-		return utils.CompareFloat(
+		return compareFloatWithNoData(
 			left.Metrics.Metrics.Avg,
 			right.Metrics.Metrics.Avg,
 			direction,
 		)
 	},
 	MetricMed: func(left *DynamicRecord, right *DynamicRecord, direction byte) int {
-		return utils.CompareInt(
+		return compareIntWithNoData(
 			int64(left.Metrics.Metrics.Med),
 			int64(right.Metrics.Metrics.Med),
 			direction,
 		)
 	},
 	MetricMdev: func(left *DynamicRecord, right *DynamicRecord, direction byte) int {
-		return utils.CompareFloat(
+		return compareFloatWithNoData(
 			left.Metrics.Metrics.Mdev,
 			right.Metrics.Metrics.Mdev,
 			direction,
@@ -282,4 +282,31 @@ var CompareFunctions = map[string]CompareDynamicRecord {
 			direction,
 		)
 	},
+}
+
+// This is impossible value of NQM, because the packet >= 1000ms would be treated as loss packet
+const biggerValueOfNqm = 10240
+func compareIntWithNoData(
+	left int64, right int64, direction byte,
+) int {
+	if left == -1 {
+		left = biggerValueOfNqm
+	}
+	if right == -1 {
+		right = biggerValueOfNqm
+	}
+
+	return utils.CompareInt(left, right, direction)
+}
+func compareFloatWithNoData(
+	left float64, right float64, direction byte,
+) int {
+	if left == -1 {
+		left = biggerValueOfNqm
+	}
+	if right == -1 {
+		right = biggerValueOfNqm
+	}
+
+	return utils.CompareFloat(left, right, direction)
 }
