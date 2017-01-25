@@ -964,6 +964,38 @@ func getMetricsByMetricType(metricType string) []string {
 	return metrics
 }
 
+func getDisksIOMetrics(hostname string, metricType string) []string {
+	metrics := []string{}
+	keyword := ""
+	if metricType == "disks" {
+		keyword = "disk.device.used.percent/device=%"
+	} else if metricType == "io" {
+		keyword = "disk.io.util/device=%"
+	} else {
+		return metrics
+	}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	endpointID := ""
+	sqlcmd := "SELECT id FROM `graph`.`endpoint` WHERE endpoint = ? LIMIT 1"
+	num, err := o.Raw(sqlcmd, hostname).Values(&rows)
+	if err != nil {
+		log.Errorf("Error = %v", err.Error())
+	} else if num > 0 {
+		endpointID = rows[0]["id"].(string)
+		sqlcmd = "SELECT counter FROM `graph`.`endpoint_counter` WHERE endpoint_id = ? AND counter LIKE ?"
+		num, err = o.Raw(sqlcmd, endpointID, keyword).Values(&rows)
+		if err != nil {
+			log.Errorf("Error = %v", err.Error())
+		} else if num > 0 {
+			for _, row := range rows {
+				metrics = append(metrics, row["counter"].(string))
+			}
+		}
+	}
+	return metrics
+}
+
 func convertDurationToPoint(duration string, result map[string]interface{}) (timestampFrom int64, timestampTo int64) {
 	timestampFrom = int64(0)
 	timestampTo = int64(0)
