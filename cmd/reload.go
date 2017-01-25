@@ -8,9 +8,7 @@ var Reload = &cobra.Command{
 	Long: `
 Reload the configuration file of the specified Open-Falcon module.
 A module represents a single node in a cluster.
-
 Modules:
-
   `,
 	RunE: reload,
 }
