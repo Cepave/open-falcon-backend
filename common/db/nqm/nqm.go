@@ -115,7 +115,7 @@ func (self *refreshAgentProcessor) IfTrue(tx *sqlx.Tx) {
 }
 
 // Gets the ping list from cache
-func GetPingListFromCache(agent *nqmModel.NqmAgent, checkedTime time.Time) []commonModel.NqmTarget {
+func GetPingListFromCache(agent *nqmModel.NqmAgent, checkedTime time.Time) ([]commonModel.NqmTarget, *nqmModel.PingListLog) {
 	agentId := int32(agent.Id)
 
 	pingListLog := getCacheLogOfPingList(agentId)
@@ -125,7 +125,7 @@ func GetPingListFromCache(agent *nqmModel.NqmAgent, checkedTime time.Time) []com
 	 */
 	hasCache := pingListLog != nil
 	if !hasCache {
-		pingListLog = buildCacheOfPingList(agentId, checkedTime)
+		pingListLog = BuildCacheOfPingList(agentId, checkedTime)
 	}
 	// :~)
 
@@ -134,25 +134,18 @@ func GetPingListFromCache(agent *nqmModel.NqmAgent, checkedTime time.Time) []com
 	/**
 	 * Refresh the cache for 1 hour live
 	 */
-	var currentStep = 1
 	go utils.BuildPanicCapture(
 		func() {
 			logger.Debugf("Update Access Time. Agent Id: [%d]", agentId)
 			updateAccessTime(agentId, checkedTime)
-			currentStep++
-			refreshAfterMinutes(agentId, pingListLog, 60, checkedTime)
 		},
 		func(p interface{}) {
-			if currentStep == 1 {
-				logger.Errorf("Update access time of ping task has error. Agent Id: [%d]. %v", agent.Id, p)
-			} else {
-				logger.Errorf("Refresh cache of ping task has error. Agent Id: [%d]. %v", agent.Id, p)
-			}
+			logger.Errorf("Update access time of ping task has error. Agent Id: [%d]. %v", agent.Id, p)
 		},
 	)()
 	// :~)
 
-	return result
+	return result, pingListLog
 }
 
 func updateAccessTime(agentId int32, accessTime time.Time) {
@@ -188,18 +181,6 @@ func updateAccessTime(agentId int32, accessTime time.Time) {
 			return commonDb.TxCommit
 		},
 	))
-}
-func refreshAfterMinutes(agentId int32, log *nqmModel.PingListLog, minutes int, checkedTime time.Time) {
-	logger.Debugf(
-		"Agent Id: [%d]. Check time:[%v]. Last refresh time: [%v]",
-		agentId, checkedTime, log.RefreshTime,
-	)
-
-	totalMinutes := time.Duration(minutes) * time.Minute
-	if checkedTime.Sub(log.RefreshTime) >= totalMinutes {
-		logger.Debugf("Refresh cache of ping list for agent: [%d].", agentId)
-		buildCacheOfPingList(agentId, checkedTime)
-	}
 }
 
 type nqmTargetImpl struct {
@@ -325,7 +306,7 @@ func getCacheLogOfPingList(agentId int32) *nqmModel.PingListLog {
 }
 // 1. Update(or INSERT) the refresh time
 // 2. Re-build the list of targets
-func buildCacheOfPingList(agentId int32, checkedTime time.Time) *nqmModel.PingListLog {
+func BuildCacheOfPingList(agentId int32, checkedTime time.Time) *nqmModel.PingListLog {
 	logger.Debugf("Agent Id[%d] -> Set to be delete flags...", agentId)
 	DbFacade.SqlxDbCtrl.InTx(
 		&toBeDeletedTargets{ agentId: agentId },

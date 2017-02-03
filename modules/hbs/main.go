@@ -9,8 +9,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/http"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
+	oos "github.com/Cepave/open-falcon-backend/common/os"
 	"os"
-	"os/signal"
 	"syscall"
 )
 
@@ -35,14 +35,12 @@ func main() {
 	go http.Start()
 	go rpc.Start()
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigs
-		fmt.Println()
-		db.Release()
-		os.Exit(0)
-	}()
-
-	select {}
+	oos.HoldingAndWaitSignal(
+		func(signal os.Signal) {
+			rpc.Stop()
+			db.Release()
+		},
+		os.Interrupt, os.Kill,
+		syscall.SIGTERM,
+	)
 }

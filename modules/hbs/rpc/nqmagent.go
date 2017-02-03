@@ -9,8 +9,16 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
 	"github.com/Cepave/open-falcon-backend/common/rpc"
 	"github.com/asaskevich/govalidator"
+)
+
+var nqmAgentHbsService = nqmService.NewAgentHbsService(
+	nqmService.AgentHbsServiceConfig {
+		QueueSizeOfRefreshCacheOfPingList: 8,
+		CacheTimeoutMinutes: 60,
+	},
 )
 
 // Task retrieves the configuration of measurement tasks for certain client
@@ -45,7 +53,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	}
 	// :~)
 
-	targets := dbNqm.GetPingListFromCache(currentAgent, now)
+	targets := nqmAgentHbsService.LoadPingList(currentAgent, now)
 	if len(targets) == 0 {
 		return
 	}

@@ -129,7 +129,7 @@ func (suite *TestDbNqmSuite) TestBuildCacheOfPingList(c *C) {
 		ocheck.LogTestCase(c, testCase)
 
 		checkedTime := otest.ParseTime(c, testCase.checkedTime)
-		logInDb := buildCacheOfPingList(
+		logInDb := BuildCacheOfPingList(
 			testCase.agentId, checkedTime,
 		)
 
