@@ -11,6 +11,7 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	otest "github.com/Cepave/open-falcon-backend/common/testing"
 
 	. "gopkg.in/check.v1"
 )
@@ -116,6 +117,7 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 		402003: []int32{ 12023, 12024 },
 	}
 
+	sampleTime := otest.ParseTime(c, "2015-09-03T10:20:40+08:00")
 	for i, testCase := range testedCases {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
@@ -125,8 +127,10 @@ func (suite *TestDbNqmSuite) TestGetTargetsByAgentForRpc(c *C) {
 				Id: testCase.agentId,
 				IpAddress: net.ParseIP("10.29.34.11"),
 			},
+			sampleTime,
 		)
 
+		c.Logf("Match targets: %#v", testedTargets)
 		c.Assert(err, IsNil, comment)
 		c.Assert(len(testedTargets), Equals, len(testCase.expectedIdOfTargets), comment)
 
@@ -163,11 +167,10 @@ type getAndRefreshNeedPingAgentTestCase struct {
 
 	testedAgent *commonModel.NqmAgent
 	checkTimeAsTime time.Time
-	testedErr error
 }
 
 func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
-	testedCases := []getAndRefreshNeedPingAgentTestCase{
+	testedCases := []*getAndRefreshNeedPingAgentTestCase{
 		{
 			agentId: 130001, checkTimeAsString: "2010-05-05T11:00:00+08:00",
 			expectedUpdatedPingTask: 3,
@@ -181,16 +184,14 @@ func (suite *TestDbNqmSuite) TestGetAndRefreshNeedPingAgentForRpc(c *C) {
 	for _, testCase := range testedCases {
 		testCase.checkTimeAsTime, _ = time.Parse(time.RFC3339, testCase.checkTimeAsString)
 
-		testCase.testedAgent, testCase.testedErr = GetAndRefreshNeedPingAgentForRpc(
+		testCase.testedAgent = GetAndRefreshNeedPingAgentForRpc(
 			testCase.agentId, testCase.checkTimeAsTime,
 		)
 
-		assertRefreshedPingTask(c, &testCase);
+		assertRefreshedPingTask(c, testCase);
 	}
 }
 func assertRefreshedPingTask(c *C, testCase *getAndRefreshNeedPingAgentTestCase) {
-	c.Assert(testCase.testedErr, IsNil)
-
 	/**
 	 * Asserts the number of modified time of last executed
 	 */
@@ -215,16 +216,19 @@ func assertRefreshedPingTask(c *C, testCase *getAndRefreshNeedPingAgentTestCase)
 	/**
 	 * Asserts the result data of agent
 	 */
-	if testCase.expectedUpdatedPingTask > 0 {
-		agentData := testCase.testedAgent
-
-		c.Assert(agentData.IspId, Equals, int16(3))
-		c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
-		c.Assert(agentData.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
-		c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_CITY_ID)
-		c.Assert(agentData.NameTagId, Equals, commonModel.UNDEFINED_NAME_TAG_ID)
-		c.Assert(agentData.GroupTagIds, DeepEquals, []int32 { 9931, 9932, 9933 })
+	if testCase.expectedUpdatedPingTask == 0 {
+		c.Assert(testCase.testedAgent, IsNil)
+		return
 	}
+
+	agentData := testCase.testedAgent
+
+	c.Assert(agentData.IspId, Equals, int16(3))
+	c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_PROVINCE_ID)
+	c.Assert(agentData.CityId, Equals, commonModel.UNDEFINED_CITY_ID)
+	c.Assert(agentData.ProvinceId, Equals, commonModel.UNDEFINED_CITY_ID)
+	c.Assert(agentData.NameTagId, Equals, commonModel.UNDEFINED_NAME_TAG_ID)
+	c.Assert(agentData.GroupTagIds, DeepEquals, []int32 { 9931, 9932, 9933 })
 	// :~)
 }
 
@@ -246,8 +250,9 @@ func (suite *TestDbNqmSuite) TestGetPingTaskState(c *C) {
 		{2010, HAS_PING_TASK_MATCH_ANY_TARGET}, // The agent has ping task(enabled, without filters)
 	}
 
+	sampleTime := otest.ParseTime(c, "2013-09-12T13:25:21+08:00")
 	for _, v := range testedCases {
-		testedResult, err := getPingTaskState(v.agentId)
+		testedResult, err := getPingTaskState(v.agentId, sampleTime)
 
 		c.Assert(err, IsNil)
 		c.Assert(testedResult, Equals, v.expectedStatus)
@@ -531,7 +536,7 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 				# :~)
 				/**
 				 * 1. The agent is disabled
-				 * 2. Two of the ping task should be executed if the agent is enabled
+				 * 2. Both of the ping tasks should be executed if the agent is enabled
 				 */
 				(130002, 9404, NULL),
 				(130002, 9405, '2012-05-05 09:58:00')
@@ -579,16 +584,16 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 				(7010, 20, true)
 			`,
 			`
-			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id)
+			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id, apt_time_last_execute)
 			VALUES
-				(2002, 7001),
-				(2002, 7002),
-				(2003, 7003),
-				(2004, 7004),
-				(2005, 7005),
-				(2006, 7006),
-				(2007, 7007),
-				(2010, 7010)
+				(2002, 7001, FROM_UNIXTIME(1378963521)),
+				(2002, 7002, FROM_UNIXTIME(1378963521)),
+				(2003, 7003, FROM_UNIXTIME(1378963521)),
+				(2004, 7004, FROM_UNIXTIME(1378963521)),
+				(2005, 7005, FROM_UNIXTIME(1378963521)),
+				(2006, 7006, FROM_UNIXTIME(1378963521)),
+				(2007, 7007, FROM_UNIXTIME(1378963521)),
+				(2010, 7010, FROM_UNIXTIME(1378963521))
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_isp(tfisp_pt_id, tfisp_isp_id)
@@ -669,8 +674,10 @@ func (s *TestDbNqmSuite) SetUpTest(c *C) {
 				(34023, 20) # Match none except probed by all
 			`,
 			`
-			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id)
-			VALUES (230001, 34021), (230002, 34022), (230003, 34023)
+			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id, apt_time_last_execute)
+			VALUES (230001, 34021, FROM_UNIXTIME(1441246840)),
+				(230002, 34022, FROM_UNIXTIME(1441246840)),
+				(230003, 34023, FROM_UNIXTIME(1441246840))
 			`,
 			`
 			INSERT INTO nqm_pt_target_filter_isp(

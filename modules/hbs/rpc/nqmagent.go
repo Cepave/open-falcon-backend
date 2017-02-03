@@ -42,16 +42,14 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	}
 	// :~)
 
+	now := time.Now()
+
 	/**
 	 * Checks and loads agent which is needing performing ping task
 	 */
-	var nqmAgent *commonModel.NqmAgent
-	if nqmAgent, err = dbNqm.GetAndRefreshNeedPingAgentForRpc(
-		currentAgent.Id, time.Now(),
-	); err != nil {
-		return
-	}
-
+	nqmAgent := dbNqm.GetAndRefreshNeedPingAgentForRpc(
+		currentAgent.Id, now,
+	);
 	if nqmAgent == nil {
 		return
 	}
@@ -61,7 +59,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	 * Loads matched targets
 	 */
 	var targets []commonModel.NqmTarget
-	if targets, err = dbNqm.GetTargetsByAgentForRpc(currentAgent); err != nil {
+	if targets, err = dbNqm.GetTargetsByAgentForRpc(currentAgent, now); err != nil {
 		return
 	}
 	// :~)
