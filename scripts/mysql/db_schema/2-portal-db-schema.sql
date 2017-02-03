@@ -1153,21 +1153,19 @@ FROM nqm_ping_task AS pt
 /**
  * Filters the enabled targets with ping tasks(enabled).
  *
- * 1) This view ignores the empty ping tasks(without any filter).
+ * 1) This view includes the empty ping tasks(without any filter).
  * 2) This view doesn't include the targets which are probed by all(nqm_target.tg_probed_by_all).
+ * 3) A ping task might include mutiple of same targets
  */
 CREATE OR REPLACE VIEW vw_enabled_targets_by_ping_task(
-	tg_pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+	tg_pt_id, tg_id
 )
 AS
-SELECT DISTINCT
-	ptc.pt_id,
-	tg_id, tg_name, tg_host,
-	tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+SELECT ptc.pt_id, tg_id
 FROM
 	/* Enabled targets */
 	(
-		SELECT tg_id, tg_name, tg_host,
+		SELECT tg_id,
 			tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id,
 			tgt.tgt_gt_id
 		FROM nqm_target AS tg
@@ -1211,7 +1209,6 @@ FROM
 		AND tg.tg_ct_id = IFNULL(ptc.ct_id, tg.tg_ct_id)
 		AND tg.tg_nt_id = IFNULL(ptc.nt_id, tg.tg_nt_id)
 		AND IFNULL(tg.tgt_gt_id, -1) = IFNULL(ptc.gt_id, IFNULL(tg.tgt_gt_id, -1));
-;
 
 CREATE TABLE `common_config` (
     `key` VARCHAR(255) NOT NULL DEFAULT '',
@@ -1241,6 +1238,36 @@ CREATE TABLE IF NOT EXISTS owl_query (
   DEFAULT CHARSET =utf8
   COLLATE =utf8_general_ci;
 
+CREATE TABLE IF NOT EXISTS nqm_cache_agent_ping_list_log(
+	apll_ag_id INT PRIMARY KEY,
+	apll_number_of_targets INT NOT NULL,
+	apll_time_access DATETIME NOT NULL,
+	apll_time_refresh DATETIME NOT NULL,
+	apll_status TINYINT NOT NULL DEFAULT 0,
+	CONSTRAINT FOREIGN KEY fk_nqm_cache_agent_ping_list_log__nqm_agent(apll_ag_id)
+		REFERENCES nqm_agent(ag_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS nqm_cache_agent_ping_list(
+	apl_apll_ag_id INT,
+	apl_tg_id INT,
+	apl_min_period SMALLINT NOT NULL,
+	apl_time_access DATETIME NOT NULL,
+	apl_build_flag TINYINT NOT NULL DEFAULT 1,
+	CONSTRAINT PRIMARY KEY(apl_apll_ag_id, apl_tg_id),
+	CONSTRAINT FOREIGN KEY fk_nqm_cache_agent_ping_list__nqm_cache_agent_ping_list_log(apl_apll_ag_id)
+		REFERENCES nqm_cache_agent_ping_list_log(apll_ag_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT,
+	CONSTRAINT FOREIGN KEY fk_nqm_cache_agent_ping_list__nqm_target (apl_tg_id)
+		REFERENCES nqm_target(tg_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT,
+	INDEX ix_nqm_cache_agent_ping_list__apl_apll_ag_id_apl_min_period(apl_apll_ag_id, apl_min_period)
+);
+
 DROP TABLE IF EXISTS `sysdb_change_log`;
 CREATE TABLE `sysdb_change_log` (
   `dcl_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1253,6 +1280,7 @@ CREATE TABLE `sysdb_change_log` (
   `dcl_comment` varchar(1024) DEFAULT NULL,
   PRIMARY KEY (`dcl_id`),
   UNIQUE KEY `ix_sysdb_change_log__result` (`dcl_named_id`,`dcl_result`,`dcl_time_update`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8;
 
-INSERT INTO `sysdb_change_log` VALUES (1,'mike-1','mike-1.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','The initialization of existing database schema'),(2,'mike-2','mike-2.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','NQM database schema'),(3,'mike-3','mike-3.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','Buildin data of ISP, province, and city'),(4,'mike-4','mike-4.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','Add name of agent'),(5,'masato-5','masato-5.sql',2,'2016-03-17 10:54:19','2016-03-17 10:54:19','','Add event of alram in portal'),(6,'myhung-6','myhung-6.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','Change city, isp, and province name english into chinese'),(7,'don-7','don-7.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-302] add CREATE TABLE tags'),(8,'chyeh-8','chyeh-8.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-451] Change the schemas for Fastbat'),(9,'masato-9','masato-9.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-468] Alarm Case database table script change'),(10,'masato-10','masato-10.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','add status column for alarm'),(11,'chyeh-11','chyeh-11.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','utf8_unicode_ci -> utf8_general_ci'),(12,'masato-12','masato-12.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','note feture support'),(13,'laurence-13','laurence-13.sql',2,'2016-09-05 07:34:54','2016-09-05 07:34:54','','[OWL-480] git repo address move to mysql.'),(14,'mike-13','mike-13.sql',2,'2016-09-05 07:34:54','2016-09-05 07:34:55','','Refactory to id for name tag'),(15,'mike-14','mike-14.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Refacotry between agent and ping task to M-to-N relationship'),(16,'mike-15','mike-15.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add view for ping tasks'),(17,'mike-16','mike-16.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add comment column for agent/target/ping task'),(18,'mike-17','mike-17.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add group tag'),(19,'mike-18','mike-18.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add name of ping task'),(20,'mike-19','mike-19.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add filter of ping task for group tag'),(21,'laurence-20','laurence-20.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','[OWL-1046] add primary key to table common_config.'),(22,'mike-21','mike-21.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Re-arrange id of NQM agents'),(23,'mike-22','mike-22.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Re-arrange id of host'),(24,'mike-23','mike-23.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Fix the view of filtering targets for ping task'),(25,'mike-24','mike-24.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Fix the view of filtering targets for ping task'),(26,'mike-25','mike-25.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','Add FK to host from nqm_agent'),(27,'mike-26','mike-26.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','Add AUTO_INCREMENT to owl_group_tag(id)'),(28,'chyeh-25','chyeh-25.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','[OWL-816] Add new entries to owl_city'),(29,'mike-27','mike-27.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','[OWL-1120] Add table for persistence of query conditions'),(30,'mike-28','mike-28.sql',2,'2017-01-20 06:34:23','2017-01-20 06:34:23','','[OWL-1442] Performance tuning of view on enabled ping task');
+INSERT INTO `sysdb_change_log` VALUES (1,'mike-1','mike-1.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','The initialization of existing database schema'),(2,'mike-2','mike-2.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','NQM database schema'),(3,'mike-3','mike-3.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','Buildin data of ISP, province, and city'),(4,'mike-4','mike-4.sql',2,'2016-02-19 12:25:10','2016-02-19 12:25:10','','Add name of agent'),(5,'masato-5','masato-5.sql',2,'2016-03-17 10:54:19','2016-03-17 10:54:19','','Add event of alram in portal'),(6,'myhung-6','myhung-6.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','Change city, isp, and province name english into chinese'),(7,'don-7','don-7.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-302] add CREATE TABLE tags'),(8,'chyeh-8','chyeh-8.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-451] Change the schemas for Fastbat'),(9,'masato-9','masato-9.sql',2,'2016-04-28 14:36:03','2016-04-28 14:36:03','','[OWL-468] Alarm Case database
+table script change'),(10,'masato-10','masato-10.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','add status column for alarm'),(11,'chyeh-11','chyeh-11.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','utf8_unicode_ci -> utf8_general_ci'),(12,'masato-12','masato-12.sql',2,'2016-08-08 11:24:27','2016-08-08 11:24:27','','note feture support'),(13,'laurence-13','laurence-13.sql',2,'2016-09-05 07:34:54','2016-09-05 07:34:54','','[OWL-480] git repo address move to mysql.'),(14,'mike-13','mike-13.sql',2,'2016-09-05 07:34:54','2016-09-05 07:34:55','','Refactory to id for name tag'),(15,'mike-14','mike-14.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Refacotry between agent and ping task to M-to-N relationship'),(16,'mike-15','mike-15.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add view for ping tasks'),(17,'mike-16','mike-16.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add comment column for agent/target/ping task'),(18,'mike-17','mike-17.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add group tag'),(19,'mike-18','mike-18.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add name of ping task'),(20,'mike-19','mike-19.sql',2,'2016-09-05 07:34:55','2016-09-05 07:34:55','','Add filter of ping task for group tag'),(21,'laurence-20','laurence-20.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','[OWL-1046] add primary key to table common_config.'),(22,'mike-21','mike-21.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Re-arrange id of NQM agents'),(23,'mike-22','mike-22.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Re-arrange id of host'),(24,'mike-23','mike-23.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Fix the view of filtering targets for ping task'),(25,'mike-24','mike-24.sql',2,'2016-10-13 01:48:52','2016-10-13 01:48:52','','Fix the view of filtering targets for ping task'),(26,'mike-25','mike-25.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','Add FK to host from nqm_agent'),(27,'mike-26','mike-26.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','Add AUTO_INCREMENT to owl_group_tag(id)'),(28,'chyeh-25','chyeh-25.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','[OWL-816] Add new entries to owl_city'),(29,'mike-27','mike-27.sql',2,'2017-01-11 02:02:35','2017-01-11 02:02:35','','[OWL-1120] Add table for persistence of query conditions'),(30,'mike-28','mike-28.sql',2,'2017-02-03 10:58:05','2017-02-03 10:58:05','','[OWL-1442] Performance tuning of view on enabled ping task'),(31,'mike-29','mike-29.sql',2,'2017-02-03 10:58:05','2017-02-03 10:58:05','','[OWL-1442] Add cache table for NQM ping list of agent');

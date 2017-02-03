@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"sort"
 	"net/rpc"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
@@ -10,6 +9,7 @@ import (
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	testJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -17,16 +17,12 @@ type TestNqmAgentSuite struct{}
 
 var _ = Suite(&TestNqmAgentSuite{})
 
-type byID []model.NqmTarget
-
-func (targets byID) Len() int           { return len(targets) }
-func (targets byID) Swap(i, j int)      { targets[i], targets[j] = targets[j], targets[i] }
-func (targets byID) Less(i, j int) bool { return targets[i].Id < targets[j].Id }
 // Tests the refreshing and retrieving list of targets for NQM agent
 func (suite *TestNqmAgentSuite) TestTask(c *C) {
 	testCases := []*struct {
 		req model.NqmTaskRequest
 		needPing bool
+		expectedTargetIds []int32
 	} {
 		{
 			model.NqmTaskRequest{
@@ -34,7 +30,7 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 				Hostname:     "rpc-1.org",
 				IpAddress:    "45.65.0.1",
 			},
-			true,
+			true, []int32{ 630001, 630002, 630003 },
 		},
 		{
 			model.NqmTaskRequest{
@@ -42,7 +38,7 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 				Hostname:     "rpc-2.org",
 				IpAddress:    "45.65.0.2",
 			},
-			false,
+			false, []int32{},
 		},
 		{ // The period is not elapsed yet
 			model.NqmTaskRequest{
@@ -50,7 +46,7 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 				Hostname:     "rpc-1.org",
 				IpAddress:    "45.65.0.1",
 			},
-			false,
+			false, []int32{},
 		},
 	}
 
@@ -67,9 +63,10 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 			c.Assert(err, IsNil)
 		})
 
-		c.Logf("Response.NeedPing: %v", resp.NeedPing)
-		c.Logf("Response.Agent: %#v", resp.Agent)
-		c.Logf("Response.Measurements: %#v", resp.Measurements)
+		connectionId := testCase.req.ConnectionId
+		c.Logf("[%s] Response Need Ping: %v", connectionId, resp.NeedPing)
+		c.Logf("[%s] Response Agent: %#v", connectionId, resp.Agent)
+		c.Logf("[%s] Response Measurements: %#v", connectionId, resp.Measurements)
 
 		/**
 		 * The case with no needed of PING
@@ -98,27 +95,11 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 		c.Assert(len(resp.Targets), Equals, 3)
 		c.Assert(resp.Measurements["fping"].Command[0], Equals, "fping")
 
-		/**
-		 * Asserts the 1st target
-		 */
-		for _, v := range resp.Targets {
-			c.Logf("Target: %#v", &v)
+		c.Assert(resp.Targets, HasLen, len(testCase.expectedTargetIds), comment)
+		for i, targetId := range testCase.expectedTargetIds {
+			c.Logf("\tTarget: %#v", resp.Targets[i])
+			c.Assert(int32(resp.Targets[i].Id), Equals, targetId, comment)
 		}
-
-		sort.Sort(byID(resp.Targets))
-
-		c.Assert(
-			resp.Targets[0], DeepEquals,
-			model.NqmTarget{
-				Id: 630001, Host: "1.2.3.4",
-				IspId: 1, IspName: "北京三信时代",
-				ProvinceId: 4, ProvinceName: "北京",
-				CityId: model.UNDEFINED_CITY_ID, CityName: model.UNDEFINED_STRING,
-				NameTagId: model.UNDEFINED_NAME_TAG_ID, NameTag: model.UNDEFINED_STRING,
-				GroupTagIds: []int32{ 9081, 9082 },
-			},
-		)
-		// :~)
 	}
 }
 
@@ -155,12 +136,12 @@ func (s *TestNqmAgentSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO nqm_target(
 				tg_id, tg_name, tg_host,
-				tg_isp_id, tg_pv_id, tg_ct_id, tg_probed_by_all, tg_nt_id, tg_available, tg_status
+				tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id, tg_available, tg_status
 			)
 			VALUES
-				(630001, 'tgn-1', '1.2.3.4', 1, 4, -1, true, -1, true, true),
-				(630002, 'tgn-2', '1.2.3.5', 2, 4, -1, true, 9901, true, true),
-				(630003, 'tgn-3', '1.2.3.6', 3, 4, -1, true, -1, true, true)
+				(630001, 'tgn-1', '1.2.3.4', 1, 4, 1, -1, true, true),
+				(630002, 'tgn-2', '1.2.3.5', 2, 5, 280, 9901, true, true),
+				(630003, 'tgn-3', '1.2.3.6', 3, 5, 285, -1, true, true)
 			`,
 			`
 			INSERT INTO nqm_agent_group_tag(agt_ag_id, agt_gt_id)
@@ -189,6 +170,7 @@ func (s *TestNqmAgentSuite) TearDownTest(c *C) {
 	switch c.TestName() {
 	case "TestNqmAgentSuite.TestTask":
 		executeInTx(
+			"DELETE FROM nqm_cache_agent_ping_list_log WHERE apll_ag_id >= 405001 AND apll_ag_id <= 405002",
 			"DELETE FROM nqm_agent_ping_task WHERE apt_ag_id >= 405001 AND apt_ag_id <= 405002",
 			"DELETE FROM nqm_ping_task WHERE pt_id = 32001",
 			"DELETE FROM nqm_agent WHERE ag_id >= 405001 AND ag_id <= 405002",

@@ -1,24 +1,49 @@
-CREATE INDEX ix_nqm_target__tg_status_tg_available
-ON nqm_target(tg_status DESC, tg_available DESC);
+CREATE TABLE nqm_cache_agent_ping_list_log(
+	apll_ag_id INT PRIMARY KEY,
+	apll_number_of_targets INT NOT NULL,
+	apll_time_access DATETIME NOT NULL,
+	apll_time_refresh DATETIME NOT NULL,
+	apll_status TINYINT NOT NULL DEFAULT 0,
+	CONSTRAINT FOREIGN KEY fk_nqm_cache_agent_ping_list_log__nqm_agent(apll_ag_id)
+		REFERENCES nqm_agent(ag_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT
+);
+
+CREATE TABLE nqm_cache_agent_ping_list(
+	apl_apll_ag_id INT,
+	apl_tg_id INT,
+	apl_min_period SMALLINT NOT NULL,
+	apl_time_access DATETIME NOT NULL,
+	apl_build_flag TINYINT NOT NULL DEFAULT 1,
+	CONSTRAINT PRIMARY KEY(apl_apll_ag_id, apl_tg_id),
+	CONSTRAINT FOREIGN KEY fk_nqm_cache_agent_ping_list__nqm_cache_agent_ping_list_log(apl_apll_ag_id)
+		REFERENCES nqm_cache_agent_ping_list_log(apll_ag_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT,
+	CONSTRAINT FOREIGN KEY fk_nqm_cache_agent_ping_list__nqm_target (apl_tg_id)
+		REFERENCES nqm_target(tg_id)
+		ON DELETE CASCADE
+		ON UPDATE RESTRICT,
+	INDEX ix_nqm_cache_agent_ping_list__apl_apll_ag_id_apl_min_period(apl_apll_ag_id, apl_min_period)
+);
 
 /**
  * Filters the enabled targets with ping tasks(enabled).
  *
  * 1) This view includes the empty ping tasks(without any filter).
  * 2) This view doesn't include the targets which are probed by all(nqm_target.tg_probed_by_all).
+ * 3) A ping task might include mutiple of same targets
  */
 CREATE OR REPLACE VIEW vw_enabled_targets_by_ping_task(
-	tg_pt_id, tg_id, tg_name, tg_host, tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+	tg_pt_id, tg_id
 )
 AS
-SELECT DISTINCT
-	ptc.pt_id,
-	tg_id, tg_name, tg_host,
-	tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
+SELECT ptc.pt_id, tg_id
 FROM
 	/* Enabled targets */
 	(
-		SELECT tg_id, tg_name, tg_host,
+		SELECT tg_id,
 			tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id,
 			tgt.tgt_gt_id
 		FROM nqm_target AS tg

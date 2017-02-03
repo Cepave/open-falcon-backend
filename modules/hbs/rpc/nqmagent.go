@@ -33,39 +33,25 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	response.Targets = nil
 	response.Measurements = nil
 
+	now := time.Now()
+
 	/**
 	 * Refresh the information of agent
 	 */
 	var currentAgent = nqmModel.NewNqmAgent(&request)
-	if err = dbNqm.RefreshAgentInfo(currentAgent); err != nil {
+	var agentDetail = dbNqm.RefreshAgentInfo(currentAgent, now)
+	if agentDetail == nil {
 		return
 	}
 	// :~)
 
-	now := time.Now()
-
-	/**
-	 * Checks and loads agent which is needing performing ping task
-	 */
-	nqmAgent := dbNqm.GetAndRefreshNeedPingAgentForRpc(
-		currentAgent.Id, now,
-	);
-	if nqmAgent == nil {
+	targets := dbNqm.GetPingListFromCache(currentAgent, now)
+	if len(targets) == 0 {
 		return
 	}
-	// :~)
-
-	/**
-	 * Loads matched targets
-	 */
-	var targets []commonModel.NqmTarget
-	if targets, err = dbNqm.GetTargetsByAgentForRpc(currentAgent, now); err != nil {
-		return
-	}
-	// :~)
 
 	response.NeedPing = true
-	response.Agent = nqmAgent
+	response.Agent = agentDetail
 	response.Targets = targets
 	response.Measurements = map[string]commonModel.MeasurementsProperty{
 		"fping":   {true, []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}, 300},
