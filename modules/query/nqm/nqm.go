@@ -232,6 +232,7 @@ func toNqmDsl(queryParams *dsl.QueryParams) *NqmDsl {
 		IspRelation: queryParams.IspRelation,
 		ProvinceRelation: queryParams.ProvinceRelation,
 		CityRelation: queryParams.CityRelation,
+		NameTagRelation: -1,
 	}
 
 	/**
