@@ -964,6 +964,38 @@ func getMetricsByMetricType(metricType string) []string {
 	return metrics
 }
 
+func getDisksIOMetrics(hostname string, metricType string) []string {
+	metrics := []string{}
+	keyword := ""
+	if metricType == "disks" {
+		keyword = "disk.device.used.percent/device=%"
+	} else if metricType == "io" {
+		keyword = "disk.io.util/device=%"
+	} else {
+		return metrics
+	}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	endpointID := ""
+	sqlcmd := "SELECT id FROM `graph`.`endpoint` WHERE endpoint = ? LIMIT 1"
+	num, err := o.Raw(sqlcmd, hostname).Values(&rows)
+	if err != nil {
+		log.Errorf("Error = %v", err.Error())
+	} else if num > 0 {
+		endpointID = rows[0]["id"].(string)
+		sqlcmd = "SELECT counter FROM `graph`.`endpoint_counter` WHERE endpoint_id = ? AND counter LIKE ?"
+		num, err = o.Raw(sqlcmd, endpointID, keyword).Values(&rows)
+		if err != nil {
+			log.Errorf("Error = %v", err.Error())
+		} else if num > 0 {
+			for _, row := range rows {
+				metrics = append(metrics, row["counter"].(string))
+			}
+		}
+	}
+	return metrics
+}
+
 func convertDurationToPoint(duration string, result map[string]interface{}) (timestampFrom int64, timestampTo int64) {
 	timestampFrom = int64(0)
 	timestampTo = int64(0)
@@ -1347,6 +1379,10 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	arguments := strings.Split(req.URL.Path, "/")
 	metricType := arguments[4]
 	hostnames := strings.Split(arguments[5], ",")
+	duration := "1d"
+	if len(arguments) > 6 {
+		duration = arguments[6]
+	}
 	metrics := []string{}
 	if metricType == "customized" {
 		metrics = strings.Split(req.URL.Query()["metrics"][0], ",")
@@ -1357,23 +1393,35 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 			metrics = append(metrics, "nic.default.out.speed")
 		}
 	}
-	duration := "1d"
 
-	if len(arguments) > 6 {
-		duration = arguments[6]
+	data := []*cmodel.GraphQueryResponse{}
+	diff := int64(0)
+	if metricType == "disks" || metricType == "io" {
+		for _, hostname := range hostnames {
+			metrics = getDisksIOMetrics(hostname, metricType)
+			dataOfHost, diff := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
+			dataRecent := []*cmodel.GraphQueryResponse{}
+			if diff > 43200 && strings.Index(duration, ",") == -1 {
+				dataRecent, _ = getGraphQueryResponse(metrics, "10min", []string{hostname}, result)
+			}
+			dataOfHost = addRecentData(dataOfHost, dataRecent)
+			for _, series := range dataOfHost {
+				data = append(data, series)
+			}
+		}
+	} else {
+		data, diff = getGraphQueryResponse(metrics, duration, hostnames, result)
+		dataRecent := []*cmodel.GraphQueryResponse{}
+		if diff > 43200 && strings.Index(duration, ",") == -1 {
+			dataRecent, _ = getGraphQueryResponse(metrics, "10min", hostnames, result)
+		}
+		data = addRecentData(data, dataRecent)
 	}
-	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
-	dataRecent := []*cmodel.GraphQueryResponse{}
-	if diff > 43200 && strings.Index(duration, ",") == -1 {
-		dataRecent, _ = getGraphQueryResponse(metrics, "10min", hostnames, result)
-	}
-	data = addRecentData(data, dataRecent)
-
 	for _, series := range data {
 		metric := series.Counter
 		if strings.Index(metric, "nic.default.out.speed") > -1 {
 			if len(series.Values) > 0 && series.Values[0].Value > 0 {
-				series.Counter = "net.transmission.limit.80%"
+				metric = "net.transmission.limit.80%"
 				limit := series.Values[0].Value
 				if series.Values[len(series.Values)-1].Value > 0 {
 					limit = series.Values[len(series.Values)-1].Value
@@ -1385,15 +1433,15 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 						break
 					}
 				}
-				limit *= 1024 * 1024 * 0.8
+				limit *= 1000 * 1000 * 0.8
 				for key, _ := range series.Values {
 					series.Values[key].Value = limit
 				}
 			} else {
-				series.Counter = ""
+				metric = ""
 			}
 		}
-		if series.Counter != "" {
+		if metric != "" {
 			values := []interface{}{}
 			for _, rrdObj := range series.Values {
 				value := []interface{}{
@@ -1404,7 +1452,7 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 			}
 			item := map[string]interface{}{
 				"host":   series.Endpoint,
-				"metric": series.Counter,
+				"metric": metric,
 				"data":   values,
 			}
 			items = append(items, item)
@@ -1767,7 +1815,7 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 			if len(result["error"].([]string)) > 0 {
 				result["error"] = []string{}
 			} else {
-				upperLimit := result["items"].(map[string]interface{})["upperLimitMB"].(float64) * 1024 * 1024
+				upperLimit := result["items"].(map[string]interface{})["upperLimitMB"].(float64) * 1000 * 1000
 				data := []interface{}{}
 				for _, timestamp := range timestamps {
 					datum := []interface{}{
