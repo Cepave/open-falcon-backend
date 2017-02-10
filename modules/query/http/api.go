@@ -876,7 +876,7 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 	result["items"] = platforms
 }
 
-func getPlatforms(rw http.ResponseWriter, req *http.Request) {
+func getAgentAlivePlatforms(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	errors := []string{}
 	var result = make(map[string]interface{})
@@ -1659,6 +1659,36 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 	nodes["platform"] = platformName
 }
 
+func getPlatforms(rw http.ResponseWriter, req *http.Request) {
+	var nodes = make(map[string]interface{})
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []map[string]string{}
+	var rows []orm.Params
+	o := orm.NewOrm()
+	o.Using("boss")
+	sql := "SELECT platform, contacts FROM `boss`.`platforms`"
+	sql += " ORDER BY platform ASC"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			item := map[string]string{
+				"platform": row["platform"].(string),
+				"contacts": row["contacts"].(string),
+			}
+			items = append(items, item)
+		}
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	arguments := strings.Split(req.URL.Path, "/")
@@ -2197,10 +2227,11 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/alive", getAlive)
 	http.HandleFunc("/api/tags/update", setStrategyTags)
 	http.HandleFunc("/api/templates/", getTemplateStrategies)
-	http.HandleFunc("/api/alive/platforms", getPlatforms)
+	http.HandleFunc("/api/alive/platforms", getAgentAlivePlatforms)
 	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
+	http.HandleFunc("/api/platforms", getPlatforms)
 	http.HandleFunc("/api/platforms/", parsePlatformArguments)
 	http.HandleFunc("/api/hosts/", getHostsBandwidths)
 	http.HandleFunc("/api/idcs/hosts", getIDCsHosts)
