@@ -1737,6 +1737,23 @@ func getTicker(timestamp int64) string {
 	return ticker
 }
 
+func getNearestTicker(timestamp float64, tickers []string) string {
+	tickerNearest := ""
+	index := -1
+	min := math.Inf(1)
+	for key, ticker := range tickers {
+		diff := math.Abs(timestamp - float64(getTimestampFromTicker(ticker)))
+		if min > diff {
+			min = diff
+			index = key
+		}
+	}
+	if index >= 0 {
+		tickerNearest = tickers[index]
+	}
+	return tickerNearest
+}
+
 func getTimestampFromTicker(ticker string) int64 {
 	timestamp := int64(0)
 	loc, err := time.LoadLocation("Asia/Taipei")
