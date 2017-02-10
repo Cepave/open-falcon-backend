@@ -1771,10 +1771,54 @@ func getTimestampFromTicker(ticker string) int64 {
 	return timestamp
 }
 
-func getGraphQueryData(metrics []string, duration string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
-	data, diff := getGraphQueryResponse(metrics, duration, hostnames, result)
-	if diff > 43200 {
-		dataRecent, _ := getGraphQueryResponse(metrics, "10min", hostnames, result)
+func getGraphQueryData(metrics []string, duration string, hostnames []string, step int, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+	var data []*cmodel.GraphQueryResponse
+	start, end := convertDurationToPoint(duration, result)
+	if (time.Now().Unix() - start) < 600 {
+		data = getGraphQueryResponse(hostnames, metrics, "3min", "MAX", 60, result)
+		timestamp := int64(0)
+		for key, series := range data {
+			max := cmodel.JsonFloat(0)
+			for _, rrdObj := range series.Values {
+				value := rrdObj.Value
+				timestamp = rrdObj.Timestamp
+				if max < value {
+					max = value
+				}
+			}
+			item := cmodel.RRDData{}
+			item.Timestamp = timestamp
+			item.Value = max
+			values := []*cmodel.RRDData{}
+			values = append(values, &item)
+			series.Values = values
+			data[key] = series
+		}
+	} else {
+		data = getGraphQueryResponse(hostnames, metrics, duration, "AVERAGE", step, result)
+	}
+	diff := time.Now().Unix() - end
+	secondsInHalfDay := int64(43200)
+	if ((end - start) > secondsInHalfDay) && (diff < 600) && (len(data) > 0) {
+		dataRecent := getGraphQueryResponse(hostnames, metrics, "3min", "MAX", 60, result)
+		timestamp := int64(0)
+		for key, series := range dataRecent {
+			max := cmodel.JsonFloat(0)
+			for _, rrdObj := range series.Values {
+				value := rrdObj.Value
+				timestamp = rrdObj.Timestamp
+				if max < value {
+					max = value
+				}
+			}
+			item := cmodel.RRDData{}
+			item.Timestamp = timestamp
+			item.Value = max
+			values := []*cmodel.RRDData{}
+			values = append(values, &item)
+			series.Values = values
+			dataRecent[key] = series
+		}
 		data = addRecentData(data, dataRecent)
 	}
 	return data
