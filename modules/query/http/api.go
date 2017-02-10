@@ -1715,9 +1715,12 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
-func getTicker(timestamp int64) string {
+func getTicker(timestamp int64, unit int) string {
 	now := time.Now().Unix()
 	diff := now - timestamp
+	if diff <= 0 {
+		return time.Now().Format("2006-01-02 15:04")
+	}
 	if diff <= 600 {
 		return time.Unix(timestamp, 0).Format("2006-01-02 15:04")
 	}
@@ -1726,7 +1729,7 @@ func getTicker(timestamp int64) string {
 	minute := date.Format("04")
 	value, err := strconv.Atoi(minute)
 	if err == nil {
-		residue := int(math.Mod(float64(value), 5))
+		residue := int(math.Mod(float64(value), float64(unit)))
 		value -= residue
 		minute = strconv.Itoa(value)
 		if len(minute) == 1 {
