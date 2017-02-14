@@ -12,7 +12,9 @@ import (
 	"strings"
 
 	"gopkg.in/gin-gonic/gin.v1"
+	"gopkg.in/go-playground/validator.v9"
 	sjson "github.com/bitly/go-simplejson"
+	ot "github.com/Cepave/open-falcon-backend/common/types"
 
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
@@ -95,19 +97,22 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 				req *http.Request, resp http.ResponseWriter, url *url.URL,
 				header http.Header,
 				ginParams gin.Params, ginRespWriter gin.ResponseWriter,
+				convSrv ot.ConversionService, validate *validator.Validate,
 			) OutputBody {
 				jsonBody := sjson.New()
 
 				/**
 				 * Binding variable of input
 				 */
-				jsonBody.Set("context", fmt.Sprintf("%t", context != nil))
-				jsonBody.Set("req", fmt.Sprintf("%t", req != nil))
-				jsonBody.Set("http_resp_writer", fmt.Sprintf("%t", resp != nil))
-				jsonBody.Set("gin_resp_writer", fmt.Sprintf("%t", ginRespWriter != nil))
+				jsonBody.Set("context", context != nil)
+				jsonBody.Set("req", req != nil)
+				jsonBody.Set("http_resp_writer", resp != nil)
+				jsonBody.Set("gin_resp_writer", ginRespWriter != nil)
 				jsonBody.Set("url", fmt.Sprintf("%s", url))
 				jsonBody.Set("form_fv_1", context.PostForm("fv-1"))
 				jsonBody.Set("cg_id", ginParams.ByName("cg_id"))
+				jsonBody.Set("conv_srv", convSrv != nil)
+				jsonBody.Set("validate", validate != nil)
 				// :~)
 
 				// Testing header
@@ -128,13 +133,15 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 				jsonResult, err := sjson.NewFromReader(r.Body)
 				c.Assert(err, IsNil, comment)
 
-				c.Assert(jsonResult.Get("context").MustString(), Equals, "true", comment)
-				c.Assert(jsonResult.Get("req").MustString(), Equals, "true", comment)
-				c.Assert(jsonResult.Get("http_resp_writer").MustString(), Equals, "true", comment)
-				c.Assert(jsonResult.Get("gin_resp_writer").MustString(), Equals, "true", comment)
+				c.Assert(jsonResult.Get("context").MustBool(), Equals, true, comment)
+				c.Assert(jsonResult.Get("req").MustBool(), Equals, true, comment)
+				c.Assert(jsonResult.Get("http_resp_writer").MustBool(), Equals, true, comment)
+				c.Assert(jsonResult.Get("gin_resp_writer").MustBool(), Equals, true, comment)
 				c.Assert(jsonResult.Get("url").MustString(), Equals, "/full-input/9810", comment)
 				c.Assert(jsonResult.Get("form_fv_1").MustString(), Equals, "671", comment)
 				c.Assert(jsonResult.Get("cg_id").MustString(), Equals, "9810", comment)
+				c.Assert(jsonResult.Get("conv_srv").MustBool(), Equals, true, comment)
+				c.Assert(jsonResult.Get("validate").MustBool(), Equals, true, comment)
 
 				c.Assert(r.Header().Get("rh1"), Equals, "PB-02", comment)
 			},
@@ -360,7 +367,6 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 		},
 	}
 
-	gin.SetMode(gin.ReleaseMode)
 	testedBuilder := NewMvcBuilder(NewDefaultMvcConfig())
 
 	for i, testCase := range testCases {
@@ -383,6 +389,44 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 
 		testCase.assertFunc(c, recorder, comment)
 	}
+}
+
+// Tests the validation of struct value
+func (suite *TestContextSuite) TestValidation(c *C) {
+	testedBuilder := NewMvcBuilder(NewDefaultMvcConfig())
+
+	gin.SetMode(gin.ReleaseMode)
+	engine := gin.Default()
+
+	var err error
+	engine.Use(
+		func(c *gin.Context) {
+			defer func() {
+				p := recover()
+				if p != nil {
+					err = p.(error)
+				}
+			}()
+			c.Next()
+		},
+	)
+	engine.Any(
+		"/input-validate",
+		testedBuilder.BuildHandler(func(
+			data *struct {
+				Name string `mvc:"query[name]" validate:"min=4"`
+			},
+		) string {
+			return "OK"
+		}),
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/input-validate?name=bbb", nil)
+	resp := httptest.NewRecorder()
+	engine.ServeHTTP(resp, req)
+
+	c.Logf("Validation error: %v", err)
+	c.Assert(err, NotNil)
 }
 
 type car struct {
@@ -435,4 +479,8 @@ func makeFile(
 	bufWriter := bufio.NewWriter(fn1Writer)
 	bufWriter.WriteString(fileContent)
 	c.Assert(bufWriter.Flush(), IsNil)
+}
+
+func (s *TestStructTagsSuite) SetUpSuite(c *C) {
+	gin.SetMode(gin.ReleaseMode)
 }

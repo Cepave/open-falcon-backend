@@ -7,21 +7,25 @@ import (
 	"io"
 	"reflect"
 
-	"gopkg.in/gin-gonic/gin.v1"
-
+	"gopkg.in/go-playground/validator.v9"
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
+
+	"gopkg.in/gin-gonic/gin.v1"
+	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 )
 
 // Defines configuration of MVC framework
 type MvcConfig struct {
 	ConvertService ot.ConversionService
+	Validator *validator.Validate
 }
 
 // Constructs default configuration of MVC framework
 func NewDefaultMvcConfig() *MvcConfig {
 	return &MvcConfig{
 		ConvertService: ot.NewDefaultConversionService(),
+		Validator: validator.New(),
 	}
 }
 
@@ -166,6 +170,13 @@ func (b *MvcBuilder) buildInputLoader(targetType reflect.Type) inputParamLoader 
 		return typedFunc
 	}
 
+	switch targetType.String() {
+	case "*validator.Validate":
+		return b.getValidateFunc
+	case "types.ConversionService":
+		return b.getConversionServiceFunc
+	}
+
 	/**
 	 * Builds the function for context binder
 	 */
@@ -173,6 +184,7 @@ func (b *MvcBuilder) buildInputLoader(targetType reflect.Type) inputParamLoader 
 		return func(c *gin.Context) interface{} {
 			value := reflect.New(targetType.Elem()).Interface()
 			value.(ContextBinder).Bind(c)
+			b.validateStruct(value)
 			return value
 		}
 	}
@@ -185,6 +197,7 @@ func (b *MvcBuilder) buildInputLoader(targetType reflect.Type) inputParamLoader 
 		return func(c *gin.Context) interface{} {
 			value := reflect.New(targetType.Elem()).Interface()
 			c.BindJSON(value)
+			b.validateStruct(value)
 			return value
 		}
 	}
@@ -223,7 +236,18 @@ func (b *MvcBuilder) buildStructPointerFunc(structType reflect.Type) func(c *gin
 			)
 		}
 
+		b.validateStruct(structValue.Interface())
 		return pointerValue
+	}
+}
+
+func (b *MvcBuilder) validateStruct(object interface{}) {
+	typeOfValue := reflect.TypeOf(object)
+
+	if typeOfValue.Kind() == reflect.Struct ||
+		(typeOfValue.Kind() == reflect.Ptr &&
+			typeOfValue.Elem().Kind() == reflect.Struct) {
+		ogin.ConformAndValidateStruct(object, b.config.Validator)
 	}
 }
 
@@ -242,6 +266,13 @@ func (b *MvcBuilder) buildWebParamFunc(structType reflect.Type) map[string]input
 	}
 
 	return result
+}
+
+func (b *MvcBuilder) getValidateFunc(c *gin.Context) interface{} {
+	return b.config.Validator
+}
+func (b *MvcBuilder) getConversionServiceFunc(c *gin.Context) interface{} {
+	return b.config.ConvertService
 }
 
 var _t_OutputBody = oreflect.TypeOfInterface((*OutputBody)(nil))
