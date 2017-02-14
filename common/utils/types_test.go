@@ -51,17 +51,15 @@ func (suite *TestTypesSuite) TestIsViable(c *C) {
 // Tests the type convertion
 func (suite *TestTypesSuite) TestConvertToForPointer(c *C) {
 	type weight int
-
 	var v1 int = 20
-	var nilV *string = nil
 
 	// Asserts the nil value
-	c.Assert(ConvertToTargetType(nilV, (*weight)(nil)), Equals, (*weight)(nil))
+	c.Assert(ConvertToTargetType((*string)(nil), new(weight)), Equals, (*weight)(nil))
 
 	/**
 	 * Asserts the value of pointer
 	 */
-	convertedValue := ConvertToTargetType(&v1, (*weight)(nil)).(*weight)
+	convertedValue := ConvertToTargetType(&v1, new(weight)).(*weight)
 	c.Assert(*convertedValue, Equals, weight(20))
 	// :~)
 }
