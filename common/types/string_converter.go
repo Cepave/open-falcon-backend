@@ -12,7 +12,7 @@ import (
 type Parser interface {
 	Scan(stringValue string, locale *time.Location) interface{}
 }
-// Defines the printing of a value to string value(with locale)
+// Defines the string-representation of a value to string value(with locale)
 type Printer interface {
 	Print(object interface{}, locale *time.Location) string
 }
@@ -22,20 +22,28 @@ type Formatter interface {
 	Printer
 }
 
+// Sub-type of ConverterRegistry, with registering of formatter.
 type FormatterRegistry interface {
 	ConverterRegistry
 
+	// Adds formatter with type of object
 	AddFormatter(objectType reflect.Type, formatter Formatter)
+	// Adds formatter by type of struct's field
 	AddFormatterForField(field reflect.StructField, formatter Formatter)
 }
 
+// Sub-type of ConversionService, which provides methods of "Print()" and "Scan()"...
 type FormattedConversionService interface {
 	ConversionService
 
+	// Generates the string-representation of an object
 	Print(sourceObject interface{}) string
+	// Generates the string-representation of an object(with locale)
 	PrintWithLocale(sourceObject interface{}, locale *time.Location) string
 
+	// Converts the string value to target value
 	Scan(stringValue string) interface{}
+	// Converts the string value to target value(with locale)
 	ScanWithLocale(stringValue string, locale *time.Location) interface{}
 }
 

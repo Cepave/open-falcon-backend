@@ -1,3 +1,32 @@
+// This package provides out-of-box conversion service.
+//
+// Default Conversion Service
+//
+// You could use "NewDefaultConversionService()" function to construct an default implementation for
+// "ConversionService" and "ConverterRegistry".
+//
+// 	convSrv := types.NewDefaultConversionService()
+//
+// Customized converter
+//
+// You could use "AddConverter()" method to register a converter between two "reflect.Type"s
+//
+// 	r.AddConverter(reflect.TypeOf(v1), reflect.TypeOf(v2), your_converter)
+//
+// Type of interface
+//
+// In some cases, you need the "reflect.Type" on a defined interface,
+// you could use common/reflect."TypeOfInterface()" to hold the interface for reflection:
+//
+// 	type DoSomething interface {
+// 		Perform(int)
+// 		GetData() string
+// 	}
+// 	var _t_YourType = oreflect.TypeOfInterface((*DoSomething)(nil))
+//
+// 	// Checking if a type implements your interface
+// 	if yourType.Implements(_t_YourType) {
+// 	}
 package types
 
 import (
@@ -12,18 +41,22 @@ import (
 
 // Main interface provided by convsersion service
 type ConversionService interface {
+	// Checks whether or not a type can be converted to another one
 	CanConvert(sourceType reflect.Type, targetType reflect.Type) bool
+	// Convert a variable to target type
 	ConvertTo(sourceObject interface{}, targetType reflect.Type) interface{}
 }
 
 // Defines the registry for managing converters
 type ConverterRegistry interface {
+	// Adds a customized converter
 	AddConverter(sourceType reflect.Type, targetType reflect.Type, converter Converter)
 }
 
-// Basic conversion function
+// General conversion function
 type Converter func(sourceObject interface{}) interface{}
 
+// Constructs a new instance of default implementation
 func NewDefaultConversionService() *DefaultConversionService {
 	srv := &DefaultConversionService{
 		mapOfConverters: make(map[uint64]map[uint64]Converter),
@@ -34,34 +67,80 @@ func NewDefaultConversionService() *DefaultConversionService {
 
 // Default implementation for conversion service
 //
-// First of all, this service would use converters added by AddConverter() function.
+// Abstract
 //
-// If nothing matched, uses buildin converters:
+// There are two phases for conversion process:
 //
-//  If target type is pointer, the converted object would be allocated by new().
+// 	1 - Use converters added by "AddConverter()" method(customized converters).
+// 	2 - Use build-in converters if nothing is matched on customized converters.
 //
-// 	From string source
-// 	Convertable to: Int, Uint. Float, Bool
-// 		To array: puts the converted element to newArray[0]
-// 		To slice: puts the converted element to newSlice[0], len() == 1, cap() == 1
-// 		To chan: send the converted element to new(chan <type>, 1)
+// Build-in converters
 //
-//  From array to slice(convertible element type)
-//  From array/slice to channel(convertible element type)
-//  From channel to slice(convertible element type)
+// If target type is pointer, the converted object would be allocated by new().
 //
-//  From slice to array(panic if: len(slice) > len(array))
-//  From channel to array(panic if: len(channel) > len(array))
+// If the target type is string, this service would use:
 //
-//  From a map to another map of different types:
-//  Both of the key and value of maps must be convertible
+// 	anyValue -> fmt.Sprintf("%v", anyValue)
 //
-// If the target type is string, this service would use fmt.Sprintf("%v", srcObject) to convert the value by default
+// If source type is string, following target type could be converted:
+//
+// 	Int, Uint. Float and Bool
+//
+// For any non-complex value(which is not array, slice, or channel), the value could be converted to:
+//
+// 	Array: Puts the converted element to "[n]string { convertedV }"
+// 	type -> [1]type
+//
+// 	Slice: Puts the converted element to "[]string { convertedV }". len(slice) == 1. cap(slice) == 1
+// 	type -> []type
+//
+// 	Channel: Send the converted element to "new(chan string, 1)"
+// 	type -> chan type len() == 1
+//
+// From array to slice(convertible element type)
+//
+// 	[3]type -> []type(len == 3, cap == 3)
+//
+// From array/slice to channel(convertible element type)
+//
+//  [3]type -> Puts every element in array to new(chan type, 3)
+//  []type { "v1", "v2" } -> Puts len([]type) elements to new(chan type, len([]type))
+//
+// From channel to slice(convertible element type), this service would try to receive an element from channel(without blocking)
+//
+//  chan type -> []type
+//  chan type -> [n]type
+//
+// WARNING: The value of channel would be put back.
+//
+// If the target type is array and the len(source) > len(array), this service would **panic**.
+//
+// 	// Panic
+// 	[]type { v1, v2 } -> [1]type
+//
+// From a map to another map of different types:
+// Both of the key and value of maps must be convertible
+//
+//   map[string]int -> map[int]string
+//
+// The key of map, must obey the rules defined by go lang:
+//
+// 	The comparison operators == and != must be fully defined for operands of the key type;
+// 	thus the key type must not be a function, map, or slice.
+// 	If the key type is an interface type,
+// 	these comparison operators must be defined for the dynamic key values;
+// 	failure will cause a run-time panic.
+//
+// See map type: https://golang.org/ref/spec#Map_types
+//
+// See comparison operator: https://golang.org/ref/spec#Comparison_operators
 //
 // Otherwise, see https://golang.org/ref/spec#Conversions
 type DefaultConversionService struct {
 	mapOfConverters map[uint64]map[uint64]Converter
 }
+
+// Implements the interface "ConverterRegistry"
 func (s *DefaultConversionService) AddConverter(sourceType reflect.Type, targetType reflect.Type, converter Converter) {
 	if sourceType == targetType {
 		panic(fmt.Sprintf("Cannot add same type of converter: [%v]", sourceType))
@@ -78,6 +157,8 @@ func (s *DefaultConversionService) AddConverter(sourceType reflect.Type, targetT
 
 	targetFuncs[targetHash] = converter
 }
+// Implements the interface "ConversionService"
+//
 // Only checks added converters(without processing of pointer)
 func (s *DefaultConversionService) CanConvert(sourceType reflect.Type, targetType reflect.Type) bool {
 	sourceHash := oreflect.DigestType(sourceType)
@@ -86,9 +167,7 @@ func (s *DefaultConversionService) CanConvert(sourceType reflect.Type, targetTyp
 	_, ok := s.mapOfConverters[sourceHash][targetHash]
 	return ok
 }
-// Converts data by converter
-//
-// If the target type is pointer to type, which could be converted, this function would use it automatically.
+// Implements the interface "ConversionService"
 func (s *DefaultConversionService) ConvertTo(sourceObject interface{}, targetType reflect.Type) interface{} {
 	sourceType := reflect.TypeOf(sourceObject)
 	if sourceType == targetType {
@@ -323,7 +402,7 @@ var containerWalkers = map[reflect.Kind]containerWalker {
 		for i := 0; i < channelLen; i++ {
 			obj, ok := src.TryRecv()
 			if !ok {
-				panic(fmt.Sprintf("Cannot receive from channel. Channel type:[%v]", src.Type()))
+				return
 			}
 
 			callback(i, obj)

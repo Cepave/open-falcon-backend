@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"reflect"
 
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
@@ -342,4 +343,66 @@ func buildMapType(keySample interface{}, valueSample interface{}) reflect.Type {
 		reflect.TypeOf(keySample),
 		reflect.TypeOf(valueSample),
 	)
+}
+
+func ExampleDefaultConversionService() {
+	convSrv := NewDefaultConversionService()
+
+	stringV := convSrv.ConvertTo(45, TypeOfString)
+	fmt.Printf("%T:%s\n", stringV, stringV)
+
+	// Output:
+	// string:45
+}
+
+func ExampleConversionService_customiedConverter() {
+	convSrv := NewDefaultConversionService()
+
+	// import ot "github.com/Cepave/open-falcon-backend/common/reflect/types"
+	convSrv.AddConverter(
+		TypeOfInt8, TypeOfString,
+		func(source interface{}) interface{} {
+			return fmt.Sprintf("int8:%d", source)
+		},
+	)
+
+	fmt.Printf("%s\n", convSrv.ConvertTo(int8(44), TypeOfString))
+
+	// Output:
+	// int8:44
+}
+
+func ExampleConversionService_slice() {
+	convSrv := NewDefaultConversionService()
+
+	// import ot "github.com/Cepave/open-falcon-backend/common/reflect/types"
+	sourceSlice := []string{ "76", "38", "99" }
+	targetSlice := convSrv.ConvertTo(sourceSlice, STypeOfInt).([]int)
+
+	fmt.Printf("%#v\n", targetSlice)
+
+	// Output:
+	// []int{76, 38, 99}
+}
+
+func ExampleConversionService_map() {
+	convSrv := NewDefaultConversionService()
+
+	sourceMap := map[string]int32 {
+		"Key1": 88,
+		"Key2": 92,
+		"Key3": 63,
+	}
+	// import ot "github.com/Cepave/open-falcon-backend/common/reflect/types"
+	targetMap := convSrv.ConvertTo(
+		sourceMap,
+		reflect.MapOf(
+			TypeOfString, TypeOfUint64,
+		),
+	).(map[string]uint64)
+
+	fmt.Printf("%d, %d, %d\n", targetMap["Key1"], targetMap["Key2"], targetMap["Key3"])
+
+	// Output:
+	// 88, 92, 63
 }
