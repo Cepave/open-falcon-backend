@@ -17,7 +17,9 @@ import (
 
 // Defines configuration of MVC framework
 type MvcConfig struct {
+	// ConversionServer used to perform type conversion
 	ConvertService ot.ConversionService
+	// Validator object used to perform data validations
 	Validator *validator.Validate
 }
 
@@ -29,10 +31,12 @@ func NewDefaultMvcConfig() *MvcConfig {
 	}
 }
 
+// Builder object with internal objects
 type MvcBuilder struct {
 	config *MvcConfig
 }
 
+// Constructs a new builder with configuration
 func NewMvcBuilder(newConfig *MvcConfig) *MvcBuilder {
 	return &MvcBuilder {
 		config: newConfig,
@@ -196,7 +200,7 @@ func (b *MvcBuilder) buildInputLoader(targetType reflect.Type) inputParamLoader 
 	if targetType.Implements(_t_JsonUnmarshaler) {
 		return func(c *gin.Context) interface{} {
 			value := reflect.New(targetType.Elem()).Interface()
-			c.BindJSON(value)
+			ogin.BindJson(c, value)
 			b.validateStruct(value)
 			return value
 		}

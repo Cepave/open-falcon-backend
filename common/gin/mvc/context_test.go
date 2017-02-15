@@ -484,3 +484,4 @@ func makeFile(
 func (s *TestStructTagsSuite) SetUpSuite(c *C) {
 	gin.SetMode(gin.ReleaseMode)
 }
+

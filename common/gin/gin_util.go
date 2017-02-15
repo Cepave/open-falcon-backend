@@ -17,10 +17,12 @@ const (
 	headerOrderBy = "order-by"
 )
 
+// Defines the error while binding json
 type BindJsonError struct {
 	sourceError error
 }
 
+// Implements error interface
 func (err BindJsonError) Error() string {
 	return err.sourceError.Error()
 }
@@ -35,14 +37,12 @@ func BindJson(context *gin.Context, object interface{}) {
 // PagingByHeader would initialize paging object by header
 //
 // This funcion would load header value:
-// "page-size" - The size of page
-// "page-pos" - The position of page, starting with "1"
-// "order-by" - The order for paging
+//
+// 	"page-size" - The size of page
+// 	"page-pos" - The position of page, starting with "1"
+// 	"order-by" - The order for paging
 //
 // 		<prop_1>#<dir>:<prop_2>#<dir>:...
-//
-// context - The gin context
-// defaultPaging - The default value of paging
 func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Paging {
 	finalPaging := *defaultPaging
 
