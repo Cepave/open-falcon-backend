@@ -9,6 +9,7 @@ import (
 	"strings"
 	"encoding/json"
 
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"gopkg.in/gin-gonic/gin.v1"
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 )
@@ -122,4 +123,40 @@ func ExampleMvcBuilder_BuildHandler_json() {
 
 	// Output:
 	// {"name":"GTA-99","age":3}
+}
+
+func ExampleMvcBuilder_BuildHandler_paging() {
+	mvcBuilder := NewMvcBuilder(NewDefaultMvcConfig())
+
+	gin.SetMode(gin.ReleaseMode)
+	engine := gin.New()
+	engine.GET(
+		"/paging-1",
+		mvcBuilder.BuildHandler(
+			func(
+				p *struct {
+					// Loads paging from header
+					Paging *model.Paging
+				},
+			) (*model.Paging, string) {
+				p.Paging.TotalCount = 980
+
+				// Output paging in header
+				return p.Paging, fmt.Sprintf("Position: %d", p.Paging.Position)
+			},
+		),
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/paging-1", nil)
+	// Ask for page of 4th
+	req.Header.Set("page-pos", "4")
+	resp := httptest.NewRecorder()
+	engine.ServeHTTP(resp, req)
+
+	fmt.Println(resp.Body.String())
+	fmt.Printf("total-count: %s", resp.Header().Get("total-count"))
+
+	// Output:
+	// Position: 4
+	// total-count: 980
 }
