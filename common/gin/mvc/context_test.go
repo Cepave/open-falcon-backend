@@ -13,6 +13,7 @@ import (
 
 	"gopkg.in/gin-gonic/gin.v1"
 	"gopkg.in/go-playground/validator.v9"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	sjson "github.com/bitly/go-simplejson"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
 
@@ -365,6 +366,27 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 				c.Assert(r.Body.String(), Equals, "context-name-55", comment)
 			},
 		},
+		{ // Binding for paging
+			"/test-paging",
+			func(
+				p *struct {
+					Paging *model.Paging
+				},
+			) (string, *model.Paging) {
+				p.Paging.PageMore = true
+				p.Paging.TotalCount = 190
+
+				return fmt.Sprintf("Size: %d", p.Paging.Size), p.Paging
+			},
+			httptest.NewRequest(http.MethodGet, "/test-paging", nil),
+			func(c *C, r *httptest.ResponseRecorder, comment CommentInterface) {
+				c.Assert(r.Code, Equals, http.StatusOK, comment)
+
+				c.Assert(r.Body.String(), Equals, "Size: 64", comment)
+				c.Assert(r.Header().Get("total-count"), Equals, "190", comment)
+				c.Assert(r.Header().Get("page-more"), Equals, "true", comment)
+			},
+		},
 	}
 
 	testedBuilder := NewMvcBuilder(NewDefaultMvcConfig())
@@ -373,6 +395,7 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
+		gin.SetMode(gin.ReleaseMode)
 		engine := gin.Default()
 		engine.Use(func(context *gin.Context) {
 			context.Set("key-cc-01", &car{ "Cool!", 88 })

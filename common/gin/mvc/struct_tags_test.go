@@ -2,11 +2,14 @@ package mvc
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"reflect"
 
 	"gopkg.in/gin-gonic/gin.v1"
 
+	"github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
 	otest "github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
@@ -167,5 +170,59 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 		testedValue := paramLoader(context)
 
 		c.Assert(testedValue, DeepEquals, testCase.expectedValue, comment)
+	}
+}
+
+// Tests the loading of page
+func (suite *TestStructTagsSuite) TestPaging(c *C) {
+	type pagingSample struct {
+		P1 *model.Paging `mvc:"pageSize[17] pageOrderBy[ak_1:bd_2]"`
+	}
+
+	testCases := []*struct {
+		requestSetup func(*http.Request)
+		expectedSize int32
+		expectedOrderBy []*model.OrderByEntity
+	} {
+		{
+			func(req *http.Request) {},
+			17,
+			[]*model.OrderByEntity {
+				{ Expr: "ak_1", Direction: utils.DefaultDirection },
+				{ Expr: "bd_2", Direction: utils.DefaultDirection },
+			},
+		},
+		{
+			func(req *http.Request) {
+				req.Header = make(http.Header)
+				req.Header.Set("page-size", "39")
+				req.Header.Set("order-by", "cp_1#asc:cp_2#desc")
+			},
+			39,
+			[]*model.OrderByEntity {
+				{ Expr: "cp_1", Direction: utils.Ascending },
+				{ Expr: "cp_2", Direction: utils.Descending },
+			},
+		},
+	}
+
+	fieldType, _ := reflect.TypeOf(pagingSample{}).FieldByName("P1")
+	convSrv := ot.NewDefaultConversionService()
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		context := &gin.Context {
+			Request: httptest.NewRequest(http.MethodPost, "/", nil),
+		}
+		testCase.requestSetup(context.Request)
+
+		paramLoader := buildParamLoader(fieldType, convSrv)
+		testedPaging := paramLoader(context).(*model.Paging)
+
+		c.Logf("Result paging: %#v", testedPaging)
+		c.Assert(testedPaging.Size, Equals, testCase.expectedSize, comment)
+		c.Assert(testedPaging.OrderBy, DeepEquals, testCase.expectedOrderBy, comment)
 	}
 }

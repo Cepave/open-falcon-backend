@@ -52,7 +52,7 @@
 // "ContextBinder" - Feeds the context to implementation of Bind(*gin.Context) function.
 //  This type of value woule be checked by ogin.ConformAndValidateStruct automatically.
 //
-// 'json.Unmarshaler' - If the type of value is ​json.Unmarshaler, use the UnmarshalJSON([]byte) function of the value
+// 'json.Unmarshaler' - If the type of value is json.Unmarshaler, use the UnmarshalJSON([]byte) function of the value
 //  This type of value woule be checked by ogin.ConformAndValidateStruct automatically.
 //
 // "<struct>" - See parameter tags for automatic binding
@@ -60,21 +60,21 @@
 //
 // "*gin.Context" - The context object of current request
 //
-// "gin.ResponseWriter" - See ​gin.ResponseWriter
+// "gin.ResponseWriter" - See gin.ResponseWriter
 //
-// "gin.Params" - See ​gin.Params
+// "gin.Params" - See gin.Params
 //
-// "*http.Request" - See ​http.Request
+// "*http.Request" - See http.Request
 //
-// "http.ResponseWriter" - See ​http.ResponseWriter
+// "http.ResponseWriter" - See http.ResponseWriter
 //
-// "*url.URL" - See ​url.URL
+// "*url.URL" - See url.URL
 //
-// "*multipart.Reader" - See ​multipart.Reader; Once you use *multipart.Form, the reader would reach EOF.
+// "*multipart.Reader" - See multipart.Reader; Once you use *multipart.Form, the reader would reach EOF.
 //
-// "*multipart.Form" - See ​multipart.Form
+// "*multipart.Form" - See multipart.Form
 //
-// "*validator.Validate" - See ​go-playground/validator.v9
+// "*validator.Validate" - See go-playground/validator.v9
 //
 // "types.ConversionService" - See ConversionService
 //
@@ -91,6 +91,8 @@
 // "string" - If the type of returned value is string, use TextOutputBody() as output type
 //
 // "fmt.Stringer" - As same as string
+//
+// "*model.Paging" - Output the content of paging to HTTP header
 //
 // Tagging Struct
 //
@@ -137,6 +139,12 @@
 //  	sent the request, usually for logging, must be string
 //  mvc:"req[RequestURI]" - RequestURI is the unmodified Request-URI of the Request-Line (RFC 2616, Section 5.1) as
 //  	sent by the client to a server, must be string
+// PAGING
+//
+// Must be type of "*model.Paging"
+//
+// 	mvc:"pageSize[50]" - The default value of page size is 50
+// 	mvc:"pageOrderBy[name:age]" - The default value of "orderBy" property of paging object is 'name:age'
 //
 // SECURITY
 //

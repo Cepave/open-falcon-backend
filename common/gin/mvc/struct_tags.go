@@ -6,7 +6,10 @@ import (
 	"regexp"
 	"strings"
 	"mime/multipart"
+	"strconv"
 
+	ogin "github.com/Cepave/open-falcon-backend/common/gin"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
 	"gopkg.in/gin-gonic/gin.v1"
 )
@@ -24,10 +27,24 @@ var defProp = map[string]bool {
 	"key": true,
 	"req": true,
 	"basicAuth": true,
+	"pageSize": true,
+	"pageOrderBy": true,
 	"default": true,
 }
 
+var _t_Paging = reflect.TypeOf(&model.Paging{})
 func buildParamLoader(field reflect.StructField, convSrv ot.ConversionService) inputParamLoader {
+	/**
+	 * Process paging object
+	 */
+	if field.Type == _t_Paging {
+		defaultPaging := loadDefaultPaging(field.Tag)
+		return func(c *gin.Context) interface{} {
+			return ogin.PagingByHeader(c, defaultPaging)
+		}
+	}
+	// :~)
+
 	tagContext := loadTag(field)
 	if tagContext == nil {
 		return nil
@@ -40,6 +57,7 @@ const (
 	paramGetterType = 1
 	keyGetterType = 2
 	fileGetterType = 3
+	pagingGetterType = 4
 )
 
 type tagContext struct {
@@ -127,47 +145,31 @@ func (t *tagContext) getLoader(targetType reflect.Type, convSrv ot.ConversionSer
 
 var propRegExp, _ = regexp.Compile(`^(\w+)\[([^]]+)\]$`)
 func loadTag(field reflect.StructField) *tagContext {
-	tagValue := field.Tag.Get(mvcTag)
-	if tagValue == "" {
-		return nil
-	}
-
 	tagContext := &tagContext{}
 
-	for _, propPair := range strings.Split(tagValue, " ") {
-		propPair = strings.TrimSpace(propPair)
-
-		matches := propRegExp.FindStringSubmatch(propPair)
-		if matches == nil {
-			panic(fmt.Sprintf("Cannot recognize in mvc:\"prop...\": %s", propPair))
-		}
-
-		propName := matches[1]
-		propValue := matches[2]
-
-		if _, ok := defProp[propName]; !ok {
-			panic(fmt.Sprintf("Cannot recognize property name: [%s]", propName))
-		}
-
-		switch propName {
-		case "query", "cookie", "param", "form", "header", "req", "basicAuth":
-			tagContext.getterType = paramGetterType
-			tagContext.getterName = propName
-			tagContext.paramName = propValue
-		case "file", "fileHeader":
-			tagContext.getterType = fileGetterType
-			tagContext.getterName = propName
-			tagContext.paramName = propValue
-		case "key":
-			tagContext.getterType = keyGetterType
-			tagContext.getterName = propName
-			tagContext.paramName = propValue
-		case "default":
-			tagContext.defaultValue = propValue
-		default:
-			panic(fmt.Sprintf("Unknown context of mvc tag: %s", propPair))
-		}
-	}
+	iterateMvcTagProperties(
+		field.Tag,
+		func(propName string, propValue string) {
+			switch propName {
+			case "query", "cookie", "param", "form", "header", "req", "basicAuth":
+				tagContext.getterType = paramGetterType
+				tagContext.getterName = propName
+				tagContext.paramName = propValue
+			case "file", "fileHeader":
+				tagContext.getterType = fileGetterType
+				tagContext.getterName = propName
+				tagContext.paramName = propValue
+			case "key":
+				tagContext.getterType = keyGetterType
+				tagContext.getterName = propName
+				tagContext.paramName = propValue
+			case "default":
+				tagContext.defaultValue = propValue
+			default:
+				panic(fmt.Sprintf("Cannot recognize property name: [%s]", propName))
+			}
+		},
+	)
 
 	return tagContext
 }
@@ -210,5 +212,61 @@ func releaseMultipartFiles(context *gin.Context) {
 		if err := file.Close(); err != nil {
 			logger.Errorf("Close file has error: [%v]", err)
 		}
+	}
+}
+
+func loadDefaultPaging(tag reflect.StructTag) *model.Paging {
+	paging := &model.Paging {
+		Size: 64,
+		Position: 1,
+	}
+
+	iterateMvcTagProperties(
+		tag,
+		func(propName string, propValue string) {
+			switch propName {
+			case "pageSize":
+				defaultSize, err := strconv.ParseInt(propValue, 10, 32)
+				if err != nil {
+					panic(fmt.Sprintf("Cannot parse pageSize[%s]. Error: %v.", propValue, err))
+				}
+				paging.Size = int32(defaultSize)
+			case "pageOrderBy":
+				parsedOrderBy, err := ogin.ParseOrderBy(propValue)
+				if err != nil {
+					panic(fmt.Sprintf("Cannot parse pageOrderBy[%s]. Error: %v.", propValue, err))
+				}
+				paging.OrderBy = parsedOrderBy
+			default:
+				panic(fmt.Sprintf("Cannot recognize property name: [%s]", propName))
+			}
+		},
+	)
+
+	return paging
+}
+
+func iterateMvcTagProperties(tag reflect.StructTag, propProcessor func(propName string, propValue string)) {
+	tagValue := tag.Get(mvcTag)
+	if tagValue == "" {
+		return
+	}
+
+	for _, propPair := range strings.Split(tagValue, " ") {
+		propPair = strings.TrimSpace(propPair)
+
+		matches := propRegExp.FindStringSubmatch(propPair)
+		if matches == nil {
+			panic(fmt.Sprintf("Cannot recognize in mvc:\"prop...\": %s", propPair))
+		}
+
+		propName := matches[1]
+		propValue := matches[2]
+
+		if _, ok := defProp[propName]; !ok {
+			panic(fmt.Sprintf("Cannot recognize property name: [%s]", propName))
+		}
+
+		propProcessor(propName, propValue)
 	}
 }

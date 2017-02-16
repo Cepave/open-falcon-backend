@@ -66,7 +66,7 @@ func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Pa
 	if orderBy := context.Request.Header.Get(headerOrderBy)
 		orderBy != "" {
 
-		parsedValue, err := parseOrderBy(orderBy)
+		parsedValue, err := ParseOrderBy(orderBy)
 		if err == nil {
 			finalPaging.OrderBy = parsedValue
 		}
@@ -93,7 +93,7 @@ func int32ToString(v int32) string {
 }
 
 var regexpOrderValue = regexp.MustCompile(`^\w+(?:#(?:a|d|asc|desc|ascending|descending))?(?::\w+(?:#(?:a|d|asc|desc|ascending|descending))?)*$`)
-func parseOrderBy(headerValueOfOrderBy string) ([]*model.OrderByEntity, error) {
+func ParseOrderBy(headerValueOfOrderBy string) ([]*model.OrderByEntity, error) {
 	var result []*model.OrderByEntity
 
 	headerValueOfOrderBy = strings.ToLower(headerValueOfOrderBy)

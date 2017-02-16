@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"gopkg.in/go-playground/validator.v9"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
 
@@ -53,16 +54,13 @@ func (b *MvcBuilder) BuildHandler(handlerFunc MvcHandler) gin.HandlerFunc {
 		panic(fmt.Sprintf("Need to be function for \"MvcHandler\". Got: [%T]", handlerFunc))
 	}
 
-	inputTypes, outputTypes := oreflect.GetAllTypesForFunction(funcType)
-	inputFunc := b.buildInputFunc(inputTypes)
-
 	/**
-	 * It is valid if handler does not have returned value
+	 * Builds binding functions for output/input parameters
 	 */
-	var outputFunc func(*gin.Context, reflect.Value) = nil
-	if len(outputTypes) > 0 {
-		outputFunc = b.buildOutputFunc(outputTypes[len(outputTypes) - 1])
-	}
+	inputTypes, outputTypes := oreflect.GetAllTypesForFunction(funcType)
+
+	inputFunc := b.buildInputFunc(inputTypes)
+	outputFunc := b.buildOutputFunc(outputTypes)
 	// :~)
 
 	return func(c *gin.Context) {
@@ -70,7 +68,7 @@ func (b *MvcBuilder) BuildHandler(handlerFunc MvcHandler) gin.HandlerFunc {
 		returnedValues := funcValue.Call(inputParams)
 
 		if outputFunc != nil {
-			outputFunc(c, returnedValues[len(returnedValues) - 1])
+			outputFunc(c, returnedValues)
 		}
 
 		// Release closable resources binding
@@ -282,33 +280,53 @@ func (b *MvcBuilder) getConversionServiceFunc(c *gin.Context) interface{} {
 var _t_OutputBody = oreflect.TypeOfInterface((*OutputBody)(nil))
 var _t_JsonMarshaler = oreflect.TypeOfInterface((*json.Marshaler)(nil))
 var _t_Stringer = oreflect.TypeOfInterface((*fmt.Stringer)(nil))
-func (b *MvcBuilder) buildOutputFunc(targetType reflect.Type) func(c *gin.Context, returnValue reflect.Value) {
-	if targetType.Implements(_t_OutputBody) {
-		return func(c *gin.Context, returnValue reflect.Value) {
-			if returnValue.IsValid() {
+func (b *MvcBuilder) buildOutputFunc(targetTypes []reflect.Type) func(c *gin.Context, returnedValue []reflect.Value) {
+	if len(targetTypes) == 0 {
+		return nil
+	}
+
+	/**
+	 * Builds the processor for every return value
+	 */
+	valueProcessors := make([]func(c *gin.Context, returnedValue reflect.Value), len(targetTypes))
+	for i, targetType := range targetTypes {
+		var processor func(c *gin.Context, returnedValue reflect.Value) = nil
+
+		switch {
+		case targetType == _t_Paging:
+			processor = func(c *gin.Context, returnValue reflect.Value) {
+				ogin.HeaderWithPaging(c, returnValue.Interface().(*model.Paging))
+			}
+		case targetType.Implements(_t_OutputBody):
+			processor = func(c *gin.Context, returnValue reflect.Value) {
 				returnValue.Interface().(OutputBody).Output(c)
 			}
-		}
-	}
-
-	if targetType.Implements(_t_JsonMarshaler) {
-		return func(c *gin.Context, returnValue reflect.Value) {
-			if returnValue.IsValid() {
+		case targetType.Implements(_t_JsonMarshaler):
+			processor = func(c *gin.Context, returnValue reflect.Value) {
 				JsonOutputBody(returnValue.Interface()).Output(c)
 			}
-		}
-	}
-
-	if targetType.Kind() == reflect.String ||
-		targetType.Implements(_t_Stringer) {
-		return func(c *gin.Context, returnValue reflect.Value) {
-			if returnValue.IsValid() {
+		case targetType.Kind() == reflect.String ||
+			targetType.Implements(_t_Stringer):
+			processor = func(c *gin.Context, returnValue reflect.Value) {
 				TextOutputBody(returnValue.Interface()).Output(c)
 			}
+		default:
+			panic(fmt.Sprintf("Unknown type for building output: [%s]", targetType))
+		}
+
+		valueProcessors[i] = processor
+	}
+	// :~)
+
+	return func(c *gin.Context, returnValues []reflect.Value) {
+		for i, processor := range valueProcessors {
+			if !returnValues[i].IsValid() {
+				continue
+			}
+
+			processor(c, returnValues[i])
 		}
 	}
-
-	panic(fmt.Sprintf("Unknown type for building output: [%s]", targetType))
 }
 
 func loadInputParams(c *gin.Context, loaders []inputParamLoader) []interface{} {
