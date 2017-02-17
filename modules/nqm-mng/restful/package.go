@@ -1,6 +1,7 @@
 package restful
 
 import (
+	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
@@ -28,6 +29,8 @@ func InitGin(config *commonGin.GinConfig) {
 }
 
 func initApi() {
+	mvcBuilder := mvc.NewMvcBuilder(mvc.NewDefaultMvcConfig())
+
 	v1 := router.Group("/api/v1")
 
 	v1.GET("/nqm/agents", listAgents)
@@ -44,6 +47,12 @@ func initApi() {
 	v1.GET("/owl/provinces", listProvinces)
 	v1.GET("/owl/cities", listCities)
 	v1.GET("/owl/province/:province_id/cities", listCitiesInProvince)
+
+	v1.GET("/owl/nametags", mvcBuilder.BuildHandler(listNameTags))
+	v1.GET("/owl/nametag/:name_tag_id", mvcBuilder.BuildHandler(getNameTagById))
+
+	v1.GET("/owl/grouptags", mvcBuilder.BuildHandler(listGroupTags))
+	v1.GET("/owl/grouptag/:group_tag_id", mvcBuilder.BuildHandler(getGroupTagById))
 
 	router.GET("/health", health)
 }
