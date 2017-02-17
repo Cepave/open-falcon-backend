@@ -25,7 +25,7 @@ var J = map[string]Distiller {
 // 	A - Any value to StringGetter
 // 	AL - Any list of objects to TextList
 // 	S - String value to StringGetter
-// 	S - object of "fmt.Stringer" to StringerGetter
+// 	SER - object of "fmt.Stringer" to StringerGetter
 // 	PF - "fmt.Sprintf" talk to TextGetter
 var Dsl = &dsl{
 	A: ToTextGetter,
