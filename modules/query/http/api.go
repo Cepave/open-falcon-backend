@@ -10,13 +10,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	log "github.com/Sirupsen/logrus"
-
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	"github.com/Cepave/open-falcon-backend/modules/query/proc"
+	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
 )
@@ -996,31 +994,40 @@ func getDisksIOMetrics(hostname string, metricType string) []string {
 	return metrics
 }
 
-func convertDurationToPoint(duration string, result map[string]interface{}) (timestampFrom int64, timestampTo int64) {
-	timestampFrom = int64(0)
-	timestampTo = int64(0)
+func getTimestampFromString(timeString string, result map[string]interface{}) int64 {
+	if timeString == "" {
+		return time.Now().UTC().Unix()
+	}
+	timestamp := int64(0)
+	timestamp, err := strconv.ParseInt(timeString, 10, 64)
+	if err != nil {
+		loc, err := time.LoadLocation("Asia/Taipei")
+		if err != nil {
+			loc = time.Local
+		}
+		timeFormat := "2006-01-02 15:04:05"
+		date, err := time.ParseInLocation(timeFormat, timeString, loc)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			timestamp = date.Unix()
+		}
+	}
+	return timestamp
+}
+
+func convertDurationToPoint(duration string, result map[string]interface{}) (int64, int64) {
+	timestampFrom := int64(0)
+	timestampTo := int64(0)
 	if strings.Index(duration, ",") > -1 {
 		from := strings.Split(duration, ",")[0]
 		to := strings.Split(duration, ",")[1]
-		timestampFrom, err := strconv.ParseInt(from, 10, 64)
-		if err != nil {
-			loc, err := time.LoadLocation("Asia/Taipei")
-			if err != nil {
-				loc = time.Local
-			}
-			timeFormat := "2006-01-02 15:04:05"
-			date, err := time.ParseInLocation(timeFormat, from, loc)
-			if err != nil {
-				setError(err.Error(), result)
-			} else {
-				timestampFrom = date.Unix()
-			}
-		}
-		timestampTo, err := strconv.ParseInt(to, 10, 64)
-		if err != nil {
-			timestampTo = time.Now().UTC().Unix()
-		}
+		timestampFrom = getTimestampFromString(from, result)
+		timestampTo = getTimestampFromString(to, result)
 		if timestampFrom >= timestampTo {
+			log.Debugf("duration = %v", duration)
+			log.Debugf("timestampFrom = %v", timestampFrom)
+			log.Debugf("timestampTo = %v", timestampTo)
 			setError("Value of timestampFrom should be less than value of timestampTo.", result)
 		}
 		return timestampFrom, timestampTo
@@ -1046,38 +1053,33 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (tim
 	return timestampFrom, timestampTo
 }
 
-func getGraphQueryResponse(metrics []string, duration string, hostnames []string, result map[string]interface{}) ([]*cmodel.GraphQueryResponse, int64) {
+func getGraphQueryResponse(hostnames []string, metrics []string, duration string, consolidationFunction string, step int, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	data := []*cmodel.GraphQueryResponse{}
 	start, end := convertDurationToPoint(duration, result)
-	diff := end - start
-
-	proc.HistoryRequestCnt.Incr()
 	for _, hostname := range hostnames {
 		for _, metric := range metrics {
 			request := cmodel.GraphQueryParam{
 				Start:     start,
 				End:       end,
-				ConsolFun: "AVERAGE",
+				ConsolFun: consolidationFunction,
 				Endpoint:  hostname,
 				Counter:   metric,
 			}
+			if step >= 60 {
+				request.Step = step
+			}
 			response, err := graph.QueryOne(request)
 			if err != nil {
+				log.Debugf("request = %v", request)
+				log.Debugf("response = %v", response)
+				log.Debugf("graph.queryOne fail, %v", request)
 				setError("graph.queryOne fail, "+err.Error(), result)
-				return data, diff
-			}
-			if result == nil {
-				continue
+				return data
 			}
 			data = append(data, response)
 		}
 	}
-
-	proc.HistoryResponseCounterCnt.IncrBy(int64(len(data)))
-	for _, item := range data {
-		proc.HistoryResponseItemCnt.IncrBy(int64(len(item.Values)))
-	}
-	return data, diff
+	return data
 }
 
 func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
@@ -1100,7 +1102,7 @@ func getHostMetricValues(rw http.ResponseWriter, req *http.Request) {
 	}
 	metrics := getMetricsByMetricType(metricType)
 	if len(metrics) > 0 && strings.Index(duration, "d") > -1 {
-		data, _ := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
+		data := getGraphQueryResponse([]string{hostname}, metrics, duration, "AVERAGE", 1, result)
 
 		for _, series := range data {
 			values := []interface{}{}
@@ -1365,8 +1367,8 @@ func addRecentData(data []*cmodel.GraphQueryResponse, dataRecent []*cmodel.Graph
 				}
 			}
 			item.Values = values
-			data[key] = item
 		}
+		data[key] = item
 	}
 	return data
 }
@@ -1393,29 +1395,17 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 			metrics = append(metrics, "nic.default.out.speed")
 		}
 	}
-
 	data := []*cmodel.GraphQueryResponse{}
-	diff := int64(0)
 	if metricType == "disks" || metricType == "io" {
 		for _, hostname := range hostnames {
 			metrics = getDisksIOMetrics(hostname, metricType)
-			dataOfHost, diff := getGraphQueryResponse(metrics, duration, []string{hostname}, result)
-			dataRecent := []*cmodel.GraphQueryResponse{}
-			if diff > 43200 && strings.Index(duration, ",") == -1 {
-				dataRecent, _ = getGraphQueryResponse(metrics, "10min", []string{hostname}, result)
-			}
-			dataOfHost = addRecentData(dataOfHost, dataRecent)
+			dataOfHost := getGraphQueryData(metrics, duration, []string{hostname}, 1, result)
 			for _, series := range dataOfHost {
 				data = append(data, series)
 			}
 		}
 	} else {
-		data, diff = getGraphQueryResponse(metrics, duration, hostnames, result)
-		dataRecent := []*cmodel.GraphQueryResponse{}
-		if diff > 43200 && strings.Index(duration, ",") == -1 {
-			dataRecent, _ = getGraphQueryResponse(metrics, "10min", hostnames, result)
-		}
-		data = addRecentData(data, dataRecent)
+		data = getGraphQueryData(metrics, duration, hostnames, 1, result)
 	}
 	for _, series := range data {
 		metric := series.Counter
@@ -1490,9 +1480,9 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 	items := []interface{}{}
 	sort.Strings(hostnames)
 	metrics := getMetricsByMetricType(metricType)
-	hostMap := map[string]interface{}{}
+	hostsMap := map[string]interface{}{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data, _ := getGraphQueryResponse(metrics, duration, hostnames, result)
+		data := getGraphQueryResponse(hostnames, metrics, duration, "AVERAGE", 1, result)
 		for _, series := range data {
 			values := []interface{}{}
 			for _, rrdObj := range series.Values {
@@ -1523,7 +1513,7 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 				"net.out.bits.avg": 0,
 				"time":             "",
 			}
-			if value, ok := hostMap[series.Endpoint]; ok {
+			if value, ok := hostsMap[series.Endpoint]; ok {
 				item = value.(map[string]interface{})
 			}
 			if series.Counter == "net.if.in.bits/iface=eth_all" {
@@ -1534,11 +1524,11 @@ func getBandwidthsAverage(metricType string, duration string, hostnames []string
 			if item["time"] == "" && average > 0 {
 				item["time"] = time.Unix(int64(timestamp), 0).Format("2006-01-02 15:04:05")
 			}
-			hostMap[series.Endpoint] = item
+			hostsMap[series.Endpoint] = item
 		}
 	}
 	for _, hostname := range hostnames {
-		host := hostMap[hostname]
+		host := hostsMap[hostname]
 		if host.(map[string]interface{})["host"].(string) != "" {
 			items = append(items, host)
 		}
@@ -1689,6 +1679,175 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[string]interface{}) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+	hostsMap := map[string]string{}
+	ISPs := map[string][]string{}
+	ISPNames := []string{
+		"all",
+		"cmb",
+		"cnc",
+		"ctl",
+		"oth",
+	}
+	var rows []orm.Params
+	o := orm.NewOrm()
+	hostnames := []string{}
+	sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
+	sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
+	num, err := o.Raw(sql, platformName).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			hostnames = append(hostnames, row["hostname"].(string))
+		}
+	}
+	sql = "SELECT hostname, platform, isp FROM `boss`.`hosts`"
+	sql += " WHERE hostname IN ('" + strings.Join(hostnames, "','")
+	sql += "') AND exist = 1 ORDER BY isp ASC"
+	num, err = o.Raw(sql).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			ISP := row["isp"].(string)
+			if ISP == "cmb" || ISP == "cnc" || ISP == "ctl" {
+				hostsMap[hostname] = ISP
+				ISPs[ISP] = append(ISPs[ISP], hostname)
+			} else {
+				hostsMap[hostname] = "oth"
+				ISPs["oth"] = append(ISPs["oth"], hostname)
+			}
+			ISPs["all"] = append(ISPs["all"], hostname)
+		}
+	}
+	hostnames = ISPs["all"]
+	metrics := getMetricsByMetricType("bandwidths")
+	data := getGraphQueryData(metrics, duration, hostnames, 1200, result)
+	if len(data) > 0 {
+		index := -1
+		max := 0
+		timestampLatest := int64(0)
+		for key, item := range data {
+			if max < len(item.Values) {
+				max = len(item.Values)
+				index = key
+			}
+			if len(item.Values) > 0 {
+				timestamp := item.Values[len(item.Values) - 1].Timestamp
+				if timestampLatest < timestamp {
+					timestampLatest = timestamp
+				}
+			}
+		}
+		start, end := convertDurationToPoint(duration, result)
+		diff := end - start
+		unit := 5
+		if diff < 1200 {
+			unit = 1
+		}
+		tickers := []string{}
+		tickersMap := map[string]float64{}
+		for _, rrdObj := range data[index].Values {
+			ticker := getTicker(rrdObj.Timestamp, unit)
+			if _, ok := tickersMap[ticker]; !ok {
+				if len(ticker) > 0 {
+					tickersMap[ticker] = float64(0)
+					tickers = append(tickers, ticker)
+				}
+			}
+		}
+		ISPsMap := map[string]map[string]map[string]float64{}
+		for _, ISP := range ISPNames {
+			ISPsMap[ISP] = map[string]map[string]float64{}
+			for _, metric := range metrics {
+				ISPsMap[ISP][metric] = map[string]float64{}
+			}
+		}
+		for _, series := range data {
+			hostname := series.Endpoint
+			ISP := hostsMap[hostname]
+			metric := series.Counter
+			for _, rrdObj := range series.Values {
+				value := float64(rrdObj.Value)
+				if !math.IsNaN(value) {
+					timestamp := rrdObj.Timestamp
+					ticker := getNearestTicker(float64(timestamp), tickers)
+					if len(ticker) > 0 {
+						if _, ok := ISPsMap[ISP][metric][ticker]; ok {
+							ISPsMap[ISP][metric][ticker] += value
+						} else {
+							ISPsMap[ISP][metric][ticker] = value
+						}
+						if _, ok := ISPsMap["all"][metric][ticker]; ok {
+							ISPsMap["all"][metric][ticker] += value
+						} else {
+							ISPsMap["all"][metric][ticker] = value
+						}
+					}
+				}
+			}
+		}
+		for _, ISP := range ISPNames {
+			for _, metric := range metrics {
+				max := float64(0)
+				for _, ticker := range tickers {
+					if value, ok := ISPsMap[ISP][metric][ticker]; ok {
+						if max < value {
+							max = value
+						}
+					}
+				}
+				threshold := max * 0.02
+				data := [][]float64{}
+				for _, ticker := range tickers {
+					if value, ok := ISPsMap[ISP][metric][ticker]; ok {
+						timestamp := getTimestampFromTicker(ticker)
+						if value > threshold {
+							datum := []float64{
+								float64(timestamp * 1000),
+								value,
+							}
+							data = append(data, datum)
+						}
+					}
+				}
+				if len(data) > 4 {
+					value := data[len(data) - 3][1]
+					if (value < (data[len(data) - 4][1]) * 0.9) &&  (value <= (data[len(data) - 2][1])) {
+						value = (data[len(data) - 4][1] + data[len(data) - 2][1]) / 2
+						data[len(data) - 3][1] = value
+					}
+				}
+				if len(data) > 3 {
+					value := data[len(data) - 2][1]
+					if (value < (data[len(data) - 3][1]) * 0.9) &&  (value <= (data[len(data) - 1][1])) {
+						value = (data[len(data) - 3][1] + data[len(data) - 1][1]) / 2
+						data[len(data) - 2][1] = value
+					}
+				}
+				item := map[string]interface{}{
+					"data":       data,
+					"hostsCount": len(ISPs[ISP]),
+					"ISP":        ISP,
+					"metric":     metric,
+					"platform":   platformName,
+				}
+				items = append(items, item)
+			}
+		}
+	}
+	result["items"] = items
+	nodes["result"] = result
+	nodes["count"] = len(items)
+	nodes["platform"] = platformName
+}
+
 func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	var nodes = make(map[string]interface{})
 	arguments := strings.Split(req.URL.Path, "/")
@@ -1699,6 +1858,15 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 	} else if len(arguments) == 5 && arguments[len(arguments)-1] == "contact" {
 		platformName := arguments[len(arguments)-2]
 		getPlatformContact(platformName, nodes)
+
+	} else if arguments[4] == "isp" {
+		platformName := arguments[3]
+		duration := "1d"
+		if len(arguments) == 6 {
+			duration = arguments[5]
+		}
+		getPlatformBandwidthsByISP(platformName, duration, nodes)
+		rw.Header().Set("Access-Control-Allow-Origin", "*")
 	} else {
 		errors := []string{}
 		var result = make(map[string]interface{})
@@ -1708,6 +1876,8 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 			errorMessage += " Example: /api/platforms/{platformName}/bandwidths/average"
 		} else if strings.Index(req.URL.Path, "/contact") > -1 {
 			errorMessage += " Example: /api/platforms/{platformName}/contact"
+		} else if strings.Index(req.URL.Path, "/isp") > -1 {
+			errorMessage += " Example: /api/platforms/{platformName}/isp"
 		}
 		setError(errorMessage, result)
 		nodes["result"] = result
@@ -1834,7 +2004,7 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	tickers := []string{}
 	tickersMap := map[string]float64{}
 	if len(metrics) > 0 && len(hostnames) > 0 {
-		data := getGraphQueryData(metrics, duration, hostnames, result)
+		data := getGraphQueryData(metrics, duration, hostnames, 1200, result)
 		index := -1
 		max := 0
 		for key, item := range data {
@@ -1844,7 +2014,7 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 			}
 		}
 		for _, rrdObj := range data[index].Values {
-			ticker := getTicker(rrdObj.Timestamp)
+			ticker := getTicker(rrdObj.Timestamp, 5)
 			if _, ok := tickersMap[ticker]; !ok {
 				if len(ticker) > 0 {
 					tickersMap[ticker] = float64(0)
@@ -1866,7 +2036,7 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 				tickerMap := valuesMap[metric]
 				for _, rrdObj := range series.Values {
 					if !math.IsNaN(float64(rrdObj.Value)) {
-						ticker := getTicker(rrdObj.Timestamp)
+						ticker := getNearestTicker(float64(rrdObj.Timestamp), tickers)
 						tickerMap[ticker] += float64(rrdObj.Value)
 					}
 				}
@@ -1877,25 +2047,15 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 	if len(tickers) > 0 {
 		for _, metric := range metrics {
 			tickerMap := metricMap[metric].(map[string]float64)
-			max := float64(0)
-			for _, ticker := range tickers {
-				value := tickerMap[ticker]
-				if max < value {
-					max = value
-				}
-			}
-			threshold := max * 0.02
 			data := [][]float64{}
 			for _, ticker := range tickers {
 				timestamp := getTimestampFromTicker(ticker)
 				value := tickerMap[ticker]
-				if value > threshold {
-					datum := []float64{
-						float64(timestamp * 1000),
-						value,
-					}
-					data = append(data, datum)
+				datum := []float64{
+					float64(timestamp * 1000),
+					value,
 				}
+				data = append(data, datum)
 			}
 			item := map[string]interface{}{
 				"host":   strings.Join(hostnames, ","),
