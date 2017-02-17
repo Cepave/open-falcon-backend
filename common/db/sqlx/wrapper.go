@@ -3,7 +3,10 @@ package sqlx
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/jmoiron/sqlx"
+
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/db"
 )
 
@@ -238,6 +241,16 @@ func (ctrl *DbController) QueryRowxAndStructScan(dest interface{}, query string,
 
 func (ctrl *DbController) QueryRowxExt(query string, args ...interface{}) *RowExt {
 	return ToRowExt(ctrl.sqlxDb.QueryRowx(query, args...))
+}
+
+func (ctrl *DbController) SelectWithFoundRows(txCallback TxCallback, paging *commonModel.Paging) {
+	finalFunc := func(sqlxTx *sqlx.Tx) db.TxFinale {
+		txFinale := txCallback.InTx(sqlxTx)
+		ToTxExt(sqlxTx).Get(&paging.TotalCount, "SELECT FOUND_ROWS()")
+		return txFinale
+	}
+
+	ctrl.InTx(TxCallbackFunc(finalFunc))
 }
 
 type RowExt sqlx.Row
