@@ -24,10 +24,7 @@ func getGroupTagById(
 		GroupTagId int32 `mvc:"param[group_tag_id]"`
 	},
 ) mvc.OutputBody {
-	groupTag := dbOwl.GetGroupTagById(p.GroupTagId)
-	if groupTag == nil {
-		return mvc.NotFoundOutputBody
-	}
-
-	return mvc.JsonOutputBody(groupTag)
+	return mvc.JsonOutputOrNotFound(
+		dbOwl.GetGroupTagById(p.GroupTagId),
+	)
 }

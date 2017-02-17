@@ -24,10 +24,7 @@ func getNameTagById(
 		NameTagId int16 `mvc:"param[name_tag_id]"`
 	},
 ) mvc.OutputBody {
-	nameTag := dbOwl.GetNameTagById(p.NameTagId)
-	if nameTag == nil {
-		return mvc.NotFoundOutputBody
-	}
-
-	return mvc.JsonOutputBody(nameTag)
+	return mvc.JsonOutputOrNotFound(
+		dbOwl.GetNameTagById(p.NameTagId),
+	)
 }
