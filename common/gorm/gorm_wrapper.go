@@ -125,9 +125,11 @@ func (self *GormDbExt) SelectWithFoundRows(txCallback TxCallback, paging *common
 	var finalFunc TxCallbackFunc = func(txGormDb *gorm.DB) db.TxFinale {
 		txFinale := txCallback.InTx(txGormDb)
 
+		var numOfRows int32
 		var selectFoundRows = txGormDb.Raw("SELECT FOUND_ROWS()")
-		err := selectFoundRows.Row().Scan(&paging.TotalCount)
+		err := selectFoundRows.Row().Scan(&numOfRows)
 		self.ConvertError.PanicIfError(err)
+		paging.SetTotalCount(numOfRows)
 
 		return txFinale
 	}

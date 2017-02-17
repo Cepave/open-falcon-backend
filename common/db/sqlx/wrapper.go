@@ -246,7 +246,11 @@ func (ctrl *DbController) QueryRowxExt(query string, args ...interface{}) *RowEx
 func (ctrl *DbController) SelectWithFoundRows(txCallback TxCallback, paging *commonModel.Paging) {
 	finalFunc := func(sqlxTx *sqlx.Tx) db.TxFinale {
 		txFinale := txCallback.InTx(sqlxTx)
-		ToTxExt(sqlxTx).Get(&paging.TotalCount, "SELECT FOUND_ROWS()")
+
+		var numOfRows int32
+		ToTxExt(sqlxTx).Get(&numOfRows, "SELECT FOUND_ROWS()")
+		paging.SetTotalCount(numOfRows)
+
 		return txFinale
 	}
 
