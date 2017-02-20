@@ -189,3 +189,12 @@ type SimpleAgent1InCity struct {
 	City   *owlModel.City2 `json:"city"`
 	Agents []*SimpleAgent1 `json:"agents"`
 }
+
+type PingListLog struct {
+	NumberOfTargets int32 `db:"apll_number_of_targets"`
+	AccessTime time.Time `db:"apll_time_access"`
+	RefreshTime time.Time `db:"apll_time_refresh"`
+}
+func (l *PingListLog) GetDurationOfLastAccess(checkedTime time.Time) int64 {
+	return int64(checkedTime.Sub(l.AccessTime) / time.Minute)
+}

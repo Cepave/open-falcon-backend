@@ -1,10 +1,14 @@
 package nqm
 
 import (
-	"github.com/leebenson/conform"
-	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
-	. "gopkg.in/check.v1"
 	"reflect"
+
+	"github.com/leebenson/conform"
+
+	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
+	otest "github.com/Cepave/open-falcon-backend/common/testing"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	. "gopkg.in/check.v1"
 )
 
 type TestAgentSuite struct{}
@@ -47,6 +51,8 @@ func (suite *TestAgentSuite) TestValidateOfAgentForAdding(c *C) {
 
 
 	for _, testCase := range testCases {
+		ocheck.LogTestCase(c, testCase)
+
 		sampleAgent := &AgentForAdding{
 			ConnectionId: "conn_id",
 			Hostname: "hostname",
@@ -63,5 +69,27 @@ func (suite *TestAgentSuite) TestValidateOfAgentForAdding(c *C) {
 			c, Validator.Struct(sampleAgent),
 			testCase.fieldName,
 		)
+	}
+}
+
+// Tests the getting of duration of time
+func (suite *TestAgentSuite) TestGetDurationOfLastAccessOnPingListLog(c *C) {
+	testCases := []*struct {
+		checkedTime string
+		expectedMinutes int64
+	} {
+		{ "2014-06-07T08:13:07+08:00", 13 },
+		{ "2014-06-07T10:00:33+08:00", 120 },
+	}
+
+	accessTime := otest.ParseTime(c, "2014-06-07T08:00:00+08:00")
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		testedLog := &PingListLog{ AccessTime: accessTime }
+		checkedTime := otest.ParseTime(c, testCase.checkedTime)
+
+		c.Assert(testedLog.GetDurationOfLastAccess(checkedTime), Equals, testCase.expectedMinutes, comment)
 	}
 }

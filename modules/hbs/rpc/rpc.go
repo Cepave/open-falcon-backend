@@ -15,6 +15,8 @@ type Agent int
 type NqmAgent int
 
 func Start() {
+	nqmAgentHbsService.Start()
+
 	addr := g.Config().Listen
 
 	server := rpc.NewServer()
@@ -39,4 +41,7 @@ func Start() {
 		}
 		go server.ServeCodec(jsonrpc.NewServerCodec(conn))
 	}
+}
+func Stop() {
+	nqmAgentHbsService.Stop()
 }
