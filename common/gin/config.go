@@ -131,7 +131,9 @@ func init() {
 //
 // 	Access-Control-Allow-Origin: *
 // 	Access-Control-Allow-Credentials: true
-// 	Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, page-size, page-pos, order-by, page-ptr
+// 	Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Cache-Control, X-Requested-With,
+// 		accept, origin,
+// 		page-size, page-pos, order-by, page-ptr, previous-page, next-page, page-more, total-count
 // 	Access-Control-Allow-Methods: POST, OPTIONS, GET, PUT
 //  Access-Control-Max-Age": "43200"
 func NewDefaultJsonEngine(config *GinConfig) *gin.Engine {
