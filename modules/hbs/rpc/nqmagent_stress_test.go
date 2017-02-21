@@ -1,12 +1,12 @@
 package rpc
 
 import (
+	"fmt"
+	"math/rand"
 	"net/rpc"
 	"sync"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
-
-	rd "github.com/Pallinder/go-randomdata"
 
 	testJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
 
@@ -17,7 +17,8 @@ type NqmAgentStressSuite struct{}
 
 var _ = Suite(&NqmAgentStressSuite{})
 
-var benchamrkTaskGoRoutines = 4
+var numberOfRoutines = 16
+
 // Tests the NQM agent HBS in stress condition
 func (suite *NqmAgentStressSuite) TestTask(c *C) {
 	idsPool := &connIdsPool {
@@ -32,9 +33,16 @@ func (suite *NqmAgentStressSuite) TestTask(c *C) {
 		return
 	}
 
+	routines := make(chan bool, numberOfRoutines)
+	for i := 0; i < numberOfRoutines; i++ {
+		routines <- true
+	}
+
 	for i := 0; i < idsPool.len; i++ {
 		connectionId := idsPool.getNextConnId()
-		ipAddress := rd.IpV4Address()
+		ipAddress := idsPool.getNextIpAddress()
+
+		c.Logf("Random IPAddress[%s] for Connection id: [%s]", ipAddress, connectionId)
 
 		request := &model.NqmTaskRequest{
 			ConnectionId: connectionId,
@@ -43,7 +51,14 @@ func (suite *NqmAgentStressSuite) TestTask(c *C) {
 		}
 
 		var resp model.NqmTaskResponse
-		testJsonRpc.OpenClient(c, func(jsonRpcClient *rpc.Client) {
+
+		<-routines
+
+		go testJsonRpc.OpenClient(c, func(jsonRpcClient *rpc.Client) {
+			defer func() {
+				routines <- true
+			}()
+
 			err := jsonRpcClient.Call(
 				"NqmAgent.Task", request, &resp,
 			)
@@ -55,6 +70,10 @@ func (suite *NqmAgentStressSuite) TestTask(c *C) {
 			}
 		})
 	}
+
+	for i := 0; i < numberOfRoutines; i++ {
+		<-routines
+	}
 }
 
 type connIdsPool struct {
@@ -62,6 +81,8 @@ type connIdsPool struct {
 	len int
 	index int
 	mutex *sync.Mutex
+
+	ip1 int
 }
 func (p *connIdsPool) getNextConnId() string {
 	p.mutex.Lock()
@@ -73,5 +94,21 @@ func (p *connIdsPool) getNextConnId() string {
 
 	return connectionId
 }
+func (p *connIdsPool) getNextIpAddress() string {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
 
-var connectionIds = []string{}
+	p.ip1++
+	p.ip1 = p.ip1 % 254 + 1
+
+	return fmt.Sprintf(
+		"%d.%d.%d.%d",
+		p.ip1,
+		rand.Int31n(255) + 1,
+		rand.Int31n(255) + 1,
+		rand.Int31n(255) + 1,
+	)
+}
+
+var connectionIds = []string{
+}
