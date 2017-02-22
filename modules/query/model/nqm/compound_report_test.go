@@ -90,3 +90,43 @@ func (suite *TestCompountReportSuite) TestCompareForHostOfTargets(c *C) {
 		c.Assert(testedResult, Equals, testCase.expected, comment)
 	}
 }
+
+// Tests the compare functions for special(-1) values on NQM metrics
+func (suite *TestCompountReportSuite) TestCompareSpecialValues(c *C) {
+	testCases := []*struct {
+		leftValue *Metrics
+		rightValue *Metrics
+		compareFuncName string
+		expectedResult int
+	} {
+		{ &Metrics{ Max: 10 }, &Metrics{ Max: 20 }, MetricMax, -1, },
+		{ &Metrics{ Max: -1 }, &Metrics{ Max: 10 }, MetricMax, 1, },
+		{ &Metrics{ Max: 10 }, &Metrics{ Max: -1 }, MetricMax, -1, },
+		{ &Metrics{ Min: 10 }, &Metrics{ Min: 20 }, MetricMin, -1, },
+		{ &Metrics{ Min: -1 }, &Metrics{ Min: 10 }, MetricMin, 1, },
+		{ &Metrics{ Min: 10 }, &Metrics{ Min: -1 }, MetricMin, -1, },
+		{ &Metrics{ Med: 10 }, &Metrics{ Med: 20 }, MetricMed, -1, },
+		{ &Metrics{ Med: -1 }, &Metrics{ Med: 10 }, MetricMed, 1, },
+		{ &Metrics{ Med: 10 }, &Metrics{ Med: -1 }, MetricMed, -1, },
+		{ &Metrics{ Avg: 10.34 }, &Metrics{ Avg: 20.33 }, MetricAvg, -1, },
+		{ &Metrics{ Avg: -1 }, &Metrics{ Avg: 20.33 }, MetricAvg, 1, },
+		{ &Metrics{ Avg: 10.34 }, &Metrics{ Avg: -1 }, MetricAvg, -1, },
+		{ &Metrics{ Mdev: 10.34 }, &Metrics{ Mdev: 20.33 }, MetricMdev, -1, },
+		{ &Metrics{ Mdev: -1 }, &Metrics{ Mdev: 20.33 }, MetricMdev, 1, },
+		{ &Metrics{ Mdev: 10.34 }, &Metrics{ Mdev: -1 }, MetricMdev, -1, },
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		testedFunc := CompareFunctions[testCase.compareFuncName]
+		testedResult := testedFunc(
+			&DynamicRecord{ Metrics: &DynamicMetrics { Metrics: testCase.leftValue } },
+			&DynamicRecord{ Metrics: &DynamicMetrics { Metrics: testCase.rightValue } },
+			utils.Descending,
+		)
+
+		c.Assert(testedResult, Equals, testCase.expectedResult, comment)
+	}
+}

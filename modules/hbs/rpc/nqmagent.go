@@ -9,8 +9,16 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
 	"github.com/Cepave/open-falcon-backend/common/rpc"
 	"github.com/asaskevich/govalidator"
+)
+
+var nqmAgentHbsService = nqmService.NewAgentHbsService(
+	nqmService.AgentHbsServiceConfig {
+		QueueSizeOfRefreshCacheOfPingList: 8,
+		CacheTimeoutMinutes: 60,
+	},
 )
 
 // Task retrieves the configuration of measurement tasks for certain client
@@ -33,41 +41,25 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	response.Targets = nil
 	response.Measurements = nil
 
+	now := time.Now()
+
 	/**
 	 * Refresh the information of agent
 	 */
 	var currentAgent = nqmModel.NewNqmAgent(&request)
-	if err = dbNqm.RefreshAgentInfo(currentAgent); err != nil {
+	var agentDetail = dbNqm.RefreshAgentInfo(currentAgent, now)
+	if agentDetail == nil {
 		return
 	}
 	// :~)
 
-	/**
-	 * Checks and loads agent which is needing performing ping task
-	 */
-	var nqmAgent *commonModel.NqmAgent
-	if nqmAgent, err = dbNqm.GetAndRefreshNeedPingAgentForRpc(
-		currentAgent.Id, time.Now(),
-	); err != nil {
+	targets := nqmAgentHbsService.LoadPingList(currentAgent, now)
+	if len(targets) == 0 {
 		return
 	}
-
-	if nqmAgent == nil {
-		return
-	}
-	// :~)
-
-	/**
-	 * Loads matched targets
-	 */
-	var targets []commonModel.NqmTarget
-	if targets, err = dbNqm.GetTargetsByAgentForRpc(currentAgent); err != nil {
-		return
-	}
-	// :~)
 
 	response.NeedPing = true
-	response.Agent = nqmAgent
+	response.Agent = agentDetail
 	response.Targets = targets
 	response.Measurements = map[string]commonModel.MeasurementsProperty{
 		"fping":   {true, []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}, 300},

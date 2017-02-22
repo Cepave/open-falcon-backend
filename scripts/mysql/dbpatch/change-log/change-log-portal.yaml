@@ -143,3 +143,13 @@
     filename: "mike-27.sql",
     comment: "[OWL-1120] Add table for persistence of query conditions"
 }
+- {
+    id: "mike-28",
+    filename: "mike-28.sql",
+    comment: "[OWL-1442] Performance tuning of view on enabled ping task"
+}
+- {
+    id: "mike-29",
+    filename: "mike-29.sql",
+    comment: "[OWL-1442] Add cache table for NQM ping list of agent"
+}
