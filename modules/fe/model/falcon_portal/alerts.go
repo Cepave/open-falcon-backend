@@ -1,6 +1,7 @@
 package falconPortal
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -153,6 +154,9 @@ func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bo
 			}
 		} else if showAll {
 			// will append this reocrd into output without boss info
+		} else if ok, _ := regexp.MatchString("virtual-.+", item.HostName); ok {
+			// work around for display vip alarm
+			// vip's endpoint name are always contains "virtual-"
 		} else {
 			continue
 		}
