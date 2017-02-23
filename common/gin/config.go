@@ -66,6 +66,9 @@ package gin
 import (
 	"os"
 	"fmt"
+	"time"
+
+	"gopkg.in/gin-contrib/cors.v1"
 	"gopkg.in/gin-gonic/gin.v1"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
@@ -98,42 +101,54 @@ func (config *GinConfig) String() string {
 	return config.GetAddress()
 }
 
+var corsConfig cors.Config
+
+func init() {
+	headers := []string{
+		"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "Cache-Control", "X-Requested-With",
+		"accept", "origin",
+		"page-size", "page-pos", "order-by", "page-ptr", "total-count", "page-more", "previous-page", "next-page",
+	}
+
+	corsConfig = cors.Config {
+		AllowMethods: []string{ "POST", "OPTIONS", "GET", "PUT" },
+		AllowHeaders: headers,
+		ExposeHeaders: headers,
+		AllowCredentials: true,
+		MaxAge: 12 * time.Hour,
+	}
+	corsConfig.AllowAllOrigins = true
+}
+
 // Initialize a router with default JSON response
 //
 // 	1. The panic code would not cause process to dead
-// 	2. Use "CORSMiddleware()" as middleware for cross-site issue
+// 	2. Use gin-contrib/cors as middleware for cross-site issue
 // 	3. Change (*gin.Engine).NoRoute() with JSON output
 // 	4. Change (*gin.Engine).NoMethod() with JSON output
+//
+// CORS Setting
+//
+// 	Access-Control-Allow-Origin: *
+// 	Access-Control-Allow-Credentials: true
+// 	Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Cache-Control, X-Requested-With,
+// 		accept, origin,
+// 		page-size, page-pos, order-by, page-ptr, previous-page, next-page, page-more, total-count
+// 	Access-Control-Allow-Methods: POST, OPTIONS, GET, PUT
+//  Access-Control-Max-Age": "43200"
 func NewDefaultJsonEngine(config *GinConfig) *gin.Engine {
 	gin.SetMode(config.Mode)
 
 	router := gin.New()
-	router.Use(CORSMiddleware)
+
+	router.Use(cors.New(corsConfig))
+
 	router.NoRoute(JsonNoRouteHandler)
 	router.NoMethod(JsonNoMethodHandler)
+
 	router.Use(BuildJsonPanicProcessor(DefaultPanicProcessor))
 
 	return router
-}
-
-// Accepting wide-range of cross-site scirpts
-//
-// 	Access-Control-Allow-Origin: *
-// 	Access-Control-Allow-Credentials: true
-// 	Access-Control-Allow-Headers: Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With
-// 	Access-Control-Allow-Methods: POST, OPTIONS, GET, PUT
-func CORSMiddleware(c *gin.Context) {
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-
-	if c.Request.Method == "OPTIONS" {
-		c.AbortWithStatus(204)
-		return
-	}
-
-	c.Next()
 }
 
 // Try to start the engine with configuration of gin

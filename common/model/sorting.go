@@ -23,6 +23,19 @@ type OrderByDialect struct {
 	FuncEntityToSyntax func(*OrderByEntity) (string, error)
 }
 
+func GetOrderByAndLimit(paging *Paging, dialect *OrderByDialect) string {
+	orderBy, err := dialect.ToQuerySyntax(paging.OrderBy)
+	if err != nil {
+		panic(err)
+	}
+
+	return fmt.Sprintf("\nORDER BY %s\n%s", orderBy, GetSqlLimit(paging))
+}
+
+func GetSqlLimit(paging *Paging) string {
+	return fmt.Sprintf("LIMIT %d, %d", paging.GetOffset(), paging.Size)
+}
+
 // Converts the entities of order to Query syntax
 //
 // If some of mapping could be found, the returned error would be non-nil
