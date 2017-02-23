@@ -466,8 +466,7 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes.json"
-
+	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes/show_ip_type/yes.json"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		setError(err.Error(), result)
@@ -2142,11 +2141,14 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	metricType := ""
 	method := ""
 	duration := ""
-	if len(arguments) == 7 && arguments[len(arguments)-3] == "bandwidths" {
-		hostnames = strings.Split(arguments[len(arguments)-4], ",")
-		metricType = arguments[len(arguments)-3]
-		method = arguments[len(arguments)-2]
-		duration = arguments[len(arguments)-1]
+	if len(arguments) == 7 && arguments[4] == "bandwidths" {
+		hostnames = strings.Split(arguments[3], ",")
+		metricType = arguments[4]
+		method = arguments[5]
+		duration = arguments[6]
+	} else if len(arguments) == 5 && arguments[2] == "hosts" {
+		hostnames = strings.Split(arguments[3], ",")
+		method = arguments[4]
 	} else if len(arguments) == 5 && arguments[2] == "hosts" {
 		hostnames = strings.Split(arguments[3], ",")
 		method = arguments[4]
@@ -2161,8 +2163,8 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 			if strings.Index(hostname, "-") > -1 {
 				NICOutSpeed := getNICOutSpeed(hostname, result)
 				item := map[string]interface{}{
-					"hostname":           hostname,
-					"nic.out.speed.bits": NICOutSpeed,
+					"hostname":         hostname,
+					"nic.out.speed.MB": NICOutSpeed,
 				}
 				items = append(items, item)
 			}
