@@ -19,9 +19,27 @@ func RefreshAgentInfo(agent *nqmModel.NqmAgent, checkedTime time.Time) *commonMo
 		agent: agent,
 		checkedTime: checkedTime,
 	}
+
+	// Builds or updates data of NQM agent(including host)
 	DbFacade.SqlxDbCtrl.InTx(refreshTx)
 
-	if !refreshTx.isAgentEnable {
+	/**
+	 * Loads id and status of NQM agent
+	 */
+	var isAgentEnable bool
+	DbFacade.SqlxDbCtrl.QueryRowxAndScan(
+		`
+		SELECT ag_id, ag_status
+		FROM nqm_agent
+		WHERE ag_connection_id = ?
+		`,
+		[]interface{} { agent.ConnectionId() },
+		&refreshTx.agent.Id,
+		&isAgentEnable,
+	)
+	// :~)
+
+	if !isAgentEnable {
 		return nil
 	}
 
@@ -34,33 +52,18 @@ func RefreshAgentInfo(agent *nqmModel.NqmAgent, checkedTime time.Time) *commonMo
 type refreshAgentProcessor struct {
 	agent *nqmModel.NqmAgent
 	checkedTime time.Time
-	isAgentEnable bool
 }
 func (self *refreshAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	agent := self.agent
-
 	if self.BootCallback(tx) {
 		self.IfTrue(tx)
 	}
-
-	txExt := osqlx.ToTxExt(tx)
-	txExt.QueryRowxAndScan(
-		`
-		SELECT ag_id, ag_status
-		FROM nqm_agent
-		WHERE ag_connection_id = ?
-		`,
-		[]interface{} { agent.ConnectionId() },
-		&agent.Id,
-		&self.isAgentEnable,
-	)
 
 	return commonDb.TxCommit
 }
 func (self *refreshAgentProcessor) BootCallback(tx *sqlx.Tx) bool {
 	agent := self.agent
 
-	result := tx.MustExec(
+	result := DbFacade.SqlxDb.MustExec(
 		`
 		UPDATE nqm_agent
 		SET ag_hostname = ?,
@@ -93,14 +96,9 @@ func (self *refreshAgentProcessor) IfTrue(tx *sqlx.Tx) {
 	tx.MustExec(
 		`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)
-		VALUES(
-			?, ?, ?, FROM_UNIXTIME(?),
-			(
-				SELECT id
-				FROM host
-				WHERE hostname = ?
-			)
-		)
+		SELECT ?, ?, ?, FROM_UNIXTIME(?), id
+		FROM host
+		WHERE hostname = ?
 		ON DUPLICATE KEY UPDATE
 			ag_hostname = VALUES(ag_hostname),
 			ag_ip_address = VALUES(ag_ip_address),
