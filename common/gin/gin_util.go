@@ -17,10 +17,12 @@ const (
 	headerOrderBy = "order-by"
 )
 
+// Defines the error while binding json
 type BindJsonError struct {
 	sourceError error
 }
 
+// Implements error interface
 func (err BindJsonError) Error() string {
 	return err.sourceError.Error()
 }
@@ -35,14 +37,12 @@ func BindJson(context *gin.Context, object interface{}) {
 // PagingByHeader would initialize paging object by header
 //
 // This funcion would load header value:
-// "page-size" - The size of page
-// "page-pos" - The position of page, starting with "1"
-// "order-by" - The order for paging
+//
+// 	"page-size" - The size of page
+// 	"page-pos" - The position of page, starting with "1"
+// 	"order-by" - The order for paging
 //
 // 		<prop_1>#<dir>:<prop_2>#<dir>:...
-//
-// context - The gin context
-// defaultPaging - The default value of paging
 func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Paging {
 	finalPaging := *defaultPaging
 
@@ -66,7 +66,7 @@ func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Pa
 	if orderBy := context.Request.Header.Get(headerOrderBy)
 		orderBy != "" {
 
-		parsedValue, err := parseOrderBy(orderBy)
+		parsedValue, err := ParseOrderBy(orderBy)
 		if err == nil {
 			finalPaging.OrderBy = parsedValue
 		}
@@ -93,7 +93,7 @@ func int32ToString(v int32) string {
 }
 
 var regexpOrderValue = regexp.MustCompile(`^\w+(?:#(?:a|d|asc|desc|ascending|descending))?(?::\w+(?:#(?:a|d|asc|desc|ascending|descending))?)*$`)
-func parseOrderBy(headerValueOfOrderBy string) ([]*model.OrderByEntity, error) {
+func ParseOrderBy(headerValueOfOrderBy string) ([]*model.OrderByEntity, error) {
 	var result []*model.OrderByEntity
 
 	headerValueOfOrderBy = strings.ToLower(headerValueOfOrderBy)

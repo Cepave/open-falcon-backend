@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"gopkg.in/check.v1"
-	"github.com/Cepave/open-falcon-backend/common/utils"
+	ot "github.com/Cepave/open-falcon-backend/common/reflect/types"
 )
 
 var LargerThan = &checkForCompare{ largerThan, "LargerThan", "The left value **is not** larger than right value" }
@@ -58,11 +58,11 @@ func performCompare(left interface{}, right interface{}, operator int) bool {
 func convertNumberToCommonType(v interface{}) interface{} {
 	switch v.(type) {
 	case int, int8, int16, int32, int64:
-		return reflect.ValueOf(v).Convert(utils.TypeOfInt64).Interface()
+		return reflect.ValueOf(v).Convert(ot.TypeOfInt64).Interface()
 	case uint, uint8, uint16, uint32, uint64:
-		return reflect.ValueOf(v).Convert(utils.TypeOfUint64).Interface()
+		return reflect.ValueOf(v).Convert(ot.TypeOfUint64).Interface()
 	case float32, float64:
-		return reflect.ValueOf(v).Convert(utils.TypeOfFloat64).Interface()
+		return reflect.ValueOf(v).Convert(ot.TypeOfFloat64).Interface()
 	}
 
 	panic(fmt.Sprintf("Unsupported type: %T", v))

@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"errors"
+	"fmt"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 )
@@ -33,4 +34,18 @@ func (suite *TestErrorSuite) TestHandleError(c *C) {
 func samplePanic(samplePanic interface{}) (err error) {
 	defer HandleError(&err)()
 	panic(samplePanic)
+}
+
+func ExampleHanleError() {
+	sampleFunc := func() (err error) {
+		defer HandleError(&err)()
+
+		panic("This is panic")
+	}
+
+	err := sampleFunc()
+	fmt.Printf("%v\n", err)
+
+	// Output:
+	// Has error on RPC: This is panic
 }

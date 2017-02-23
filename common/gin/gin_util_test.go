@@ -98,7 +98,7 @@ func (suite *TestGinUtilSuite) TestParseOrderBy(c *C) {
 	}
 
 	for _, testCase := range testCases {
-		testedResult, err := parseOrderBy(testCase.sampleValue)
+		testedResult, err := ParseOrderBy(testCase.sampleValue)
 
 		if !testCase.hasError {
 			c.Assert(err, IsNil)
