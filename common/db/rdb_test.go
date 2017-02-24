@@ -125,7 +125,7 @@ func (suite *TestRdbSuite) TestQueryForRow(c *C) {
 	var numberOfRows int
 	testedCtrl.QueryForRow(
 		RowCallbackFunc(func(row *sql.Row) {
-			DbPanic(row.Scan(&numberOfRows))
+			PanicIfError(row.Scan(&numberOfRows))
 		}),
 		"SELECT COUNT(*) FROM test_row",
 	)
@@ -164,7 +164,7 @@ func (suite *TestRdbSuite) TestInTx(c *C) {
 			tx.Exec("INSERT INTO test_in_tx VALUES(123, 'v-123')")
 			tx.Exec("INSERT INTO test_in_tx VALUES(124, 'v-124')")
 			_, err := tx.Exec("INSERT INTO test_in_tx VALUES(21, 'v-21')")
-			DbPanic(err)
+			PanicIfError(err)
 
 			return TxCommit
 		}))

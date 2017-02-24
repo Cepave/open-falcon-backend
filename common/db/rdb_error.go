@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+	"path"
+	"runtime"
 )
 
 // Defines the type of database error
@@ -16,14 +18,25 @@ func (dbError *DbError) Error() string {
 
 // Panic with database error if the error is vialbe
 func PanicIfError(err error) {
-	if err != nil {
-		panic(NewDatabaseError(err))
+	if err == nil {
+		return
 	}
+
+	callerPc, file, line, _ := runtime.Caller(1)
+	callerFunc := runtime.FuncForPC(callerPc)
+
+	finalFileName := path.Base(file)
+
+	panic(NewDatabaseError(
+		fmt.Errorf(
+			"[RDB Error] %s @ File:%s (line:%d)\n\t%s",
+			callerFunc.Name(), finalFileName, line,
+			err,
+		),
+	))
 }
 
-// Constructs a error of database
+// Constructs an error of database
 func NewDatabaseError(err error) *DbError {
-	return &DbError {
-		fmt.Sprintf("Database Error. %v", err),
-	}
+	return &DbError { err.Error() }
 }

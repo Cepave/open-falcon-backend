@@ -29,7 +29,7 @@ func (suite *TestGormSuite) TestPanicIfError(c *C) {
 			dbExt.PanicIfError()
 		},
 		PanicMatches,
-		"no such table.+",
+		"(?s:.*no such table.*)",
 	)
 }
 

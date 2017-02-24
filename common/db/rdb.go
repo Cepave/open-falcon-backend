@@ -27,7 +27,7 @@ func (config *DbConfig) String() string {
 //
 // For exception handling, all callback method should use panic() or log.Panicf() to release the error object.
 //
-// You may use DbPanic() to ease your process of Error object.
+// You may use PanicIfError to ease your process of Error object.
 
 // Main controller of database
 type DbController struct {
@@ -42,8 +42,8 @@ type DbCallback interface {
 
 // The function object delegates the DbCallback interface
 type DbCallbackFunc func(*sql.DB)
-func (callbackFunc DbCallbackFunc) OnDb(db *sql.DB) {
-	callbackFunc(db)
+func (f DbCallbackFunc) OnDb(db *sql.DB) {
+	f(db)
 }
 
 // The interface of rows callback for sql package
@@ -84,7 +84,7 @@ func BuildTxForSqls(queries... string) TxCallback {
 	return TxCallbackFunc(func(tx *sql.Tx) TxFinale {
 		for _, v := range queries {
 			if _, err := tx.Exec(v); err != nil {
-				panic(err)
+				PanicIfError(err)
 			}
 		}
 
@@ -113,9 +113,7 @@ func ToDbExt(db *sql.DB) *DbExt {
 // Exec with panic instead of error
 func (dbext *DbExt) Exec(query string, args ...interface{}) sql.Result {
 	result, err := ((*sql.DB)(dbext)).Exec(query, args)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return result
 }
@@ -123,9 +121,7 @@ func (dbext *DbExt) Exec(query string, args ...interface{}) sql.Result {
 // Query with panic instead of error
 func (dbext *DbExt) Query(query string, args ...interface{}) *sql.Rows {
 	rows, err := ((*sql.DB)(dbext)).Query(query, args)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return rows
 }
@@ -133,9 +129,7 @@ func (dbext *DbExt) Query(query string, args ...interface{}) *sql.Rows {
 // Query with panic instead of error
 func (dbext *DbExt) Prepare(query string) *sql.Stmt {
 	stmt, err := ((*sql.DB)(dbext)).Prepare(query)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return stmt
 }
@@ -151,9 +145,7 @@ func ToRowsExt(rows *sql.Rows) *RowsExt {
 // Gets columns, with panic instead of returned error
 func (rowsExt *RowsExt) Columns() ([]string) {
 	columns, err := ((*sql.Rows)(rowsExt)).Columns()
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return columns
 }
@@ -161,9 +153,7 @@ func (rowsExt *RowsExt) Columns() ([]string) {
 // Scans the values of row into variables, with panic instead of returned error
 func (rowsExt *RowsExt) Scan(dest ...interface{}) {
 	err := ((*sql.Rows)(rowsExt)).Scan(dest...)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 }
 
 // Extension for sql.Row
@@ -177,9 +167,7 @@ func ToRowExt(row *sql.Row) *RowExt {
 // Scans the values of row into variables, with panic instead of returned error
 func (rowExt *RowExt) Scan(dest ...interface{}) {
 	err := ((*sql.Row)(rowExt)).Scan(dest...)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 }
 
 // Extension for sql.Stmt
@@ -193,9 +181,7 @@ func ToStmtExt(stmt *sql.Stmt) *StmtExt {
 // Exec with panic instead of error
 func (stmtExt *StmtExt) Exec(args ...interface{}) sql.Result {
 	result, err := ((*sql.Stmt)(stmtExt)).Exec(args...)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return result
 }
@@ -203,9 +189,7 @@ func (stmtExt *StmtExt) Exec(args ...interface{}) sql.Result {
 // Query with panic instead of error
 func (stmtExt *StmtExt) Query(args ...interface{}) *sql.Rows {
 	rows, err := ((*sql.Stmt)(stmtExt)).Query(args...)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return rows
 }
@@ -221,17 +205,13 @@ func ToTxExt(tx *sql.Tx) *TxExt {
 // Commit with panic instead of returned error
 func (txExt *TxExt) Commit() {
 	err := ((*sql.Tx)(txExt)).Commit()
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 }
 
 // Commit with panic instead of returned error
 func (txExt *TxExt) Exec(query string, args ...interface{}) sql.Result {
 	result, err := ((*sql.Tx)(txExt)).Exec(query, args...)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return result
 }
@@ -239,9 +219,7 @@ func (txExt *TxExt) Exec(query string, args ...interface{}) sql.Result {
 // Prepare with panic instead of returned error
 func (txExt *TxExt) Prepare(query string) *sql.Stmt {
 	stmt, err := ((*sql.Tx)(txExt)).Prepare(query)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return stmt
 }
@@ -249,9 +227,7 @@ func (txExt *TxExt) Prepare(query string) *sql.Stmt {
 // Query with panic instead of returned error
 func (txExt *TxExt) Query(query string, args ...interface{}) *sql.Rows {
 	rows, err := ((*sql.Tx)(txExt)).Query(query)
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return rows
 }
@@ -259,9 +235,7 @@ func (txExt *TxExt) Query(query string, args ...interface{}) *sql.Rows {
 // Rollback with panic instead of returned error
 func (txExt *TxExt) Rollback() {
 	err := ((*sql.Tx)(txExt)).Rollback()
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 }
 
 // Extension for sql.Result
@@ -277,9 +251,7 @@ func ToResultExt (result sql.Result) *ResultExt {
 // Gets last id of insert with panic instead of returned error
 func (resultExt *ResultExt) LastInsertId() int64 {
 	insertId, err := resultExt.sqlResult.LastInsertId()
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return insertId
 }
@@ -287,9 +259,7 @@ func (resultExt *ResultExt) LastInsertId() int64 {
 // Gets last number of affected rows with panic instead of returned error
 func (resultExt *ResultExt) RowsAffected() int64 {
 	numberOfRowsAffected, err := resultExt.sqlResult.RowsAffected()
-	if err != nil {
-		panic(err)
-	}
+	PanicIfError(err)
 
 	return numberOfRowsAffected
 }
@@ -313,7 +283,7 @@ const (
 // The raised panic would be re-paniced.
 func NewDbController(newDbObject *sql.DB) *DbController {
 	if newDbObject == nil {
-		panic(fmt.Errorf("Need viable DB object(sql.DB)"))
+		PanicIfError(fmt.Errorf("Need viable DB object(sql.DB)"))
 	}
 
 	return &DbController{
@@ -329,22 +299,11 @@ func NewDbErrorCapture(errHolder *error) PanicHandler {
 	return func (panicValue interface{}) {
 		err, ok := panicValue.(error)
 		if !ok {
-			panic(fmt.Errorf("The panic[%v] is not a error object", panicValue))
+			PanicIfError(fmt.Errorf("The panic[%v] is not a error object", panicValue))
 		}
 
 		*errHolder = err
 	}
-}
-
-// Raise panic if the error object is not nil
-//
-// The error object would be formatted by "Database Panic: %v"
-func DbPanic(err error) {
-	if err == nil {
-		return
-	}
-
-	panic(fmt.Errorf("Database Panic: %v", err))
 }
 
 // Registers a handler while a panic is raised
@@ -367,9 +326,7 @@ func (dbController *DbController) Exec(query string, args ...interface{}) sql.Re
 	var result sql.Result
 	var dbFunc DbCallbackFunc = func(db *sql.DB) {
 		innerResult, err := db.Exec(query, args...)
-		if err != nil {
-			panic(fmt.Errorf("Execute SQL has error: %v. SQL: [%s]. Params: [%v]", err, query, args))
-		}
+		PanicIfError(err)
 
 		result = innerResult
 	}
@@ -498,7 +455,7 @@ func (dbController *DbController) Release() {
 
 func (dbController *DbController) needInitializedOrPanic() {
 	if dbController.dbObject == nil {
-		panic(fmt.Errorf("The controller is not initialized"))
+		PanicIfError(fmt.Errorf("The controller is not initialized"))
 	}
 }
 

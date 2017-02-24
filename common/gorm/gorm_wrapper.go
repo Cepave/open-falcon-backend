@@ -35,9 +35,7 @@ func (self ErrorConverter) PanicIfDbError(gormDb *gorm.DB) {
 }
 // Raise panic if the error is not nil
 func (self ErrorConverter) PanicIfError(err error) {
-	if err != nil {
-		panic(self(err))
-	}
+	db.PanicIfError(self(err))
 }
 
 func sameError(err error) error {
