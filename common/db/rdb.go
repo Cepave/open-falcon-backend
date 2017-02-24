@@ -100,40 +100,6 @@ type ExecuteIfByTx interface {
 	IfTrue(tx *sql.Tx)
 }
 
-// Extension for sql.DB
-//
-// Shoule be initialized by controller
-type DbExt sql.DB
-
-// Converts the sql.DB to DbExt
-func ToDbExt(db *sql.DB) *DbExt {
-	return (*DbExt)(db)
-}
-
-// Exec with panic instead of error
-func (dbext *DbExt) Exec(query string, args ...interface{}) sql.Result {
-	result, err := ((*sql.DB)(dbext)).Exec(query, args)
-	PanicIfError(err)
-
-	return result
-}
-
-// Query with panic instead of error
-func (dbext *DbExt) Query(query string, args ...interface{}) *sql.Rows {
-	rows, err := ((*sql.DB)(dbext)).Query(query, args)
-	PanicIfError(err)
-
-	return rows
-}
-
-// Query with panic instead of error
-func (dbext *DbExt) Prepare(query string) *sql.Stmt {
-	stmt, err := ((*sql.DB)(dbext)).Prepare(query)
-	PanicIfError(err)
-
-	return stmt
-}
-
 // Extension for sql.Rows
 type RowsExt sql.Rows
 
