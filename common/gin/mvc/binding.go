@@ -173,8 +173,10 @@ package mvc
 
 import (
 	"net/http"
+	"reflect"
 
 	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 )
@@ -218,6 +220,15 @@ func JsonOutputBody2(code int, v interface{}) OutputBody {
 	})
 }
 
+// Output the value or not found error if the value is not viable
+func JsonOutputOrNotFound(v interface{}) OutputBody {
+	if !isViableValue(v) {
+		return NotFoundOutputBody
+	}
+
+	return JsonOutputBody(v)
+}
+
 // Uses "(*gin.Context).String(http.StatusOK, v)" to perform response
 func TextOutputBody(v interface{}) OutputBody {
 	return TextOutputBody2(http.StatusOK, v)
@@ -227,6 +238,15 @@ func TextOutputBody2(code int, v interface{}) OutputBody {
 	return OutputBodyFunc(func(context *gin.Context) {
 		context.String(code, "%s", v)
 	})
+}
+
+// Output the value or not found error if the value is not viable
+func TextOutputOrNotFound(v interface{}) OutputBody {
+	if !isViableValue(v) {
+		return NotFoundOutputBody
+	}
+
+	return TextOutputBody(v)
 }
 
 // Uses "(*gin.Context).HTML(http.StatusOK, name, v)" to perform response
@@ -240,6 +260,15 @@ func HtmlOutputBody2(code int, name string, v interface{}) OutputBody {
 	})
 }
 
+// Output the value or not found error if the value is not viable
+func HtmlOutputOrNotFound(name string, v interface{}) OutputBody {
+	if !isViableValue(v) {
+		return NotFoundOutputBody
+	}
+
+	return HtmlOutputBody(name, v)
+}
+
 // Uses "(*gin.Context).XML(http.StatusOK, v)" to perform response
 func XmlOutputBody(v interface{}) OutputBody {
 	return XmlOutputBody2(http.StatusOK, v)
@@ -251,6 +280,15 @@ func XmlOutputBody2(code int, v interface{}) OutputBody {
 	})
 }
 
+// Output the value or not found error if the value is not viable
+func XmlOutputOrNotFound(v interface{}) OutputBody {
+	if !isViableValue(v) {
+		return NotFoundOutputBody
+	}
+
+	return XmlOutputBody(v)
+}
+
 // Uses "(*gin.Context).YAML(http.StatusOK, v)" to perform response
 func YamlOutputBody(v interface{}) OutputBody {
 	return YamlOutputBody2(http.StatusOK, v)
@@ -260,4 +298,17 @@ func YamlOutputBody2(code int, v interface{}) OutputBody {
 	return OutputBodyFunc(func(context *gin.Context) {
 		context.YAML(code, v)
 	})
+}
+
+// Output the value or not found error if the value is not viable
+func YamlOutputOrNotFound(v interface{}) OutputBody {
+	if !isViableValue(v) {
+		return NotFoundOutputBody
+	}
+
+	return YamlOutputBody(v)
+}
+
+func isViableValue(v interface{}) bool {
+	return utils.ValueExt(reflect.ValueOf(v)).IsViable()
 }

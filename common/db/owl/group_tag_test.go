@@ -1,6 +1,12 @@
 package owl
 
 import (
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	"github.com/Cepave/open-falcon-backend/common/model"
+	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
+
+	"github.com/Cepave/open-falcon-backend/common/utils"
+
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
@@ -30,6 +36,43 @@ func (suite *TestGroupTagSuite) TestGetGroupTagById(c *C) {
 	}
 }
 
+// Tests the listing of group tags
+func (suite *TestGroupTagSuite) TestListGroupTags(c *C) {
+	testCases := []*struct {
+		name string
+		pageSize int32
+		expectedIds []int32
+		expectedTotalCount int32
+	} {
+		{ "", 5, []int32{ 23041, 23042, 23043, 23044 }, 4 },
+		{ "", 2, []int32{ 23041, 23042 }, 4 },
+		{ "ls-gt-gin", 5, []int32{ 23043, 23044 }, 2 },
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		paging := &model.Paging {
+			Size: testCase.pageSize,
+		}
+		testedResult := ListGroupTags(
+			testCase.name, paging,
+		)
+
+		testedIds := utils.MakeAbstractArray(testedResult).
+			MapTo(
+				func(elem interface{}) interface{} {
+					return elem.(*owlModel.GroupTag).Id
+				},
+				rt.TypeOfInt32,
+			).GetArray()
+
+		c.Assert(testedIds, DeepEquals, testCase.expectedIds, comment)
+		c.Assert(paging.TotalCount, Equals, testCase.expectedTotalCount, comment)
+	}
+}
+
 func (s *TestGroupTagSuite) SetUpTest(c *C) {
 	inTx := DbFacade.SqlDbCtrl.ExecQueriesInTx
 
@@ -39,6 +82,16 @@ func (s *TestGroupTagSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO owl_group_tag(gt_id, gt_name)
 			VALUES(33061, 'gt-db-1')
+			`,
+		)
+	case "TestGroupTagSuite.TestListGroupTags":
+		inTx(
+			`
+			INSERT INTO owl_group_tag(gt_id, gt_name)
+			VALUES(23041, 'ls-gt-car-1'),
+				(23042, 'ls-gt-car-2'),
+				(23043, 'ls-gt-gin-3'),
+				(23044, 'ls-gt-gin-4')
 			`,
 		)
 	}
@@ -51,13 +104,19 @@ func (s *TestGroupTagSuite) TearDownTest(c *C) {
 		inTx(
 			`DELETE FROM owl_group_tag WHERE gt_id = 33061`,
 		)
+	case "TestGroupTagSuite.TestListGroupTags":
+		inTx(
+			`
+			DELETE FROM owl_group_tag
+			WHERE gt_id >= 23041 AND gt_id <= 23044
+			`,
+		)
 	}
 }
 
 func (s *TestGroupTagSuite) SetUpSuite(c *C) {
 	DbFacade = dbTest.InitDbFacade(c)
 }
-
 func (s *TestGroupTagSuite) TearDownSuite(c *C) {
 	dbTest.ReleaseDbFacade(c, DbFacade)
 }
