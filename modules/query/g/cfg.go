@@ -17,14 +17,18 @@ type HttpConfig struct {
 	Listen  string `json:"listen"`
 }
 
+type ContactsConfig struct {
+	Enabled  bool `json:"enabled"`
+	Interval int  `json:"interval"`
+}
+
 type HostsConfig struct {
 	Enabled  bool `json:"enabled"`
 	Interval int  `json:"interval"`
 }
 
-type ContactsConfig struct {
-	Enabled  bool `json:"enabled"`
-	Interval int  `json:"interval"`
+type SpeedConfig struct {
+	Enabled bool `json:"enabled"`
 }
 
 type GinHttpConfig struct {
@@ -45,12 +49,13 @@ type ApiConfig struct {
 	Name      string `json:"name"`
 	Token     string `json:"token"`
 	Contact   string `json:"contact"`
-	Event     string `json:"event"`
-	Map       string `json:"map"`
-	Geo       string `json:"geo"`
-	Uplink    string `json:"uplink"`
-	Query     string `json:"query"`
 	Dashboard string `json:"dashboard"`
+	Event     string `json:"event"`
+	Geo       string `json:"geo"`
+	Map       string `json:"map"`
+	Platform  string `json:"platform"`
+	Query     string `json:"query"`
+	Uplink    string `json:"uplink"`
 	Max       int    `json:"max"`
 }
 
@@ -85,10 +90,11 @@ type GlobalConfig struct {
 	Debug    bool            `json:"debug"`
 	RootDir  string          `json:"root_dir"`
 	Http     *HttpConfig     `json:"http"`
-	Hosts    *HostsConfig    `json:"hosts"`
 	Contacts *ContactsConfig `json:"contacts"`
-	Graph    *GraphConfig    `json:"graph"`
+	Hosts    *HostsConfig    `json:"hosts"`
+	Speed    *SpeedConfig    `json:"speed"`
 	Api      *ApiConfig      `json:"api"`
+	Graph    *GraphConfig    `json:"graph"`
 	Db       *DbConfig       `json:"db"`
 	BossDB   *DbConfig       `json:"bossdb"`
 	Local    string          `json:"local"`
