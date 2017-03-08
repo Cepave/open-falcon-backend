@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
-CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng
+CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng api
 TARGET = open-falcon
 
 VERSION := $(shell cat VERSION)
@@ -43,4 +43,4 @@ clean:
 trash:
 	trash -k -cache package_cache_tmp
 
-.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe
+.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe api
