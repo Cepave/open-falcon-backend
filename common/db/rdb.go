@@ -3,7 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
+
+	"github.com/Cepave/open-falcon-backend/common/utils"
+	or "github.com/Cepave/open-falcon-backend/common/runtime"
 )
 
 type TxFinale byte
@@ -32,7 +34,7 @@ func (config *DbConfig) String() string {
 // Main controller of database
 type DbController struct {
 	dbObject *sql.DB
-	panicHandlers []PanicHandler
+	panicHandlers []utils.PanicHandler
 }
 
 // The interface of DB callback for sql package
@@ -82,10 +84,10 @@ func (callbackFunc TxCallbackFunc) InTx(tx *sql.Tx) TxFinale {
 // BuildTxForSqls builds function for exeuction of multiple SQLs
 func BuildTxForSqls(queries... string) TxCallback {
 	return TxCallbackFunc(func(tx *sql.Tx) TxFinale {
+		txExt := ToTxExt(tx)
+
 		for _, v := range queries {
-			if _, err := tx.Exec(v); err != nil {
-				PanicIfError(err)
-			}
+			txExt.Exec(v)
 		}
 
 		return TxCommit
@@ -111,7 +113,7 @@ func ToRowsExt(rows *sql.Rows) *RowsExt {
 // Gets columns, with panic instead of returned error
 func (rowsExt *RowsExt) Columns() ([]string) {
 	columns, err := ((*sql.Rows)(rowsExt)).Columns()
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return columns
 }
@@ -119,7 +121,7 @@ func (rowsExt *RowsExt) Columns() ([]string) {
 // Scans the values of row into variables, with panic instead of returned error
 func (rowsExt *RowsExt) Scan(dest ...interface{}) {
 	err := ((*sql.Rows)(rowsExt)).Scan(dest...)
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 }
 
 // Extension for sql.Row
@@ -133,7 +135,7 @@ func ToRowExt(row *sql.Row) *RowExt {
 // Scans the values of row into variables, with panic instead of returned error
 func (rowExt *RowExt) Scan(dest ...interface{}) {
 	err := ((*sql.Row)(rowExt)).Scan(dest...)
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 }
 
 // Extension for sql.Stmt
@@ -147,7 +149,7 @@ func ToStmtExt(stmt *sql.Stmt) *StmtExt {
 // Exec with panic instead of error
 func (stmtExt *StmtExt) Exec(args ...interface{}) sql.Result {
 	result, err := ((*sql.Stmt)(stmtExt)).Exec(args...)
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return result
 }
@@ -155,7 +157,7 @@ func (stmtExt *StmtExt) Exec(args ...interface{}) sql.Result {
 // Query with panic instead of error
 func (stmtExt *StmtExt) Query(args ...interface{}) *sql.Rows {
 	rows, err := ((*sql.Stmt)(stmtExt)).Query(args...)
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return rows
 }
@@ -171,13 +173,13 @@ func ToTxExt(tx *sql.Tx) *TxExt {
 // Commit with panic instead of returned error
 func (txExt *TxExt) Commit() {
 	err := ((*sql.Tx)(txExt)).Commit()
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 }
 
 // Commit with panic instead of returned error
 func (txExt *TxExt) Exec(query string, args ...interface{}) sql.Result {
 	result, err := ((*sql.Tx)(txExt)).Exec(query, args...)
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return result
 }
@@ -185,7 +187,7 @@ func (txExt *TxExt) Exec(query string, args ...interface{}) sql.Result {
 // Prepare with panic instead of returned error
 func (txExt *TxExt) Prepare(query string) *sql.Stmt {
 	stmt, err := ((*sql.Tx)(txExt)).Prepare(query)
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return stmt
 }
@@ -193,7 +195,7 @@ func (txExt *TxExt) Prepare(query string) *sql.Stmt {
 // Query with panic instead of returned error
 func (txExt *TxExt) Query(query string, args ...interface{}) *sql.Rows {
 	rows, err := ((*sql.Tx)(txExt)).Query(query)
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return rows
 }
@@ -201,7 +203,7 @@ func (txExt *TxExt) Query(query string, args ...interface{}) *sql.Rows {
 // Rollback with panic instead of returned error
 func (txExt *TxExt) Rollback() {
 	err := ((*sql.Tx)(txExt)).Rollback()
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 }
 
 // Extension for sql.Result
@@ -217,7 +219,7 @@ func ToResultExt (result sql.Result) *ResultExt {
 // Gets last id of insert with panic instead of returned error
 func (resultExt *ResultExt) LastInsertId() int64 {
 	insertId, err := resultExt.sqlResult.LastInsertId()
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return insertId
 }
@@ -225,16 +227,10 @@ func (resultExt *ResultExt) LastInsertId() int64 {
 // Gets last number of affected rows with panic instead of returned error
 func (resultExt *ResultExt) RowsAffected() int64 {
 	numberOfRowsAffected, err := resultExt.sqlResult.RowsAffected()
-	PanicIfError(err)
+	PanicIfError(utils.BuildErrorWithCaller(err))
 
 	return numberOfRowsAffected
 }
-
-// The handler used to handler panic
-//
-// You should use this type with DbController.RegisterPanicHandler to
-// customize your logic of panic
-type PanicHandler func (panicValue interface{})
 
 // The control of iterating
 type IterateControl byte
@@ -249,33 +245,21 @@ const (
 // The raised panic would be re-paniced.
 func NewDbController(newDbObject *sql.DB) *DbController {
 	if newDbObject == nil {
-		PanicIfError(fmt.Errorf("Need viable DB object(sql.DB)"))
+		PanicIfError(utils.BuildErrorWithCaller(
+			fmt.Errorf("Need viable DB object(sql.DB)"),
+		))
 	}
 
 	return &DbController{
 		dbObject: newDbObject,
-		panicHandlers: make([]PanicHandler, 0),
-	}
-}
-
-// Builds handler for error capture
-//
-// errHolder - The error object to holding captured one
-func NewDbErrorCapture(errHolder *error) PanicHandler {
-	return func (panicValue interface{}) {
-		err, ok := panicValue.(error)
-		if !ok {
-			PanicIfError(fmt.Errorf("The panic[%v] is not a error object", panicValue))
-		}
-
-		*errHolder = err
+		panicHandlers: make([]utils.PanicHandler, 0),
 	}
 }
 
 // Registers a handler while a panic is raised
 //
 // This object may register multiple handlers for panic
-func (dbController *DbController) RegisterPanicHandler(panicHandler PanicHandler) {
+func (dbController *DbController) RegisterPanicHandler(panicHandler utils.PanicHandler) {
 	dbController.panicHandlers = append(dbController.panicHandlers, panicHandler)
 }
 
@@ -283,22 +267,25 @@ func (dbController *DbController) RegisterPanicHandler(panicHandler PanicHandler
 func (dbController *DbController) OperateOnDb(dbCallback DbCallback) {
 	dbController.needInitializedOrPanic()
 	defer dbController.handlePanic()
+	defer utils.DeferCatchPanicWithCaller()()
 
 	dbCallback.OnDb(dbController.dbObject)
 }
 
 // Executes the query string or panic
 func (dbController *DbController) Exec(query string, args ...interface{}) sql.Result {
-	var result sql.Result
-	var dbFunc DbCallbackFunc = func(db *sql.DB) {
-		innerResult, err := db.Exec(query, args...)
-		PanicIfError(err)
+	callerInfo := or.GetCallerInfo()
 
-		result = innerResult
+	var finalResult sql.Result
+	var dbFunc DbCallbackFunc = func(db *sql.DB) {
+		r, err := db.Exec(query, args...)
+		PanicIfError(utils.BuildErrorWithCallerInfo(err, callerInfo))
+
+		finalResult = r
 	}
 
 	dbController.OperateOnDb(dbFunc)
-	return result
+	return finalResult
 }
 
 // Query for rows and get called of rows with Next()
@@ -306,15 +293,19 @@ func (dbController *DbController) QueryForRows(
 	rowsCallback RowsCallback,
 	sqlQuery string, args ...interface{},
 ) (numberOfRows uint) {
+	defer utils.DeferCatchPanicWithCaller()()
+
 	var dbFunc DbCallbackFunc = func(db *sql.DB) {
 		rows, err := db.Query(
 			sqlQuery, args...,
 		)
+
 		if err != nil {
-			log.Panicf(
-				"Query SQL with exception: %v SQL: [%s] Params: [%v]",
+			err := fmt.Errorf(
+				"Query SQL with exception: %v. SQL: \"%s\" Params: %#v",
 				err, sqlQuery, args,
 			)
+			PanicIfError(utils.BuildErrorWithCaller(err))
 		}
 
 		defer rows.Close()
@@ -337,6 +328,8 @@ func (dbController *DbController) QueryForRow(
 	rowCallback RowCallback,
 	sqlQuery string, args ...interface{},
 ) {
+	defer utils.DeferCatchPanicWithCaller()()
+
 	var dbFunc DbCallbackFunc = func(db *sql.DB) {
 		row := db.QueryRow(
 			sqlQuery, args...,
@@ -353,9 +346,13 @@ func (dbController *DbController) QueryForRow(
 // This method would commit the transaction if there is no raised panic,
 // rollback it otherwise.
 func (dbController *DbController) InTx(txCallback TxCallback) {
+	defer utils.DeferCatchPanicWithCaller()()
+
 	var dbFunc DbCallbackFunc = func(db *sql.DB) {
+		callerInfo := or.GetCallerInfo()
+
 		tx, err := db.Begin()
-		PanicIfError(err)
+		PanicIfError(utils.BuildErrorWithCallerInfo(err, callerInfo))
 
 		/**
 		 * Rollback the transaction when panic is rised
@@ -366,19 +363,31 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 				return
 			}
 
+			var finalError = utils.BuildErrorWithCallerInfo(
+				utils.SimpleErrorConverter(p), callerInfo,
+			)
+
+			/**
+			 * Rollback the transaction
+			 */
 			rollbackError := tx.Rollback()
 			if rollbackError != nil {
-				p = fmt.Errorf("Transaction has Error: %v. Rollback has error too: %v", p, rollbackError)
+				finalError = utils.BuildErrorWithCallerInfo(
+					fmt.Errorf("Rollback has error: %v. Cause Error: %v", rollbackError, finalError), callerInfo,
+				)
 			}
-			panic(p)
+			// :~)
+
+			PanicIfError(finalError)
 		}()
 		// :~)
 
+		txExt := ToTxExt(tx)
 		switch txCallback.InTx(tx) {
 		case TxCommit:
-			PanicIfError(tx.Commit())
+			txExt.Commit()
 		case TxRollback:
-			PanicIfError(tx.Rollback())
+			txExt.Rollback()
 		}
 	}
 
@@ -387,6 +396,8 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 
 // Executes the complex statement in transaction
 func (dbController *DbController) InTxForIf(ifCallbacks ExecuteIfByTx) {
+	defer utils.DeferCatchPanicWithCaller()()
+
 	var txFunc TxCallbackFunc = func(tx *sql.Tx) TxFinale {
 		if ifCallbacks.BootCallback(tx) {
 			ifCallbacks.IfTrue(tx)
@@ -400,6 +411,7 @@ func (dbController *DbController) InTxForIf(ifCallbacks ExecuteIfByTx) {
 
 // Executes in transaction
 func (dbController *DbController) ExecQueriesInTx(queries... string) {
+	defer utils.DeferCatchPanicWithCaller()()
 	dbController.InTx(BuildTxForSqls(queries...))
 }
 
@@ -413,16 +425,23 @@ func (dbController *DbController) Release() {
 	err := dbController.dbObject.Close()
 
 	if err != nil {
-		log.Panicf("Release database connection error. %v", err)
+		PanicIfError(utils.BuildErrorWithCaller(
+			fmt.Errorf("Release database connection error. %v", err),
+		))
 	}
 
 	dbController.dbObject = nil
 }
 
 func (dbController *DbController) needInitializedOrPanic() {
-	if dbController.dbObject == nil {
-		PanicIfError(fmt.Errorf("The controller is not initialized"))
+	if dbController.dbObject != nil {
+		return
 	}
+
+	PanicIfError(utils.BuildErrorWithCallerInfo(
+		fmt.Errorf("The controller is not initialized"),
+		or.GetCallerInfoWithDepth(1),
+	))
 }
 
 func (dbController *DbController) handlePanic() {

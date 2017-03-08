@@ -93,6 +93,10 @@ func ConvertToByReflect(sourceValue reflect.Value, targetType reflect.Type) refl
 	return sourceValue.Convert(targetType)
 }
 
+func IsViable(v interface{}) bool {
+	return ValueExt(reflect.ValueOf(v)).IsViable()
+}
+
 type ValueExt reflect.Value
 func (v ValueExt) IsArray() bool {
 	switch reflect.Value(v).Kind() {

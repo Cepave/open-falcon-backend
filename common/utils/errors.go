@@ -26,10 +26,14 @@ package utils
 
 import (
 	"fmt"
+	gr "github.com/Cepave/open-falcon-backend/common/runtime"
 )
 
 // Defines the converter from converting any value to error object
 type ErrorConverter func(p interface{}) error
+
+// Defines the handler of panic
+type PanicHandler func(interface{})
 
 // Converts the panic content to error object
 //
@@ -65,7 +69,7 @@ func SimpleErrorConverter(p interface{}) error {
 // Convert a lambda function to function with error returned
 func PanicToErrorWrapper(mainFunc func(), errConverter ErrorConverter) func() error {
 	return func() (err error) {
-		defer PanicToError(&err, errConverter)()
+		defer PanicToError(&err, errConverter)
 		mainFunc()
 		return
 	}
@@ -100,5 +104,64 @@ func BuildPanicToError(targetFunc func(), errHolder *error) func() {
 		}()
 
 		targetFunc()
+	}
+}
+
+type StackError struct {
+	cause error
+	callerInfo *gr.CallerInfo
+}
+func (e *StackError) Error() string {
+	return fmt.Sprintf("%s:%d:%v", e.callerInfo.GetFile(), e.callerInfo.Line, e.cause)
+}
+
+func DeferCatchPanicWithCaller() func() {
+	callerInfo := gr.GetCallerInfoWithDepth(1)
+
+	return func() {
+		p := recover()
+		if p == nil {
+			return
+		}
+
+		panic(BuildErrorWithCallerInfo(
+			SimpleErrorConverter(p), callerInfo,
+		))
+	}
+}
+
+func BuildErrorWithCaller(err error) *StackError {
+	if err == nil {
+		return nil
+	}
+
+	return BuildErrorWithCallerDepth(err, 2)
+}
+func BuildErrorWithCallerDepth(err error, depth int) *StackError {
+	if err == nil {
+		return nil
+	}
+
+	return BuildErrorWithCallerInfo(
+		err,
+		gr.GetCallerInfoWithDepth(depth),
+	)
+}
+
+// Builds the error object with caller info, if the error object is type of *StackError,
+// replaces the caller info with the new one
+func BuildErrorWithCallerInfo(err error, callerInfo *gr.CallerInfo) *StackError {
+	if err == nil {
+		return nil
+	}
+
+	if stackError, ok := err.(*StackError); ok {
+		stackError.callerInfo = callerInfo
+		return stackError
+	}
+
+	return &StackError {
+		cause: err,
+		callerInfo: callerInfo,
 	}
 }

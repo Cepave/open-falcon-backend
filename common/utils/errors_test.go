@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"fmt"
 	. "gopkg.in/check.v1"
 )
@@ -56,16 +55,14 @@ func ExamplePanicToSimpleError() {
 
 func ExamplePanicToSimpleErrorWrapper() {
 	sampleFunc := func(n int) {
-		log.Panicf("Value: %d", n)
+		panic(fmt.Sprintf("Value: %d", n))
 	}
 
-	err := PanicToSimpleErrorWrapper(
+	testedFunc := PanicToSimpleErrorWrapper(
 		func() { sampleFunc(918) },
-	)()
-	fmt.Println(err)
+	)
 
-	// Output:
-	// Value: 918
+	fmt.Println(testedFunc())
 }
 
 // Tests the capture of error object

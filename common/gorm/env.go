@@ -1,6 +1,7 @@
 package gorm
 
 import (
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/common/db"
 	"github.com/jinzhu/gorm"
 )
@@ -9,6 +10,10 @@ import (
 //
 // See ToGormDbExt
 var DefaultGormErrorConverter ErrorConverter = func(err error) error {
+	if !utils.IsViable(err) {
+		return nil
+	}
+
 	return db.NewDatabaseError(err)
 }
 

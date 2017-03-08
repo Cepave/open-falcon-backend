@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/Cepave/open-falcon-backend/common/db"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 )
 
@@ -31,11 +32,24 @@ type ErrorConverter func(error) error
 
 // Raise panic if the error is not nil
 func (self ErrorConverter) PanicIfDbError(gormDb *gorm.DB) {
-	self.PanicIfError(gormDb.Error)
+	if !utils.IsViable(gormDb.Error) {
+		return
+	}
+
+	self.PanicIfError(
+		utils.BuildErrorWithCallerDepth(
+			gormDb.Error, 1,
+		),
+	)
 }
 // Raise panic if the error is not nil
 func (self ErrorConverter) PanicIfError(err error) {
-	db.PanicIfError(self(err))
+	if !utils.IsViable(err) {
+		return
+	}
+
+	err = self(err)
+	db.PanicIfError(err)
 }
 
 func sameError(err error) error {
@@ -51,8 +65,11 @@ func ToGormDbExt(gormDb *gorm.DB) *GormDbExt {
 }
 
 // Raise panic if the Gorm has error
-func (self *GormDbExt) PanicIfError() {
+func (self *GormDbExt) PanicIfError() *GormDbExt {
+	defer utils.DeferCatchPanicWithCaller()()
 	self.ConvertError.PanicIfDbError(self.gormDb)
+
+	return self
 }
 
 func (self *GormDbExt) IsRecordNotFound() bool {
@@ -64,6 +81,8 @@ func (self *GormDbExt) IsRecordNotFound() bool {
 //
 // This function also calls PanicIfError(
 func (self *GormDbExt) IfRecordNotFound(foundValue interface{}, notFoundValue interface{}) interface{} {
+	defer utils.DeferCatchPanicWithCaller()()
+
 	if self.IsRecordNotFound() {
 		return notFoundValue
 	}
@@ -76,6 +95,8 @@ func (self *GormDbExt) IfRecordNotFound(foundValue interface{}, notFoundValue in
 func (self *GormDbExt) IterateRows(
 	rowsCallback db.RowsCallback,
 ) {
+	defer utils.DeferCatchPanicWithCaller()()
+
 	rows := self.Rows()
 	defer rows.Close()
 
@@ -89,25 +110,37 @@ func (self *GormDbExt) IterateRows(
 // Same as Rows() with panic instead of returned error
 func (self *GormDbExt) Rows() *sql.Rows {
 	rows, err := self.gormDb.Rows()
-	self.ConvertError.PanicIfError(err)
+	if utils.IsViable(err) {
+		self.ConvertError.PanicIfError(
+			utils.BuildErrorWithCaller(err),
+		)
+	}
 
 	return rows
 }
 
 // Executes gorm in transaction
 func (self *GormDbExt) InTx(txCallback TxCallback) {
+	defer utils.DeferCatchPanicWithCaller()()
 	txGormDb := self.gormDb.Begin()
 
 	defer func() {
 		p := recover()
-		if p != nil {
-			txGormDb = txGormDb.Rollback()
-			if txGormDb.Error != nil{
-				p = fmt.Errorf("Transaction has error: %v. Rollback has error too: %v", p, txGormDb.Error)
-			}
-
-			panic(p)
+		if p == nil {
+			return
 		}
+
+		finalErr := utils.SimpleErrorConverter(p)
+
+		txGormDb = txGormDb.Rollback()
+		if !utils.IsViable(txGormDb.Error) {
+			finalErr = fmt.Errorf(
+				"Transaction has error: %v. Rollback has error too: %v",
+				finalErr, txGormDb.Error,
+			)
+		}
+
+		self.ConvertError.PanicIfError(finalErr)
 	}()
 
 	switch txCallback.InTx(txGormDb) {
@@ -120,13 +153,21 @@ func (self *GormDbExt) InTx(txCallback TxCallback) {
 
 // Selects the query by callback and perform "SELECT FOUND_ROWS()" to gets the total number of matched rows
 func (self *GormDbExt) SelectWithFoundRows(txCallback TxCallback, paging *commonModel.Paging) {
+	defer utils.DeferCatchPanicWithCaller()()
+
 	var finalFunc TxCallbackFunc = func(txGormDb *gorm.DB) db.TxFinale {
 		txFinale := txCallback.InTx(txGormDb)
 
 		var numOfRows int32
 		var selectFoundRows = txGormDb.Raw("SELECT FOUND_ROWS()")
 		err := selectFoundRows.Row().Scan(&numOfRows)
-		self.ConvertError.PanicIfError(err)
+
+		if utils.IsViable(err) {
+			self.ConvertError.PanicIfError(
+				utils.BuildErrorWithCaller(err),
+			)
+		}
+
 		paging.SetTotalCount(numOfRows)
 
 		return txFinale
@@ -138,5 +179,9 @@ func (self *GormDbExt) SelectWithFoundRows(txCallback TxCallback, paging *common
 // Same as ScanRows with panic instead of returned error
 func (self *GormDbExt) ScanRows(rows *sql.Rows, result interface{}) {
 	err := self.gormDb.ScanRows(rows, result)
-	self.ConvertError.PanicIfError(err)
+	if utils.IsViable(err) {
+		self.ConvertError.PanicIfError(
+			utils.BuildErrorWithCaller(err),
+		)
+	}
 }
