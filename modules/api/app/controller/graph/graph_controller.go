@@ -9,7 +9,7 @@ import (
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	log "github.com/Sirupsen/logrus"
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 	h "github.com/Cepave/open-falcon-backend/modules/api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/api/app/model/graph"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/utils"

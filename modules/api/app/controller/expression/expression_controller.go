@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 	"github.com/jinzhu/gorm"
 	h "github.com/Cepave/open-falcon-backend/modules/api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/api/app/model/falcon_portal"

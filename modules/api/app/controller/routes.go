@@ -13,7 +13,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/api/app/controller/template"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/controller/uic"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/utils"
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 func StartGin(port string, r *gin.Engine) {

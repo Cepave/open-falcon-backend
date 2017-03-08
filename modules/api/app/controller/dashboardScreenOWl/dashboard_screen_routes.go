@@ -3,9 +3,9 @@ package dashboardScreenOWl
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/masato25/go_email/app/utils"
+	"github.com/Cepave/open-falcon-backend/modules/api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/api/config"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 var db config.DBPool

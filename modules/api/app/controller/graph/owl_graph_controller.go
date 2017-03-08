@@ -5,7 +5,7 @@ import (
 
 	"github.com/emirpasic/gods/lists/arraylist"
 
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 	h "github.com/Cepave/open-falcon-backend/modules/api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/helper/filter"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/model/boss"

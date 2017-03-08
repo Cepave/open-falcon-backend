@@ -3,10 +3,10 @@ package utils
 import (
 	"net/http"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/gin-gonic/gin"
 	h "github.com/Cepave/open-falcon-backend/modules/api/app/helper"
+	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 func AuthSessionMidd(c *gin.Context) {

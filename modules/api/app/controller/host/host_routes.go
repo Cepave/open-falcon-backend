@@ -3,7 +3,7 @@ package host
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"gopkg.in/gin-gonic/gin.v1"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/api/config"
 )
