@@ -64,8 +64,8 @@
 package gin
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"time"
 
 	"gopkg.in/gin-contrib/cors.v1"
@@ -80,9 +80,9 @@ var logger = log.NewDefaultLogger("INFO")
 type GinConfig struct {
 	// The mode of gin framework
 	// 	const (
-    // 		DebugMode   string = "debug"
-    // 		ReleaseMode string = "release"
-    // 		TestMode    string = "test"
+	// 		DebugMode   string = "debug"
+	// 		ReleaseMode string = "release"
+	// 		TestMode    string = "test"
 	// 	)
 	Mode string
 	// The host could be used to start service(optional)
@@ -106,16 +106,16 @@ var corsConfig cors.Config
 func init() {
 	headers := []string{
 		"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization", "Cache-Control", "X-Requested-With",
-		"accept", "origin",
+		"accept", "origin", "Apitoken",
 		"page-size", "page-pos", "order-by", "page-ptr", "total-count", "page-more", "previous-page", "next-page",
 	}
 
-	corsConfig = cors.Config {
-		AllowMethods: []string{ "POST", "OPTIONS", "GET", "PUT" },
-		AllowHeaders: headers,
-		ExposeHeaders: headers,
+	corsConfig = cors.Config{
+		AllowMethods:     []string{"POST", "OPTIONS", "GET", "PUT", "DELETE", "UPDATE"},
+		AllowHeaders:     headers,
+		ExposeHeaders:    headers,
 		AllowCredentials: true,
-		MaxAge: 12 * time.Hour,
+		MaxAge:           12 * time.Hour,
 	}
 	corsConfig.AllowAllOrigins = true
 }
@@ -155,8 +155,7 @@ func NewDefaultJsonEngine(config *GinConfig) *gin.Engine {
 //
 // If some error happened, exit application with "os.Exit(1)"
 func StartServiceOrExit(router *gin.Engine, config *GinConfig) {
-	if err := router.Run(config.GetAddress())
-		err != nil {
+	if err := router.Run(config.GetAddress()); err != nil {
 		logger.Errorf("Cannot start web service: %v", err)
 		os.Exit(1)
 	}
