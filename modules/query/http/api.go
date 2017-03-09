@@ -2149,9 +2149,6 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	} else if len(arguments) == 5 && arguments[2] == "hosts" {
 		hostnames = strings.Split(arguments[3], ",")
 		method = arguments[4]
-	} else if len(arguments) == 5 && arguments[2] == "hosts" {
-		hostnames = strings.Split(arguments[3], ",")
-		method = arguments[4]
 	}
 	if method == "average" {
 		items = getBandwidthsAverage(metricType, duration, hostnames, result)
