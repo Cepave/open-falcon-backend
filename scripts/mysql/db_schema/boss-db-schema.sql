@@ -29,7 +29,7 @@ CREATE TABLE `hosts` (
   `province` varchar(10) CHARACTER SET utf8 DEFAULT NULL,
   `city` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
   `status` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
-  `bonding` int(3) UNSIGNED DEFAULT NULL,
+  `bonding` int(3) DEFAULT -1,
   `speed` int(8) UNSIGNED DEFAULT NULL,
   `remark` varchar(256) CHARACTER SET utf8 DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
@@ -56,6 +56,7 @@ CREATE TABLE `ips` (
   `ip` varchar(20) CHARACTER SET utf8 NOT NULL,
   `exist` boolean DEFAULT NULL,
   `status` boolean DEFAULT NULL,
+  `type` varchar(10) CHARACTER SET utf8 DEFAULT NULL,
   `hostname` varchar(30) CHARACTER SET utf8 NOT NULL,
   `platform` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
@@ -72,8 +73,10 @@ CREATE TABLE `nodes` (
   `city` varchar(15) CHARACTER SET utf8 NOT NULL,
   `idc` varchar(50) CHARACTER SET utf8 NOT NULL,
   `isp` varchar(15) CHARACTER SET utf8 NOT NULL,
-  `ping` FLOAT DEFAULT NULL,
-  `loss` FLOAT DEFAULT NULL,
+  `send` tinyint(3) UNSIGNED DEFAULT NULL,
+  `receive` tinyint(3) UNSIGNED DEFAULT NULL,
+  `ping` float(6,2) UNSIGNED DEFAULT NULL,
+  `loss` float(6,2) UNSIGNED DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
@@ -82,11 +85,16 @@ DROP TABLE IF EXISTS `platforms`;
 CREATE TABLE `platforms` (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `platform` varchar(30) CHARACTER SET utf8 NOT NULL UNIQUE,
+  `type` varchar(20) CHARACTER SET utf8 DEFAULT NULL,
+  `visible` tinyint(1) UNSIGNED DEFAULT NULL,
   `contacts` varchar(80) CHARACTER SET utf8 DEFAULT NULL,
   `principal` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
   `deputy` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
   `upgrader` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
   `count` int(6) DEFAULT NULL,
+  `department` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
+  `team` varchar(30) CHARACTER SET utf8 DEFAULT NULL,
+  `description` varchar(200) CHARACTER SET utf8 DEFAULT NULL,
   `updated` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

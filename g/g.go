@@ -29,6 +29,7 @@ func init() {
 		"sender":     true,
 		"task":       true,
 		"transfer":   true,
+		"api":        true,
 	}
 
 	BinOf = map[string]string{
@@ -45,6 +46,7 @@ func init() {
 		"sender":     "./sender/bin/falcon-sender",
 		"task":       "./task/bin/falcon-task",
 		"transfer":   "./transfer/bin/falcon-transfer",
+		"api":        "./api/bin/falcon-api",
 	}
 
 	cfgOf = map[string]string{
@@ -61,6 +63,7 @@ func init() {
 		"sender":     "./sender/config/cfg.json",
 		"task":       "./task/config/cfg.json",
 		"transfer":   "./transfer/config/cfg.json",
+		"api":        "./api/config/cfg.json",
 	}
 
 	ModuleApps = map[string]string{
@@ -77,6 +80,7 @@ func init() {
 		"sender":     "falcon-sender",
 		"task":       "falcon-task",
 		"transfer":   "falcon-transfer",
+		"api":        "falcon-api",
 	}
 
 	logpathOf = map[string]string{
@@ -93,6 +97,7 @@ func init() {
 		"sender":     "./sender/logs/sender.log",
 		"task":       "./task/logs/task.log",
 		"transfer":   "./transfer/logs/transfer.log",
+		"api":        "./api/logs/api.log",
 	}
 
 	PidOf = map[string]string{
@@ -109,6 +114,7 @@ func init() {
 		"sender":     "<NOT SET>",
 		"task":       "<NOT SET>",
 		"transfer":   "<NOT SET>",
+		"api":        "<NOT SET>",
 	}
 
 	// Modules are deployed in this order
@@ -126,6 +132,7 @@ func init() {
 		"task",
 		"aggregator",
 		"agent",
+		"api",
 	}
 }
 

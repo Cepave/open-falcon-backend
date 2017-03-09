@@ -404,7 +404,13 @@ func getPhoenix(rw http.ResponseWriter, req *http.Request) {
 	node := map[string]string{}
 	items := []map[string]string{}
 	nodeName := req.URL.Query().Get("node")
-
+	page := 1
+	if len(req.URL.Query().Get("page")) > 0 {
+		pageInput, err := strconv.Atoi(req.URL.Query().Get("page"))
+		if err == nil && pageInput > 0 {
+			page = pageInput
+		}
+	}
 	timestamp := int64(0)
 	loc, err := time.LoadLocation("Asia/Taipei")
 	if err != nil {
@@ -429,12 +435,15 @@ func getPhoenix(rw http.ResponseWriter, req *http.Request) {
 
 	if timestampNearest > 0 {
 		log.Debugf("timestampNearest = %v", timestampNearest)
+		offset := (page - 1) * 20
 		o := orm.NewOrm()
 		o.Using("gz_nqm")
-		sqlcmd := "SELECT ip, dest_ip, dest_id, loss, max, min, avg FROM `gz_nqm`.`" + tableName + "` WHERE mtime = ?"
+		sqlcmd := "SELECT ip, dest_ip, dest_id, loss, max, min, avg "
+		sqlcmd += "FROM `gz_nqm`.`" + tableName + "` "
+		sqlcmd += "WHERE mtime = ? LIMIT 20 OFFSET ?"
 		log.Debugf("sqlcmd = %v", sqlcmd)
 		var rows []orm.Params
-		num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestampNearest))).Values(&rows)
+		num, err := o.Raw(sqlcmd, strconv.Itoa(int(timestampNearest)), offset).Values(&rows)
 		if err != nil {
 			log.Debugf("Error = %v", err.Error())
 		} else if num > 0 {

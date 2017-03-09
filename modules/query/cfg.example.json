@@ -1,17 +1,22 @@
 {
     "debug": false,
+    "logLevel": "info",
     "root_dir": "/home/query",
     "http": {
         "enabled":  true,
         "listen":   "0.0.0.0:9966"
     },
+    "contacts": {
+        "enabled": true,
+        "interval": 3600
+    },
     "hosts": {
         "enabled": true,
         "interval": 60
     },
-    "contacts": {
+    "speed": {
         "enabled": true,
-        "interval": 3600
+        "time": "04:00"
     },
     "gin_http": {
         "enabled":  true,
@@ -28,19 +33,20 @@
         }
     },
     "grpc": {
-      "enabled":  true,
+      "enabled": true,
       "port": 1235
     },
     "api": {
         "name": "apiName",
         "token": "apiToken",
         "contact": "https://example.com/api_contact_path",
+        "dashboard": "http://example.com/dashboard_path",
         "event": "https://example.com/api_event_path",
-        "map": "https://example.com/api_map_path",
         "geo": "https://example.com/api_geo_path",
+        "map": "https://example.com/api_map_path",
+        "platform": "https://example.com/api_platform_path",
+        "query": "http://example.com/query_path",
         "uplink": "https://example.com/api_uplink_path",
-        "query": "http://example.com:port",
-        "dashboard": "http://example.com",
         "max": 500
     },
     "db": {

@@ -1,15 +1,19 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/jasonlvhit/gocron"
@@ -36,6 +40,9 @@ type Hosts struct {
 	Province  string
 	City      string
 	Status    string
+	Bonding   int
+	Speed     int
+	Remark    string
 	Updated   string
 }
 
@@ -56,20 +63,26 @@ type Ips struct {
 	Ip       string
 	Exist    int
 	Status   int
+	Type     string
 	Hostname string
 	Platform string
 	Updated  string
 }
 
 type Platforms struct {
-	Id        int
-	Platform  string
-	Contacts  string
-	Principal string
-	Deputy    string
-	Upgrader  string
-	Count     int
-	Updated   string
+	Id          int
+	Platform    string
+	Type        string
+	Visible     int
+	Contacts    string
+	Principal   string
+	Deputy      string
+	Upgrader    string
+	Count       int
+	Department  string
+	Team        string
+	Description string
+	Updated     string
 }
 
 func SyncHostsAndContactsTable() {
@@ -86,6 +99,10 @@ func SyncHostsAndContactsTable() {
 			syncContactsTable()
 			intervalToSyncContactsTable := uint64(g.Config().Contacts.Interval)
 			gocron.Every(intervalToSyncContactsTable).Seconds().Do(syncContactsTable)
+		}
+		if g.Config().Speed.Enabled {
+			addBondingAndSpeedToHostsTable()
+			gocron.Every(1).Day().At(g.Config().Speed.Time).Do(addBondingAndSpeedToHostsTable)
 		}
 		<-gocron.Start()
 	}
@@ -217,6 +234,143 @@ func syncIDCsTable() {
 	updateIDCsTable(IDCNames, IDCsMap)
 }
 
+func getHostsBondingAndSpeed(hostname string) map[string]int {
+	item := map[string]int{}
+	param := cmodel.GraphLastParam{
+		Endpoint: hostname,
+	}
+	param.Counter = "nic.bond.mode"
+	resp, err := graph.Last(param)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if resp != nil {
+		value := int(resp.Value.Value)
+		if value >= 0 {
+			item["bonding"] = value
+		}
+	}
+	param.Counter = "nic.default.out.speed"
+	resp, err = graph.Last(param)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if resp != nil {
+		value := int(resp.Value.Value)
+		if value > 0 {
+			item["speed"] = value
+		}
+	}
+	return item
+}
+
+func addBondingAndSpeedToHostsTable() {
+	log.Debugf("func addBondingAndSpeedToHostsTable()")
+	o := orm.NewOrm()
+	var rows []orm.Params
+	sql := "SELECT id, hostname FROM `boss`.`hosts` WHERE exist = 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if num > 0 {
+		var host Hosts
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			item := getHostsBondingAndSpeed(hostname)
+			o.Using("boss")
+			err = o.QueryTable("hosts").Filter("hostname", hostname).One(&host)
+			if err != nil {
+				log.Errorf(err.Error())
+			} else {
+				if _, ok := item["bonding"]; ok {
+					host.Bonding = item["bonding"]
+				}
+				if _, ok := item["speed"]; ok {
+					host.Speed = item["speed"]
+				}
+				host.Updated = getNow()
+				_, err = o.Update(&host)
+				if err != nil {
+					log.Errorf(err.Error())
+				}
+			}
+		}
+	}
+}
+
+func getPlatformsType(nodes map[string]interface{}, result map[string]interface{}, platformsMap map[string]map[string]string) map[string]map[string]string {
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Platform
+	params := map[string]string{
+		"fcname":   fcname,
+		"fctoken":  fctoken,
+	}
+	s, err := json.Marshal(params)
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	reqPost.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqPost)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		err = json.Unmarshal(body, &nodes)
+		if err != nil {
+			log.Errorf(err.Error())
+		}
+		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
+			if len(nodes["result"].([]interface{})) == 0 {
+				errorMessage := "No platforms returned"
+				setError(errorMessage, result)
+			} else {
+				re_inside_whiteSpaces := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
+				for _, platform := range nodes["result"].([]interface{}) {
+					platformName := platform.(map[string]interface{})["platform"].(string)
+					platformType := platform.(map[string]interface{})["platform_type"].(string)
+					department := ""
+					if platform.(map[string]interface{})["department"] != nil {
+						department = platform.(map[string]interface{})["department"].(string)
+					}
+					team := ""
+					if platform.(map[string]interface{})["team"] != nil {
+						team = platform.(map[string]interface{})["team"].(string)
+					}
+					visible := platform.(map[string]interface{})["visible"].(string)
+					description := platform.(map[string]interface{})["description"].(string)
+					if len(description) > 0 {
+						description = strings.Replace(description, "\r", " ", -1)
+						description = strings.Replace(description, "\n", " ", -1)
+						description = strings.Replace(description, "\t", " ", -1)
+						description = strings.TrimSpace(description)
+						description = re_inside_whiteSpaces.ReplaceAllString(description, " ")
+						if len(description) > 200 {
+							description = string([]rune(description)[0:100])
+						}
+					}
+					if value, ok := platformsMap[platformName]; ok {
+						value["type"] = platformType
+						value["visible"] = visible
+						value["department"] = department
+						value["team"] = team
+						value["description"] = description
+						platformsMap[platformName] = value
+					}
+				}
+			}
+		} else {
+			setError("Error occurs", result)
+		}
+	}
+	return platformsMap
+}
+
 func syncHostsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -246,14 +400,14 @@ func syncHostsTable() {
 		return
 	}
 	platformNames := []string{}
-	platformsMap := map[string]map[string]interface{}{}
+	platformsMap := map[string]map[string]string{}
+	hostname := ""
 	hostnames := []string{}
+	hostsMap := map[string]map[string]string{}
 	IPs := []string{}
 	IPKeys := []string{}
 	IPsMap := map[string]map[string]string{}
-	hostsMap := map[string]map[string]string{}
 	idcIDs := []string{}
-	hostname := ""
 	for _, platform := range nodes["result"].([]interface{}) {
 		platformName := platform.(map[string]interface{})["platform"].(string)
 		platformNames = appendUniqueString(platformNames, platformName)
@@ -261,11 +415,13 @@ func syncHostsTable() {
 			hostname = device.(map[string]interface{})["hostname"].(string)
 			IP := device.(map[string]interface{})["ip"].(string)
 			status := device.(map[string]interface{})["ip_status"].(string)
+			IPType := device.(map[string]interface{})["ip_type"].(string)
 			item := map[string]string{
 				"IP":       IP,
 				"status":   status,
 				"hostname": hostname,
 				"platform": platformName,
+				"type":     strings.ToLower(IPType),
 			}
 			IPs = append(IPs, IP)
 			IPKey := platformName + "_" + IP
@@ -317,7 +473,7 @@ func syncHostsTable() {
 				}
 			}
 		}
-		platformsMap[platformName] = map[string]interface{}{
+		platformsMap[platformName] = map[string]string{
 			"platformName": platformName,
 		}
 	}
@@ -328,6 +484,7 @@ func syncHostsTable() {
 	log.Debugf("platformNames =", platformNames)
 	updateIPsTable(IPKeys, IPsMap)
 	updateHostsTable(hostnames, hostsMap)
+	platformsMap = getPlatformsType(nodes, result, platformsMap)
 	updatePlatformsTable(platformNames, platformsMap)
 	muteFalconHostTable(hostnames, hostsMap)
 }
@@ -515,7 +672,6 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			return
 		}
 	}
-
 	for _, IPName := range IPNames {
 		item := IPsMap[IPName]
 		sql := "SELECT id FROM boss.ips WHERE ip = ? AND platform = ? LIMIT 1"
@@ -523,9 +679,9 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 		if num == 0 {
 			status, _ := strconv.Atoi(item["status"])
 			sql := "INSERT INTO boss.ips("
-			sql += "ip, exist, status, hostname, platform, updated) "
-			sql += "VALUES(?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now).Exec()
+			sql += "ip, exist, status, type, hostname, platform, updated) "
+			sql += "VALUES(?, ?, ?, ?, ?, ?, ?)"
+			_, err := o.Raw(sql, item["IP"], 1, status, item["type"], item["hostname"], item["platform"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -536,10 +692,10 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			ID := row["id"]
 			status, _ := strconv.Atoi(item["status"])
 			sql := "UPDATE boss.ips"
-			sql += " SET ip = ?, exist = ?, status = ?,"
+			sql += " SET ip = ?, exist = ?, status = ?, type = ?,"
 			sql += " hostname = ?, platform = ?, updated = ?"
 			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now, ID).Exec()
+			_, err := o.Raw(sql, item["IP"], 1, status, item["type"], item["hostname"], item["platform"], now, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -696,33 +852,53 @@ func muteFalconHostTable(hostnames []string, hostsMap map[string]map[string]stri
 	}
 }
 
-func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
+func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]string) {
 	log.Debugf("func updatePlatformsTable()")
 	now := getNow()
 	o := orm.NewOrm()
 	o.Using("boss")
 	var platform Platforms
+	var rows []orm.Params
+	max := 0
 	for _, platformName := range platformNames {
-		count, err := o.QueryTable("ips").Filter("platform", platformName).Filter("exist", 1).Filter("status", 1).Exclude("hostname__isnull", true).Count()
+		sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
+		sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
+		count, err := o.Raw(sql, platformName).Values(&rows)
 		if err != nil {
 			count = 0
+			log.Errorf(err.Error())
 		}
 		group := platformsMap[platformName]
 		err = o.QueryTable("platforms").Filter("platform", group["platformName"]).One(&platform)
 		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.platforms(platform, count, updated) VALUES(?, ?, ?)"
-			_, err := o.Raw(sql, group["platformName"], count, now).Exec()
+			sql = "INSERT INTO boss.platforms(platform, type, visible, count, department, team, description, updated) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+			_, err := o.Raw(sql, group["platformName"], group["type"], group["visible"], count, group["department"], group["team"], group["description"], now).Exec()
 			if err != nil {
+				log.Errorf(err.Error())
+				if max < len(group["description"]) {
+					max = len(group["description"])
+				}
 				log.Errorf(err.Error())
 			}
 		} else if err != nil {
 			log.Errorf(err.Error())
 		} else {
-			platform.Platform = group["platformName"].(string)
+			platform.Platform = group["platformName"]
+			platform.Type = group["type"]
+			platform.Visible = 0
+			if group["visible"] == "1" {
+				platform.Visible = 1
+			}
 			platform.Count = int(count)
+			platform.Department = group["department"]
+			platform.Team = group["team"]
+			platform.Description = group["description"]
 			platform.Updated = now
 			_, err := o.Update(&platform)
 			if err != nil {
+				if max < len(group["description"]) {
+					max = len(group["description"])
+				}
 				log.Errorf(err.Error())
 			}
 		}
