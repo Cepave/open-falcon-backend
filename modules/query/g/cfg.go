@@ -28,7 +28,8 @@ type HostsConfig struct {
 }
 
 type SpeedConfig struct {
-	Enabled bool `json:"enabled"`
+	Enabled bool   `json:"enabled"`
+	Time    string `json:"time"`
 }
 
 type GinHttpConfig struct {
