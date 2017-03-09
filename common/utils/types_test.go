@@ -12,10 +12,18 @@ var _ = Suite(&TestTypesSuite{})
 type car struct{}
 type func1 func()
 
+type g1Err struct{}
+func (e *g1Err) Error() string {
+	return "OK"
+}
+
 // Tests types of any value
 func (suite *TestTypesSuite) TestIsViable(c *C) {
 	ch1, ch2 := make(chan bool, 1), make(chan bool, 1)
 	ch1 <- true
+
+	var nilErr1 error = (*g1Err)(nil)
+	var nilErr2 *g1Err = (*g1Err)(nil)
 
 	testCases := []*struct {
 		sampleValue interface{}
@@ -36,6 +44,9 @@ func (suite *TestTypesSuite) TestIsViable(c *C) {
 		{ func1(nil), false },
 		{ ch1, true },
 		{ ch2, false },
+		{ nilErr1, false },
+		{ nilErr2, false },
+		{ (error)(nil), false },
 	}
 
 	for i, testCase := range testCases {

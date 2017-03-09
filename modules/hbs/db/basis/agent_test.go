@@ -50,7 +50,7 @@ func assertUpdateAgent(c *C, testCase *testCaseOfUpdateAgent) {
 			var ip, agentVersion, pluginVersion string
 
 			err := row.Scan(&ip, &agentVersion, &pluginVersion)
-			commonDb.DbPanic(err)
+			commonDb.PanicIfError(err)
 
 			c.Assert(ip, Equals, testCase.ip)
 			c.Assert(agentVersion, Equals, testCase.agentVersion)
