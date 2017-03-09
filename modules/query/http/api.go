@@ -994,18 +994,18 @@ func getDisksIOMetrics(hostname string, metricType string) []string {
 }
 
 func getTimestampFromString(timeString string, result map[string]interface{}) int64 {
+	location, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		location = time.Local
+	}
 	if timeString == "" {
-		return time.Now().UTC().Unix()
+		return time.Now().In(location).Unix()
 	}
 	timestamp := int64(0)
-	timestamp, err := strconv.ParseInt(timeString, 10, 64)
+	timestamp, err = strconv.ParseInt(timeString, 10, 64)
 	if err != nil {
-		loc, err := time.LoadLocation("Asia/Taipei")
-		if err != nil {
-			loc = time.Local
-		}
 		timeFormat := "2006-01-02 15:04:05"
-		date, err := time.ParseInLocation(timeFormat, timeString, loc)
+		date, err := time.ParseInLocation(timeFormat, timeString, location)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
@@ -2146,9 +2146,6 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 		metricType = arguments[4]
 		method = arguments[5]
 		duration = arguments[6]
-	} else if len(arguments) == 5 && arguments[2] == "hosts" {
-		hostnames = strings.Split(arguments[3], ",")
-		method = arguments[4]
 	} else if len(arguments) == 5 && arguments[2] == "hosts" {
 		hostnames = strings.Split(arguments[3], ",")
 		method = arguments[4]

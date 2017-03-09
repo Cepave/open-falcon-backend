@@ -102,7 +102,7 @@ func SyncHostsAndContactsTable() {
 		}
 		if g.Config().Speed.Enabled {
 			addBondingAndSpeedToHostsTable()
-			gocron.Every(1).Day().At("04:00").Do(addBondingAndSpeedToHostsTable)
+			gocron.Every(1).Day().At(g.Config().Speed.Time).Do(addBondingAndSpeedToHostsTable)
 		}
 		<-gocron.Start()
 	}
@@ -264,7 +264,6 @@ func getHostsBondingAndSpeed(hostname string) map[string]int {
 
 func addBondingAndSpeedToHostsTable() {
 	log.Debugf("func addBondingAndSpeedToHostsTable()")
-	now := getNow()
 	o := orm.NewOrm()
 	var rows []orm.Params
 	sql := "SELECT id, hostname FROM `boss`.`hosts` WHERE exist = 1"
@@ -287,7 +286,7 @@ func addBondingAndSpeedToHostsTable() {
 				if _, ok := item["speed"]; ok {
 					host.Speed = item["speed"]
 				}
-				host.Updated = now
+				host.Updated = getNow()
 				_, err = o.Update(&host)
 				if err != nil {
 					log.Errorf(err.Error())
