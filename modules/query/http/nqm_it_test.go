@@ -3,7 +3,6 @@ package http
 import (
 	"fmt"
 	"net/http"
-	"github.com/dghubble/sling"
 	httpT "github.com/Cepave/open-falcon-backend/common/testing/http"
 	t "github.com/Cepave/open-falcon-backend/modules/query/test"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
@@ -46,9 +45,8 @@ func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
 
 		return httpT.NewCheckSlint(
 			c,
-			sling.New().
-				Post(httpClientConfig.String()).
-				Path("/nqm/icmp/compound-report").
+			httpClientConfig.NewSlingByBase().
+				Post("nqm/icmp/compound-report").
 				BodyJSON(jsonBody),
 		).
 			GetJsonBody(expectedStatus)
@@ -90,9 +88,8 @@ func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
 		/**
 		 * Calls RESTful service and retrieve data
 		 */
-		slingObject := sling.New().Base(httpClientConfig.String()).
-				Path("/nqm/icmp/compound-report/query/").
-				Path(testCase.sampleUuid)
+		slingObject := httpClientConfig.NewSlingByBase().
+			Get("nqm/icmp/compound-report/query/" + testCase.sampleUuid)
 
 		clientChecker := httpT.NewCheckSlint(c, slingObject)
 

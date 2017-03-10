@@ -9,8 +9,6 @@ import (
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
-	"github.com/dghubble/sling"
-
 	. "gopkg.in/check.v1"
 )
 
@@ -20,8 +18,8 @@ var _ = Suite(&TestAgentItSuite{})
 
 // Tests the getting of agent by id
 func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/agent/36771")
+	client := httpClientConfig.NewSlingByBase().
+		Get("api/v1/nqm/agent/36771")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 	jsonResult := slintChecker.GetJsonBody(http.StatusOK)
@@ -65,8 +63,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 	}
 
 	for _, testCase := range testCases {
-		client := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/agent").
+		client := httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent").
 			BodyJSON(jsonBody)
 
 		slintChecker := testingHttp.NewCheckSlint(c, client)
@@ -100,8 +97,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 
 // Tests the listing of agents
 func (suite *TestAgentItSuite) TestListAgents(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/agents")
+	client := httpClientConfig.NewSlingByBase().Get("api/v1/nqm/agents")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 
@@ -134,8 +130,7 @@ func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 		GroupTags: []string{ "rest-gt-91", "rest-gt-92", "rest-gt-93" },
 	}
 
-	client := sling.New().Put(httpClientConfig.String()).
-		Path("/api/v1/nqm/agent/23041").
+	client := httpClientConfig.NewSlingByBase().Put("api/v1/nqm/agent/23041").
 		BodyJSON(jsonBody)
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
