@@ -1,4 +1,4 @@
-package main
+package test
 
 import (
 	"encoding/json"
@@ -7,9 +7,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/Cepave/open-falcon-backend/modules/fe/dmodel"
 	"github.com/Pallinder/go-randomdata"
 )
+
+type BossObj struct {
+	Platform string
+	Province string
+	Isp      string
+	Idc      string
+	Ip       string
+	Hostname string
+}
 
 var (
 	platform  = []string{"a-01", "a-02", "b-01", "c-04", "d-01", "c-11"}
@@ -52,9 +60,9 @@ func main() {
 	f, err := os.Create("../fakeData.json")
 	defer f.Close()
 	nsize := 20
-	res := make([]dmodel.BossObj, nsize)
+	res := make([]BossObj, nsize)
 	for i := 0; i < nsize; i++ {
-		b := dmodel.BossObj{
+		b := BossObj{
 			Platform: getPlatform(),
 			Province: getProvince(),
 			Isp:      getIsp(),
