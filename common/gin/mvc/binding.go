@@ -163,7 +163,7 @@
 //
 // Data Validation
 //
-// For struct type of input parameter, this framework would use "MvcConfig.Validator" and "leebenson/conform"
+// For struct type of input parameter, this framework would use "MvcConfig.Validator" and "common/conform"
 // to perform post-process on the parameter and validate it.
 //
 // See go-playground/validator: https://godoc.org/gopkg.in/go-playground/validator.v9

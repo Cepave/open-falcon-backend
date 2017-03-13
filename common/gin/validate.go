@@ -2,7 +2,7 @@ package gin
 
 import (
 	"fmt"
-	"github.com/leebenson/conform"
+	"github.com/Cepave/open-falcon-backend/common/conform"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -22,7 +22,7 @@ func (err ValidationError) Error() string {
 // See leebeson/conform: https://github.com/leebenson/conform
 // See go-playground/validator: https://godoc.org/gopkg.in/go-playground/validator.v9
 func ConformAndValidateStruct(object interface{}, v *validator.Validate) {
-	conform.Strings(object)
+	conform.MustConform(object)
 
 	err := v.Struct(object)
 
