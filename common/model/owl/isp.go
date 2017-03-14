@@ -10,3 +10,13 @@ type Isp struct {
 func (Isp) TableName() string {
 	return "owl_isp"
 }
+
+// Isp represents data of ISP in RDB
+type IspOfPingtaskView struct {
+	Id   int    `gorm:"primary_key:true;column:isp_id" json:"id"`
+	Name string `gorm:"column:isp_name" json:"name"`
+}
+
+func (IspOfPingtaskView) TableName() string {
+	return "owl_isp"
+}

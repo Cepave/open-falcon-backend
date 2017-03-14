@@ -4,40 +4,42 @@ import (
 	"fmt"
 	"net"
 	"time"
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	json "github.com/bitly/go-simplejson"
+
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	json "github.com/bitly/go-simplejson"
 )
 
 type AgentForAdding struct {
-	Id int32 `json:"-"`
-	Name string `json:"name" conform:"trim"`
+	Id           int32  `json:"-"`
+	Name         string `json:"name" conform:"trim"`
 	ConnectionId string `json:"connection_id" conform:"trim" validate:"min=1"`
-	Comment string `json:"comment" conform:"trim"`
-	Status bool `json:"status"`
+	Comment      string `json:"comment" conform:"trim"`
+	Status       bool   `json:"status"`
 
-	Hostname string `json:"hostname" conform:"trim" validate:"min=1"`
+	Hostname  string `json:"hostname" conform:"trim" validate:"min=1"`
 	IpAddress net.IP `json:"-"`
 
-	IspId int16 `json:"isp_id" validate:"nonZeroId"`
+	IspId      int16 `json:"isp_id" validate:"nonZeroId"`
 	ProvinceId int16 `json:"province_id" validate:"nonZeroId"`
-	CityId int16 `json:"city_id" validate:"nonZeroId"`
+	CityId     int16 `json:"city_id" validate:"nonZeroId"`
 
-	NameTagId int16 `json:"-"`
+	NameTagId    int16  `json:"-"`
 	NameTagValue string `json:"name_tag" conform:"trim"`
 
 	GroupTags []string `json:"group_tags" conform:"trim"`
 }
+
 func NewAgentForAdding() *AgentForAdding {
-	return &AgentForAdding {
-		Status: true,
-		Hostname: "",
-		IpAddress: net.ParseIP("0.0.0.0").To4(),
-		IspId: -1,
+	return &AgentForAdding{
+		Status:     true,
+		Hostname:   "",
+		IpAddress:  net.ParseIP("0.0.0.0").To4(),
+		IspId:      -1,
 		ProvinceId: -1,
-		CityId: -1,
-		NameTagId: -1,
+		CityId:     -1,
+		NameTagId:  -1,
 	}
 }
 func (agent *AgentForAdding) AreGroupTagsSame(anotherAgent *AgentForAdding) bool {
@@ -56,33 +58,35 @@ func (agent *AgentForAdding) GetIpAddressAsString() string {
 }
 
 type Agent struct {
-	Id int32 `gorm:"primary_key:true;column:ag_id"`
-	Name string `gorm:"column:ag_name"`
-	ConnectionId string `gorm:"column:ag_connection_id""`
-	Hostname string `gorm:"column:ag_hostname"`
+	Id                    int32  `gorm:"primary_key:true;column:ag_id"`
+	Name                  string `gorm:"column:ag_name"`
+	ConnectionId          string `gorm:"column:ag_connection_id""`
+	Hostname              string `gorm:"column:ag_hostname"`
+	NumOfEnabledPingtasks int32  `gorm:"column:ag_num_of_enabled_pingtasks"`
 
 	IpAddress net.IP `gorm:"column:ag_ip_address"`
 
-	Status bool `gorm:"column:ag_status"`
-	Comment string `gorm:"column:ag_comment"`
+	Status        bool      `gorm:"column:ag_status"`
+	Comment       string    `gorm:"column:ag_comment"`
 	LastHeartBeat time.Time `gorm:"column:ag_last_heartbeat"`
 
-	IspId int16 `gorm:"column:isp_id"`
+	IspId   int16  `gorm:"column:isp_id"`
 	IspName string `gorm:"column:isp_name"`
 
-	ProvinceId int16 `gorm:"column:pv_id"`
+	ProvinceId   int16  `gorm:"column:pv_id"`
 	ProvinceName string `gorm:"column:pv_name"`
 
-	CityId int16 `gorm:"column:ct_id"`
+	CityId   int16  `gorm:"column:ct_id"`
 	CityName string `gorm:"column:ct_name"`
 
-	NameTagId int16 `gorm:"column:nt_id"`
+	NameTagId    int16  `gorm:"column:nt_id"`
 	NameTagValue string `gorm:"column:nt_value"`
 
-	IdsOfGroupTags string `gorm:"column:gt_ids"`
+	IdsOfGroupTags   string `gorm:"column:gt_ids"`
 	NamesOfGroupTags string `gorm:"column:gt_names"`
-	GroupTags []*owlModel.GroupTag
+	GroupTags        []*owlModel.GroupTag
 }
+
 func (Agent) TableName() string {
 	return "nqm_agent"
 }
@@ -92,23 +96,23 @@ func (agentView *Agent) ToAgentForAdding() *AgentForAdding {
 		groupTags = append(groupTags, groupTag.Name)
 	}
 
-	return &AgentForAdding {
-		Id: agentView.Id,
-		Name: agentView.Name,
+	return &AgentForAdding{
+		Id:      agentView.Id,
+		Name:    agentView.Name,
 		Comment: agentView.Comment,
-		Status: agentView.Status,
+		Status:  agentView.Status,
 
 		ConnectionId: agentView.ConnectionId,
-		Hostname: agentView.Hostname,
-		IpAddress: agentView.IpAddress,
+		Hostname:     agentView.Hostname,
+		IpAddress:    agentView.IpAddress,
 
-		IspId: agentView.IspId,
+		IspId:      agentView.IspId,
 		ProvinceId: agentView.ProvinceId,
-		CityId: agentView.CityId,
+		CityId:     agentView.CityId,
 
-		NameTagId: agentView.NameTagId,
+		NameTagId:    agentView.NameTagId,
 		NameTagValue: agentView.NameTagValue,
-		GroupTags: owlModel.GroupTags(agentView.GroupTags).ToNames(),
+		GroupTags:    owlModel.GroupTags(agentView.GroupTags).ToNames(),
 	}
 }
 func (agentView *Agent) MarshalJSON() ([]byte, error) {
@@ -163,18 +167,19 @@ func (agent *Agent) String() string {
 }
 
 type SimpleAgent1 struct {
-	Id int32 `json:"id" db:"ag_id"`
-	Name string `json:"name" db:"ag_name"`
-	Hostname string `json:"hostname" db:"ag_hostname"`
+	Id        int32  `json:"id" db:"ag_id"`
+	Name      string `json:"name" db:"ag_name"`
+	Hostname  string `json:"hostname" db:"ag_hostname"`
 	IpAddress net.IP `json:"ip_address" db:"ag_ip_address"`
 
-	IspId int16 `json:"isp_id" db:"ag_isp_id"`
+	IspId      int16 `json:"isp_id" db:"ag_isp_id"`
 	ProvinceId int16 `json:"province_id" db:"ag_pv_id"`
-	CityId int16 `json:"city_id" db:"ag_ct_id"`
-	NameTagId int16 `json:"name_tag_id" db:"ag_nt_id"`
+	CityId     int16 `json:"city_id" db:"ag_ct_id"`
+	NameTagId  int16 `json:"name_tag_id" db:"ag_nt_id"`
 }
 
 type SimpleAgent1s []*SimpleAgent1
+
 func (as SimpleAgent1s) GetInt32s() []int32 {
 	result := make([]int32, 0)
 
@@ -191,10 +196,11 @@ type SimpleAgent1InCity struct {
 }
 
 type PingListLog struct {
-	NumberOfTargets int32 `db:"apll_number_of_targets"`
-	AccessTime time.Time `db:"apll_time_access"`
-	RefreshTime time.Time `db:"apll_time_refresh"`
+	NumberOfTargets int32     `db:"apll_number_of_targets"`
+	AccessTime      time.Time `db:"apll_time_access"`
+	RefreshTime     time.Time `db:"apll_time_refresh"`
 }
+
 func (l *PingListLog) GetDurationOfLastAccess(checkedTime time.Time) int64 {
 	return int64(checkedTime.Sub(l.AccessTime) / time.Minute)
 }

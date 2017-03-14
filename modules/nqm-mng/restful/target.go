@@ -2,13 +2,14 @@ package restful
 
 import (
 	"net/http"
-	"gopkg.in/gin-gonic/gin.v1"
 	"strconv"
 
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	"gopkg.in/gin-gonic/gin.v1"
+
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
-	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 )
 
 func addNewTarget(c *gin.Context) {
@@ -28,8 +29,8 @@ func addNewTarget(c *gin.Context) {
 		case commonNqmDb.ErrDuplicatedNqmTarget:
 			commonGin.JsonConflictHandler(
 				c,
-				commonGin.DataConflictError {
-					ErrorCode: 1,
+				commonGin.DataConflictError{
+					ErrorCode:    1,
 					ErrorMessage: err.Error(),
 				},
 			)
@@ -90,8 +91,8 @@ func listTargets(c *gin.Context) {
 	 */
 	paging := commonGin.PagingByHeader(
 		c,
-		&commonModel.Paging {
-			Size: 50,
+		&commonModel.Paging{
+			Size:     50,
 			Position: 1,
 		},
 	)
@@ -105,7 +106,7 @@ func listTargets(c *gin.Context) {
 }
 
 func buildQueryForListTargets(c *gin.Context) *commonNqmModel.TargetQuery {
-	query := &commonNqmModel.TargetQuery {}
+	query := &commonNqmModel.TargetQuery{}
 	queryWrapper := commonGin.NewQueryWrapper(c)
 
 	/**
