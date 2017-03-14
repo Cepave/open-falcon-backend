@@ -85,6 +85,37 @@ func GetProvincesByName(name string) []*owlModel.Province {
 	return gormDbExt.IfRecordNotFound(results, results).([]*owlModel.Province)
 }
 
+func GetCityById(cityId int16) *city1view {
+	var q = DbFacade.GormDb.Model(&owlModel.City1{}).
+		Select(`
+		ct_id, ct_name, ct_post_code, pv_id, pv_name
+		`).
+		Joins(`
+		INNER JOIN
+		owl_province
+		ON ct_pv_id = pv_id
+		AND ct_id = ?
+		LIMIT 1
+		`,
+			cityId,
+		)
+
+	var result owlModel.City1
+	gormExt.ToDefaultGormDbExt(q.Find(&result))
+
+	view := &city1view{
+		Id:       result.Id,
+		Name:     result.Name,
+		PostCode: result.PostCode,
+		Province: &owlModel.Province{
+			Id:   result.ProvinceId,
+			Name: result.ProvinceName,
+		},
+	}
+
+	return view
+}
+
 func GetCity2ById(cityId int16) *owlModel.City2 {
 	var result owlModel.City2
 
@@ -94,6 +125,7 @@ func GetCity2ById(cityId int16) *owlModel.City2 {
 
 	return gormDbExt.IfRecordNotFound(&result, (*owlModel.City2)(nil)).(*owlModel.City2)
 }
+
 func GetCity2sByName(prefixName string) []*owlModel.City2 {
 	var result []*owlModel.City2
 

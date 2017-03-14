@@ -6,6 +6,7 @@ import (
 
 	commonOwlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
+	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -18,6 +19,16 @@ func listProvinces(c *gin.Context) {
 	c.JSON(http.StatusOK, provinces)
 }
 
+func getProvinceByID(
+	p *struct {
+		ProvinceID int16 `mvc:"param[province_id]"`
+	},
+) mvc.OutputBody {
+	return mvc.JsonOutputOrNotFound(
+		commonOwlDb.GetProvinceById(p.ProvinceID),
+	)
+}
+
 func listCities(c *gin.Context) {
 	var cityName string
 	if v, ok := c.GetQuery("name"); ok {
@@ -25,6 +36,16 @@ func listCities(c *gin.Context) {
 	}
 	cities := commonOwlDb.GetCitiesByName(cityName)
 	c.JSON(http.StatusOK, cities)
+}
+
+func getCityByID(
+	p *struct {
+		CityID int16 `mvc:"param[city_id]"`
+	},
+) mvc.OutputBody {
+	return mvc.JsonOutputOrNotFound(
+		commonOwlDb.GetCityById(p.CityID),
+	)
 }
 
 func listCitiesInProvince(c *gin.Context) {
