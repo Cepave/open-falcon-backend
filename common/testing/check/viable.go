@@ -6,7 +6,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
-// See utils.ValueExt.IsViable() function
+// See "utils.ValueExt.IsViable()" function
 var ViableValue = viableValue(true)
 
 type viableValue bool

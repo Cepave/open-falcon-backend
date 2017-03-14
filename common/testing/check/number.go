@@ -7,9 +7,13 @@ import (
 	ot "github.com/Cepave/open-falcon-backend/common/reflect/types"
 )
 
+// Checks if obtained > expected
 var LargerThan = &checkForCompare{ largerThan, "LargerThan", "The left value **is not** larger than right value" }
+// Checks if obtained >= expected
 var LargerThanOrEqualTo = &checkForCompare{ largerThanOrEqualTo, "LargerThanOrEqual", "The left value **is not** larger than or equal to right value" }
+// Checks if obtained < expected
 var SmallerThan = &checkForCompare{ smallerThan, "SmallerThan", "The left value **is not** larger than right value" }
+// Checks if obtained <= expected
 var SmallerThanOrEqualTo = &checkForCompare{ smallerThanOrEqualTo, "SmallerThanOrEqual", "The left value **is not** larger than or equal to right value" }
 
 const (

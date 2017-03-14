@@ -1,3 +1,11 @@
+//
+// The base environment for RDB testing
+//
+// Flags
+//
+// This package has pre-defined flags of command:
+//
+// 	-dsn_mysql - MySQL DSN used to intialize configuration of mysql connection
 package db
 
 import (
@@ -7,17 +15,16 @@ import (
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 )
 
-// The base environment for RDB testing
 
 var dsnMysql = flag.String("dsn_mysql", "", "DSN of MySql")
 
-// This callback is used to setup a viable database configuration while testing
+// This callback is used to setup a viable database configuration for testing.
 type ViableDbConfigFunc func(config *commonDb.DbConfig)
 
 // This function is used to:
 //
-// 1) Check whether or not the configuration o "dsn_mysql" has been supplied
-// 2) If it does, supply the data of configuration to callback function
+// 	1. Check whether or not the configuration o "dsn_mysql" has been supplied
+// 	2. If it does, supply the data of configuration to callback function
 func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
 	config := GetDbConfig(c)
 
@@ -28,6 +35,9 @@ func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
 	return config != nil
 }
 
+// Gets the database configuration or skip the testing(depends on "gopkg.in/check.v1").
+//
+// If the environment is not ready(flag is empty), this function returns "nil"
 func GetDbConfig(c *check.C) *commonDb.DbConfig {
 	if *dsnMysql == "" {
 		c.Skip("Skip database testing. Needs \"-dsn_mysql=<MySQL DSN>\"")
@@ -39,6 +49,11 @@ func GetDbConfig(c *check.C) *commonDb.DbConfig {
 		MaxIdle: 2,
 	}
 }
+// Constructs "*db/facade/DbFacade" object by configuration of flag.
+//
+// The checker object is used to trigger panic if the database cannot be opened.
+//
+// If the environment is not ready(flag is empty), this function returns "nil"
 func InitDbFacade(c *check.C) *f.DbFacade {
 	var dbFacade = &f.DbFacade{}
 	dbConfig := GetDbConfig(c)
@@ -52,13 +67,18 @@ func InitDbFacade(c *check.C) *f.DbFacade {
 
 	return dbFacade
 }
+// Releases "*db/facade/DbFacade" object by configuration of flag.
+//
+// The checker object is used to trigger panic if the database cannot be released.
 func ReleaseDbFacade(c *check.C, dbFacade *f.DbFacade) {
 	if dbFacade != nil {
 		dbFacade.Release()
 	}
 }
 
-// Checks whether or not skipping testing by viable arguments
+// Checks whether or not skipping testing by viable arguments.
+//
+// If the environment is not ready(flag is empty), this function returns false value.
 func HasDbEnvForMysqlOrSkip(c *check.C) bool {
 	var hasMySqlDsn = *dsnMysql != ""
 

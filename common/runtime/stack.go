@@ -1,6 +1,20 @@
+//
+// Because go language does not have industrial level of exception handing mechanism,
+// using the information of calling state is the only way to expose secret in code.
+//
+// Obtain CallerInfo
+//
+// CallerInfo is the main struct which holds essential information of detail on code.
+//
+// You can obtain CallerInfo by various functions:
+//
+// 	GetCallerInfo() - Obtains the caller(the previous calling point to current function)
+// 	GetCallerInfoWithDepth() - Obtains the caller of caller by numeric depth
+//
 package runtime
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 )
@@ -22,6 +36,7 @@ func init() {
 	// :~)
 }
 
+// Information of the position in file and where line number is targeted
 type CallerInfo struct {
 	Line int
 
@@ -39,10 +54,17 @@ func (c *CallerInfo) GetFile() string {
 	c.file = trimGoPath(c.rawFile)
 	return c.file
 }
+func (c *CallerInfo) String() string {
+	return fmt.Sprintf("%s:%d", c.GetFile(), c.Line)
+}
 
+// Gets caller info from current function
 func GetCallerInfo() *CallerInfo {
 	return GetCallerInfoWithDepth(1)
 }
+// Gets caller info with depth.
+//
+// N means the Nth caller of caller.
 func GetCallerInfoWithDepth(depth int) *CallerInfo {
 	_, file, line, _ := runtime.Caller(depth + 2)
 
