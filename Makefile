@@ -26,6 +26,7 @@ pack: checkbin
 	@cp -r ./modules/fe/{static,views,scripts} ./out/fe/bin
 	@cp -r ./modules/alarm/{static,views} ./out/alarm/bin
 	@cp -r ./modules/agent/public ./out/agent/bin
+	@cp -r ./modules/api/data ./out/api/
 	@cp cfg.json ./out/cfg.json
 	@bash ./config/confgen.sh
 	@cp $(TARGET) ./out/$(TARGET)
