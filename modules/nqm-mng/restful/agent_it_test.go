@@ -33,35 +33,35 @@ func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
 // Tests the adding of new agent
 func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 	jsonBody := &struct {
-		Name string `json:"name"`
-		Hostname string `json:"hostname"`
-		ConnectionId string `json:"connection_id"`
-		Status bool `json:status`
-		Comment string `json:"comment"`
-		IspId int `json:"isp_id"`
-		ProvinceId int `json:"province_id"`
-		CityId int `json:"city_id"`
-		NameTag string `json:"name_tag"`
-		GroupTags []string `json:"group_tags"`
-	} {
-		Name: "new-agent-ccc",
-		Hostname: "new-host-cccc",
-		Status: true,
+		Name         string   `json:"name"`
+		Hostname     string   `json:"hostname"`
+		ConnectionId string   `json:"connection_id"`
+		Status       bool     `json:status`
+		Comment      string   `json:"comment"`
+		IspId        int      `json:"isp_id"`
+		ProvinceId   int      `json:"province_id"`
+		CityId       int      `json:"city_id"`
+		NameTag      string   `json:"name_tag"`
+		GroupTags    []string `json:"group_tags"`
+	}{
+		Name:         "new-agent-ccc",
+		Hostname:     "new-host-cccc",
+		Status:       true,
 		ConnectionId: "new-agent@blue.12.91.33",
-		Comment: "This is new agent by blue 12.91 ***",
-		IspId: 8,
-		ProvinceId: 9,
-		CityId: 130,
-		NameTag: "rest-nt-1",
-		GroupTags: []string{ "pp-rest-tag-1", "pp-rest-tag-2" },
+		Comment:      "This is new agent by blue 12.91 ***",
+		IspId:        8,
+		ProvinceId:   9,
+		CityId:       130,
+		NameTag:      "rest-nt-1",
+		GroupTags:    []string{"pp-rest-tag-1", "pp-rest-tag-2"},
 	}
 
 	testCases := []*struct {
-		expectedStatus int
+		expectedStatus    int
 		expectedErrorCode int
-	} {
-		{ http.StatusOK, -1 },
-		{ http.StatusConflict, 1 },
+	}{
+		{http.StatusOK, -1},
+		{http.StatusConflict, 1},
 	}
 
 	for _, testCase := range testCases {
@@ -115,23 +115,23 @@ func (suite *TestAgentItSuite) TestListAgents(c *C) {
 // Tests the modifying of agent
 func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 	jsonBody := &struct {
-		Name string `json:"name"`
-		Status bool `json:status`
-		Comment string `json:"comment"`
-		IspId int `json:"isp_id"`
-		ProvinceId int `json:"province_id"`
-		CityId int `json:"city_id"`
-		NameTag string `json:"name_tag"`
-		GroupTags []string `json:"group_tags"`
-	} {
-		Name: "Update-Agent-1",
-		Status: false,
-		Comment: "This is updated comment",
-		IspId: 3,
+		Name       string   `json:"name"`
+		Status     bool     `json:status`
+		Comment    string   `json:"comment"`
+		IspId      int      `json:"isp_id"`
+		ProvinceId int      `json:"province_id"`
+		CityId     int      `json:"city_id"`
+		NameTag    string   `json:"name_tag"`
+		GroupTags  []string `json:"group_tags"`
+	}{
+		Name:       "Update-Agent-1",
+		Status:     false,
+		Comment:    "This is updated comment",
+		IspId:      3,
 		ProvinceId: 11,
-		CityId: 230,
-		NameTag: "rest-nt-9",
-		GroupTags: []string{ "rest-gt-91", "rest-gt-92", "rest-gt-93" },
+		CityId:     230,
+		NameTag:    "rest-nt-9",
+		GroupTags:  []string{"rest-gt-91", "rest-gt-92", "rest-gt-93"},
 	}
 
 	client := sling.New().Put(httpClientConfig.String()).

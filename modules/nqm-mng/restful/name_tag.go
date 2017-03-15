@@ -9,7 +9,7 @@ import (
 
 func listNameTags(
 	p *struct {
-		Value string `mvc:"query[value]"`
+		Value  string        `mvc:"query[value]"`
 		Paging *model.Paging `mvc:"pageSize[100] pageOrderBy[value#asc]"`
 	},
 ) (*model.Paging, mvc.OutputBody) {
