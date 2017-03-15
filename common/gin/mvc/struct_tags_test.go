@@ -37,6 +37,7 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 		FA2 []string `mvc:"key[ks1]"` // default value on *gin.Context key
 		FA22 []uint16 `mvc:"key[ks2] default[12,76,33]"` // default value on *gin.Context key
 		FE1 int `mvc:"query[c1]"` // empty to default value of golang
+		None string
 	}
 
 	testCases := []*struct {
@@ -44,6 +45,11 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 		setupFunc func(*gin.Context)
 		expectedValue interface{}
 	} {
+		{
+			"None",
+			func(ginC *gin.Context) {},
+			"",
+		},
 		{
 			"F1",
 			func(ginC *gin.Context) {
@@ -167,6 +173,9 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 		context := &gin.Context {}
 		testCase.setupFunc(context)
 
+		if paramLoader == nil {
+			continue
+		}
 		testedValue := paramLoader(context)
 
 		c.Assert(testedValue, DeepEquals, testCase.expectedValue, comment)

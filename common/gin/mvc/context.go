@@ -238,7 +238,7 @@ func (b *MvcBuilder) buildStructPointerFunc(structType reflect.Type) func(c *gin
 			)
 		}
 
-		b.validateStruct(structValue.Interface())
+		b.validateStruct(pointerValue.Interface())
 		return pointerValue
 	}
 }
