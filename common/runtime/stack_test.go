@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"fmt"
-	//ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 )
 
@@ -45,6 +44,15 @@ func (suite *TestStackSuite) TestGetCallerInfo(c *C) {
 
 	c.Logf("Caller info: %#v", testedInfo)
 	c.Assert(testedInfo.file, Matches, ".*stack_test.go")
+}
+
+// Tests the getting of caller informations
+func (suite *TestStackSuite) TestGetCallerInfoStack(c *C) {
+	stack := GetCallerInfoStack(0, 10)
+
+	for _, callerInfo := range stack {
+		c.Logf("%#v", callerInfo.GetFile())
+	}
 }
 
 func info() *CallerInfo {

@@ -43,6 +43,17 @@ type CallerInfo struct {
 	file string
 	rawFile string
 }
+
+type CallerStack []*CallerInfo
+func (s CallerStack) AsStringStack() []string {
+	callerStackString := make([]string, 0)
+	for _, caller := range s {
+		callerStackString = append(callerStackString, caller.String())
+	}
+
+	return callerStackString
+}
+
 // Gets the file by trimming of $GOPATH
 //
 // The processing of file is delayed to improve performance
@@ -58,6 +69,21 @@ func (c *CallerInfo) String() string {
 	return fmt.Sprintf("%s:%d", c.GetFile(), c.Line)
 }
 
+// Gets stack of caller info
+func GetCallerInfoStack(startDepth int, endDepth int) CallerStack {
+	callers := make([]*CallerInfo, 0)
+	for i := startDepth + 1; i < endDepth + 1; i++ {
+		callerInfo := GetCallerInfoWithDepth(i)
+		if callerInfo == nil {
+			break
+		}
+
+		callers = append(callers, callerInfo)
+	}
+
+	return callers
+}
+
 // Gets caller info from current function
 func GetCallerInfo() *CallerInfo {
 	return GetCallerInfoWithDepth(1)
@@ -66,7 +92,10 @@ func GetCallerInfo() *CallerInfo {
 //
 // N means the Nth caller of caller.
 func GetCallerInfoWithDepth(depth int) *CallerInfo {
-	_, file, line, _ := runtime.Caller(depth + 2)
+	_, file, line, ok := runtime.Caller(depth + 2)
+	if !ok {
+		return nil
+	}
 
 	return &CallerInfo {
 		rawFile: file,
