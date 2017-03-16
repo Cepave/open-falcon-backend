@@ -336,6 +336,7 @@ func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 		hasFound bool
 	} {
 		{ 130981, true },
+		{ 130982, true },
 		{ -10, false },
 	}
 
@@ -344,7 +345,15 @@ func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 
 		testedResult := GetSimpleAgent1ById(testCase.sampleId)
 
-		c.Logf("Found agent: %#v", testedResult)
+		c.Logf("Found agent: %#v.", testedResult)
+
+		if testCase.hasFound {
+			if testedResult.Name != nil {
+				c.Logf("Agent name: %s", *testedResult.Name)
+			} else {
+				c.Logf("Agent name: %v", testedResult.Name)
+			}
+		}
 		c.Assert(testedResult, ocheck.ViableValue, testCase.hasFound, comment)
 	}
 }
@@ -486,7 +495,8 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 				ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status,
 				ag_isp_id, ag_pv_id, ag_ct_id, ag_nt_id
 			)
-			VALUES(130981, 876081, 'ag-name-1', 'simple-get-1@187.93.16.55', 'ag-get-1.nohh.com', x'375A1637', 1, 3, 3, 5, -1)
+			VALUES(130981, 876081, 'ag-name-1', 'simple-get-1@187.93.16.55', 'ag-get-1.nohh.com', x'375A1637', 1, 3, 3, 5, -1),
+				(130982, 876081, NULL, 'simple-get-2@187.93.16.55', 'ag-get-2.nohh.com', x'375A1697', 1, 3, 3, 5, -1)
 			`,
 		)
 	case "TestAgentSuite.TestGetAgentById":
@@ -588,7 +598,7 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 		)
 	case "TestAgentSuite.TestGetSimpleAgent1ById":
 		inTx(
-			"DELETE FROM nqm_agent WHERE ag_id = 130981",
+			"DELETE FROM nqm_agent WHERE ag_id >= 130981 AND ag_id <= 130982",
 			"DELETE FROM host WHERE id = 876081",
 		)
 	case "TestAgentSuite.TestGetAgentById":

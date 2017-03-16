@@ -648,3 +648,4 @@ func getRelation(arrayOfNumber interface{}) PropRelation {
 
 	return NoCondition
 }
+

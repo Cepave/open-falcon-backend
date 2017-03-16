@@ -219,7 +219,7 @@ func LoadSimpleAgent1sByFilter(filter *nqmModel.AgentFilter) []*nqmModel.SimpleA
 
 type agentInCity struct {
 	AgentId int32 `db:"ag_id"`
-	AgentName string `db:"ag_name"`
+	AgentName *string `db:"ag_name"`
 	AgentHostname string `db:"ag_hostname"`
 	AgentIpAddress net.IP `db:"ag_ip_address"`
 	CityId int16 `db:"ct_id"`
@@ -237,7 +237,7 @@ func (a *agentInCity) getSimpleAgent1() *nqmModel.SimpleAgent1 {
 	return &nqmModel.SimpleAgent1 {
 		Id: a.AgentId,
 		Name: a.AgentName,
-		Hostname: a.AgentName,
+		Hostname: a.AgentHostname,
 		IpAddress: a.AgentIpAddress,
 	}
 }

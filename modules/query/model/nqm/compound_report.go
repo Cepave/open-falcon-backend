@@ -1,6 +1,7 @@
 package nqm
 
 import (
+	"fmt"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	sjson "github.com/bitly/go-simplejson"
 	"github.com/Cepave/open-falcon-backend/common/utils"
@@ -14,23 +15,91 @@ type DynamicRecord struct {
 }
 
 type DynamicAgentProps struct {
-	Id int32 `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-	IpAddress string `json:"ip_address,omitempty"`
-	Hostname string `json:"hostname,omitempty"`
-	Isp *owlModel.Isp `json:"isp,omitempty"`
-	Province *owlModel.Province `json:"province,omitempty"`
-	City *owlModel.City2 `json:"city,omitempty"`
-	NameTag *owlModel.NameTag `json:"name_tag,omitempty"`
+	Id int32
+	Name *string
+	IpAddress string
+	Hostname string
+	Isp *owlModel.Isp
+	Province *owlModel.Province
+	City *owlModel.City2
+	NameTag *owlModel.NameTag
+	Grouping []string
+}
+func (p *DynamicAgentProps) MarshalJSON() ([]byte, error) {
+	if len(p.Grouping) == 0 {
+		return []byte("null"), nil
+	}
+
+	json := sjson.New()
+
+	if p.Id != 0 {
+		json.Set("id", p.Id)
+	}
+
+	for _, grouping := range p.Grouping {
+		switch grouping {
+			case AgentGroupingName:
+				json.Set("name", p.Name)
+			case AgentGroupingHostname:
+				json.Set("hostname", p.Hostname)
+			case AgentGroupingIpAddress:
+				json.Set("ip_address", p.IpAddress)
+			case GroupingIsp:
+				json.Set("isp", p.Isp)
+			case GroupingProvince:
+				json.Set("province", p.Province)
+			case GroupingCity:
+				json.Set("city", p.City)
+			case GroupingNameTag:
+				json.Set("name_tag", p.NameTag)
+			default:
+				panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", grouping))
+		}
+	}
+
+	return json.MarshalJSON()
 }
 type DynamicTargetProps struct {
-	Id int32 `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-	Host string `json:"host,omitempty"`
-	Isp *owlModel.Isp `json:"isp,omitempty"`
-	Province *owlModel.Province `json:"province,omitempty"`
-	City *owlModel.City2 `json:"city,omitempty"`
-	NameTag *owlModel.NameTag `json:"name_tag,omitempty"`
+	Id int32
+	Name string
+	Host string
+	Isp *owlModel.Isp
+	Province *owlModel.Province
+	City *owlModel.City2
+	NameTag *owlModel.NameTag
+	Grouping []string
+}
+func (p *DynamicTargetProps) MarshalJSON() ([]byte, error) {
+	if len(p.Grouping) == 0 {
+		return []byte("null"), nil
+	}
+
+	json := sjson.New()
+
+	if p.Id != 0 {
+		json.Set("id", p.Id)
+	}
+
+	for _, grouping := range p.Grouping {
+		switch grouping {
+			case TargetGroupingName:
+				json.Set("name", p.Name)
+			case TargetGroupingHost:
+				json.Set("host", p.Host)
+			case GroupingIsp:
+				json.Set("isp", p.Isp)
+			case GroupingProvince:
+				json.Set("province", p.Province)
+			case GroupingCity:
+				json.Set("city", p.City)
+			case GroupingNameTag:
+				json.Set("name_tag", p.NameTag)
+			default:
+				panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", grouping))
+		}
+	}
+
+	return json.MarshalJSON()
 }
 
 type DynamicMetrics struct {
@@ -86,8 +155,11 @@ var CompareFunctions = map[string]CompareDynamicRecord {
 		if r, hasNil := utils.CompareNil(left.Agent, right.Agent, direction); hasNil {
 			return r
 		}
+		if r, hasNil := utils.CompareNil(left.Agent.Name, right.Agent.Name, direction); hasNil {
+			return r
+		}
 
-		return utils.CompareString(left.Agent.Name, right.Agent.Name, direction)
+		return utils.CompareString(*left.Agent.Name, *right.Agent.Name, direction)
 	},
 	"agent_hostname": func(left *DynamicRecord, right *DynamicRecord, direction byte) int {
 		if r, hasNil := utils.CompareNil(left.Agent, right.Agent, direction); hasNil {

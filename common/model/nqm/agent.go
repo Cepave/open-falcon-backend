@@ -178,7 +178,7 @@ func (a *AgentWithPingTask) MarshalJSON() ([]byte, error) {
 
 type SimpleAgent1 struct {
 	Id int32 `json:"id" db:"ag_id"`
-	Name string `json:"name" db:"ag_name"`
+	Name *string `json:"name" db:"ag_name"`
 	Hostname string `json:"hostname" db:"ag_hostname"`
 	IpAddress net.IP `json:"ip_address" db:"ag_ip_address"`
 
