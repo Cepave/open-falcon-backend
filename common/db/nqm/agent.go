@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"net"
 	"reflect"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	"github.com/Cepave/open-falcon-backend/common/utils"
@@ -305,70 +306,36 @@ func LoadEffectiveAgentsInProvince(provinceId int16) []*nqmModel.SimpleAgent1InC
 }
 
 // Lists the agents by query condition
-func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmModel.Agent, *commonModel.Paging) {
-	var result []*nqmModel.Agent
+func ListAgentsWithPingTask(query *nqmModel.AgentQueryWithPingTask, paging commonModel.Paging) ([]*nqmModel.AgentWithPingTask, *commonModel.Paging) {
+	result := make([]*nqmModel.AgentWithPingTask, 0)
 
 	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
-		/**
-		 * Retrieves the page of data
-		 */
-		var selectAgent = txGormDb.Model(&nqmModel.Agent{}).
-			Select(`SQL_CALC_FOUND_ROWS
-				ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
-				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,
-				COUNT(gt.gt_id) AS gt_number,
-				GROUP_CONCAT(gt.gt_id ORDER BY gt_name ASC SEPARATOR ',') AS gt_ids,
-				GROUP_CONCAT(gt.gt_name ORDER BY gt_name ASC SEPARATOR '\0') AS gt_names
-			`).
-			Joins(`
-				INNER JOIN
-				owl_isp AS isp
-				ON ag_isp_id = isp.isp_id
-				INNER JOIN
-				owl_province AS pv
-				ON ag_pv_id = pv.pv_id
-				INNER JOIN
-				owl_city AS ct
-				ON ag_ct_id = ct.ct_id
-				INNER JOIN
-				owl_name_tag AS nt
-				ON ag_nt_id = nt.nt_id
-				LEFT OUTER JOIN
-				nqm_agent_group_tag AS agt
-				ON ag_id = agt.agt_ag_id
-				LEFT OUTER JOIN
-				owl_group_tag AS gt
-				ON agt.agt_gt_id = gt.gt_id
-			`).
-			Limit(paging.Size).
-			Group(`
-				ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
-				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
-			`).
-			Order(buildSortingClauseOfAgents(&paging)).
-			Offset(paging.GetOffset())
+		having := ""
+		if query.HasAppliedCondition() {
+			if query.Applied {
+				having = "COUNT(apt_pt_id) > 0"
+			} else {
+				having = "COUNT(apt_pt_id) = 0"
+			}
+		}
 
-		if query.Name != "" {
-			selectAgent = selectAgent.Where("ag_name LIKE ?", query.Name + "%")
-		}
-		if query.ConnectionId != "" {
-			selectAgent = selectAgent.Where("ag_connection_id LIKE ?", query.ConnectionId + "%")
-		}
-		if query.Hostname != "" {
-			selectAgent = selectAgent.Where("ag_hostname LIKE ?", query.Hostname + "%")
-		}
-		if query.HasIspId {
-			selectAgent = selectAgent.Where("ag_isp_id = ?", query.IspId)
-		}
-		if query.HasStatusCondition {
-			selectAgent = selectAgent.Where("ag_status = ?", query.Status)
-		}
-		if query.IpAddress != "" {
-			selectAgent = selectAgent.Where("ag_ip_address LIKE ?", query.GetIpForLikeCondition())
-		}
-		// :~)
+		selectAgent := buildSelectAgentsGorm(
+			txGormDb, &query.AgentQuery, &paging,
+			[]string{ "IF(COUNT(apt_pt_id) > 0, TRUE, FALSE) AS applying_ping_task" }, having,
+			buildSortingClauseOfAgentsWithPingTask(&paging),
+		).
+			Joins(
+				`
+				LEFT OUTER JOIN
+				nqm_agent_ping_task
+				ON ag_id = apt_ag_id
+					AND apt_pt_id = ?
+				`,
+				query.PingTaskId,
+			).
+			Find(&result)
 
-		gormExt.ToDefaultGormDbExt(selectAgent.Find(&result)).PanicIfError()
+		gormExt.ToDefaultGormDbExt(selectAgent).PanicIfError()
 
 		return commonDb.TxCommit
 	}
@@ -388,6 +355,122 @@ func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmMo
 	return result, &paging
 }
 
+// Lists the agents by query condition
+func ListAgents(query *nqmModel.AgentQuery, paging commonModel.Paging) ([]*nqmModel.Agent, *commonModel.Paging) {
+	var result []*nqmModel.Agent
+
+	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
+		gormExt.ToDefaultGormDbExt(
+			buildSelectAgentsGorm(
+				txGormDb, query, &paging,
+				nil, "", buildSortingClauseOfAgents(&paging),
+			).Find(&result),
+		).PanicIfError()
+
+		return commonDb.TxCommit
+	}
+
+	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
+		funcTxLoader, &paging,
+	)
+
+	/**
+	 * Loads group tags
+	 */
+	for _, agent := range result {
+		agent.AfterLoad()
+	}
+	// :~)
+
+	return result, &paging
+}
+
+var agentColumns = []string {
+	"SQL_CALC_FOUND_ROWS ag_id",
+	"ag_name",
+	"ag_connection_id",
+	"ag_hostname",
+	"ag_ip_address",
+	"ag_status",
+	"ag_comment",
+	"ag_last_heartbeat",
+	"isp_id",
+	"isp_name",
+	"pv_id",
+	"pv_name",
+	"ct_id",
+	"ct_name",
+	"nt_id",
+	"nt_value",
+	"COUNT(gt.gt_id) AS gt_number",
+	"GROUP_CONCAT(gt.gt_id ORDER BY gt_name ASC SEPARATOR ',') AS gt_ids",
+	"GROUP_CONCAT(gt.gt_name ORDER BY gt_name ASC SEPARATOR '\\0') AS gt_names",
+}
+func buildSelectAgentsGorm(
+	gormDb *gorm.DB, query *nqmModel.AgentQuery, paging *commonModel.Paging,
+	additionalSelectColumns []string, having string, orderBy string,
+) *gorm.DB {
+	finalSelectColumns := append(agentColumns, additionalSelectColumns...)
+
+	var selectAgent = gormDb.Model(&nqmModel.Agent{}).
+		Select(strings.Join(finalSelectColumns, ",")).
+		Joins(`
+			INNER JOIN
+			owl_isp AS isp
+			ON ag_isp_id = isp.isp_id
+			INNER JOIN
+			owl_province AS pv
+			ON ag_pv_id = pv.pv_id
+			INNER JOIN
+			owl_city AS ct
+			ON ag_ct_id = ct.ct_id
+			INNER JOIN
+			owl_name_tag AS nt
+			ON ag_nt_id = nt.nt_id
+			LEFT OUTER JOIN
+			nqm_agent_group_tag AS agt
+			ON ag_id = agt.agt_ag_id
+			LEFT OUTER JOIN
+			owl_group_tag AS gt
+			ON agt.agt_gt_id = gt.gt_id
+		`).
+		Group(`
+			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
+			isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
+		`)
+
+	if having != "" {
+		selectAgent = selectAgent.Having(having)
+	}
+
+	selectAgent = selectAgent.
+		Order(orderBy).
+		Limit(paging.Size).
+		Offset(paging.GetOffset())
+
+	if query.Name != "" {
+		selectAgent = selectAgent.Where("ag_name LIKE ?", query.Name + "%")
+	}
+	if query.ConnectionId != "" {
+		selectAgent = selectAgent.Where("ag_connection_id LIKE ?", query.ConnectionId + "%")
+	}
+	if query.Hostname != "" {
+		selectAgent = selectAgent.Where("ag_hostname LIKE ?", query.Hostname + "%")
+	}
+	if query.HasIspId() {
+		selectAgent = selectAgent.Where("ag_isp_id = ?", query.IspId)
+	}
+	if query.HasStatusCondition() {
+		selectAgent = selectAgent.Where("ag_status = ?", query.Status)
+	}
+	if query.IpAddress != "" {
+		selectAgent = selectAgent.Where("ag_ip_address LIKE ?", query.GetIpForLikeCondition())
+	}
+	// :~)
+
+	return selectAgent
+}
+
 var orderByDialectForAgents = commonModel.NewSqlOrderByDialect(
 	map[string]string {
 		"status": "ag_status",
@@ -398,6 +481,7 @@ var orderByDialectForAgents = commonModel.NewSqlOrderByDialect(
 		"city": "ct_name",
 		"last_heartbeat_time": "ag_last_heartbeat",
 		"name_tag": "nt_value",
+		"applied": "applying_ping_task",
 	},
 )
 func init() {
@@ -412,6 +496,28 @@ func init() {
 	}
 }
 
+func buildSortingClauseOfAgentsWithPingTask(paging *commonModel.Paging) string {
+	if len(paging.OrderBy) == 0 {
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "applied", commonModel.Descending })
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "connection_id", commonModel.Ascending })
+	}
+
+	if len(paging.OrderBy) == 1 {
+		switch paging.OrderBy[0].Expr {
+		case "province":
+			paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "city", commonModel.Ascending })
+		}
+	}
+
+	if paging.OrderBy[len(paging.OrderBy) - 1].Expr != "last_heartbeat_time" {
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "last_heartbeat_time", commonModel.Descending })
+	}
+
+	querySyntax, err := orderByDialectForAgents.ToQuerySyntax(paging.OrderBy)
+	gormExt.DefaultGormErrorConverter.PanicIfError(err)
+
+	return querySyntax
+}
 func buildSortingClauseOfAgents(paging *commonModel.Paging) string {
 	if len(paging.OrderBy) == 0 {
 		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "status", commonModel.Descending })

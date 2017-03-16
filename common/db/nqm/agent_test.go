@@ -150,15 +150,15 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 		expectedCountOfAll int32
 	} {
 		{ // All data
-			&nqmModel.AgentQuery {},
+			&nqmModel.AgentQuery { IspId: -2, HasStatus: "!N!" },
 			10, 1, 3, 3,
 		},
 		{ // 2nd page
-			&nqmModel.AgentQuery {},
+			&nqmModel.AgentQuery { IspId: -2, HasStatus: "!N!" },
 			2, 2, 1, 3,
 		},
 		{ // Match nothing for futher page
-			&nqmModel.AgentQuery {},
+			&nqmModel.AgentQuery { IspId: -2, HasStatus: "!N!" },
 			10, 10, 0, 3,
 		},
 		{ // Match 1 row by all of the conditions
@@ -166,20 +166,23 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 				Name: "ag-name-1",
 				ConnectionId: "ag-list-1",
 				Hostname: "hn-list-1",
-				HasIspId: true,
 				IspId: 3,
 				IpAddress: "123.52",
-				HasStatusCondition: true,
+				HasStatus: "1",
 				Status: true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match 1 row(by special IP address)
 			&nqmModel.AgentQuery {
+				IspId: -2,
+				HasStatus: "!N!",
 				IpAddress: "12.37",
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
 			&nqmModel.AgentQuery {
+				IspId: -2,
+				HasStatus: "!N!",
 				ConnectionId: "ag-list-1",
 				Hostname: "hn-list-2",
 			}, 10, 1, 0, 0,
@@ -207,13 +210,122 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 			testCase.query, paging,
 		)
 
-		c.Logf("[List] Query condition: %v. Number of agents: %d", testCase.query, len(testedResult))
+		c.Logf("[List] Query: %#v. Number of agents: %d", testCase.query, len(testedResult))
 
 		for _, agent := range testedResult {
-			c.Logf("[List] Agent: %v.", agent)
+			c.Logf("\t[List] Matched Agent: %#v.", agent)
 		}
 		c.Assert(testedResult, HasLen, testCase.expectedCountOfCurrentPage)
 		c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll)
+	}
+}
+
+// Tests the list of agents with ping task information
+func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
+	testCases := []*struct {
+		query *nqmModel.AgentQuery
+		pageSize int32
+		pagePosition int32
+		expectedCountOfCurrentPage int
+		expectedCountOfAll int32
+	} {
+		{ // All data
+			&nqmModel.AgentQuery { IspId: -2, HasStatus: "!N!" },
+			10, 1, 3, 3,
+		},
+		{ // All data(not-match ping task)
+			&nqmModel.AgentQuery { IspId: -2, HasStatus: "!N!" },
+			10, 1, 3, 3,
+		},
+		{ // 2nd page
+			&nqmModel.AgentQuery { IspId: -2, HasStatus: "!N!" },
+			2, 2, 1, 3,
+		},
+		{ // Match nothing for futher page
+			&nqmModel.AgentQuery { IspId: -2, HasStatus: "!N!" },
+			10, 10, 0, 3,
+		},
+		{ // Match 1 row by all of the conditions
+			&nqmModel.AgentQuery {
+				Name: "ag-name-1",
+				ConnectionId: "ag-list-1",
+				Hostname: "hn-list-1",
+				IspId: 3,
+				IpAddress: "123.52",
+				HasStatus: "1",
+				Status: true,
+			},
+			10, 1, 1, 1,
+		},
+		{ // Match 1 row(by special IP address)
+			&nqmModel.AgentQuery {
+				IspId: -2,
+				HasStatus: "!N!",
+				IpAddress: "12.37",
+			}, 10, 1, 1, 1,
+		},
+		{ // Match nothing
+			&nqmModel.AgentQuery {
+				IspId: -2,
+				HasStatus: "!N!",
+				ConnectionId: "ag-list-1",
+				Hostname: "hn-list-2",
+			}, 10, 1, 0, 0,
+		},
+	}
+	testCasesForPingTask := []*struct {
+		pingTaskId int32
+		appliedInt string
+		expectedApplying bool
+	} {
+		{ 38201, "!N!", true },
+		{ 38202, "!N!", false },
+		{ 38201, "1", true },
+		{ 38202, "0", false },
+	}
+
+	for _, testCase := range testCases {
+		ocheck.LogTestCase(c, testCase)
+		for j, testCaseForPingTask := range testCasesForPingTask {
+			commentPingTask := ocheck.TestCaseComment(j)
+			ocheck.LogTestCase(c, testCaseForPingTask)
+
+			paging := commonModel.Paging{
+				Size: testCase.pageSize,
+				Position: testCase.pagePosition,
+				OrderBy: []*commonModel.OrderByEntity {
+					&commonModel.OrderByEntity{ "applied", commonModel.Descending },
+					&commonModel.OrderByEntity{ "status", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "name", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "connection_id", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "comment", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "province", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "city", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "last_heartbeat_time", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "name_tag", commonModel.Ascending },
+					&commonModel.OrderByEntity{ "group_tag", commonModel.Descending },
+				},
+			}
+
+			finalQuery := &nqmModel.AgentQueryWithPingTask {
+				AgentQuery: *testCase.query,
+				PingTaskId: testCaseForPingTask.pingTaskId,
+				HasApplied: testCaseForPingTask.appliedInt,
+				Applied: testCaseForPingTask.appliedInt != "0",
+			}
+			testedResult, newPaging := ListAgentsWithPingTask(
+				finalQuery, paging,
+			)
+
+			c.Logf("[List] Query: %#v. Number of agents: %d", testCase.query, len(testedResult))
+
+			for _, agent := range testedResult {
+				c.Logf("\t[List] Matched Agent: %#v.", agent)
+				c.Assert(agent.ApplyingPingTask, Equals, testCaseForPingTask.expectedApplying, commentPingTask)
+			}
+			c.Assert(testedResult, HasLen, testCase.expectedCountOfCurrentPage)
+			c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll)
+		}
 	}
 }
 
@@ -392,7 +504,7 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 			VALUES(88971, 12571, 'ag-name-1', 'ag-get-1@87.90.6.55', 'ag-get-1.nohh.com', x'575A0637', 1, 3, 3, 5, -1)
 			`,
 		)
-	case "TestAgentSuite.TestListAgents":
+	case "TestAgentSuite.TestListAgents", "TestAgentSuite.TestListAgentsWithPingTask":
 		inTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
@@ -401,6 +513,10 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 			`
 			INSERT INTO owl_group_tag(gt_id, gt_name)
 			VALUES(12001, '上海光速群'),(12002, '湖南SSD群')
+			`,
+			`
+			INSERT INTO nqm_ping_task(pt_id, pt_name, pt_period)
+			VALUES(38201, 'to-be-agent-link', 40)
 			`,
 			`
 			INSERT INTO host(id, hostname, agent_version, plugin_version)
@@ -415,18 +531,19 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 			VALUES(7061, 67001, 'ag-name-1', 'ag-list-1', 'hn-list-1', x'7B340E15', 1, 3, 3, 5, 4990)
 			`,
 			`
+			-- IP:
+			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
+			VALUES
+				(7062, 67001, 'ag-list-2', 'hn-list-2', x'0C056879', 4, 0), -- IP: 12.5.104.121
+				(7063, 67001, 'ag-list-3', 'hn-list-3', x'0C251630', 3, 1) -- IP: 12.37.22.48
+			`,
+			`
 			INSERT INTO nqm_agent_group_tag(agt_ag_id, agt_gt_id)
 			VALUES(7061, 12001),(7061, 12002)
 			`,
 			`
-			-- IP: 12.5.104.121
-			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
-			VALUES(7062, 67001, 'ag-list-2', 'hn-list-2', x'0C056879', 4, 0)
-			`,
-			`
-			-- IP: 12.37.22.48
-			INSERT INTO nqm_agent(ag_id, ag_hs_id, ag_connection_id, ag_hostname, ag_ip_address, ag_isp_id, ag_status)
-			VALUES(7063, 67001, 'ag-list-3', 'hn-list-3', x'0C251630', 3, 1)
+			INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id)
+			VALUES(7061, 38201), (7062, 38201), (7063, 38201)
 			`,
 		)
 	case "TestAgentSuite.TestUpdateAgent":
@@ -485,8 +602,16 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			WHERE id = 12571
 			`,
 		)
-	case "TestAgentSuite.TestListAgents":
+	case "TestAgentSuite.TestListAgents", "TestAgentSuite.TestListAgentsWithPingTask":
 		inTx(
+			`
+			DELETE FROM nqm_agent_ping_task
+			WHERE apt_pt_id = 38201
+			`,
+			`
+			DELETE FROM nqm_ping_task
+			WHERE pt_id = 38201
+			`,
 			`
 			DELETE FROM nqm_agent
 			WHERE ag_id >= 7061 AND ag_id <= 7063

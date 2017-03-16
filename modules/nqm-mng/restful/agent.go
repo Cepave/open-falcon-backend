@@ -9,6 +9,7 @@ import (
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
+	mvc "github.com/Cepave/open-falcon-backend/common/gin/mvc"
 )
 
 func addNewAgent(c *gin.Context) {
@@ -84,54 +85,14 @@ func getAgentById(c *gin.Context) {
 
 	commonGin.OutputJsonIfNotNil(c, agent)
 }
-func listAgents(c *gin.Context) {
-	/**
-	 * Set-up paging
-	 */
-	paging := commonGin.PagingByHeader(
-		c,
-		&commonModel.Paging {
-			Size: 50,
-			Position: 1,
-		},
-	)
-	// :~)
 
-	query := buildQueryForListAgents(c)
-	agents, resultPaging := commonNqmDb.ListAgents(query, *paging)
+func listAgents(
+	query *commonNqmModel.AgentQuery,
+	paging *struct {
+		Page *commonModel.Paging `mvc:"pageSize[50] pageOrderBy[status#desc:connection_id#asc]"`
+	},
+) (*commonModel.Paging, mvc.OutputBody) {
+	agents, resultPaging := commonNqmDb.ListAgents(query, *paging.Page)
 
-	commonGin.HeaderWithPaging(c, resultPaging)
-	c.JSON(http.StatusOK, agents)
-}
-
-func buildQueryForListAgents(c *gin.Context) *commonNqmModel.AgentQuery {
-	query := &commonNqmModel.AgentQuery {}
-	queryWrapper := commonGin.NewQueryWrapper(c)
-
-	/**
-	 * Set-up query parameters
-	 */
-	if v, ok := c.GetQuery("name"); ok {
-		query.Name = v
-	}
-	if v, ok := c.GetQuery("connection_id"); ok {
-		query.ConnectionId = v
-	}
-	if v, ok := c.GetQuery("hostname"); ok {
-		query.Hostname = v
-	}
-	if v, ok := c.GetQuery("ip_address"); ok {
-		query.IpAddress = v
-	}
-	if param := queryWrapper.GetInt64("isp_id"); param.Viable {
-		query.HasIspId = true
-		query.IspId = int16(param.Value.(int64))
-	}
-	if param := queryWrapper.GetBool("status"); param.Viable {
-		query.HasStatusCondition = true
-		query.Status = param.Value.(bool)
-	}
-	// :~)
-
-	return query
+	return resultPaging, mvc.JsonOutputBody(agents)
 }
