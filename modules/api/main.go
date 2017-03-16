@@ -1,6 +1,11 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/Cepave/open-falcon-backend/modules/api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/api/config"
 	"github.com/Cepave/open-falcon-backend/modules/api/graph"
@@ -16,8 +21,28 @@ func initGraph() {
 }
 
 func main() {
+	cfgTmp := flag.String("c", "cfg.json", "configuration file")
+	version := flag.Bool("v", false, "show version")
+	help := flag.Bool("h", false, "help")
+	flag.Parse()
+	cfg := *cfgTmp
+	if *version {
+		fmt.Println(config.VERSION)
+		os.Exit(0)
+	}
+
+	if *help {
+		flag.Usage()
+		os.Exit(0)
+	}
+
 	viper.AddConfigPath(".")
-	viper.SetConfigName("cfg")
+	viper.AddConfigPath("/")
+	viper.AddConfigPath("./config")
+	viper.AddConfigPath("./api/config")
+	cfg = strings.Replace(cfg, ".json", "", 1)
+	viper.SetConfigName(cfg)
+
 	viper.ReadInConfig()
 	err := config.InitLog(viper.GetString("log_level"))
 	if err != nil {

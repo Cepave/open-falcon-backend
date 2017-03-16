@@ -5,15 +5,15 @@ import (
 
 	"github.com/emirpasic/gods/lists/arraylist"
 
-	"gopkg.in/gin-gonic/gin.v1"
 	h "github.com/Cepave/open-falcon-backend/modules/api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/helper/filter"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/model/boss"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 func HostsSearching(c *gin.Context) {
 	AccpectTypes := arraylist.New()
-	AccpectTypes.Add("platfrom", "idc", "isp", "province", "hostname", "hostgroup")
+	AccpectTypes.Add("platform", "idc", "isp", "province", "hostname", "hostgroup")
 	q := c.DefaultQuery("q", "--")
 	ftype := c.DefaultQuery("filter_type", "all")
 	if q == "--" {
@@ -27,9 +27,9 @@ func HostsSearching(c *gin.Context) {
 	bossList := boss.GetBossObjs()
 	res := map[string]interface{}{}
 	switch ftype {
-	case "platfrom":
+	case "platform":
 		res = map[string]interface{}{
-			"platfrom": filter.PlatformFilter(bossList, q),
+			"platform": filter.PlatformFilter(bossList, q),
 		}
 	case "idc":
 		res = map[string]interface{}{
@@ -53,7 +53,7 @@ func HostsSearching(c *gin.Context) {
 		}
 	case "all":
 		res = map[string]interface{}{
-			"platfrom":  filter.PlatformFilter(bossList, q),
+			"platform":  filter.PlatformFilter(bossList, q),
 			"idc":       filter.IdcFilter(bossList, q),
 			"isp":       filter.IspFilter(bossList, q),
 			"province":  filter.ProvinceFilter(bossList, q),
