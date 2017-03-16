@@ -387,6 +387,35 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 				c.Assert(r.Header().Get("page-more"), Equals, "true", comment)
 			},
 		},
+		{ // Nested struct
+			"/test-nest-struct",
+			func(
+				p *struct {
+					Name string `mvc:"query[name1]"`
+					N1 *struct {
+						Name1 string `mvc:"query[name2]"`
+					}
+					N2 struct {
+						Name1 string `mvc:"query[name3]"`
+					}
+				},
+			) OutputBody {
+				return JsonOutputBody(p)
+			},
+			httptest.NewRequest(http.MethodGet, "/test-nest-struct?name1=v10c10&name2=v10c20&name3=v10c30", nil),
+			func(c *C, r *httptest.ResponseRecorder, comment CommentInterface) {
+				c.Assert(r.Code, Equals, http.StatusOK, comment)
+
+				jsonResult, err := sjson.NewFromReader(r.Body)
+				c.Assert(err, IsNil, comment)
+
+				c.Logf("Json of nested result: %v", jsonResult)
+
+				c.Assert(jsonResult.Get("Name").MustString(), Equals, "v10c10")
+				c.Assert(jsonResult.GetPath("N1", "Name1").MustString(), Equals, "v10c20")
+				c.Assert(jsonResult.GetPath("N2", "Name1").MustString(), Equals, "v10c30")
+			},
+		},
 	}
 
 	testedBuilder := NewMvcBuilder(NewDefaultMvcConfig())

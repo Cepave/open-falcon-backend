@@ -261,6 +261,26 @@ func (b *MvcBuilder) buildWebParamFunc(structType reflect.Type) map[string]input
 
 		fieldLoader := buildParamLoader(field, b.config.ConvertService)
 		if fieldLoader == nil {
+			/**
+			 * Supporting of nested struct
+			 *
+			 * Could be pointer to struct or concrete struct
+			 */
+			finalType := oreflect.FinalPointedType(field.Type)
+			if finalType.Kind() == reflect.Struct {
+				structFunc := b.buildStructPointerFunc(finalType)
+				if field.Type.Kind() == reflect.Ptr {
+					result[field.Name] = func(c *gin.Context) interface{} {
+						return structFunc(c).Interface()
+					}
+				} else {
+					result[field.Name] = func(c *gin.Context) interface{} {
+						return structFunc(c).Elem().Interface()
+					}
+				}
+			}
+			// :~)
+
 			continue
 		}
 
