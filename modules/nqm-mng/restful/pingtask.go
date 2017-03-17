@@ -13,46 +13,17 @@ import (
 	"github.com/chyeh/cast"
 )
 
-func listPingtasks(c *gin.Context) {
-	/**
-	 * Set-up paging
-	 */
-	paging := commonGin.PagingByHeader(
-		c,
-		&commonModel.Paging{
-			Size:     50,
-			Position: 1,
-		},
-	)
-	// :~)
+func listPingtasks(
+	c *gin.Context,
+	q *commonNqmModel.PingtaskQuery,
+	p *struct {
+		Paging *commonModel.Paging `mvc:"pageSize[50] pageOrderBy[enable#desc:name#asc:num_of_enabled_agents#desc]"`
+	},
+) (*commonModel.Paging, mvc.OutputBody) {
+	p.Paging = commonGin.PagingByHeader(c, p.Paging)
+	pingtasks, resultPaging := commonNqmDb.ListPingtasks(q, *p.Paging)
 
-	query := buildQueryForListPingtasks(c)
-	pingtasks, resultPaging := commonNqmDb.ListPingtasks(query, *paging)
-
-	commonGin.HeaderWithPaging(c, resultPaging)
-	c.JSON(http.StatusOK, pingtasks)
-}
-
-func buildQueryForListPingtasks(c *gin.Context) *commonNqmModel.PingtaskQuery {
-	query := &commonNqmModel.PingtaskQuery{}
-
-	if v, ok := c.GetQuery("period"); ok {
-		query.Period = v
-	}
-	if v, ok := c.GetQuery("name"); ok {
-		query.Name = v
-	}
-	if v, ok := c.GetQuery("enable"); ok {
-		query.Enable = v
-	}
-	if v, ok := c.GetQuery("comment"); ok {
-		query.Comment = v
-	}
-	if v, ok := c.GetQuery("num_of_enabled_agents"); ok {
-		query.NumOfEnabledAgents = v
-	}
-
-	return query
+	return resultPaging, mvc.JsonOutputBody(pingtasks)
 }
 
 func getPingtasksById(

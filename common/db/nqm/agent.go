@@ -484,6 +484,7 @@ func buildSelectAgentsGorm(
 
 var orderByDialectForAgents = commonModel.NewSqlOrderByDialect(
 	map[string]string{
+		"id":                  "ag_id",
 		"status":              "ag_status",
 		"name":                "ag_name",
 		"connection_id":       "ag_connection_id",

@@ -121,6 +121,7 @@ func RemovePingtaskFromAgentForPingtask(aID int32, pID int32) (*nqmModel.Pingtas
 
 var orderByDialectForPingtasks = commonModel.NewSqlOrderByDialect(
 	map[string]string{
+		"id":                    "pt_id",
 		"period":                "pt_period",
 		"name":                  "pt_name",
 		"enable":                "pt_enable",
