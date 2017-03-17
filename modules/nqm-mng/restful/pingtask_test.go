@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	testingOwlDb "github.com/Cepave/open-falcon-backend/common/testing/db"
+	nqmTestinglDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
@@ -33,13 +33,13 @@ func (s *TestPingtaskItSuite) SetUpTest(c *C) {
 		"TestPingtaskItSuite.TestGetPingtaskById",
 		"TestPingtaskItSuite.TestListPingtasks",
 		"TestPingtaskItSuite.TestModifyPingtask":
-		inTx(testingOwlDb.InsertPingtaskSQL)
+		inTx(nqmTestinglDb.InsertPingtaskSQL)
 	case
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForPingtask",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForPingtask":
-		inTx(testingOwlDb.InitNqmAgentAndPingtaskSQL...)
+		inTx(nqmTestinglDb.InitNqmAgentAndPingtaskSQL...)
 	}
 }
 func (s *TestPingtaskItSuite) TearDownTest(c *C) {
@@ -51,13 +51,13 @@ func (s *TestPingtaskItSuite) TearDownTest(c *C) {
 		"TestPingtaskItSuite.TestListPingtasks",
 		"TestPingtaskItSuite.TestModifyPingtask",
 		"TestPingtaskItSuite.TestAddNewPingtask":
-		inTx(testingOwlDb.DeletePingtaskSQL)
+		inTx(nqmTestinglDb.DeletePingtaskSQL)
 	case
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForPingtask",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForPingtask":
-		inTx(testingOwlDb.CleanNqmAgentAndPingtaskSQL...)
+		inTx(nqmTestinglDb.CleanNqmAgentAndPingtaskSQL...)
 	}
 }
 

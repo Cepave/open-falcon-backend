@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	nqmTestingDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	testingOwlDb "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 )
 
@@ -24,13 +24,13 @@ func (s *TestPingtaskSuite) SetUpTest(c *C) {
 		"TestPingtaskSuite.TestGetPingtaskById",
 		"TestPingtaskSuite.TestListPingtasks",
 		"TestPingtaskSuite.TestUpdateAndGetPingtask":
-		inTx(testingOwlDb.InsertPingtaskSQL)
+		inTx(nqmTestingDb.InsertPingtaskSQL)
 	case
 		"TestPingtaskSuite.TestAssignPingtaskToAgentForAgent",
 		"TestPingtaskSuite.TestRemovePingtaskFromAgentForAgent",
 		"TestPingtaskSuite.TestAssignPingtaskToAgentForPingtask",
 		"TestPingtaskSuite.TestRemovePingtaskFromAgentForPingtask":
-		inTx(testingOwlDb.InitNqmAgentAndPingtaskSQL...)
+		inTx(nqmTestingDb.InitNqmAgentAndPingtaskSQL...)
 	case
 		"TestPingtaskSuite.TestAddAndGetPingtask":
 	}
@@ -45,13 +45,13 @@ func (s *TestPingtaskSuite) TearDownTest(c *C) {
 		"TestPingtaskSuite.TestListPingtasks",
 		"TestPingtaskSuite.TestUpdateAndGetPingtask",
 		"TestPingtaskSuite.TestAddAndGetPingtask":
-		inTx(testingOwlDb.DeletePingtaskSQL)
+		inTx(nqmTestingDb.DeletePingtaskSQL)
 	case
 		"TestPingtaskSuite.TestAssignPingtaskToAgentForAgent",
 		"TestPingtaskSuite.TestRemovePingtaskFromAgentForAgent",
 		"TestPingtaskSuite.TestAssignPingtaskToAgentForPingtask",
 		"TestPingtaskSuite.TestRemovePingtaskFromAgentForPingtask":
-		inTx(testingOwlDb.CleanNqmAgentAndPingtaskSQL...)
+		inTx(nqmTestingDb.CleanNqmAgentAndPingtaskSQL...)
 	}
 }
 
