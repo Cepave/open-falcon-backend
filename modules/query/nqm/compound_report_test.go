@@ -607,7 +607,7 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 		testedResult := sampleLessFunc.lessImpl(
 			&model.DynamicRecord {
 				Agent: &model.DynamicAgentProps {
-					Name: testCase.agentName[0],
+					Name: &testCase.agentName[0],
 				},
 				Target: &model.DynamicTargetProps {
 					Isp: &owlModel.Isp {
@@ -622,7 +622,7 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 			},
 			&model.DynamicRecord {
 				Agent: &model.DynamicAgentProps {
-					Name: testCase.agentName[1],
+					Name: &testCase.agentName[1],
 				},
 				Target: &model.DynamicTargetProps {
 					Isp: &owlModel.Isp {
@@ -689,12 +689,14 @@ func (suite *TestCompoundReportSuite) TestFilterRecords(c *C) {
 
 // Tests the retrieving of page(with sorted result)
 func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
+	sp := func(v string) *string { return &v }
+
 	sampleRecords := []*model.DynamicRecord {
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-5" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-4" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-3" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-2" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-1" } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-5") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-4") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-3") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-2") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-1") } },
 	}
 
 	samplePaging := &commonModel.Paging {
@@ -706,8 +708,8 @@ func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
 	}
 
 	testedResult := retrievePage(sampleRecords, samplePaging)
-	c.Assert(testedResult[0].Agent.Name, Equals, "AG-3")
-	c.Assert(testedResult[1].Agent.Name, Equals, "AG-4")
+	c.Assert(*testedResult[0].Agent.Name, Equals, "AG-3")
+	c.Assert(*testedResult[1].Agent.Name, Equals, "AG-4")
 }
 
 func (s *TestCompoundReportSuiteOnDb) SetUpTest(c *C) {

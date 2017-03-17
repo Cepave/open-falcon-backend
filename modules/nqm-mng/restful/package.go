@@ -33,7 +33,7 @@ func initApi() {
 
 	v1 := router.Group("/api/v1")
 
-	v1.GET("/nqm/agents", listAgents)
+	v1.GET("/nqm/agents", mvcBuilder.BuildHandler(listAgents))
 	v1.GET("/nqm/agent/:agent_id", getAgentById)
 	v1.POST("/nqm/agent", addNewAgent)
 	v1.PUT("/nqm/agent/:agent_id", modifyAgent)
@@ -51,6 +51,8 @@ func initApi() {
 	v1.GET("/nqm/target/:target_id", getTargetById)
 	v1.POST("/nqm/target", addNewTarget)
 	v1.PUT("/nqm/target/:target_id", modifyTarget)
+
+	v1.GET("/nqm/pingtask/:pingtask_id/agents", mvcBuilder.BuildHandler(listAgentsByPingTask))
 
 	v1.GET("/owl/isps", listISPs)
 	v1.GET("/owl/isp/:isp_id", mvcBuilder.BuildHandler(getISPByID))

@@ -2,7 +2,6 @@ package http
 
 import (
 	"testing"
-	"github.com/dghubble/sling"
 	httptesting "github.com/Cepave/open-falcon-backend/common/testing/http"
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	. "gopkg.in/check.v1"
@@ -18,7 +17,7 @@ var httpClientConfig = httptesting.NewHttpClientConfigByFlag()
 
 // Tests the health
 func (suite *TestCommonSuite) TestHealth(c *C) {
-	slint := sling.New().Get(httpClientConfig.String()).Path("health")
+	slint := httpClientConfig.NewSlingByBase().Get("health")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 
@@ -29,7 +28,7 @@ func (suite *TestCommonSuite) TestHealth(c *C) {
 
 // Tests the version
 func (suite *TestCommonSuite) TestVersion(c *C) {
-	slint := sling.New().Get(httpClientConfig.String()).Path("version")
+	slint := httpClientConfig.NewSlingByBase().Get("version")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 
@@ -40,7 +39,7 @@ func (suite *TestCommonSuite) TestVersion(c *C) {
 
 // Tests the workdir
 func (suite *TestCommonSuite) TestWorkdir(c *C) {
-	slint := sling.New().Get(httpClientConfig.String()).Path("workdir")
+	slint := httpClientConfig.NewSlingByBase().Get("workdir")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 
@@ -52,7 +51,7 @@ func (suite *TestCommonSuite) TestWorkdir(c *C) {
 
 // Tests the reload of configuration
 func (suite *TestCommonSuite) TestReloadConfig(c *C) {
-	slint := sling.New().Get(httpClientConfig.String()).Path("config/reload")
+	slint := httpClientConfig.NewSlingByBase().Get("config/reload")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 

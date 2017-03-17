@@ -1,7 +1,7 @@
 package nqm
 
 import (
-	"github.com/leebenson/conform"
+	"github.com/Cepave/open-falcon-backend/common/conform"
 	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
 	. "gopkg.in/check.v1"
 	"reflect"
@@ -21,7 +21,7 @@ func (suite *TestTargetSuite) TestConformOfTargetForAdding(c *C) {
 		GroupTags: []string{ " gt-1 ", " gt-2 " },
 	}
 
-	conform.Strings(testedTarget)
+	conform.MustConform(testedTarget)
 
 	c.Assert(testedTarget.Name, Equals, "name-1")
 	c.Assert(testedTarget.Host, Equals, "host-1")

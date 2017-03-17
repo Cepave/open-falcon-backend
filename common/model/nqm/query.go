@@ -6,16 +6,15 @@ import (
 
 // The query conditions of agent
 type AgentQuery struct {
-	Name         string
-	ConnectionId string
-	Hostname     string
-	IpAddress    string
+	Name         string `mvc:"query[name]" conform:"trim"`
+	ConnectionId string `mvc:"query[connection_id]" conform:"trim"`
+	Hostname     string `mvc:"query[hostname]" conform:"trim"`
+	IpAddress    string `mvc:"query[ip_address]" conform:"trim"`
 
-	HasIspId bool
-	IspId    int16
+	IspId    int16 `mvc:"query[isp_id] default[-2]"`
 
-	HasStatusCondition bool
-	Status             bool
+	Status             bool `mvc:"query[status]"`
+	HasStatus          string `mvc:"query[status] default[!N!]"`
 }
 
 // Gets the []byte used to perform like in MySql
@@ -26,6 +25,22 @@ func (query *AgentQuery) GetIpForLikeCondition() []byte {
 	}
 
 	return bytes
+}
+func (query *AgentQuery) HasIspId() bool {
+	return query.IspId != -2
+}
+func (query *AgentQuery) HasStatusCondition() bool {
+	return query.HasStatus != "!N!"
+}
+
+type AgentQueryWithPingTask struct {
+	AgentQuery
+	PingTaskId int32 `mvc:"param[pingtask_id]"`
+	Applied bool `mvc:"query[applied]"`
+	HasApplied string `mvc:"query[applied] default[!N!]"`
+}
+func (query *AgentQueryWithPingTask) HasAppliedCondition() bool {
+	return query.HasApplied != "!N!"
 }
 
 // The query conditions of target

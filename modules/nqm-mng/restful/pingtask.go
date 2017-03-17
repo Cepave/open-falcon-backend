@@ -249,3 +249,14 @@ func removePingtaskFromAgentForPingtask(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, agentWithRemovedPingtask)
 }
+
+func listAgentsByPingTask(
+	query *commonNqmModel.AgentQueryWithPingTask,
+	paging *struct {
+		Page *commonModel.Paging `mvc:"pageSize[50] pageOrderBy[status#desc:connection_id#asc]"`
+	},
+) (*commonModel.Paging, mvc.OutputBody) {
+	agents, resultPaging := commonNqmDb.ListAgentsWithPingTask(query, *paging.Page)
+
+	return resultPaging, mvc.JsonOutputBody(agents)
+}

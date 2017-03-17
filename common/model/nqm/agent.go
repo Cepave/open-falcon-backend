@@ -42,17 +42,21 @@ func NewAgentForAdding() *AgentForAdding {
 		NameTagId:  -1,
 	}
 }
+
 func (agent *AgentForAdding) AreGroupTagsSame(anotherAgent *AgentForAdding) bool {
 	return utils.AreArrayOfStringsSame(
 		agent.GroupTags, anotherAgent.GroupTags,
 	)
 }
+
 func (agent *AgentForAdding) UniqueGroupTags() {
 	agent.GroupTags = utils.UniqueArrayOfStrings(agent.GroupTags)
 }
+
 func (agent *AgentForAdding) GetIpAddressAsBytes() []byte {
 	return ([]byte)(agent.IpAddress.To4())
 }
+
 func (agent *AgentForAdding) GetIpAddressAsString() string {
 	return agent.IpAddress.String()
 }
@@ -90,32 +94,8 @@ type Agent struct {
 func (Agent) TableName() string {
 	return "nqm_agent"
 }
-func (agentView *Agent) ToAgentForAdding() *AgentForAdding {
-	groupTags := make([]string, 0, len(agentView.GroupTags))
-	for _, groupTag := range agentView.GroupTags {
-		groupTags = append(groupTags, groupTag.Name)
-	}
 
-	return &AgentForAdding{
-		Id:      agentView.Id,
-		Name:    agentView.Name,
-		Comment: agentView.Comment,
-		Status:  agentView.Status,
-
-		ConnectionId: agentView.ConnectionId,
-		Hostname:     agentView.Hostname,
-		IpAddress:    agentView.IpAddress,
-
-		IspId:      agentView.IspId,
-		ProvinceId: agentView.ProvinceId,
-		CityId:     agentView.CityId,
-
-		NameTagId:    agentView.NameTagId,
-		NameTagValue: agentView.NameTagValue,
-		GroupTags:    owlModel.GroupTags(agentView.GroupTags).ToNames(),
-	}
-}
-func (agentView *Agent) MarshalJSON() ([]byte, error) {
+func (agentView *Agent) ToSimpleJson() *json.Json {
 	jsonObject := json.New()
 
 	jsonObject.Set("id", agentView.Id)
@@ -151,14 +131,46 @@ func (agentView *Agent) MarshalJSON() ([]byte, error) {
 	jsonGroupTags := owlModel.GroupTags(agentView.GroupTags).ToJson()
 	jsonObject.Set("group_tags", jsonGroupTags)
 
-	return jsonObject.MarshalJSON()
+	return jsonObject
 }
+
+func (agentView *Agent) ToAgentForAdding() *AgentForAdding {
+	groupTags := make([]string, 0, len(agentView.GroupTags))
+	for _, groupTag := range agentView.GroupTags {
+		groupTags = append(groupTags, groupTag.Name)
+	}
+
+	return &AgentForAdding{
+		Id:      agentView.Id,
+		Name:    agentView.Name,
+		Comment: agentView.Comment,
+		Status:  agentView.Status,
+
+		ConnectionId: agentView.ConnectionId,
+		Hostname:     agentView.Hostname,
+		IpAddress:    agentView.IpAddress,
+
+		IspId:      agentView.IspId,
+		ProvinceId: agentView.ProvinceId,
+		CityId:     agentView.CityId,
+
+		NameTagId:    agentView.NameTagId,
+		NameTagValue: agentView.NameTagValue,
+		GroupTags:    owlModel.GroupTags(agentView.GroupTags).ToNames(),
+	}
+}
+
+func (agentView *Agent) MarshalJSON() ([]byte, error) {
+	return agentView.ToSimpleJson().MarshalJSON()
+}
+
 func (agentView *Agent) AfterLoad() {
 	agentView.GroupTags = owlModel.SplitToArrayOfGroupTags(
 		agentView.IdsOfGroupTags, ",",
 		agentView.NamesOfGroupTags, "\000",
 	)
 }
+
 func (agent *Agent) String() string {
 	return fmt.Sprintf(
 		"Id: [%d]. Name: [%s]. Connection Id: [%s]. IpAddress: [%s]. Hostname: [%s]. Status: [%v]",
@@ -166,11 +178,23 @@ func (agent *Agent) String() string {
 	)
 }
 
+type AgentWithPingTask struct {
+	Agent
+	ApplyingPingTask bool `gorm:"column:applying_ping_task"`
+}
+
+func (a *AgentWithPingTask) MarshalJSON() ([]byte, error) {
+	json := a.ToSimpleJson()
+	json.Set("applying_ping_task", a.ApplyingPingTask)
+
+	return json.MarshalJSON()
+}
+
 type SimpleAgent1 struct {
-	Id        int32  `json:"id" db:"ag_id"`
-	Name      string `json:"name" db:"ag_name"`
-	Hostname  string `json:"hostname" db:"ag_hostname"`
-	IpAddress net.IP `json:"ip_address" db:"ag_ip_address"`
+	Id        int32   `json:"id" db:"ag_id"`
+	Name      *string `json:"name" db:"ag_name"`
+	Hostname  string  `json:"hostname" db:"ag_hostname"`
+	IpAddress net.IP  `json:"ip_address" db:"ag_ip_address"`
 
 	IspId      int16 `json:"isp_id" db:"ag_isp_id"`
 	ProvinceId int16 `json:"province_id" db:"ag_pv_id"`

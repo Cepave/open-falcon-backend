@@ -9,8 +9,8 @@ import (
 
 // This checking would check:
 //
-// 1) the len for both of the channels and
-// 2) every element(be put back) in both of the channels
+// 	1. The len() for both of the channels and
+// 	2. Every element(be put back) in both of the channels
 var ChannelEquals = channelEquals(true)
 
 type channelEquals bool

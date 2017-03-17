@@ -9,8 +9,6 @@ import (
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
-	"github.com/dghubble/sling"
-
 	. "gopkg.in/check.v1"
 )
 
@@ -20,8 +18,9 @@ var _ = Suite(&TestTargetItSuite{})
 
 // Tests the getting of agent by id
 func (suite *TestTargetItSuite) TestGetTargetById(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/target/40021")
+	client := httpClientConfig.NewSlingByBase().Get(
+		"api/v1/nqm/target/40021",
+	)
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 	jsonResult := slintChecker.GetJsonBody(http.StatusOK)
@@ -65,8 +64,8 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 	}
 
 	for _, testCase := range testCases {
-		client := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/target").
+		client := httpClientConfig.NewSlingByBase().
+			Post("api/v1/nqm/target").
 			BodyJSON(jsonBody)
 
 		slintChecker := testingHttp.NewCheckSlint(c, client)
@@ -121,8 +120,8 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 		GroupTags:   []string{"blue-utg-3", "blue-utg-4", "blue-utg-5"},
 	}
 
-	client := sling.New().Put(httpClientConfig.String()).
-		Path("/api/v1/nqm/target/39347").
+	client := httpClientConfig.NewSlingByBase().
+		Put("api/v1/nqm/target/39347").
 		BodyJSON(jsonBody)
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
@@ -144,8 +143,8 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 
 // Tests the listing of targets
 func (suite *TestTargetItSuite) TestListTargets(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/targets")
+	client := httpClientConfig.NewSlingByBase().
+		Get("api/v1/nqm/targets")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 

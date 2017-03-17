@@ -22,6 +22,53 @@
 // 	)
 //
 // 	err := errFunc()
+//
+// Capture panic to speical handler
+//
+// If a go routine gets panic, the process would be terminated by default,
+// you could use "BuildPanicCapture" to prevent the behavior.
+//
+// 	panicFreeFunc := utils.BuildPanicCapture(
+//		func() {
+//			/* Your code... */
+//		},
+//		func(panicObject interface{}) {
+//			/* Gets executed if there is non-nil panic while executing your code */
+//		},
+// 	)
+//
+// 	go panicFreeFunc()
+//
+// Alternatively, there is a "BuildPanicToError" to set error object into "error pointer" if something gets panic.
+//
+// Stack error
+//
+// If you are writing IoC framework, the code position in framework may be too complex while output panic message,
+// you could use "StackError" to record caller's position:
+//
+//	func yourLibrary() error {
+//		err := someFunc()
+//		if err != nil {
+//			return BuildErrorWithCaller(err)
+//		}
+//
+//		return nil
+//	}
+//
+// For lambda-style programming, you could use "common/runtime.GetCallerInfo()" to keep the position of caller:
+//
+// 	func yourIoc(clientCode func()) {
+// 		callerInfo := runtime.GetCallerInfo()
+//
+// 		defer func() {
+// 			p := recover()
+// 			if p != nil {
+// 				panic(BuildErrorWithCallerInfo(SimpleErrorConverter(p), callerInfo))
+// 			}
+// 		}
+//
+// 		clinetCode()
+// 	}
 package utils
 
 import (

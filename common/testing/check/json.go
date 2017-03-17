@@ -8,6 +8,19 @@ import (
 	"io"
 )
 
+// Checks two varialbes which could be converted to "*go-simplejson.Json"
+//
+// Various types of variable are supported:
+//
+// 	string - JSON string
+// 	[]byte - As JSON string
+// 	io.Reader - A reader contains JSON
+// 	*go-simplejson.Json
+//
+// If non of above types is matched, this checker uses "encoding/json.Marshal()" to marshal the object
+// to JSON format and performs comparison.
+//
+// See "https://godoc.org/github.com/bitly/go-simplejson" for detail information of simplejson
 var JsonEquals = &checkJsonEquals{}
 
 type checkJsonEquals struct{}
