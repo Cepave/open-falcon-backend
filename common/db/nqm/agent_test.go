@@ -295,6 +295,7 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 				Size:     testCase.pageSize,
 				Position: testCase.pagePosition,
 				OrderBy: []*commonModel.OrderByEntity{
+					&commonModel.OrderByEntity{"id", commonModel.Descending},
 					&commonModel.OrderByEntity{"applied", commonModel.Descending},
 					&commonModel.OrderByEntity{"status", commonModel.Ascending},
 					&commonModel.OrderByEntity{"name", commonModel.Ascending},
