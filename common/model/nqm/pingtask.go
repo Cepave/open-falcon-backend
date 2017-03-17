@@ -24,35 +24,35 @@ type pingtaskFilter struct {
 }
 
 type pingtaskModifyFilter struct {
-	IspIds      []int8  `json:"ids_of_isp"`
-	ProvinceIds []int8  `json:"ids_of_province"`
-	CityIds     []int8  `json:"ids_of_city"`
-	NameTagIds  []int8  `json:"ids_of_name_tag"`
-	GroupTagIds []int16 `json:"ids_of_group_tag"`
+	IspIds      []int16 `json:"ids_of_isp"`
+	ProvinceIds []int16 `json:"ids_of_province"`
+	CityIds     []int16 `json:"ids_of_city"`
+	NameTagIds  []int16 `json:"ids_of_name_tag"`
+	GroupTagIds []int32 `json:"ids_of_group_tag"`
 }
 
 type PingtaskView struct {
 	ID                 int32   `gorm:"primary_key:true;column:pt_id" json:"id"`
-	Period             int8    `gorm:"column:pt_period" json:"period"`
+	Period             int16   `gorm:"column:pt_period" json:"period"`
 	Name               *string `gorm:"column:pt_name" json:"name"`
 	Enable             bool    `gorm:"column:pt_enable" json:"enable"`
 	Comment            *string `gorm:"column:pt_comment" json:"comment"`
-	NumOfEnabledAgents int8    `gorm:"column:pt_num_of_enabled_agents" json:"num_of_enabled_agents"`
+	NumOfEnabledAgents int32   `gorm:"column:pt_num_of_enabled_agents" json:"num_of_enabled_agents"`
 
-	IdsOfIspFilters  string `gorm:"column:pt_isp_filter_ids" json:"-"`
-	NamesOfIspFilter string `gorm:"column:pt_isp_filter_names" json:"-"`
+	IdsOfIspFilters  string `gorm:"column:pt_isp_filter_ids"`
+	NamesOfIspFilter string `gorm:"column:pt_isp_filter_names"`
 
-	IdsOfProvinceFilters  string `gorm:"column:pt_province_filter_ids" json:"-"`
-	NamesOfProvinceFilter string `gorm:"column:pt_province_filter_names" json:"-"`
+	IdsOfProvinceFilters  string `gorm:"column:pt_province_filter_ids"`
+	NamesOfProvinceFilter string `gorm:"column:pt_province_filter_names"`
 
-	IdsOfCityFilters  string `gorm:"column:pt_city_filter_ids" json:"-"`
-	NamesOfCityFilter string `gorm:"column:pt_city_filter_names" json:"-"`
+	IdsOfCityFilters  string `gorm:"column:pt_city_filter_ids"`
+	NamesOfCityFilter string `gorm:"column:pt_city_filter_names"`
 
-	IdsOfNameTagFilters  string `gorm:"column:pt_name_tag_filter_ids" json:"-"`
-	NamesOfNameTagFilter string `gorm:"column:pt_name_tag_filter_values" json:"-"`
+	IdsOfNameTagFilters  string `gorm:"column:pt_name_tag_filter_ids"`
+	NamesOfNameTagFilter string `gorm:"column:pt_name_tag_filter_values"`
 
-	IdsOfGroupTagFilters  string `gorm:"column:pt_group_tag_filter_ids" json:"-"`
-	NamesOfGroupTagFilter string `gorm:"column:pt_group_tag_filter_names" json:"-"`
+	IdsOfGroupTagFilters  string `gorm:"column:pt_group_tag_filter_ids"`
+	NamesOfGroupTagFilter string `gorm:"column:pt_group_tag_filter_names"`
 
 	Filter pingtaskFilter `json:"filter"`
 }
