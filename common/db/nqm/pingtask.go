@@ -212,7 +212,7 @@ func ListPingtasks(query *nqmModel.PingtaskQuery, paging commonModel.Paging) ([]
 		if query.Name != "" {
 			selectPingtask = selectPingtask.Where("pt_name LIKE ?", query.Name+"%")
 		}
-		if ena, err := strconv.ParseBool(query.Enable); query.Enable != "" && err != nil {
+		if ena, err := strconv.ParseBool(query.Enable); query.Enable != "" && err == nil {
 			selectPingtask = selectPingtask.Where("pt_enable = ?", ena)
 		}
 		if query.Comment != "" {
