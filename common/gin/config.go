@@ -68,7 +68,7 @@ import (
 	"os"
 	"time"
 
-	"gopkg.in/gin-contrib/cors.v1"
+	"github.com/gin-contrib/cors"
 	"gopkg.in/gin-gonic/gin.v1"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"

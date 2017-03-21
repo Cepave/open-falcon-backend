@@ -17,7 +17,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/api/app/controller/uic"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/api/config"
-	"gopkg.in/gin-contrib/cors.v1"
+	"github.com/gin-contrib/cors"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
