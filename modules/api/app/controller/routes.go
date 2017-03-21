@@ -52,8 +52,13 @@ func StartGin(port string, r *gin.Engine) {
 			message = fmt.Sprintf("%s is down, please check it.", strings.Join(errorTable, ","))
 		}
 		c.JSON(200, map[string]interface{}{
-			"health":  status,
-			"message": message,
+			"rdb": map[string]interface{}{
+				"ping_result":  status,
+				"ping_message": message,
+			},
+			"http": map[string]interface{}{
+				"listening": port,
+			},
 		})
 		return
 	})
