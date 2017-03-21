@@ -7,8 +7,8 @@ before_install:
   - go get github.com/rancher/trash
 
 install:
+  - trash
   - go get -t -v ./...
-#  - make
 
 script:
   - go build -o open-falcon
