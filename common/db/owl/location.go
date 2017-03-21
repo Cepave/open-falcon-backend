@@ -52,10 +52,10 @@ func CheckHierarchyForCity(provinceId int16, cityId int16) error {
 	if cityInfo.ProvinceId != provinceId {
 		return ErrNotInSameHierarchy{
 			message: fmt.Sprintf(
-				"City[ID: %d][%s] should be belonging to province[ID: %d]. But got province[ID: %d][%s]",
+				"City[ID: %d][Name: %s] belongs to province[ID: %d][Name: %s]. But got province[ID: %d]",
 				cityInfo.CityId, cityInfo.CityName,
-				provinceId,
 				cityInfo.ProvinceId, cityInfo.ProvinceName,
+				provinceId,
 			),
 		}
 	}
@@ -70,21 +70,47 @@ func GetProvinceById(provinceId int16) *owlModel.Province {
 		DbFacade.GormDb.First(&result, provinceId),
 	)
 
-	return gormDbExt.IfRecordNotFound(&result, (*owlModel.Province)(nil)).
-		(*owlModel.Province)
+	return gormDbExt.IfRecordNotFound(&result, (*owlModel.Province)(nil)).(*owlModel.Province)
 }
 
 func GetProvincesByName(name string) []*owlModel.Province {
 	var results []*owlModel.Province
 
-	var gormDbExt =	gormExt.ToDefaultGormDbExt(
+	var gormDbExt = gormExt.ToDefaultGormDbExt(
 		DbFacade.GormDb.Model(&owlModel.Province{}).
-			Where("pv_name LIKE ?", name + "%").
+			Where("pv_name LIKE ?", name+"%").
 			Find(&results),
 	)
 
-	return gormDbExt.IfRecordNotFound(results, results).
-		([]*owlModel.Province)
+	return gormDbExt.IfRecordNotFound(results, results).([]*owlModel.Province)
+}
+
+func GetCityById(cityId int16) *city1view {
+	var result owlModel.City1
+	gormDbExt := gormExt.ToDefaultGormDbExt(
+		DbFacade.GormDb.Model(&owlModel.City1{}).
+			Select(`
+			ct_id, ct_name, ct_post_code, pv_id, pv_name
+			`).
+			Joins(`
+			INNER JOIN
+			owl_province
+			ON ct_pv_id = pv_id
+			`).
+			First(&result, cityId),
+	)
+
+	view := city1view{
+		Id:       result.Id,
+		Name:     result.Name,
+		PostCode: result.PostCode,
+		Province: &owlModel.Province{
+			Id:   result.ProvinceId,
+			Name: result.ProvinceName,
+		},
+	}
+
+	return gormDbExt.IfRecordNotFound(&view, (*city1view)(nil)).(*city1view)
 }
 
 func GetCity2ById(cityId int16) *owlModel.City2 {
@@ -94,20 +120,19 @@ func GetCity2ById(cityId int16) *owlModel.City2 {
 		DbFacade.GormDb.First(&result, cityId),
 	)
 
-	return gormDbExt.IfRecordNotFound(&result, (*owlModel.City2)(nil)).
-		(*owlModel.City2)
+	return gormDbExt.IfRecordNotFound(&result, (*owlModel.City2)(nil)).(*owlModel.City2)
 }
+
 func GetCity2sByName(prefixName string) []*owlModel.City2 {
 	var result []*owlModel.City2
 
 	gormDbExt := gormExt.ToDefaultGormDbExt(
 		DbFacade.GormDb.Model(&owlModel.City2{}).
-			Where("ct_name LIKE ?", prefixName + "%").
+			Where("ct_name LIKE ?", prefixName+"%").
 			Find(&result),
 	)
 
-	return gormDbExt.IfRecordNotFound(result, result).
-		([]*owlModel.City2)
+	return gormDbExt.IfRecordNotFound(result, result).([]*owlModel.City2)
 }
 
 func GetCitiesByName(name string) []*city1view {
@@ -121,8 +146,8 @@ func GetCitiesByName(name string) []*city1view {
 		ON ct_pv_id = pv_id
 		AND ct_name LIKE ?
 		`,
-		name+"%",
-	)
+			name+"%",
+		)
 
 	var results []*owlModel.City1
 	gormExt.ToDefaultGormDbExt(q.Find(&results))
@@ -151,7 +176,7 @@ func GetCitiesInProvinceByName(pvId int, name string) []*owlModel.City2 {
 			ct_pv_id = ?
 			AND ct_name LIKE ?
 			`,
-			pvId, name + "%",
+			pvId, name+"%",
 		)
 
 	var results []*owlModel.City2
