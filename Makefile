@@ -12,6 +12,7 @@ $(CMD):
 	go build -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
+	go get .
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
 
 checkbin: bin/ config/ open-falcon cfg.json
