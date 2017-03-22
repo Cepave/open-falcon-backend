@@ -8,9 +8,9 @@ import (
 
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
+	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	"github.com/mikelue/cepave-owl/common/gin/mvc"
 )
 
 func addNewTarget(c *gin.Context) {

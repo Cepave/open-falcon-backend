@@ -5,11 +5,11 @@ import (
 	"strconv"
 
 	nqmTestinglDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
+	"github.com/Cepave/open-falcon-backend/common/json"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
 	"github.com/dghubble/sling"
-	"github.com/mikelue/cepave-owl/common/json"
 
 	. "gopkg.in/check.v1"
 )
