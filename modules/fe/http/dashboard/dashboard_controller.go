@@ -2,19 +2,16 @@ package dashboard
 
 import (
 	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
-
-	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/dashboard"
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
-	"github.com/SlyMarbo/rss"
+	log "github.com/Sirupsen/logrus"
+	"github.com/toolkits/sys"
 )
 
 type DashBoardController struct {
@@ -75,39 +72,33 @@ func (this *DashBoardController) CounterRegxQuery() {
 	return
 }
 
-type xmlEntry struct {
-	ID      string `xml:"id"`
-	Updated string `xml:"updated"`
-}
-
-type xmlData struct {
-	EntryList []xmlEntry `xml:"entry"`
+func gitLsRemote(gitRepo string, refs string) (string, error) {
+	// This function depends on git command
+	if resultStr, err := sys.CmdOut("git", "ls-remote", gitRepo, refs); err != nil {
+		return "", err
+	} else {
+		// resultStr should be:
+		// cb7a2998571cb25693867afcb24a7331f597768e        refs/heads/master
+		strList := strings.Fields(resultStr)
+		return strList[0], nil
+	}
 }
 
 func (this *DashBoardController) LatestPlugin() {
 	baseResp := this.BasicRespGen()
-	_, err := this.SessionCheck()
-	if err != nil {
-		this.ResposeError(baseResp, err.Error())
+	if c, q_err := dashboard.QueryConfig("git_repo"); q_err != nil {
+		log.Errorln("Query error: ", q_err)
+		this.ResposeError(baseResp, "Error when getting git_repo address from database.")
 		return
-	}
-
-	v := xmlData{}
-
-	c, q_err := dashboard.QueryConfig("atom_addr")
-	if q_err != nil {
-		log.Errorln("QueryConfig error: ", q_err)
 	} else {
-		log.Debugln("Lastest Plugin atom address value is: ", c.Value)
-		if resp, err := http.Get(c.Value); err != nil {
-			log.Errorln("Error retrieving resource:", err)
+		log.Debugln("git_repo address value is: ", c.Value)
+		if hash, glr_err := gitLsRemote(c.Value, "refs/heads/master"); glr_err != nil {
+			this.ResposeError(baseResp, "Error when git ls-remote GIT_ADDR")
+			return
 		} else {
-			defer resp.Body.Close()
-			xml.NewDecoder(resp.Body).Decode(&v)
+			baseResp.Data["latestCommitHash"] = hash
 		}
 	}
-
-	baseResp.Data["EntryList"] = v.EntryList
 	this.ServeApiJson(baseResp)
 	return
 }
@@ -349,87 +340,5 @@ func (this *DashBoardController) EndpRegxquryForPlugin() {
 	}
 	log.Debugln(baseResp)
 	this.ServeApiJson(baseResp)
-	return
-}
-
-func (this *DashBoardController) EndpRegxquryForOps() {
-	this.Data["Shortcut"] = g.Config().Shortcut
-	sig := this.Ctx.GetCookie("sig")
-	session := uic.ReadSessionBySig(sig)
-	var username *uic.User
-	if sig == "" || session.Uid <= 0 {
-		this.Data["SessionFlag"] = true
-		this.Data["ErrorMsg"] = "Session is not vaild"
-	} else {
-		this.Data["SessionFlag"] = false
-		username = uic.SelectUserById(session.Uid)
-		if username.Name != "root" {
-			this.Data["SessionFlag"] = true
-			this.Data["ErrorMsg"] = "You don't have permission to access this page"
-		}
-	}
-	queryStr := this.GetString("queryStr", "")
-	this.Data["QueryCondstion"] = queryStr
-	if queryStr == "" || this.Data["SessionFlag"] == true {
-		this.Data["Init"] = true
-	} else {
-		enpRow, _ := dashboard.QueryEndpintByNameRegxForOps(queryStr)
-		enp := gitInfoAdapter(enpRow)
-		if len(enp) > 0 {
-			var ips []string
-			this.Data["Endpoints"] = enp
-			this.Data["Len"] = len(enp)
-			for _, en := range enp {
-				if en.Ip != "" {
-					ips = append(ips, en.Ip)
-				}
-			}
-			this.Data["IP"] = strings.Join(ips, ",")
-		} else {
-			this.Data["Endpoints"] = []string{}
-			this.Data["Len"] = 0
-			this.Data["IP"] = ""
-		}
-	}
-	this.TplName = "dashboard/endpoints.html"
-}
-
-var commitsInfo []*rss.Item
-
-func gitInfoAdapter(enpRow []dashboard.Hosts) (enp []dashboard.GitInfo) {
-	c, q_err := dashboard.QueryConfig("atom_addr")
-	if q_err != nil {
-		log.Errorln("QueryConfig error: ", q_err)
-	}
-	log.Debugln("gitInfoAdapter shows atom address as: ", c.Value)
-
-	feed, err := rss.Fetch(c.Value)
-	if err != nil {
-		log.Errorln(err)
-	}
-
-	commitsInfo = append(commitsInfo, feed.Items...)
-	log.Debugln("commit atom feed is:", feed.Items)
-	log.Debugln("commitsInfo is:", commitsInfo)
-	for _, host := range enpRow {
-		gitInfo := dashboard.GitInfo{Hostname: host.Hostname,
-			Ip:            host.Ip,
-			AgentVersion:  host.AgentVersion,
-			PluginVersion: host.PluginVersion,
-			Valid:         false}
-		for _, item := range commitsInfo {
-			titleArray := strings.Split(item.ID, "/")
-			hash := strings.TrimSpace(titleArray[len(titleArray)-1])
-			if hash == host.PluginVersion {
-				// copy Title and Date column
-				gitInfo.Date = item.Date
-				gitInfo.Title = item.Title
-				gitInfo.Valid = true
-				break
-			}
-		}
-		enp = append(enp, gitInfo)
-	}
-
 	return
 }

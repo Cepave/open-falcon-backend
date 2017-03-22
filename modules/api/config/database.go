@@ -112,3 +112,26 @@ func CloseDB() (err error) {
 	}
 	return
 }
+
+func (db DBPool) HealthCheck() (errorBool int, errorTable []string) {
+	errorTable = []string{}
+	//0 means ok!, 1 means problem
+	errorBool = 0
+	if err := db.Boss.DB().Ping(); err != nil {
+		errorTable = append(errorTable, "boss")
+		errorBool = 1
+	}
+	if err := db.Dashboard.DB().Ping(); err != nil {
+		errorTable = append(errorTable, "dashboard")
+		errorBool = 1
+	}
+	if err := db.Falcon.DB().Ping(); err != nil {
+		errorTable = append(errorTable, "falcon")
+		errorBool = 1
+	}
+	if err := db.Uic.DB().Ping(); err != nil {
+		errorTable = append(errorTable, "uic")
+		errorBool = 1
+	}
+	return
+}

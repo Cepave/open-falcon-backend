@@ -100,6 +100,56 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	// :~)
 }
 
+// Tests the convertion of query to deatil information on special conditions
+//
+// Some properties(isp_ids, province_ids, city_ids, name_tag_ids) supports special values:
+//
+// -11 - The property(ISP, location, etc.) should be same with another side
+// -12 - The property(ISP, location, etc.) should not be same with another side
+func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetailOnSpecialValue(c *C) {
+	/**
+	 * Sets-up sample query
+	 */
+	sampleQuery := model.NewCompoundQuery()
+
+	agentFilter := sampleQuery.Filters.Agent
+
+	agentFilter.IspIds = []int16 { -11, -12 }
+	agentFilter.ProvinceIds = []int16 { -11, -12 }
+	agentFilter.CityIds = []int16 { -11, -12 }
+	agentFilter.NameTagIds = []int16 { -11, -12 }
+
+	targetFilter := sampleQuery.Filters.Target
+	targetFilter.IspIds = []int16 { -11, -12 }
+	targetFilter.ProvinceIds = []int16 { -11, -12 }
+	targetFilter.CityIds = []int16 { -11, -12 }
+	targetFilter.NameTagIds = []int16 { -11, -12 }
+	// :~)
+
+	testedDetail := ToQueryDetail(sampleQuery)
+
+	c.Logf("%#v", testedDetail.Agent)
+	c.Logf("%#v", testedDetail.Target)
+
+	c.Assert(testedDetail.Agent.Isps[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Isps[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Agent.Provinces[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Provinces[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Agent.Cities[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Cities[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Agent.NameTags[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.NameTags[1].Id, Equals, int16(-12))
+
+	c.Assert(testedDetail.Target.Isps[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.Isps[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Target.Provinces[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.Provinces[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Target.Cities[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.Cities[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Target.NameTags[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.NameTags[1].Id, Equals, int16(-12))
+}
+
 // Tests the building of query object
 func (suite *TestCompoundReportSuiteOnDb) TestBuildQuery(c *C) {
 	sampleQuery := model.NewCompoundQuery()

@@ -1,8 +1,8 @@
 package restful
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
+	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	gin "gopkg.in/gin-gonic/gin.v1"
@@ -46,8 +46,11 @@ func initApi() {
 	v1.GET("/nqm/pingtask/:pingtask_id/agents", mvcBuilder.BuildHandler(listAgentsByPingTask))
 
 	v1.GET("/owl/isps", listISPs)
+	v1.GET("/owl/isp/:isp_id", mvcBuilder.BuildHandler(getISPByID))
 	v1.GET("/owl/provinces", listProvinces)
+	v1.GET("/owl/province/:province_id", mvcBuilder.BuildHandler(getProvinceByID))
 	v1.GET("/owl/cities", listCities)
+	v1.GET("/owl/city/:city_id", mvcBuilder.BuildHandler(getCityByID))
 	v1.GET("/owl/province/:province_id/cities", listCitiesInProvince)
 
 	v1.GET("/owl/nametags", mvcBuilder.BuildHandler(listNameTags))

@@ -208,8 +208,6 @@
       ```
 
 ### `GET` `POST` /api/v1/dashboard/latestplugin
-  * `required login session`
-  * `required root login`
   * params:
   * response:
     * ok
@@ -220,32 +218,9 @@
           "method": "GET",
           "status": "success",
           "data": {
-            "EntryList": [
-              {
-                "ID": "https://gitlab.com/Cepave/OwlPlugin/commit/fdb8d00127613c0044934b4f8c4ed087e5d7e45c",
-                "Updated": "2016-07-26T09:15:27+00:00"
-              },
-              {
-                "ID": "https://gitlab.com/Cepave/OwlPlugin/commit/d709443111216d19f6b8dc4210526c79b3962f16",
-                "Updated": "2016-07-26T17:08:14+08:00"
-              },
-              ...
-            ]
+            "latestCommitHash": "9a4d709fd4e6511441d96281a1d5e392afba40b4"
           }
         }
-      ```
-      * EntryList: the list of git log
-    * failed
-
-      ```
-      {
-        "version": "v1",
-        "method": "GET",
-        "status": "failed",
-        "error": {
-          "message": "name or sig is empty, please check again"
-        }
-      }
       ```
 ### `GET` `POST` /api/v1/dashboard/counters
   * `required login session`
