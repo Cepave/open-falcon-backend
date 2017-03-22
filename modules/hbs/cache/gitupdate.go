@@ -1,14 +1,13 @@
 package cache
 
 import (
-	"encoding/xml"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	log "github.com/Sirupsen/logrus"
+	"github.com/toolkits/sys"
 )
 
 func GitRepoUpdateCheck(hostname string) bool {
@@ -60,13 +59,16 @@ type SafeGitRepo struct {
 	gitRepo string
 }
 
-type xmlEntry struct {
-	ID      string `xml:"id"`
-	Updated string `xml:"updated"`
-}
-
-type xmlData struct {
-	EntryList []xmlEntry `xml:"entry"`
+func gitLsRemote(gitRepo string, refs string) (string, error) {
+	// This function depends on git command
+	if resultStr, err := sys.CmdOut("git", "ls-remote", gitRepo, refs); err != nil {
+		return "", err
+	} else {
+		// resultStr should be:
+		// cb7a2998571cb25693867afcb24a7331f597768e        refs/heads/master
+		strList := strings.Fields(resultStr)
+		return strList[0], nil
+	}
 }
 
 func getNewestPluginHash() {
@@ -78,21 +80,11 @@ func getNewestPluginHash() {
 		if !strings.HasPrefix(addr, "http") {
 			continue
 		}
-		v := xmlData{}
-		atomAddr := strings.Replace(addr, ".git", "/commits/master.atom", -1)
-		if resp, err := http.Get(atomAddr); err != nil {
-			// handle error.
-			log.Errorln("Error retrieving resource:", err)
+		if hash, err := gitLsRemote(addr, "refs/heads/master"); err != nil {
+			log.Errorln("Error retrieving git-repo:", addr, err)
 		} else {
-			defer resp.Body.Close()
-			xml.NewDecoder(resp.Body).Decode(&v)
-		}
-		if len(v.EntryList) > 0 {
-			// update newest Plugin hash
-			strlist := strings.Split(v.EntryList[0].ID, "/")
-			hash := strlist[len(strlist)-1]
 			pluginHash.Put(hash)
-			log.Debugln("Get newest plugin hash from atomAddr:", atomAddr)
+			log.Debugln("Get newest plugin hash from: ", addr)
 			log.Debugln("Record newest hash as:", hash)
 		}
 	}

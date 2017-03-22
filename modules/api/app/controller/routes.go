@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/api/app/controller/dashboardGraphOwl"
@@ -14,7 +16,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/api/app/controller/template"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/controller/uic"
 	"github.com/Cepave/open-falcon-backend/modules/api/app/utils"
-	"gopkg.in/gin-contrib/cors.v1"
+	"github.com/Cepave/open-falcon-backend/modules/api/config"
+	"github.com/gin-contrib/cors"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -39,6 +42,25 @@ func StartGin(port string, r *gin.Engine) {
 	r.Use(utils.CORS())
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello, I'm OWL (｡A｡)")
+		return
+	})
+	r.GET("/health", func(c *gin.Context) {
+		db := config.Con()
+		status, errorTable := db.HealthCheck()
+		message := "everything is works!"
+		if len(errorTable) > 0 {
+			message = fmt.Sprintf("%s is down, please check it.", strings.Join(errorTable, ","))
+		}
+		c.JSON(200, map[string]interface{}{
+			"rdb": map[string]interface{}{
+				"ping_result":  status,
+				"ping_message": message,
+			},
+			"http": map[string]interface{}{
+				"listening": port,
+			},
+		})
+		return
 	})
 	graph.Routes(r)
 	uic.Routes(r)
