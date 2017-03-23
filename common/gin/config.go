@@ -69,7 +69,7 @@ import (
 	"time"
 
 	"gopkg.in/gin-gonic/gin.v1"
-	"gopkg.in/gin-contrib/cors.v1"
+	"github.com/gin-contrib/cors"
 )
 
 // Configuration defines the properties on gin framework
