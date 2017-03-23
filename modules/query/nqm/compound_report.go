@@ -2,6 +2,7 @@ package nqm
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 
 	"github.com/satori/go.uuid"
@@ -272,22 +273,22 @@ func ToQueryDetail(q *model.CompoundQuery) *model.CompoundQueryDetail {
 			IpAddress: agentFilter.IpAddress,
 			ConnectionId: agentFilter.ConnectionId,
 
-			Isps: ispService.GetIspsByIds(agentFilter.IspIds...),
-			Provinces: provinceService.GetProvincesByIds(agentFilter.ProvinceIds...),
-			Cities: cityService.GetCity2sByIds(agentFilter.CityIds...),
+			Isps: getIspsByIds(agentFilter.IspIds...),
+			Provinces: getProvincesByIds(agentFilter.ProvinceIds...),
+			Cities: getCity2sByIds(agentFilter.CityIds...),
 
-			NameTags: nameTagService.GetNameTagsByIds(agentFilter.NameTagIds...),
+			NameTags: getNameTagsByIds(agentFilter.NameTagIds...),
 			GroupTags: groupTagService.GetGroupTagsByIds(agentFilter.GroupTagIds...),
 		},
 		Target: &model.TargetOfQueryDetail {
 			Name: targetFilter.Name,
 			Host: targetFilter.Host,
 
-			Isps: ispService.GetIspsByIds(targetFilter.IspIds...),
-			Provinces: provinceService.GetProvincesByIds(targetFilter.ProvinceIds...),
-			Cities: cityService.GetCity2sByIds(targetFilter.CityIds...),
+			Isps: getIspsByIds(targetFilter.IspIds...),
+			Provinces: getProvincesByIds(targetFilter.ProvinceIds...),
+			Cities: getCity2sByIds(targetFilter.CityIds...),
 
-			NameTags: nameTagService.GetNameTagsByIds(targetFilter.NameTagIds...),
+			NameTags: getNameTagsByIds(targetFilter.NameTagIds...),
 			GroupTags: groupTagService.GetGroupTagsByIds(targetFilter.GroupTagIds...),
 		},
 		Output: &model.OutputDetail {
@@ -473,4 +474,97 @@ func processTargetGrouping(targetProps *model.DynamicTargetProps, targetId int32
 				panic(fmt.Sprintf("Unsupported grouping for target: [%s]", selectedPropOfTarget))
 		}
 	}
+}
+
+var typeOfIsp = reflect.TypeOf(&owlModel.Isp{})
+func getIspsByIds(ids ...int16) []*owlModel.Isp {
+	return utils.MakeAbstractArray(ids).MapTo(
+		func(v interface{}) interface{} {
+			ispId := v.(int16)
+			switch ispId {
+			case int16(model.RelationSame):
+				return &owlModel.Isp {
+					Id: ispId,
+					Name: "<RelationSame>",
+				}
+			case int16(model.RelationNotSame):
+				return &owlModel.Isp {
+					Id: ispId,
+					Name: "<RelationNotSame>",
+				}
+			}
+
+			return ispService.GetIspById(ispId)
+		},
+		typeOfIsp,
+	).GetArray().([]*owlModel.Isp)
+}
+var typeOfProvince = reflect.TypeOf(&owlModel.Province{})
+func getProvincesByIds(provinceIds ...int16) []*owlModel.Province {
+	return utils.MakeAbstractArray(provinceIds).MapTo(
+		func(v interface{}) interface{} {
+			provinceId := v.(int16)
+			switch provinceId {
+			case int16(model.RelationSame):
+				return &owlModel.Province {
+					Id: provinceId,
+					Name: "<RelationSame>",
+				}
+			case int16(model.RelationNotSame):
+				return &owlModel.Province {
+					Id: provinceId,
+					Name: "<RelationNotSame>",
+				}
+			}
+
+			return provinceService.GetProvinceById(provinceId)
+		},
+		typeOfProvince,
+	).GetArray().([]*owlModel.Province)
+}
+var typeOfCity2 = reflect.TypeOf(&owlModel.City2{})
+func getCity2sByIds(cityIds ...int16) []*owlModel.City2 {
+	return utils.MakeAbstractArray(cityIds).MapTo(
+		func(v interface{}) interface{} {
+			cityId := v.(int16)
+			switch cityId {
+			case int16(model.RelationSame):
+				return &owlModel.City2 {
+					Id: cityId,
+					Name: "<RelationSame>",
+				}
+			case int16(model.RelationNotSame):
+				return &owlModel.City2 {
+					Id: cityId,
+					Name: "<RelationNotSame>",
+				}
+			}
+
+			return cityService.GetCity2ById(cityId)
+		},
+		typeOfCity2,
+	).GetArray().([]*owlModel.City2)
+}
+var typeOfNameTag = reflect.TypeOf(&owlModel.NameTag{})
+func getNameTagsByIds(nameTagIds ...int16) []*owlModel.NameTag {
+	return utils.MakeAbstractArray(nameTagIds).MapTo(
+		func(v interface{}) interface{} {
+			nameTagId := v.(int16)
+			switch nameTagId {
+			case int16(model.RelationSame):
+				return &owlModel.NameTag {
+					Id: nameTagId,
+					Value: "<RelationSame>",
+				}
+			case int16(model.RelationNotSame):
+				return &owlModel.NameTag {
+					Id: nameTagId,
+					Value: "<RelationNotSame>",
+				}
+			}
+
+			return nameTagService.GetNameTagById(nameTagId)
+		},
+		typeOfNameTag,
+	).GetArray().([]*owlModel.NameTag)
 }

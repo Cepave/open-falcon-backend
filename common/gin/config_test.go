@@ -25,7 +25,7 @@ func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *C) {
 		assertFunc func(*C, *httptest.ResponseRecorder, CommentInterface)
 	} {
 		{ // Tests the CORS
-			httptest.NewRequest(http.MethodGet, "/simple-1", nil),
+			httptest.NewRequest(http.MethodOptions, "/simple-1", nil),
 			func(c *C, resp *httptest.ResponseRecorder, comment CommentInterface) {
 				c.Assert(resp.Header().Get("Access-Control-Allow-Origin"), Equals, "*", comment)
 			},
@@ -106,6 +106,8 @@ func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *C) {
 	for i, testCase := range testCases {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
+
+		testCase.req.Header.Set("Origin", "http://non-local/")
 
 		resp := httptest.NewRecorder()
 		engine.ServeHTTP(resp, testCase.req)

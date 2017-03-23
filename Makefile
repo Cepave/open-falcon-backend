@@ -8,9 +8,11 @@ VERSION := $(shell cat VERSION)
 all: trash $(CMD) $(TARGET)
 
 $(CMD):
+	go get ./modules/$@
 	go build -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
+	go get .
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
 
 checkbin: bin/ config/ open-falcon cfg.json
@@ -42,6 +44,7 @@ clean:
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
 trash:
+	go get -u github.com/rancher/trash
 	trash -k -cache package_cache_tmp
 
 .PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe api
