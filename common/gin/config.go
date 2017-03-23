@@ -68,13 +68,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"gopkg.in/gin-gonic/gin.v1"
-
-	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/gin-contrib/cors"
 )
-
-var logger = log.NewDefaultLogger("INFO")
 
 // Configuration defines the properties on gin framework
 type GinConfig struct {

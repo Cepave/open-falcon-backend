@@ -3,7 +3,7 @@ package nqm
 import (
 	"reflect"
 
-	"github.com/leebenson/conform"
+	"github.com/Cepave/open-falcon-backend/common/conform"
 
 	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
 	otest "github.com/Cepave/open-falcon-backend/common/testing"
@@ -26,7 +26,7 @@ func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 		GroupTags: []string{ " gt-1 ", " gt-2 " },
 	}
 
-	conform.Strings(testedAgent)
+	conform.MustConform(testedAgent)
 
 	c.Assert(testedAgent.Name, Equals, "name-1")
 	c.Assert(testedAgent.ConnectionId, Equals, "conn-id-1")

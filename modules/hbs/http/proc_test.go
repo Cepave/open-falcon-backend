@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/dghubble/sling"
 	httptesting "github.com/Cepave/open-falcon-backend/common/testing/http"
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	. "gopkg.in/check.v1"
@@ -13,7 +12,7 @@ var _ = Suite(&TestProcSuite{})
 
 // Tests the expressions service
 func (suite *TestProcSuite) TestExpressions(c *C) {
-	slint := sling.New().Get(httpClientConfig.String()).Path("expressions")
+	slint := httpClientConfig.NewSlingByBase().Get("expressions")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 
@@ -25,7 +24,7 @@ func (suite *TestProcSuite) TestExpressions(c *C) {
 
 // Tests the plugins service
 func (suite *TestProcSuite) TestPlugins(c *C) {
-	slint := sling.New().Get(httpClientConfig.String()).Path("plugins/")
+	slint := httpClientConfig.NewSlingByBase().Get("plugins/")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 

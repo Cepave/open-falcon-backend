@@ -103,6 +103,9 @@ type HttpClientConfig struct {
 	Ssl bool
 	Host string
 	Port uint16
+	Resource string
+
+	slingBase *sling.Sling
 }
 
 // Initialize a client config by flag
@@ -114,18 +117,45 @@ func NewHttpClientConfigByFlag() *HttpClientConfig {
 	var host = flag.String("http.host", "127.0.0.1", "Host of HTTP service to be tested")
 	var port = flag.Int("http.port", 80, "Port of HTTP service to be tested")
 	var ssl = flag.Bool("http.ssl", false, "Whether or not to use SSL for HTTP service to be tested")
+	var resource = flag.String("http.resource", "", "resource for http://<host>:<port/<resource>")
 
 	flag.Parse()
 
-	return &HttpClientConfig {
+	config := &HttpClientConfig {
 		Host: *host,
 		Port: uint16(*port),
 		Ssl: *ssl,
+		Resource: *resource,
 	}
+	config.slingBase = sling.New().Base(
+		config.hostAndPort(),
+	)
+
+	if config.Resource != "" {
+		config.slingBase.Path(config.Resource + "/")
+	}
+
+	logger.Infof("Sling URL for testing: %s", config.String())
+
+	return config
 }
 
 // Gets the full URL of tested service
 func (self *HttpClientConfig) String() string {
+	url := self.hostAndPort()
+
+	if self.Resource != "" {
+		url += "/" + self.Resource
+	}
+
+	return url
+}
+
+func (self *HttpClientConfig) NewSlingByBase() *sling.Sling {
+	return self.slingBase.New()
+}
+
+func (self *HttpClientConfig) hostAndPort() string {
 	schema := "http"
 	if self.Ssl {
 		schema = "https"
