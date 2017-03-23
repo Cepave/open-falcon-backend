@@ -163,7 +163,7 @@ func (suite *TestPingtaskSuite) TestAssignPingtaskToAgentForPingtask(c *C) {
 	testCases := []*struct {
 		inputAID                   int32
 		inputPID                   int32
-		expectedNumOfEnabledAgents int8
+		expectedNumOfEnabledAgents int32
 		expectedPingtask           *nqmModel.PingtaskView
 		expectedErr                error
 	}{
@@ -195,7 +195,7 @@ func (suite *TestPingtaskSuite) TestRemovePingtaskFromAgentForPingtask(c *C) {
 	testCases := []*struct {
 		inputAID                   int32
 		inputPID                   int32
-		expectedNumOfEnabledAgents int8
+		expectedNumOfEnabledAgents int32
 		expectedPingtask           *nqmModel.PingtaskView
 		expectedErr                error
 	}{
@@ -236,6 +236,15 @@ func (suite *TestPingtaskSuite) TestRemovePingtaskFromAgentForPingtask(c *C) {
 }
 
 func (suite *TestPingtaskSuite) TestListPingtasks(c *C) {
+	orderBy := []*commonModel.OrderByEntity{
+		&commonModel.OrderByEntity{"id", commonModel.Descending},
+		&commonModel.OrderByEntity{"period", commonModel.Descending},
+		&commonModel.OrderByEntity{"name", commonModel.Ascending},
+		&commonModel.OrderByEntity{"enable", commonModel.Ascending},
+		&commonModel.OrderByEntity{"comment", commonModel.Ascending},
+		&commonModel.OrderByEntity{"num_of_enabled_agents", commonModel.Ascending},
+	}
+
 	testCases := []*struct {
 		query                      *nqmModel.PingtaskQuery
 		paging                     commonModel.Paging
@@ -244,17 +253,17 @@ func (suite *TestPingtaskSuite) TestListPingtasks(c *C) {
 	}{
 		{
 			&nqmModel.PingtaskQuery{},
-			commonModel.Paging{Size: 2, Position: 1, OrderBy: []*commonModel.OrderByEntity{}},
+			commonModel.Paging{Size: 2, Position: 1, OrderBy: orderBy},
 			2, 2,
 		},
 		{
 			&nqmModel.PingtaskQuery{},
-			commonModel.Paging{Size: 1, Position: 1, OrderBy: []*commonModel.OrderByEntity{}},
+			commonModel.Paging{Size: 1, Position: 1, OrderBy: orderBy},
 			1, 2,
 		},
 		{
 			&nqmModel.PingtaskQuery{},
-			commonModel.Paging{Size: 10, Position: 10, OrderBy: []*commonModel.OrderByEntity{}},
+			commonModel.Paging{Size: 10, Position: 10, OrderBy: orderBy},
 			0, 2,
 		},
 		{
@@ -262,28 +271,28 @@ func (suite *TestPingtaskSuite) TestListPingtasks(c *C) {
 				Period: "3",
 				Name:   "test2",
 			},
-			commonModel.Paging{Size: 2, Position: 1, OrderBy: []*commonModel.OrderByEntity{}},
+			commonModel.Paging{Size: 2, Position: 1, OrderBy: orderBy},
 			1, 1,
 		},
 		{
 			&nqmModel.PingtaskQuery{
 				Period: "40",
 			},
-			commonModel.Paging{Size: 2, Position: 1, OrderBy: []*commonModel.OrderByEntity{}},
+			commonModel.Paging{Size: 2, Position: 1, OrderBy: orderBy},
 			1, 1,
 		},
 		{
 			&nqmModel.PingtaskQuery{
 				Name: "test1",
 			},
-			commonModel.Paging{Size: 2, Position: 1, OrderBy: []*commonModel.OrderByEntity{}},
+			commonModel.Paging{Size: 2, Position: 1, OrderBy: orderBy},
 			1, 1,
 		},
 		{
 			&nqmModel.PingtaskQuery{
 				Enable: "true",
 			},
-			commonModel.Paging{Size: 2, Position: 1, OrderBy: []*commonModel.OrderByEntity{}},
+			commonModel.Paging{Size: 2, Position: 1, OrderBy: orderBy},
 			2, 2,
 		},
 	}
@@ -329,7 +338,7 @@ func (suite *TestPingtaskSuite) TestAddAndGetPingtask(c *C) {
 		actual := AddAndGetPingtask(v.inputPm)
 		c.Logf("case [%d]: %+v\n", i+1, actual)
 		c.Assert(actual, NotNil)
-		c.Assert(actual.Period, Equals, int8(15))
+		c.Assert(actual.Period, Equals, int16(15))
 		c.Assert(*actual.Name, Equals, "廣東")
 		c.Assert(actual.Enable, Equals, true)
 		c.Assert(*actual.Comment, Equals, "This is for some purpose")
@@ -391,7 +400,7 @@ func (suite *TestPingtaskSuite) TestUpdateAndGetPingtask(c *C) {
 		actual := UpdateAndGetPingtask(10120, v.inputPm)
 		c.Logf("case [%d]: %+v\n", i+1, actual)
 		c.Assert(actual, NotNil)
-		c.Assert(actual.Period, Equals, int8(15))
+		c.Assert(actual.Period, Equals, int16(15))
 		c.Assert(*actual.Name, Equals, "廣東")
 		c.Assert(actual.Enable, Equals, true)
 		c.Assert(*actual.Comment, Equals, "This is for some purpose")

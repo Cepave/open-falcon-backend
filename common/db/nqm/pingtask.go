@@ -121,6 +121,7 @@ func RemovePingtaskFromAgentForPingtask(aID int32, pID int32) (*nqmModel.Pingtas
 
 var orderByDialectForPingtasks = commonModel.NewSqlOrderByDialect(
 	map[string]string{
+		"id":                    "pt_id",
 		"period":                "pt_period",
 		"name":                  "pt_name",
 		"enable":                "pt_enable",
@@ -211,7 +212,7 @@ func ListPingtasks(query *nqmModel.PingtaskQuery, paging commonModel.Paging) ([]
 		if query.Name != "" {
 			selectPingtask = selectPingtask.Where("pt_name LIKE ?", query.Name+"%")
 		}
-		if ena, err := strconv.ParseBool(query.Enable); query.Enable != "" && err != nil {
+		if ena, err := strconv.ParseBool(query.Enable); query.Enable != "" && err == nil {
 			selectPingtask = selectPingtask.Where("pt_enable = ?", ena)
 		}
 		if query.Comment != "" {

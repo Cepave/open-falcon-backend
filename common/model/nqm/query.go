@@ -11,10 +11,10 @@ type AgentQuery struct {
 	Hostname     string `mvc:"query[hostname]" conform:"trim"`
 	IpAddress    string `mvc:"query[ip_address]" conform:"trim"`
 
-	IspId    int16 `mvc:"query[isp_id] default[-2]"`
+	IspId int16 `mvc:"query[isp_id] default[-2]"`
 
-	Status             bool `mvc:"query[status]"`
-	HasStatus          string `mvc:"query[status] default[!N!]"`
+	Status    bool   `mvc:"query[status]"`
+	HasStatus string `mvc:"query[status] default[!N!]"`
 }
 
 // Gets the []byte used to perform like in MySql
@@ -35,24 +35,23 @@ func (query *AgentQuery) HasStatusCondition() bool {
 
 type AgentQueryWithPingTask struct {
 	AgentQuery
-	PingTaskId int32 `mvc:"param[pingtask_id]"`
-	Applied bool `mvc:"query[applied]"`
+	PingTaskId int32  `mvc:"param[pingtask_id]"`
+	Applied    bool   `mvc:"query[applied]"`
 	HasApplied string `mvc:"query[applied] default[!N!]"`
 }
+
 func (query *AgentQueryWithPingTask) HasAppliedCondition() bool {
 	return query.HasApplied != "!N!"
 }
 
 // The query conditions of target
 type TargetQuery struct {
-	Name string
-	Host string
-
-	HasIspId bool
-	IspId    int16
-
+	Name               string `mvc:"query[name]"`
+	Host               string `mvc:"query[host]"`
+	HasIspId           bool
+	IspId              int16 `mvc:"query[isp_id]"`
 	HasStatusCondition bool
-	Status             bool
+	Status             bool `mvc:"query[status]"`
 }
 
 type AgentFilter struct {
@@ -88,9 +87,9 @@ func (f *TargetFilter) HasTargetDescriptive() bool {
 
 // The query parameters filtering pingtasks
 type PingtaskQuery struct {
-	Period             string
-	Name               string
-	Enable             string
-	Comment            string
-	NumOfEnabledAgents string
+	Period             string `mvc:"query[period]"`
+	Name               string `mvc:"query[name]"`
+	Enable             string `mvc:"query[enable]"`
+	Comment            string `mvc:"query[comment]"`
+	NumOfEnabledAgents string `mvc:"query[num_of_enabled_agents]"`
 }
