@@ -4,9 +4,9 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/chyeh/viper"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
