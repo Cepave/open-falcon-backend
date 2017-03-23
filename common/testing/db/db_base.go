@@ -10,11 +10,11 @@ package db
 
 import (
 	"flag"
-	check "gopkg.in/check.v1"
+
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
+	check "gopkg.in/check.v1"
 )
-
 
 var dsnMysql = flag.String("dsn_mysql", "", "DSN of MySql")
 
@@ -44,11 +44,12 @@ func GetDbConfig(c *check.C) *commonDb.DbConfig {
 		return nil
 	}
 
-	return &commonDb.DbConfig {
-		Dsn: *dsnMysql,
+	return &commonDb.DbConfig{
+		Dsn:     *dsnMysql,
 		MaxIdle: 2,
 	}
 }
+
 // Constructs "*db/facade/DbFacade" object by configuration of flag.
 //
 // The checker object is used to trigger panic if the database cannot be opened.
@@ -67,6 +68,7 @@ func InitDbFacade(c *check.C) *f.DbFacade {
 
 	return dbFacade
 }
+
 // Releases "*db/facade/DbFacade" object by configuration of flag.
 //
 // The checker object is used to trigger panic if the database cannot be released.

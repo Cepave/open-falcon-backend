@@ -3,12 +3,13 @@ package owl
 import (
 	"fmt"
 	"strings"
+
 	"github.com/Cepave/open-falcon-backend/common/strconv"
 	json "github.com/bitly/go-simplejson"
 )
 
 type GroupTag struct {
-	Id int32 `gorm:"primary_key:true;column:gt_id" json:"id" db:"gt_id"`
+	Id   int32  `gorm:"primary_key:true;column:gt_id" json:"id" db:"gt_id"`
 	Name string `gorm:"column:gt_name" json:"name" db:"gt_name"`
 }
 
@@ -29,6 +30,7 @@ func (groupTag *GroupTag) ToJson() *json.Json {
 }
 
 type GroupTags []*GroupTag
+
 func (groupTags GroupTags) ToJson() []*json.Json {
 	jsonGroupTags := make([]*json.Json, len(groupTags))
 
@@ -64,12 +66,21 @@ func SplitToArrayOfGroupTags(
 	for i, groupTagId := range allIds {
 		result = append(
 			result,
-			&GroupTag {
-				Id: int32(groupTagId),
+			&GroupTag{
+				Id:   int32(groupTagId),
 				Name: allNames[i],
 			},
 		)
 	}
 
 	return result
+}
+
+type GroupTagOfPingtaskView struct {
+	Id   int    `gorm:"primary_key:true;column:gt_id" json:"id" db:"gt_id"`
+	Name string `gorm:"column:gt_name" json:"name" db:"gt_name"`
+}
+
+func (GroupTagOfPingtaskView) TableName() string {
+	return "owl_group_tag"
 }

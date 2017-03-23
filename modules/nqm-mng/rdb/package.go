@@ -1,10 +1,10 @@
 package rdb
 
 import (
-	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 )
 

@@ -2,14 +2,15 @@ package restful
 
 import (
 	"net/http"
-	"gopkg.in/gin-gonic/gin.v1"
 	"strconv"
 
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	"gopkg.in/gin-gonic/gin.v1"
+
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
-	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	mvc "github.com/Cepave/open-falcon-backend/common/gin/mvc"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 )
 
 func addNewAgent(c *gin.Context) {
@@ -29,8 +30,8 @@ func addNewAgent(c *gin.Context) {
 		case commonNqmDb.ErrDuplicatedNqmAgent:
 			commonGin.JsonConflictHandler(
 				c,
-				commonGin.DataConflictError {
-					ErrorCode: 1,
+				commonGin.DataConflictError{
+					ErrorCode:    1,
 					ErrorMessage: err.Error(),
 				},
 			)
@@ -43,6 +44,7 @@ func addNewAgent(c *gin.Context) {
 
 	c.JSON(http.StatusOK, newAgent)
 }
+
 func modifyAgent(c *gin.Context) {
 	/**
 	 * Loads agent from database
@@ -75,6 +77,7 @@ func modifyAgent(c *gin.Context) {
 
 	c.JSON(http.StatusOK, updatedAgent)
 }
+
 func getAgentById(c *gin.Context) {
 	agentId, err := strconv.Atoi(c.Param("agent_id"))
 	if err != nil {
