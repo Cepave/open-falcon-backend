@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"gopkg.in/gin-gonic/gin.v1"
 	json "github.com/bitly/go-simplejson"
+	or "github.com/Cepave/open-falcon-backend/common/runtime"
 )
 
 // Defines the error used to represent the "409 Conflict" error
@@ -90,6 +91,13 @@ func BuildJsonPanicProcessor(panicProcessor PanicProcessor) gin.HandlerFunc {
 //
 // Otherwise, use http.StatusInternalServerError as output status
 func DefaultPanicProcessor(c *gin.Context, panicObject interface{}) {
+	stack := or.GetCallerInfoStack(2, 16).AsStringStack()
+
+	logger.Warnf("[GIN] Got panic: %v", panicObject)
+	for _, messageInStack := range stack {
+		logger.Warnf("%s", messageInStack)
+	}
+
 	switch errObject := panicObject.(type) {
 	case ValidationError:
 		c.JSON(
@@ -125,6 +133,7 @@ func DefaultPanicProcessor(c *gin.Context, panicObject interface{}) {
 				"http_status": http.StatusInternalServerError,
 				"error_code": -1,
 				"error_message": fmt.Sprintf("%v", panicObject),
+				"error_stack": stack,
 			},
 		)
 	}

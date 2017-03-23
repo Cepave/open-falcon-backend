@@ -46,7 +46,7 @@ func buildParamLoader(field reflect.StructField, convSrv ot.ConversionService) i
 	// :~)
 
 	tagContext := loadTag(field)
-	if tagContext == nil {
+	if tagContext.getterType == 0 {
 		return nil
 	}
 

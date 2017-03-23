@@ -129,8 +129,12 @@ func loadIcmpRecords(q *model.CompoundQuery) []*model.DynamicRecord {
 
 	for _, icmpLog := range icmpLogs {
 		newRecord := &model.DynamicRecord{
-			Agent: &model.DynamicAgentProps{},
-			Target: &model.DynamicTargetProps{},
+			Agent: &model.DynamicAgentProps{
+				Grouping: q.Grouping.Agent,
+			},
+			Target: &model.DynamicTargetProps{
+				Grouping: q.Grouping.Target,
+			},
 			Metrics: &model.DynamicMetrics {
 				Metrics: icmpLog.metrics,
 				Output: &q.Output.Metrics,
