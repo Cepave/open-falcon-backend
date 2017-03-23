@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
-CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng api
+CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng f2e-api
 TARGET = open-falcon
 
 VERSION := $(shell cat VERSION)
@@ -28,7 +28,7 @@ pack: checkbin
 	@cp -r ./modules/fe/{static,views,scripts} ./out/fe/bin
 	@cp -r ./modules/alarm/{static,views} ./out/alarm/bin
 	@cp -r ./modules/agent/public ./out/agent/bin
-	@cp -r ./modules/api/data ./out/api/
+	@cp -r ./modules/f2e-api/data ./out/f2e-api/
 	@cp cfg.json ./out/cfg.json
 	@bash ./config/confgen.sh
 	@cp $(TARGET) ./out/$(TARGET)
@@ -47,4 +47,4 @@ trash:
 	go get -u github.com/rancher/trash
 	trash -k -cache package_cache_tmp
 
-.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe api
+.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api
