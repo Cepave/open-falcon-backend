@@ -307,10 +307,12 @@ func getPlatformsType(nodes map[string]interface{}, result map[string]interface{
 	s, err := json.Marshal(params)
 	if err != nil {
 		log.Errorf(err.Error())
+		return platformsMap
 	}
 	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
 	if err != nil {
 		log.Errorf(err.Error())
+		return platformsMap
 	}
 	reqPost.Header.Set("Content-Type", "application/json")
 
@@ -318,22 +320,31 @@ func getPlatformsType(nodes map[string]interface{}, result map[string]interface{
 	resp, err := client.Do(reqPost)
 	if err != nil {
 		log.Errorf(err.Error())
+		return platformsMap
 	} else {
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
 		err = json.Unmarshal(body, &nodes)
 		if err != nil {
 			log.Errorf(err.Error())
+			return platformsMap
 		}
 		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			if len(nodes["result"].([]interface{})) == 0 {
 				errorMessage := "No platforms returned"
 				setError(errorMessage, result)
+				return platformsMap
 			} else {
 				re_inside_whiteSpaces := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
 				for _, platform := range nodes["result"].([]interface{}) {
-					platformName := platform.(map[string]interface{})["platform"].(string)
-					platformType := platform.(map[string]interface{})["platform_type"].(string)
+					platformName := ""
+					if platform.(map[string]interface{})["platform"] != nil {
+						platformName = platform.(map[string]interface{})["platform"].(string)
+					}
+					platformType := ""
+					if platform.(map[string]interface{})["platform_type"] != nil {
+						platformType = platform.(map[string]interface{})["platform_type"].(string)
+					}
 					department := ""
 					if platform.(map[string]interface{})["department"] != nil {
 						department = platform.(map[string]interface{})["department"].(string)
@@ -342,7 +353,10 @@ func getPlatformsType(nodes map[string]interface{}, result map[string]interface{
 					if platform.(map[string]interface{})["team"] != nil {
 						team = platform.(map[string]interface{})["team"].(string)
 					}
-					visible := platform.(map[string]interface{})["visible"].(string)
+					visible := ""
+					if platform.(map[string]interface{})["visible"] != nil {
+						visible = platform.(map[string]interface{})["visible"].(string)
+					}
 					description := platform.(map[string]interface{})["description"].(string)
 					if len(description) > 0 {
 						description = strings.Replace(description, "\r", " ", -1)
@@ -475,6 +489,11 @@ func syncHostsTable() {
 		}
 		platformsMap[platformName] = map[string]string{
 			"platformName": platformName,
+			"type": "",
+			"visible": "",
+			"department": "",
+			"team": "",
+			"description": "",
 		}
 	}
 	sort.Strings(IPs)
@@ -859,10 +878,12 @@ func updatePlatformsTable(platformNames []string, platformsMap map[string]map[st
 	o.Using("boss")
 	var platform Platforms
 	var rows []orm.Params
-	max := 0
+	sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
+	sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
+	sqlInsert := "INSERT INTO `boss`.`platforms`"
+	sqlInsert += "(platform, type, visible, count, department, team, description, updated) "
+	sqlInsert += "VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
 	for _, platformName := range platformNames {
-		sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
-		sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
 		count, err := o.Raw(sql, platformName).Values(&rows)
 		if err != nil {
 			count = 0
@@ -871,13 +892,8 @@ func updatePlatformsTable(platformNames []string, platformsMap map[string]map[st
 		group := platformsMap[platformName]
 		err = o.QueryTable("platforms").Filter("platform", group["platformName"]).One(&platform)
 		if err == orm.ErrNoRows {
-			sql = "INSERT INTO boss.platforms(platform, type, visible, count, department, team, description, updated) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, group["platformName"], group["type"], group["visible"], count, group["department"], group["team"], group["description"], now).Exec()
+			_, err := o.Raw(sqlInsert, group["platformName"], group["type"], group["visible"], count, group["department"], group["team"], group["description"], now).Exec()
 			if err != nil {
-				log.Errorf(err.Error())
-				if max < len(group["description"]) {
-					max = len(group["description"])
-				}
 				log.Errorf(err.Error())
 			}
 		} else if err != nil {
@@ -896,9 +912,6 @@ func updatePlatformsTable(platformNames []string, platformsMap map[string]map[st
 			platform.Updated = now
 			_, err := o.Update(&platform)
 			if err != nil {
-				if max < len(group["description"]) {
-					max = len(group["description"])
-				}
 				log.Errorf(err.Error())
 			}
 		}
