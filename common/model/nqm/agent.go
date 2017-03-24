@@ -13,8 +13,8 @@ import (
 
 type AgentForAdding struct {
 	Id           int32  `json:"-"`
-	Name         *string `json:"name" conform:"trim"`
-	Comment      *string `json:"comment" conform:"trim"`
+	Name         *string `json:"name" conform:"trimToNil"`
+	Comment      *string `json:"comment" conform:"trimToNil"`
 	ConnectionId string `json:"connection_id" conform:"trim" validate:"min=1"`
 	Status       bool   `json:"status"`
 

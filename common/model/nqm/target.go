@@ -14,7 +14,7 @@ type TargetForAdding struct {
 	Host string `json:"host" conform:"trim" validate:"min=1"`
 	ProbedByAll bool `json:"probed_by_all"`
 	Status bool `json:"status"`
-	Comment *string `json:"comment" conform:"trim"`
+	Comment *string `json:"comment" conform:"trimToNil"`
 
 	IspId int16 `json:"isp_id" validate:"nonZeroId"`
 	ProvinceId int16 `json:"province_id" validate:"nonZeroId"`
