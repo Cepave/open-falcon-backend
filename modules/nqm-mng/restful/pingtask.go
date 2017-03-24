@@ -10,7 +10,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	"github.com/chyeh/cast"
+	"github.com/spf13/cast"
 )
 
 func listPingtasks(

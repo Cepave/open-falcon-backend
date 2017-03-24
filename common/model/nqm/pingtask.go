@@ -6,7 +6,7 @@ import (
 
 	owlGin "github.com/Cepave/open-falcon-backend/common/gin"
 	commonOwlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	"github.com/chyeh/cast"
+	"github.com/spf13/cast"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -39,20 +39,20 @@ type PingtaskView struct {
 	Comment            *string `gorm:"column:pt_comment" json:"comment"`
 	NumOfEnabledAgents int32   `gorm:"column:pt_num_of_enabled_agents" json:"num_of_enabled_agents"`
 
-	IdsOfIspFilters  string `gorm:"column:pt_isp_filter_ids"`
-	NamesOfIspFilter string `gorm:"column:pt_isp_filter_names"`
+	IdsOfIspFilters  string `gorm:"column:pt_isp_filter_ids" json:"-"`
+	NamesOfIspFilter string `gorm:"column:pt_isp_filter_names" json:"-"`
 
-	IdsOfProvinceFilters  string `gorm:"column:pt_province_filter_ids"`
-	NamesOfProvinceFilter string `gorm:"column:pt_province_filter_names"`
+	IdsOfProvinceFilters  string `gorm:"column:pt_province_filter_ids" json:"-"`
+	NamesOfProvinceFilter string `gorm:"column:pt_province_filter_names" json:"-"`
 
-	IdsOfCityFilters  string `gorm:"column:pt_city_filter_ids"`
-	NamesOfCityFilter string `gorm:"column:pt_city_filter_names"`
+	IdsOfCityFilters  string `gorm:"column:pt_city_filter_ids" json:"-"`
+	NamesOfCityFilter string `gorm:"column:pt_city_filter_names" json:"-"`
 
-	IdsOfNameTagFilters  string `gorm:"column:pt_name_tag_filter_ids"`
-	NamesOfNameTagFilter string `gorm:"column:pt_name_tag_filter_values"`
+	IdsOfNameTagFilters  string `gorm:"column:pt_name_tag_filter_ids" json:"-"`
+	NamesOfNameTagFilter string `gorm:"column:pt_name_tag_filter_values" json:"-"`
 
-	IdsOfGroupTagFilters  string `gorm:"column:pt_group_tag_filter_ids"`
-	NamesOfGroupTagFilter string `gorm:"column:pt_group_tag_filter_names"`
+	IdsOfGroupTagFilters  string `gorm:"column:pt_group_tag_filter_ids" json:"-"`
+	NamesOfGroupTagFilter string `gorm:"column:pt_group_tag_filter_names" json:"-"`
 
 	Filter pingtaskFilter `json:"filter"`
 }
