@@ -193,7 +193,7 @@ func (suite *TestPingtaskItSuite) TestAddPingtaskToAgentForAgent(c *C) {
 			Post("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask?pingtask_id=" + strconv.Itoa(v.inputPID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
-		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
+		c.Logf("[Add Pingtask To Agent For Agent] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
 		c.Logf("%+v", jsonResult)
 	}
 }
@@ -225,7 +225,7 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForAgent(c *C) {
 			Delete("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask/=" + strconv.Itoa(v.inputPID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
-		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
+		c.Logf("[Remove Pingtask To Agent For Agent] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
 		c.Logf("%+v", jsonResult)
 	}
 }
@@ -250,7 +250,7 @@ func (suite *TestPingtaskItSuite) TestAddPingtaskToAgentForPingtask(c *C) {
 			Post("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent?agent_id=" + strconv.Itoa(v.inputAID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
-		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
+		c.Logf("[Add Pingtask To Agent For Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
 		c.Logf("%+v", jsonResult)
 	}
 }
@@ -282,7 +282,7 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForPingtask(c *C) {
 			Delete("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent/=" + strconv.Itoa(v.inputAID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
-		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
+		c.Logf("[Remove Pingtask To Agent For Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
 		c.Logf("%+v", jsonResult)
 	}
 }
