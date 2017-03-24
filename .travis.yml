@@ -11,20 +11,7 @@ install:
   - go get -t -v ./...
 
 script:
-  - go build -o open-falcon
-  - go build ./modules/aggregator
-  - go build ./modules/graph
-  - go build ./modules/hbs
-  - go build ./modules/judge
-  - go build ./modules/nodata
-  - go build ./modules/query
-  - go build ./modules/sender
-  - go build ./modules/task
-  - go build ./modules/transfer
-  - go build ./modules/fe
-  - go build ./modules/alarm
-  - go build ./modules/agent
-  - go build ./modules/nqm-mng
+  - make f2e-api 
 
 after_success:
   - go test -race -coverprofile=coverage.txt -covermode=atomic github.com/Cepave/open-falcon-backend/modules/query/http
