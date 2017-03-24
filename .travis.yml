@@ -3,9 +3,6 @@ language: go
 go:
   - 1.6
 
-install:
-  - make trash
-
 script:
   - make all 
   - make pack
