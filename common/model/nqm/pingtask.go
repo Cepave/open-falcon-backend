@@ -159,9 +159,9 @@ func (p *PingtaskView) AfterLoad() {
 
 type PingtaskModify struct {
 	Period  int32                `json:"period"`
-	Name    string               `json:"name" conform:"trim"`
+	Name    *string               `json:"name" conform:"trim"`
 	Enable  bool                 `json:"enable"`
-	Comment string               `json:"comment" conform:"trim"`
+	Comment *string               `json:"comment" conform:"trim"`
 	Filter  pingtaskModifyFilter `json:"filter"`
 }
 

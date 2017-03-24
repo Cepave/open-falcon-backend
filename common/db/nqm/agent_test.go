@@ -9,6 +9,7 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	. "gopkg.in/check.v1"
 )
 
@@ -19,8 +20,8 @@ var _ = Suite(&TestAgentSuite{})
 // Tests the updating of agent
 func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
 	modifiedAgent := &nqmModel.AgentForAdding{
-		Name:         "new-name-1",
-		Comment:      "new-comment-1",
+		Name:         utils.PointerOfCloneString("new-name-1"),
+		Comment:      utils.PointerOfCloneString("new-comment-1"),
 		Status:       false,
 		ProvinceId:   27,
 		CityId:       205,
@@ -34,8 +35,8 @@ func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
 	testedAgent, err := UpdateAgent(originalAgent, modifiedAgent)
 
 	c.Assert(err, IsNil)
-	c.Assert(testedAgent.Name, Equals, modifiedAgent.Name)
-	c.Assert(testedAgent.Comment, Equals, modifiedAgent.Comment)
+	c.Assert(testedAgent.Name, DeepEquals, modifiedAgent.Name)
+	c.Assert(testedAgent.Comment, DeepEquals, modifiedAgent.Comment)
 	c.Assert(testedAgent.Status, Equals, modifiedAgent.Status)
 	c.Assert(testedAgent.ProvinceId, Equals, modifiedAgent.ProvinceId)
 	c.Assert(testedAgent.CityId, Equals, modifiedAgent.CityId)
@@ -83,8 +84,8 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 	defaultAgent_2.Hostname = "hs-def-agent-2"
 	defaultAgent_2.IpAddress = net.ParseIP("33.29.111.10")
 	defaultAgent_2.Status = false
-	defaultAgent_2.Name = "sample-agent"
-	defaultAgent_2.Comment = "This is sample agent"
+	defaultAgent_2.Name = utils.PointerOfCloneString("sample-agent")
+	defaultAgent_2.Comment = utils.PointerOfCloneString("This is sample agent")
 	defaultAgent_2.IspId = 3
 	defaultAgent_2.ProvinceId = 20
 	defaultAgent_2.CityId = 6
@@ -129,7 +130,7 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 		c.Logf("New Agent: %v", newAgent)
 		c.Logf("New Agent[Group Tags]: %v", newAgent.GroupTags)
 
-		c.Assert(newAgent.Name, Equals, currentAddedAgent.Name)
+		c.Assert(newAgent.Name, DeepEquals, currentAddedAgent.Name)
 		c.Assert(newAgent.ConnectionId, Equals, currentAddedAgent.ConnectionId)
 		c.Assert(newAgent.Hostname, Equals, currentAddedAgent.Hostname)
 		c.Assert(newAgent.IpAddress.String(), Equals, currentAddedAgent.IpAddress.String())

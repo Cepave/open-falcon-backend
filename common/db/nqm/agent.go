@@ -1,7 +1,6 @@
 package nqm
 
 import (
-	"database/sql"
 	"fmt"
 	"net"
 	"reflect"
@@ -632,14 +631,8 @@ func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 			"city_id":       newAgent.CityId,
 			"name_tag_id":   newAgent.NameTagId,
 			"connection_id": newAgent.ConnectionId,
-			"name": sql.NullString{
-				newAgent.Name,
-				newAgent.Name != "",
-			},
-			"comment": sql.NullString{
-				newAgent.Comment,
-				newAgent.Comment != "",
-			},
+			"name": newAgent.Name,
+			"comment": newAgent.Comment,
 		},
 	)
 
@@ -690,8 +683,8 @@ func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 			ag_nt_id = ?
 		WHERE ag_id = ?
 		`,
-		sql.NullString{updatedAgent.Name, updatedAgent.Name != ""},
-		sql.NullString{updatedAgent.Comment, updatedAgent.Comment != ""},
+		updatedAgent.Name,
+		updatedAgent.Comment,
 		updatedAgent.Status,
 		updatedAgent.IspId,
 		updatedAgent.ProvinceId,

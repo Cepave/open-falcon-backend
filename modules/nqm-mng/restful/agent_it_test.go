@@ -32,21 +32,21 @@ func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
 func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 	jsonBody := &struct {
 		Name         string   `json:"name"`
+		Comment      string   `json:"comment"`
 		Hostname     string   `json:"hostname"`
 		ConnectionId string   `json:"connection_id"`
 		Status       bool     `json:status`
-		Comment      string   `json:"comment"`
 		IspId        int      `json:"isp_id"`
 		ProvinceId   int      `json:"province_id"`
 		CityId       int      `json:"city_id"`
 		NameTag      string   `json:"name_tag"`
 		GroupTags    []string `json:"group_tags"`
 	}{
-		Name:         "new-agent-ccc",
+		Name:         "ko-name-cc1",
+		Comment:      "cc-name-cc1",
 		Hostname:     "new-host-cccc",
 		Status:       true,
 		ConnectionId: "new-agent@blue.12.91.33",
-		Comment:      "This is new agent by blue 12.91 ***",
 		IspId:        8,
 		ProvinceId:   9,
 		CityId:       130,
@@ -82,10 +82,10 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		}
 
 		c.Assert(jsonResp.Get("name").MustString(), Equals, jsonBody.Name)
+		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
 		c.Assert(jsonResp.Get("connection_id").MustString(), Equals, jsonBody.ConnectionId)
 		c.Assert(jsonResp.Get("ip_address").MustString(), Equals, "0.0.0.0")
 		c.Assert(jsonResp.Get("hostname").MustString(), Equals, jsonBody.Hostname)
-		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
 		c.Assert(jsonResp.Get("status").MustBool(), Equals, jsonBody.Status)
 		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
 		c.Assert(jsonResp.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)

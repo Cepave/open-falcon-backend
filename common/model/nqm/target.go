@@ -14,7 +14,7 @@ type TargetForAdding struct {
 	Host string `json:"host" conform:"trim" validate:"min=1"`
 	ProbedByAll bool `json:"probed_by_all"`
 	Status bool `json:"status"`
-	Comment string `json:"comment" conform:"trim"`
+	Comment *string `json:"comment" conform:"trim"`
 
 	IspId int16 `json:"isp_id" validate:"nonZeroId"`
 	ProvinceId int16 `json:"province_id" validate:"nonZeroId"`
@@ -51,7 +51,7 @@ type Target struct {
 	ProbedByAll bool `gorm:"column:tg_probed_by_all"`
 	Status bool `gorm:"column:tg_status"`
 	Available bool `gorm:"column:tg_available"`
-	Comment string `gorm:"column:tg_comment"`
+	Comment *string `gorm:"column:tg_comment"`
 	CreationTime *time.Time `gorm:"column:tg_created_ts"`
 
 	IspId int16 `gorm:"column:isp_id"`
@@ -89,12 +89,7 @@ func (target *Target) MarshalJSON() ([]byte, error) {
 	jsonObject.Set("status", target.Status)
 	jsonObject.Set("available", target.Available)
 	jsonObject.Set("creation_time", target.CreationTime.Unix())
-
-	if target.Comment != "" {
-		jsonObject.Set("comment", target.Comment)
-	} else {
-		jsonObject.Set("comment", nil)
-	}
+	jsonObject.Set("comment", target.Comment)
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", target.IspId)

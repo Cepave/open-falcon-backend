@@ -8,6 +8,7 @@ import (
 	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
 	otest "github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	. "gopkg.in/check.v1"
 )
 
@@ -18,9 +19,9 @@ var _ = Suite(&TestAgentSuite{})
 // Tests validation of NQM agent
 func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 	testedAgent := &AgentForAdding {
-		Name: " name-1 ",
+		Name: utils.PointerOfCloneString(" name-1 "),
 		ConnectionId: " conn-id-1 ",
-		Comment: " comment-1 ",
+		Comment: utils.PointerOfCloneString(" comment-1 "),
 		Hostname: " hostname-1 ",
 		NameTagValue: " name-tag-1 ",
 		GroupTags: []string{ " gt-1 ", " gt-2 " },
@@ -28,9 +29,9 @@ func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 
 	conform.MustConform(testedAgent)
 
-	c.Assert(testedAgent.Name, Equals, "name-1")
+	c.Assert(testedAgent.Name, DeepEquals, utils.PointerOfCloneString("name-1"))
 	c.Assert(testedAgent.ConnectionId, Equals, "conn-id-1")
-	c.Assert(testedAgent.Comment, Equals, "comment-1")
+	c.Assert(testedAgent.Comment, DeepEquals, utils.PointerOfCloneString("comment-1"))
 	c.Assert(testedAgent.Hostname, Equals, "hostname-1")
 	c.Assert(testedAgent.NameTagValue, Equals, "name-tag-1")
 	c.Assert(testedAgent.GroupTags, DeepEquals, []string{ "gt-1", "gt-2" })
