@@ -97,7 +97,7 @@ func (s *ConformService) conformAnyWithTransformers(anyValue reflect.Value, tran
 			}
 		}
 	case reflect.String:
-		return conformStringValue(finalValueOfAny, transformers)
+		return conformStringValue(anyValue, finalValueOfAny, transformers)
 	default:
 		if len(transformers) > 0 {
 			return e.Errorf("Unsupported type: %v. Pointed type[%v]", typeOfAnyValue, finalTypeOfAnyValue)
@@ -139,23 +139,33 @@ func (s *ConformService) getTransformers(structType reflect.Type, field reflect.
 	return s.transformerCache[uniqName]
 }
 
-func conformStringValue(v reflect.Value, transformers []StringTransformer) error {
+func conformStringValue(sourceValue reflect.Value, finalValue reflect.Value, transformers []StringTransformer) error {
 	if len(transformers) == 0 {
 		return nil
 	}
 
-	v = or.FinalPointedValue(v)
+	finalValue = or.FinalPointedValue(finalValue)
 
-	if v.Kind() != reflect.String {
-		return e.Errorf("Value: %v is not string type: [%v]", v, v.Type())
+	if finalValue.Kind() != reflect.String {
+		return e.Errorf("Value: %v is not string type: [%v]", finalValue, finalValue.Type())
 	}
 
-	stringValue := v.Interface().(string)
+	stringValue := finalValue.Interface().(string)
 	for _, t := range transformers {
 		stringValue = t(stringValue)
 	}
 
-	v.Set(reflect.ValueOf(stringValue))
+	if stringValue == nilString {
+		if sourceValue.Kind() != reflect.Ptr {
+			return e.Errorf("Cannot set xxxToNil to **NON-POINTER** type: %v", sourceValue.Type())
+		}
+
+		sourceValue.Set(reflect.Zero(sourceValue.Type()))
+		return nil
+	}
+
+	finalValue.Set(reflect.ValueOf(stringValue))
+
 	return nil
 }
 
@@ -180,7 +190,16 @@ var patterns = map[string]*regexp.Regexp{
 	"nonAlpha":   regexp.MustCompile("[^\\pL]"),
 	"name":       regexp.MustCompile("[\\p{L}]([\\p{L}|[:space:]|-]*[\\p{L}])*"),
 }
+const nilString = "<@!NilString!@>"
 var buildinTransformer = map[string]StringTransformer {
+	"trimToNil": func(input string) string {
+		s := strings.TrimSpace(input)
+		if s == "" {
+			return nilString
+		}
+
+		return s
+	},
 	"trim": strings.TrimSpace,
 	"ltrim": func (input string) string { return strings.TrimLeft(input, " ") },
 	"rtrim": func (input string) string { return strings.TrimRight(input, " ") },

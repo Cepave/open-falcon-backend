@@ -1,7 +1,6 @@
 package nqm
 
 import (
-	"database/sql"
 	"fmt"
 
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
@@ -373,10 +372,7 @@ func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 			"province_id":   newTarget.ProvinceId,
 			"city_id":       newTarget.CityId,
 			"name_tag_id":   newTarget.NameTagId,
-			"comment": sql.NullString{
-				newTarget.Comment,
-				newTarget.Comment != "",
-			},
+			"comment": newTarget.Comment,
 		},
 	)
 
@@ -451,7 +447,7 @@ func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 		WHERE tg_id = ?
 		`,
 		updatedTarget.Name,
-		sql.NullString{updatedTarget.Comment, updatedTarget.Comment != ""},
+		updatedTarget.Comment,
 		updatedTarget.Status,
 		updatedTarget.IspId,
 		updatedTarget.ProvinceId,

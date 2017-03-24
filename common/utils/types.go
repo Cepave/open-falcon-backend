@@ -54,6 +54,15 @@ var (
 	FalseValue = ot.FalseValue
 )
 
+// If the value of source is empty(""), gets nil pointer
+func PointerOfCloneString(source string) *string {
+	if source == "" {
+		return nil
+	}
+
+	return &source
+}
+
 // Super convertion by reflect
 //
 // 1. Nil pointer would be to nil pointer of target type

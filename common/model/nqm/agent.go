@@ -13,9 +13,9 @@ import (
 
 type AgentForAdding struct {
 	Id           int32  `json:"-"`
-	Name         string `json:"name" conform:"trim"`
+	Name         *string `json:"name" conform:"trimToNil"`
+	Comment      *string `json:"comment" conform:"trimToNil"`
 	ConnectionId string `json:"connection_id" conform:"trim" validate:"min=1"`
-	Comment      string `json:"comment" conform:"trim"`
 	Status       bool   `json:"status"`
 
 	Hostname  string `json:"hostname" conform:"trim" validate:"min=1"`
@@ -63,7 +63,7 @@ func (agent *AgentForAdding) GetIpAddressAsString() string {
 
 type Agent struct {
 	Id                    int32  `gorm:"primary_key:true;column:ag_id"`
-	Name                  string `gorm:"column:ag_name"`
+	Name                  *string `gorm:"column:ag_name"`
 	ConnectionId          string `gorm:"column:ag_connection_id""`
 	Hostname              string `gorm:"column:ag_hostname"`
 	NumOfEnabledPingtasks int32  `gorm:"column:ag_num_of_enabled_pingtasks"`
@@ -71,7 +71,7 @@ type Agent struct {
 	IpAddress net.IP `gorm:"column:ag_ip_address"`
 
 	Status        bool      `gorm:"column:ag_status"`
-	Comment       string    `gorm:"column:ag_comment"`
+	Comment       *string    `gorm:"column:ag_comment"`
 	LastHeartBeat time.Time `gorm:"column:ag_last_heartbeat"`
 
 	IspId   int16  `gorm:"column:isp_id"`
@@ -105,8 +105,8 @@ func (agentView *Agent) ToSimpleJson() *json.Json {
 	jsonObject.Set("status", agentView.Status)
 
 	jsonObject.Set("last_heartbeat_time", ojson.JsonTime(agentView.LastHeartBeat))
-	jsonObject.Set("name", ojson.JsonString(agentView.Name))
-	jsonObject.Set("comment", ojson.JsonString(agentView.Comment))
+	jsonObject.Set("name", agentView.Name)
+	jsonObject.Set("comment", agentView.Comment)
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", agentView.IspId)

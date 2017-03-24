@@ -8,6 +8,8 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	"github.com/Cepave/open-falcon-backend/common/utils"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -87,7 +89,7 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 	modifiedTarget := &nqmModel.TargetForAdding{
 		Name:         "new-tg-1",
-		Comment:      "new-comment-1",
+		Comment:      utils.PointerOfCloneString("new-comment-1"),
 		Status:       false,
 		ProvinceId:   26,
 		CityId:       194,
@@ -102,7 +104,7 @@ func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 
 	c.Assert(err, IsNil)
 	c.Assert(testedTarget.Name, Equals, modifiedTarget.Name)
-	c.Assert(testedTarget.Comment, Equals, modifiedTarget.Comment)
+	c.Assert(testedTarget.Comment, DeepEquals, modifiedTarget.Comment)
 	c.Assert(testedTarget.Status, Equals, modifiedTarget.Status)
 	c.Assert(testedTarget.ProvinceId, Equals, modifiedTarget.ProvinceId)
 	c.Assert(testedTarget.CityId, Equals, modifiedTarget.CityId)
