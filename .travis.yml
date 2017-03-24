@@ -10,7 +10,7 @@ install:
   - make trash
 
 script:
-  - make f2e-api 
+  - make all 
 
 after_success:
   - go test -race -coverprofile=coverage.txt -covermode=atomic github.com/Cepave/open-falcon-backend/modules/query/http
