@@ -9,7 +9,6 @@ import (
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
-	"github.com/dghubble/sling"
 
 	. "gopkg.in/check.v1"
 )
@@ -72,8 +71,8 @@ func (suite *TestPingtaskItSuite) TestGetPingtaskById(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := sling.New().Get(httpClientConfig.String()).
-			Path("/api/v1/nqm/pingtask/" + strconv.Itoa(v.inputID))
+		client := httpClientConfig.NewSlingByBase().
+			Get("api/v1/nqm/pingtask/" + strconv.Itoa(v.inputID))
 
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
@@ -97,8 +96,9 @@ func (suite *TestPingtaskItSuite) TestAddNewPingtask(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/pingtask").BodyJSON(json.UnmarshalToJson([]byte(`
+		client := httpClientConfig.NewSlingByBase().
+			Post("api/v1/nqm/pingtask").
+			BodyJSON(json.UnmarshalToJson([]byte(`
 			{
 			  "period" : 15,
 			  "name" : "廣東",
@@ -120,9 +120,8 @@ func (suite *TestPingtaskItSuite) TestAddNewPingtask(c *C) {
 }
 
 func (suite *TestPingtaskItSuite) TestListPingtasks(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/pingtasks")
-
+	client := httpClientConfig.NewSlingByBase().
+		Get("api/v1/nqm/pingtasks")
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 
 	slintChecker.AssertHasPaging()
@@ -143,8 +142,9 @@ func (suite *TestPingtaskItSuite) TestModifyPingtask(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := sling.New().Put(httpClientConfig.String()).
-			Path("/api/v1/nqm/pingtask/" + strconv.Itoa(v.inputID)).BodyJSON(json.UnmarshalToJson([]byte(`
+		client := httpClientConfig.NewSlingByBase().
+			Put("api/v1/nqm/pingtask/" + strconv.Itoa(v.inputID)).
+			BodyJSON(json.UnmarshalToJson([]byte(`
 			{
 			  "period" : 15,
 			  "name" : "廣東",
@@ -189,8 +189,8 @@ func (suite *TestPingtaskItSuite) TestAddPingtaskToAgentForAgent(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask?pingtask_id=" + strconv.Itoa(v.inputPID))
+		client := httpClientConfig.NewSlingByBase().
+			Post("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask?pingtask_id=" + strconv.Itoa(v.inputPID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
 		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
@@ -213,16 +213,16 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForAgent(c *C) {
 		{24026, 10121, http.StatusOK},
 	}
 	for _, v := range testCases {
-		req, _ := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask?pingtask_id=" + strconv.Itoa(v.inputPID)).
+		req, _ := httpClientConfig.NewSlingByBase().
+			Post("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask?pingtask_id=" + strconv.Itoa(v.inputPID)).
 			Request()
 		client := &http.Client{}
 		client.Do(req)
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := sling.New().Delete(httpClientConfig.String()).
-			Path("/api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask/=" + strconv.Itoa(v.inputPID))
+		client := httpClientConfig.NewSlingByBase().
+			Delete("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask/=" + strconv.Itoa(v.inputPID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
 		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
@@ -246,8 +246,8 @@ func (suite *TestPingtaskItSuite) TestAddPingtaskToAgentForPingtask(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent?agent_id=" + strconv.Itoa(v.inputAID))
+		client := httpClientConfig.NewSlingByBase().
+			Post("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent?agent_id=" + strconv.Itoa(v.inputAID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
 		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
@@ -270,16 +270,16 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForPingtask(c *C) {
 		{10121, 24026, http.StatusOK},
 	}
 	for _, v := range testCases {
-		req, _ := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent?agent_id=" + strconv.Itoa(v.inputAID)).
+		req, _ := httpClientConfig.NewSlingByBase().
+			Post("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent?agent_id=" + strconv.Itoa(v.inputAID)).
 			Request()
 		client := &http.Client{}
 		client.Do(req)
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := sling.New().Delete(httpClientConfig.String()).
-			Path("/api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent/=" + strconv.Itoa(v.inputAID))
+		client := httpClientConfig.NewSlingByBase().
+			Delete("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent/=" + strconv.Itoa(v.inputAID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
 		c.Logf("[Modify Pingtask] JSON Result:\n%s", json.MarshalPrettyJSON(jsonResult))
