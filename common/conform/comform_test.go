@@ -3,6 +3,7 @@ package conform
 import (
 	"reflect"
 
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 )
@@ -111,6 +112,42 @@ func (suite *TestConformSuite) TestMustConform(c *C) {
 
 		// Asserts value
 		assertFunc(testCase.value, testCase.checker, testCase.expected, comment)
+	}
+}
+
+// Tests the trimming to nil
+func (suite *TestConformSuite) TestTrimToNil(c *C) {
+	ps := utils.PointerOfCloneString
+
+	testCases := []*struct {
+		source interface{}
+		expected interface{}
+	} {
+		{ ps(""), (*string)(nil) },
+		{ ps("    "), (*string)(nil) },
+		{ ps(" ACB "), ps("ACB") },
+		{ []*string{ ps("  "), ps(""), ps(" K-1 ") }, []*string{ nil, nil, ps("K-1") } },
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		newStructType := reflect.StructOf([]reflect.StructField {
+			reflect.StructField {
+				Name: "PtrField",
+				Type: reflect.TypeOf(testCase.expected),
+				Tag: `conform:"trimToNil"`,
+			},
+		})
+		structPtrValue := reflect.New(newStructType)
+		targetField := structPtrValue.Elem().Field(0)
+
+		targetField.Set(reflect.ValueOf(testCase.source))
+		MustConform(structPtrValue.Interface())
+
+		c.Logf("Conformed value: %v", targetField.Interface())
+		c.Assert(targetField.Interface(), DeepEquals, testCase.expected, comment)
 	}
 }
 
