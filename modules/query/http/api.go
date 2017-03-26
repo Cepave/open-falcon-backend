@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,6 +26,13 @@ type Tag struct {
 	Value      string
 	CreateAt   string
 	UpdateAt   string
+}
+
+type Remark struct {
+	User string
+	Sig  string
+	Host string
+	Text string
 }
 
 /**
@@ -1454,6 +1462,133 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 	setResponse(rw, nodes)
 }
 
+func getApolloRemark(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := map[string]map[string]string{}
+	arguments := strings.Split(req.URL.Path, "/")
+	hostnames := strings.Split(arguments[4], ",")
+	var rows []orm.Params
+	o := orm.NewOrm()
+	sql := "SELECT remark, account, name, email, updated FROM `apollo`.`remarks`"
+	sql += " WHERE hostname = ? ORDER BY updated DESC LIMIT 1"
+	for _, hostname := range hostnames {
+		num, err := o.Raw(sql, hostname).Values(&rows)
+		if err != nil {
+			setError(err.Error(), result)
+		} else if num > 0 {
+			row := rows[0]
+			remark := map[string]string{
+				"remark": row["remark"].(string),
+				"account": row["account"].(string),
+				"name": row["name"].(string),
+				"email": row["email"].(string),
+				"updated": row["updated"].(string),
+			}
+			items[hostname] = remark
+		}
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
+func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+
+	decoder := json.NewDecoder(req.Body)
+	var remark Remark
+	err := decoder.Decode(&remark)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	defer req.Body.Close()
+	user := map[string]string{
+		"account": remark.User,
+		"userID": "",
+		"name": "",
+		"email": "",
+	}
+	login := false
+
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT id, cnname, email FROM `uic`.`user` WHERE name = ? LIMIT 1"
+	num, err := o.Raw(sql, remark.User).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		user["userID"] = rows[0]["id"].(string)
+		user["name"] = rows[0]["cnname"].(string)
+		user["email"] = rows[0]["email"].(string)
+	}
+	sql = "SELECT expired FROM `uic`.`session` WHERE sig = ? ORDER BY expired DESC LIMIT 1"
+	num, err = o.Raw(sql, remark.Sig).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		expired := rows[0]["expired"].(string)
+		expiredTimestamp, err := strconv.Atoi(expired)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			if int64(expiredTimestamp) > time.Now().Unix() {
+				login = true
+			}
+		}
+	}
+	if login {
+		text := remark.Text
+		text = strings.Replace(text, "\r", " ", -1)
+		text = strings.Replace(text, "\n", " ", -1)
+		text = strings.Replace(text, "\t", " ", -1)
+		text = strings.TrimSpace(text)
+		re_inside_whiteSpaces := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
+		text = re_inside_whiteSpaces.ReplaceAllString(text, " ")
+		if len(text) > 500 {
+			text = string([]rune(text)[0:250])
+		}
+		sql = "INSERT INTO `apollo`.`remarks`(`hostname`, `remark`, `userid`,"
+		sql += "`account`, `name`, `email`, `updated`) VALUES(?, ?, ?, ?, ?, ?, ?)"
+		_, err := o.Raw(sql, remark.Host, text, user["userID"], remark.User,
+			user["name"], user["email"], getNow()).Exec()
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			sql = "SELECT remark, account, name, email, updated "
+			sql += "FROM `apollo`.`remarks` WHERE hostname = ? "
+			sql += "ORDER BY updated DESC LIMIT 1"
+			num, err := o.Raw(sql, remark.Host).Values(&rows)
+			if err != nil {
+				setError(err.Error(), result)
+			} else if num > 0 {
+				item := map[string]string{}
+				item["hostname"] = remark.Host
+				item["remark"] = rows[0]["remark"].(string)
+				item["account"] = rows[0]["account"].(string)
+				item["name"] = rows[0]["name"].(string)
+				item["email"] = rows[0]["email"].(string)
+				item["updated"] = rows[0]["updated"].(string)
+				items = append(items, item)
+			}
+		}
+	} else {
+		result["error"] = append(result["error"].([]string), "Please log in first.")
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
 func getIPFromHostname(hostname string, result map[string]interface{}) string {
 	ip := ""
 	fragments := strings.Split(hostname, "-")
@@ -2454,6 +2589,8 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
+	http.HandleFunc("/api/apollo/remarks/add", addApolloRemark)
+	http.HandleFunc("/api/apollo/remarks/", getApolloRemark)
 	http.HandleFunc("/api/platforms", getPlatforms)
 	http.HandleFunc("/api/platforms/", parsePlatformArguments)
 	http.HandleFunc("/api/hosts/", getHostsBandwidths)
