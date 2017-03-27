@@ -1742,6 +1742,8 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 	}
 	hostnames = ISPs["all"]
 	metrics := getMetricsByMetricType("bandwidths")
+	start, end := convertDurationToPoint(duration, result)
+	diff := end - start
 	data := getGraphQueryData(metrics, duration, hostnames, 1200, result)
 	if len(data) > 0 {
 		index := -1
@@ -1759,8 +1761,6 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 				}
 			}
 		}
-		start, end := convertDurationToPoint(duration, result)
-		diff := end - start
 		unit := 5
 		if diff < 1200 {
 			unit = 1
@@ -1856,6 +1856,100 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 			}
 		}
 	}
+
+	year, month, day := time.Now().Date()
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	today := time.Date(year, month, day, 0, 0, 0, 0, loc).Format("2006-01-02")
+	today += "%"
+	meansMap := map[string]int{}
+	deviationsMap := map[string]int{}
+	tickers := []string{}
+	sql = "SELECT DATE_FORMAT(date, '%Y-%m-%d %H:%i'), mean, deviation FROM `apollo`.`deviations`"
+	sql += " WHERE platform = ? AND metric = 1 AND date LIKE ? ORDER BY date ASC"
+	num, err = o.Raw(sql, platformName, today).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if (num > 0) && (diff > 600) {
+		for _, row := range rows {
+			ticker := row["DATE_FORMAT(date, '%Y-%m-%d %H:%i')"].(string)
+			mean := 0
+			value, err := strconv.Atoi(row["mean"].(string))
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				mean = value
+			}
+			deviation := 0
+			value, err = strconv.Atoi(row["deviation"].(string))
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				deviation = value
+			}
+			meansMap[ticker] = mean
+			deviationsMap[ticker] = deviation
+			tickers = append(tickers, ticker)
+		}
+		oneSigma := map[string]int{}
+		twoSigma := map[string]int{}
+		threeSigma := map[string]int{}
+		for _, ticker := range tickers {
+			mean := meansMap[ticker]
+			deviation := deviationsMap[ticker]
+			oneSigma[ticker] = mean + deviation
+			twoSigma[ticker] = mean + (deviation * 2)
+			threeSigma[ticker] = mean + (deviation * 3)
+		}
+		oneSigmaSeries := [][]int{}
+		twoSigmaSeries := [][]int{}
+		threeSigmaSeries := [][]int{}
+		for _, ticker := range tickers {
+			timestamp := getTimestampFromTicker(ticker)
+			oneSigmaValue := []int{
+				int(timestamp * 1000),
+				oneSigma[ticker],
+			}
+			twoSigmaValue := []int{
+				int(timestamp * 1000),
+				twoSigma[ticker],
+			}
+			threeSigmaValue := []int{
+				int(timestamp * 1000),
+				threeSigma[ticker],
+			}
+			oneSigmaSeries = append(oneSigmaSeries, oneSigmaValue)
+			twoSigmaSeries = append(twoSigmaSeries, twoSigmaValue)
+			threeSigmaSeries = append(threeSigmaSeries, threeSigmaValue)
+		}
+		item := map[string]interface{}{
+			"data":       oneSigmaSeries,
+			"hostsCount": len(ISPs["all"]),
+			"ISP":        "all",
+			"metric":     "sigma.x1",
+			"platform":   platformName,
+		}
+		items = append(items, item)
+		item = map[string]interface{}{
+			"data":       twoSigmaSeries,
+			"hostsCount": len(ISPs["all"]),
+			"ISP":        "all",
+			"metric":     "sigma.x2",
+			"platform":   platformName,
+		}
+		items = append(items, item)
+		item = map[string]interface{}{
+			"data":       threeSigmaSeries,
+			"hostsCount": len(ISPs["all"]),
+			"ISP":        "all",
+			"metric":     "sigma.x3",
+			"platform":   platformName,
+		}
+		items = append(items, item)
+	}
+
 	result["items"] = items
 	nodes["result"] = result
 	nodes["count"] = len(items)

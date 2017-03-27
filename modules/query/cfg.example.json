@@ -10,9 +10,17 @@
         "enabled": true,
         "interval": 3600
     },
+    "deviations": {
+        "enabled": true,
+        "time": "03:00"
+    },
     "hosts": {
         "enabled": true,
         "interval": 60
+    },
+    "net": {
+        "enabled": true,
+        "time": "01:00"
     },
     "speed": {
         "enabled": true,
@@ -51,6 +59,11 @@
     },
     "db": {
         "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
+    "apollodb": {
+        "addr": "root:@tcp(127.0.0.1:3306)/apollo?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
     },

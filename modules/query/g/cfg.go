@@ -6,9 +6,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/Cepave/open-falcon-backend/modules/query/logger"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
 )
 
@@ -27,7 +26,7 @@ type HostsConfig struct {
 	Interval int  `json:"interval"`
 }
 
-type SpeedConfig struct {
+type NetConfig struct {
 	Enabled bool   `json:"enabled"`
 	Time    string `json:"time"`
 }
@@ -54,10 +53,10 @@ type ApiConfig struct {
 	Event     string `json:"event"`
 	Geo       string `json:"geo"`
 	Map       string `json:"map"`
+	Max       int    `json:"max"`
 	Platform  string `json:"platform"`
 	Query     string `json:"query"`
 	Uplink    string `json:"uplink"`
-	Max       int    `json:"max"`
 }
 
 type DbConfig struct {
@@ -88,23 +87,26 @@ type GraphDB struct {
 }
 
 type GlobalConfig struct {
-	Debug    bool            `json:"debug"`
-	RootDir  string          `json:"root_dir"`
-	Http     *HttpConfig     `json:"http"`
-	Contacts *ContactsConfig `json:"contacts"`
-	Hosts    *HostsConfig    `json:"hosts"`
-	Speed    *SpeedConfig    `json:"speed"`
-	Api      *ApiConfig      `json:"api"`
-	Graph    *GraphConfig    `json:"graph"`
-	Db       *DbConfig       `json:"db"`
-	BossDB   *DbConfig       `json:"bossdb"`
-	Local    string          `json:"local"`
-	NqmLog   *NqmLogConfig   `json:"nqmlog"`
-	Nqm      *NqmConfig      `json:"nqm"`
-	Grpc     *GrpcConfig     `json:"grpc"`
-	GinHttp  *GinHttpConfig  `json:"gin_http"`
-	GraphDB  *GraphDB        `json:"graphdb"`
-	Fe       string          `json:"fe"`
+	Debug      bool            `json:"debug"`
+	RootDir    string          `json:"root_dir"`
+	Http       *HttpConfig     `json:"http"`
+	Contacts   *ContactsConfig `json:"contacts"`
+	Hosts      *HostsConfig    `json:"hosts"`
+	Deviations *NetConfig      `json:"deviations"`
+	Net        *NetConfig      `json:"net"`
+	Speed      *NetConfig      `json:"speed"`
+	Api        *ApiConfig      `json:"api"`
+	Graph      *GraphConfig    `json:"graph"`
+	Db         *DbConfig       `json:"db"`
+	ApolloDB   *DbConfig       `json:"apollodb"`
+	BossDB     *DbConfig       `json:"bossdb"`
+	Local      string          `json:"local"`
+	NqmLog     *NqmLogConfig   `json:"nqmlog"`
+	Nqm        *NqmConfig      `json:"nqm"`
+	Grpc       *GrpcConfig     `json:"grpc"`
+	GinHttp    *GinHttpConfig  `json:"gin_http"`
+	GraphDB    *GraphDB        `json:"graphdb"`
+	Fe         string          `json:"fe"`
 }
 
 var (
