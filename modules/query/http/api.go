@@ -1395,16 +1395,31 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	data := []*cmodel.GraphQueryResponse{}
+	step := 1
+	start, end := convertDurationToPoint(duration, result)
+	diff := math.Abs(float64(end - start))
+	if diff > 3600 {
+		step = 1200
+	}
 	if metricType == "disks" || metricType == "io" {
+		dataOfHost := []*cmodel.GraphQueryResponse{}
 		for _, hostname := range hostnames {
 			metrics = getDisksIOMetrics(hostname, metricType)
-			dataOfHost := getGraphQueryData(metrics, duration, []string{hostname}, 1, result)
+			if diff < 300 {
+				dataOfHost = getGraphLastData(metrics, []string{hostname}, result)
+			} else {
+				dataOfHost = getGraphQueryData(metrics, duration, []string{hostname}, step, result)
+			}
 			for _, series := range dataOfHost {
 				data = append(data, series)
 			}
 		}
 	} else {
-		data = getGraphQueryData(metrics, duration, hostnames, 1, result)
+		if diff < 300 {
+			data = getGraphLastData(metrics, hostnames, result)
+		} else {
+			data = getGraphQueryData(metrics, duration, hostnames, step, result)
+		}
 	}
 	for _, series := range data {
 		metric := series.Counter
@@ -1940,55 +1955,49 @@ func getTimestampFromTicker(ticker string) int64 {
 	return timestamp
 }
 
+func getGraphLastData(metrics []string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+	var data []*cmodel.GraphQueryResponse
+	for _, metric := range metrics {
+		for _, hostname := range hostnames {
+			param := cmodel.GraphLastParam{
+				Endpoint: hostname,
+				Counter: metric,
+			}
+			resp, err := graph.Last(param)
+			if err != nil {
+				log.Errorf(err.Error())
+			} else if resp != nil {
+				item := cmodel.RRDData{
+					Timestamp: resp.Value.Timestamp,
+					Value: resp.Value.Value,
+				}
+				values := []*cmodel.RRDData{}
+				values = append(values, &item)
+				datum := cmodel.GraphQueryResponse{
+					Endpoint: resp.Endpoint,
+					Counter: resp.Counter,
+					Values: values,
+				}
+				data = append(data, &datum)
+			}
+		}
+	}
+	return data
+}
+
 func getGraphQueryData(metrics []string, duration string, hostnames []string, step int, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	var data []*cmodel.GraphQueryResponse
 	start, end := convertDurationToPoint(duration, result)
-	if (time.Now().Unix() - start) < 600 {
-		data = getGraphQueryResponse(hostnames, metrics, "3min", "MAX", 60, result)
-		timestamp := int64(0)
-		for key, series := range data {
-			max := cmodel.JsonFloat(0)
-			for _, rrdObj := range series.Values {
-				value := rrdObj.Value
-				timestamp = rrdObj.Timestamp
-				if max < value {
-					max = value
-				}
-			}
-			item := cmodel.RRDData{}
-			item.Timestamp = timestamp
-			item.Value = max
-			values := []*cmodel.RRDData{}
-			values = append(values, &item)
-			series.Values = values
-			data[key] = series
-		}
+	if (time.Now().Unix() - start) < 200 {
+		data = getGraphLastData(metrics, hostnames, result)
 	} else {
 		data = getGraphQueryResponse(hostnames, metrics, duration, "AVERAGE", step, result)
-	}
-	diff := time.Now().Unix() - end
-	secondsInHalfDay := int64(43200)
-	if ((end - start) > secondsInHalfDay) && (diff < 600) && (len(data) > 0) {
-		dataRecent := getGraphQueryResponse(hostnames, metrics, "3min", "MAX", 60, result)
-		timestamp := int64(0)
-		for key, series := range dataRecent {
-			max := cmodel.JsonFloat(0)
-			for _, rrdObj := range series.Values {
-				value := rrdObj.Value
-				timestamp = rrdObj.Timestamp
-				if max < value {
-					max = value
-				}
-			}
-			item := cmodel.RRDData{}
-			item.Timestamp = timestamp
-			item.Value = max
-			values := []*cmodel.RRDData{}
-			values = append(values, &item)
-			series.Values = values
-			dataRecent[key] = series
+		diff := time.Now().Unix() - end
+		secondsInHalfDay := int64(43200)
+		if ((end - start) > secondsInHalfDay) && (diff < 600) && (len(data) > 0) {
+			dataRecent := getGraphLastData(metrics, hostnames, result)
+			data = addRecentData(data, dataRecent)
 		}
-		data = addRecentData(data, dataRecent)
 	}
 	return data
 }
