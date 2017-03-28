@@ -48,10 +48,15 @@ func (query *AgentQueryWithPingTask) HasAppliedCondition() bool {
 type TargetQuery struct {
 	Name               string `mvc:"query[name]"`
 	Host               string `mvc:"query[host]"`
-	HasIspId           bool
-	IspId              int16 `mvc:"query[isp_id]"`
-	HasStatusCondition bool
+	IspId              int16 `mvc:"query[isp_id] default[-2]"`
 	Status             bool `mvc:"query[status]"`
+	HasStatus          string `mvc:"query[status] default[!N!]"`
+}
+func (q *TargetQuery) HasIspId() bool {
+	return q.IspId != -2
+}
+func (q *TargetQuery) HasStatusCondition() bool {
+	return q.HasStatus != "!N!"
 }
 
 type AgentFilter struct {
