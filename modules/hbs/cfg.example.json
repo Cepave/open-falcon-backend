@@ -8,5 +8,13 @@
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:6031"
+    },
+    "nqm" : {
+        "queue_size": {
+            "refresh_agent_ping_list": 8
+        },
+        "cache_minutes": {
+            "agent_ping_list": 20
+        }
     }
 }

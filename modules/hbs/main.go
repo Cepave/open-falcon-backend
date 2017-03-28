@@ -29,6 +29,7 @@ func main() {
 
 	db.Init()
 	cache.Init()
+	rpc.InitPackage(vipercfg.Config())
 
 	go cache.DeleteStaleAgents()
 

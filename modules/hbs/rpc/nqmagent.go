@@ -14,12 +14,8 @@ import (
 	"github.com/asaskevich/govalidator"
 )
 
-var nqmAgentHbsService = nqmService.NewAgentHbsService(
-	nqmService.AgentHbsServiceConfig {
-		QueueSizeOfRefreshCacheOfPingList: 8,
-		CacheTimeoutMinutes: 60,
-	},
-)
+var nqmAgentHbsService *nqmService.AgentHbsService = nil
+
 
 // Task retrieves the configuration of measurement tasks for certain client
 //
