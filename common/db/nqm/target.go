@@ -171,10 +171,10 @@ func ListTargets(query *nqmModel.TargetQuery, paging commonModel.Paging) ([]*nqm
 		if query.Host != "" {
 			dbListTargets = dbListTargets.Where("tg_host LIKE ?", query.Host+"%")
 		}
-		if query.HasIspId {
+		if query.HasIspId() {
 			dbListTargets = dbListTargets.Where("tg_isp_id = ?", query.IspId)
 		}
-		if query.HasStatusCondition {
+		if query.HasStatusCondition() {
 			dbListTargets = dbListTargets.Where("tg_status = ?", query.Status)
 		}
 		// :~)

@@ -48,9 +48,12 @@ func (s *TestPingtaskItSuite) TearDownTest(c *C) {
 	case
 		"TestPingtaskItSuite.TestGetPingtaskById",
 		"TestPingtaskItSuite.TestListPingtasks",
-		"TestPingtaskItSuite.TestModifyPingtask",
-		"TestPingtaskItSuite.TestAddNewPingtask":
+		"TestPingtaskItSuite.TestModifyPingtask":
 		inTx(nqmTestinglDb.DeletePingtaskSQL)
+	case "TestPingtaskItSuite.TestAddNewPingtask":
+		inTx(
+			`DELETE FROM nqm_ping_task WHERE pt_name = 'tadd-pt-1'`,
+		)
 	case
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForAgent",
@@ -101,7 +104,7 @@ func (suite *TestPingtaskItSuite) TestAddNewPingtask(c *C) {
 			BodyJSON(json.UnmarshalToJson([]byte(`
 			{
 			  "period" : 15,
-			  "name" : "廣東",
+			  "name" : "tadd-pt-1",
 			  "enable" : true,
 			  "comment" : "This is for some purpose",
 			  "filter" : {

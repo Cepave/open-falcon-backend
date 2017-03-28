@@ -194,11 +194,11 @@ func (s *TestTargetItSuite) SetUpTest(c *C) {
 		inTx(
 			`
 			INSERT INTO nqm_target(
-				tg_id, tg_name, tg_host
+				tg_id, tg_name, tg_host, tg_status, tg_available
 			)
-			VALUES(40901, 'tg-name-1', 'tg-1.fastweb.com'),
-				(40902, 'tg-name-2', 'tg-2.fastweb.com'),
-				(40903, 'tg-name-3', 'tg-3.fastweb.com')
+			VALUES(40901, 'tg-name-1', 'tg-1.fastweb.com', true, true),
+				(40902, 'tg-name-2', 'tg-2.fastweb.com', true, true),
+				(40903, 'tg-name-3', 'tg-3.fastweb.com', true, true)
 			`,
 		)
 	case "TestTargetItSuite.TestModifyTarget":
