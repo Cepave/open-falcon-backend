@@ -9,5 +9,13 @@
         "enabled": true,
         "listen": "%%HBS_HTTP%%"
     },
-    "gitrepo": "https://gitlab.com/Cepave/OwlPlugin.git"
+    "gitrepo": "https://gitlab.com/Cepave/OwlPlugin.git",
+    "nqm" : {
+        "queue_size": {
+            "refresh_agent_ping_list": 8
+        },
+        "cache_minutes": {
+            "agent_ping_list": 20
+        }
+    }
 }
