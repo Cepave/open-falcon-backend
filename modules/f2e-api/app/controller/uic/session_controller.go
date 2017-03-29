@@ -8,6 +8,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	log "github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -95,8 +96,13 @@ func AuthSession(c *gin.Context) {
 
 func CreateRoot(c *gin.Context) {
 	password := c.DefaultQuery("password", "")
-	if password == "" {
+	signupDisable := viper.GetBool("signup_disable")
+	switch {
+	case password == "":
 		h.JSONR(c, badstatus, "password is empty, please check it")
+		return
+	case signupDisable:
+		h.JSONR(c, badstatus, "sign up is not enabled, please contact administrator")
 		return
 	}
 	password = utils.HashIt(password)

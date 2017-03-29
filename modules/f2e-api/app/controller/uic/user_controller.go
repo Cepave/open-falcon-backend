@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"gopkg.in/gin-gonic/gin.v1"
-	"github.com/jinzhu/gorm"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
+	log "github.com/Sirupsen/logrus"
+	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 type APIUserInput struct {
@@ -27,12 +28,17 @@ type APIUserInput struct {
 func CreateUser(c *gin.Context) {
 	var inputs APIUserInput
 	err := c.Bind(&inputs)
+	signupDisable := viper.GetBool("signup_disable")
+
 	switch {
 	case err != nil:
 		h.JSONR(c, http.StatusBadRequest, err)
 		return
 	case utils.HasDangerousCharacters(inputs.Cnname):
 		h.JSONR(c, http.StatusBadRequest, "name pattern is invalid")
+		return
+	case signupDisable:
+		h.JSONR(c, badstatus, "sign up is not enabled, please contact administrator")
 		return
 	}
 	var user uic.User
