@@ -4,21 +4,28 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"gopkg.in/gin-gonic/gin.v1"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
+	log "github.com/Sirupsen/logrus"
+	"github.com/spf13/viper"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
-func Login(c *gin.Context) {
-	name := c.DefaultQuery("name", "")
-	password := c.DefaultQuery("password", "")
+type APILoginInput struct {
+	Name     string `json:"name"  form:"name" binding:"required"`
+	Password string `json:"password"  form:"password" binding:"required"`
+}
 
-	if name == "" || password == "" {
+func Login(c *gin.Context) {
+	inputs := APILoginInput{}
+	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, "name or password is blank")
 		return
 	}
+	name := inputs.Name
+	password := inputs.Password
+
 	user := uic.User{
 		Name: name,
 	}
@@ -89,8 +96,13 @@ func AuthSession(c *gin.Context) {
 
 func CreateRoot(c *gin.Context) {
 	password := c.DefaultQuery("password", "")
-	if password == "" {
+	signupDisable := viper.GetBool("signup_disable")
+	switch {
+	case password == "":
 		h.JSONR(c, badstatus, "password is empty, please check it")
+		return
+	case signupDisable:
+		h.JSONR(c, badstatus, "sign up is not enabled, please contact administrator")
 		return
 	}
 	password = utils.HashIt(password)

@@ -8,6 +8,7 @@
     "db_bug": true
   },
   "log_level": "debug",
+  "signup_disable": false,
   "graphs": {
     "cluster": {
       "graph-01": "garph1.com:6070",
