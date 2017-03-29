@@ -4,21 +4,27 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-	"gopkg.in/gin-gonic/gin.v1"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
+	log "github.com/Sirupsen/logrus"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
-func Login(c *gin.Context) {
-	name := c.DefaultQuery("name", "")
-	password := c.DefaultQuery("password", "")
+type APILoginInput struct {
+	Name     string `json:"name"  form:"name" binding:"required"`
+	Password string `json:"password"  form:"password" binding:"required"`
+}
 
-	if name == "" || password == "" {
+func Login(c *gin.Context) {
+	inputs := APILoginInput{}
+	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, "name or password is blank")
 		return
 	}
+	name := inputs.Name
+	password := inputs.Password
+
 	user := uic.User{
 		Name: name,
 	}
