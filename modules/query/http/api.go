@@ -1277,6 +1277,7 @@ func completeApolloFiltersData(hostsInput []map[string]string, result map[string
 		} else {
 			keywords[platform] = []string{id}
 		}
+		host["platform"] = strings.Join(tags, ",")
 		host["tag"] = strings.Join(tags, ",")
 		delete(host, "activate")
 		delete(host, "city")
@@ -2250,15 +2251,17 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 				index = key
 			}
 		}
-		for _, rrdObj := range data[index].Values {
-			ticker := getTicker(rrdObj.Timestamp, 5)
-			if _, ok := tickersMap[ticker]; !ok {
-				if len(ticker) > 0 {
-					tickersMap[ticker] = float64(0)
-					tickers = append(tickers, ticker)
+		if index >= 0 {
+			for _, rrdObj := range data[index].Values {
+				ticker := getTicker(rrdObj.Timestamp, 5)
+				if _, ok := tickersMap[ticker]; !ok {
+					if len(ticker) > 0 {
+						tickersMap[ticker] = float64(0)
+						tickers = append(tickers, ticker)
+					}
 				}
+				timestamps = append(timestamps, rrdObj.Timestamp)
 			}
-			timestamps = append(timestamps, rrdObj.Timestamp)
 		}
 		if len(tickers) > 0 {
 			for _, metric := range metrics {
