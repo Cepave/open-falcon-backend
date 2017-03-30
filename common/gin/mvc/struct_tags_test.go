@@ -5,13 +5,14 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"reflect"
+	"strings"
 
 	"gopkg.in/gin-gonic/gin.v1"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
-	otest "github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 )
@@ -22,162 +23,234 @@ var _ = Suite(&TestStructTagsSuite{})
 
 // Tests the building of loader
 func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
-	type sampleCar struct {
-		F1 string `mvc:"query[easy-1]"`
-		F11 string `mvc:"query[easy-2] default[something-1]"` // Default value
-		F2 int `mvc:"cookie[kc1]"`
-		F3 float32 `mvc:"param[kc1]"`
-		F4 int8 `mvc:"form[kc1]"`
-		F5 string `mvc:"header[sure]"`
-		F6 string `mvc:"req[ContentLength]"`
-		F7 int32 `mvc:"key[col-1]"`
-		F77 int32 `mvc:"key[col-2] default[-13]"` // Default value on *gin.Context key
-		FA1 []int32 `mvc:"query[easy-1]"` // Normal array
-		FA11 []uint8 `mvc:"query[noV] default[9,8,13]"` // default value of array
-		FA2 []string `mvc:"key[ks1]"` // default value on *gin.Context key
-		FA22 []uint16 `mvc:"key[ks2] default[12,76,33]"` // default value on *gin.Context key
-		FE1 int `mvc:"query[c1]"` // empty to default value of golang
-		None string
+	getReqSetup := func(context *gin.Context) {
+		context.Request = httptest.NewRequest("GET", "/query?qv-1=hello3&qv-2=56&nv=32&nv=76", nil)
+		context.Request.Header.Add("Cookie", "ck_1=hello98")
+		context.Request.Header.Add("Cookie", "ck_2=77")
+
+		context.Request.Header.Add("hvv1", "hello24")
+		context.Request.Header.Add("hvv2", "278")
+
+		context.Set("kg-1", "hello45")
+		context.Set("kg-2", "871")
+		context.Set("kg-3", nil)
+	}
+	postReqSetup := func(context *gin.Context) {
+		params := make(url.Values)
+		params.Add("fv-1", "hello256")
+		params.Add("fv-2", "23")
+		params.Add("fv-2", "56")
+
+		context.Request = httptest.NewRequest(
+			"POST", "/query?qv-1=hello3&qv-2=56&nv=32&nv=76",
+			strings.NewReader(params.Encode()),
+		)
+		context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
 
 	testCases := []*struct {
-		fieldName string
+		sampleType reflect.Type
+		sampleTag reflect.StructTag
 		setupFunc func(*gin.Context)
 		expectedValue interface{}
 	} {
-		{
-			"None",
-			func(ginC *gin.Context) {},
-			"",
+		/**
+		 * Query parameters
+		 */
+		{ // Viable value
+			rt.TypeOfString, `mvc:"query[qv-1]"`,
+			getReqSetup, "hello3",
 		},
-		{
-			"F1",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{
-					URL: otest.ParseRequestUri(c, "/query?easy-1=38"),
-				}
-			},
-			"38",
+		{ // Default value
+			rt.TypeOfString, `mvc:"query[qv-3] default[sde-13]"`,
+			getReqSetup, "sde-13",
 		},
-		{
-			"F11",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{
-					URL: otest.ParseRequestUri(c, "/query"),
-				}
-			},
-			"something-1",
+		{ // Default value of go lang
+			rt.TypeOfInt, `mvc:"query[qvn-3]"`,
+			getReqSetup, 0,
 		},
-		{
-			"F2",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{ Header: make(http.Header) }
-				ginC.Request.Header.Add("Cookie", "kc1=129")
-			},
-			129,
+		{ // Viable value with type conversion
+			rt.TypeOfInt16, `mvc:"query[qv-2]"`,
+			getReqSetup, int16(56),
 		},
-		{
-			"F3",
-			func(ginC *gin.Context) {
-				ginC.Params = make([]gin.Param, 1)
-				ginC.Params[0] = gin.Param { Key: "kc1", Value: "54.61" }
-			},
-			float32(54.61),
+		{ // Checked param(true)
+			rt.TypeOfBool, `mvc:"query[?qv-1]"`,
+			getReqSetup, true,
 		},
-		{
-			"F4",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{}
-				ginC.Request.PostForm, _ = url.ParseQuery("kc1=17")
-			},
-			int8(17),
+		{ // Checked param(false)
+			rt.TypeOfBool, `mvc:"query[?qv-3]"`,
+			getReqSetup, false,
 		},
-		{
-			"F5",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{ Header: make(http.Header) }
-				ginC.Request.Header.Set("sure", "gc-091-KC1")
-			},
-			"gc-091-KC1",
+		{ // Viable slice
+			rt.STypeOfString, `mvc:"query[nv]"`,
+			getReqSetup, []string{ "32", "76" },
 		},
-		{
-			"F6",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{}
-				ginC.Request.ContentLength = 98761
-			},
-			"98761",
+		{ // Vialbe slice with type conversion
+			rt.STypeOfUint16, `mvc:"query[nv]"`,
+			getReqSetup, []uint16{ 32, 76 },
 		},
-		{
-			"F7",
-			func(ginC *gin.Context) {
-				ginC.Set("col-1", "981")
-			},
-			int32(981),
+		{ // Default value
+			rt.STypeOfUint32, `mvc:"query[nv9] default[88,76,39]"`,
+			getReqSetup, []uint32{ 88, 76, 39 },
 		},
-		{
-			"F77",
-			func(ginC *gin.Context) {},
-			int32(-13),
+		// :~)
+
+		/**
+		 * Form parameters
+		 */
+		{ // Viable value
+			rt.TypeOfString, `mvc:"form[fv-1]"`,
+			postReqSetup, "hello256",
 		},
-		{
-			"FA1",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{
-					URL: otest.ParseRequestUri(c, "/query?easy-1=38&easy-1=91"),
-				}
-			},
-			[]int32 { 38, 91 },
+		{ // Default value
+			rt.TypeOfString, `mvc:"form[fv-3] default[ffcc-013]"`,
+			postReqSetup, "ffcc-013",
 		},
-		{
-			"FA11",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{
-					URL: otest.ParseRequestUri(c, "/query"),
-				}
-			},
-			[]uint8 { 9, 8, 13 },
+		{ // Default value of go lang
+			rt.TypeOfUint8, `mvc:"form[nff]"`,
+			postReqSetup, uint8(0),
 		},
-		{
-			"FA2",
-			func(ginC *gin.Context) {
-				ginC.Set("ks1", []int{ 81, 71, 62 })
-			},
-			[]string { "81", "71", "62" },
+		{ // Viable value with type conversion
+			rt.TypeOfInt16, `mvc:"form[fv-2]"`,
+			postReqSetup, int16(23),
 		},
-		{
-			"FA22",
-			func(ginC *gin.Context) {},
-			[]uint16 { 12, 76, 33 },
+		{ // Checked param(true)
+			rt.TypeOfBool, `mvc:"form[?fv-1]"`,
+			postReqSetup, true,
 		},
-		{
-			"FE1",
-			func(ginC *gin.Context) {
-				ginC.Request = &http.Request{
-					URL: otest.ParseRequestUri(c, "/query"),
-				}
-			},
-			int(0),
+		{ // Checked param(false)
+			rt.TypeOfBool, `mvc:"form[?nfv03]"`,
+			postReqSetup, false,
+		},
+		{ // Viable slice
+			rt.STypeOfString, `mvc:"form[fv-2]"`,
+			postReqSetup, []string{ "23", "56" },
+		},
+		{ // Vialbe slice with type conversion
+			rt.STypeOfUint16, `mvc:"form[fv-2]"`,
+			postReqSetup, []uint16{ 23, 56 },
+		},
+		{ // Default value
+			rt.STypeOfUint32, `mvc:"form[ng55] default[28,176,89]"`,
+			postReqSetup, []uint32{ 28, 176, 89 },
+		},
+		// :~)
+
+		/**
+		 * Headers
+		 */
+		{ // Viable value
+			rt.TypeOfString, `mvc:"header[hvv1]"`,
+			getReqSetup, "hello24",
+		},
+		{ // Default value
+			rt.TypeOfString, `mvc:"header[hvv3] default[gd-103]"`,
+			getReqSetup, "gd-103",
+		},
+		{ // Default value of go lang
+			rt.TypeOfInt16, `mvc:"query[hvv722]"`,
+			getReqSetup, int16(0),
+		},
+		{ // Viable value with type conversion
+			rt.TypeOfInt32, `mvc:"header[hvv2]"`,
+			getReqSetup, int32(278),
+		},
+		{ // Checked param(true)
+			rt.TypeOfBool, `mvc:"header[?hvv1]"`,
+			getReqSetup, true,
+		},
+		{ // Checked param(false)
+			rt.TypeOfBool, `mvc:"header[?hvv3]"`,
+			getReqSetup, false,
+		},
+		// :~)
+
+		/**
+		 * Cookies
+		 */
+		{ // Viable value
+			rt.TypeOfString, `mvc:"cookie[ck_1]"`,
+			getReqSetup, "hello98",
+		},
+		{ // Default value
+			rt.TypeOfString, `mvc:"cookie[ck_3] default[gd-33]"`,
+			getReqSetup, "gd-33",
+		},
+		{ // Default value of go lang
+			rt.TypeOfString, `mvc:"query[ck_12]"`,
+			getReqSetup, "",
+		},
+		{ // Viable value with type conversion
+			rt.TypeOfUint64, `mvc:"cookie[ck_2]"`,
+			getReqSetup, uint64(77),
+		},
+		{ // Checked param(true)
+			rt.TypeOfBool, `mvc:"cookie[?ck_1]"`,
+			getReqSetup, true,
+		},
+		{ // Checked param(false)
+			rt.TypeOfBool, `mvc:"cookie[?ck_3]"`,
+			getReqSetup, false,
+		},
+
+		/**
+		 * key/value in gin.Context
+		 */
+		{ // Viable value
+			rt.TypeOfString, `mvc:"key[kg-1]"`,
+			getReqSetup, "hello45",
+		},
+		{ // Default value
+			rt.TypeOfString, `mvc:"key[kg-5] default[sampleKey1]"`,
+			getReqSetup, "sampleKey1",
+		},
+		{ // Default value of go lang
+			rt.TypeOfString, `mvc:"key[kg-23]"`,
+			getReqSetup, "",
+		},
+		{ // Viable value with type conversion
+			rt.TypeOfInt32, `mvc:"key[kg-2]"`,
+			getReqSetup, int32(871),
+		},
+		{ // Checked param(true)
+			rt.TypeOfBool, `mvc:"key[?kg-1]"`,
+			getReqSetup, true,
+		},
+		{ // Checked param(false)
+			rt.TypeOfBool, `mvc:"key[?kg-3]"`,
+			getReqSetup, false,
+		},
+		{ // Checked param(false)
+			rt.TypeOfBool, `mvc:"key[?kg-5]"`,
+			getReqSetup, false,
+		},
+		// :~)
+		{ // Not a MVC field
+			rt.TypeOfBool, ``,
+			getReqSetup, nil,
 		},
 	}
 
-	sampleType := reflect.TypeOf(sampleCar{})
 	convSrv := ot.NewDefaultConversionService()
 	for i, testCase := range testCases {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		fieldType, _ := sampleType.FieldByName(testCase.fieldName)
+		fieldType := reflect.StructField {
+			Name: "FieldValue1",
+			Type: testCase.sampleType,
+			Tag: testCase.sampleTag,
+		}
+
 		paramLoader := buildParamLoader(fieldType, convSrv)
+		if paramLoader == nil {
+			continue
+		}
 
 		context := &gin.Context {}
 		testCase.setupFunc(context)
 
-		if paramLoader == nil {
-			continue
-		}
 		testedValue := paramLoader(context)
-
 		c.Assert(testedValue, DeepEquals, testCase.expectedValue, comment)
 	}
 }

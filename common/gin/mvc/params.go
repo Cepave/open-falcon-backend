@@ -19,6 +19,30 @@ var paramGetters = map[string]paramGetter {
 	"basicAuth": basicAuthImpl(true),
 }
 
+var paramCheckers = map[string]boolParamChecker {
+	"query": func(context *gin.Context, paramName string) bool {
+		return isStringViable(context.Query(paramName))
+	},
+	"form": func(context *gin.Context, paramName string) bool {
+		return isStringViable(context.PostForm(paramName))
+	},
+	"cookie": func(context *gin.Context, paramName string) bool {
+		cookie, _ := context.Cookie(paramName)
+		return isStringViable(cookie)
+	},
+	"header": func(context *gin.Context, paramName string) bool {
+		return isStringViable(context.Request.Header.Get(paramName))
+	},
+	"key": func(context *gin.Context, paramName string) bool {
+		v, ok := context.Get(paramName)
+		return v != nil && ok
+	},
+}
+
+func isStringViable(v string) bool {
+	return strings.TrimSpace(v) != ""
+}
+
 var keyGetter = keyGetterImpl(true)
 
 type basicAuthImpl bool
@@ -68,11 +92,14 @@ func (f formGetterImpl) getParam(context *gin.Context, paramName string, default
 }
 func (f formGetterImpl) getParamAsArray(context *gin.Context, paramName string, defaultValue []string) []string {
 	req := context.Request
+
 	req.ParseForm()
 	req.ParseMultipartForm(32 << 20) // 32 MB
+
 	if values := req.PostForm[paramName]; len(values) > 0 {
 		return values
 	}
+
 	if req.MultipartForm != nil && req.MultipartForm.File != nil {
 		if values := req.MultipartForm.Value[paramName]; len(values) > 0 {
 			return values
@@ -224,3 +251,5 @@ func (u reqGetterImpl) getParamAsArray(context *gin.Context, paramName string, d
 
 	return []string { value }
 }
+
+type boolParamChecker func(context *gin.Context, paramName string) bool
