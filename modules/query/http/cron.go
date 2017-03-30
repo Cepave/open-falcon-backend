@@ -625,6 +625,8 @@ func syncDeviationsTable() {
 	platformsMap := map[string]map[string]string{}
 	o := orm.NewOrm()
 	o.Using("apollo")
+	bo := orm.NewOrm()
+	bo.Using("boss")
 	var rows []orm.Params
 	sql := "SELECT updated FROM `apollo`.`deviations` ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
@@ -641,7 +643,7 @@ func syncDeviationsTable() {
 		}
 	}
 	sql = "SELECT platform, principal FROM `boss`.`platforms` WHERE type LIKE '%业务' AND visible = 1 AND count > 0 ORDER BY platform ASC"
-	num, err = o.Raw(sql).Values(&rows)
+	num, err = bo.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
@@ -772,6 +774,8 @@ func writeToNetTable(platformName string, offset int) {
 func syncNetTable() {
 	o := orm.NewOrm()
 	o.Using("apollo")
+	bo := orm.NewOrm()
+	bo.Using("boss")
 	var rows []orm.Params
 	sql := "SELECT updated FROM `apollo`.`net` ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
@@ -789,7 +793,7 @@ func syncNetTable() {
 	}
 	platformNames := []string{}
 	sql = "SELECT platform, count FROM `boss`.`platforms` WHERE type LIKE '%业务' AND visible = 1 AND count > 0 ORDER BY platform ASC"
-	num, err = o.Raw(sql).Values(&rows)
+	num, err = bo.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
@@ -825,7 +829,7 @@ func syncNetTable() {
 				hostCountOfPlatform := 0
 				sql = "SELECT DISTINCT hostname FROM `boss`.`ips` "
 				sql += "WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
-				num, err = o.Raw(sql, platformName).Values(&rows)
+				num, err = bo.Raw(sql, platformName).Values(&rows)
 				if err != nil {
 					log.Errorf(err.Error())
 				} else {
