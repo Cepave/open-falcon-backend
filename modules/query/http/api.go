@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
@@ -500,7 +501,7 @@ func queryHostsData(result map[string]interface{}) []map[string]string {
 	var rows []orm.Params
 	o := orm.NewOrm()
 	o.Using("boss")
-	sql := "SELECT hostname, activate, platform, ip FROM boss.hosts"
+	sql := "SELECT hostname, activate, platform, ip FROM `boss`.`hosts`"
 	sql += " WHERE exist = 1 AND platform != '' ORDER BY hostname ASC"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
@@ -529,7 +530,7 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT ip, hostname, platform, status FROM boss.ips"
+	sql := "SELECT ip, hostname, platform, status FROM `boss`.`ips`"
 	sql += " WHERE exist = 1 AND hostname != '' AND platform != ''"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
@@ -575,7 +576,7 @@ func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (ma
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT hostname, activate FROM boss.hosts"
+	sql := "SELECT hostname, activate FROM `boss`.`hosts`"
 	sql += " WHERE hostname IN ('" + strings.Join(hostnames, "','")
 	sql += "') AND exist = 1"
 	num, err := o.Raw(sql).Values(&rows)
@@ -627,10 +628,11 @@ func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (ma
 
 func setGraphQueries(hostnames []string, hostnamesExisted []string, result map[string]interface{}) (queries []*cmodel.GraphLastParam, versions map[string]map[string]string) {
 	o := orm.NewOrm()
+	o.Using("default")
 	var hosts []*Host
 	versions = make(map[string]map[string]string)
 	hostnamesStr := strings.Join(hostnames, "','")
-	sqlcommand := "SELECT hostname, agent_version, plugin_version FROM falcon_portal.host WHERE hostname IN ('"
+	sqlcommand := "SELECT hostname, agent_version, plugin_version FROM `falcon_portal`.`host` WHERE hostname IN ('"
 	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
 	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
 	if err != nil {
@@ -791,7 +793,7 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT idc, city, province FROM boss.hosts WHERE hostname = ?"
+	sql := "SELECT idc, city, province FROM `boss`.`hosts` WHERE hostname = ?"
 	for _, groupName := range groupNames {
 		platform := map[string]interface{}{}
 		hosts := []interface{}{}
@@ -1215,9 +1217,10 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 	hostnames := []string{}
 	hostsMap := map[string]map[string]string{}
 	o := orm.NewOrm()
+	o.Using("boss")
 	var rows []orm.Params
 	hostnameStr := strings.Join(hostnamesInput, "','")
-	sqlcmd := "SELECT hostname, idc, isp, province, city FROM boss.hosts"
+	sqlcmd := "SELECT hostname, idc, isp, province, city FROM `boss`.`hosts`"
 	sqlcmd += " WHERE hostname IN ('" + hostnameStr + "')"
 	sqlcmd += " AND exist = 1"
 	sqlcmd += " ORDER BY hostname ASC"
@@ -1487,6 +1490,7 @@ func getApolloRemark(rw http.ResponseWriter, req *http.Request) {
 	hostnames := strings.Split(arguments[4], ",")
 	var rows []orm.Params
 	o := orm.NewOrm()
+	o.Using("apollo")
 	sql := "SELECT remark, account, name, email, updated FROM `apollo`.`remarks`"
 	sql += " WHERE hostname = ? ORDER BY updated DESC LIMIT 1"
 	for _, hostname := range hostnames {
@@ -1496,10 +1500,10 @@ func getApolloRemark(rw http.ResponseWriter, req *http.Request) {
 		} else if num > 0 {
 			row := rows[0]
 			remark := map[string]string{
-				"remark": row["remark"].(string),
+				"remark":  row["remark"].(string),
 				"account": row["account"].(string),
-				"name": row["name"].(string),
-				"email": row["email"].(string),
+				"name":    row["name"].(string),
+				"email":   row["email"].(string),
 				"updated": row["updated"].(string),
 			}
 			items[hostname] = remark
@@ -1527,14 +1531,14 @@ func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	user := map[string]string{
 		"account": remark.User,
-		"userID": "",
-		"name": "",
-		"email": "",
+		"userID":  "",
+		"name":    "",
+		"email":   "",
 	}
 	login := false
 
 	o := orm.NewOrm()
-	o.Using("boss")
+	o.Using("default")
 	var rows []orm.Params
 	sql := "SELECT id, cnname, email FROM `uic`.`user` WHERE name = ? LIMIT 1"
 	num, err := o.Raw(sql, remark.User).Values(&rows)
@@ -1571,6 +1575,7 @@ func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
 		if len(text) > 500 {
 			text = string([]rune(text)[0:250])
 		}
+		o.Using("apollo")
 		sql = "INSERT INTO `apollo`.`remarks`(`hostname`, `remark`, `userid`,"
 		sql += "`account`, `name`, `email`, `updated`) VALUES(?, ?, ?, ?, ?, ?, ?)"
 		_, err := o.Raw(sql, remark.Host, text, user["userID"], remark.User,
@@ -1845,6 +1850,7 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 	}
 	var rows []orm.Params
 	o := orm.NewOrm()
+	o.Using("boss")
 	hostnames := []string{}
 	sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
 	sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
@@ -1891,7 +1897,7 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 				index = key
 			}
 			if len(item.Values) > 0 {
-				timestamp := item.Values[len(item.Values) - 1].Timestamp
+				timestamp := item.Values[len(item.Values)-1].Timestamp
 				if timestampLatest < timestamp {
 					timestampLatest = timestamp
 				}
@@ -1970,17 +1976,17 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 					}
 				}
 				if len(data) > 4 {
-					value := data[len(data) - 3][1]
-					if (value < (data[len(data) - 4][1]) * 0.9) &&  (value <= (data[len(data) - 2][1])) {
-						value = (data[len(data) - 4][1] + data[len(data) - 2][1]) / 2
-						data[len(data) - 3][1] = value
+					value := data[len(data)-3][1]
+					if (value < (data[len(data)-4][1])*0.9) && (value <= (data[len(data)-2][1])) {
+						value = (data[len(data)-4][1] + data[len(data)-2][1]) / 2
+						data[len(data)-3][1] = value
 					}
 				}
 				if len(data) > 3 {
-					value := data[len(data) - 2][1]
-					if (value < (data[len(data) - 3][1]) * 0.9) &&  (value <= (data[len(data) - 1][1])) {
-						value = (data[len(data) - 3][1] + data[len(data) - 1][1]) / 2
-						data[len(data) - 2][1] = value
+					value := data[len(data)-2][1]
+					if (value < (data[len(data)-3][1])*0.9) && (value <= (data[len(data)-1][1])) {
+						value = (data[len(data)-3][1] + data[len(data)-1][1]) / 2
+						data[len(data)-2][1] = value
 					}
 				}
 				item := map[string]interface{}{
@@ -2005,6 +2011,7 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 	meansMap := map[string]int{}
 	deviationsMap := map[string]int{}
 	tickers := []string{}
+	o.Using("apollo")
 	sql = "SELECT DATE_FORMAT(date, '%Y-%m-%d %H:%i'), mean, deviation FROM `apollo`.`deviations`"
 	sql += " WHERE platform = ? AND metric = 1 AND date LIKE ? ORDER BY date ASC"
 	num, err = o.Raw(sql, platformName, today).Values(&rows)
@@ -2193,7 +2200,7 @@ func getGraphLastData(metrics []string, hostnames []string, result map[string]in
 		for _, hostname := range hostnames {
 			param := cmodel.GraphLastParam{
 				Endpoint: hostname,
-				Counter: metric,
+				Counter:  metric,
 			}
 			resp, err := graph.Last(param)
 			if err != nil {
@@ -2201,14 +2208,14 @@ func getGraphLastData(metrics []string, hostnames []string, result map[string]in
 			} else if resp != nil {
 				item := cmodel.RRDData{
 					Timestamp: resp.Value.Timestamp,
-					Value: resp.Value.Value,
+					Value:     resp.Value.Value,
 				}
 				values := []*cmodel.RRDData{}
 				values = append(values, &item)
 				datum := cmodel.GraphQueryResponse{
 					Endpoint: resp.Endpoint,
-					Counter: resp.Counter,
-					Values: values,
+					Counter:  resp.Counter,
+					Values:   values,
 				}
 				data = append(data, &datum)
 			}
@@ -2467,8 +2474,9 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 		IDCNamesMap := map[string]string{}
 		IDCNames := []string{}
 		o := orm.NewOrm()
+		o.Using("grafana")
 		var idcs []*Idc
-		sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
+		sqlcommand := "SELECT pop_id, name FROM `grafana`.`idc` ORDER BY pop_id ASC"
 		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
 		if err != nil {
 			setError(err.Error(), result)
@@ -2629,8 +2637,9 @@ func getHostsList(rw http.ResponseWriter, req *http.Request) {
 		idcIDsMap := map[string]interface{}{}
 		idcNames := []string{}
 		o := orm.NewOrm()
+		o.Using("grafana")
 		var idcs []*Idc
-		sqlcommand := "SELECT pop_id, province, city, name FROM grafana.idc ORDER BY pop_id ASC"
+		sqlcommand := "SELECT pop_id, province, city, name FROM `grafana`.`idc` ORDER BY pop_id ASC"
 		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
 		if err != nil {
 			setError(err.Error(), result)
