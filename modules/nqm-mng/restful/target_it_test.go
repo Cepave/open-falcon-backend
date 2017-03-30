@@ -9,8 +9,6 @@ import (
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
-	"github.com/dghubble/sling"
-
 	. "gopkg.in/check.v1"
 )
 
@@ -20,8 +18,9 @@ var _ = Suite(&TestTargetItSuite{})
 
 // Tests the getting of agent by id
 func (suite *TestTargetItSuite) TestGetTargetById(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/target/40021")
+	client := httpClientConfig.NewSlingByBase().Get(
+		"api/v1/nqm/target/40021",
+	)
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 	jsonResult := slintChecker.GetJsonBody(http.StatusOK)
@@ -33,40 +32,40 @@ func (suite *TestTargetItSuite) TestGetTargetById(c *C) {
 // Tests the adding of new target
 func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 	jsonBody := &struct {
-		Name string `json:"name"`
-		Host string `json:"host"`
-		Status bool `json:status`
-		ProbedByAll bool `json:"probed_by_all"`
-		Comment string `json:"comment"`
-		IspId int `json:"isp_id"`
-		ProvinceId int `json:"province_id"`
-		CityId int `json:"city_id"`
-		NameTag string `json:"name_tag"`
-		GroupTags []string `json:"group_tags"`
-	} {
-		Name: "new-target-ccc",
-		Host: "new-tg.repo.targets.com",
-		Status: true,
+		Name        string   `json:"name"`
+		Host        string   `json:"host"`
+		Status      bool     `json:status`
+		ProbedByAll bool     `json:"probed_by_all"`
+		Comment     string   `json:"comment"`
+		IspId       int      `json:"isp_id"`
+		ProvinceId  int      `json:"province_id"`
+		CityId      int      `json:"city_id"`
+		NameTag     string   `json:"name_tag"`
+		GroupTags   []string `json:"group_tags"`
+	}{
+		Name:        "new-target-ccc",
+		Host:        "new-tg.repo.targets.com",
+		Status:      true,
 		ProbedByAll: true,
-		Comment: "This is new target by red 33.72 ***",
-		IspId: 2,
-		ProvinceId: 27,
-		CityId: 206,
-		NameTag: "tg-nt-1",
-		GroupTags: []string{ "tg-rest-tag-1", "tg-rest-tag-2" },
+		Comment:     "This is new target by red 33.72 ***",
+		IspId:       2,
+		ProvinceId:  27,
+		CityId:      206,
+		NameTag:     "tg-nt-1",
+		GroupTags:   []string{"tg-rest-tag-1", "tg-rest-tag-2"},
 	}
 
 	testCases := []*struct {
-		expectedStatus int
+		expectedStatus    int
 		expectedErrorCode int
-	} {
-		{ http.StatusOK, -1 },
-		{ http.StatusConflict, 1 },
+	}{
+		{http.StatusOK, -1},
+		{http.StatusConflict, 1},
 	}
 
 	for _, testCase := range testCases {
-		client := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/target").
+		client := httpClientConfig.NewSlingByBase().
+			Post("api/v1/nqm/target").
 			BodyJSON(jsonBody)
 
 		slintChecker := testingHttp.NewCheckSlint(c, client)
@@ -100,29 +99,29 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 // Tests the modifying of target
 func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 	jsonBody := &struct {
-		Name string `json:"name"`
-		Status bool `json:status`
-		ProbedByAll bool `json:"probed_by_all"`
-		Comment string `json:"comment"`
-		IspId int `json:"isp_id"`
-		ProvinceId int `json:"province_id"`
-		CityId int `json:"city_id"`
-		NameTag string `json:"name_tag"`
-		GroupTags []string `json:"group_tags"`
-	} {
-		Name: "Updated-Target-1",
-		Status: false,
+		Name        string   `json:"name"`
+		Status      bool     `json:status`
+		ProbedByAll bool     `json:"probed_by_all"`
+		Comment     string   `json:"comment"`
+		IspId       int      `json:"isp_id"`
+		ProvinceId  int      `json:"province_id"`
+		CityId      int      `json:"city_id"`
+		NameTag     string   `json:"name_tag"`
+		GroupTags   []string `json:"group_tags"`
+	}{
+		Name:        "Updated-Target-1",
+		Status:      false,
 		ProbedByAll: false,
-		Comment: "[3981] This is updated target",
-		IspId: 9,
-		ProvinceId: 19,
-		CityId: 164,
-		NameTag: "tg-nt-3",
-		GroupTags: []string{ "blue-utg-3", "blue-utg-4", "blue-utg-5" },
+		Comment:     "[3981] This is updated target",
+		IspId:       9,
+		ProvinceId:  19,
+		CityId:      164,
+		NameTag:     "tg-nt-3",
+		GroupTags:   []string{"blue-utg-3", "blue-utg-4", "blue-utg-5"},
 	}
 
-	client := sling.New().Put(httpClientConfig.String()).
-		Path("/api/v1/nqm/target/39347").
+	client := httpClientConfig.NewSlingByBase().
+		Put("api/v1/nqm/target/39347").
 		BodyJSON(jsonBody)
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
@@ -144,8 +143,8 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 
 // Tests the listing of targets
 func (suite *TestTargetItSuite) TestListTargets(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/targets")
+	client := httpClientConfig.NewSlingByBase().
+		Get("api/v1/nqm/targets")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 
@@ -195,11 +194,11 @@ func (s *TestTargetItSuite) SetUpTest(c *C) {
 		inTx(
 			`
 			INSERT INTO nqm_target(
-				tg_id, tg_name, tg_host
+				tg_id, tg_name, tg_host, tg_status, tg_available
 			)
-			VALUES(40901, 'tg-name-1', 'tg-1.fastweb.com'),
-				(40902, 'tg-name-2', 'tg-2.fastweb.com'),
-				(40903, 'tg-name-3', 'tg-3.fastweb.com')
+			VALUES(40901, 'tg-name-1', 'tg-1.fastweb.com', true, true),
+				(40902, 'tg-name-2', 'tg-2.fastweb.com', true, true),
+				(40903, 'tg-name-3', 'tg-3.fastweb.com', true, true)
 			`,
 		)
 	case "TestTargetItSuite.TestModifyTarget":

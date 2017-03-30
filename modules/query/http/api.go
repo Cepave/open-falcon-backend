@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -25,6 +26,13 @@ type Tag struct {
 	Value      string
 	CreateAt   string
 	UpdateAt   string
+}
+
+type Remark struct {
+	User string
+	Sig  string
+	Host string
+	Text string
 }
 
 /**
@@ -466,8 +474,7 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	fcname := g.Config().Api.Name
 	fctoken := getFctoken()
 	url := g.Config().Api.Map + "/fcname/" + fcname + "/fctoken/" + fctoken
-	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes.json"
-
+	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes/show_ip_type/yes.json"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		setError(err.Error(), result)
@@ -995,18 +1002,18 @@ func getDisksIOMetrics(hostname string, metricType string) []string {
 }
 
 func getTimestampFromString(timeString string, result map[string]interface{}) int64 {
+	location, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		location = time.Local
+	}
 	if timeString == "" {
-		return time.Now().UTC().Unix()
+		return time.Now().In(location).Unix()
 	}
 	timestamp := int64(0)
-	timestamp, err := strconv.ParseInt(timeString, 10, 64)
+	timestamp, err = strconv.ParseInt(timeString, 10, 64)
 	if err != nil {
-		loc, err := time.LoadLocation("Asia/Taipei")
-		if err != nil {
-			loc = time.Local
-		}
 		timeFormat := "2006-01-02 15:04:05"
-		date, err := time.ParseInLocation(timeFormat, timeString, loc)
+		date, err := time.ParseInLocation(timeFormat, timeString, location)
 		if err != nil {
 			setError(err.Error(), result)
 		} else {
@@ -1270,6 +1277,7 @@ func completeApolloFiltersData(hostsInput []map[string]string, result map[string
 		} else {
 			keywords[platform] = []string{id}
 		}
+		host["platform"] = strings.Join(tags, ",")
 		host["tag"] = strings.Join(tags, ",")
 		delete(host, "activate")
 		delete(host, "city")
@@ -1396,16 +1404,31 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 		}
 	}
 	data := []*cmodel.GraphQueryResponse{}
+	step := 1
+	start, end := convertDurationToPoint(duration, result)
+	diff := math.Abs(float64(end - start))
+	if diff > 3600 {
+		step = 1200
+	}
 	if metricType == "disks" || metricType == "io" {
+		dataOfHost := []*cmodel.GraphQueryResponse{}
 		for _, hostname := range hostnames {
 			metrics = getDisksIOMetrics(hostname, metricType)
-			dataOfHost := getGraphQueryData(metrics, duration, []string{hostname}, 1, result)
+			if diff < 300 {
+				dataOfHost = getGraphLastData(metrics, []string{hostname}, result)
+			} else {
+				dataOfHost = getGraphQueryData(metrics, duration, []string{hostname}, step, result)
+			}
 			for _, series := range dataOfHost {
 				data = append(data, series)
 			}
 		}
 	} else {
-		data = getGraphQueryData(metrics, duration, hostnames, 1, result)
+		if diff < 300 {
+			data = getGraphLastData(metrics, hostnames, result)
+		} else {
+			data = getGraphQueryData(metrics, duration, hostnames, step, result)
+		}
 	}
 	for _, series := range data {
 		metric := series.Counter
@@ -1447,6 +1470,133 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 			}
 			items = append(items, item)
 		}
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
+func getApolloRemark(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := map[string]map[string]string{}
+	arguments := strings.Split(req.URL.Path, "/")
+	hostnames := strings.Split(arguments[4], ",")
+	var rows []orm.Params
+	o := orm.NewOrm()
+	sql := "SELECT remark, account, name, email, updated FROM `apollo`.`remarks`"
+	sql += " WHERE hostname = ? ORDER BY updated DESC LIMIT 1"
+	for _, hostname := range hostnames {
+		num, err := o.Raw(sql, hostname).Values(&rows)
+		if err != nil {
+			setError(err.Error(), result)
+		} else if num > 0 {
+			row := rows[0]
+			remark := map[string]string{
+				"remark": row["remark"].(string),
+				"account": row["account"].(string),
+				"name": row["name"].(string),
+				"email": row["email"].(string),
+				"updated": row["updated"].(string),
+			}
+			items[hostname] = remark
+		}
+	}
+	result["items"] = items
+	var nodes = make(map[string]interface{})
+	nodes["result"] = result
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	setResponse(rw, nodes)
+}
+
+func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
+	errors := []string{}
+	var result = make(map[string]interface{})
+	result["error"] = errors
+	items := []interface{}{}
+
+	decoder := json.NewDecoder(req.Body)
+	var remark Remark
+	err := decoder.Decode(&remark)
+	if err != nil {
+		setError(err.Error(), result)
+	}
+	defer req.Body.Close()
+	user := map[string]string{
+		"account": remark.User,
+		"userID": "",
+		"name": "",
+		"email": "",
+	}
+	login := false
+
+	o := orm.NewOrm()
+	o.Using("boss")
+	var rows []orm.Params
+	sql := "SELECT id, cnname, email FROM `uic`.`user` WHERE name = ? LIMIT 1"
+	num, err := o.Raw(sql, remark.User).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		user["userID"] = rows[0]["id"].(string)
+		user["name"] = rows[0]["cnname"].(string)
+		user["email"] = rows[0]["email"].(string)
+	}
+	sql = "SELECT expired FROM `uic`.`session` WHERE sig = ? ORDER BY expired DESC LIMIT 1"
+	num, err = o.Raw(sql, remark.Sig).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if num > 0 {
+		expired := rows[0]["expired"].(string)
+		expiredTimestamp, err := strconv.Atoi(expired)
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			if int64(expiredTimestamp) > time.Now().Unix() {
+				login = true
+			}
+		}
+	}
+	if login {
+		text := remark.Text
+		text = strings.Replace(text, "\r", " ", -1)
+		text = strings.Replace(text, "\n", " ", -1)
+		text = strings.Replace(text, "\t", " ", -1)
+		text = strings.TrimSpace(text)
+		re_inside_whiteSpaces := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
+		text = re_inside_whiteSpaces.ReplaceAllString(text, " ")
+		if len(text) > 500 {
+			text = string([]rune(text)[0:250])
+		}
+		sql = "INSERT INTO `apollo`.`remarks`(`hostname`, `remark`, `userid`,"
+		sql += "`account`, `name`, `email`, `updated`) VALUES(?, ?, ?, ?, ?, ?, ?)"
+		_, err := o.Raw(sql, remark.Host, text, user["userID"], remark.User,
+			user["name"], user["email"], getNow()).Exec()
+		if err != nil {
+			setError(err.Error(), result)
+		} else {
+			sql = "SELECT remark, account, name, email, updated "
+			sql += "FROM `apollo`.`remarks` WHERE hostname = ? "
+			sql += "ORDER BY updated DESC LIMIT 1"
+			num, err := o.Raw(sql, remark.Host).Values(&rows)
+			if err != nil {
+				setError(err.Error(), result)
+			} else if num > 0 {
+				item := map[string]string{}
+				item["hostname"] = remark.Host
+				item["remark"] = rows[0]["remark"].(string)
+				item["account"] = rows[0]["account"].(string)
+				item["name"] = rows[0]["name"].(string)
+				item["email"] = rows[0]["email"].(string)
+				item["updated"] = rows[0]["updated"].(string)
+				items = append(items, item)
+			}
+		}
+	} else {
+		result["error"] = append(result["error"].([]string), "Please log in first.")
 	}
 	result["items"] = items
 	var nodes = make(map[string]interface{})
@@ -1728,6 +1878,8 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 	}
 	hostnames = ISPs["all"]
 	metrics := getMetricsByMetricType("bandwidths")
+	start, end := convertDurationToPoint(duration, result)
+	diff := end - start
 	data := getGraphQueryData(metrics, duration, hostnames, 1200, result)
 	if len(data) > 0 {
 		index := -1
@@ -1745,20 +1897,20 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 				}
 			}
 		}
-		start, end := convertDurationToPoint(duration, result)
-		diff := end - start
 		unit := 5
 		if diff < 1200 {
 			unit = 1
 		}
 		tickers := []string{}
 		tickersMap := map[string]float64{}
-		for _, rrdObj := range data[index].Values {
-			ticker := getTicker(rrdObj.Timestamp, unit)
-			if _, ok := tickersMap[ticker]; !ok {
-				if len(ticker) > 0 {
-					tickersMap[ticker] = float64(0)
-					tickers = append(tickers, ticker)
+		if index >= 0 {
+			for _, rrdObj := range data[index].Values {
+				ticker := getTicker(rrdObj.Timestamp, unit)
+				if _, ok := tickersMap[ticker]; !ok {
+					if len(ticker) > 0 {
+						tickersMap[ticker] = float64(0)
+						tickers = append(tickers, ticker)
+					}
 				}
 			}
 		}
@@ -1842,6 +1994,100 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 			}
 		}
 	}
+
+	year, month, day := time.Now().Date()
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	today := time.Date(year, month, day, 0, 0, 0, 0, loc).Format("2006-01-02")
+	today += "%"
+	meansMap := map[string]int{}
+	deviationsMap := map[string]int{}
+	tickers := []string{}
+	sql = "SELECT DATE_FORMAT(date, '%Y-%m-%d %H:%i'), mean, deviation FROM `apollo`.`deviations`"
+	sql += " WHERE platform = ? AND metric = 1 AND date LIKE ? ORDER BY date ASC"
+	num, err = o.Raw(sql, platformName, today).Values(&rows)
+	if err != nil {
+		setError(err.Error(), result)
+	} else if (num > 0) && (diff > 600) {
+		for _, row := range rows {
+			ticker := row["DATE_FORMAT(date, '%Y-%m-%d %H:%i')"].(string)
+			mean := 0
+			value, err := strconv.Atoi(row["mean"].(string))
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				mean = value
+			}
+			deviation := 0
+			value, err = strconv.Atoi(row["deviation"].(string))
+			if err != nil {
+				setError(err.Error(), result)
+			} else {
+				deviation = value
+			}
+			meansMap[ticker] = mean
+			deviationsMap[ticker] = deviation
+			tickers = append(tickers, ticker)
+		}
+		oneSigma := map[string]int{}
+		twoSigma := map[string]int{}
+		threeSigma := map[string]int{}
+		for _, ticker := range tickers {
+			mean := meansMap[ticker]
+			deviation := deviationsMap[ticker]
+			oneSigma[ticker] = mean + deviation
+			twoSigma[ticker] = mean + (deviation * 2)
+			threeSigma[ticker] = mean + (deviation * 3)
+		}
+		oneSigmaSeries := [][]int{}
+		twoSigmaSeries := [][]int{}
+		threeSigmaSeries := [][]int{}
+		for _, ticker := range tickers {
+			timestamp := getTimestampFromTicker(ticker)
+			oneSigmaValue := []int{
+				int(timestamp * 1000),
+				oneSigma[ticker],
+			}
+			twoSigmaValue := []int{
+				int(timestamp * 1000),
+				twoSigma[ticker],
+			}
+			threeSigmaValue := []int{
+				int(timestamp * 1000),
+				threeSigma[ticker],
+			}
+			oneSigmaSeries = append(oneSigmaSeries, oneSigmaValue)
+			twoSigmaSeries = append(twoSigmaSeries, twoSigmaValue)
+			threeSigmaSeries = append(threeSigmaSeries, threeSigmaValue)
+		}
+		item := map[string]interface{}{
+			"data":       oneSigmaSeries,
+			"hostsCount": len(ISPs["all"]),
+			"ISP":        "all",
+			"metric":     "sigma.x1",
+			"platform":   platformName,
+		}
+		items = append(items, item)
+		item = map[string]interface{}{
+			"data":       twoSigmaSeries,
+			"hostsCount": len(ISPs["all"]),
+			"ISP":        "all",
+			"metric":     "sigma.x2",
+			"platform":   platformName,
+		}
+		items = append(items, item)
+		item = map[string]interface{}{
+			"data":       threeSigmaSeries,
+			"hostsCount": len(ISPs["all"]),
+			"ISP":        "all",
+			"metric":     "sigma.x3",
+			"platform":   platformName,
+		}
+		items = append(items, item)
+	}
+
 	result["items"] = items
 	nodes["result"] = result
 	nodes["count"] = len(items)
@@ -1941,55 +2187,49 @@ func getTimestampFromTicker(ticker string) int64 {
 	return timestamp
 }
 
+func getGraphLastData(metrics []string, hostnames []string, result map[string]interface{}) []*cmodel.GraphQueryResponse {
+	var data []*cmodel.GraphQueryResponse
+	for _, metric := range metrics {
+		for _, hostname := range hostnames {
+			param := cmodel.GraphLastParam{
+				Endpoint: hostname,
+				Counter: metric,
+			}
+			resp, err := graph.Last(param)
+			if err != nil {
+				log.Errorf(err.Error())
+			} else if resp != nil {
+				item := cmodel.RRDData{
+					Timestamp: resp.Value.Timestamp,
+					Value: resp.Value.Value,
+				}
+				values := []*cmodel.RRDData{}
+				values = append(values, &item)
+				datum := cmodel.GraphQueryResponse{
+					Endpoint: resp.Endpoint,
+					Counter: resp.Counter,
+					Values: values,
+				}
+				data = append(data, &datum)
+			}
+		}
+	}
+	return data
+}
+
 func getGraphQueryData(metrics []string, duration string, hostnames []string, step int, result map[string]interface{}) []*cmodel.GraphQueryResponse {
 	var data []*cmodel.GraphQueryResponse
 	start, end := convertDurationToPoint(duration, result)
-	if (time.Now().Unix() - start) < 600 {
-		data = getGraphQueryResponse(hostnames, metrics, "3min", "MAX", 60, result)
-		timestamp := int64(0)
-		for key, series := range data {
-			max := cmodel.JsonFloat(0)
-			for _, rrdObj := range series.Values {
-				value := rrdObj.Value
-				timestamp = rrdObj.Timestamp
-				if max < value {
-					max = value
-				}
-			}
-			item := cmodel.RRDData{}
-			item.Timestamp = timestamp
-			item.Value = max
-			values := []*cmodel.RRDData{}
-			values = append(values, &item)
-			series.Values = values
-			data[key] = series
-		}
+	if (time.Now().Unix() - start) < 200 {
+		data = getGraphLastData(metrics, hostnames, result)
 	} else {
 		data = getGraphQueryResponse(hostnames, metrics, duration, "AVERAGE", step, result)
-	}
-	diff := time.Now().Unix() - end
-	secondsInHalfDay := int64(43200)
-	if ((end - start) > secondsInHalfDay) && (diff < 600) && (len(data) > 0) {
-		dataRecent := getGraphQueryResponse(hostnames, metrics, "3min", "MAX", 60, result)
-		timestamp := int64(0)
-		for key, series := range dataRecent {
-			max := cmodel.JsonFloat(0)
-			for _, rrdObj := range series.Values {
-				value := rrdObj.Value
-				timestamp = rrdObj.Timestamp
-				if max < value {
-					max = value
-				}
-			}
-			item := cmodel.RRDData{}
-			item.Timestamp = timestamp
-			item.Value = max
-			values := []*cmodel.RRDData{}
-			values = append(values, &item)
-			series.Values = values
-			dataRecent[key] = series
+		diff := time.Now().Unix() - end
+		secondsInHalfDay := int64(43200)
+		if ((end - start) > secondsInHalfDay) && (diff < 600) && (len(data) > 0) {
+			dataRecent := getGraphLastData(metrics, hostnames, result)
+			data = addRecentData(data, dataRecent)
 		}
-		data = addRecentData(data, dataRecent)
 	}
 	return data
 }
@@ -2013,15 +2253,17 @@ func getBandwidthsSum(metricType string, duration string, hostnames []string, fi
 				index = key
 			}
 		}
-		for _, rrdObj := range data[index].Values {
-			ticker := getTicker(rrdObj.Timestamp, 5)
-			if _, ok := tickersMap[ticker]; !ok {
-				if len(ticker) > 0 {
-					tickersMap[ticker] = float64(0)
-					tickers = append(tickers, ticker)
+		if index >= 0 {
+			for _, rrdObj := range data[index].Values {
+				ticker := getTicker(rrdObj.Timestamp, 5)
+				if _, ok := tickersMap[ticker]; !ok {
+					if len(ticker) > 0 {
+						tickersMap[ticker] = float64(0)
+						tickers = append(tickers, ticker)
+					}
 				}
+				timestamps = append(timestamps, rrdObj.Timestamp)
 			}
-			timestamps = append(timestamps, rrdObj.Timestamp)
 		}
 		if len(tickers) > 0 {
 			for _, metric := range metrics {
@@ -2142,11 +2384,11 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 	metricType := ""
 	method := ""
 	duration := ""
-	if len(arguments) == 7 && arguments[len(arguments)-3] == "bandwidths" {
-		hostnames = strings.Split(arguments[len(arguments)-4], ",")
-		metricType = arguments[len(arguments)-3]
-		method = arguments[len(arguments)-2]
-		duration = arguments[len(arguments)-1]
+	if len(arguments) == 7 && arguments[4] == "bandwidths" {
+		hostnames = strings.Split(arguments[3], ",")
+		metricType = arguments[4]
+		method = arguments[5]
+		duration = arguments[6]
 	} else if len(arguments) == 5 && arguments[2] == "hosts" {
 		hostnames = strings.Split(arguments[3], ",")
 		method = arguments[4]
@@ -2161,8 +2403,8 @@ func getHostsBandwidths(rw http.ResponseWriter, req *http.Request) {
 			if strings.Index(hostname, "-") > -1 {
 				NICOutSpeed := getNICOutSpeed(hostname, result)
 				item := map[string]interface{}{
-					"hostname":           hostname,
-					"nic.out.speed.bits": NICOutSpeed,
+					"hostname":         hostname,
+					"nic.out.speed.MB": NICOutSpeed,
 				}
 				items = append(items, item)
 			}
@@ -2455,6 +2697,8 @@ func configAPIRoutes() {
 	http.HandleFunc("/api/metrics.health/", getHostMetricValues)
 	http.HandleFunc("/api/apollo/filters", getApolloFilters)
 	http.HandleFunc("/api/apollo/charts/", getApolloCharts)
+	http.HandleFunc("/api/apollo/remarks/add", addApolloRemark)
+	http.HandleFunc("/api/apollo/remarks/", getApolloRemark)
 	http.HandleFunc("/api/platforms", getPlatforms)
 	http.HandleFunc("/api/platforms/", parsePlatformArguments)
 	http.HandleFunc("/api/hosts/", getHostsBandwidths)

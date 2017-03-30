@@ -9,8 +9,6 @@ import (
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
-	"github.com/dghubble/sling"
-
 	. "gopkg.in/check.v1"
 )
 
@@ -20,8 +18,8 @@ var _ = Suite(&TestAgentItSuite{})
 
 // Tests the getting of agent by id
 func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/agent/36771")
+	client := httpClientConfig.NewSlingByBase().
+		Get("api/v1/nqm/agent/36771")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 	jsonResult := slintChecker.GetJsonBody(http.StatusOK)
@@ -33,40 +31,39 @@ func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
 // Tests the adding of new agent
 func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 	jsonBody := &struct {
-		Name string `json:"name"`
-		Hostname string `json:"hostname"`
-		ConnectionId string `json:"connection_id"`
-		Status bool `json:status`
-		Comment string `json:"comment"`
-		IspId int `json:"isp_id"`
-		ProvinceId int `json:"province_id"`
-		CityId int `json:"city_id"`
-		NameTag string `json:"name_tag"`
-		GroupTags []string `json:"group_tags"`
-	} {
-		Name: "new-agent-ccc",
-		Hostname: "new-host-cccc",
-		Status: true,
+		Name         string   `json:"name"`
+		Comment      string   `json:"comment"`
+		Hostname     string   `json:"hostname"`
+		ConnectionId string   `json:"connection_id"`
+		Status       bool     `json:status`
+		IspId        int      `json:"isp_id"`
+		ProvinceId   int      `json:"province_id"`
+		CityId       int      `json:"city_id"`
+		NameTag      string   `json:"name_tag"`
+		GroupTags    []string `json:"group_tags"`
+	}{
+		Name:         "ko-name-cc1",
+		Comment:      "cc-name-cc1",
+		Hostname:     "new-host-cccc",
+		Status:       true,
 		ConnectionId: "new-agent@blue.12.91.33",
-		Comment: "This is new agent by blue 12.91 ***",
-		IspId: 8,
-		ProvinceId: 9,
-		CityId: 130,
-		NameTag: "rest-nt-1",
-		GroupTags: []string{ "pp-rest-tag-1", "pp-rest-tag-2" },
+		IspId:        8,
+		ProvinceId:   9,
+		CityId:       130,
+		NameTag:      "rest-nt-1",
+		GroupTags:    []string{"pp-rest-tag-1", "pp-rest-tag-2"},
 	}
 
 	testCases := []*struct {
-		expectedStatus int
+		expectedStatus    int
 		expectedErrorCode int
-	} {
-		{ http.StatusOK, -1 },
-		{ http.StatusConflict, 1 },
+	}{
+		{http.StatusOK, -1},
+		{http.StatusConflict, 1},
 	}
 
 	for _, testCase := range testCases {
-		client := sling.New().Post(httpClientConfig.String()).
-			Path("/api/v1/nqm/agent").
+		client := httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent").
 			BodyJSON(jsonBody)
 
 		slintChecker := testingHttp.NewCheckSlint(c, client)
@@ -85,10 +82,10 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		}
 
 		c.Assert(jsonResp.Get("name").MustString(), Equals, jsonBody.Name)
+		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
 		c.Assert(jsonResp.Get("connection_id").MustString(), Equals, jsonBody.ConnectionId)
 		c.Assert(jsonResp.Get("ip_address").MustString(), Equals, "0.0.0.0")
 		c.Assert(jsonResp.Get("hostname").MustString(), Equals, jsonBody.Hostname)
-		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
 		c.Assert(jsonResp.Get("status").MustBool(), Equals, jsonBody.Status)
 		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
 		c.Assert(jsonResp.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)
@@ -100,8 +97,7 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 
 // Tests the listing of agents
 func (suite *TestAgentItSuite) TestListAgents(c *C) {
-	client := sling.New().Get(httpClientConfig.String()).
-		Path("/api/v1/nqm/agents")
+	client := httpClientConfig.NewSlingByBase().Get("api/v1/nqm/agents")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 
@@ -115,27 +111,26 @@ func (suite *TestAgentItSuite) TestListAgents(c *C) {
 // Tests the modifying of agent
 func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 	jsonBody := &struct {
-		Name string `json:"name"`
-		Status bool `json:status`
-		Comment string `json:"comment"`
-		IspId int `json:"isp_id"`
-		ProvinceId int `json:"province_id"`
-		CityId int `json:"city_id"`
-		NameTag string `json:"name_tag"`
-		GroupTags []string `json:"group_tags"`
-	} {
-		Name: "Update-Agent-1",
-		Status: false,
-		Comment: "This is updated comment",
-		IspId: 3,
+		Name       string   `json:"name"`
+		Status     bool     `json:status`
+		Comment    string   `json:"comment"`
+		IspId      int      `json:"isp_id"`
+		ProvinceId int      `json:"province_id"`
+		CityId     int      `json:"city_id"`
+		NameTag    string   `json:"name_tag"`
+		GroupTags  []string `json:"group_tags"`
+	}{
+		Name:       "Update-Agent-1",
+		Status:     false,
+		Comment:    "This is updated comment",
+		IspId:      3,
 		ProvinceId: 11,
-		CityId: 230,
-		NameTag: "rest-nt-9",
-		GroupTags: []string{ "rest-gt-91", "rest-gt-92", "rest-gt-93" },
+		CityId:     230,
+		NameTag:    "rest-nt-9",
+		GroupTags:  []string{"rest-gt-91", "rest-gt-92", "rest-gt-93"},
 	}
 
-	client := sling.New().Put(httpClientConfig.String()).
-		Path("/api/v1/nqm/agent/23041").
+	client := httpClientConfig.NewSlingByBase().Put("api/v1/nqm/agent/23041").
 		BodyJSON(jsonBody)
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)

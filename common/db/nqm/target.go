@@ -2,23 +2,24 @@ package nqm
 
 import (
 	"fmt"
-	"database/sql"
-	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	tb "github.com/Cepave/open-falcon-backend/common/textbuilder"
 	sqlb "github.com/Cepave/open-falcon-backend/common/textbuilder/sql"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	"github.com/jmoiron/sqlx"
-	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"github.com/jinzhu/gorm"
-	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type ErrDuplicatedNqmTarget struct {
 	Host string
 }
+
 func (err ErrDuplicatedNqmTarget) Error() string {
 	return fmt.Sprintf("Duplicated HOST: %s", err.Host)
 }
@@ -54,6 +55,7 @@ func AddTarget(newTarget *nqmModel.TargetForAdding) (*nqmModel.Target, error) {
 
 	return GetTargetById(newTarget.Id), nil
 }
+
 // Update and retrieve detail data of target
 func UpdateTarget(oldTarget *nqmModel.Target, updatedTarget *nqmModel.TargetForAdding) (*nqmModel.Target, error) {
 	/**
@@ -67,13 +69,14 @@ func UpdateTarget(oldTarget *nqmModel.Target, updatedTarget *nqmModel.TargetForA
 
 	txProcessor := &updateTargetTx{
 		updatedTarget: updatedTarget,
-		oldTarget: oldTarget.ToTargetForAdding(),
+		oldTarget:     oldTarget.ToTargetForAdding(),
 	}
 
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 
 	return GetTargetById(oldTarget.Id), nil
 }
+
 func GetTargetById(targetId int32) *nqmModel.Target {
 	dbListTargets := DbFacade.GormDb.Model(&nqmModel.Target{}).
 		Select(`
@@ -118,6 +121,7 @@ func GetTargetById(targetId int32) *nqmModel.Target {
 	loadedTarget.AfterLoad()
 	return loadedTarget
 }
+
 func ListTargets(query *nqmModel.TargetQuery, paging commonModel.Paging) ([]*nqmModel.Target, *commonModel.Paging) {
 	var result []*nqmModel.Target
 
@@ -162,15 +166,15 @@ func ListTargets(query *nqmModel.TargetQuery, paging commonModel.Paging) ([]*nqm
 			Offset(paging.GetOffset())
 
 		if query.Name != "" {
-			dbListTargets = dbListTargets.Where("tg_name LIKE ?", query.Name + "%")
+			dbListTargets = dbListTargets.Where("tg_name LIKE ?", query.Name+"%")
 		}
 		if query.Host != "" {
-			dbListTargets = dbListTargets.Where("tg_host LIKE ?", query.Host + "%")
+			dbListTargets = dbListTargets.Where("tg_host LIKE ?", query.Host+"%")
 		}
-		if query.HasIspId {
+		if query.HasIspId() {
 			dbListTargets = dbListTargets.Where("tg_isp_id = ?", query.IspId)
 		}
-		if query.HasStatusCondition {
+		if query.HasStatusCondition() {
 			dbListTargets = dbListTargets.Where("tg_status = ?", query.Status)
 		}
 		// :~)
@@ -214,6 +218,7 @@ func GetSimpleTarget1ById(targetId int32) *nqmModel.SimpleTarget1 {
 
 	return &result
 }
+
 // Gets the targets by filter
 func LoadSimpleTarget1sByFilter(filter *nqmModel.TargetFilter) []*nqmModel.SimpleTarget1 {
 	var result []*nqmModel.SimpleTarget1
@@ -252,13 +257,13 @@ func LoadSimpleTarget1sByFilter(filter *nqmModel.TargetFilter) []*nqmModel.Simpl
 		SELECT tg_id, tg_name, tg_host,
 			tg_isp_id, tg_pv_id, tg_ct_id, tg_nt_id
 		FROM nqm_target
-		` +
-		sqlb.Where(
-			sqlb.And(
-				buildRepeatOr("tg_name LIKE ?", filter.Name),
-				buildRepeatOr("tg_host LIKE ?", filter.Host),
-			),
-		).String(),
+		`+
+			sqlb.Where(
+				sqlb.And(
+					buildRepeatOr("tg_name LIKE ?", filter.Name),
+					buildRepeatOr("tg_host LIKE ?", filter.Host),
+				),
+			).String(),
 		sqlArgs...,
 	)
 
@@ -266,35 +271,36 @@ func LoadSimpleTarget1sByFilter(filter *nqmModel.TargetFilter) []*nqmModel.Simpl
 }
 
 var orderByDialectForTagets = commonModel.NewSqlOrderByDialect(
-	map[string]string {
-		"name": "tg_name",
-		"host": "tg_host",
-		"isp": "isp_name",
-		"province": "pv_name",
-		"city": "ct_name",
-		"status": "tg_status",
-		"available": "tg_available",
-		"comment": "tg_comment",
+	map[string]string{
+		"id":            "tg_id",
+		"name":          "tg_name",
+		"host":          "tg_host",
+		"isp":           "isp_name",
+		"province":      "pv_name",
+		"city":          "ct_name",
+		"status":        "tg_status",
+		"available":     "tg_available",
+		"comment":       "tg_comment",
 		"creation_time": "tg_created_ts",
-		"name_tag": "nt_value",
+		"name_tag":      "nt_value",
 	},
 )
 
 func buildSortingClauseOfTargets(paging *commonModel.Paging) string {
 	if len(paging.OrderBy) == 0 {
-		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "status", commonModel.Descending })
-		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "available", commonModel.Descending })
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"status", commonModel.Descending})
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"available", commonModel.Descending})
 	}
 
 	if len(paging.OrderBy) == 1 {
 		switch paging.OrderBy[0].Expr {
 		case "province":
-			paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "city", commonModel.Ascending })
+			paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"city", commonModel.Ascending})
 		}
 	}
 
-	if paging.OrderBy[len(paging.OrderBy) - 1].Expr != "creation_time" {
-		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{ "creation_time", commonModel.Descending })
+	if paging.OrderBy[len(paging.OrderBy)-1].Expr != "creation_time" {
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"creation_time", commonModel.Descending})
 	}
 
 	querySyntax, err := orderByDialectForTagets.ToQuerySyntax(paging.OrderBy)
@@ -317,8 +323,9 @@ func init() {
 
 type addTargetTx struct {
 	target *nqmModel.TargetForAdding
-	err error
+	err    error
 }
+
 func (targetTx *addTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	targetTx.target.NameTagId = owlDb.BuildAndGetNameTagId(
 		tx, targetTx.target.NameTagValue,
@@ -332,6 +339,7 @@ func (targetTx *addTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	targetTx.prepareGroupTags(tx)
 	return commonDb.TxCommit
 }
+
 func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 	txExt := sqlxExt.ToTxExt(tx)
 	newTarget := targetTx.target
@@ -355,19 +363,16 @@ func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 			WHERE tg_host = :host
 		)
 		`,
-		map[string]interface{} {
-			"name" : newTarget.Name,
-			"host" : newTarget.Host,
-			"status" : newTarget.Status,
-			"probed_by_all" : newTarget.ProbedByAll,
-			"isp_id" : newTarget.IspId,
-			"province_id" : newTarget.ProvinceId,
-			"city_id" : newTarget.CityId,
-			"name_tag_id" : newTarget.NameTagId,
-			"comment" : sql.NullString {
-				newTarget.Comment,
-				newTarget.Comment != "",
-			},
+		map[string]interface{}{
+			"name":          newTarget.Name,
+			"host":          newTarget.Host,
+			"status":        newTarget.Status,
+			"probed_by_all": newTarget.ProbedByAll,
+			"isp_id":        newTarget.IspId,
+			"province_id":   newTarget.ProvinceId,
+			"city_id":       newTarget.CityId,
+			"name_tag_id":   newTarget.NameTagId,
+			"comment": newTarget.Comment,
 		},
 	)
 
@@ -375,7 +380,7 @@ func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 	 * Rollback if the NQM target is existing(duplicated by host)
 	 */
 	if commonDb.ToResultExt(addedNqmTarget).RowsAffected() == 0 {
-		targetTx.err = ErrDuplicatedNqmTarget{ newTarget.Host }
+		targetTx.err = ErrDuplicatedNqmTarget{newTarget.Host}
 		return
 	}
 	// :~)
@@ -389,6 +394,7 @@ func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 		newTarget.Host,
 	)
 }
+
 func (targetTx *addTargetTx) prepareGroupTags(tx *sqlx.Tx) {
 	newTarget := targetTx.target
 	buildGroupTagsForTarget(
@@ -421,8 +427,9 @@ func buildGroupTagsForTarget(tx *sqlx.Tx, targetId int32, groupTags []string) {
 
 type updateTargetTx struct {
 	updatedTarget *nqmModel.TargetForAdding
-	oldTarget *nqmModel.TargetForAdding
+	oldTarget     *nqmModel.TargetForAdding
 }
+
 func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	agentTx.loadNameTagId(tx)
 
@@ -440,7 +447,7 @@ func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 		WHERE tg_id = ?
 		`,
 		updatedTarget.Name,
-		sql.NullString{ updatedTarget.Comment, updatedTarget.Comment != "" },
+		updatedTarget.Comment,
 		updatedTarget.Status,
 		updatedTarget.IspId,
 		updatedTarget.ProvinceId,
@@ -452,6 +459,7 @@ func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	agentTx.updateGroupTags(tx)
 	return commonDb.TxCommit
 }
+
 func (agentTx *updateTargetTx) loadNameTagId(tx *sqlx.Tx) {
 	updatedTarget, oldTarget := agentTx.updatedTarget, agentTx.oldTarget
 
@@ -463,6 +471,7 @@ func (agentTx *updateTargetTx) loadNameTagId(tx *sqlx.Tx) {
 		tx, updatedTarget.NameTagValue,
 	)
 }
+
 func (agentTx *updateTargetTx) updateGroupTags(tx *sqlx.Tx) {
 	updatedTarget, oldTarget := agentTx.updatedTarget, agentTx.oldTarget
 	if updatedTarget.AreGroupTagsSame(oldTarget) {

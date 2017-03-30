@@ -25,7 +25,7 @@ func (suite *TestRdbSuite) TestOperateOnDbWithPanic(c *C) {
 	}
 
 	defer func() {
-		c.Assert(testedFunc, PanicMatches, "Test Panic")
+		c.Assert(testedFunc, PanicMatches, ".*Test Panic.*")
 	} ()
 }
 
@@ -125,7 +125,7 @@ func (suite *TestRdbSuite) TestQueryForRow(c *C) {
 	var numberOfRows int
 	testedCtrl.QueryForRow(
 		RowCallbackFunc(func(row *sql.Row) {
-			DbPanic(row.Scan(&numberOfRows))
+			ToRowExt(row).Scan(&numberOfRows)
 		}),
 		"SELECT COUNT(*) FROM test_row",
 	)
@@ -146,9 +146,11 @@ func (suite *TestRdbSuite) TestInTx(c *C) {
 	 * Builds committed data
 	 */
 	testedCtrl.InTx(TxCallbackFunc(func(tx *sql.Tx) TxFinale {
-		tx.Exec("INSERT INTO test_in_tx VALUES(21, 'v-21')")
-		tx.Exec("INSERT INTO test_in_tx VALUES(22, 'v-22')")
-		tx.Exec("INSERT INTO test_in_tx VALUES(23, 'v-23')")
+		txExt := ToTxExt(tx)
+
+		txExt.Exec("INSERT INTO test_in_tx VALUES(21, 'v-21')")
+		txExt.Exec("INSERT INTO test_in_tx VALUES(22, 'v-22')")
+		txExt.Exec("INSERT INTO test_in_tx VALUES(23, 'v-23')")
 
 		return TxCommit
 	}))
@@ -161,10 +163,11 @@ func (suite *TestRdbSuite) TestInTx(c *C) {
 	 */
 	var testedFunc = func() {
 		testedCtrl.InTx(TxCallbackFunc(func(tx *sql.Tx) TxFinale {
-			tx.Exec("INSERT INTO test_in_tx VALUES(123, 'v-123')")
-			tx.Exec("INSERT INTO test_in_tx VALUES(124, 'v-124')")
-			_, err := tx.Exec("INSERT INTO test_in_tx VALUES(21, 'v-21')")
-			DbPanic(err)
+			txExt := ToTxExt(tx)
+
+			txExt.Exec("INSERT INTO test_in_tx VALUES(123, 'v-123')")
+			txExt.Exec("INSERT INTO test_in_tx VALUES(124, 'v-124')")
+			txExt.Exec("INSERT INTO test_in_tx VALUES(21, 'v-21')")
 
 			return TxCommit
 		}))
@@ -188,6 +191,32 @@ func (suite *TestRdbSuite) TestInTxForIf(c *C) {
 
 	c.Assert(testedTrueSample.getCalled, Equals, true)
 	c.Assert(testedFalseSample.getCalled, Equals, false)
+}
+
+// Tests the executing of queries in transaction
+func (suite *TestRdbSuite) TestExecQueriesInTx(c *C) {
+	testedCtrl := buildSampleDbController(c)
+	defer testedCtrl.Release()
+
+	testedCtrl.Exec(
+		"CREATE TABLE car_981 ( c_id INT PRIMARY KEY, c_name VARCHAR(64) NOT NULL )",
+	)
+
+	testedCtrl.ExecQueriesInTx(
+		"INSERT INTO car_981 VALUES(1, 'OK-1')",
+		"INSERT INTO car_981 VALUES(2, 'OK-2')",
+		"INSERT INTO car_981 VALUES(3, 'OK-3')",
+	)
+
+	var numberOfRows int
+	testedCtrl.QueryForRow(
+		RowCallbackFunc(func(row *sql.Row) {
+			ToRowExt(row).Scan(&numberOfRows)
+		}),
+		"SELECT COUNT(*) FROM car_981",
+	)
+
+	c.Assert(numberOfRows, Equals, 3)
 }
 
 type ifSample struct {

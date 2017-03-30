@@ -3,58 +3,72 @@ package utils
 import (
 	"fmt"
 	"reflect"
+
+	ot "github.com/Cepave/open-falcon-backend/common/reflect/types"
 )
 
 var (
-	TypeOfInt = reflect.TypeOf(int(0))
-	TypeOfInt64 = reflect.TypeOf(int64(0))
-	TypeOfInt32 = reflect.TypeOf(int32(0))
-	TypeOfInt16 = reflect.TypeOf(int16(0))
-	TypeOfInt8 = reflect.TypeOf(int8(0))
-	TypeOfUint = reflect.TypeOf(uint(0))
-	TypeOfUint64 = reflect.TypeOf(uint64(0))
-	TypeOfUint32 = reflect.TypeOf(uint32(0))
-	TypeOfUint16 = reflect.TypeOf(uint16(0))
-	TypeOfUint8 = reflect.TypeOf(uint8(0))
+	TypeOfInt = ot.TypeOfInt
+	TypeOfInt64 = ot.TypeOfInt64
+	TypeOfInt32 = ot.TypeOfInt32
+	TypeOfInt16 = ot.TypeOfInt16
+	TypeOfInt8 = ot.TypeOfInt8
+	TypeOfUint = ot.TypeOfUint
+	TypeOfUint64 = ot.TypeOfUint64
+	TypeOfUint32 = ot.TypeOfUint32
+	TypeOfUint16 = ot.TypeOfUint16
+	TypeOfUint8 = ot.TypeOfUint8
 
-	TypeOfFloat32 = reflect.TypeOf(float32(0))
-	TypeOfFloat64 = reflect.TypeOf(float64(0))
+	TypeOfFloat32 = ot.TypeOfFloat32
+	TypeOfFloat64 = ot.TypeOfFloat64
 
-	TypeOfComplex64 = reflect.TypeOf(complex64(0))
-	TypeOfComplex128 = reflect.TypeOf(complex128(0))
+	TypeOfComplex64 = ot.TypeOfComplex64
+	TypeOfComplex128 = ot.TypeOfComplex128
 
-	TypeOfByte = reflect.TypeOf(byte(0))
-	TypeOfBool = reflect.TypeOf(true)
-	TypeOfString = reflect.TypeOf("")
+	TypeOfByte = ot.TypeOfByte
+	TypeOfBool = ot.TypeOfBool
+	TypeOfString = ot.TypeOfString
 
-	ATypeOfInt = reflect.TypeOf([]int{})
-	ATypeOfInt64 = reflect.TypeOf([]int64{})
-	ATypeOfInt32 = reflect.TypeOf([]int32{})
-	ATypeOfInt16 = reflect.TypeOf([]int16{})
-	ATypeOfInt8 = reflect.TypeOf([]int8{})
-	ATypeOfUint = reflect.TypeOf([]uint{})
-	ATypeOfUint64 = reflect.TypeOf([]uint64{})
-	ATypeOfUint32 = reflect.TypeOf([]uint32{})
-	ATypeOfUint16 = reflect.TypeOf([]uint16{})
-	ATypeOfUint8 = reflect.TypeOf([]uint8{})
+	ATypeOfInt = ot.STypeOfInt
+	ATypeOfInt64 = ot.STypeOfInt64
+	ATypeOfInt32 = ot.STypeOfInt32
+	ATypeOfInt16 = ot.STypeOfInt16
+	ATypeOfInt8 = ot.STypeOfInt8
+	ATypeOfUint = ot.STypeOfUint
+	ATypeOfUint64 = ot.STypeOfUint64
+	ATypeOfUint32 = ot.STypeOfUint32
+	ATypeOfUint16 = ot.STypeOfUint16
+	ATypeOfUint8 = ot.STypeOfUint8
 
-	ATypeOfFloat32 = reflect.TypeOf([]float32{})
-	ATypeOfFloat64 = reflect.TypeOf([]float64{})
+	ATypeOfFloat32 = ot.STypeOfFloat32
+	ATypeOfFloat64 = ot.STypeOfFloat64
 
-	ATypeOfComplex64 = reflect.TypeOf([]complex64{})
-	ATypeOfComplex128 = reflect.TypeOf([]complex128{})
+	ATypeOfComplex64 = ot.STypeOfComplex64
+	ATypeOfComplex128 = ot.STypeOfComplex128
 
-	ATypeOfByte = reflect.TypeOf([]byte{})
-	ATypeOfBool = reflect.TypeOf([]bool{})
-	ATypeOfString = reflect.TypeOf([]string{})
+	ATypeOfByte = ot.STypeOfByte
+	ATypeOfBool = ot.STypeOfBool
+	ATypeOfString = ot.STypeOfString
 
-	TrueValue = reflect.ValueOf(true)
-	FalseValue = reflect.ValueOf(false)
+	TrueValue = ot.TrueValue
+	FalseValue = ot.FalseValue
 )
+
+// If the value of source is empty(""), gets nil pointer
+func PointerOfCloneString(source string) *string {
+	if source == "" {
+		return nil
+	}
+
+	return &source
+}
 
 // Super convertion by reflect
 //
 // 1. Nil pointer would be to nil pointer of target type
+// 2. Othewise, uses the reflect.Value.Convert() function to perform convertion
+//
+// See https://golang.org/ref/spec#Conversions
 func ConvertTo(value interface{}, targetType reflect.Type) interface{} {
 	return ConvertToByReflect(
 		reflect.ValueOf(value), targetType,
@@ -79,10 +93,6 @@ func ConvertToByReflect(sourceValue reflect.Value, targetType reflect.Type) refl
 		if sourceValue.IsNil() {
 			return reflect.Zero(targetType)
 		}
-
-		if !sourceType.ConvertibleTo(targetType) {
-			panic(fmt.Sprintf("Type of source[%s] cannot be converted to type of target[%s]", sourceType, targetType))
-		}
 	}
 
 	if !sourceType.ConvertibleTo(targetType) {
@@ -92,7 +102,13 @@ func ConvertToByReflect(sourceValue reflect.Value, targetType reflect.Type) refl
 	return sourceValue.Convert(targetType)
 }
 
+func IsViable(v interface{}) bool {
+	return ValueExt(reflect.ValueOf(v)).IsViable()
+}
+
+// Alias of reflect.Value, provides some convenient functions for programming on reflection.
 type ValueExt reflect.Value
+// Returns true value if the value is array or slice
 func (v ValueExt) IsArray() bool {
 	switch reflect.Value(v).Kind() {
 	case reflect.Slice, reflect.Array:
@@ -101,6 +117,7 @@ func (v ValueExt) IsArray() bool {
 
 	return false
 }
+// Returns true value if the value is reflect.Ptr, reflect.Uintptr, or reflect.UnsafePointer
 func (v ValueExt) IsPointer() bool {
 	switch reflect.Value(v).Kind() {
 	case reflect.Ptr, reflect.Uintptr, reflect.UnsafePointer:
@@ -110,11 +127,13 @@ func (v ValueExt) IsPointer() bool {
 	return false
 }
 
-// For array, slice, map, chan, the value.Len() must be > 0
+// Checks if a value is viable
 //
-// For pointer, interface, or function, the value.IsNil() must not be true
+// 	For array, slice, map, chan: the value.Len() must be > 0
 //
-// Othewise, use value.IsValid()
+//	For pointer, interface, or function: the value.IsNil() must not be true
+//
+//	Othewise: use reflect.Value.IsValid()
 func (v ValueExt) IsViable() bool {
 	reflectValue := reflect.Value(v)
 

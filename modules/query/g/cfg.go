@@ -6,9 +6,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/Cepave/open-falcon-backend/modules/query/logger"
+	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
 )
 
@@ -17,14 +16,19 @@ type HttpConfig struct {
 	Listen  string `json:"listen"`
 }
 
+type ContactsConfig struct {
+	Enabled  bool `json:"enabled"`
+	Interval int  `json:"interval"`
+}
+
 type HostsConfig struct {
 	Enabled  bool `json:"enabled"`
 	Interval int  `json:"interval"`
 }
 
-type ContactsConfig struct {
-	Enabled  bool `json:"enabled"`
-	Interval int  `json:"interval"`
+type NetConfig struct {
+	Enabled bool   `json:"enabled"`
+	Time    string `json:"time"`
 }
 
 type GinHttpConfig struct {
@@ -45,13 +49,14 @@ type ApiConfig struct {
 	Name      string `json:"name"`
 	Token     string `json:"token"`
 	Contact   string `json:"contact"`
-	Event     string `json:"event"`
-	Map       string `json:"map"`
-	Geo       string `json:"geo"`
-	Uplink    string `json:"uplink"`
-	Query     string `json:"query"`
 	Dashboard string `json:"dashboard"`
+	Event     string `json:"event"`
+	Geo       string `json:"geo"`
+	Map       string `json:"map"`
 	Max       int    `json:"max"`
+	Platform  string `json:"platform"`
+	Query     string `json:"query"`
+	Uplink    string `json:"uplink"`
 }
 
 type DbConfig struct {
@@ -82,22 +87,26 @@ type GraphDB struct {
 }
 
 type GlobalConfig struct {
-	Debug    bool            `json:"debug"`
-	RootDir  string          `json:"root_dir"`
-	Http     *HttpConfig     `json:"http"`
-	Hosts    *HostsConfig    `json:"hosts"`
-	Contacts *ContactsConfig `json:"contacts"`
-	Graph    *GraphConfig    `json:"graph"`
-	Api      *ApiConfig      `json:"api"`
-	Db       *DbConfig       `json:"db"`
-	BossDB   *DbConfig       `json:"bossdb"`
-	Local    string          `json:"local"`
-	NqmLog   *NqmLogConfig   `json:"nqmlog"`
-	Nqm      *NqmConfig      `json:"nqm"`
-	Grpc     *GrpcConfig     `json:"grpc"`
-	GinHttp  *GinHttpConfig  `json:"gin_http"`
-	GraphDB  *GraphDB        `json:"graphdb"`
-	Fe       string          `json:"fe"`
+	Debug      bool            `json:"debug"`
+	RootDir    string          `json:"root_dir"`
+	Http       *HttpConfig     `json:"http"`
+	Contacts   *ContactsConfig `json:"contacts"`
+	Hosts      *HostsConfig    `json:"hosts"`
+	Deviations *NetConfig      `json:"deviations"`
+	Net        *NetConfig      `json:"net"`
+	Speed      *NetConfig      `json:"speed"`
+	Api        *ApiConfig      `json:"api"`
+	Graph      *GraphConfig    `json:"graph"`
+	Db         *DbConfig       `json:"db"`
+	ApolloDB   *DbConfig       `json:"apollodb"`
+	BossDB     *DbConfig       `json:"bossdb"`
+	Local      string          `json:"local"`
+	NqmLog     *NqmLogConfig   `json:"nqmlog"`
+	Nqm        *NqmConfig      `json:"nqm"`
+	Grpc       *GrpcConfig     `json:"grpc"`
+	GinHttp    *GinHttpConfig  `json:"gin_http"`
+	GraphDB    *GraphDB        `json:"graphdb"`
+	Fe         string          `json:"fe"`
 }
 
 var (

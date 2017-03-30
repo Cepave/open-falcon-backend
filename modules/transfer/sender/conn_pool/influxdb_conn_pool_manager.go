@@ -2,13 +2,15 @@ package conn_pool
 
 import (
 	"fmt"
-	influxdb "github.com/influxdata/influxdb/client/v2"
-	cmodel "github.com/open-falcon/common/model"
 	"net"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	influxdb "github.com/influxdata/influxdb/client/v2"
+	cmodel "github.com/open-falcon/common/model"
 )
 
 // InfluxdbClient, 要实现io.Closer接口
@@ -53,31 +55,55 @@ func (this InfluxdbClient) Call(items []*cmodel.JudgeItem) error {
 	}
 
 	for _, item := range items {
-		token := strings.SplitN(item.Metric, ".", 2)
-		var measurement, field string
-		if len(token) == 1 {
-			measurement = "_other"
-			field = token[0]
-		} else if len(token) == 2 {
-			measurement = token[0]
-			field = token[1]
-		}
+		measurement := item.Metric
 
 		// Create a point and add to batch
 		tags := map[string]string{
 			"host": item.Endpoint,
 		}
 		fields := map[string]interface{}{
-			field: item.Value,
+			"value": item.Value,
 		}
-		for k, v := range item.Tags {
-			fields[k] = v
+		//will set "-" as default, when data not set any open-falcon tags
+		tagsKey := "-"
+		flag := true
+		if v, ok := item.Tags["tag"]; ok {
+			// workaround for fix first tags cut error for first element
+			if strings.Contains(v, "=") {
+				k2 := strings.Split(v, "=")
+				tagsKey = fmt.Sprintf("%s=%s", k2[0], k2[1])
+				tags[k2[0]] = k2[1]
+			} else {
+				log.Errorf("invalid data: %v, because data's tag is no matched right formating.\n", item)
+				flag = false
+			}
 		}
-		pt, err := influxdb.NewPoint(measurement, tags, fields, time.Unix(item.Timestamp, 0))
-		if err != nil {
-			return err
+
+		//for filter invalid data
+		if flag {
+			for k, v := range item.Tags {
+				//skip tag key, because already save on above
+				if k == "tag" {
+					continue
+				}
+				key := k
+				value := v
+				if tagsKey == "-" {
+					tagsKey = fmt.Sprintf("%s=%s", key, value)
+				} else {
+					tagsKey = fmt.Sprintf("%v/%s=%s", tagsKey, key, value)
+				}
+				tags[k] = v
+			}
+			tags["owltag"] = tagsKey
+			pt, err := influxdb.NewPoint(measurement, tags, fields, time.Unix(item.Timestamp, 0))
+			if err != nil {
+				return err
+			}
+			//sample output: [metirc_name],cc=1,host=[host_name].niean,owltag=t0\=oo2/cc\=1,t0=oo2 value=0 [timestamp microsecond]
+			log.Debugf("Data: %v\n", pt.String())
+			bp.AddPoint(pt)
 		}
-		bp.AddPoint(pt)
 	}
 
 	// Write the batch

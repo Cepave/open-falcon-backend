@@ -6,8 +6,11 @@ import (
 	"time"
 )
 
+// Checks if the both of time value are equal(only UNIX time).
 var TimeEquals timeEqualsImpl
+// Checks if the obtained time is before expected time(only UNIX time).
 var TimeBefore timeBeforeImpl
+// Checks if the obtained time is after expected time(only UNIX time).
 var TimeAfter timeAfterImpl
 
 type timeEqualsImpl bool

@@ -100,6 +100,56 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	// :~)
 }
 
+// Tests the convertion of query to deatil information on special conditions
+//
+// Some properties(isp_ids, province_ids, city_ids, name_tag_ids) supports special values:
+//
+// -11 - The property(ISP, location, etc.) should be same with another side
+// -12 - The property(ISP, location, etc.) should not be same with another side
+func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetailOnSpecialValue(c *C) {
+	/**
+	 * Sets-up sample query
+	 */
+	sampleQuery := model.NewCompoundQuery()
+
+	agentFilter := sampleQuery.Filters.Agent
+
+	agentFilter.IspIds = []int16 { -11, -12 }
+	agentFilter.ProvinceIds = []int16 { -11, -12 }
+	agentFilter.CityIds = []int16 { -11, -12 }
+	agentFilter.NameTagIds = []int16 { -11, -12 }
+
+	targetFilter := sampleQuery.Filters.Target
+	targetFilter.IspIds = []int16 { -11, -12 }
+	targetFilter.ProvinceIds = []int16 { -11, -12 }
+	targetFilter.CityIds = []int16 { -11, -12 }
+	targetFilter.NameTagIds = []int16 { -11, -12 }
+	// :~)
+
+	testedDetail := ToQueryDetail(sampleQuery)
+
+	c.Logf("%#v", testedDetail.Agent)
+	c.Logf("%#v", testedDetail.Target)
+
+	c.Assert(testedDetail.Agent.Isps[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Isps[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Agent.Provinces[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Provinces[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Agent.Cities[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Cities[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Agent.NameTags[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Agent.NameTags[1].Id, Equals, int16(-12))
+
+	c.Assert(testedDetail.Target.Isps[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.Isps[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Target.Provinces[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.Provinces[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Target.Cities[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.Cities[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Target.NameTags[0].Id, Equals, int16(-11))
+	c.Assert(testedDetail.Target.NameTags[1].Id, Equals, int16(-12))
+}
+
 // Tests the building of query object
 func (suite *TestCompoundReportSuiteOnDb) TestBuildQuery(c *C) {
 	sampleQuery := model.NewCompoundQuery()
@@ -607,7 +657,7 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 		testedResult := sampleLessFunc.lessImpl(
 			&model.DynamicRecord {
 				Agent: &model.DynamicAgentProps {
-					Name: testCase.agentName[0],
+					Name: &testCase.agentName[0],
 				},
 				Target: &model.DynamicTargetProps {
 					Isp: &owlModel.Isp {
@@ -622,7 +672,7 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 			},
 			&model.DynamicRecord {
 				Agent: &model.DynamicAgentProps {
-					Name: testCase.agentName[1],
+					Name: &testCase.agentName[1],
 				},
 				Target: &model.DynamicTargetProps {
 					Isp: &owlModel.Isp {
@@ -689,12 +739,14 @@ func (suite *TestCompoundReportSuite) TestFilterRecords(c *C) {
 
 // Tests the retrieving of page(with sorted result)
 func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
+	sp := func(v string) *string { return &v }
+
 	sampleRecords := []*model.DynamicRecord {
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-5" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-4" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-3" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-2" } },
-		{ Agent: &model.DynamicAgentProps{ Name: "AG-1" } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-5") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-4") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-3") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-2") } },
+		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-1") } },
 	}
 
 	samplePaging := &commonModel.Paging {
@@ -706,8 +758,8 @@ func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
 	}
 
 	testedResult := retrievePage(sampleRecords, samplePaging)
-	c.Assert(testedResult[0].Agent.Name, Equals, "AG-3")
-	c.Assert(testedResult[1].Agent.Name, Equals, "AG-4")
+	c.Assert(*testedResult[0].Agent.Name, Equals, "AG-3")
+	c.Assert(*testedResult[1].Agent.Name, Equals, "AG-4")
 }
 
 func (s *TestCompoundReportSuiteOnDb) SetUpTest(c *C) {

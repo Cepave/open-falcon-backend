@@ -1,15 +1,20 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"math"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	log "github.com/Sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/jasonlvhit/gocron"
@@ -36,6 +41,9 @@ type Hosts struct {
 	Province  string
 	City      string
 	Status    string
+	Bonding   int
+	Speed     int
+	Remark    string
 	Updated   string
 }
 
@@ -56,20 +64,26 @@ type Ips struct {
 	Ip       string
 	Exist    int
 	Status   int
+	Type     string
 	Hostname string
 	Platform string
 	Updated  string
 }
 
 type Platforms struct {
-	Id        int
-	Platform  string
-	Contacts  string
-	Principal string
-	Deputy    string
-	Upgrader  string
-	Count     int
-	Updated   string
+	Id          int
+	Platform    string
+	Type        string
+	Visible     int
+	Contacts    string
+	Principal   string
+	Deputy      string
+	Upgrader    string
+	Count       int
+	Department  string
+	Team        string
+	Description string
+	Updated     string
 }
 
 func SyncHostsAndContactsTable() {
@@ -86,6 +100,18 @@ func SyncHostsAndContactsTable() {
 			syncContactsTable()
 			intervalToSyncContactsTable := uint64(g.Config().Contacts.Interval)
 			gocron.Every(intervalToSyncContactsTable).Seconds().Do(syncContactsTable)
+		}
+		if g.Config().Net.Enabled {
+			syncNetTable()
+			gocron.Every(1).Day().At(g.Config().Net.Time).Do(syncNetTable)
+		}
+		if g.Config().Deviations.Enabled {
+			syncDeviationsTable()
+			gocron.Every(1).Day().At(g.Config().Deviations.Time).Do(syncDeviationsTable)
+		}
+		if g.Config().Speed.Enabled {
+			addBondingAndSpeedToHostsTable()
+			gocron.Every(1).Day().At(g.Config().Speed.Time).Do(addBondingAndSpeedToHostsTable)
 		}
 		<-gocron.Start()
 	}
@@ -217,6 +243,596 @@ func syncIDCsTable() {
 	updateIDCsTable(IDCNames, IDCsMap)
 }
 
+func getHostsBondingAndSpeed(hostname string) map[string]int {
+	item := map[string]int{}
+	param := cmodel.GraphLastParam{
+		Endpoint: hostname,
+	}
+	param.Counter = "nic.bond.mode"
+	resp, err := graph.Last(param)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if resp != nil {
+		value := int(resp.Value.Value)
+		if value >= 0 {
+			item["bonding"] = value
+		}
+	}
+	param.Counter = "nic.default.out.speed"
+	resp, err = graph.Last(param)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if resp != nil {
+		value := int(resp.Value.Value)
+		if value > 0 {
+			item["speed"] = value
+		}
+	}
+	return item
+}
+
+func addBondingAndSpeedToHostsTable() {
+	log.Debugf("func addBondingAndSpeedToHostsTable()")
+	o := orm.NewOrm()
+	var rows []orm.Params
+	sql := "SELECT id, hostname FROM `boss`.`hosts` WHERE exist = 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if num > 0 {
+		var host Hosts
+		for _, row := range rows {
+			hostname := row["hostname"].(string)
+			item := getHostsBondingAndSpeed(hostname)
+			o.Using("boss")
+			err = o.QueryTable("hosts").Filter("hostname", hostname).One(&host)
+			if err != nil {
+				log.Errorf(err.Error())
+			} else {
+				if _, ok := item["bonding"]; ok {
+					host.Bonding = item["bonding"]
+				}
+				if _, ok := item["speed"]; ok {
+					host.Speed = item["speed"]
+				}
+				host.Updated = getNow()
+				_, err = o.Update(&host)
+				if err != nil {
+					log.Errorf(err.Error())
+				}
+			}
+		}
+	}
+}
+
+func getPlatformsType(nodes map[string]interface{}, result map[string]interface{}, platformsMap map[string]map[string]string) map[string]map[string]string {
+	fcname := g.Config().Api.Name
+	fctoken := getFctoken()
+	url := g.Config().Api.Platform
+	params := map[string]string{
+		"fcname":   fcname,
+		"fctoken":  fctoken,
+	}
+	s, err := json.Marshal(params)
+	if err != nil {
+		log.Errorf(err.Error())
+		return platformsMap
+	}
+	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
+	if err != nil {
+		log.Errorf(err.Error())
+		return platformsMap
+	}
+	reqPost.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(reqPost)
+	if err != nil {
+		log.Errorf(err.Error())
+		return platformsMap
+	} else {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		err = json.Unmarshal(body, &nodes)
+		if err != nil {
+			log.Errorf(err.Error())
+			return platformsMap
+		}
+		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
+			if len(nodes["result"].([]interface{})) == 0 {
+				errorMessage := "No platforms returned"
+				setError(errorMessage, result)
+				return platformsMap
+			} else {
+				re_inside_whiteSpaces := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
+				for _, platform := range nodes["result"].([]interface{}) {
+					platformName := ""
+					if platform.(map[string]interface{})["platform"] != nil {
+						platformName = platform.(map[string]interface{})["platform"].(string)
+					}
+					platformType := ""
+					if platform.(map[string]interface{})["platform_type"] != nil {
+						platformType = platform.(map[string]interface{})["platform_type"].(string)
+					}
+					department := ""
+					if platform.(map[string]interface{})["department"] != nil {
+						department = platform.(map[string]interface{})["department"].(string)
+					}
+					team := ""
+					if platform.(map[string]interface{})["team"] != nil {
+						team = platform.(map[string]interface{})["team"].(string)
+					}
+					visible := ""
+					if platform.(map[string]interface{})["visible"] != nil {
+						visible = platform.(map[string]interface{})["visible"].(string)
+					}
+					description := platform.(map[string]interface{})["description"].(string)
+					if len(description) > 0 {
+						description = strings.Replace(description, "\r", " ", -1)
+						description = strings.Replace(description, "\n", " ", -1)
+						description = strings.Replace(description, "\t", " ", -1)
+						description = strings.TrimSpace(description)
+						description = re_inside_whiteSpaces.ReplaceAllString(description, " ")
+						if len(description) > 200 {
+							description = string([]rune(description)[0:100])
+						}
+					}
+					if value, ok := platformsMap[platformName]; ok {
+						value["type"] = platformType
+						value["visible"] = visible
+						value["department"] = department
+						value["team"] = team
+						value["description"] = description
+						platformsMap[platformName] = value
+					}
+				}
+			}
+		} else {
+			setError("Error occurs", result)
+		}
+	}
+	return platformsMap
+}
+
+func getDurationForNetTableQuery(offset int) (int64, int64) {
+	year, month, day := time.Now().Date()
+	loc, err := time.LoadLocation("Asia/Taipei")
+	if err != nil {
+		loc = time.Local
+	}
+	timestampFrom := time.Date(year, month, day - offset, 0, 0, 0, 0, loc).Unix() - 300
+	timestampTo := time.Date(year, month, day - offset, 23, 59, 59, 0, loc).Unix()
+	return timestampFrom, timestampTo
+}
+
+func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]map[string]int, string, map[string]int) {
+	data := map[string]map[string]int{
+		"in": map[string]int{},
+		"out": map[string]int{},
+	}
+	date := ""
+	counts := map[string]int{
+		"in": 0,
+		"out": 0,
+	}
+	hostnames := []string{}
+	var rows []orm.Params
+	o := orm.NewOrm()
+	sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
+	sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
+	num, err := o.Raw(sql, platformName).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+	} else if num > 0 {
+		for _, row := range rows {
+			hostnames = append(hostnames, row["hostname"].(string))
+		}
+	}
+	metrics := getMetricsByMetricType("bandwidths")
+	timestampFrom, timestampTo := getDurationForNetTableQuery(offset)
+	responses := []*cmodel.GraphQueryResponse{}
+	for _, hostname := range hostnames {
+		for _, metric := range metrics {
+			request := cmodel.GraphQueryParam{
+				Endpoint:  hostname,
+				Counter:   metric,
+				Start:     timestampFrom,
+				End:       timestampTo,
+				ConsolFun: "AVERAGE",
+				Step:      1200,
+			}
+			response, err := graph.QueryOne(request)
+			if err != nil {
+				log.Debugf("graph.queryOne fail = %v", err.Error())
+			} else {
+				responses = append(responses, response)
+			}
+		}
+	}
+	dataRaw := map[string]map[string]float64{
+		"in": map[string]float64{},
+		"out": map[string]float64{},
+	}
+	tickers := []string{}
+	if len(responses) > 0 {
+		index := -1
+		max := 0
+		for key, item := range responses {
+			if max < len(item.Values) {
+				max = len(item.Values)
+				index = key
+			}
+		}
+		if index == -1 {
+			date = time.Unix(timestampTo, 0).Format("2006-01-02")
+			return data, date, counts
+		}
+		unit := 20
+		tickersMap := map[string]float64{}
+		for _, rrdObj := range responses[index].Values {
+			ticker := getTicker(rrdObj.Timestamp, unit)
+			if _, ok := tickersMap[ticker]; !ok {
+				if len(ticker) > 0 {
+					tickersMap[ticker] = float64(0)
+					tickers = append(tickers, ticker)
+				}
+			}
+		}
+		for _, series := range responses {
+			metric := strings.Replace(series.Counter, "net.if.", "", -1)
+			metric = strings.Replace(metric, ".bits/iface=eth_all", "", -1)
+			for _, rrdObj := range series.Values {
+				value := float64(rrdObj.Value)
+				if !math.IsNaN(value) {
+					timestamp := rrdObj.Timestamp
+					ticker := getNearestTicker(float64(timestamp), tickers)
+					if len(ticker) > 0 {
+						if _, ok := dataRaw[metric][ticker]; ok {
+							dataRaw[metric][ticker] += value
+						} else {
+							dataRaw[metric][ticker] = value
+						}
+					}
+				}
+			}
+			counts[metric]++
+		}
+	}
+	for metric, series := range dataRaw {
+		for _, ticker := range tickers {
+			value := int(math.Floor(series[ticker]))
+			date = strings.Split(ticker, " ")[0]
+			ticker = strings.Split(ticker, " ")[1]
+			data[metric][ticker] = value
+		}
+	}
+	return data, date, counts
+}
+
+func getMean(values []int) int {
+	mean := 0
+	if len(values) == 0 {
+		return mean
+	}
+	sum := 0
+	for _, value := range values {
+		sum += value
+	}
+	mean = sum / len(values)
+	return mean
+}
+
+func getStandardDeviation(values []int) int {
+	deviation := 0
+	if len(values) == 0 {
+		return deviation
+	}
+	total := 0
+	mean := getMean(values)
+	for _, value := range values {
+		total += (value - mean) * (value - mean)
+	}
+	variance := float64(total) / float64(len(values))
+	deviation = int(math.Sqrt(variance))
+	return deviation
+}
+
+func getMinMaxAvg(values []int) (int, int, int) {
+	avg := 0
+	min := 0
+	max := 0
+	if len(values) > 0 {
+		sum := 0
+		for _, value := range values {
+			sum += value
+		}
+		avg = sum / len(values)
+		sort.Ints(values)
+		min = values[0]
+		max = values[len(values)-1]
+	}
+	return min, max, avg
+}
+
+func writeToDeviationsTable(platformName string, hour int, minute int, date string, ticker string) {
+	o := orm.NewOrm()
+	var rows []orm.Params
+	dateFull := date + " " + ticker + ":00"
+	sql := "SELECT metric, COUNT(DISTINCT date), AVG(bits), STD(bits) "
+	sql += "FROM `apollo`.`net` WHERE platform = ? AND hour = ? AND minute = ? "
+	sql += "AND date >= DATE_SUB(?, INTERVAL 7 DAY) "
+	sql += "AND date < DATE_SUB(?, INTERVAL 1 DAY) GROUP BY metric"
+	num, err := o.Raw(sql, platformName, hour, minute, dateFull, dateFull).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	} else if num > 0 {
+		for _, row := range rows {
+			samples := 0
+			value, err := strconv.Atoi(row["COUNT(DISTINCT date)"].(string))
+			if err != nil {
+				log.Errorf(err.Error())
+			} else {
+				samples = value
+			}
+			if samples >= 3 {
+				metricKey := 0
+				value, err := strconv.Atoi(row["metric"].(string))
+				if err != nil {
+					log.Errorf(err.Error())
+				} else {
+					metricKey = value
+				}
+				mean := 0
+				val, err := strconv.ParseFloat(row["AVG(bits)"].(string), 64)
+				if err != nil {
+					log.Errorf(err.Error())
+				} else {
+					mean = int(math.Floor(val))
+				}
+				deviation := 0
+				val, err = strconv.ParseFloat(row["STD(bits)"].(string), 64)
+				if err != nil {
+					log.Errorf(err.Error())
+				} else {
+					deviation = int(math.Floor(val))
+				}
+				sql = "SELECT id FROM `apollo`.`deviations` WHERE date = ? AND platform = ? AND metric = ? LIMIT 1"
+				num, err = o.Raw(sql, date + " " + ticker, platformName, metricKey).Values(&rows)
+				if err != nil {
+					log.Errorf(err.Error())
+				} else if num == 0 {
+					sql = "INSERT INTO `apollo`.`deviations`(`date`, `platform`, `metric`,"
+					sql += "`samples`, `mean`, `deviation`, `updated`) VALUES("
+					sql += "?, ?, ?, ?, ?, ?, ?)"
+					_, err := o.Raw(sql, date + " " + ticker, platformName, metricKey, samples, mean, deviation,
+						getNow()).Exec()
+					if err != nil {
+						log.Errorf(err.Error())
+					}
+				}
+			}
+		}
+	}
+}
+
+func syncDeviationsTable() {
+	platformNames := []string{}
+	platformsMap := map[string]map[string]string{}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	sql := "SELECT updated FROM `apollo`.`deviations` ORDER BY updated DESC LIMIT 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	} else if num > 0 {
+		format := "2006-01-02 15:04:05"
+		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
+		currentTime, _ := time.Parse(format, getNow())
+		diff := currentTime.Unix() - updatedTime.Unix()
+		if int(diff) < g.Config().Contacts.Interval {
+			return
+		}
+	}
+	sql = "SELECT platform, principal FROM `boss`.`platforms` WHERE type LIKE '%业务' AND visible = 1 AND count > 0 ORDER BY platform ASC"
+	num, err = o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	} else if num > 0 {
+		for _, row := range rows {
+			platformName := row["platform"].(string)
+			platformsMap[platformName] = map[string]string{
+				"contact": row["principal"].(string),
+			}
+			platformNames = append(platformNames, platformName)
+		}
+	}
+	hours := []int{}
+	for hour := 0; hour < 24; hour++ {
+		hours = append(hours, hour)
+	}
+	minutes := []int{0, 20, 40,}
+	for _, platformName := range platformNames {
+		for i := 0; i < 30; i++ {
+			offset := i * (-1)
+			date := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
+			dateFull := date + " 00:00:00"
+			sql = "SELECT DISTINCT date FROM `apollo`.`net` "
+			sql += "WHERE platform = ? AND hour = ? AND minute = ? "
+			sql += "AND date >= DATE_SUB(?, INTERVAL 7 DAY) "
+			sql += "AND date < DATE_SUB(?, INTERVAL 1 DAY) ORDER BY date DESC"
+			num, err = o.Raw(sql, platformName, 0, 0, dateFull, dateFull).Values(&rows)
+			if err != nil {
+				log.Errorf(err.Error())
+				break
+			} else if num > 1 {
+				for _, hour := range hours {
+					for _, minute := range minutes {
+						ticker := strconv.Itoa(hour) + ":"
+						if hour < 10 {
+							ticker = "0" + ticker
+						}
+						if minute == 0 {
+							ticker += "00"
+						} else {
+							ticker += strconv.Itoa(minute)
+						}
+						dateQuery := date + " " + ticker + "%"
+						sql = "SELECT date FROM `apollo`.`deviations` WHERE platform = ? AND date LIKE ? LIMIT 1"
+						num, err = o.Raw(sql, platformName, dateQuery).Values(&rows)
+						if err != nil {
+							log.Errorf(err.Error())
+						} else if num == 0 {
+							writeToDeviationsTable(platformName, hour, minute, date, ticker)
+						}
+					}
+				}
+			} else {
+				break
+			}
+		}
+	}
+}
+
+func writeToNetTable(platformName string, offset int) {
+	hours := []int{}
+	for hour := 0; hour < 24; hour++ {
+		hours = append(hours, hour)
+	}
+	minutes := []int{0, 20, 40,}
+	o := orm.NewOrm()
+	var rows []orm.Params
+	data, date, counts := getPlatformsDailyTrafficData(platformName, offset)
+	metrics := []string{
+		"in",
+		"out",
+	}
+	for metricKey, metric := range metrics {
+		for _, hour := range hours {
+			for _, minute := range minutes {
+				ticker := strconv.Itoa(hour) + ":"
+				if hour < 10 {
+					ticker = "0" + ticker
+				}
+				if minute == 0 {
+					ticker += "00"
+				} else {
+					ticker += strconv.Itoa(minute)
+				}
+				bits := 0
+				if val, ok := data[metric][ticker]; ok {
+					bits = val
+				}
+				sql := "SELECT id, date, hour, minute, platform, metric, count FROM `apollo`.`net` "
+				sql += "WHERE date = ? AND hour = ? AND minute = ? AND platform = ? AND metric = ? LIMIT 1"
+				num, err := o.Raw(sql, date, hour, minute, platformName, metricKey).Values(&rows)
+				if err != nil {
+					log.Errorf(err.Error())
+				} else if num == 0 {
+					sql = "INSERT INTO `apollo`.`net`(`date`, `hour`, `minute`,"
+					sql += "`platform`, `metric`, `count`, `bits`,"
+					sql += "`updated`) VALUES("
+					sql += "?, ?, ?, ?, ?, ?, ?, ?)"
+					_, err := o.Raw(sql, date, hour, minute, platformName,
+						metricKey, counts[metric], bits,
+						getNow()).Exec()
+					if err != nil {
+						log.Errorf(err.Error())
+					}
+				} else if num > 0 {
+					count, _ := strconv.Atoi(rows[0]["count"].(string))
+					if count < counts[metric] {
+						ID := rows[0]["id"]
+						sql := "UPDATE `apollo`.`net`"
+						sql += " SET `date` = ?, `hour` = ?, `minute` = ?,"
+						sql += " `platform` = ?, `metric` = ?, `count` = ?,"
+						sql += " `bits` = ?, `updated` = ?"
+						sql += " WHERE id = ?"
+						_, err := o.Raw(sql, date, hour, minute, platformName,
+							metricKey, counts[metric], bits,
+							getNow(), ID).Exec()
+						if err != nil {
+							log.Errorf(err.Error())
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
+func syncNetTable() {
+	o := orm.NewOrm()
+	var rows []orm.Params
+	sql := "SELECT updated FROM `apollo`.`net` ORDER BY updated DESC LIMIT 1"
+	num, err := o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	} else if num > 0 {
+		format := "2006-01-02 15:04:05"
+		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
+		currentTime, _ := time.Parse(format, getNow())
+		diff := currentTime.Unix() - updatedTime.Unix()
+		if int(diff) < g.Config().Contacts.Interval {
+			return
+		}
+	}
+	platformNames := []string{}
+	sql = "SELECT platform, count FROM `boss`.`platforms` WHERE type LIKE '%业务' AND visible = 1 AND count > 0 ORDER BY platform ASC"
+	num, err = o.Raw(sql).Values(&rows)
+	if err != nil {
+		log.Errorf(err.Error())
+		return
+	} else if num > 0 {
+		for _, row := range rows {
+			platformName := row["platform"].(string)
+			platformNames = append(platformNames, platformName)
+		}
+	}
+	for _, platformName := range platformNames {
+		for i := 1; i < 7; i++ {
+			hostCountOfData := 0
+			offset := i * (-1)
+			date := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
+			sql = "SELECT MIN(count) FROM `apollo`.`net` "
+			sql += "WHERE platform = ? AND date LIKE ?"
+			num, err = o.Raw(sql, platformName, date + "%").Values(&rows)
+			if err != nil {
+				log.Errorf(err.Error())
+			} else if num > 0 {
+				if val, ok := rows[0]["MIN(count)"]; ok {
+					if val != nil {
+						value, err := strconv.Atoi(val.(string))
+						if err == nil {
+							hostCountOfData = value
+						}
+					}
+				}
+			}
+			if hostCountOfData == 0 {
+				writeToNetTable(platformName, i)
+			} else {
+				hostCountOfPlatform := 0
+				sql = "SELECT DISTINCT hostname FROM `boss`.`ips` "
+				sql += "WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
+				num, err = o.Raw(sql, platformName).Values(&rows)
+				if err != nil {
+					log.Errorf(err.Error())
+				} else {
+					hostCountOfPlatform = int(num)
+				}
+				if (hostCountOfData < hostCountOfPlatform) && (hostCountOfPlatform > 0) {
+					writeToNetTable(platformName, i)
+				}
+			}
+		}
+	}
+}
+
 func syncHostsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
@@ -246,14 +862,14 @@ func syncHostsTable() {
 		return
 	}
 	platformNames := []string{}
-	platformsMap := map[string]map[string]interface{}{}
+	platformsMap := map[string]map[string]string{}
+	hostname := ""
 	hostnames := []string{}
+	hostsMap := map[string]map[string]string{}
 	IPs := []string{}
 	IPKeys := []string{}
 	IPsMap := map[string]map[string]string{}
-	hostsMap := map[string]map[string]string{}
 	idcIDs := []string{}
-	hostname := ""
 	for _, platform := range nodes["result"].([]interface{}) {
 		platformName := platform.(map[string]interface{})["platform"].(string)
 		platformNames = appendUniqueString(platformNames, platformName)
@@ -261,11 +877,13 @@ func syncHostsTable() {
 			hostname = device.(map[string]interface{})["hostname"].(string)
 			IP := device.(map[string]interface{})["ip"].(string)
 			status := device.(map[string]interface{})["ip_status"].(string)
+			IPType := device.(map[string]interface{})["ip_type"].(string)
 			item := map[string]string{
 				"IP":       IP,
 				"status":   status,
 				"hostname": hostname,
 				"platform": platformName,
+				"type":     strings.ToLower(IPType),
 			}
 			IPs = append(IPs, IP)
 			IPKey := platformName + "_" + IP
@@ -317,8 +935,13 @@ func syncHostsTable() {
 				}
 			}
 		}
-		platformsMap[platformName] = map[string]interface{}{
+		platformsMap[platformName] = map[string]string{
 			"platformName": platformName,
+			"type": "",
+			"visible": "",
+			"department": "",
+			"team": "",
+			"description": "",
 		}
 	}
 	sort.Strings(IPs)
@@ -328,6 +951,7 @@ func syncHostsTable() {
 	log.Debugf("platformNames =", platformNames)
 	updateIPsTable(IPKeys, IPsMap)
 	updateHostsTable(hostnames, hostsMap)
+	platformsMap = getPlatformsType(nodes, result, platformsMap)
 	updatePlatformsTable(platformNames, platformsMap)
 	muteFalconHostTable(hostnames, hostsMap)
 }
@@ -515,7 +1139,6 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			return
 		}
 	}
-
 	for _, IPName := range IPNames {
 		item := IPsMap[IPName]
 		sql := "SELECT id FROM boss.ips WHERE ip = ? AND platform = ? LIMIT 1"
@@ -523,9 +1146,9 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 		if num == 0 {
 			status, _ := strconv.Atoi(item["status"])
 			sql := "INSERT INTO boss.ips("
-			sql += "ip, exist, status, hostname, platform, updated) "
-			sql += "VALUES(?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now).Exec()
+			sql += "ip, exist, status, type, hostname, platform, updated) "
+			sql += "VALUES(?, ?, ?, ?, ?, ?, ?)"
+			_, err := o.Raw(sql, item["IP"], 1, status, item["type"], item["hostname"], item["platform"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -536,10 +1159,10 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 			ID := row["id"]
 			status, _ := strconv.Atoi(item["status"])
 			sql := "UPDATE boss.ips"
-			sql += " SET ip = ?, exist = ?, status = ?,"
+			sql += " SET ip = ?, exist = ?, status = ?, type = ?,"
 			sql += " hostname = ?, platform = ?, updated = ?"
 			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, item["IP"], 1, status, item["hostname"], item["platform"], now, ID).Exec()
+			_, err := o.Raw(sql, item["IP"], 1, status, item["type"], item["hostname"], item["platform"], now, ID).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
@@ -696,30 +1319,50 @@ func muteFalconHostTable(hostnames []string, hostsMap map[string]map[string]stri
 	}
 }
 
-func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]interface{}) {
+func updatePlatformsTable(platformNames []string, platformsMap map[string]map[string]string) {
 	log.Debugf("func updatePlatformsTable()")
 	now := getNow()
 	o := orm.NewOrm()
 	o.Using("boss")
 	var platform Platforms
+	var rows []orm.Params
+	sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
+	sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
+	sqlInsert := "INSERT INTO `boss`.`platforms`"
+	sqlInsert += "(platform, type, visible, count, department, team, description, updated) "
+	sqlInsert += "VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
 	for _, platformName := range platformNames {
-		count, err := o.QueryTable("ips").Filter("platform", platformName).Filter("exist", 1).Filter("status", 1).Exclude("hostname__isnull", true).Count()
+		count, err := o.Raw(sql, platformName).Values(&rows)
 		if err != nil {
 			count = 0
+			log.Errorf(err.Error())
 		}
 		group := platformsMap[platformName]
 		err = o.QueryTable("platforms").Filter("platform", group["platformName"]).One(&platform)
 		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.platforms(platform, count, updated) VALUES(?, ?, ?)"
-			_, err := o.Raw(sql, group["platformName"], count, now).Exec()
+			_, err := o.Raw(sqlInsert, group["platformName"], group["type"], group["visible"], count, group["department"], group["team"], group["description"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
 			}
 		} else if err != nil {
 			log.Errorf(err.Error())
 		} else {
-			platform.Platform = group["platformName"].(string)
+			platform.Platform = group["platformName"]
+			if len(group["type"]) > 0 {
+				platform.Type = group["type"]
+			}
+			if len(group["visible"]) > 0 {
+				platform.Visible = 0
+				if group["visible"] == "1" {
+					platform.Visible = 1
+				}
+			}
 			platform.Count = int(count)
+			if len(group["department"]) > 0 {
+				platform.Department = group["department"]
+			}
+			platform.Team = group["team"]
+			platform.Description = group["description"]
 			platform.Updated = now
 			_, err := o.Update(&platform)
 			if err != nil {

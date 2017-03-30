@@ -1,13 +1,16 @@
 package nqm
 
 import (
+	"reflect"
+
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	"github.com/Cepave/open-falcon-backend/common/utils"
+
 	. "gopkg.in/check.v1"
-	"reflect"
 )
 
 type TestTargetSuite struct{}
@@ -30,7 +33,7 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 	defaultTarget_2.ProvinceId = 20
 	defaultTarget_2.CityId = 6
 	defaultTarget_2.NameTagValue = "IBM-617"
-	defaultTarget_2.GroupTags = []string {
+	defaultTarget_2.GroupTags = []string{
 		"KSC-03", "KSC-04", "KSC-05",
 	}
 
@@ -42,13 +45,13 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 
 	testCases := []*struct {
 		addedTarget *nqmModel.TargetForAdding
-		hasError bool
-		errorType reflect.Type
-	} {
-		{ defaultTarget_1, false, nil }, // Use the minimum value
-		{ defaultTarget_1, true, reflect.TypeOf(ErrDuplicatedNqmTarget{}) },
-		{ defaultTarget_2, false, nil }, // Use every properties
-		{ &defaultTarget_3, true, reflect.TypeOf(owlDb.ErrNotInSameHierarchy{}) }, // Duplicated connection id
+		hasError    bool
+		errorType   reflect.Type
+	}{
+		{defaultTarget_1, false, nil}, // Use the minimum value
+		{defaultTarget_1, true, reflect.TypeOf(ErrDuplicatedNqmTarget{})},
+		{defaultTarget_2, false, nil},                                           // Use every properties
+		{&defaultTarget_3, true, reflect.TypeOf(owlDb.ErrNotInSameHierarchy{})}, // Duplicated connection id
 	}
 
 	for _, testCase := range testCases {
@@ -84,15 +87,15 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 
 // Tests the updating for data of target
 func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
-	modifiedTarget := &nqmModel.TargetForAdding {
-		Name: "new-tg-1",
-		Comment: "new-comment-1",
-		Status: false,
-		ProvinceId: 26,
-		CityId: 194,
-		IspId: 2,
+	modifiedTarget := &nqmModel.TargetForAdding{
+		Name:         "new-tg-1",
+		Comment:      utils.PointerOfCloneString("new-comment-1"),
+		Status:       false,
+		ProvinceId:   26,
+		CityId:       194,
+		IspId:        2,
 		NameTagValue: "tg-nt-2",
-		GroupTags: []string{"tg-gt-3", "tg-gt-4", "tg-gt-5"},
+		GroupTags:    []string{"tg-gt-3", "tg-gt-4", "tg-gt-5"},
 	}
 
 	originalTarget := GetTargetById(34091)
@@ -101,7 +104,7 @@ func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 
 	c.Assert(err, IsNil)
 	c.Assert(testedTarget.Name, Equals, modifiedTarget.Name)
-	c.Assert(testedTarget.Comment, Equals, modifiedTarget.Comment)
+	c.Assert(testedTarget.Comment, DeepEquals, modifiedTarget.Comment)
 	c.Assert(testedTarget.Status, Equals, modifiedTarget.Status)
 	c.Assert(testedTarget.ProvinceId, Equals, modifiedTarget.ProvinceId)
 	c.Assert(testedTarget.CityId, Equals, modifiedTarget.CityId)
@@ -116,10 +119,10 @@ func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 func (suite *TestTargetSuite) TestGetTargetById(c *C) {
 	testCases := []*struct {
 		sampleIdOfTarget int32
-		hasFound bool
-	} {
-		{ 23041, true },
-		{ 23051, false },
+		hasFound         bool
+	}{
+		{23041, true},
+		{23051, false},
 	}
 
 	for i, testCase := range testCases {
@@ -137,42 +140,43 @@ func (suite *TestTargetSuite) TestGetTargetById(c *C) {
 // Tests the listing of targets
 func (suite *TestTargetSuite) TestListTargets(c *C) {
 	testCases := []*struct {
-		query *nqmModel.TargetQuery
-		pageSize int32
-		pagePosition int32
+		query                      *nqmModel.TargetQuery
+		pageSize                   int32
+		pagePosition               int32
 		expectedCountOfCurrentPage int
-		expectedCountOfAll int32
-	} {
+		expectedCountOfAll         int32
+	}{
 		{ // All data
-			&nqmModel.TargetQuery {},
+			&nqmModel.TargetQuery{ IspId: -2, HasStatus: "!N!" },
 			10, 1, 3, 3,
 		},
 		{ // 2nd page
-			&nqmModel.TargetQuery {},
+			&nqmModel.TargetQuery{ IspId: -2, HasStatus: "!N!" },
 			2, 2, 1, 3,
 		},
 		{ // Match nothing for futher page
-			&nqmModel.TargetQuery {},
+			&nqmModel.TargetQuery{ IspId: -2, HasStatus: "!N!" },
 			10, 10, 0, 3,
 		},
 		{ // Match 1 row by all of the conditions
-			&nqmModel.TargetQuery {
-				Name: "tg-name-1",
-				Host: "tg-host-1",
-				HasIspId: true,
-				IspId: 3,
-				HasStatusCondition: true,
-				Status: true,
+			&nqmModel.TargetQuery{
+				Name:               "tg-name-1",
+				Host:               "tg-host-1",
+				IspId:              3,
+				HasStatus: "true",
+				Status:             true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match 1 row(by ISP id)
-			&nqmModel.TargetQuery {
-				HasIspId: true,
-				IspId: 5,
+			&nqmModel.TargetQuery{
+				IspId:    5,
+				HasStatus: "!N!",
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
-			&nqmModel.TargetQuery {
+			&nqmModel.TargetQuery{
+				IspId: -2,
+				HasStatus: "!N!",
 				Name: "tg-easy-1",
 				Host: "tg-host-1",
 			}, 10, 1, 0, 0,
@@ -181,19 +185,20 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 
 	for i, testCase := range testCases {
 		paging := commonModel.Paging{
-			Size: testCase.pageSize,
+			Size:     testCase.pageSize,
 			Position: testCase.pagePosition,
-			OrderBy: []*commonModel.OrderByEntity {
-				&commonModel.OrderByEntity{ "name", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "status", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "host", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "comment", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "isp", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "province", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "city", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "creation_time", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "name_tag", commonModel.Ascending },
-				&commonModel.OrderByEntity{ "group_tag", commonModel.Descending },
+			OrderBy: []*commonModel.OrderByEntity{
+				&commonModel.OrderByEntity{"id", commonModel.Descending},
+				&commonModel.OrderByEntity{"name", commonModel.Ascending},
+				&commonModel.OrderByEntity{"status", commonModel.Ascending},
+				&commonModel.OrderByEntity{"host", commonModel.Ascending},
+				&commonModel.OrderByEntity{"comment", commonModel.Ascending},
+				&commonModel.OrderByEntity{"isp", commonModel.Ascending},
+				&commonModel.OrderByEntity{"province", commonModel.Ascending},
+				&commonModel.OrderByEntity{"city", commonModel.Ascending},
+				&commonModel.OrderByEntity{"creation_time", commonModel.Ascending},
+				&commonModel.OrderByEntity{"name_tag", commonModel.Ascending},
+				&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
 			},
 		}
 
@@ -206,8 +211,8 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 		for _, target := range testedResult {
 			c.Logf("[List] Target: %v.", target)
 		}
-		c.Assert(testedResult, HasLen, testCase.expectedCountOfCurrentPage, Commentf("Test Case: %d", i + 1))
-		c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll, Commentf("Test Case: %d", i + 1))
+		c.Assert(testedResult, HasLen, testCase.expectedCountOfCurrentPage, Commentf("Test Case: %d", i+1))
+		c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll, Commentf("Test Case: %d", i+1))
 	}
 }
 
@@ -216,13 +221,13 @@ func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
 	testCases := []*struct {
 		sampleId int32
 		hasFound bool
-	} {
-		{ 6981, true },
-		{ 6982, false },
+	}{
+		{6981, true},
+		{6982, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		c.Assert(GetSimpleTarget1ById(testCase.sampleId), ocheck.ViableValue, testCase.hasFound, comment)
 	}
@@ -231,27 +236,27 @@ func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
 // Tests the loading of targets by filter
 func (suite *TestTargetSuite) TestLoadSimpleTarget1sByFilter(c *C) {
 	testCases := []*struct {
-		sampleFilter *nqmModel.TargetFilter
+		sampleFilter   *nqmModel.TargetFilter
 		expectedNumber int
-	} {
+	}{
 		{ // List all of data
-			&nqmModel.TargetFilter {}, 3,
+			&nqmModel.TargetFilter{}, 3,
 		},
 		{ // Matches some of data
-			&nqmModel.TargetFilter {
-				Name: []string{ "ftg-1", "ftg-1-C01" },
-				Host: []string{ "20.45" },
+			&nqmModel.TargetFilter{
+				Name: []string{"ftg-1", "ftg-1-C01"},
+				Host: []string{"20.45"},
 			}, 2,
 		},
 		{ // Matches nothing
-			&nqmModel.TargetFilter {
-				Name: []string{ "no-such-tt" },
+			&nqmModel.TargetFilter{
+				Name: []string{"no-such-tt"},
 			}, 0,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := LoadSimpleTarget1sByFilter(testCase.sampleFilter)
 		c.Assert(testedResult, HasLen, testCase.expectedNumber, comment)

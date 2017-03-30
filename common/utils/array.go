@@ -1,3 +1,8 @@
+// This package provides misc utilities.
+//
+// Array process
+//
+// MakeAbstractArray() wraps an array object to *AbstractArray.
 package utils
 
 import (

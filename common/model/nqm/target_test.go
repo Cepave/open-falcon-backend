@@ -1,7 +1,9 @@
 package nqm
 
 import (
-	"github.com/leebenson/conform"
+	"github.com/Cepave/open-falcon-backend/common/conform"
+	"github.com/Cepave/open-falcon-backend/common/utils"
+
 	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
 	. "gopkg.in/check.v1"
 	"reflect"
@@ -16,16 +18,16 @@ func (suite *TestTargetSuite) TestConformOfTargetForAdding(c *C) {
 	testedTarget := &TargetForAdding {
 		Name: " name-1 ",
 		Host: " host-1 ",
-		Comment: " comment-1 ",
+		Comment: utils.PointerOfCloneString(" comment-1 "),
 		NameTagValue: " name-tag-1 ",
 		GroupTags: []string{ " gt-1 ", " gt-2 " },
 	}
 
-	conform.Strings(testedTarget)
+	conform.MustConform(testedTarget)
 
 	c.Assert(testedTarget.Name, Equals, "name-1")
 	c.Assert(testedTarget.Host, Equals, "host-1")
-	c.Assert(testedTarget.Comment, Equals, "comment-1")
+	c.Assert(testedTarget.Comment, DeepEquals, utils.PointerOfCloneString("comment-1"))
 	c.Assert(testedTarget.NameTagValue, Equals, "name-tag-1")
 	c.Assert(testedTarget.GroupTags, DeepEquals, []string{ "gt-1", "gt-2" })
 }

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
-CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng
+CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng f2e-api
 TARGET = open-falcon
 
 VERSION := $(shell cat VERSION)
@@ -8,9 +8,11 @@ VERSION := $(shell cat VERSION)
 all: trash $(CMD) $(TARGET)
 
 $(CMD):
+	go get ./modules/$@
 	go build -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
+	go get .
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
 
 checkbin: bin/ config/ open-falcon cfg.json
@@ -26,6 +28,7 @@ pack: checkbin
 	@cp -r ./modules/fe/{static,views,scripts} ./out/fe/bin
 	@cp -r ./modules/alarm/{static,views} ./out/alarm/bin
 	@cp -r ./modules/agent/public ./out/agent/bin
+	@cp -r ./modules/f2e-api/data ./out/f2e-api/
 	@cp cfg.json ./out/cfg.json
 	@bash ./config/confgen.sh
 	@cp $(TARGET) ./out/$(TARGET)
@@ -41,6 +44,7 @@ clean:
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
 trash:
+	go get -u github.com/rancher/trash
 	trash -k -cache package_cache_tmp
 
-.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe
+.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api

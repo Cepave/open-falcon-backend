@@ -1,10 +1,68 @@
 package owl
 
 import (
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	"fmt"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	"github.com/Cepave/open-falcon-backend/common/db"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	t "github.com/Cepave/open-falcon-backend/common/textbuilder"
+	tsql "github.com/Cepave/open-falcon-backend/common/textbuilder/sql"
 )
+
+var orderByDialectForNameTag = model.NewSqlOrderByDialect(
+	map[string]string {
+		"value": "nt_value",
+	},
+)
+
+// This function skipes the -1 name tag
+func ListNameTags(value string, p *model.Paging) []*owlModel.NameTag {
+	var result = make([]*owlModel.NameTag, 0)
+
+	if len(p.OrderBy) == 0 {
+		p.OrderBy = append(p.OrderBy, &model.OrderByEntity{ "value", utils.Ascending })
+	}
+
+	var sqlParams = make([]interface{}, 0)
+	if value != "" {
+		sqlParams = append(sqlParams, value + "%")
+	}
+
+	txFunc := sqlxExt.TxCallbackFunc(func(tx *sqlx.Tx) db.TxFinale {
+		sql := fmt.Sprintf(
+			`
+			SELECT SQL_CALC_FOUND_ROWS nt_id, nt_value
+			FROM owl_name_tag
+			%s
+			%s
+			`,
+			tsql.Where(
+				tsql.And(
+					t.Dsl.S("nt_id >= 1"),
+					t.Dsl.S("nt_value LIKE ?").
+						Post().Viable(value != ""),
+				),
+			),
+			model.GetOrderByAndLimit(p, orderByDialectForNameTag),
+		)
+
+		sqlxExt.ToTxExt(tx).Select(
+			&result, sql, sqlParams...,
+		)
+
+		return db.TxCommit
+	})
+
+	DbFacade.SqlxDbCtrl.SelectWithFoundRows(
+		txFunc, p,
+	)
+
+	return result
+}
 
 func BuildAndGetNameTagId(tx *sqlx.Tx, valueOfNameTag string) int16 {
 	if valueOfNameTag == "" {

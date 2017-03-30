@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	commonOwlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -14,4 +15,14 @@ func listISPs(c *gin.Context) {
 	}
 	ISPs := commonOwlDb.GetISPsByName(ispName)
 	c.JSON(http.StatusOK, ISPs)
+}
+
+func getISPByID(
+	p *struct {
+		ISPID int16 `mvc:"param[isp_id]"`
+	},
+) mvc.OutputBody {
+	return mvc.JsonOutputOrNotFound(
+		commonOwlDb.GetIspById(p.ISPID),
+	)
 }

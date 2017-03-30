@@ -31,6 +31,8 @@ func InitDatabase() {
 	orm.RegisterDataBase("grafana", "mysql", strConn, config.Db.Idle, config.Db.Max)
 	orm.RegisterModel(new(Province), new(City), new(Idc))
 
+	orm.RegisterDataBase("apollo", "mysql", config.ApolloDB.Addr, config.ApolloDB.Idle, config.ApolloDB.Max)
+
 	orm.RegisterDataBase("boss", "mysql", config.BossDB.Addr, config.BossDB.Idle, config.BossDB.Max)
 	orm.RegisterModel(new(Contacts), new(Hosts), new(Idcs), new(Ips), new(Platforms))
 

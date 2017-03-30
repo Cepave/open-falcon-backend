@@ -41,9 +41,9 @@ class RPCClient(object):
 
 if __name__ == '__main__':
     rpc = RPCClient(("127.0.0.1", 8433))
-    for i in xrange(10000):
-        mv1 = dict(endpoint='host.niean', metric='metric.niean.1', value=i, step=60, 
-            counterType='GAUGE', tags='tag=t'+str(i), timestamp=int(time.time()))
-        mv2 = dict(endpoint='host.niean', metric='metric.niean.2', value=i, step=60, 
-            counterType='COUNTER', tags='tag=t'+str(i), timestamp=int(time.time()))
+    for i in xrange(1):
+        mv1 = dict(endpoint='host.niean', metric='metric.niean', value=i, step=60, 
+            counterType='GAUGE', tags='tagt'+str(i)+"=ooo,c2=3,g=4", timestamp=int(time.time()))
+        mv2 = dict(endpoint='host.niean', metric='metric.niean', value=i, step=60, 
+            counterType='COUNTER', tags='tag=t'+str(i)+"=oo2,cc=1", timestamp=int(time.time()))
         print rpc.call("Transfer.Update", [mv1, mv2])
