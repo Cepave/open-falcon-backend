@@ -312,8 +312,8 @@ func getPlatformsType(nodes map[string]interface{}, result map[string]interface{
 	fctoken := getFctoken()
 	url := g.Config().Api.Platform
 	params := map[string]string{
-		"fcname":   fcname,
-		"fctoken":  fctoken,
+		"fcname":  fcname,
+		"fctoken": fctoken,
 	}
 	s, err := json.Marshal(params)
 	if err != nil {
@@ -402,19 +402,19 @@ func getDurationForNetTableQuery(offset int) (int64, int64) {
 	if err != nil {
 		loc = time.Local
 	}
-	timestampFrom := time.Date(year, month, day - offset, 0, 0, 0, 0, loc).Unix() - 300
-	timestampTo := time.Date(year, month, day - offset, 23, 59, 59, 0, loc).Unix()
+	timestampFrom := time.Date(year, month, day-offset, 0, 0, 0, 0, loc).Unix() - 300
+	timestampTo := time.Date(year, month, day-offset, 23, 59, 59, 0, loc).Unix()
 	return timestampFrom, timestampTo
 }
 
 func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]map[string]int, string, map[string]int) {
 	data := map[string]map[string]int{
-		"in": map[string]int{},
+		"in":  map[string]int{},
 		"out": map[string]int{},
 	}
 	date := ""
 	counts := map[string]int{
-		"in": 0,
+		"in":  0,
 		"out": 0,
 	}
 	hostnames := []string{}
@@ -453,7 +453,7 @@ func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]m
 		}
 	}
 	dataRaw := map[string]map[string]float64{
-		"in": map[string]float64{},
+		"in":  map[string]float64{},
 		"out": map[string]float64{},
 	}
 	tickers := []string{}
@@ -602,14 +602,14 @@ func writeToDeviationsTable(platformName string, hour int, minute int, date stri
 					deviation = int(math.Floor(val))
 				}
 				sql = "SELECT id FROM `apollo`.`deviations` WHERE date = ? AND platform = ? AND metric = ? LIMIT 1"
-				num, err = o.Raw(sql, date + " " + ticker, platformName, metricKey).Values(&rows)
+				num, err = o.Raw(sql, date+" "+ticker, platformName, metricKey).Values(&rows)
 				if err != nil {
 					log.Errorf(err.Error())
 				} else if num == 0 {
 					sql = "INSERT INTO `apollo`.`deviations`(`date`, `platform`, `metric`,"
 					sql += "`samples`, `mean`, `deviation`, `updated`) VALUES("
 					sql += "?, ?, ?, ?, ?, ?, ?)"
-					_, err := o.Raw(sql, date + " " + ticker, platformName, metricKey, samples, mean, deviation,
+					_, err := o.Raw(sql, date+" "+ticker, platformName, metricKey, samples, mean, deviation,
 						getNow()).Exec()
 					if err != nil {
 						log.Errorf(err.Error())
@@ -658,7 +658,7 @@ func syncDeviationsTable() {
 	for hour := 0; hour < 24; hour++ {
 		hours = append(hours, hour)
 	}
-	minutes := []int{0, 20, 40,}
+	minutes := []int{0, 20, 40}
 	for _, platformName := range platformNames {
 		for i := 0; i < 30; i++ {
 			offset := i * (-1)
@@ -706,7 +706,7 @@ func writeToNetTable(platformName string, offset int) {
 	for hour := 0; hour < 24; hour++ {
 		hours = append(hours, hour)
 	}
-	minutes := []int{0, 20, 40,}
+	minutes := []int{0, 20, 40}
 	o := orm.NewOrm()
 	o.Using("apollo")
 	var rows []orm.Params
@@ -769,7 +769,6 @@ func writeToNetTable(platformName string, offset int) {
 	}
 }
 
-
 func syncNetTable() {
 	o := orm.NewOrm()
 	o.Using("apollo")
@@ -807,7 +806,7 @@ func syncNetTable() {
 			date := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
 			sql = "SELECT MIN(count) FROM `apollo`.`net` "
 			sql += "WHERE platform = ? AND date LIKE ?"
-			num, err = o.Raw(sql, platformName, date + "%").Values(&rows)
+			num, err = o.Raw(sql, platformName, date+"%").Values(&rows)
 			if err != nil {
 				log.Errorf(err.Error())
 			} else if num > 0 {
@@ -944,11 +943,11 @@ func syncHostsTable() {
 		}
 		platformsMap[platformName] = map[string]string{
 			"platformName": platformName,
-			"type": "",
-			"visible": "",
-			"department": "",
-			"team": "",
-			"description": "",
+			"type":         "",
+			"visible":      "",
+			"department":   "",
+			"team":         "",
+			"description":  "",
 		}
 	}
 	sort.Strings(IPs)
@@ -1033,21 +1032,21 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 			if items, ok := contacts[platformName]; ok {
 				contacts := []string{}
 				for role, user := range items.(map[string]map[string]string) {
-					if (role == "principal") {
+					if role == "principal" {
 						platform.Principal = user["name"]
-					} else if (role == "deputy") {
+					} else if role == "deputy" {
 						platform.Deputy = user["name"]
-					} else if (role == "upgrader") {
+					} else if role == "upgrader" {
 						platform.Upgrader = user["name"]
 					}
 				}
-				if (len(platform.Principal) > 0) {
+				if len(platform.Principal) > 0 {
 					contacts = append(contacts, platform.Principal)
 				}
-				if (len(platform.Deputy) > 0) {
+				if len(platform.Deputy) > 0 {
 					contacts = append(contacts, platform.Deputy)
 				}
-				if (len(platform.Upgrader) > 0) {
+				if len(platform.Upgrader) > 0 {
 					contacts = append(contacts, platform.Upgrader)
 				}
 				platform.Contacts = strings.Join(contacts, ",")

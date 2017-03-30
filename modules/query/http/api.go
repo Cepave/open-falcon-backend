@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
@@ -1499,10 +1500,10 @@ func getApolloRemark(rw http.ResponseWriter, req *http.Request) {
 		} else if num > 0 {
 			row := rows[0]
 			remark := map[string]string{
-				"remark": row["remark"].(string),
+				"remark":  row["remark"].(string),
 				"account": row["account"].(string),
-				"name": row["name"].(string),
-				"email": row["email"].(string),
+				"name":    row["name"].(string),
+				"email":   row["email"].(string),
 				"updated": row["updated"].(string),
 			}
 			items[hostname] = remark
@@ -1530,9 +1531,9 @@ func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 	user := map[string]string{
 		"account": remark.User,
-		"userID": "",
-		"name": "",
-		"email": "",
+		"userID":  "",
+		"name":    "",
+		"email":   "",
 	}
 	login := false
 
@@ -1896,7 +1897,7 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 				index = key
 			}
 			if len(item.Values) > 0 {
-				timestamp := item.Values[len(item.Values) - 1].Timestamp
+				timestamp := item.Values[len(item.Values)-1].Timestamp
 				if timestampLatest < timestamp {
 					timestampLatest = timestamp
 				}
@@ -1975,17 +1976,17 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 					}
 				}
 				if len(data) > 4 {
-					value := data[len(data) - 3][1]
-					if (value < (data[len(data) - 4][1]) * 0.9) &&  (value <= (data[len(data) - 2][1])) {
-						value = (data[len(data) - 4][1] + data[len(data) - 2][1]) / 2
-						data[len(data) - 3][1] = value
+					value := data[len(data)-3][1]
+					if (value < (data[len(data)-4][1])*0.9) && (value <= (data[len(data)-2][1])) {
+						value = (data[len(data)-4][1] + data[len(data)-2][1]) / 2
+						data[len(data)-3][1] = value
 					}
 				}
 				if len(data) > 3 {
-					value := data[len(data) - 2][1]
-					if (value < (data[len(data) - 3][1]) * 0.9) &&  (value <= (data[len(data) - 1][1])) {
-						value = (data[len(data) - 3][1] + data[len(data) - 1][1]) / 2
-						data[len(data) - 2][1] = value
+					value := data[len(data)-2][1]
+					if (value < (data[len(data)-3][1])*0.9) && (value <= (data[len(data)-1][1])) {
+						value = (data[len(data)-3][1] + data[len(data)-1][1]) / 2
+						data[len(data)-2][1] = value
 					}
 				}
 				item := map[string]interface{}{
@@ -2199,7 +2200,7 @@ func getGraphLastData(metrics []string, hostnames []string, result map[string]in
 		for _, hostname := range hostnames {
 			param := cmodel.GraphLastParam{
 				Endpoint: hostname,
-				Counter: metric,
+				Counter:  metric,
 			}
 			resp, err := graph.Last(param)
 			if err != nil {
@@ -2207,14 +2208,14 @@ func getGraphLastData(metrics []string, hostnames []string, result map[string]in
 			} else if resp != nil {
 				item := cmodel.RRDData{
 					Timestamp: resp.Value.Timestamp,
-					Value: resp.Value.Value,
+					Value:     resp.Value.Value,
 				}
 				values := []*cmodel.RRDData{}
 				values = append(values, &item)
 				datum := cmodel.GraphQueryResponse{
 					Endpoint: resp.Endpoint,
-					Counter: resp.Counter,
-					Values: values,
+					Counter:  resp.Counter,
+					Values:   values,
 				}
 				data = append(data, &datum)
 			}
