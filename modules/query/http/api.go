@@ -1903,12 +1903,14 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 		}
 		tickers := []string{}
 		tickersMap := map[string]float64{}
-		for _, rrdObj := range data[index].Values {
-			ticker := getTicker(rrdObj.Timestamp, unit)
-			if _, ok := tickersMap[ticker]; !ok {
-				if len(ticker) > 0 {
-					tickersMap[ticker] = float64(0)
-					tickers = append(tickers, ticker)
+		if index >= 0 {
+			for _, rrdObj := range data[index].Values {
+				ticker := getTicker(rrdObj.Timestamp, unit)
+				if _, ok := tickersMap[ticker]; !ok {
+					if len(ticker) > 0 {
+						tickersMap[ticker] = float64(0)
+						tickers = append(tickers, ticker)
+					}
 				}
 			}
 		}
