@@ -35,7 +35,17 @@ var paramCheckers = map[string]boolParamChecker {
 	},
 	"key": func(context *gin.Context, paramName string) bool {
 		v, ok := context.Get(paramName)
-		return v != nil && ok
+
+		if !ok {
+			return false
+		}
+
+		s, isString := v.(string)
+		if isString {
+			return isStringViable(s)
+		}
+
+		return v != nil
 	},
 }
 

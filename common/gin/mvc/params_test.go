@@ -244,15 +244,16 @@ func (suite *TestParamSuite) TestBoolParamGetter(c *C) {
 		context.Request.Header.Add("Cookie", "ck1=28")
 		context.Request.Header.Add("Cookie", "ck2=")
 		context.Request.Header.Add("hd1", "ss90")
-		context.Request.Header.Add("hd2", "")
+		context.Request.Header.Add("hd2", "  ")
 
 		context.Set("key-1", "v1")
 		context.Set("key-2", nil)
+		context.Set("key-es", "  ")
 	}
 	formContextSetup := func(context *gin.Context) {
 		values := make(url.Values)
 		values.Add("fc1", "10")
-		values.Add("fc2", "")
+		values.Add("fc2", "  ")
 
 		context.Request = httptest.NewRequest("POST", "/form-post", strings.NewReader(values.Encode()))
 		context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -277,7 +278,8 @@ func (suite *TestParamSuite) TestBoolParamGetter(c *C) {
 		{ "header", "hd2", queryContextSetup, false, }, // Empty value
 		{ "header", "hd3", queryContextSetup, false, }, // No such param
 		{ "key", "key-1", queryContextSetup, true, },
-		{ "key", "key-2", queryContextSetup, false, }, // Empty value
+		{ "key", "key-es", queryContextSetup, false, }, // Empty string
+		{ "key", "key-2", queryContextSetup, false, }, // nil value
 		{ "key", "key-3", queryContextSetup, false, }, // No such param
 	}
 
