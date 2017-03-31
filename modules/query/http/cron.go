@@ -120,8 +120,9 @@ func SyncHostsAndContactsTable() {
 func getIDCMap() map[string]interface{} {
 	idcMap := map[string]interface{}{}
 	o := orm.NewOrm()
+	o.Using("grafana")
 	var idcs []Idc
-	sqlcommand := "SELECT pop_id, name, province, city FROM grafana.idc ORDER BY pop_id ASC"
+	sqlcommand := "SELECT pop_id, name, province, city FROM `grafana`.`idc` ORDER BY pop_id ASC"
 	_, err := o.Raw(sqlcommand).QueryRows(&idcs)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -137,7 +138,7 @@ func queryIDCsHostsCount(IDCName string) int64 {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT COUNT(*) FROM boss.hosts WHERE idc = ?"
+	sql := "SELECT COUNT(*) FROM `boss`.`hosts` WHERE idc = ?"
 	num, err := o.Raw(sql, IDCName).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -156,7 +157,7 @@ func syncIDCsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM boss.idcs ORDER BY updated DESC LIMIT 1"
+	sql := "SELECT updated FROM `boss`.`idcs` ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -274,6 +275,7 @@ func getHostsBondingAndSpeed(hostname string) map[string]int {
 func addBondingAndSpeedToHostsTable() {
 	log.Debugf("func addBondingAndSpeedToHostsTable()")
 	o := orm.NewOrm()
+	o.Using("boss")
 	var rows []orm.Params
 	sql := "SELECT id, hostname FROM `boss`.`hosts` WHERE exist = 1"
 	num, err := o.Raw(sql).Values(&rows)
@@ -310,8 +312,8 @@ func getPlatformsType(nodes map[string]interface{}, result map[string]interface{
 	fctoken := getFctoken()
 	url := g.Config().Api.Platform
 	params := map[string]string{
-		"fcname":   fcname,
-		"fctoken":  fctoken,
+		"fcname":  fcname,
+		"fctoken": fctoken,
 	}
 	s, err := json.Marshal(params)
 	if err != nil {
@@ -400,24 +402,25 @@ func getDurationForNetTableQuery(offset int) (int64, int64) {
 	if err != nil {
 		loc = time.Local
 	}
-	timestampFrom := time.Date(year, month, day - offset, 0, 0, 0, 0, loc).Unix() - 300
-	timestampTo := time.Date(year, month, day - offset, 23, 59, 59, 0, loc).Unix()
+	timestampFrom := time.Date(year, month, day-offset, 0, 0, 0, 0, loc).Unix() - 300
+	timestampTo := time.Date(year, month, day-offset, 23, 59, 59, 0, loc).Unix()
 	return timestampFrom, timestampTo
 }
 
 func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]map[string]int, string, map[string]int) {
 	data := map[string]map[string]int{
-		"in": map[string]int{},
+		"in":  map[string]int{},
 		"out": map[string]int{},
 	}
 	date := ""
 	counts := map[string]int{
-		"in": 0,
+		"in":  0,
 		"out": 0,
 	}
 	hostnames := []string{}
 	var rows []orm.Params
 	o := orm.NewOrm()
+	o.Using("boss")
 	sql := "SELECT DISTINCT hostname FROM `boss`.`ips`"
 	sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
 	num, err := o.Raw(sql, platformName).Values(&rows)
@@ -450,7 +453,7 @@ func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]m
 		}
 	}
 	dataRaw := map[string]map[string]float64{
-		"in": map[string]float64{},
+		"in":  map[string]float64{},
 		"out": map[string]float64{},
 	}
 	tickers := []string{}
@@ -556,6 +559,7 @@ func getMinMaxAvg(values []int) (int, int, int) {
 
 func writeToDeviationsTable(platformName string, hour int, minute int, date string, ticker string) {
 	o := orm.NewOrm()
+	o.Using("apollo")
 	var rows []orm.Params
 	dateFull := date + " " + ticker + ":00"
 	sql := "SELECT metric, COUNT(DISTINCT date), AVG(bits), STD(bits) "
@@ -598,14 +602,14 @@ func writeToDeviationsTable(platformName string, hour int, minute int, date stri
 					deviation = int(math.Floor(val))
 				}
 				sql = "SELECT id FROM `apollo`.`deviations` WHERE date = ? AND platform = ? AND metric = ? LIMIT 1"
-				num, err = o.Raw(sql, date + " " + ticker, platformName, metricKey).Values(&rows)
+				num, err = o.Raw(sql, date+" "+ticker, platformName, metricKey).Values(&rows)
 				if err != nil {
 					log.Errorf(err.Error())
 				} else if num == 0 {
 					sql = "INSERT INTO `apollo`.`deviations`(`date`, `platform`, `metric`,"
 					sql += "`samples`, `mean`, `deviation`, `updated`) VALUES("
 					sql += "?, ?, ?, ?, ?, ?, ?)"
-					_, err := o.Raw(sql, date + " " + ticker, platformName, metricKey, samples, mean, deviation,
+					_, err := o.Raw(sql, date+" "+ticker, platformName, metricKey, samples, mean, deviation,
 						getNow()).Exec()
 					if err != nil {
 						log.Errorf(err.Error())
@@ -620,6 +624,9 @@ func syncDeviationsTable() {
 	platformNames := []string{}
 	platformsMap := map[string]map[string]string{}
 	o := orm.NewOrm()
+	o.Using("apollo")
+	bo := orm.NewOrm()
+	bo.Using("boss")
 	var rows []orm.Params
 	sql := "SELECT updated FROM `apollo`.`deviations` ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
@@ -636,7 +643,7 @@ func syncDeviationsTable() {
 		}
 	}
 	sql = "SELECT platform, principal FROM `boss`.`platforms` WHERE type LIKE '%业务' AND visible = 1 AND count > 0 ORDER BY platform ASC"
-	num, err = o.Raw(sql).Values(&rows)
+	num, err = bo.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
@@ -653,7 +660,7 @@ func syncDeviationsTable() {
 	for hour := 0; hour < 24; hour++ {
 		hours = append(hours, hour)
 	}
-	minutes := []int{0, 20, 40,}
+	minutes := []int{0, 20, 40}
 	for _, platformName := range platformNames {
 		for i := 0; i < 30; i++ {
 			offset := i * (-1)
@@ -701,8 +708,9 @@ func writeToNetTable(platformName string, offset int) {
 	for hour := 0; hour < 24; hour++ {
 		hours = append(hours, hour)
 	}
-	minutes := []int{0, 20, 40,}
+	minutes := []int{0, 20, 40}
 	o := orm.NewOrm()
+	o.Using("apollo")
 	var rows []orm.Params
 	data, date, counts := getPlatformsDailyTrafficData(platformName, offset)
 	metrics := []string{
@@ -763,9 +771,11 @@ func writeToNetTable(platformName string, offset int) {
 	}
 }
 
-
 func syncNetTable() {
 	o := orm.NewOrm()
+	o.Using("apollo")
+	bo := orm.NewOrm()
+	bo.Using("boss")
 	var rows []orm.Params
 	sql := "SELECT updated FROM `apollo`.`net` ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
@@ -783,7 +793,7 @@ func syncNetTable() {
 	}
 	platformNames := []string{}
 	sql = "SELECT platform, count FROM `boss`.`platforms` WHERE type LIKE '%业务' AND visible = 1 AND count > 0 ORDER BY platform ASC"
-	num, err = o.Raw(sql).Values(&rows)
+	num, err = bo.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
@@ -800,7 +810,7 @@ func syncNetTable() {
 			date := time.Now().AddDate(0, 0, offset).Format("2006-01-02")
 			sql = "SELECT MIN(count) FROM `apollo`.`net` "
 			sql += "WHERE platform = ? AND date LIKE ?"
-			num, err = o.Raw(sql, platformName, date + "%").Values(&rows)
+			num, err = o.Raw(sql, platformName, date+"%").Values(&rows)
 			if err != nil {
 				log.Errorf(err.Error())
 			} else if num > 0 {
@@ -819,7 +829,7 @@ func syncNetTable() {
 				hostCountOfPlatform := 0
 				sql = "SELECT DISTINCT hostname FROM `boss`.`ips` "
 				sql += "WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
-				num, err = o.Raw(sql, platformName).Values(&rows)
+				num, err = bo.Raw(sql, platformName).Values(&rows)
 				if err != nil {
 					log.Errorf(err.Error())
 				} else {
@@ -837,7 +847,7 @@ func syncHostsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM boss.ips WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
+	sql := "SELECT updated FROM `boss`.`ips` WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -937,11 +947,11 @@ func syncHostsTable() {
 		}
 		platformsMap[platformName] = map[string]string{
 			"platformName": platformName,
-			"type": "",
-			"visible": "",
-			"department": "",
-			"team": "",
-			"description": "",
+			"type":         "",
+			"visible":      "",
+			"department":   "",
+			"team":         "",
+			"description":  "",
 		}
 	}
 	sort.Strings(IPs)
@@ -961,7 +971,7 @@ func syncContactsTable() {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM boss.contacts ORDER BY updated DESC LIMIT 1"
+	sql := "SELECT updated FROM `boss`.`contacts` ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -1026,21 +1036,21 @@ func addContactsToPlatformsTable(contacts map[string]interface{}) {
 			if items, ok := contacts[platformName]; ok {
 				contacts := []string{}
 				for role, user := range items.(map[string]map[string]string) {
-					if (role == "principal") {
+					if role == "principal" {
 						platform.Principal = user["name"]
-					} else if (role == "deputy") {
+					} else if role == "deputy" {
 						platform.Deputy = user["name"]
-					} else if (role == "upgrader") {
+					} else if role == "upgrader" {
 						platform.Upgrader = user["name"]
 					}
 				}
-				if (len(platform.Principal) > 0) {
+				if len(platform.Principal) > 0 {
 					contacts = append(contacts, platform.Principal)
 				}
-				if (len(platform.Deputy) > 0) {
+				if len(platform.Deputy) > 0 {
 					contacts = append(contacts, platform.Deputy)
 				}
-				if (len(platform.Upgrader) > 0) {
+				if len(platform.Upgrader) > 0 {
 					contacts = append(contacts, platform.Upgrader)
 				}
 				platform.Contacts = strings.Join(contacts, ",")
@@ -1063,7 +1073,7 @@ func updateContactsTable(contactNames []string, contactsMap map[string]map[strin
 		user := contactsMap[contactName]
 		err := o.QueryTable("contacts").Filter("name", user["name"]).One(&contact)
 		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.contacts(name, phone, email, updated) VALUES(?, ?, ?, ?)"
+			sql := "INSERT INTO `boss`.`contacts`(name, phone, email, updated) VALUES(?, ?, ?, ?)"
 			_, err := o.Raw(sql, user["name"], user["phone"], user["email"], getNow()).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
@@ -1092,7 +1102,7 @@ func updateIDCsTable(IDCNames []string, IDCsMap map[string]map[string]string) {
 		item := IDCsMap[IDCName]
 		err := o.QueryTable("idcs").Filter("idc", IDCName).One(&idc)
 		if err == orm.ErrNoRows {
-			sql := "INSERT INTO boss.idcs(popid, idc, bandwidth, count, area, province, city, updated) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+			sql := "INSERT INTO `boss`.`idcs`(popid, idc, bandwidth, count, area, province, city, updated) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
 			_, err := o.Raw(sql, item["popid"], item["idc"], item["bandwidth"], item["count"], item["area"], item["province"], item["city"], now).Exec()
 			if err != nil {
 				log.Errorf(err.Error())
@@ -1125,7 +1135,7 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM boss.ips WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
+	sql := "SELECT updated FROM `boss`.`ips` WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -1221,7 +1231,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM boss.hosts WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
+	sql := "SELECT updated FROM `boss`.`hosts` WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -1288,11 +1298,12 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 func muteFalconHostTable(hostnames []string, hostsMap map[string]map[string]string) {
 	log.Debugf("func muteFalconHostTable()")
 	o := orm.NewOrm()
+	o.Using("default")
 	var rows []orm.Params
 	now := getNow()
 	for _, hostname := range hostnames {
 		host := hostsMap[hostname]
-		sql := "SELECT id FROM falcon_portal.host WHERE hostname = ? LIMIT 1"
+		sql := "SELECT id FROM `falcon_portal`.`host` WHERE hostname = ? LIMIT 1"
 		num, err := o.Raw(sql, host["hostname"]).Values(&rows)
 		if err != nil {
 			log.Errorf(err.Error())
