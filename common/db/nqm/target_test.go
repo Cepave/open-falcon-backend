@@ -147,15 +147,15 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 		expectedCountOfAll         int32
 	}{
 		{ // All data
-			&nqmModel.TargetQuery{ IspId: -2, HasStatus: "!N!" },
+			&nqmModel.TargetQuery{ IspId: -2, HasStatusParam: false },
 			10, 1, 3, 3,
 		},
 		{ // 2nd page
-			&nqmModel.TargetQuery{ IspId: -2, HasStatus: "!N!" },
+			&nqmModel.TargetQuery{ IspId: -2, HasStatusParam: false },
 			2, 2, 1, 3,
 		},
 		{ // Match nothing for futher page
-			&nqmModel.TargetQuery{ IspId: -2, HasStatus: "!N!" },
+			&nqmModel.TargetQuery{ IspId: -2, HasStatusParam: false },
 			10, 10, 0, 3,
 		},
 		{ // Match 1 row by all of the conditions
@@ -163,20 +163,20 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 				Name:               "tg-name-1",
 				Host:               "tg-host-1",
 				IspId:              3,
-				HasStatus: "true",
+				HasStatusParam: true,
 				Status:             true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match 1 row(by ISP id)
 			&nqmModel.TargetQuery{
 				IspId:    5,
-				HasStatus: "!N!",
+				HasIspIdParam: true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
 			&nqmModel.TargetQuery{
 				IspId: -2,
-				HasStatus: "!N!",
+				HasStatusParam: false,
 				Name: "tg-easy-1",
 				Host: "tg-host-1",
 			}, 10, 1, 0, 0,

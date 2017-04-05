@@ -152,15 +152,15 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 		expectedCountOfAll         int32
 	}{
 		{ // All data
-			&nqmModel.AgentQuery{IspId: -2, HasStatus: "!N!"},
+			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 1, 3, 3,
 		},
 		{ // 2nd page
-			&nqmModel.AgentQuery{IspId: -2, HasStatus: "!N!"},
+			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
 		{ // Match nothing for futher page
-			&nqmModel.AgentQuery{IspId: -2, HasStatus: "!N!"},
+			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},
 		{ // Match 1 row by all of the conditions
@@ -169,22 +169,23 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 				ConnectionId: "ag-list-1",
 				Hostname:     "hn-list-1",
 				IspId:        3,
+				HasIspIdParam: true,
 				IpAddress:    "123.52",
-				HasStatus:    "1",
+				HasStatusParam:    true,
 				Status:       true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match 1 row(by special IP address)
 			&nqmModel.AgentQuery{
 				IspId:     -2,
-				HasStatus: "!N!",
+				HasStatusParam: false,
 				IpAddress: "12.37",
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
 			&nqmModel.AgentQuery{
 				IspId:        -2,
-				HasStatus:    "!N!",
+				HasStatusParam:    false,
 				ConnectionId: "ag-list-1",
 				Hostname:     "hn-list-2",
 			}, 10, 1, 0, 0,
@@ -232,19 +233,19 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 		expectedCountOfAll         int32
 	}{
 		{ // All data
-			&nqmModel.AgentQuery{IspId: -2, HasStatus: "!N!"},
+			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 1, 3, 3,
 		},
 		{ // All data(not-match ping task)
-			&nqmModel.AgentQuery{IspId: -2, HasStatus: "!N!"},
+			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 1, 3, 3,
 		},
 		{ // 2nd page
-			&nqmModel.AgentQuery{IspId: -2, HasStatus: "!N!"},
+			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
 		{ // Match nothing for futher page
-			&nqmModel.AgentQuery{IspId: -2, HasStatus: "!N!"},
+			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},
 		{ // Match 1 row by all of the conditions
@@ -254,7 +255,7 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 				Hostname:     "hn-list-1",
 				IspId:        3,
 				IpAddress:    "123.52",
-				HasStatus:    "1",
+				HasStatusParam:    true,
 				Status:       true,
 			},
 			10, 1, 1, 1,
@@ -262,14 +263,14 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 		{ // Match 1 row(by special IP address)
 			&nqmModel.AgentQuery{
 				IspId:     -2,
-				HasStatus: "!N!",
+				HasStatusParam: false,
 				IpAddress: "12.37",
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
 			&nqmModel.AgentQuery{
 				IspId:        -2,
-				HasStatus:    "!N!",
+				HasStatusParam:    false,
 				ConnectionId: "ag-list-1",
 				Hostname:     "hn-list-2",
 			}, 10, 1, 0, 0,
