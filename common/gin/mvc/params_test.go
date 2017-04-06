@@ -2,13 +2,14 @@ package mvc
 
 import (
 	"fmt"
-	"net/http"
+	"io"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 
 	"gopkg.in/gin-gonic/gin.v1"
 
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	otest "github.com/Cepave/open-falcon-backend/common/testing"
 	. "gopkg.in/check.v1"
 )
 
@@ -64,25 +65,24 @@ func (suite *TestParamSuite) TestGettersForArrayValue(c *C) {
 		{
 			"query",
 			func(context *gin.Context, testCase *testCaseOfGetterOnArrayValue) {
-				context.Request = &http.Request{}
-				context.Request.URL = otest.ParseRequestUri(
-					c, "/query?" + buildUriValues(testCase.paramName, testCase.paramValue),
+				context.Request = httptest.NewRequest(
+					"GET", "/query?" + buildUriValuesAsString(testCase.paramName, testCase.paramValue), nil,
 				)
 			},
 		},
 		{
 			"form",
 			func(context *gin.Context, testCase *testCaseOfGetterOnArrayValue) {
-				context.Request = &http.Request{}
-				context.Request.PostForm, _ = url.ParseQuery(
-					buildUriValues(testCase.paramName, testCase.paramValue),
+				context.Request = httptest.NewRequest(
+					"POST", "/form-post", buildUriValuesAsBody(testCase.paramName, testCase.paramValue),
 				)
+				context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			},
 		},
 		{
 			"cookie",
 			func(context *gin.Context, testCase *testCaseOfGetterOnArrayValue) {
-				context.Request = &http.Request{ Header: make(http.Header), }
+				context.Request = httptest.NewRequest("GET", "/cookie-getter", nil)
 
 				if len(testCase.paramValue) > 0 {
 					context.Request.Header.Set("Cookie", fmt.Sprintf("%s=%s", testCase.paramName, testCase.paramValue[0]))
@@ -104,7 +104,7 @@ func (suite *TestParamSuite) TestGettersForArrayValue(c *C) {
 		{
 			"header",
 			func(context *gin.Context, testCase *testCaseOfGetterOnArrayValue) {
-				context.Request = &http.Request { Header: make(http.Header), }
+				context.Request = httptest.NewRequest("GET", "/header-getter", nil)
 				for _, v := range testCase.paramValue {
 					context.Request.Header.Add(testCase.paramName, v)
 				}
@@ -118,14 +118,20 @@ func (suite *TestParamSuite) TestGettersForArrayValue(c *C) {
 	}
 }
 
-func buildUriValues(name string, values []string) string {
+func buildUriValuesAsBody(name string, values []string) io.Reader {
+	return strings.NewReader(buildUriValuesAsString(name, values))
+}
+func buildUriValuesAsString(name string, values []string) string {
+	return buildUriValues(name, values).Encode()
+}
+func buildUriValues(name string, values []string) url.Values {
 	result := make(url.Values)
 
 	for _, v := range values {
 		result.Add(name, v)
 	}
 
-	return result.Encode()
+	return result
 }
 
 // Test the getting value of URI parameters
@@ -168,25 +174,22 @@ func (suite *TestParamSuite) TestGettersForSingleValue(c *C) {
 		{
 			"query",
 			func(context *gin.Context, testCase *testCaseOfGetterOnSingleValue) {
-				context.Request = &http.Request{}
-				context.Request.URL = otest.ParseRequestUri(
-					c, "/query?" + fmt.Sprintf("%s=%s", testCase.paramName, testCase.paramValue),
+				context.Request = httptest.NewRequest(
+					"GET", "/query?" + buildUriValuesAsString(testCase.paramName, []string{ testCase.paramValue }), nil,
 				)
 			},
 		},
 		{
 			"form",
 			func(context *gin.Context, testCase *testCaseOfGetterOnSingleValue) {
-				context.Request = &http.Request{}
-				context.Request.PostForm, _ = url.ParseQuery(
-					fmt.Sprintf("%s=%s", testCase.paramName, testCase.paramValue),
-				)
+				context.Request = httptest.NewRequest("POST", "/post-form", buildUriValuesAsBody(testCase.paramName, []string{ testCase.paramValue }))
+				context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 			},
 		},
 		{
 			"cookie",
 			func(context *gin.Context, testCase *testCaseOfGetterOnSingleValue) {
-				context.Request = &http.Request{ Header: make(http.Header), }
+				context.Request = httptest.NewRequest("GET", "/cookie-getter", nil)
 				context.Request.Header.Add("Cookie", fmt.Sprintf("%s=%s", testCase.paramName, testCase.paramValue))
 			},
 		},
@@ -200,7 +203,7 @@ func (suite *TestParamSuite) TestGettersForSingleValue(c *C) {
 		{
 			"header",
 			func(context *gin.Context, testCase *testCaseOfGetterOnSingleValue) {
-				context.Request = &http.Request { Header: make(http.Header), }
+				context.Request = httptest.NewRequest("GET", "/header-getter", nil)
 				context.Request.Header.Set(testCase.paramName, testCase.paramValue)
 			},
 		},
@@ -230,5 +233,66 @@ func gettersSingleValueTestingStub(c *C, testedGetter paramGetter, contextSetup 
 
 		testedValue := testedGetter.getParam(sampleContext, testCase.paramName, testCase.defaultValue)
 		c.Assert(testedValue, Equals, testCase.expectedValue, comment)
+	}
+}
+
+// Tests the bool getter for checking of viable value
+func (suite *TestParamSuite) TestBoolParamGetter(c *C) {
+	queryContextSetup := func(context *gin.Context) {
+		context.Request = httptest.NewRequest("GET", "/query?g1=33&g2=", nil)
+
+		context.Request.Header.Add("Cookie", "ck1=28")
+		context.Request.Header.Add("Cookie", "ck2=")
+		context.Request.Header.Add("hd1", "ss90")
+		context.Request.Header.Add("hd2", "  ")
+
+		context.Set("key-1", "v1")
+		context.Set("key-2", nil)
+		context.Set("key-es", "  ")
+	}
+	formContextSetup := func(context *gin.Context) {
+		values := make(url.Values)
+		values.Add("fc1", "10")
+		values.Add("fc2", "  ")
+
+		context.Request = httptest.NewRequest("POST", "/form-post", strings.NewReader(values.Encode()))
+		context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+
+	testCases := []*struct {
+		testedFunc string
+		sampleParam string
+		contextSetup func(*gin.Context)
+		expectedResult bool
+	} {
+		{ "query", "g1", queryContextSetup, true, },
+		{ "query", "g2", queryContextSetup, false, }, // Empty value
+		{ "query", "g3", queryContextSetup, false, }, // No such param
+		{ "form", "fc1", formContextSetup, true, },
+		{ "form", "fc2", formContextSetup, false, }, // Empty value
+		{ "form", "fc3", formContextSetup, false, }, // No such param
+		{ "cookie", "ck1", queryContextSetup, true, },
+		{ "cookie", "ck2", queryContextSetup, false, }, // Empty value
+		{ "cookie", "ck3", queryContextSetup, false, }, // No such param
+		{ "header", "hd1", queryContextSetup, true, },
+		{ "header", "hd2", queryContextSetup, false, }, // Empty value
+		{ "header", "hd3", queryContextSetup, false, }, // No such param
+		{ "key", "key-1", queryContextSetup, true, },
+		{ "key", "key-es", queryContextSetup, false, }, // Empty string
+		{ "key", "key-2", queryContextSetup, false, }, // nil value
+		{ "key", "key-3", queryContextSetup, false, }, // No such param
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		sampleContext := &gin.Context {}
+
+		testCase.contextSetup(sampleContext)
+
+		testedResult := paramCheckers[testCase.testedFunc](sampleContext, testCase.sampleParam)
+
+		c.Assert(testedResult, Equals, testCase.expectedResult, comment)
 	}
 }

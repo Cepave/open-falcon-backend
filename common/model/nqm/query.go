@@ -11,10 +11,11 @@ type AgentQuery struct {
 	Hostname     string `mvc:"query[hostname]" conform:"trim"`
 	IpAddress    string `mvc:"query[ip_address]" conform:"trim"`
 
-	IspId int16 `mvc:"query[isp_id] default[-2]"`
+	IspId int16 `mvc:"query[isp_id]"`
+	HasIspIdParam bool `mvc:"query[?isp_id]"`
 
-	Status    bool   `mvc:"query[status]"`
-	HasStatus string `mvc:"query[status] default[!N!]"`
+	Status    bool  `mvc:"query[status]"`
+	HasStatusParam bool `mvc:"query[?status]"`
 }
 
 // Gets the []byte used to perform like in MySql
@@ -25,12 +26,6 @@ func (query *AgentQuery) GetIpForLikeCondition() []byte {
 	}
 
 	return bytes
-}
-func (query *AgentQuery) HasIspId() bool {
-	return query.IspId != -2
-}
-func (query *AgentQuery) HasStatusCondition() bool {
-	return query.HasStatus != "!N!"
 }
 
 type AgentQueryWithPingTask struct {
@@ -48,15 +43,12 @@ func (query *AgentQueryWithPingTask) HasAppliedCondition() bool {
 type TargetQuery struct {
 	Name               string `mvc:"query[name]"`
 	Host               string `mvc:"query[host]"`
-	IspId              int16 `mvc:"query[isp_id] default[-2]"`
+
+	IspId              int16 `mvc:"query[isp_id]"`
+	HasIspIdParam		bool `mvc:"query[?isp_id]"`
+
 	Status             bool `mvc:"query[status]"`
-	HasStatus          string `mvc:"query[status] default[!N!]"`
-}
-func (q *TargetQuery) HasIspId() bool {
-	return q.IspId != -2
-}
-func (q *TargetQuery) HasStatusCondition() bool {
-	return q.HasStatus != "!N!"
+	HasStatusParam     bool `mvc:"query[?status]"`
 }
 
 type AgentFilter struct {

@@ -467,10 +467,10 @@ func buildSelectAgentsGorm(
 	if query.Hostname != "" {
 		selectAgent = selectAgent.Where("ag_hostname LIKE ?", query.Hostname+"%")
 	}
-	if query.HasIspId() {
+	if query.HasIspIdParam {
 		selectAgent = selectAgent.Where("ag_isp_id = ?", query.IspId)
 	}
-	if query.HasStatusCondition() {
+	if query.HasStatusParam {
 		selectAgent = selectAgent.Where("ag_status = ?", query.Status)
 	}
 	if query.IpAddress != "" {
