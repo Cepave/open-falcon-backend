@@ -641,22 +641,96 @@ func getAlertMetricTypeCounts(items []interface{}) map[string]int {
 		"memory":       0,
 		"net":          0,
 		"others":       0,
-		"agent":        0,
-		"check":        0,
-		"chk":          0,
-		"dev":          0,
-		"fcd":          0,
-		"file":         0,
-		"fm":           0,
-		"http":         0,
-		"nic":          0,
-		"proc":         0,
-		"tags":         0,
-		"zabbix-agent": 0,
+	}
+	metricMap := map[string]string{
+		"cpu.idle": "cpu",
+		"cpu.iowait": "cpu",
+		"df.bytes.free.percent/fstype=ext4,mount=/": "disk",
+		"df.bytes.free.percent/fstype=ext4,mount=/hdata": "disk",
+		"df.bytes.free.percent/fstype=iso9660,mount=/var/www/html": "disk",
+		"df.bytes.free.percent/fstype=xfs,mount=/cache/cache": "disk",
+		"df.bytes.free.percent/fstype=xfs,mount=/cache/cache01": "disk",
+		"df.bytes.free.percent/fstype=xfs,mount=/cache/logs": "disk",
+		"disk.free.error/partition=/": "disk",
+		"disk.free.error/partition=/cache/cache": "disk",
+		"disk.free.error/partition=/cache/cache/temp": "disk",
+		"disk.free.error/partition=/cache/cache01": "disk",
+		"disk.free.error/partition=/cache/cache02": "disk",
+		"disk.free.error/partition=/cache/cache03": "disk",
+		"disk.free.error/partition=/cache/cache04": "disk",
+		"disk.free.error/partition=/cache/cache05": "disk",
+		"disk.free.error/partition=/cache/cache06": "disk",
+		"disk.free.error/partition=/cache/cache07": "disk",
+		"disk.free.error/partition=/cache/cache08": "disk",
+		"disk.free.error/partition=/cache/cache10": "disk",
+		"disk.free.error/partition=/cache/cache11": "disk",
+		"disk.free.error/partition=/cache/cache12": "disk",
+		"disk.free.error/partition=/cache/logs": "disk",
+		"disk.free.error/partition=/cache/ssd01": "disk",
+		"disk.free.error/partition=/data": "disk",
+		"disk.free.error/partition=/data/proclog/log/pzs": "disk",
+		"disk.free.error/partition=/data11": "disk",
+		"disk.free.error/partition=/logs": "disk",
+		"disk.free.error/partition=/wdata": "disk",
+		"disk.io.avgrq_sz/device=vda": "disk",
+		"disk.io.await/device=vda": "disk",
+		"disk.io.util/device=sda": "disk",
+		"disk.io.util/device=sdb": "disk",
+		"disk.io.util/device=sdc": "disk",
+		"disk.io.util/device=sdd": "disk",
+		"disk.io.util/device=sde": "disk",
+		"disk.io.util/device=sdf": "disk",
+		"disk.io.util/device=sdg": "disk",
+		"disk.io.util/device=sdh": "disk",
+		"disk.io.util/device=sdi": "disk",
+		"disk.io.util/device=sdj": "disk",
+		"disk.io.util/device=sdk": "disk",
+		"disk.io.util/device=sdl": "disk",
+		"disk.io.util/device=sdm": "disk",
+		"disk.io.util/device=sdn": "disk",
+		"disk.io.util/device=sdu": "disk",
+		"disk.io.util/device=vda": "disk",
+		"mem.memfree.percent": "memory",
+		"mem.swapused.percent": "memory",
+		"fm.http.code": "net",
+		"fm.http.speed": "net",
+		"fm.http.time.connect": "net",
+		"http.get.error": "net",
+		"http.get.time": "net",
+		"http.response.time": "net",
+		"net.if.out.bits/iface=eth_all": "net",
+		"net.nic.speed": "net",
+		"net.nic.speed/device=": "net",
+		"net.nic.speed/device=em1": "net",
+		"net.nic.speed/device=eth0": "net",
+		"net.nic.speed/device=eth1": "net",
+		"net.nic.speed/device=eth2": "net",
+		"net.nic.speed/device=eth3": "net",
+		"net.nic.speed/device=eth4": "net",
+		"net.nic.speed/device=eth5": "net",
+		"net.nic.speed/device=tun0": "net",
+		"net.port.listen/port=8092": "net",
+		"nic.out.usage.rate": "net",
+		"nic.usage_rate.max": "net",
 	}
 	for _, item := range items {
 		metric := item.(map[string]interface{})["metric"].(string)
-		metricType := strings.ToLower(strings.Split(metric, ".")[0])
+		metricType := "others"
+		if strings.ToLower(strings.Split(metric, ".")[0]) == "net" {
+			metricType = "net"
+		} else if strings.ToLower(strings.Split(metric, ".")[0]) == "cpu" {
+			metricType = "cpu"
+		} else if strings.ToLower(strings.Split(metric, ".")[0]) == "disk" {
+			metricType = "disk"
+		} else if strings.ToLower(strings.Split(metric, ".")[0]) == "mem" {
+			metricType = "memory"
+		} else if strings.ToLower(strings.Split(metric, ".")[0]) == "df" {
+			metricType = "disk"
+		} else if strings.Index(strings.ToLower(metric), "http") > -1 {
+			metricType = "net"
+		} else if value, ok := metricMap[metric]; ok {
+			metricType = value
+		}
 		if metricType == "cpu" {
 			count["cpu"]++
 		} else if metricType == "disk" {
@@ -667,31 +741,6 @@ func getAlertMetricTypeCounts(items []interface{}) map[string]int {
 			count["net"]++
 		} else {
 			count["others"]++
-			if metricType == "agent" {
-				count["agent"]++
-			} else if metricType == "check" {
-				count["check"]++
-			} else if metricType == "chk" {
-				count["chk"]++
-			} else if metricType == "dev" {
-				count["dev"]++
-			} else if metricType == "fcd" {
-				count["fcd"]++
-			} else if metricType == "file" {
-				count["file"]++
-			} else if metricType == "fm" {
-				count["fm"]++
-			} else if metricType == "http" {
-				count["http"]++
-			} else if metricType == "nic" {
-				count["nic"]++
-			} else if metricType == "proc" {
-				count["proc"]++
-			} else if metricType == "zabbix-agent" {
-				count["zabbix-agent"]++
-			} else if strings.Index(metricType, "tags") > -1 {
-				count["tags"]++
-			}
 		}
 	}
 	return count
