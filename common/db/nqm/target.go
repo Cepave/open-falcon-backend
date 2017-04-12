@@ -372,7 +372,7 @@ func (targetTx *addTargetTx) addTarget(tx *sqlx.Tx) {
 			"province_id":   newTarget.ProvinceId,
 			"city_id":       newTarget.CityId,
 			"name_tag_id":   newTarget.NameTagId,
-			"comment": newTarget.Comment,
+			"comment":       newTarget.Comment,
 		},
 	)
 
@@ -430,10 +430,10 @@ type updateTargetTx struct {
 	oldTarget     *nqmModel.TargetForAdding
 }
 
-func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	agentTx.loadNameTagId(tx)
+func (targetTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	targetTx.loadNameTagId(tx)
 
-	updatedTarget, oldTarget := agentTx.updatedTarget, agentTx.oldTarget
+	updatedTarget, oldTarget := targetTx.updatedTarget, targetTx.oldTarget
 	tx.MustExec(
 		`
 		UPDATE nqm_target
@@ -443,7 +443,8 @@ func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 			tg_isp_id = ?,
 			tg_pv_id = ?,
 			tg_ct_id = ?,
-			tg_nt_id = ?
+			tg_nt_id = ?,
+			tg_probed_by_all = ?
 		WHERE tg_id = ?
 		`,
 		updatedTarget.Name,
@@ -453,15 +454,16 @@ func (agentTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 		updatedTarget.ProvinceId,
 		updatedTarget.CityId,
 		updatedTarget.NameTagId,
+		updatedTarget.ProbedByAll,
 		oldTarget.Id,
 	)
 
-	agentTx.updateGroupTags(tx)
+	targetTx.updateGroupTags(tx)
 	return commonDb.TxCommit
 }
 
-func (agentTx *updateTargetTx) loadNameTagId(tx *sqlx.Tx) {
-	updatedTarget, oldTarget := agentTx.updatedTarget, agentTx.oldTarget
+func (targetTx *updateTargetTx) loadNameTagId(tx *sqlx.Tx) {
+	updatedTarget, oldTarget := targetTx.updatedTarget, targetTx.oldTarget
 
 	if updatedTarget.NameTagValue == oldTarget.NameTagValue {
 		return
@@ -472,8 +474,8 @@ func (agentTx *updateTargetTx) loadNameTagId(tx *sqlx.Tx) {
 	)
 }
 
-func (agentTx *updateTargetTx) updateGroupTags(tx *sqlx.Tx) {
-	updatedTarget, oldTarget := agentTx.updatedTarget, agentTx.oldTarget
+func (targetTx *updateTargetTx) updateGroupTags(tx *sqlx.Tx) {
+	updatedTarget, oldTarget := targetTx.updatedTarget, targetTx.oldTarget
 	if updatedTarget.AreGroupTagsSame(oldTarget) {
 		return
 	}
