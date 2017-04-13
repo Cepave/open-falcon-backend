@@ -44,11 +44,24 @@ func (this *BaseController) SessionCheck() (session *uic.Session, err error) {
 		return
 	}
 	session = uic.ReadSessionBySig(sig)
-	if session.Uid != uic.SelectUserIdByName(name) {
+	if session == nil {
 		err = errors.New("can not find this kind of session")
 		return
 	}
-	return
+	u := uic.SelectUserById(session.Uid)
+	switch {
+	case sig == "disabled":
+		err = errors.New("this account has beend disabled")
+		return
+	case u != nil && u.Role == -1:
+		err = errors.New("this account has beend disabled")
+		return
+	case u == nil || u.Name != name:
+		err = errors.New("can not find this kind of session")
+		return
+	default:
+		return
+	}
 }
 
 func (this *BaseController) ResposeError(apiBasicParams *ApiResp, msg string) {
