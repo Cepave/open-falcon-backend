@@ -3,17 +3,19 @@ package uic
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
 	. "github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/fe/utils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/str"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
 )
 
 type AuthController struct {

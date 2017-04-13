@@ -2,8 +2,9 @@ package base
 
 import (
 	"errors"
-	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"regexp"
+
+	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 )
 
 type ApiResp struct {
