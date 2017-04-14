@@ -3,17 +3,19 @@ package uic
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
 	. "github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/fe/utils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/str"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
 )
 
 type AuthController struct {
@@ -44,9 +46,12 @@ func (this *AuthController) LoginGet() {
 	callback := this.GetString("callback", "")
 
 	cookieSig := this.Ctx.GetCookie("sig")
-	if cookieSig == "" {
+	switch cookieSig {
+	case "":
 		this.renderLoginPage(appSig, callback)
 		return
+	case "disabled":
+		this.renderLoginPage(cookieSig, callback)
 	}
 
 	sessionObj := ReadSessionBySig(cookieSig)
@@ -151,6 +156,11 @@ func (this *AuthController) LoginPost() {
 			this.ServeErrJson("password error")
 			return
 		}
+
+		if u.Role == -1 {
+			this.ServeErrJson("this account has been disabled")
+			return
+		}
 	}
 
 	appSig := this.GetString("sig", "")
@@ -170,6 +180,14 @@ func (this *AuthController) renderLoginPage(sig, callback string) {
 	this.Data["Sig"] = sig
 	this.Data["Callback"] = callback
 	this.Data["Shortcut"] = g.Config().Shortcut
+	if sig == "disabled" {
+		if this.Ctx.GetCookie("name") != "" {
+			this.Data["Message"] = fmt.Sprintf("%s has been disabled", this.Ctx.GetCookie("name"))
+		} else {
+			this.Data["Message"] = "this account has been disabled"
+		}
+	}
+	log.Printf("this.Data: %v", this.Data)
 	this.TplName = "auth/login.html"
 }
 
@@ -377,17 +395,26 @@ func (this *AuthController) LoginWithToken() {
 		this.Ctx.SetCookie("token", access_key, maxAge, "/")
 		this.Ctx.SetCookie("token", access_key, maxAge, "/", g.Config().Http.Cookie)
 
-		appSig := this.GetString("sig", "")
-		callback := this.GetString("callback", "")
-		if appSig != "" && callback != "" {
-			SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
+		if user.Role != -1 {
+			appSig := this.GetString("sig", "")
+			callback := this.GetString("callback", "")
+			if appSig != "" && callback != "" {
+				SaveSessionAttrs(user.Id, appSig, int(time.Now().Unix())+3600*24*30)
+			} else {
+				this.CreateSession(user.Id, 3600*24*30)
+			}
+			if callback != "" {
+				this.Redirect(callback, 302)
+			} else {
+				this.Redirect("/me/info", 302)
+			}
 		} else {
-			this.CreateSession(user.Id, 3600*24*30)
-		}
-		if callback != "" {
-			this.Redirect(callback, 302)
-		} else {
-			this.Redirect("/me/info", 302)
+			//role == -1 means this account has been disabled
+			this.Ctx.SetCookie("sig", "disabled", maxAge, "/", g.Config().Http.Cookie)
+			this.Ctx.SetCookie("name", username, maxAge, "/", g.Config().Http.Cookie)
+			appSig := "disabled"
+			callback := this.GetString("callback", "")
+			this.renderLoginPage(appSig, callback)
 		}
 	} else {
 		// not logged in. redirect to login page.

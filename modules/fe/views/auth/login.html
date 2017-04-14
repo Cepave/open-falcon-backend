@@ -24,6 +24,13 @@ $(function() {
 					</div>
 					<div class="panel-body">
 						<div class="form-sign" role="form">
+							{{if .Message}}
+								<div class="form-group">
+									<span class="label label-danger" style="position: relative;left: 25%;">
+										{{ .Message }}
+									</span>
+								</div>
+							{{end}}
 							<div class="form-group">
 								<input type="text" placeholder="name" id="name"
 								class="form-control" required autofocus />
