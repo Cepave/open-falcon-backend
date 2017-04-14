@@ -99,3 +99,16 @@ func listAgents(
 
 	return resultPaging, mvc.JsonOutputBody(agents)
 }
+
+func listTargetsOfAgentById(
+	c *gin.Context,
+	q *commonNqmModel.TargetsOfAgentQuery,
+	p *struct {
+		Paging *commonModel.Paging `mvc:"pageSize[50] pageOrderBy[status#desc:name#asc:host#asc]"`
+	},
+) (*commonModel.Paging, mvc.OutputBody) {
+	p.Paging = commonGin.PagingByHeader(c, p.Paging)
+	targets, resultPaging := commonNqmDb.ListTargetsOfAgentById(q, *p.Paging)
+
+	return resultPaging, mvc.JsonOutputOrNotFound(targets)
+}

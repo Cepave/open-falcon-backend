@@ -12,11 +12,11 @@ import (
 )
 
 type AgentForAdding struct {
-	Id           int32  `json:"-"`
+	Id           int32   `json:"-"`
 	Name         *string `json:"name" conform:"trimToNil"`
 	Comment      *string `json:"comment" conform:"trimToNil"`
-	ConnectionId string `json:"connection_id" conform:"trim" validate:"min=1"`
-	Status       bool   `json:"status"`
+	ConnectionId string  `json:"connection_id" conform:"trim" validate:"min=1"`
+	Status       bool    `json:"status"`
 
 	Hostname  string `json:"hostname" conform:"trim" validate:"min=1"`
 	IpAddress net.IP `json:"-"`
@@ -62,16 +62,16 @@ func (agent *AgentForAdding) GetIpAddressAsString() string {
 }
 
 type Agent struct {
-	Id                    int32  `gorm:"primary_key:true;column:ag_id"`
+	Id                    int32   `gorm:"primary_key:true;column:ag_id"`
 	Name                  *string `gorm:"column:ag_name"`
-	ConnectionId          string `gorm:"column:ag_connection_id""`
-	Hostname              string `gorm:"column:ag_hostname"`
-	NumOfEnabledPingtasks int32  `gorm:"column:ag_num_of_enabled_pingtasks"`
+	ConnectionId          string  `gorm:"column:ag_connection_id""`
+	Hostname              string  `gorm:"column:ag_hostname"`
+	NumOfEnabledPingtasks int32   `gorm:"column:ag_num_of_enabled_pingtasks"`
 
 	IpAddress net.IP `gorm:"column:ag_ip_address"`
 
 	Status        bool      `gorm:"column:ag_status"`
-	Comment       *string    `gorm:"column:ag_comment"`
+	Comment       *string   `gorm:"column:ag_comment"`
 	LastHeartBeat time.Time `gorm:"column:ag_last_heartbeat"`
 
 	IspId   int16  `gorm:"column:isp_id"`
@@ -225,6 +225,20 @@ type PingListLog struct {
 	NumberOfTargets int32     `db:"apll_number_of_targets"`
 	AccessTime      time.Time `db:"apll_time_access"`
 	RefreshTime     time.Time `db:"apll_time_refresh"`
+}
+
+type CacheAgentPingListLog struct {
+	ApllAgId          int32     `gorm:"primary_key:true;column:apll_ag_id"`
+	CachedRefreshTime time.Time `gorm:"column:apll_time_refresh"`
+}
+
+func (CacheAgentPingListLog) TableName() string {
+	return "nqm_cache_agent_ping_list_log"
+}
+
+type TargetsOfAgent struct {
+	CachedRefreshTime ojson.JsonTime `json:"cached_refresh_time"`
+	Targets           []*Target      `json:"targets"`
 }
 
 func (l *PingListLog) GetDurationOfLastAccess(checkedTime time.Time) int64 {

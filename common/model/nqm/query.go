@@ -11,10 +11,10 @@ type AgentQuery struct {
 	Hostname     string `mvc:"query[hostname]" conform:"trim"`
 	IpAddress    string `mvc:"query[ip_address]" conform:"trim"`
 
-	IspId int16 `mvc:"query[isp_id]"`
-	HasIspIdParam bool `mvc:"query[?isp_id]"`
+	IspId         int16 `mvc:"query[isp_id]"`
+	HasIspIdParam bool  `mvc:"query[?isp_id]"`
 
-	Status    bool  `mvc:"query[status]"`
+	Status         bool `mvc:"query[status]"`
 	HasStatusParam bool `mvc:"query[?status]"`
 }
 
@@ -39,16 +39,21 @@ func (query *AgentQueryWithPingTask) HasAppliedCondition() bool {
 	return query.HasApplied != "!N!"
 }
 
+type TargetsOfAgentQuery struct {
+	AgentID     int32 `mvc:"param[agent_id]"`
+	TargetQuery *TargetQuery
+}
+
 // The query conditions of target
 type TargetQuery struct {
-	Name               string `mvc:"query[name]"`
-	Host               string `mvc:"query[host]"`
+	Name string `mvc:"query[name]"`
+	Host string `mvc:"query[host]"`
 
-	IspId              int16 `mvc:"query[isp_id]"`
-	HasIspIdParam		bool `mvc:"query[?isp_id]"`
+	IspId         int16 `mvc:"query[isp_id]"`
+	HasIspIdParam bool  `mvc:"query[?isp_id]"`
 
-	Status             bool `mvc:"query[status]"`
-	HasStatusParam     bool `mvc:"query[?status]"`
+	Status         bool `mvc:"query[status]"`
+	HasStatusParam bool `mvc:"query[?status]"`
 }
 
 type AgentFilter struct {
