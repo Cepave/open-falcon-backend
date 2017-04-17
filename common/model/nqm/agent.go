@@ -26,7 +26,7 @@ type AgentForAdding struct {
 	CityId     int16 `json:"city_id" validate:"nonZeroId"`
 
 	NameTagId    int16  `json:"-"`
-	NameTagValue string `json:"name_tag" conform:"trim"`
+	NameTagValue *string `json:"name_tag" conform:"trim"`
 
 	GroupTags []string `json:"group_tags" conform:"trim"`
 }
@@ -140,6 +140,8 @@ func (agentView *Agent) ToAgentForAdding() *AgentForAdding {
 		groupTags = append(groupTags, groupTag.Name)
 	}
 
+	nameTagValue := agentView.NameTagValue
+
 	return &AgentForAdding{
 		Id:      agentView.Id,
 		Name:    agentView.Name,
@@ -155,7 +157,7 @@ func (agentView *Agent) ToAgentForAdding() *AgentForAdding {
 		CityId:     agentView.CityId,
 
 		NameTagId:    agentView.NameTagId,
-		NameTagValue: agentView.NameTagValue,
+		NameTagValue: &nameTagValue,
 		GroupTags:    owlModel.GroupTags(agentView.GroupTags).ToNames(),
 	}
 }

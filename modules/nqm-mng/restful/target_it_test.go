@@ -6,6 +6,7 @@ import (
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
@@ -34,36 +35,45 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 	jsonBody := &struct {
 		Name        string   `json:"name"`
 		Host        string   `json:"host"`
-		Status      bool     `json:status`
+		Status      bool     `json:"status"`
 		ProbedByAll bool     `json:"probed_by_all"`
 		Comment     string   `json:"comment"`
 		IspId       int      `json:"isp_id"`
 		ProvinceId  int      `json:"province_id"`
 		CityId      int      `json:"city_id"`
-		NameTag     string   `json:"name_tag"`
+		NameTag     *string   `json:"name_tag"`
 		GroupTags   []string `json:"group_tags"`
-	}{
-		Name:        "new-target-ccc",
-		Host:        "new-tg.repo.targets.com",
+	} {
 		Status:      true,
 		ProbedByAll: true,
 		Comment:     "This is new target by red 33.72 ***",
 		IspId:       2,
 		ProvinceId:  27,
 		CityId:      206,
-		NameTag:     "tg-nt-1",
-		GroupTags:   []string{"tg-rest-tag-1", "tg-rest-tag-2"},
 	}
 
+	sPtr := func(v string) *string { return &v }
 	testCases := []*struct {
+		host string
+		nameTag *string
+		groupTags []string
 		expectedStatus    int
 		expectedErrorCode int
-	}{
-		{http.StatusOK, -1},
-		{http.StatusConflict, 1},
+	} {
+		{ "54", nil, []string{}, http.StatusOK, -1},
+		{ "55", sPtr("tg-nt-1"), []string{ "tg-rest-tag-1", "tg-rest-tag-2" }, http.StatusOK, -1},
+		{ "54", nil, []string{}, http.StatusConflict, 1},
 	}
 
-	for _, testCase := range testCases {
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		jsonBody.Name = "new-tg-" + testCase.host
+		jsonBody.Host = "87.6.44." + testCase.host
+		jsonBody.NameTag = testCase.nameTag
+		jsonBody.GroupTags = testCase.groupTags
+
 		client := httpClientConfig.NewSlingByBase().
 			Post("api/v1/nqm/target").
 			BodyJSON(jsonBody)
@@ -76,23 +86,29 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 
 		switch testCase.expectedStatus {
 		case http.StatusConflict:
-			c.Assert(jsonResp.Get("error_code").MustInt(), Equals, testCase.expectedErrorCode)
+			c.Assert(jsonResp.Get("error_code").MustInt(), Equals, testCase.expectedErrorCode, comment)
 		}
 
 		if testCase.expectedStatus != http.StatusOK {
 			continue
 		}
 
-		c.Assert(jsonResp.Get("name").MustString(), Equals, jsonBody.Name)
-		c.Assert(jsonResp.Get("host").MustString(), Equals, jsonBody.Host)
-		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
-		c.Assert(jsonResp.Get("status").MustBool(), Equals, jsonBody.Status)
-		c.Assert(jsonResp.Get("probed_by_all").MustBool(), Equals, jsonBody.ProbedByAll)
-		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
-		c.Assert(jsonResp.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)
-		c.Assert(jsonResp.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId)
-		c.Assert(jsonResp.Get("name_tag").Get("value").MustString(), Equals, jsonBody.NameTag)
-		c.Assert(jsonResp.Get("group_tags").MustArray(), HasLen, len(jsonBody.GroupTags))
+		c.Assert(jsonResp.Get("name").MustString(), Equals, jsonBody.Name, comment)
+		c.Assert(jsonResp.Get("host").MustString(), Equals, jsonBody.Host, comment)
+		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment, comment)
+		c.Assert(jsonResp.Get("status").MustBool(), Equals, jsonBody.Status, comment)
+		c.Assert(jsonResp.Get("probed_by_all").MustBool(), Equals, jsonBody.ProbedByAll, comment)
+		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId, comment)
+		c.Assert(jsonResp.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId, comment)
+		c.Assert(jsonResp.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId, comment)
+
+		if testCase.nameTag != nil {
+			c.Assert(jsonResp.Get("name_tag").Get("value").MustString(), Equals, *jsonBody.NameTag, comment)
+		} else {
+			c.Assert(jsonResp.Get("name_tag").Get("id").MustInt(), Equals, -1, comment)
+		}
+
+		c.Assert(jsonResp.Get("group_tags").MustArray(), HasLen, len(jsonBody.GroupTags), comment)
 	}
 }
 
@@ -100,15 +116,15 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 	jsonBody := &struct {
 		Name        string   `json:"name"`
-		Status      bool     `json:status`
+		Status      bool     `json:"status"`
 		ProbedByAll bool     `json:"probed_by_all"`
 		Comment     string   `json:"comment"`
 		IspId       int      `json:"isp_id"`
 		ProvinceId  int      `json:"province_id"`
 		CityId      int      `json:"city_id"`
-		NameTag     string   `json:"name_tag"`
+		NameTag     *string   `json:"name_tag"`
 		GroupTags   []string `json:"group_tags"`
-	}{
+	} {
 		Name:        "Updated-Target-1",
 		Status:      false,
 		ProbedByAll: false,
@@ -116,29 +132,50 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 		IspId:       9,
 		ProvinceId:  19,
 		CityId:      164,
-		NameTag:     "tg-nt-3",
-		GroupTags:   []string{"blue-utg-3", "blue-utg-4", "blue-utg-5"},
 	}
 
-	client := httpClientConfig.NewSlingByBase().
-		Put("api/v1/nqm/target/39347").
-		BodyJSON(jsonBody)
+	sPtr := func(v string) *string { return &v }
+	testCases := []*struct {
+		nameTag *string
+		groupTags []string
+	} {
+		{ sPtr("tg-nt-3"), []string{"blue-utg-3", "blue-utg-4", "blue-utg-5"} },
+		{ nil, []string{} },
+	}
 
-	slintChecker := testingHttp.NewCheckSlint(c, client)
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-	jsonResult := slintChecker.GetJsonBody(http.StatusOK)
+		jsonBody.NameTag = testCase.nameTag
+		jsonBody.GroupTags = testCase.groupTags
 
-	c.Logf("Update target: %v", json.MarshalPrettyJSON(jsonResult))
+		client := httpClientConfig.NewSlingByBase().
+			Put("api/v1/nqm/target/39347").
+			BodyJSON(jsonBody)
 
-	c.Assert(jsonResult.Get("name").MustString(), Equals, jsonBody.Name)
-	c.Assert(jsonResult.Get("host").MustString(), Equals, "ab01.targets.com.cn")
-	c.Assert(jsonResult.Get("comment").MustString(), Equals, jsonBody.Comment)
-	c.Assert(jsonResult.Get("status").MustBool(), Equals, jsonBody.Status)
-	c.Assert(jsonResult.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
-	c.Assert(jsonResult.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)
-	c.Assert(jsonResult.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId)
-	c.Assert(jsonResult.Get("name_tag").Get("value").MustString(), Equals, jsonBody.NameTag)
-	c.Assert(jsonResult.Get("group_tags").MustArray(), HasLen, len(jsonBody.GroupTags))
+		slintChecker := testingHttp.NewCheckSlint(c, client)
+
+		jsonResult := slintChecker.GetJsonBody(http.StatusOK)
+
+		c.Logf("Update target: %v", json.MarshalPrettyJSON(jsonResult))
+
+		c.Assert(jsonResult.Get("name").MustString(), Equals, jsonBody.Name, comment)
+		c.Assert(jsonResult.Get("host").MustString(), Equals, "ab01.targets.com.cn", comment)
+		c.Assert(jsonResult.Get("comment").MustString(), Equals, jsonBody.Comment, comment)
+		c.Assert(jsonResult.Get("status").MustBool(), Equals, jsonBody.Status, comment)
+		c.Assert(jsonResult.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId, comment)
+		c.Assert(jsonResult.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId, comment)
+		c.Assert(jsonResult.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId, comment)
+
+		if jsonBody.NameTag != nil {
+			c.Assert(jsonResult.Get("name_tag").Get("value").MustString(), Equals, *jsonBody.NameTag, comment)
+		} else {
+			c.Assert(jsonResult.Get("name_tag").Get("id").MustInt(), Equals, -1, comment)
+		}
+
+		c.Assert(jsonResult.Get("group_tags").MustArray(), HasLen, len(jsonBody.GroupTags), comment)
+	}
 }
 
 // Tests the listing of targets
@@ -254,7 +291,7 @@ func (s *TestTargetItSuite) TearDownTest(c *C) {
 		)
 	case "TestTargetItSuite.TestAddNewTarget":
 		inTx(
-			"DELETE FROM nqm_target WHERE tg_host = 'new-tg.repo.targets.com'",
+			"DELETE FROM nqm_target WHERE tg_name LIKE 'new-tg-%'",
 			"DELETE FROM owl_name_tag where nt_value = 'tg-nt-1'",
 			"DELETE FROM owl_group_tag where gt_name LIKE 'tg-rest-tag-%'",
 		)

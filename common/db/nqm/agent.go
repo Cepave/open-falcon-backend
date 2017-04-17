@@ -561,9 +561,14 @@ type addAgentTx struct {
 func (agentTx *addAgentTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	agentTx.prepareHost(tx)
 
-	agentTx.agent.NameTagId = owlDb.BuildAndGetNameTagId(
-		tx, agentTx.agent.NameTagValue,
-	)
+	newAgent := agentTx.agent
+	if newAgent.NameTagValue == nil {
+		newAgent.NameTagId = -1
+	} else {
+		agentTx.agent.NameTagId = owlDb.BuildAndGetNameTagId(
+			tx, *newAgent.NameTagValue,
+		)
+	}
 
 	agentTx.addAgent(tx)
 	if agentTx.err != nil {
@@ -698,14 +703,15 @@ func (agentTx *updateAgentTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 }
 
 func (agentTx *updateAgentTx) loadNameTagId(tx *sqlx.Tx) {
-	updatedAgent, oldAgent := agentTx.updatedAgent, agentTx.oldAgent
+	updatedAgent := agentTx.updatedAgent
 
-	if updatedAgent.NameTagValue == oldAgent.NameTagValue {
+	if updatedAgent.NameTagValue == nil {
+		updatedAgent.NameTagId = -1
 		return
 	}
 
 	updatedAgent.NameTagId = owlDb.BuildAndGetNameTagId(
-		tx, updatedAgent.NameTagValue,
+		tx, *updatedAgent.NameTagValue,
 	)
 }
 

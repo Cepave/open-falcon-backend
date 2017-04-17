@@ -19,54 +19,50 @@ var _ = Suite(&TestTargetSuite{})
 
 // Tests the adding of data for target
 func (suite *TestTargetSuite) TestAddTarget(c *C) {
+	sPtr := func(v string) *string { return &v }
+
 	/**
 	 * sample targets
 	 */
-	defaultTarget_1 := nqmModel.NewTargetForAdding()
-	defaultTarget_1.Name = "def-target-1"
-	defaultTarget_1.Host = "13.41.60.178"
-
-	defaultTarget_2 := nqmModel.NewTargetForAdding()
-	defaultTarget_2.Name = "def-target-2"
-	defaultTarget_2.Host = "13.41.60.179"
-	defaultTarget_2.IspId = 3
-	defaultTarget_2.ProvinceId = 20
-	defaultTarget_2.CityId = 6
-	defaultTarget_2.NameTagValue = "IBM-617"
-	defaultTarget_2.GroupTags = []string{
-		"KSC-03", "KSC-04", "KSC-05",
-	}
-
-	defaultTarget_3 := *defaultTarget_2
-	defaultTarget_3.Name = "def-target-3"
-	defaultTarget_3.Host = "13.41.60.180"
-	defaultTarget_3.CityId = 50
+	sampleTarget := nqmModel.NewTargetForAdding()
+	sampleTarget.Host = "13.41.60.178"
+	sampleTarget.IspId = 3
+	sampleTarget.ProvinceId = 20
+	sampleTarget.CityId = 6
 	// :~)
 
 	testCases := []*struct {
-		addedTarget *nqmModel.TargetForAdding
-		hasError    bool
-		errorType   reflect.Type
-	}{
-		{defaultTarget_1, false, nil}, // Use the minimum value
-		{defaultTarget_1, true, reflect.TypeOf(ErrDuplicatedNqmTarget{})},
-		{defaultTarget_2, false, nil},                                           // Use every properties
-		{&defaultTarget_3, true, reflect.TypeOf(owlDb.ErrNotInSameHierarchy{})}, // Duplicated connection id
+		targetName string
+		host string
+		nameTag *string
+		groupTags []string
+		cityId int16
+		errorType   interface{}
+	} {
+		{ "tg-1", "1", nil, []string{}, 6, nil },
+		{ "tg-1", "1", nil, []string{}, 6, ErrDuplicatedNqmTarget{} }, // Duplicated host
+		{ "tg-2-1", "2", sPtr("IBM-1"), []string{ "KSC-1", "KSC-32" }, 6, nil },
+		{ "tg-2-2", "3", sPtr("IBM-1"), []string{ "KSC-1", "KSC-32" }, 112, owlDb.ErrNotInSameHierarchy{} }, // Location is not consistent
 	}
 
 	for _, testCase := range testCases {
-		currentAddedTarget := testCase.addedTarget
-		newTarget, err := AddTarget(currentAddedTarget)
+		sampleTarget.Name = "def-target-" + testCase.targetName
+		sampleTarget.Host = "13.41.60.3" + testCase.host
+		sampleTarget.NameTagValue = testCase.nameTag
+		sampleTarget.GroupTags = testCase.groupTags
+		sampleTarget.CityId = testCase.cityId
+
+		newTarget, err := AddTarget(sampleTarget)
 
 		/**
 		 * Asserts the occuring error
 		 */
-		if testCase.hasError {
+		if testCase.errorType != nil {
 			c.Assert(newTarget, IsNil)
 			c.Assert(err, NotNil)
 			c.Logf("Has error: %v", err)
 
-			c.Assert(reflect.TypeOf(err), Equals, testCase.errorType)
+			c.Assert(reflect.TypeOf(err), Equals, reflect.TypeOf(testCase.errorType))
 			continue
 		}
 		// :~)
@@ -75,18 +71,25 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 		c.Logf("New Target: %v", newTarget)
 		c.Logf("New Target[Group Tags]: %v", newTarget.GroupTags)
 
-		c.Assert(newTarget.Name, Equals, currentAddedTarget.Name)
-		c.Assert(newTarget.Host, Equals, currentAddedTarget.Host)
-		c.Assert(newTarget.IspId, Equals, currentAddedTarget.IspId)
-		c.Assert(newTarget.ProvinceId, Equals, currentAddedTarget.ProvinceId)
-		c.Assert(newTarget.CityId, Equals, currentAddedTarget.CityId)
-		c.Assert(newTarget.NameTagId, Equals, currentAddedTarget.NameTagId)
-		c.Assert(newTarget.GroupTags, HasLen, len(currentAddedTarget.GroupTags))
+		c.Assert(newTarget.Name, Equals, sampleTarget.Name)
+		c.Assert(newTarget.Host, Equals, sampleTarget.Host)
+		c.Assert(newTarget.IspId, Equals, sampleTarget.IspId)
+		c.Assert(newTarget.ProvinceId, Equals, sampleTarget.ProvinceId)
+		c.Assert(newTarget.CityId, Equals, sampleTarget.CityId)
+
+		if sampleTarget.NameTagValue != nil {
+			c.Assert(newTarget.NameTagValue, Equals, *sampleTarget.NameTagValue)
+		} else {
+			c.Assert(newTarget.NameTagId, Equals, int16(-1))
+		}
+
+		c.Assert(newTarget.GroupTags, HasLen, len(sampleTarget.GroupTags))
 	}
 }
 
 // Tests the updating for data of target
 func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
+	sPtr := func(v string) *string { return &v }
 	modifiedTarget := &nqmModel.TargetForAdding{
 		Name:         "new-tg-1",
 		Comment:      utils.PointerOfCloneString("new-comment-1"),
@@ -94,25 +97,43 @@ func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 		ProvinceId:   26,
 		CityId:       194,
 		IspId:        2,
-		NameTagValue: "tg-nt-2",
-		GroupTags:    []string{"tg-gt-3", "tg-gt-4", "tg-gt-5"},
 	}
 
-	originalTarget := GetTargetById(34091)
+	testCases := []*struct {
+		nameTag *string
+		groupTags []string
+	} {
+		{ sPtr("tg-nt-2"), []string{ "tg-gt-3", "tg-gt-4", "tg-gt-5" } },
+		{ nil, []string{} },
+	}
 
-	testedTarget, err := UpdateTarget(originalTarget, modifiedTarget)
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-	c.Assert(err, IsNil)
-	c.Assert(testedTarget.Name, Equals, modifiedTarget.Name)
-	c.Assert(testedTarget.Comment, DeepEquals, modifiedTarget.Comment)
-	c.Assert(testedTarget.Status, Equals, modifiedTarget.Status)
-	c.Assert(testedTarget.ProvinceId, Equals, modifiedTarget.ProvinceId)
-	c.Assert(testedTarget.CityId, Equals, modifiedTarget.CityId)
-	c.Assert(testedTarget.IspId, Equals, modifiedTarget.IspId)
-	c.Assert(testedTarget.NameTagId, Equals, modifiedTarget.NameTagId)
+		modifiedTarget.NameTagValue = testCase.nameTag
+		modifiedTarget.GroupTags = testCase.groupTags
 
-	testedTargetForAdding := testedTarget.ToTargetForAdding()
-	c.Assert(testedTargetForAdding.AreGroupTagsSame(modifiedTarget), Equals, true)
+		originalTarget := GetTargetById(34091)
+		testedTarget, err := UpdateTarget(originalTarget, modifiedTarget)
+
+		c.Assert(err, IsNil)
+		c.Assert(testedTarget.Name, Equals, modifiedTarget.Name, comment)
+		c.Assert(testedTarget.Comment, DeepEquals, modifiedTarget.Comment, comment)
+		c.Assert(testedTarget.Status, Equals, modifiedTarget.Status, comment)
+		c.Assert(testedTarget.ProvinceId, Equals, modifiedTarget.ProvinceId, comment)
+		c.Assert(testedTarget.CityId, Equals, modifiedTarget.CityId, comment)
+		c.Assert(testedTarget.IspId, Equals, modifiedTarget.IspId, comment)
+
+		if modifiedTarget.NameTagValue != nil {
+			c.Assert(testedTarget.NameTagValue, Equals, *modifiedTarget.NameTagValue, comment)
+		} else {
+			c.Assert(testedTarget.NameTagId, Equals, int16(-1), comment)
+		}
+
+		testedTargetForAdding := testedTarget.ToTargetForAdding()
+		c.Assert(testedTargetForAdding.AreGroupTagsSame(modifiedTarget), Equals, true, comment)
+	}
 }
 
 // Tests the retrieving of data for a target by id

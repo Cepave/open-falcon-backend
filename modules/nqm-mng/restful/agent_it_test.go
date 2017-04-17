@@ -6,6 +6,7 @@ import (
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
@@ -30,6 +31,8 @@ func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
 
 // Tests the adding of new agent
 func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
+	sPtr := func(v string) *string { return &v }
+
 	jsonBody := &struct {
 		Name         string   `json:"name"`
 		Comment      string   `json:"comment"`
@@ -39,30 +42,34 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		IspId        int      `json:"isp_id"`
 		ProvinceId   int      `json:"province_id"`
 		CityId       int      `json:"city_id"`
-		NameTag      string   `json:"name_tag"`
+		NameTag      *string   `json:"name_tag"`
 		GroupTags    []string `json:"group_tags"`
-	}{
+	} {
 		Name:         "ko-name-cc1",
 		Comment:      "cc-name-cc1",
 		Hostname:     "new-host-cccc",
 		Status:       true,
-		ConnectionId: "new-agent@blue.12.91.33",
 		IspId:        8,
 		ProvinceId:   9,
 		CityId:       130,
-		NameTag:      "rest-nt-1",
 		GroupTags:    []string{"pp-rest-tag-1", "pp-rest-tag-2"},
 	}
 
 	testCases := []*struct {
+		connectionId string
+		nameTag *string
 		expectedStatus    int
 		expectedErrorCode int
-	}{
-		{http.StatusOK, -1},
-		{http.StatusConflict, 1},
+	} {
+		{"@192.33.9.1", sPtr("add-agent-nt-1"), http.StatusOK, -1},
+		{"@192.33.9.2", nil, http.StatusOK, -1},
+		{"@192.33.9.1", sPtr("add-agent-nt-1"), http.StatusConflict, 1},
 	}
 
 	for _, testCase := range testCases {
+		jsonBody.ConnectionId = "add-agent-" + testCase.connectionId
+		jsonBody.NameTag = testCase.nameTag
+
 		client := httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent").
 			BodyJSON(jsonBody)
 
@@ -90,7 +97,13 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
 		c.Assert(jsonResp.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)
 		c.Assert(jsonResp.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId)
-		c.Assert(jsonResp.Get("name_tag").Get("value").MustString(), Equals, jsonBody.NameTag)
+
+		if jsonBody.NameTag != nil {
+			c.Assert(jsonResp.Get("name_tag").Get("value").MustString(), Equals, *jsonBody.NameTag)
+		} else {
+			c.Assert(jsonResp.Get("name_tag").Get("id").MustInt(), Equals, -1)
+		}
+
 		c.Assert(jsonResp.Get("group_tags").MustArray(), HasLen, len(jsonBody.GroupTags))
 	}
 }
@@ -117,7 +130,7 @@ func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 		IspId      int      `json:"isp_id"`
 		ProvinceId int      `json:"province_id"`
 		CityId     int      `json:"city_id"`
-		NameTag    string   `json:"name_tag"`
+		NameTag    *string   `json:"name_tag"`
 		GroupTags  []string `json:"group_tags"`
 	}{
 		Name:       "Update-Agent-1",
@@ -126,27 +139,48 @@ func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 		IspId:      3,
 		ProvinceId: 11,
 		CityId:     230,
-		NameTag:    "rest-nt-9",
-		GroupTags:  []string{"rest-gt-91", "rest-gt-92", "rest-gt-93"},
 	}
 
-	client := httpClientConfig.NewSlingByBase().Put("api/v1/nqm/agent/23041").
-		BodyJSON(jsonBody)
+	sPtr := func(v string) *string { return &v }
+	testCases := []*struct {
+		nameTag *string
+		groupTags []string
+	} {
+		{ sPtr("rest-nt-9"), []string{ "rest-gt-91", "rest-gt-92", "rest-gt-93" } },
+		{ nil, []string{} },
+	}
 
-	slintChecker := testingHttp.NewCheckSlint(c, client)
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-	jsonResult := slintChecker.GetJsonBody(http.StatusOK)
+		jsonBody.NameTag = testCase.nameTag
+		jsonBody.GroupTags = testCase.groupTags
 
-	c.Logf("Update agent: %v", json.MarshalPrettyJSON(jsonResult))
+		client := httpClientConfig.NewSlingByBase().Put("api/v1/nqm/agent/23041").
+			BodyJSON(jsonBody)
 
-	c.Assert(jsonResult.Get("name").MustString(), Equals, jsonBody.Name)
-	c.Assert(jsonResult.Get("comment").MustString(), Equals, jsonBody.Comment)
-	c.Assert(jsonResult.Get("status").MustBool(), Equals, jsonBody.Status)
-	c.Assert(jsonResult.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
-	c.Assert(jsonResult.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)
-	c.Assert(jsonResult.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId)
-	c.Assert(jsonResult.Get("name_tag").Get("value").MustString(), Equals, jsonBody.NameTag)
-	c.Assert(jsonResult.Get("group_tags").MustArray(), HasLen, 3)
+		slintChecker := testingHttp.NewCheckSlint(c, client)
+
+		jsonResult := slintChecker.GetJsonBody(http.StatusOK)
+
+		c.Logf("Update agent: %v", json.MarshalPrettyJSON(jsonResult))
+
+		c.Assert(jsonResult.Get("name").MustString(), Equals, jsonBody.Name, comment)
+		c.Assert(jsonResult.Get("comment").MustString(), Equals, jsonBody.Comment, comment)
+		c.Assert(jsonResult.Get("status").MustBool(), Equals, jsonBody.Status, comment)
+		c.Assert(jsonResult.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId, comment)
+		c.Assert(jsonResult.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId, comment)
+		c.Assert(jsonResult.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId, comment)
+
+		if jsonBody.NameTag != nil {
+			c.Assert(jsonResult.Get("name_tag").Get("value").MustString(), Equals, *jsonBody.NameTag, comment)
+		} else {
+			c.Assert(jsonResult.Get("name_tag").Get("id").MustInt(), Equals, -1, comment)
+		}
+
+		c.Assert(jsonResult.Get("group_tags").MustArray(), HasLen, len(testCase.groupTags), comment)
+	}
 }
 
 func (s *TestAgentItSuite) SetUpSuite(c *C) {
@@ -258,9 +292,9 @@ func (s *TestAgentItSuite) TearDownTest(c *C) {
 		)
 	case "TestAgentItSuite.TestAddNewAgent":
 		inTx(
-			"DELETE FROM nqm_agent WHERE ag_connection_id = 'new-agent@blue.12.91.33'",
+			"DELETE FROM nqm_agent WHERE ag_connection_id LIKE 'add-agent%'",
 			"DELETE FROM host WHERE hostname = 'new-agent-blue-1'",
-			"DELETE FROM owl_name_tag where nt_value = 'rest-nt-1'",
+			"DELETE FROM owl_name_tag where nt_value LIKE 'add-agent-%'",
 			"DELETE FROM owl_group_tag where gt_name LIKE 'pp-rest-tag-%'",
 		)
 	case "TestAgentItSuite.TestModifyAgent":

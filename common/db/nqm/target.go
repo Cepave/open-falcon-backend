@@ -327,9 +327,15 @@ type addTargetTx struct {
 }
 
 func (targetTx *addTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	targetTx.target.NameTagId = owlDb.BuildAndGetNameTagId(
-		tx, targetTx.target.NameTagValue,
-	)
+	newTarget := targetTx.target
+
+	if newTarget.NameTagValue != nil {
+		newTarget.NameTagId = owlDb.BuildAndGetNameTagId(
+			tx, *newTarget.NameTagValue,
+		)
+	} else {
+		newTarget.NameTagId = -1
+	}
 
 	targetTx.addTarget(tx)
 	if targetTx.err != nil {
@@ -463,15 +469,15 @@ func (targetTx *updateTargetTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 }
 
 func (targetTx *updateTargetTx) loadNameTagId(tx *sqlx.Tx) {
-	updatedTarget, oldTarget := targetTx.updatedTarget, targetTx.oldTarget
+	updatedTarget := targetTx.updatedTarget
 
-	if updatedTarget.NameTagValue == oldTarget.NameTagValue {
-		return
+	if updatedTarget.NameTagValue != nil {
+		updatedTarget.NameTagId = owlDb.BuildAndGetNameTagId(
+			tx, *updatedTarget.NameTagValue,
+		)
+	} else {
+		updatedTarget.NameTagId = -1
 	}
-
-	updatedTarget.NameTagId = owlDb.BuildAndGetNameTagId(
-		tx, updatedTarget.NameTagValue,
-	)
 }
 
 func (targetTx *updateTargetTx) updateGroupTags(tx *sqlx.Tx) {

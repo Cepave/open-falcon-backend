@@ -21,7 +21,7 @@ type TargetForAdding struct {
 	CityId int16 `json:"city_id" validate:"nonZeroId"`
 
 	NameTagId int16 `json:"-"`
-	NameTagValue string `json:"name_tag" conform:"trim"`
+	NameTagValue *string `json:"name_tag" conform:"trim"`
 	GroupTags []string `json:"group_tags" conform:"trim"`
 }
 func (target *TargetForAdding) AreGroupTagsSame(anotherTarget *TargetForAdding) bool {
