@@ -26,25 +26,45 @@ func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
 		ProvinceId:   27,
 		CityId:       205,
 		IspId:        8,
-		NameTagValue: "nt-2",
-		GroupTags:    []string{"ng-2", "ng-3", "ng-4"},
 	}
 
-	originalAgent := GetAgentById(10061)
+	sPtr := func(v string) *string { return &v }
+	testCases := []*struct {
+		nameTag *string
+		groupTags []string
+	} {
+		{ sPtr("nt-2"), []string{"ng-2", "ng-3", "ng-4"} },
+		{ nil, []string{} },
+	}
 
-	testedAgent, err := UpdateAgent(originalAgent, modifiedAgent)
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
 
-	c.Assert(err, IsNil)
-	c.Assert(testedAgent.Name, DeepEquals, modifiedAgent.Name)
-	c.Assert(testedAgent.Comment, DeepEquals, modifiedAgent.Comment)
-	c.Assert(testedAgent.Status, Equals, modifiedAgent.Status)
-	c.Assert(testedAgent.ProvinceId, Equals, modifiedAgent.ProvinceId)
-	c.Assert(testedAgent.CityId, Equals, modifiedAgent.CityId)
-	c.Assert(testedAgent.IspId, Equals, modifiedAgent.IspId)
-	c.Assert(testedAgent.NameTagValue, Equals, modifiedAgent.NameTagValue)
+		modifiedAgent.NameTagValue = testCase.nameTag
+		modifiedAgent.GroupTags = testCase.groupTags
 
-	testedAgentForAdding := testedAgent.ToAgentForAdding()
-	c.Assert(testedAgentForAdding.AreGroupTagsSame(modifiedAgent), Equals, true)
+		originalAgent := GetAgentById(10061)
+
+		testedAgent, err := UpdateAgent(originalAgent, modifiedAgent)
+
+		c.Assert(err, IsNil, comment)
+		c.Assert(testedAgent.Name, DeepEquals, modifiedAgent.Name, comment)
+		c.Assert(testedAgent.Comment, DeepEquals, modifiedAgent.Comment, comment)
+		c.Assert(testedAgent.Status, Equals, modifiedAgent.Status, comment)
+		c.Assert(testedAgent.ProvinceId, Equals, modifiedAgent.ProvinceId, comment)
+		c.Assert(testedAgent.CityId, Equals, modifiedAgent.CityId, comment)
+		c.Assert(testedAgent.IspId, Equals, modifiedAgent.IspId, comment)
+
+		if testCase.nameTag != nil {
+			c.Assert(testedAgent.NameTagValue, Equals, *modifiedAgent.NameTagValue, comment)
+		} else {
+			c.Assert(testedAgent.NameTagId, Equals, int16(-1), comment)
+		}
+
+		testedAgentForAdding := testedAgent.ToAgentForAdding()
+		c.Assert(testedAgentForAdding.AreGroupTagsSame(modifiedAgent), Equals, true, comment)
+	}
 }
 
 // Tests the getting of agent by id
@@ -71,6 +91,8 @@ func (suite *TestAgentSuite) TestGetAgentById(c *C) {
 
 // Tests the adding of new agent
 func (suite *TestAgentSuite) TestAddAgent(c *C) {
+	sPtr := func(v string) *string { return &v }
+
 	/**
 	 * sample agents
 	 */
@@ -89,7 +111,7 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 	defaultAgent_2.IspId = 3
 	defaultAgent_2.ProvinceId = 20
 	defaultAgent_2.CityId = 6
-	defaultAgent_2.NameTagValue = "CISCO-617"
+	defaultAgent_2.NameTagValue = sPtr("CISCO-617")
 	defaultAgent_2.GroupTags = []string{
 		"TPE-03", "TPE-04", "TPE-05",
 	}

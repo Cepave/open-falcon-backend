@@ -15,7 +15,7 @@ type AgentPingtask struct {
 	PingtaskID int32
 }
 
-type pingtaskFilter struct {
+type PingtaskFilter struct {
 	IspFilters      []*commonOwlModel.IspOfPingtaskView      `json:"isps"`
 	ProvinceFilters []*commonOwlModel.ProvinceOfPingtaskView `json:"provinces"`
 	CityFilters     []*commonOwlModel.CityOfPingtaskView     `json:"cities"`
@@ -23,7 +23,7 @@ type pingtaskFilter struct {
 	GroupTagFilters []*commonOwlModel.GroupTagOfPingtaskView `json:"group_tags"`
 }
 
-type pingtaskModifyFilter struct {
+type PingtaskModifyFilter struct {
 	IspIds      []int16 `json:"ids_of_isp"`
 	ProvinceIds []int16 `json:"ids_of_province"`
 	CityIds     []int16 `json:"ids_of_city"`
@@ -54,7 +54,7 @@ type PingtaskView struct {
 	IdsOfGroupTagFilters  string `gorm:"column:pt_group_tag_filter_ids" json:"-"`
 	NamesOfGroupTagFilter string `gorm:"column:pt_group_tag_filter_names" json:"-"`
 
-	Filter pingtaskFilter `json:"filter"`
+	Filter PingtaskFilter `json:"filter"`
 }
 
 func (PingtaskView) TableName() string {
@@ -158,11 +158,11 @@ func (p *PingtaskView) AfterLoad() {
 }
 
 type PingtaskModify struct {
-	Period  int32                `json:"period"`
+	Period  int16                `json:"period"`
 	Name    *string               `json:"name" conform:"trimToNil"`
 	Enable  bool                 `json:"enable"`
 	Comment *string               `json:"comment" conform:"trimToNil"`
-	Filter  pingtaskModifyFilter `json:"filter"`
+	Filter  *PingtaskModifyFilter `json:"filter"`
 }
 
 func (p *PingtaskModify) Bind(c *gin.Context) {

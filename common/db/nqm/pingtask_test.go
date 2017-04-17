@@ -1,7 +1,6 @@
 package nqm
 
 import (
-	"encoding/json"
 	"fmt"
 
 	nqmTestingDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
@@ -9,6 +8,8 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -20,10 +21,39 @@ func (s *TestPingtaskSuite) SetUpTest(c *C) {
 	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestPingtaskSuite.TestAddAndGetPingtask":
+		inTx(
+			`
+			INSERT INTO owl_name_tag(nt_id, nt_value)
+			VALUES(7801, 'pt-cp-1'),
+				(7802, 'pt-cp-2')
+			`,
+			`
+			INSERT INTO owl_group_tag(gt_id, gt_name)
+			VALUES(10201, 'pt-ii-1'),
+				(10202, 'pt-ii-2')
+			`,
+		)
+	case "TestPingtaskSuite.TestUpdateAndGetPingtask":
+		inTx(
+			`
+			INSERT INTO owl_name_tag(nt_id, nt_value)
+			VALUES(6931, 'pt-cp-1'),
+				(6932, 'pt-cp-2')
+			`,
+			`
+			INSERT INTO owl_group_tag(gt_id, gt_name)
+			VALUES(28441, 'pt-ii-1'),
+				(28442, 'pt-ii-2')
+			`,
+			`
+			INSERT INTO nqm_ping_task(pt_id, pt_name, pt_period)
+			VALUES(8702, 'pt-update-test-1', 40)
+			`,
+		)
 	case
 		"TestPingtaskSuite.TestGetPingtaskById",
-		"TestPingtaskSuite.TestListPingtasks",
-		"TestPingtaskSuite.TestUpdateAndGetPingtask":
+		"TestPingtaskSuite.TestListPingtasks":
 		inTx(nqmTestingDb.InsertPingtaskSQL)
 	case
 		"TestPingtaskSuite.TestAssignPingtaskToAgentForAgent",
@@ -31,8 +61,6 @@ func (s *TestPingtaskSuite) SetUpTest(c *C) {
 		"TestPingtaskSuite.TestAssignPingtaskToAgentForPingtask",
 		"TestPingtaskSuite.TestRemovePingtaskFromAgentForPingtask":
 		inTx(nqmTestingDb.InitNqmAgentAndPingtaskSQL...)
-	case
-		"TestPingtaskSuite.TestAddAndGetPingtask":
 	}
 }
 
@@ -40,11 +68,21 @@ func (s *TestPingtaskSuite) TearDownTest(c *C) {
 	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
+	case "TestPingtaskSuite.TestAddAndGetPingtask":
+		inTx(
+			"DELETE FROM nqm_ping_task WHERE pt_name LIKE 'add-pt-%'",
+			"DELETE FROM owl_name_tag WHERE nt_id >= 7801 AND nt_id <= 7802",
+			"DELETE FROM owl_group_tag WHERE gt_id >= 10201 AND gt_id <= 10202",
+		)
+	case "TestPingtaskSuite.TestUpdateAndGetPingtask":
+		inTx(
+			"DELETE FROM nqm_ping_task WHERE pt_id = 8702",
+			"DELETE FROM owl_name_tag WHERE nt_id >= 6931 AND nt_id <= 6932",
+			"DELETE FROM owl_group_tag WHERE gt_id >= 28441 AND gt_id <= 28442",
+		)
 	case
 		"TestPingtaskSuite.TestGetPingtaskById",
-		"TestPingtaskSuite.TestListPingtasks",
-		"TestPingtaskSuite.TestUpdateAndGetPingtask",
-		"TestPingtaskSuite.TestAddAndGetPingtask":
+		"TestPingtaskSuite.TestListPingtasks":
 		inTx(nqmTestingDb.DeletePingtaskSQL)
 	case
 		"TestPingtaskSuite.TestAssignPingtaskToAgentForAgent",
@@ -313,103 +351,118 @@ func (suite *TestPingtaskSuite) TestListPingtasks(c *C) {
 }
 
 func (suite *TestPingtaskSuite) TestAddAndGetPingtask(c *C) {
-	var pm1 *nqmModel.PingtaskModify
-	if err := json.Unmarshal([]byte(`
-		{
-		  "period" : 15,
-		  "name" : "廣東",
-		  "enable" : true,
-		  "comment" : "This is for some purpose",
-		  "filter" : {
-		    "ids_of_isp" : [ 7, 8, 9 ],
-		    "ids_of_province" : [ 2, 3 ],
-		    "ids_of_city" : [ 11, 12, 13 ]
-		  }
-		}
-	`), &pm1); err != nil {
-		c.Error(err)
+	sPtr := func(v string) *string { return &v }
+	var newPingTask = &nqmModel.PingtaskModify {
+		Period: 30,
+		Name: sPtr("add-pt-廣東"),
+		Enable: true,
+		Comment: sPtr("This is for some purpose"),
 	}
-	testCases := []*struct {
-		inputPm *nqmModel.PingtaskModify
-	}{
-		{pm1},
-	}
-	for i, v := range testCases {
-		actual := AddAndGetPingtask(v.inputPm)
-		c.Logf("case [%d]: %+v\n", i+1, actual)
-		c.Assert(actual, NotNil)
-		c.Assert(actual.Period, Equals, int16(15))
-		c.Assert(*actual.Name, Equals, "廣東")
-		c.Assert(actual.Enable, Equals, true)
-		c.Assert(*actual.Comment, Equals, "This is for some purpose")
 
-		// Tricky, so I only test the lengths
-		c.Assert(len(actual.Filter.IspFilters), Equals, 3)
-		c.Assert(len(actual.Filter.ProvinceFilters), Equals, 2)
-		c.Assert(len(actual.Filter.CityFilters), Equals, 3)
-		c.Assert(len(actual.Filter.NameTagFilters), Equals, 0)
-		c.Assert(len(actual.Filter.GroupTagFilters), Equals, 0)
+	testCases := []*struct {
+		filter *nqmModel.PingtaskModifyFilter
+	} {
+		{
+			&nqmModel.PingtaskModifyFilter{
+				IspIds: []int16{},
+				ProvinceIds: []int16{},
+				CityIds:     []int16{},
+				NameTagIds:  []int16{},
+				GroupTagIds: []int32{},
+			},
+		},
+		{
+			&nqmModel.PingtaskModifyFilter{
+				IspIds: []int16{ 3, 4 },
+				ProvinceIds: []int16{ 11, 12, 13 },
+				CityIds:     []int16{ 51, 52 },
+				NameTagIds:  []int16{ 7801, 7802 },
+				GroupTagIds: []int32{ 10201, 10202 },
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		newPingTask.Filter = testCase.filter
+
+		addedPingTask := AddAndGetPingtask(newPingTask)
+
+		c.Assert(addedPingTask, NotNil, comment)
+		c.Assert(addedPingTask.Period, Equals, newPingTask.Period, comment)
+		c.Assert(addedPingTask.Name, DeepEquals, newPingTask.Name, comment)
+		c.Assert(addedPingTask.Enable, Equals, newPingTask.Enable, comment)
+		c.Assert(addedPingTask.Comment, DeepEquals, newPingTask.Comment, comment)
+
+		/**
+		 * Asserts filters
+		 */
+		filters := addedPingTask.Filter
+		c.Assert(filters.IspFilters, HasLen, len(testCase.filter.IspIds), comment)
+		c.Assert(filters.ProvinceFilters, HasLen, len(testCase.filter.ProvinceIds), comment)
+		c.Assert(filters.CityFilters, HasLen, len(testCase.filter.CityIds), comment)
+		c.Assert(filters.NameTagFilters, HasLen, len(testCase.filter.NameTagIds), comment)
+		c.Assert(filters.GroupTagFilters, HasLen, len(testCase.filter.GroupTagIds), comment)
+		// :~)
 	}
 }
 
 func (suite *TestPingtaskSuite) TestUpdateAndGetPingtask(c *C) {
-	var pm1 *nqmModel.PingtaskModify
-	if err := json.Unmarshal([]byte(`
-		{
-		  "period" : 15,
-		  "name" : "廣東",
-		  "enable" : true,
-		  "comment" : "This is for some purpose",
-		  "filter" : {
-		    "ids_of_isp" : [ 7, 8, 9 ],
-		    "ids_of_province" : [ 2, 3 ],
-		    "ids_of_city" : [ 11, 12, 13 ]
-		  }
-		}
-	`), &pm1); err != nil {
-		c.Error(err)
+	sPtr := func(v string) *string { return &v }
+	var modifiedPingTask = &nqmModel.PingtaskModify {
+		Period: 78,
+		Enable: false,
+		Name: sPtr("up-name-88"),
+		Comment: sPtr("up-comment-71"),
 	}
-	var pm2 *nqmModel.PingtaskModify
-	if err := json.Unmarshal([]byte(`
-		{
-		  "period" : 15,
-		  "name" : "廣東",
-		  "enable" : true,
-		  "comment" : "This is for some purpose",
-		  "filter" : {
-		    "ids_of_isp" : [ 17, 18 ],
-		    "ids_of_province" : [ 2, 3, 4 ],
-		    "ids_of_city" : [ 3 ]
-		  }
-		}
-	`), &pm2); err != nil {
-		c.Error(err)
-	}
-	testCases := []*struct {
-		inputPm             *nqmModel.PingtaskModify
-		expectedIspLen      int
-		expectedProvinceLen int
-		expectedCityLen     int
-		expectedNameTagLen  int
-		expectedGroupTagLen int
-	}{
-		{pm1, 3, 2, 3, 0, 0},
-		{pm2, 2, 3, 1, 0, 0},
-	}
-	for i, v := range testCases {
-		actual := UpdateAndGetPingtask(10120, v.inputPm)
-		c.Logf("case [%d]: %+v\n", i+1, actual)
-		c.Assert(actual, NotNil)
-		c.Assert(actual.Period, Equals, int16(15))
-		c.Assert(*actual.Name, Equals, "廣東")
-		c.Assert(actual.Enable, Equals, true)
-		c.Assert(*actual.Comment, Equals, "This is for some purpose")
 
-		// Tricky, so I only test the lengths
-		c.Assert(len(actual.Filter.IspFilters), Equals, v.expectedIspLen)
-		c.Assert(len(actual.Filter.ProvinceFilters), Equals, v.expectedProvinceLen)
-		c.Assert(len(actual.Filter.CityFilters), Equals, v.expectedCityLen)
-		c.Assert(len(actual.Filter.NameTagFilters), Equals, v.expectedNameTagLen)
-		c.Assert(len(actual.Filter.GroupTagFilters), Equals, v.expectedGroupTagLen)
+	testCases := []*struct {
+		filter *nqmModel.PingtaskModifyFilter
+	} {
+		{
+			&nqmModel.PingtaskModifyFilter{
+				IspIds: []int16{ 3, 4 },
+				ProvinceIds: []int16{ 11, 12, 13 },
+				CityIds:     []int16{ 51, 52 },
+				NameTagIds:  []int16{ 6931, 6932 },
+				GroupTagIds: []int32{ 28441, 28442 },
+			},
+		},
+		{
+			&nqmModel.PingtaskModifyFilter{
+				IspIds: []int16{},
+				ProvinceIds: []int16{},
+				CityIds:     []int16{},
+				NameTagIds:  []int16{},
+				GroupTagIds: []int32{},
+			},
+		},
+	}
+
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		modifiedPingTask.Filter = testCase.filter
+
+		updatedPingTask := UpdateAndGetPingtask(8702, modifiedPingTask)
+
+		c.Assert(updatedPingTask.Period, Equals, modifiedPingTask.Period, comment)
+		c.Assert(updatedPingTask.Name, DeepEquals, modifiedPingTask.Name, comment)
+		c.Assert(updatedPingTask.Enable, Equals, modifiedPingTask.Enable, comment)
+		c.Assert(updatedPingTask.Comment, DeepEquals, modifiedPingTask.Comment, comment)
+
+		/**
+		 * Asserts filters
+		 */
+		filters := updatedPingTask.Filter
+		c.Assert(filters.IspFilters, HasLen, len(testCase.filter.IspIds), comment)
+		c.Assert(filters.ProvinceFilters, HasLen, len(testCase.filter.ProvinceIds), comment)
+		c.Assert(filters.CityFilters, HasLen, len(testCase.filter.CityIds), comment)
+		c.Assert(filters.NameTagFilters, HasLen, len(testCase.filter.NameTagIds), comment)
+		c.Assert(filters.GroupTagFilters, HasLen, len(testCase.filter.GroupTagIds), comment)
+		// :~)
 	}
 }

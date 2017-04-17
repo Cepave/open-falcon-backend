@@ -2,7 +2,9 @@ package nqm
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/jinzhu/gorm"
 	"github.com/jmoiron/sqlx"
@@ -321,97 +323,6 @@ func GetPingtaskById(id int32) *nqmModel.PingtaskView {
 	return loadedPingtask
 }
 
-type addPingtaskTx struct {
-	pingtask   *nqmModel.PingtaskModify
-	pingtaskID int32
-	err        error
-}
-
-func (p *addPingtaskTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	r := tx.MustExec(
-		`
-		INSERT INTO nqm_ping_task(pt_period,pt_name,pt_enable,pt_comment)
-		VALUES
-		(?,?,?,?)
-		`,
-		p.pingtask.Period,
-		p.pingtask.Name,
-		p.pingtask.Enable,
-		p.pingtask.Comment,
-	)
-	pID, _ := r.LastInsertId()
-	if len(p.pingtask.Filter.IspIds) != 0 {
-		for _, ispId := range p.pingtask.Filter.IspIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_isp(tfisp_isp_id,tfisp_pt_id)
-				VALUES
-				(?,?)
-				`,
-				ispId,
-				pID,
-			)
-		}
-	}
-	if len(p.pingtask.Filter.ProvinceIds) != 0 {
-		for _, pvId := range p.pingtask.Filter.ProvinceIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_province(tfpv_pv_id,tfpv_pt_id)
-				VALUES
-				(?,?)
-				`,
-				pvId,
-				pID,
-			)
-		}
-	}
-	if len(p.pingtask.Filter.CityIds) != 0 {
-		for _, ctId := range p.pingtask.Filter.CityIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_city(tfct_ct_id,tfct_pt_id)
-				VALUES
-				(?,?)
-				`,
-				ctId,
-				pID,
-			)
-		}
-	}
-	if len(p.pingtask.Filter.NameTagIds) != 0 {
-		for _, ntId := range p.pingtask.Filter.NameTagIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_name_tag(tfnt_nt_id,tfnt_pt_id)
-				VALUES
-				(?,?)
-				`,
-				ntId,
-				pID,
-			)
-		}
-	}
-	if len(p.pingtask.Filter.GroupTagIds) != 0 {
-		for _, gtId := range p.pingtask.Filter.GroupTagIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_group_tag(tfgt_gt_id,tfgt_pt_id)
-				VALUES
-				(?,?)
-				`,
-				gtId,
-				pID,
-			)
-		}
-	}
-	if p.err != nil {
-		return commonDb.TxRollback
-	}
-	p.pingtaskID = int32(pID)
-	return commonDb.TxCommit
-}
-
 func AddAndGetPingtask(pm *nqmModel.PingtaskModify) *nqmModel.PingtaskView {
 	txProcessor := &addPingtaskTx{
 		pingtask: pm,
@@ -420,137 +331,34 @@ func AddAndGetPingtask(pm *nqmModel.PingtaskModify) *nqmModel.PingtaskView {
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 	// :~)
 
-	if txProcessor.err != nil {
-		commonDb.PanicIfError(txProcessor.err)
-	}
 	return GetPingtaskById(txProcessor.pingtaskID)
 }
 
-type updatePingtaskTx struct {
+type addPingtaskTx struct {
 	pingtask   *nqmModel.PingtaskModify
 	pingtaskID int32
-	err        error
 }
 
-func (u *updatePingtaskTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	tx.MustExec(
+func (p *addPingtaskTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	r := tx.MustExec(
 		`
-		UPDATE nqm_ping_task SET
-		pt_period = ?,
-		pt_name = ?,
-		pt_enable = ?,
-		pt_comment = ?
-		WHERE pt_id = ?
+		INSERT INTO nqm_ping_task(pt_period, pt_name, pt_enable, pt_comment)
+		VALUES (?, ?, ?, ?)
 		`,
-		u.pingtask.Period,
-		u.pingtask.Name,
-		u.pingtask.Enable,
-		u.pingtask.Comment,
-		u.pingtaskID,
+		p.pingtask.Period,
+		p.pingtask.Name,
+		p.pingtask.Enable,
+		p.pingtask.Comment,
 	)
-	if len(u.pingtask.Filter.IspIds) != 0 {
-		tx.MustExec(
-			`
-			DELETE from nqm_pt_target_filter_isp WHERE
-			tfisp_pt_id=?
-			`,
-			u.pingtaskID,
-		)
-		for _, ispId := range u.pingtask.Filter.IspIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_isp(tfisp_isp_id,tfisp_pt_id)
-				VALUES
-				(?,?)
-				`,
-				ispId,
-				u.pingtaskID,
-			)
-		}
-	}
-	if len(u.pingtask.Filter.ProvinceIds) != 0 {
-		tx.MustExec(
-			`
-			DELETE from nqm_pt_target_filter_province WHERE
-			tfpv_pt_id=?
-			`,
-			u.pingtaskID,
-		)
-		for _, pvId := range u.pingtask.Filter.ProvinceIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_province(tfpv_pv_id,tfpv_pt_id)
-				VALUES
-				(?,?)
-				`,
-				pvId,
-				u.pingtaskID,
-			)
-		}
-	}
-	if len(u.pingtask.Filter.CityIds) != 0 {
-		tx.MustExec(
-			`
-			DELETE from nqm_pt_target_filter_city WHERE
-			tfct_pt_id=?
-			`,
-			u.pingtaskID,
-		)
-		for _, ctId := range u.pingtask.Filter.CityIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_city(tfct_ct_id,tfct_pt_id)
-				VALUES
-				(?,?)
-				`,
-				ctId,
-				u.pingtaskID,
-			)
-		}
-	}
-	if len(u.pingtask.Filter.NameTagIds) != 0 {
-		tx.MustExec(
-			`
-			DELETE from nqm_pt_target_filter_name_tag WHERE
-			tfnt_pt_id=?
-			`,
-			u.pingtaskID,
-		)
-		for _, ntId := range u.pingtask.Filter.NameTagIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_name_tag(tfnt_nt_id,tfnt_pt_id)
-				VALUES
-				(?,?)
-				`,
-				ntId,
-				u.pingtaskID,
-			)
-		}
-	}
-	if len(u.pingtask.Filter.GroupTagIds) != 0 {
-		tx.MustExec(
-			`
-			DELETE from nqm_pt_target_filter_group_tag WHERE
-			tfgt_pt_id=?
-			`,
-			u.pingtaskID,
-		)
-		for _, gtId := range u.pingtask.Filter.GroupTagIds {
-			tx.MustExec(
-				`
-				INSERT INTO nqm_pt_target_filter_group_tag(tfgt_gt_id,tfgt_pt_id)
-				VALUES
-				(?,?)
-				`,
-				gtId,
-				u.pingtaskID,
-			)
-		}
-	}
-	if u.err != nil {
-		return commonDb.TxRollback
-	}
+	pingTaskId := int32(commonDb.ToResultExt(r).LastInsertId())
+
+	pingTaskFilterModifiers["isp"].buildData(tx, pingTaskId, p.pingtask.Filter.IspIds)
+	pingTaskFilterModifiers["province"].buildData(tx, pingTaskId, p.pingtask.Filter.ProvinceIds)
+	pingTaskFilterModifiers["city"].buildData(tx, pingTaskId, p.pingtask.Filter.CityIds)
+	pingTaskFilterModifiers["name_tag"].buildData(tx, pingTaskId, p.pingtask.Filter.NameTagIds)
+	pingTaskFilterModifiers["group_tag"].buildData(tx, pingTaskId, p.pingtask.Filter.GroupTagIds)
+
+	p.pingtaskID = pingTaskId
 	return commonDb.TxCommit
 }
 
@@ -563,8 +371,116 @@ func UpdateAndGetPingtask(id int32, pm *nqmModel.PingtaskModify) *nqmModel.Pingt
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 	// :~)
 
-	if txProcessor.err != nil {
-		commonDb.PanicIfError(txProcessor.err)
-	}
 	return GetPingtaskById(txProcessor.pingtaskID)
+}
+
+var pingTaskFilterModifiers = map[string]*filterModifier {
+	"isp":  newFilterModifier("isp", "tfisp", "isp_id"),
+	"province": newFilterModifier("province", "tfpv", "pv_id"),
+	"city": newFilterModifier("city", "tfct", "ct_id"),
+	"name_tag": newFilterModifier("name_tag", "tfnt", "nt_id"),
+	"group_tag": newFilterModifier("group_tag", "tfgt", "gt_id"),
+}
+type updatePingtaskTx struct {
+	pingtask   *nqmModel.PingtaskModify
+	pingtaskID int32
+}
+
+func (u *updatePingtaskTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	tx.MustExec(
+		`
+		UPDATE nqm_ping_task SET
+			pt_period = ?,
+			pt_name = ?,
+			pt_enable = ?,
+			pt_comment = ?
+		WHERE pt_id = ?
+		`,
+		u.pingtask.Period,
+		u.pingtask.Name,
+		u.pingtask.Enable,
+		u.pingtask.Comment,
+		u.pingtaskID,
+	)
+
+	pingTaskId := u.pingtaskID
+
+	pingTaskFilterModifiers["isp"].setData(tx, pingTaskId, u.pingtask.Filter.IspIds)
+	pingTaskFilterModifiers["province"].setData(tx, pingTaskId, u.pingtask.Filter.ProvinceIds)
+	pingTaskFilterModifiers["city"].setData(tx, pingTaskId, u.pingtask.Filter.CityIds)
+	pingTaskFilterModifiers["name_tag"].setData(tx, pingTaskId, u.pingtask.Filter.NameTagIds)
+	pingTaskFilterModifiers["group_tag"].setData(tx, pingTaskId, u.pingtask.Filter.GroupTagIds)
+
+	return commonDb.TxCommit
+}
+
+func newFilterModifier(
+	tableNameSuffix string,
+	columnPrefix string,
+	propertySuffix string,
+) *filterModifier {
+	return &filterModifier {
+		deleteSql: fmt.Sprintf(
+			`
+			DELETE FROM nqm_pt_target_filter_%s WHERE %s_pt_id = ?
+			`,
+			tableNameSuffix, columnPrefix,
+		),
+		insertSqlTmpl: fmt.Sprintf(
+			`
+			INSERT INTO nqm_pt_target_filter_%s(%s_pt_id, %s_%s)
+			VALUES %%s
+			`,
+			tableNameSuffix,
+			columnPrefix,
+			columnPrefix, propertySuffix,
+		),
+	}
+}
+
+type filterModifier struct {
+	deleteSql string
+	insertSqlTmpl string
+}
+func (m *filterModifier) setData(tx *sqlx.Tx, pingTaskId int32, data interface{}) {
+	buildDataSql, params := m.buildSqlOfNewData(pingTaskId, data)
+
+	tx.MustExec(m.deleteSql, pingTaskId)
+	if buildDataSql != "" {
+		tx.MustExec(buildDataSql, params...)
+	}
+}
+func (m *filterModifier) buildData(tx *sqlx.Tx, pingTaskId int32, data interface{}) {
+	buildDataSql, params := m.buildSqlOfNewData(pingTaskId, data)
+
+	if buildDataSql != "" {
+		tx.MustExec(buildDataSql, params...)
+	}
+}
+
+func (m *filterModifier) buildSqlOfNewData(pingTaskId int32, data interface{}) (string, []interface{}) {
+	values := reflect.ValueOf(data)
+	if values.Len() == 0 {
+		return "", nil
+	}
+
+	newValuesSql := make([]string, values.Len())
+	sqlParams := make([]interface{}, values.Len() * 2)
+
+	p := 0
+	for i := 0; i < values.Len(); i++ {
+		newValuesSql[i] = "(?, ?)"
+
+		sqlParams[p] = pingTaskId
+		p++
+		sqlParams[p] = values.Index(i).Interface()
+		p++
+	}
+
+	finalSql := fmt.Sprintf(
+		m.insertSqlTmpl,
+		strings.Join(newValuesSql, ", "),
+	)
+
+	return finalSql, sqlParams
 }
