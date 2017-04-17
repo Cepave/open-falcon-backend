@@ -23,9 +23,15 @@ func (this *AuthApiController) AuthSession() {
 		this.ResposeError(baseResp, err.Error())
 		return
 	case session.Sig != "":
-		baseResp.Data["sigs"] = session
-		baseResp.Data["expired"] = session.Expired
-		baseResp.Data["message"] = "session passed!"
+		name := this.GetString("cName", this.Ctx.GetCookie("name"))
+		user := ReadUserByName(name)
+		if user.Role == -1 {
+			this.ResposeError(baseResp, "this account has been disabled")
+		} else {
+			baseResp.Data["sigs"] = session
+			baseResp.Data["expired"] = session.Expired
+			baseResp.Data["message"] = "session passed!"
+		}
 	default:
 		baseResp.Error["message"] = "sesion checking failed for a unknow reason, please ask administor for help"
 	}
@@ -67,6 +73,9 @@ func (this *AuthApiController) Login() {
 	switch {
 	case user == nil:
 		this.ResposeError(baseResp, "no such user")
+		return
+	case user.Role == -1:
+		this.ResposeError(baseResp, "this account has been disabled")
 		return
 	case user.Passwd != str.Md5Encode(g.Config().Salt+password):
 		this.ResposeError(baseResp, "password error")

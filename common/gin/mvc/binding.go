@@ -115,11 +115,16 @@
 // Parameters, Heaer, Cookie, and From
 //
 //  mvc:"query[param_name_1]" - Use query parameter param_name_1 as binding value
+//  mvc:"query[?param_name_1]" - Must be bool type, used to indicate whether or not has viable value for this parameter
 //  mvc:"cookie[ck_1]" - Use the value of cookie ck_1 as binding value
+//  mvc:"cookie[?ck_2]" - Must be bool type, used to indicate whether or not has viable value for this parameter
 //  mvc:"param[pm_1]" - Use the value of URI parameter pm_1 as binding value
 //  mvc:"form[in_1]" - Use the form value of in_1 as binding value
+//  mvc:"form[?in_2]" - Must be bool type, used to indicate whether or not has viable value for this parameter
 //  mvc:"header[Content-Type]" - Use the header value of Content-Type as binding value
+//  mvc:"header[?pg_id]" - Must be bool type, used to indicate whether or not has viable value for this parameter
 //  mvc:"key[key-1]" - Use the key value of key-1 as binding value
+//  mvc:"key[?key-3]" - Must be bool type, used to indicate whether or not has viable value for this parameter
 //
 // By default, if the value of binding is existing, the framework would use the default value of binding type.
 //

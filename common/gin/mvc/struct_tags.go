@@ -55,6 +55,8 @@ func buildParamLoader(field reflect.StructField, convSrv ot.ConversionService) i
 
 const (
 	paramGetterType = 1
+	paramCheckerType = 5
+
 	keyGetterType = 2
 	fileGetterType = 3
 	pagingGetterType = 4
@@ -89,6 +91,11 @@ func (t *tagContext) getLoader(targetType reflect.Type, convSrv ot.ConversionSer
 					targetType,
 				)
 			}
+		}
+	case paramCheckerType:
+		checker := paramCheckers[t.getterName]
+		return func(c *gin.Context) interface{} {
+			return checker(c, t.paramName)
 		}
 	case keyGetterType:
 		return func(c *gin.Context) interface{} {
@@ -152,17 +159,29 @@ func loadTag(field reflect.StructField) *tagContext {
 		func(propName string, propValue string) {
 			switch propName {
 			case "query", "cookie", "param", "form", "header", "req", "basicAuth":
-				tagContext.getterType = paramGetterType
-				tagContext.getterName = propName
-				tagContext.paramName = propValue
+				if strings.HasPrefix(propValue, "?") {
+					tagContext.getterType = paramCheckerType
+					tagContext.getterName = propName
+					tagContext.paramName = strings.TrimLeft(propValue, "?")
+				} else {
+					tagContext.getterType = paramGetterType
+					tagContext.getterName = propName
+					tagContext.paramName = propValue
+				}
 			case "file", "fileHeader":
 				tagContext.getterType = fileGetterType
 				tagContext.getterName = propName
 				tagContext.paramName = propValue
 			case "key":
-				tagContext.getterType = keyGetterType
-				tagContext.getterName = propName
-				tagContext.paramName = propValue
+				if strings.HasPrefix(propValue, "?") {
+					tagContext.getterType = paramCheckerType
+					tagContext.getterName = propName
+					tagContext.paramName = strings.TrimLeft(propValue, "?")
+				} else {
+					tagContext.getterType = keyGetterType
+					tagContext.getterName = propName
+					tagContext.paramName = propValue
+				}
 			case "default":
 				tagContext.defaultValue = propValue
 			default:
