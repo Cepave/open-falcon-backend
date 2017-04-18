@@ -7,9 +7,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
 	"net/http"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"syscall"
 	"time"
 )
@@ -44,46 +42,6 @@ func cmdSessionRunWithTimeout(cmd *exec.Cmd, timeout time.Duration) (error, bool
 	}
 }
 
-func DeleteAndCloneRepo(pluginDir string, gitRemoteAddr string) (out string) {
-	parentDir := file.Dir(pluginDir)
-
-	absPath, _ := filepath.Abs(pluginDir)
-	if absPath == "/" {
-		out = fmt.Sprintf("\nRemove directory:%s is not allowed.", absPath)
-		log.Errorln(out)
-		return
-	}
-	err1 := os.RemoveAll(file.Basename(pluginDir))
-	if err1 != nil {
-		out = fmt.Sprintf("\nremove the git plugin dir:%s fail. error: %s", file.Basename(pluginDir), err1)
-		log.Errorln(out)
-		return
-	} else {
-		out = fmt.Sprintf("\nremove the git plugin dir:%s success", file.Basename(pluginDir))
-	}
-
-	cmd := exec.Command("git", "clone", gitRemoteAddr, file.Basename(pluginDir))
-	cmd.Dir = parentDir
-	err2, isTimeout := cmdSessionRunWithTimeout(cmd, time.Duration(600)*time.Second)
-	if isTimeout {
-		// has be killed
-		if err2 == nil {
-			log.Warnln("timeout and kill process git clone successfully")
-		}
-		if err2 != nil {
-			log.Errorln("kill process git clone occur error:", err2)
-		}
-		return
-	}
-	if err2 != nil {
-		log.Errorln("git clone run fails:", err2)
-		out = out + fmt.Sprintf("\ngit clone in dir:%s fail. error: %s", parentDir, err2)
-		return
-	}
-	out = out + "\ngit clone success"
-	return
-}
-
 func configPluginRoutes() {
 	http.HandleFunc("/plugin/update", func(w http.ResponseWriter, r *http.Request) {
 		if !g.Config().Plugin.Enabled {
@@ -113,7 +71,6 @@ func configPluginRoutes() {
 			if err != nil {
 				log.Errorf("git pull in dir: %s fail. error: %s", dir, err)
 				w.Write([]byte(fmt.Sprintf("git pull in dir:%s fail. error: %s", dir, err)))
-				w.Write([]byte(DeleteAndCloneRepo(dir, plugins.GitRepo)))
 				return
 			}
 		} else {

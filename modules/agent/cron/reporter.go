@@ -6,6 +6,7 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
+	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -22,12 +23,12 @@ func reportAgentStatus(interval time.Duration) {
 			hostname = fmt.Sprintf("error:%s", err.Error())
 		}
 
-		currPluginVersion, currPluginErr := g.GetCurrPluginVersion()
+		currPluginVersion, currPluginErr := plugins.GetCurrPluginVersion()
 		if currPluginErr != nil {
 			log.Warnln("GetCurrPluginVersion returns: ", currPluginErr)
 		}
 
-		currPluginRepo, currRepoErr := g.GetCurrGitRepo()
+		currPluginRepo, currRepoErr := plugins.GetCurrGitRepo()
 		if currRepoErr != nil {
 			log.Warnln("GetCurrGitRepo returns: ", currRepoErr)
 		}

@@ -12,9 +12,12 @@ import (
 )
 
 type PluginConfig struct {
-	Enabled bool   `json:"enabled"`
-	Dir     string `json:"dir"`
-	LogDir  string `json:"logs"`
+	Enabled           bool   `json:"enabled"`
+	Dir               string `json:"dir"`
+	Git               string `json:"git"`
+	AutoGitUpdate     bool   `json:"autoGitUpdate"`
+	AutoGitRepoUpdate bool   `json:"autoGitRepoUpdate"`
+	LogDir            string `json:"logs"`
 }
 
 type HeartbeatConfig struct {

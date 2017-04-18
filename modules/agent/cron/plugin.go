@@ -1,16 +1,14 @@
 package cron
 
 import (
-	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
-	localHttp "github.com/Cepave/open-falcon-backend/modules/agent/http"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
 	log "github.com/Sirupsen/logrus"
+	"github.com/toolkits/file"
 )
 
 func SyncMinePlugins() {
@@ -74,17 +72,53 @@ func syncMinePlugins() {
 
 		pluginDirs = dirFilter(resp.Plugins)
 		timestamp = resp.Timestamp
-		plugins.GitRepo = resp.GitRepo
 
-		if resp.GitRepoUpdate {
-			log.Println("GitRepo updating ... ")
-			gitUpdateResult := localHttp.DeleteAndCloneRepo(g.Config().Plugin.Dir, plugins.GitRepo)
-			log.Debugln(gitUpdateResult)
-		} else if resp.GitUpdate {
-			addr := fmt.Sprintf("http://127.0.0.1%s/plugin/update", g.Config().Http.Listen)
-			log.Println("GitUpdate API address is: ", addr)
-			apiResp, _ := http.Get(addr)
-			log.Debugln(&apiResp)
+		// git repo updating.
+		log.Debugln("GitRepo auto update with HBS: ", g.Config().Plugin.AutoGitRepoUpdate)
+		if g.Config().Plugin.AutoGitRepoUpdate {
+			if currPluginRepo, currRepoErr := plugins.GetCurrGitRepo(); currRepoErr != nil {
+				log.Warnln("GetCurrGitRepo returns: ", currRepoErr)
+				if !file.IsExist(g.Config().Plugin.Dir) {
+					log.Debugln("local git repo not existent.")
+					log.Debugln("initializing git repo by HBS.")
+					plugins.UpdatePlugin("", resp.GitRepo)
+				}
+			} else {
+				if currPluginRepo != resp.GitRepo {
+					log.Debugln("local git repo != HBS's git repo.")
+					log.Debugln("git remote set-url origin", resp.GitRepo)
+					plugins.SetCurrGitRepo(resp.GitRepo)
+					plugins.UpdatePlugin("", resp.GitRepo)
+				}
+			}
+		}
+
+		// git commit sync
+		log.Debugln("Git commits auto sync: ", g.Config().Plugin.AutoGitUpdate)
+		if g.Config().Plugin.AutoGitUpdate {
+			if currPluginRepo, currRepoErr := plugins.GetCurrGitRepo(); currRepoErr != nil {
+				log.Warnln("GetCurrGitRepo returns: ", currRepoErr)
+				if !file.IsExist(g.Config().Plugin.Dir) {
+					log.Debugln("local git repo not existent.")
+					log.Debugln("initializing git repo by config.")
+					plugins.UpdatePlugin("", "")
+				}
+			} else {
+				if hash, err := plugins.GitLsRemote(currPluginRepo, "refs/heads/master"); err != nil {
+					log.Warnln("Error retrieving git-repo:", currPluginRepo, err)
+				} else {
+					log.Debugln("Get newest plugin hash from: ", currPluginRepo, hash)
+					if currHash, currErr := plugins.GetCurrPluginVersion(); currErr != nil {
+						log.Warnln("GetCurrPluignVersion returns: ", currHash)
+					} else {
+						if currHash != hash {
+							log.Debugln("local git's HEAD != origin's HEAD.")
+							log.Debugln("git fetch; git reset --hard ", hash)
+							plugins.UpdatePlugin(hash, currPluginRepo)
+						}
+					}
+				}
+			}
 		}
 
 		if g.Config().Debug {
