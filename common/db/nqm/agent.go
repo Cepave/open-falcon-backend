@@ -321,7 +321,6 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 	var result *nqmModel.TargetsOfAgent
 
 	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
-		//selectCacheAgentPingListLog := DbFacade.GormDb.First(&resultOfCacheAgentPingListLog, query.AgentID)
 		selectCacheAgentPingListLog := txGormDb.Model(&nqmModel.CacheAgentPingListLog{}).
 			Select(`
 				apll_ag_id, apll_time_refresh
