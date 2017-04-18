@@ -25,7 +25,7 @@ type AgentForAdding struct {
 	ProvinceId int16 `json:"province_id" validate:"nonZeroId"`
 	CityId     int16 `json:"city_id" validate:"nonZeroId"`
 
-	NameTagId    int16  `json:"-"`
+	NameTagId    int16   `json:"-"`
 	NameTagValue *string `json:"name_tag" conform:"trim"`
 
 	GroupTags []string `json:"group_tags" conform:"trim"`
@@ -237,8 +237,9 @@ func (CacheAgentPingListLog) TableName() string {
 }
 
 type TargetsOfAgent struct {
-	CachedRefreshTime ojson.JsonTime `json:"cached_refresh_time"`
-	Targets           []*Target      `json:"targets"`
+	CacheRefreshTime ojson.JsonTime `json:"cache_refresh_time"`
+	CacheLifeTime    int            `json:"cache_lifetime"`
+	Targets          []*Target      `json:"targets"`
 }
 
 func (l *PingListLog) GetDurationOfLastAccess(checkedTime time.Time) int64 {

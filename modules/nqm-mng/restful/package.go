@@ -28,6 +28,17 @@ func InitGin(config *commonGin.GinConfig) {
 	*GinConfig = *config
 }
 
+type CacheConfig struct {
+	Size     int
+	Lifetime int
+}
+
+var cacheConfig *CacheConfig = &CacheConfig{}
+
+func InitCache(config *CacheConfig) {
+	cacheConfig = config
+}
+
 func initApi() {
 	mvcBuilder := mvc.NewMvcBuilder(mvc.NewDefaultMvcConfig())
 

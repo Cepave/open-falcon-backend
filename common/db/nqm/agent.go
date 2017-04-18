@@ -405,9 +405,6 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 	if result == nil {
 		return nil, &paging
 	}
-	if paging.TotalCount == 0 {
-		return result, &paging
-	}
 
 	/**
 	 * Loads group tags
@@ -418,8 +415,8 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 	// :~)
 
 	result = &nqmModel.TargetsOfAgent{
-		CachedRefreshTime: ojson.JsonTime(resultOfCacheAgentPingListLog.CachedRefreshTime),
-		Targets:           resultOfTargets,
+		CacheRefreshTime: ojson.JsonTime(resultOfCacheAgentPingListLog.CachedRefreshTime),
+		Targets:          resultOfTargets,
 	}
 	return result, &paging
 }

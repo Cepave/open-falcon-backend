@@ -108,7 +108,10 @@ func listTargetsOfAgentById(
 	},
 ) (*commonModel.Paging, mvc.OutputBody) {
 	p.Paging = commonGin.PagingByHeader(c, p.Paging)
-	targets, resultPaging := commonNqmDb.ListTargetsOfAgentById(q, *p.Paging)
+	targetList, resultPaging := commonNqmDb.ListTargetsOfAgentById(q, *p.Paging)
+	if targetList != nil {
+		targetList.CacheLifeTime = cacheConfig.Lifetime
+	}
 
-	return resultPaging, mvc.JsonOutputOrNotFound(targets)
+	return resultPaging, mvc.JsonOutputOrNotFound(targetList)
 }
