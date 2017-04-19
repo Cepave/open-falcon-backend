@@ -41,7 +41,14 @@ type updateHostsInTx struct {
 
 func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
 	for _, host := range uHost.hosts {
-		r := tx.MustExec(`
+		uHost.result.RowsAffected += updateAndGetRowsAffected(tx, host)
+	}
+
+	return db.TxCommit
+}
+
+func updateAndGetRowsAffected(tx *sqlx.Tx, agent *model.AgentHeartbeat) int64 {
+	r := tx.MustExec(`
 		UPDATE host
 		SET ip = ?,
 			agent_version = ?,
@@ -50,17 +57,14 @@ func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
 		WHERE hostname = ?
 			AND update_at < FROM_UNIXTIME(?)
 		`,
-			host.IP,
-			host.AgentVersion,
-			host.PluginVersion,
-			host.UpdateTime,
-			host.Hostname,
-			host.UpdateTime,
-		)
-		uHost.result.RowsAffected += db.ToResultExt(r).RowsAffected()
-	}
-
-	return db.TxCommit
+		agent.IP,
+		agent.AgentVersion,
+		agent.PluginVersion,
+		agent.UpdateTime,
+		agent.Hostname,
+		agent.UpdateTime,
+	)
+	return db.ToResultExt(r).RowsAffected()
 }
 
 type updateOrInsertHostsInTx struct {
@@ -113,21 +117,5 @@ func (uoiHost *updateOrInsertHostsInTx) addHost(tx *sqlx.Tx, agent *model.AgentH
 }
 
 func (uoiHost *updateOrInsertHostsInTx) updateHost(tx *sqlx.Tx, agent *model.AgentHeartbeat) {
-	r := tx.MustExec(`
-		UPDATE host
-		SET ip = ?,
-			agent_version = ?,
-			plugin_version = ?,
-			update_at = FROM_UNIXTIME(?)
-		WHERE hostname = ?
-			AND update_at < FROM_UNIXTIME(?)
-		`,
-		agent.IP,
-		agent.AgentVersion,
-		agent.PluginVersion,
-		agent.UpdateTime,
-		agent.Hostname,
-		agent.UpdateTime,
-	)
-	uoiHost.result.RowsAffected += db.ToResultExt(r).RowsAffected()
+	uoiHost.result.RowsAffected += updateAndGetRowsAffected(tx, agent)
 }
