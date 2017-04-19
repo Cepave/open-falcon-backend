@@ -1,6 +1,8 @@
 package rdb
 
 import (
+	"strconv"
+
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
@@ -34,18 +36,18 @@ func (suite *TestUpdateOrInsertSuite) TestUpdateOrInsertHost(c *C) {
 		ocheck.LogTestCase(c, testCase)
 
 		sampleTime := testing.ParseTime(c, testCase.timestamp)
-		// var sampleNumber string := idx + 1
-		// sampleIp, sampleAgentVersion, samplePluginVersion :=
-		// 	"127.0.0." + sampleNumber, "0.0." + sampleNumber, "12345abcd" + sampleNumber
+		sampleNumber := strconv.Itoa(idx + 1)
+		sampleIP, sampleAgentVersion, samplePluginVersion :=
+			"127.0.0."+sampleNumber, "0.0."+sampleNumber, "12345abcd"+sampleNumber
 
 		sampleHosts := make([]*model.AgentHeartbeat, len(testCase.hosts))
 		for idx, hostName := range testCase.hosts {
 			sampleHosts[idx] = &model.AgentHeartbeat{
 				Hostname:      "nqm-mng-tc1-" + hostName,
 				UpdateTime:    sampleTime.Unix(),
-				IP:            "127.0.0.1",
-				AgentVersion:  "0.0.1",
-				PluginVersion: "12155256cec3926186de22e282e67f4ce11cdbf7",
+				IP:            sampleIP,
+				AgentVersion:  sampleAgentVersion,
+				PluginVersion: samplePluginVersion,
 			}
 		}
 
@@ -57,11 +59,11 @@ func (suite *TestUpdateOrInsertSuite) TestUpdateOrInsertHost(c *C) {
 		FROM host
 		WHERE update_at = FROM_UNIXTIME(?)
 			AND hostname LIKE 'nqm-mng-tc1-%'
-			AND ip = '127.0.0.1'
-			AND agent_version = '0.0.1'
-			AND plugin_version = '12155256cec3926186de22e282e67f4ce11cdbf7'
+			AND ip = ?
+			AND agent_version = ?
+			AND plugin_version = ?
 		`
-		DbFacade.SqlxDbCtrl.QueryRowxAndScan(sql, []interface{}{sampleTime.Unix()}, &dbResult)
+		DbFacade.SqlxDbCtrl.QueryRowxAndScan(sql, []interface{}{sampleTime.Unix(), sampleIP, sampleAgentVersion, samplePluginVersion}, &dbResult)
 		c.Assert(result.RowsAffected, Equals, testCase.expect, comment)
 		c.Assert(dbResult, Equals, testCase.expect, comment)
 	}
