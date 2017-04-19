@@ -107,6 +107,7 @@ func (agentView *Agent) ToSimpleJson() *json.Json {
 	jsonObject.Set("last_heartbeat_time", ojson.JsonTime(agentView.LastHeartBeat))
 	jsonObject.Set("name", agentView.Name)
 	jsonObject.Set("comment", agentView.Comment)
+	jsonObject.Set("num_of_enabled_pingtasks", agentView.NumOfEnabledPingtasks)
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", agentView.IspId)
