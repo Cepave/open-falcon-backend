@@ -26,8 +26,10 @@ func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.Agent
 	reply.Plugins = cache.GetPlugins(args.Hostname)
 	reply.Timestamp = time.Now().Unix()
 	reply.GitRepo = cache.GitRepo.Get()
-	reply.GitUpdate = cache.GitUpdateCheck(args.Hostname)
-	reply.GitRepoUpdate = cache.GitRepoUpdateCheck(args.Hostname)
+	// deprecate the attributes: reply.GitUpdate, reply.GitRepoUpdate
+	// git repo updating will be invoked only by reply.GitRepo
+	reply.GitUpdate = false
+	reply.GitRepoUpdate = false
 	log.Debugln("show reply of MinePlugins: ", reply)
 
 	return nil

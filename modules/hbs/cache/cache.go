@@ -39,8 +39,6 @@ func Init() {
 	log.Println("cache done")
 
 	go LoopInit()
-	go getNewestPluginHash()
-	go getGitRepoAddr()
 }
 
 func LoopInit() {
@@ -55,5 +53,6 @@ func LoopInit() {
 		HostTemplateIds.Init()
 		ExpressionCache.Init()
 		MonitoredHosts.Init()
+		GitRepo.Init()
 	}
 }
