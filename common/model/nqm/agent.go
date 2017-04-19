@@ -243,6 +243,10 @@ type TargetsOfAgent struct {
 	Targets          []*Target      `json:"targets"`
 }
 
+type ClearCacheView struct {
+	RowsAffected int8 `json:"rows_affected"`
+}
+
 func (l *PingListLog) GetDurationOfLastAccess(checkedTime time.Time) int64 {
 	return int64(checkedTime.Sub(l.AccessTime) / time.Minute)
 }

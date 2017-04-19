@@ -1,6 +1,7 @@
 package nqm
 
 import (
+	"database/sql"
 	"fmt"
 	"net"
 	"reflect"
@@ -418,6 +419,50 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 		Targets:          resultOfTargets,
 	}
 	return result, &paging
+}
+
+type deleteNqmCacheAgentPingListLogTx struct {
+	agentId int32
+	result  *nqmModel.ClearCacheView
+}
+
+func (delTx *deleteNqmCacheAgentPingListLogTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	ra, _ := tx.MustExec(`
+		DELETE FROM nqm_cache_agent_ping_list_log
+		WHERE apll_ag_id = ?
+		`,
+		delTx.agentId,
+	).RowsAffected()
+
+	delTx.result = new(nqmModel.ClearCacheView)
+	delTx.result.RowsAffected = int8(ra)
+	return commonDb.TxCommit
+}
+
+// Clear the cached targets of an agent by the agent's ID
+func DeleteCachedTargetsOfAgentById(idArg int32) *nqmModel.ClearCacheView {
+	var resAgID sql.NullInt64
+	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
+		&resAgID,
+		`
+		SELECT apll_ag_id
+		FROM nqm_cache_agent_ping_list_log
+		RIGHT JOIN
+		nqm_agent AS ag
+		ON apll_ag_id = ag.ag_id
+		WHERE ag.ag_id = ?
+		`,
+		idArg,
+	) {
+		return nil
+	}
+
+	txProcessor := &deleteNqmCacheAgentPingListLogTx{
+		agentId: int32(resAgID.Int64),
+	}
+	DbFacade.SqlxDbCtrl.InTx(txProcessor)
+
+	return txProcessor.result
 }
 
 // Lists the agents by query condition

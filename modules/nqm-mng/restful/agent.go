@@ -115,3 +115,12 @@ func listTargetsOfAgentById(
 
 	return resultPaging, mvc.JsonOutputOrNotFound(targetList)
 }
+
+func clearCachedTargetsOfAgentById(
+	q *struct {
+		AgentID int32 `mvc:"param[agent_id]"`
+	},
+) mvc.OutputBody {
+	r := commonNqmDb.DeleteCachedTargetsOfAgentById(q.AgentID)
+	return mvc.JsonOutputOrNotFound(r)
+}
