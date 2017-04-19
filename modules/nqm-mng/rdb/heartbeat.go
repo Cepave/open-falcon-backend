@@ -1,9 +1,9 @@
 package rdb
 
 import (
+	"github.com/Cepave/open-falcon-backend/common/db"
+	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
-	"github.com/cepave/open-falcon-backend/common/db"
-	sqlxExt "github.com/cepave/open-falcon-backend/common/db/sqlx"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -21,7 +21,7 @@ func updateOrInsertHost(agents []*model.AgentHeartbeat) *model.AgentHeartbeatRes
 
 	DbFacade.SqlxDbCtrl.InTx(updateOrInsertHosts)
 
-	return &updateOrInsertHostsInTx.result
+	return &updateOrInsertHosts.result
 }
 
 func updateHost(agents []*model.AgentHeartbeat) *model.AgentHeartbeatResult {
@@ -40,15 +40,15 @@ type updateHostsInTx struct {
 }
 
 func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
-	for _, host := range tx.hosts {
+	for _, host := range uHost.hosts {
 		r := tx.MustExec(`
 		UPDATE host
 		SET ip = ?,
 			agent_version = ?,
 			plugin_version = ?,
-			update_at = ?
+			update_at = FROM_UNIXTIME(?)
 		WHERE hostname = ?
-			AND update_at < ?
+			AND update_at < FROM_UNIXTIME(?)
 		`,
 			host.IP,
 			host.AgentVersion,
@@ -69,7 +69,7 @@ type updateOrInsertHostsInTx struct {
 }
 
 func (uoiHost *updateOrInsertHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
-	for _, host := range tx.hosts {
+	for _, host := range uoiHost.hosts {
 		if uoiHost.isHostExisting(tx, host) {
 			uoiHost.updateHost(tx, host)
 		} else {
@@ -101,26 +101,26 @@ func (uoiHost *updateOrInsertHostsInTx) addHost(tx *sqlx.Tx, agent *model.AgentH
 			hostname,
 			ip, agent_version, plugin_version, update_at
 		)
-		VALUES (?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, FROM_UNIXTIME(?))
 		`,
 		agent.Hostname,
 		agent.IP,
 		agent.AgentVersion,
 		agent.PluginVersion,
-		agent.UpdateTime
+		agent.UpdateTime,
 	)
 	uoiHost.result.RowsAffected += db.ToResultExt(r).RowsAffected()
 }
 
-func (uoiHost *updateOrInsertHostsInTx) updateHost(tx *sqlx.Tx, agnet *model.AgentHeartbeat) {
+func (uoiHost *updateOrInsertHostsInTx) updateHost(tx *sqlx.Tx, agent *model.AgentHeartbeat) {
 	r := tx.MustExec(`
 		UPDATE host
 		SET ip = ?,
 			agent_version = ?,
 			plugin_version = ?,
-			update_at = ?
+			update_at = FROM_UNIXTIME(?)
 		WHERE hostname = ?
-			AND update_at < ?
+			AND update_at < FROM_UNIXTIME(?)
 		`,
 		agent.IP,
 		agent.AgentVersion,
