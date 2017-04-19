@@ -75,7 +75,7 @@ func configPluginRoutes() {
 			}
 		} else {
 			// git clone
-			cmd := exec.Command("git", "clone", plugins.GitRepo, file.Basename(dir))
+			cmd := exec.Command("git", "clone", g.Config().Plugin.Git, file.Basename(dir))
 			cmd.Dir = parentDir
 			err, isTimeout := cmdSessionRunWithTimeout(cmd, time.Duration(600)*time.Second)
 			if isTimeout {
