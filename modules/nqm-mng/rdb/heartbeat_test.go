@@ -14,20 +14,27 @@ type TestUpdateOrInsertSuite struct{}
 
 var _ = Suite(&TestUpdateOrInsertSuite{})
 
-func (suite *TestUpdateOrInsertSuite) TestUpdateOrInsertHost(c *C) {
+func (suite *TestUpdateOrInsertSuite) TestAgentHeartbeat(c *C) {
 	testCases := []struct {
-		hosts     []string
-		timestamp string
-		expect    int64
+		hosts      []string
+		timestamp  string
+		updateOnly bool
+		expect     int64
 	}{
 		{ // Add new 3 new hosts
-			[]string{"001", "002", "003"}, "2014-05-05T10:20:30+08:00", 3,
+			[]string{"001", "002", "003"}, "2014-05-05T10:20:00+08:00", false, 3,
 		},
 		{ // Update existing hosts
-			[]string{"001", "002", "003"}, "2014-05-05T12:20:30+08:00", 3,
+			[]string{"001", "002", "003"}, "2014-05-05T11:20:30+08:00", false, 3,
 		},
-		{ // Simulate old heartbeat and a new one.
-			[]string{"001", "002", "003", "004"}, "2014-05-04T10:20:30+08:00", 1,
+		{ // Simulate old heartbeat and a new one
+			[]string{"001", "002", "003", "004"}, "2014-04-04T10:20:30+08:00", false, 1,
+		},
+		{ // Update hosts in updateOnly mode
+			[]string{"001", "002", "003", "005"}, "2014-06-06T10:20:30+08:00", true, 3,
+		},
+		{ // Simulate old heatbeat in updateOnly mode
+			[]string{"001", "002", "003", "004"}, "2014-03-03T10:20:30+08:00", true, 0,
 		},
 	}
 
@@ -51,7 +58,7 @@ func (suite *TestUpdateOrInsertSuite) TestUpdateOrInsertHost(c *C) {
 			}
 		}
 
-		result := updateOrInsertHost(sampleHosts)
+		result := AgentHeartbeat(sampleHosts, testCase.updateOnly)
 
 		var dbResult int64
 		sql := `
@@ -73,7 +80,7 @@ func (suite *TestUpdateOrInsertSuite) TearDownTest(c *C) {
 	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
-	case "TestUpdateOrInsertSuite.TestUpdateOrInsertHost":
+	case "TestUpdateOrInsertSuite.TestAgentHeartbeat":
 		inTx(
 			`DELETE FROM host WHERE hostname LIKE 'nqm-mng-tc1-%'`,
 		)
