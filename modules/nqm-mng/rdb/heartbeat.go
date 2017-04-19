@@ -7,6 +7,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var updateSql = `
+	UPDATE host
+	SET ip = ?,
+		agent_version = ?,
+		plugin_version = ?,
+		update_at = FROM_UNIXTIME(?)
+	WHERE hostname = ?
+		AND update_at < FROM_UNIXTIME(?)
+`
+
 func AgentHeartbeat(agents []*model.AgentHeartbeat, updateOnly bool) *model.AgentHeartbeatResult {
 	if updateOnly {
 		return updateHost(agents)
@@ -40,23 +50,17 @@ type updateHostsInTx struct {
 }
 
 func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
+	updateStmt := sqlxExt.ToTxExt(tx).Preparex(updateSql)
+
 	for _, host := range uHost.hosts {
-		uHost.result.RowsAffected += updateAndGetRowsAffected(tx, host)
+		uHost.result.RowsAffected += updateAndGetRowsAffected(updateStmt, host)
 	}
 
 	return db.TxCommit
 }
 
-func updateAndGetRowsAffected(tx *sqlx.Tx, agent *model.AgentHeartbeat) int64 {
-	r := tx.MustExec(`
-		UPDATE host
-		SET ip = ?,
-			agent_version = ?,
-			plugin_version = ?,
-			update_at = FROM_UNIXTIME(?)
-		WHERE hostname = ?
-			AND update_at < FROM_UNIXTIME(?)
-		`,
+func updateAndGetRowsAffected(updateStmt *sqlx.Stmt, agent *model.AgentHeartbeat) int64 {
+	r := updateStmt.MustExec(
 		agent.IP,
 		agent.AgentVersion,
 		agent.PluginVersion,
@@ -73,40 +77,46 @@ type updateOrInsertHostsInTx struct {
 }
 
 func (uoiHost *updateOrInsertHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
+	selectStmt := sqlxExt.ToStmtExt(sqlxExt.ToTxExt(tx).Preparex(`
+		SELECT COUNT(id)
+		FROM host
+		WHERE hostname = ?
+		FOR UPDATE
+		`,
+	))
+	updateStmt := sqlxExt.ToTxExt(tx).Preparex(updateSql)
+	insertStmt := sqlxExt.ToTxExt(tx).Preparex(`
+		INSERT INTO host(
+			hostname,
+			ip, agent_version, plugin_version, update_at
+		)
+		VALUES (?, ?, ?, ?, FROM_UNIXTIME(?))
+		ON DUPLICATE KEY UPDATE
+			ip = VALUES(ip),
+			agent_version = VALUES(agent_version),
+			plugin_version = VALUES(plugin_version),
+			update_at = IF(TIMESTAMPDIFF(SECOND, update_at, VALUES(update_at)) > 0, VALUES(update_at), update_at)
+	`)
+
 	for _, host := range uoiHost.hosts {
-		if uoiHost.isHostExisting(tx, host) {
-			uoiHost.updateHost(tx, host)
+		if uoiHost.isHostExisting(selectStmt, host) {
+			uoiHost.updateHost(updateStmt, host)
 		} else {
-			uoiHost.addHost(tx, host)
+			uoiHost.addHost(insertStmt, host)
 		}
 	}
 
 	return db.TxCommit
 }
 
-func (uoiHost *updateOrInsertHostsInTx) isHostExisting(tx *sqlx.Tx, agent *model.AgentHeartbeat) bool {
+func (uoiHost *updateOrInsertHostsInTx) isHostExisting(selectExt *sqlxExt.StmtExt, agent *model.AgentHeartbeat) bool {
 	var count int
-	sqlxExt.ToTxExt(tx).Get(
-		&count,
-		`
-		SELECT COUNT("hostname")
-		FROM host
-		WHERE hostname = ?
-		`,
-		agent.Hostname,
-	)
-
+	selectExt.Get(&count, agent.Hostname)
 	return count >= 1
 }
 
-func (uoiHost *updateOrInsertHostsInTx) addHost(tx *sqlx.Tx, agent *model.AgentHeartbeat) {
-	r := tx.MustExec(`
-		INSERT INTO host(
-			hostname,
-			ip, agent_version, plugin_version, update_at
-		)
-		VALUES (?, ?, ?, ?, FROM_UNIXTIME(?))
-		`,
+func (uoiHost *updateOrInsertHostsInTx) addHost(insertStmt *sqlx.Stmt, agent *model.AgentHeartbeat) {
+	r := insertStmt.MustExec(
 		agent.Hostname,
 		agent.IP,
 		agent.AgentVersion,
@@ -116,6 +126,6 @@ func (uoiHost *updateOrInsertHostsInTx) addHost(tx *sqlx.Tx, agent *model.AgentH
 	uoiHost.result.RowsAffected += db.ToResultExt(r).RowsAffected()
 }
 
-func (uoiHost *updateOrInsertHostsInTx) updateHost(tx *sqlx.Tx, agent *model.AgentHeartbeat) {
-	uoiHost.result.RowsAffected += updateAndGetRowsAffected(tx, agent)
+func (uoiHost *updateOrInsertHostsInTx) updateHost(updateStmt *sqlx.Stmt, agent *model.AgentHeartbeat) {
+	uoiHost.result.RowsAffected += updateAndGetRowsAffected(updateStmt, agent)
 }

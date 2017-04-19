@@ -38,6 +38,16 @@ func (suite *TestUpdateOrInsertSuite) TestAgentHeartbeat(c *C) {
 		},
 	}
 
+	countStmt := DbFacade.SqlxDbCtrl.PreparexExt(`
+		SELECT COUNT(*)
+		FROM host
+		WHERE update_at = FROM_UNIXTIME(?)
+			AND hostname LIKE 'nqm-mng-tc1-%'
+			AND ip = ?
+			AND agent_version = ?
+			AND plugin_version = ?
+	`)
+
 	for idx, testCase := range testCases {
 		comment := ocheck.TestCaseComment(idx)
 		ocheck.LogTestCase(c, testCase)
@@ -61,16 +71,7 @@ func (suite *TestUpdateOrInsertSuite) TestAgentHeartbeat(c *C) {
 		result := AgentHeartbeat(sampleHosts, testCase.updateOnly)
 
 		var dbResult int64
-		sql := `
-		SELECT COUNT(*)
-		FROM host
-		WHERE update_at = FROM_UNIXTIME(?)
-			AND hostname LIKE 'nqm-mng-tc1-%'
-			AND ip = ?
-			AND agent_version = ?
-			AND plugin_version = ?
-		`
-		DbFacade.SqlxDbCtrl.QueryRowxAndScan(sql, []interface{}{sampleTime.Unix(), sampleIP, sampleAgentVersion, samplePluginVersion}, &dbResult)
+		countStmt.QueryRowxAndScan([]interface{}{sampleTime.Unix(), sampleIP, sampleAgentVersion, samplePluginVersion}, &dbResult)
 		c.Assert(result.RowsAffected, Equals, testCase.expect, comment)
 		c.Assert(dbResult, Equals, testCase.expect, comment)
 	}
