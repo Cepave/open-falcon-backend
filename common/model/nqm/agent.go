@@ -237,10 +237,55 @@ func (CacheAgentPingListLog) TableName() string {
 	return "nqm_cache_agent_ping_list_log"
 }
 
+type AgentPingListTarget struct {
+	Target
+	AgentPingListTimeAccess time.Time      `gorm:"column:tg_apl_time_access"`
+	ProbedTime              ojson.JsonTime //`json:"probed_time"`
+}
+
+func (target *AgentPingListTarget) MarshalJSON() ([]byte, error) {
+	jsonObject := json.New()
+
+	jsonObject.Set("id", target.Id)
+	jsonObject.Set("name", target.Name)
+	jsonObject.Set("host", target.Host)
+	jsonObject.Set("probed_by_all", target.ProbedByAll)
+	jsonObject.Set("status", target.Status)
+	jsonObject.Set("available", target.Available)
+	jsonObject.Set("creation_time", target.CreationTime.Unix())
+	jsonObject.Set("comment", target.Comment)
+	jsonObject.Set("probed_time", target.ProbedTime)
+
+	jsonIsp := json.New()
+	jsonIsp.Set("id", target.IspId)
+	jsonIsp.Set("name", target.IspName)
+	jsonObject.Set("isp", jsonIsp)
+
+	jsonProvince := json.New()
+	jsonProvince.Set("id", target.ProvinceId)
+	jsonProvince.Set("name", target.ProvinceName)
+	jsonObject.Set("province", jsonProvince)
+
+	jsonCity := json.New()
+	jsonCity.Set("id", target.CityId)
+	jsonCity.Set("name", target.CityName)
+	jsonObject.Set("city", jsonCity)
+
+	jsonNameTag := json.New()
+	jsonNameTag.Set("id", target.NameTagId)
+	jsonNameTag.Set("value", target.NameTagValue)
+	jsonObject.Set("name_tag", jsonNameTag)
+
+	jsonGroupTags := owlModel.GroupTags(target.GroupTags).ToJson()
+	jsonObject.Set("group_tags", jsonGroupTags)
+
+	return jsonObject.MarshalJSON()
+}
+
 type TargetsOfAgent struct {
-	CacheRefreshTime ojson.JsonTime `json:"cache_refresh_time"`
-	CacheLifeTime    int            `json:"cache_lifetime"`
-	Targets          []*Target      `json:"targets"`
+	CacheRefreshTime ojson.JsonTime         `json:"cache_refresh_time"`
+	CacheLifeTime    int                    `json:"cache_lifetime"`
+	Targets          []*AgentPingListTarget `json:"targets"`
 }
 
 type ClearCacheView struct {

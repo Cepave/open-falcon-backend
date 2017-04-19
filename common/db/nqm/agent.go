@@ -317,7 +317,7 @@ func LoadEffectiveAgentsInProvince(provinceId int16) []*nqmModel.SimpleAgent1InC
 
 // Lists the targets of an agent by the agent's ID
 func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonModel.Paging) (*nqmModel.TargetsOfAgent, *commonModel.Paging) {
-	var resultOfTargets []*nqmModel.Target
+	var resultOfTargets []*nqmModel.AgentPingListTarget
 	var resultOfCacheAgentPingListLog nqmModel.CacheAgentPingListLog
 	var result *nqmModel.TargetsOfAgent
 
@@ -341,9 +341,10 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 		/**
 		 * Retrieves the page of data
 		 */
-		var dbListTargets = txGormDb.Model(&nqmModel.Target{}).
+		var dbListTargets = txGormDb.Model(&nqmModel.AgentPingListTarget{}).
 			Select(`SQL_CALC_FOUND_ROWS
 				tg_id, tg_name, tg_host, tg_probed_by_all, tg_status, tg_available, tg_comment, tg_created_ts,
+				apl.apl_time_access AS tg_apl_time_access,
 				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,
 				COUNT(gt.gt_id) AS gt_number,
 				GROUP_CONCAT(gt.gt_id ORDER BY gt_name ASC SEPARATOR ',') AS gt_ids,
@@ -375,6 +376,7 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 			Limit(paging.Size).
 			Group(`
 				tg_id, tg_name, tg_host, tg_probed_by_all, tg_status, tg_available, tg_comment, tg_created_ts,
+				tg_apl_time_access,
 				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
 			`).
 			Order(buildSortingClauseOfTargets(&paging)).
@@ -411,6 +413,7 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 	 */
 	for _, target := range resultOfTargets {
 		target.AfterLoad()
+		target.ProbedTime = ojson.JsonTime(target.AgentPingListTimeAccess)
 	}
 	// :~)
 
