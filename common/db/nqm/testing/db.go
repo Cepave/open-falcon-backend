@@ -18,6 +18,41 @@ VALUES(36091, 'ct-agent-1', '', ''),
 `
 var DeleteHostSQL = `DELETE FROM host WHERE id >= 36091 AND id <= 36095`
 
+var InsertOwlNameTag = `
+INSERT INTO owl_name_tag(nt_id, nt_value)
+VALUES(3081, '美國 IP 群')
+`
+
+var DeleteOwlNameTag = `DELETE FROM owl_name_tag WHERE nt_id = 3081`
+
+var InsertOwlGroupTag = `
+INSERT INTO owl_group_tag(gt_id, gt_name)
+VALUES
+	(23401, '串流一網'),
+	(23402, '串流二 網')
+`
+
+var DeleteOwlGroupTag = `DELETE FROM owl_group_tag WHERE gt_id >= 23401 AND gt_id <= 23402`
+
+var InsertNqmTarget = `
+INSERT INTO nqm_target(tg_id, tg_name, tg_host, tg_available, tg_status, tg_isp_id, tg_nt_id)
+VALUES
+	(40201, 'tg-name-1', 'tg-host-1', false, true, 3, -1),
+	(40202, 'tg-name-2', 'tg-host-2', true, true, 4, 3081),
+	(40203, 'tg-name-3', 'tg-host-3', true, false, 5, -1)
+`
+var DeleteNqmTarget = `DELETE FROM nqm_target WHERE tg_id >= 40201 AND tg_id <= 40203`
+
+var InsertNqmTargetGroupTag = `
+INSERT INTO nqm_target_group_tag(tgt_tg_id, tgt_gt_id)
+VALUES
+	(40201, 23401),
+	(40201, 23402)
+`
+
+var InitNqmTarget = []string{InsertOwlNameTag, InsertOwlGroupTag, InsertNqmTarget, InsertNqmTargetGroupTag}
+var ClearNqmTarget = []string{DeleteNqmTarget, DeleteOwlNameTag, DeleteOwlGroupTag}
+
 var InsertNqmAgentSQL = `
 INSERT INTO nqm_agent(
 	ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address,
@@ -32,3 +67,38 @@ var DeleteNqmAgentSQL = `DELETE FROM nqm_agent WHERE ag_id >= 24021 AND ag_id <=
 
 var InitNqmAgentAndPingtaskSQL = []string{InsertPingtaskSQL, InsertHostSQL, InsertNqmAgentSQL}
 var CleanNqmAgentAndPingtaskSQL = []string{DeleteNqmAgentPingtaskSQL, DeleteNqmAgentSQL, DeleteHostSQL, DeletePingtaskSQL}
+
+var InitNqmAgent = []string{InsertHostSQL, InsertNqmAgentSQL}
+var ClearNqmAgent = []string{DeleteNqmAgentSQL, DeleteHostSQL}
+
+var InsertNqmCacheAgentPingListLog = `
+INSERT INTO nqm_cache_agent_ping_list_log(
+	apll_ag_id, apll_number_of_targets, apll_time_access, apll_time_refresh
+)
+VALUES
+	(24021, 3, '2017-01-01', '2017-01-01'),
+	(24022, 0, '2017-01-01', '2017-01-01')
+`
+
+var DeleteNqmCacheAgentPingListLog = `
+DELETE FROM nqm_cache_agent_ping_list_log
+WHERE apll_ag_id>= 24021 AND  apll_ag_id<= 24022
+`
+
+var InsertNqmCacheAgentPingList = `
+INSERT INTO nqm_cache_agent_ping_list(
+	apl_apll_ag_id, apl_tg_id, apl_min_period, apl_time_access
+)
+VALUES
+	(24021, 40201, 1, '2017-01-01'),
+	(24021, 40202, 1, '2017-01-01'),
+	(24021, 40203, 1, '2017-01-01')
+`
+
+var InitNqmCacheAgentPingListLog = []string{InsertHostSQL, InsertNqmAgentSQL, InsertNqmCacheAgentPingListLog}
+
+var ClearNqmCacheAgentPingListLog = []string{DeleteNqmCacheAgentPingListLog, DeleteNqmAgentSQL, DeleteHostSQL}
+
+var InitNqmCacheAgentPingList = []string{InsertHostSQL, InsertNqmAgentSQL, InsertNqmCacheAgentPingListLog, InsertOwlNameTag, InsertOwlGroupTag, InsertNqmTarget, InsertNqmTargetGroupTag, InsertNqmCacheAgentPingList}
+
+var ClearNqmCacheAgentPingList = []string{DeleteNqmCacheAgentPingListLog, DeleteNqmAgentSQL, DeleteHostSQL, DeleteNqmTarget, DeleteOwlNameTag, DeleteOwlGroupTag}
