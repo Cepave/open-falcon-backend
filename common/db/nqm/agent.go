@@ -315,6 +315,46 @@ func LoadEffectiveAgentsInProvince(provinceId int16) []*nqmModel.SimpleAgent1InC
 	return result
 }
 
+var orderByDialectForAgentPingListTargets = commonModel.NewSqlOrderByDialect(
+	map[string]string{
+		"id":            "tg_id",
+		"name":          "tg_name",
+		"host":          "tg_host",
+		"isp":           "isp_name",
+		"province":      "pv_name",
+		"city":          "ct_name",
+		"status":        "tg_status",
+		"available":     "tg_available",
+		"comment":       "tg_comment",
+		"creation_time": "tg_created_ts",
+		"name_tag":      "nt_value",
+		"probed_time":   "tg_apl_time_access",
+	},
+)
+
+func buildSortingClauseOfAgentPingListTarget(paging *commonModel.Paging) string {
+	if len(paging.OrderBy) == 0 {
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"status", commonModel.Descending})
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"available", commonModel.Descending})
+	}
+
+	if len(paging.OrderBy) == 1 {
+		switch paging.OrderBy[0].Expr {
+		case "province":
+			paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"city", commonModel.Ascending})
+		}
+	}
+
+	if paging.OrderBy[len(paging.OrderBy)-1].Expr != "creation_time" {
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"creation_time", commonModel.Descending})
+	}
+
+	querySyntax, err := orderByDialectForAgentPingListTargets.ToQuerySyntax(paging.OrderBy)
+	gormExt.DefaultGormErrorConverter.PanicIfError(err)
+
+	return querySyntax
+}
+
 // Lists the targets of an agent by the agent's ID
 func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonModel.Paging) (*nqmModel.TargetsOfAgent, *commonModel.Paging) {
 	var resultOfTargets []*nqmModel.AgentPingListTarget
@@ -379,7 +419,7 @@ func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonMo
 				tg_apl_time_access,
 				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
 			`).
-			Order(buildSortingClauseOfTargets(&paging)).
+			Order(buildSortingClauseOfAgentPingListTarget(&paging)).
 			Offset(paging.GetOffset())
 
 		if query.TargetQuery.Name != "" {
