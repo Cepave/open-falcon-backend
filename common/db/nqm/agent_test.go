@@ -497,6 +497,27 @@ func (suite *TestAgentSuite) TestListTargetsOfAgentById(c *C) {
 	}
 }
 
+func (suite *TestAgentSuite) TestDeleteCachedTargetsOfAgentById(c *C) {
+	testCases := []*struct {
+		input    int32
+		expected int8
+	}{
+		{24021, 1},
+		{24021, 0},
+		{24022, 1},
+		{24022, 0},
+		{24023, 0},
+		{0, 0},
+	}
+	for i, testCase := range testCases {
+		if i == 5 {
+			c.Assert(DeleteCachedTargetsOfAgentById(testCase.input), IsNil, Commentf("Test Case: %d", i+1))
+			continue
+		}
+		c.Assert(DeleteCachedTargetsOfAgentById(testCase.input).RowsAffected, Equals, testCase.expected, Commentf("Test Case: %d", i+1))
+	}
+}
+
 // Tests the getting data of agent by id
 func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 	testCases := []*struct {
@@ -749,6 +770,8 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 		)
 	case "TestAgentSuite.TestListTargetsOfAgentById":
 		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
+	case "TestAgentSuite.TestDeleteCachedTargetsOfAgentById":
+		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
 	}
 }
 func (s *TestAgentSuite) TearDownTest(c *C) {
@@ -836,6 +859,8 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'ng-%'",
 		)
 	case "TestAgentSuite.TestListTargetsOfAgentById":
+		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
+	case "TestAgentSuite.TestDeleteCachedTargetsOfAgentById":
 		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
 	}
 }
