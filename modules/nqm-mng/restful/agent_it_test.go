@@ -143,13 +143,43 @@ func (suite *TestAgentItSuite) TestListTargetsOfAgentById(c *C) {
 
 		switch i {
 		case 0, 1:
-			c.Assert(jsonResult.Get("cache_refresh_time").MustInt(), Equals, 1483200000)
+			c.Assert(jsonResult.Get("cache_refresh_time").MustInt(), Equals, 1483200000, Commentf("Test Case: %d", i+1))
 		case 2:
-			c.Assert(jsonResult.Get("cache_refresh_time").Interface(), IsNil)
+			c.Assert(jsonResult.Get("cache_refresh_time").Interface(), IsNil, Commentf("Test Case: %d", i+1))
 		case 3:
-			c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1)
+			c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1, Commentf("Test Case: %d", i+1))
 		}
 
+	}
+}
+
+func (suite *TestAgentItSuite) TestClearCachedTargetsOfAgentById(c *C) {
+	testCases := []*struct {
+		input                string
+		expectedRowsAffected int
+		expectedStatus       int
+	}{
+		{"24021", 1, http.StatusOK},
+		{"24021", 0, http.StatusOK},
+		{"24022", 1, http.StatusOK},
+		{"24022", 0, http.StatusOK},
+		{"24023", 0, http.StatusOK},
+		{"0", -1, http.StatusNotFound},
+	}
+
+	for i, testCase := range testCases {
+		client := httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent/" + testCase.input + "/targets/clear")
+
+		slintChecker := testingHttp.NewCheckSlint(c, client)
+		jsonResult := slintChecker.GetJsonBody(testCase.expectedStatus)
+
+		c.Logf("Case[%d] [Get A Agent] JSON Result: %s", i, json.MarshalPrettyJSON(jsonResult))
+
+		if i == 5 {
+			c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1, Commentf("Test Case: %d", i+1))
+			continue
+		}
+		c.Assert(jsonResult.Get("rows_affected").MustInt(), Equals, testCase.expectedRowsAffected, Commentf("Test Case: %d", i+1))
 	}
 }
 
@@ -293,6 +323,8 @@ func (s *TestAgentItSuite) SetUpTest(c *C) {
 		)
 	case "TestAgentItSuite.TestListTargetsOfAgentById":
 		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
+	case "TestAgentItSuite.TestClearCachedTargetsOfAgentById":
+		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
 	}
 }
 func (s *TestAgentItSuite) TearDownTest(c *C) {
@@ -339,6 +371,8 @@ func (s *TestAgentItSuite) TearDownTest(c *C) {
 			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'rest-gt-%'",
 		)
 	case "TestAgentItSuite.TestListTargetsOfAgentById":
+		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
+	case "TestAgentItSuite.TestClearCachedTargetsOfAgentById":
 		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
 	}
 }
