@@ -701,6 +701,16 @@ func init() {
 
 		return originFunc(entity)
 	}
+
+	originFunc = orderByDialectForAgentPingListTargets.FuncEntityToSyntax
+	orderByDialectForAgentPingListTargets.FuncEntityToSyntax = func(entity *commonModel.OrderByEntity) (string, error) {
+		switch entity.Expr {
+		case "group_tag":
+			return owlDb.GetSyntaxOfOrderByGroupTags(entity), nil
+		}
+
+		return originFunc(entity)
+	}
 }
 
 func buildSortingClauseOfAgentsWithPingTask(paging *commonModel.Paging) string {

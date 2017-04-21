@@ -461,7 +461,7 @@ func (suite *TestAgentSuite) TestListTargetsOfAgentById(c *C) {
 				&commonModel.OrderByEntity{"city", commonModel.Ascending},
 				&commonModel.OrderByEntity{"creation_time", commonModel.Ascending},
 				&commonModel.OrderByEntity{"name_tag", commonModel.Ascending},
-				//&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
+				&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
 				&commonModel.OrderByEntity{"probed_time", commonModel.Descending},
 			},
 		}
