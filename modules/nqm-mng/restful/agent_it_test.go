@@ -3,10 +3,11 @@ package restful
 import (
 	"net/http"
 
+	nqmTestingDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
 	json "github.com/Cepave/open-falcon-backend/common/json"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
@@ -42,25 +43,25 @@ func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
 		IspId        int      `json:"isp_id"`
 		ProvinceId   int      `json:"province_id"`
 		CityId       int      `json:"city_id"`
-		NameTag      *string   `json:"name_tag"`
+		NameTag      *string  `json:"name_tag"`
 		GroupTags    []string `json:"group_tags"`
-	} {
-		Name:         "ko-name-cc1",
-		Comment:      "cc-name-cc1",
-		Hostname:     "new-host-cccc",
-		Status:       true,
-		IspId:        8,
-		ProvinceId:   9,
-		CityId:       130,
-		GroupTags:    []string{"pp-rest-tag-1", "pp-rest-tag-2"},
+	}{
+		Name:       "ko-name-cc1",
+		Comment:    "cc-name-cc1",
+		Hostname:   "new-host-cccc",
+		Status:     true,
+		IspId:      8,
+		ProvinceId: 9,
+		CityId:     130,
+		GroupTags:  []string{"pp-rest-tag-1", "pp-rest-tag-2"},
 	}
 
 	testCases := []*struct {
-		connectionId string
-		nameTag *string
+		connectionId      string
+		nameTag           *string
 		expectedStatus    int
 		expectedErrorCode int
-	} {
+	}{
 		{"@192.33.9.1", sPtr("add-agent-nt-1"), http.StatusOK, -1},
 		{"@192.33.9.2", nil, http.StatusOK, -1},
 		{"@192.33.9.1", sPtr("add-agent-nt-1"), http.StatusConflict, 1},
@@ -121,6 +122,37 @@ func (suite *TestAgentItSuite) TestListAgents(c *C) {
 	c.Assert(len(message.MustArray()), Equals, 3)
 }
 
+func (suite *TestAgentItSuite) TestListTargetsOfAgentById(c *C) {
+	testCases := []*struct {
+		input          string
+		expectedStatus int
+	}{
+		{"24021", http.StatusOK},
+		{"24022", http.StatusOK},
+		{"24023", http.StatusOK},
+		{"0", http.StatusNotFound},
+	}
+
+	for i, testCase := range testCases {
+		client := httpClientConfig.NewSlingByBase().Get("api/v1/nqm/agent/" + testCase.input + "/targets")
+
+		slintChecker := testingHttp.NewCheckSlint(c, client)
+		jsonResult := slintChecker.GetJsonBody(testCase.expectedStatus)
+
+		c.Logf("Case[%d] [Get A Agent] JSON Result: %s", i, json.MarshalPrettyJSON(jsonResult))
+
+		switch i {
+		case 0, 1:
+			c.Assert(jsonResult.Get("cache_refresh_time").MustInt(), Equals, 1483200000)
+		case 2:
+			c.Assert(jsonResult.Get("cache_refresh_time").Interface(), IsNil)
+		case 3:
+			c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1)
+		}
+
+	}
+}
+
 // Tests the modifying of agent
 func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 	jsonBody := &struct {
@@ -130,7 +162,7 @@ func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 		IspId      int      `json:"isp_id"`
 		ProvinceId int      `json:"province_id"`
 		CityId     int      `json:"city_id"`
-		NameTag    *string   `json:"name_tag"`
+		NameTag    *string  `json:"name_tag"`
 		GroupTags  []string `json:"group_tags"`
 	}{
 		Name:       "Update-Agent-1",
@@ -143,11 +175,11 @@ func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
 
 	sPtr := func(v string) *string { return &v }
 	testCases := []*struct {
-		nameTag *string
+		nameTag   *string
 		groupTags []string
-	} {
-		{ sPtr("rest-nt-9"), []string{ "rest-gt-91", "rest-gt-92", "rest-gt-93" } },
-		{ nil, []string{} },
+	}{
+		{sPtr("rest-nt-9"), []string{"rest-gt-91", "rest-gt-92", "rest-gt-93"}},
+		{nil, []string{}},
 	}
 
 	for i, testCase := range testCases {
@@ -259,6 +291,8 @@ func (s *TestAgentItSuite) SetUpTest(c *C) {
 			VALUES(23041, 20871),(23041, 20872)
 			`,
 		)
+	case "TestAgentItSuite.TestListTargetsOfAgentById":
+		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
 	}
 }
 func (s *TestAgentItSuite) TearDownTest(c *C) {
@@ -304,5 +338,7 @@ func (s *TestAgentItSuite) TearDownTest(c *C) {
 			"DELETE FROM owl_name_tag WHERE nt_value LIKE 'rest-nt-%'",
 			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'rest-gt-%'",
 		)
+	case "TestAgentItSuite.TestListTargetsOfAgentById":
+		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
 	}
 }
