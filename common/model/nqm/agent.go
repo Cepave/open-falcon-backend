@@ -12,11 +12,11 @@ import (
 )
 
 type AgentForAdding struct {
-	Id           int32  `json:"-"`
+	Id           int32   `json:"-"`
 	Name         *string `json:"name" conform:"trimToNil"`
 	Comment      *string `json:"comment" conform:"trimToNil"`
-	ConnectionId string `json:"connection_id" conform:"trim" validate:"min=1"`
-	Status       bool   `json:"status"`
+	ConnectionId string  `json:"connection_id" conform:"trim" validate:"min=1"`
+	Status       bool    `json:"status"`
 
 	Hostname  string `json:"hostname" conform:"trim" validate:"min=1"`
 	IpAddress net.IP `json:"-"`
@@ -25,7 +25,7 @@ type AgentForAdding struct {
 	ProvinceId int16 `json:"province_id" validate:"nonZeroId"`
 	CityId     int16 `json:"city_id" validate:"nonZeroId"`
 
-	NameTagId    int16  `json:"-"`
+	NameTagId    int16   `json:"-"`
 	NameTagValue *string `json:"name_tag" conform:"trim"`
 
 	GroupTags []string `json:"group_tags" conform:"trim"`
@@ -62,16 +62,16 @@ func (agent *AgentForAdding) GetIpAddressAsString() string {
 }
 
 type Agent struct {
-	Id                    int32  `gorm:"primary_key:true;column:ag_id"`
+	Id                    int32   `gorm:"primary_key:true;column:ag_id"`
 	Name                  *string `gorm:"column:ag_name"`
-	ConnectionId          string `gorm:"column:ag_connection_id""`
-	Hostname              string `gorm:"column:ag_hostname"`
-	NumOfEnabledPingtasks int32  `gorm:"column:ag_num_of_enabled_pingtasks"`
+	ConnectionId          string  `gorm:"column:ag_connection_id""`
+	Hostname              string  `gorm:"column:ag_hostname"`
+	NumOfEnabledPingtasks int32   `gorm:"column:ag_num_of_enabled_pingtasks"`
 
 	IpAddress net.IP `gorm:"column:ag_ip_address"`
 
 	Status        bool      `gorm:"column:ag_status"`
-	Comment       *string    `gorm:"column:ag_comment"`
+	Comment       *string   `gorm:"column:ag_comment"`
 	LastHeartBeat time.Time `gorm:"column:ag_last_heartbeat"`
 
 	IspId   int16  `gorm:"column:isp_id"`
@@ -107,6 +107,7 @@ func (agentView *Agent) ToSimpleJson() *json.Json {
 	jsonObject.Set("last_heartbeat_time", ojson.JsonTime(agentView.LastHeartBeat))
 	jsonObject.Set("name", agentView.Name)
 	jsonObject.Set("comment", agentView.Comment)
+	jsonObject.Set("num_of_enabled_pingtasks", agentView.NumOfEnabledPingtasks)
 
 	jsonIsp := json.New()
 	jsonIsp.Set("id", agentView.IspId)
@@ -225,6 +226,70 @@ type PingListLog struct {
 	NumberOfTargets int32     `db:"apll_number_of_targets"`
 	AccessTime      time.Time `db:"apll_time_access"`
 	RefreshTime     time.Time `db:"apll_time_refresh"`
+}
+
+type CacheAgentPingListLog struct {
+	ApllAgId          int32     `gorm:"primary_key:true;column:apll_ag_id"`
+	CachedRefreshTime time.Time `gorm:"column:apll_time_refresh"`
+}
+
+func (CacheAgentPingListLog) TableName() string {
+	return "nqm_cache_agent_ping_list_log"
+}
+
+type AgentPingListTarget struct {
+	Target
+	AgentPingListTimeAccess time.Time      `gorm:"column:tg_apl_time_access"`
+	ProbedTime              ojson.JsonTime //`json:"probed_time"`
+}
+
+func (target *AgentPingListTarget) MarshalJSON() ([]byte, error) {
+	jsonObject := json.New()
+
+	jsonObject.Set("id", target.Id)
+	jsonObject.Set("name", target.Name)
+	jsonObject.Set("host", target.Host)
+	jsonObject.Set("probed_by_all", target.ProbedByAll)
+	jsonObject.Set("status", target.Status)
+	jsonObject.Set("available", target.Available)
+	jsonObject.Set("creation_time", target.CreationTime.Unix())
+	jsonObject.Set("comment", target.Comment)
+	jsonObject.Set("probed_time", target.ProbedTime)
+
+	jsonIsp := json.New()
+	jsonIsp.Set("id", target.IspId)
+	jsonIsp.Set("name", target.IspName)
+	jsonObject.Set("isp", jsonIsp)
+
+	jsonProvince := json.New()
+	jsonProvince.Set("id", target.ProvinceId)
+	jsonProvince.Set("name", target.ProvinceName)
+	jsonObject.Set("province", jsonProvince)
+
+	jsonCity := json.New()
+	jsonCity.Set("id", target.CityId)
+	jsonCity.Set("name", target.CityName)
+	jsonObject.Set("city", jsonCity)
+
+	jsonNameTag := json.New()
+	jsonNameTag.Set("id", target.NameTagId)
+	jsonNameTag.Set("value", target.NameTagValue)
+	jsonObject.Set("name_tag", jsonNameTag)
+
+	jsonGroupTags := owlModel.GroupTags(target.GroupTags).ToJson()
+	jsonObject.Set("group_tags", jsonGroupTags)
+
+	return jsonObject.MarshalJSON()
+}
+
+type TargetsOfAgent struct {
+	CacheRefreshTime ojson.JsonTime         `json:"cache_refresh_time"`
+	CacheLifeTime    int                    `json:"cache_lifetime"`
+	Targets          []*AgentPingListTarget `json:"targets"`
+}
+
+type ClearCacheView struct {
+	RowsAffected int8 `json:"rows_affected"`
 }
 
 func (l *PingListLog) GetDurationOfLastAccess(checkedTime time.Time) int64 {

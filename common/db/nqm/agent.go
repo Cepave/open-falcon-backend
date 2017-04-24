@@ -1,6 +1,7 @@
 package nqm
 
 import (
+	"database/sql"
 	"fmt"
 	"net"
 	"reflect"
@@ -14,6 +15,7 @@ import (
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
@@ -313,6 +315,199 @@ func LoadEffectiveAgentsInProvince(provinceId int16) []*nqmModel.SimpleAgent1InC
 	return result
 }
 
+var orderByDialectForAgentPingListTargets = commonModel.NewSqlOrderByDialect(
+	map[string]string{
+		"id":            "tg_id",
+		"name":          "tg_name",
+		"host":          "tg_host",
+		"isp":           "isp_name",
+		"province":      "pv_name",
+		"city":          "ct_name",
+		"status":        "tg_status",
+		"available":     "tg_available",
+		"comment":       "tg_comment",
+		"creation_time": "tg_created_ts",
+		"name_tag":      "nt_value",
+		"probed_time":   "tg_apl_time_access",
+	},
+)
+
+func buildSortingClauseOfAgentPingListTarget(paging *commonModel.Paging) string {
+	if len(paging.OrderBy) == 0 {
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"status", commonModel.Descending})
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"available", commonModel.Descending})
+	}
+
+	if len(paging.OrderBy) == 1 {
+		switch paging.OrderBy[0].Expr {
+		case "province":
+			paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"city", commonModel.Ascending})
+		}
+	}
+
+	if paging.OrderBy[len(paging.OrderBy)-1].Expr != "creation_time" {
+		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"creation_time", commonModel.Descending})
+	}
+
+	querySyntax, err := orderByDialectForAgentPingListTargets.ToQuerySyntax(paging.OrderBy)
+	gormExt.DefaultGormErrorConverter.PanicIfError(err)
+
+	return querySyntax
+}
+
+// Lists the targets of an agent by the agent's ID
+func ListTargetsOfAgentById(query *nqmModel.TargetsOfAgentQuery, paging commonModel.Paging) (*nqmModel.TargetsOfAgent, *commonModel.Paging) {
+	var resultOfTargets []*nqmModel.AgentPingListTarget
+	var resultOfCacheAgentPingListLog nqmModel.CacheAgentPingListLog
+	var result *nqmModel.TargetsOfAgent
+
+	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
+		selectCacheAgentPingListLog := txGormDb.Model(&nqmModel.CacheAgentPingListLog{}).
+			Select(`
+				apll_ag_id, apll_time_refresh
+			`).
+			Joins(`
+				RIGHT JOIN
+				nqm_agent AS ag
+				ON apll_ag_id = ag.ag_id
+			`).
+			Where(`ag.ag_id = ?`, query.AgentID).
+			Find(&resultOfCacheAgentPingListLog)
+		if gormExt.ToDefaultGormDbExt(selectCacheAgentPingListLog).IsRecordNotFound() {
+			return commonDb.TxCommit
+		}
+
+		result = &nqmModel.TargetsOfAgent{}
+		/**
+		 * Retrieves the page of data
+		 */
+		var dbListTargets = txGormDb.Model(&nqmModel.AgentPingListTarget{}).
+			Select(`SQL_CALC_FOUND_ROWS
+				tg_id, tg_name, tg_host, tg_probed_by_all, tg_status, tg_available, tg_comment, tg_created_ts,
+				apl.apl_time_access AS tg_apl_time_access,
+				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,
+				COUNT(gt.gt_id) AS gt_number,
+				GROUP_CONCAT(gt.gt_id ORDER BY gt_name ASC SEPARATOR ',') AS gt_ids,
+				GROUP_CONCAT(gt.gt_name ORDER BY gt_name ASC SEPARATOR '\0') AS gt_names
+			`).
+			Joins(`
+				RIGHT JOIN
+				nqm_cache_agent_ping_list AS apl
+				ON tg_id = apl.apl_tg_id AND apl.apl_apll_ag_id = ?
+				INNER JOIN
+				owl_isp AS isp
+				ON tg_isp_id = isp.isp_id
+				INNER JOIN
+				owl_province AS pv
+				ON tg_pv_id = pv.pv_id
+				INNER JOIN
+				owl_city AS ct
+				ON tg_ct_id = ct.ct_id
+				INNER JOIN
+				owl_name_tag AS nt
+				ON tg_nt_id = nt.nt_id
+				LEFT OUTER JOIN
+				nqm_target_group_tag AS tgt
+				ON tg_id = tgt.tgt_tg_id
+				LEFT OUTER JOIN
+				owl_group_tag AS gt
+				ON tgt.tgt_gt_id = gt.gt_id
+			`, query.AgentID).
+			Limit(paging.Size).
+			Group(`
+				tg_id, tg_name, tg_host, tg_probed_by_all, tg_status, tg_available, tg_comment, tg_created_ts,
+				tg_apl_time_access,
+				isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
+			`).
+			Order(buildSortingClauseOfAgentPingListTarget(&paging)).
+			Offset(paging.GetOffset())
+
+		if query.TargetQuery.Name != "" {
+			dbListTargets = dbListTargets.Where("tg_name LIKE ?", query.TargetQuery.Name+"%")
+		}
+		if query.TargetQuery.Host != "" {
+			dbListTargets = dbListTargets.Where("tg_host LIKE ?", query.TargetQuery.Host+"%")
+		}
+		if query.TargetQuery.HasIspIdParam {
+			dbListTargets = dbListTargets.Where("tg_isp_id = ?", query.TargetQuery.IspId)
+		}
+		if query.TargetQuery.HasStatusParam {
+			dbListTargets = dbListTargets.Where("tg_status = ?", query.TargetQuery.Status)
+		}
+		// :~)
+		selectNqmTarget := dbListTargets.Find(&resultOfTargets)
+		gormExt.ToDefaultGormDbExt(selectNqmTarget).PanicIfError()
+		return commonDb.TxCommit
+	}
+
+	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
+		funcTxLoader, &paging,
+	)
+
+	if result == nil {
+		return nil, &paging
+	}
+
+	/**
+	 * Loads group tags
+	 */
+	for _, target := range resultOfTargets {
+		target.AfterLoad()
+		target.ProbedTime = ojson.JsonTime(target.AgentPingListTimeAccess)
+	}
+	// :~)
+
+	result = &nqmModel.TargetsOfAgent{
+		CacheRefreshTime: ojson.JsonTime(resultOfCacheAgentPingListLog.CachedRefreshTime),
+		Targets:          resultOfTargets,
+	}
+	return result, &paging
+}
+
+type deleteNqmCacheAgentPingListLogTx struct {
+	agentId int32
+	result  *nqmModel.ClearCacheView
+}
+
+func (delTx *deleteNqmCacheAgentPingListLogTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	ra, _ := tx.MustExec(`
+		DELETE FROM nqm_cache_agent_ping_list_log
+		WHERE apll_ag_id = ?
+		`,
+		delTx.agentId,
+	).RowsAffected()
+
+	delTx.result = new(nqmModel.ClearCacheView)
+	delTx.result.RowsAffected = int8(ra)
+	return commonDb.TxCommit
+}
+
+// Clear the cached targets of an agent by the agent's ID
+func DeleteCachedTargetsOfAgentById(idArg int32) *nqmModel.ClearCacheView {
+	var resAgID sql.NullInt64
+	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
+		&resAgID,
+		`
+		SELECT apll_ag_id
+		FROM nqm_cache_agent_ping_list_log
+		RIGHT JOIN
+		nqm_agent AS ag
+		ON apll_ag_id = ag.ag_id
+		WHERE ag.ag_id = ?
+		`,
+		idArg,
+	) {
+		return nil
+	}
+
+	txProcessor := &deleteNqmCacheAgentPingListLogTx{
+		agentId: int32(resAgID.Int64),
+	}
+	DbFacade.SqlxDbCtrl.InTx(txProcessor)
+
+	return txProcessor.result
+}
+
 // Lists the agents by query condition
 func ListAgentsWithPingTask(query *nqmModel.AgentQueryWithPingTask, paging commonModel.Paging) ([]*nqmModel.AgentWithPingTask, *commonModel.Paging) {
 	result := make([]*nqmModel.AgentWithPingTask, 0)
@@ -506,6 +701,16 @@ func init() {
 
 		return originFunc(entity)
 	}
+
+	originFunc = orderByDialectForAgentPingListTargets.FuncEntityToSyntax
+	orderByDialectForAgentPingListTargets.FuncEntityToSyntax = func(entity *commonModel.OrderByEntity) (string, error) {
+		switch entity.Expr {
+		case "group_tag":
+			return owlDb.GetSyntaxOfOrderByGroupTags(entity), nil
+		}
+
+		return originFunc(entity)
+	}
 }
 
 func buildSortingClauseOfAgentsWithPingTask(paging *commonModel.Paging) string {
@@ -636,8 +841,8 @@ func (agentTx *addAgentTx) addAgent(tx *sqlx.Tx) {
 			"city_id":       newAgent.CityId,
 			"name_tag_id":   newAgent.NameTagId,
 			"connection_id": newAgent.ConnectionId,
-			"name": newAgent.Name,
-			"comment": newAgent.Comment,
+			"name":          newAgent.Name,
+			"comment":       newAgent.Comment,
 		},
 	)
 

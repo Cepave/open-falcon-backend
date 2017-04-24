@@ -4,6 +4,7 @@ import (
 	"net"
 	"reflect"
 
+	nqmTestingDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
@@ -20,21 +21,21 @@ var _ = Suite(&TestAgentSuite{})
 // Tests the updating of agent
 func (suite *TestAgentSuite) TestUpdateAgent(c *C) {
 	modifiedAgent := &nqmModel.AgentForAdding{
-		Name:         utils.PointerOfCloneString("new-name-1"),
-		Comment:      utils.PointerOfCloneString("new-comment-1"),
-		Status:       false,
-		ProvinceId:   27,
-		CityId:       205,
-		IspId:        8,
+		Name:       utils.PointerOfCloneString("new-name-1"),
+		Comment:    utils.PointerOfCloneString("new-comment-1"),
+		Status:     false,
+		ProvinceId: 27,
+		CityId:     205,
+		IspId:      8,
 	}
 
 	sPtr := func(v string) *string { return &v }
 	testCases := []*struct {
-		nameTag *string
+		nameTag   *string
 		groupTags []string
-	} {
-		{ sPtr("nt-2"), []string{"ng-2", "ng-3", "ng-4"} },
-		{ nil, []string{} },
+	}{
+		{sPtr("nt-2"), []string{"ng-2", "ng-3", "ng-4"}},
+		{nil, []string{}},
 	}
 
 	for i, testCase := range testCases {
@@ -187,29 +188,29 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 		},
 		{ // Match 1 row by all of the conditions
 			&nqmModel.AgentQuery{
-				Name:         "ag-name-1",
-				ConnectionId: "ag-list-1",
-				Hostname:     "hn-list-1",
-				IspId:        3,
-				HasIspIdParam: true,
-				IpAddress:    "123.52",
-				HasStatusParam:    true,
-				Status:       true,
+				Name:           "ag-name-1",
+				ConnectionId:   "ag-list-1",
+				Hostname:       "hn-list-1",
+				IspId:          3,
+				HasIspIdParam:  true,
+				IpAddress:      "123.52",
+				HasStatusParam: true,
+				Status:         true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match 1 row(by special IP address)
 			&nqmModel.AgentQuery{
-				IspId:     -2,
+				IspId:          -2,
 				HasStatusParam: false,
-				IpAddress: "12.37",
+				IpAddress:      "12.37",
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
 			&nqmModel.AgentQuery{
-				IspId:        -2,
-				HasStatusParam:    false,
-				ConnectionId: "ag-list-1",
-				Hostname:     "hn-list-2",
+				IspId:          -2,
+				HasStatusParam: false,
+				ConnectionId:   "ag-list-1",
+				Hostname:       "hn-list-2",
 			}, 10, 1, 0, 0,
 		},
 	}
@@ -272,29 +273,29 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 		},
 		{ // Match 1 row by all of the conditions
 			&nqmModel.AgentQuery{
-				Name:         "ag-name-1",
-				ConnectionId: "ag-list-1",
-				Hostname:     "hn-list-1",
-				IspId:        3,
-				IpAddress:    "123.52",
-				HasStatusParam:    true,
-				Status:       true,
+				Name:           "ag-name-1",
+				ConnectionId:   "ag-list-1",
+				Hostname:       "hn-list-1",
+				IspId:          3,
+				IpAddress:      "123.52",
+				HasStatusParam: true,
+				Status:         true,
 			},
 			10, 1, 1, 1,
 		},
 		{ // Match 1 row(by special IP address)
 			&nqmModel.AgentQuery{
-				IspId:     -2,
+				IspId:          -2,
 				HasStatusParam: false,
-				IpAddress: "12.37",
+				IpAddress:      "12.37",
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
 			&nqmModel.AgentQuery{
-				IspId:        -2,
-				HasStatusParam:    false,
-				ConnectionId: "ag-list-1",
-				Hostname:     "hn-list-2",
+				IspId:          -2,
+				HasStatusParam: false,
+				ConnectionId:   "ag-list-1",
+				Hostname:       "hn-list-2",
 			}, 10, 1, 0, 0,
 		},
 	}
@@ -352,6 +353,168 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 			c.Assert(testedResult, HasLen, testCase.expectedCountOfCurrentPage)
 			c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll)
 		}
+	}
+}
+
+func (suite *TestAgentSuite) TestListTargetsOfAgentById(c *C) {
+	testCases := []*struct {
+		query                      *nqmModel.TargetsOfAgentQuery
+		pageSize                   int32
+		pagePosition               int32
+		expectedCountOfCurrentPage int
+		expectedCountOfAll         int32
+	}{
+		{ // All data
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID: 24021,
+				TargetQuery: &nqmModel.TargetQuery{
+					IspId:          -2,
+					HasStatusParam: false,
+				},
+			},
+			10, 1, 3, 3,
+		},
+		{ // 2nd page
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID: 24021,
+				TargetQuery: &nqmModel.TargetQuery{
+					IspId:          -2,
+					HasStatusParam: false,
+				},
+			},
+			2, 2, 1, 3,
+		},
+		{ // Match nothing for futher page
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID: 24021,
+				TargetQuery: &nqmModel.TargetQuery{
+					IspId:          -2,
+					HasStatusParam: false,
+				},
+			},
+			10, 10, 0, 3,
+		},
+		{ // Match 1 row by all of the conditions
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID: 24021,
+				TargetQuery: &nqmModel.TargetQuery{
+					Name:           "tg-name-1",
+					Host:           "tg-host-1",
+					IspId:          3,
+					HasStatusParam: true,
+					Status:         true,
+				},
+			}, 10, 1, 1, 1,
+		},
+		{ // Match 1 row(by ISP id)
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID: 24021,
+				TargetQuery: &nqmModel.TargetQuery{
+					IspId:         5,
+					HasIspIdParam: true,
+				},
+			}, 10, 1, 1, 1,
+		},
+		{ // Match nothing
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID: 24021,
+				TargetQuery: &nqmModel.TargetQuery{
+					IspId:          -2,
+					HasStatusParam: false,
+					Name:           "tg-easy-1",
+					Host:           "tg-host-1",
+				},
+			}, 10, 1, 0, 0,
+		},
+		{ // Zero targets
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID:     24022,
+				TargetQuery: &nqmModel.TargetQuery{},
+			}, 10, 1, 0, 0,
+		},
+		{ // Agent not existent
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID:     0,
+				TargetQuery: &nqmModel.TargetQuery{},
+			}, 10, 1, 0, 0,
+		},
+		{ // Agent existent but not in cache
+			&nqmModel.TargetsOfAgentQuery{
+				AgentID:     24023,
+				TargetQuery: &nqmModel.TargetQuery{},
+			}, 10, 1, 0, 0,
+		},
+	}
+
+	for i, testCase := range testCases {
+		paging := commonModel.Paging{
+			Size:     testCase.pageSize,
+			Position: testCase.pagePosition,
+			OrderBy: []*commonModel.OrderByEntity{
+				&commonModel.OrderByEntity{"id", commonModel.Descending},
+				&commonModel.OrderByEntity{"name", commonModel.Ascending},
+				&commonModel.OrderByEntity{"status", commonModel.Ascending},
+				&commonModel.OrderByEntity{"host", commonModel.Ascending},
+				&commonModel.OrderByEntity{"comment", commonModel.Ascending},
+				&commonModel.OrderByEntity{"isp", commonModel.Ascending},
+				&commonModel.OrderByEntity{"province", commonModel.Ascending},
+				&commonModel.OrderByEntity{"city", commonModel.Ascending},
+				&commonModel.OrderByEntity{"creation_time", commonModel.Ascending},
+				&commonModel.OrderByEntity{"name_tag", commonModel.Ascending},
+				&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
+				&commonModel.OrderByEntity{"probed_time", commonModel.Descending},
+			},
+		}
+
+		testedResult, newPaging := ListTargetsOfAgentById(
+			testCase.query, paging,
+		)
+
+		//if i == 6 { // AgentID not existent
+		//	c.Assert(len(testedResult.Targets), Equals, 0)
+		//	continue
+		//}
+
+		if i == 7 { // AgentID not existent
+			c.Assert(testedResult, IsNil)
+			continue
+		}
+
+		if i == 8 { // AgentID existent but not in cache
+			tStr, _ := testedResult.CacheRefreshTime.MarshalJSON()
+			c.Assert(tStr, DeepEquals, []byte("null"))
+			continue
+		}
+
+		c.Logf("[List] Query condition: %v. Number of targets: %d", testCase.query, len(testedResult.Targets))
+
+		for _, target := range testedResult.Targets {
+			c.Logf("[List] Target: %v.", target)
+		}
+		c.Assert(testedResult.Targets, HasLen, testCase.expectedCountOfCurrentPage, Commentf("Test Case: %d", i+1))
+		c.Assert(newPaging.TotalCount, Equals, testCase.expectedCountOfAll, Commentf("Test Case: %d", i+1))
+		// testedResult.CacheRefreshTime
+	}
+}
+
+func (suite *TestAgentSuite) TestDeleteCachedTargetsOfAgentById(c *C) {
+	testCases := []*struct {
+		input    int32
+		expected int8
+	}{
+		{24021, 1},
+		{24021, 0},
+		{24022, 1},
+		{24022, 0},
+		{24023, 0},
+		{0, 0},
+	}
+	for i, testCase := range testCases {
+		if i == 5 {
+			c.Assert(DeleteCachedTargetsOfAgentById(testCase.input), IsNil, Commentf("Test Case: %d", i+1))
+			continue
+		}
+		c.Assert(DeleteCachedTargetsOfAgentById(testCase.input).RowsAffected, Equals, testCase.expected, Commentf("Test Case: %d", i+1))
 	}
 }
 
@@ -605,6 +768,10 @@ func (s *TestAgentSuite) SetUpTest(c *C) {
 			VALUES(10061, 37201),(10061, 37202)
 			`,
 		)
+	case "TestAgentSuite.TestListTargetsOfAgentById":
+		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
+	case "TestAgentSuite.TestDeleteCachedTargetsOfAgentById":
+		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
 	}
 }
 func (s *TestAgentSuite) TearDownTest(c *C) {
@@ -691,6 +858,10 @@ func (s *TestAgentSuite) TearDownTest(c *C) {
 			"DELETE FROM owl_name_tag WHERE nt_value LIKE 'nt-%'",
 			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'ng-%'",
 		)
+	case "TestAgentSuite.TestListTargetsOfAgentById":
+		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
+	case "TestAgentSuite.TestDeleteCachedTargetsOfAgentById":
+		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
 	}
 }
 
