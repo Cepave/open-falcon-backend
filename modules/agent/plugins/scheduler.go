@@ -187,8 +187,10 @@ func PluginRun(plugin *Plugin) {
 
 	for j := 0; j < len(metrics); j++ {
 		metrics[j].Step = int64(sec)
-		metrics[j].Endpoint = hostname
 		metrics[j].Timestamp = now
+		if metrics[j].Endpoint == "" {
+			metrics[j].Endpoint = hostname
+		}
 	}
 
 	g.SendToTransfer(metrics)
