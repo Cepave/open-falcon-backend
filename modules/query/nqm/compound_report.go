@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"time"
 
 	"github.com/satori/go.uuid"
 
@@ -301,7 +302,6 @@ func ToQueryDetail(q *model.CompoundQuery) *model.CompoundQueryDetail {
 
 func buildNqmDslByCompoundQuery(q *model.CompoundQuery) *NqmDsl {
 	filters := q.Filters
-	startTime, endTime := filters.Time.GetNetTimeRange()
 
 	loadAgentIdsFunc := func() nqmModel.Int32sGetter {
 		return nqmModel.SimpleAgent1s(
@@ -314,11 +314,8 @@ func buildNqmDslByCompoundQuery(q *model.CompoundQuery) *NqmDsl {
 		)
 	}
 
-	return &NqmDsl {
+	nqmDsl := &NqmDsl {
 		GroupingColumns: buildGroupingColumnOfDsl(q.Grouping),
-
-		StartTime: EpochTime(startTime.Unix()),
-		EndTime: EpochTime(endTime.Unix()),
 
 		IdsOfAgents: loadInt32Ids(filters.Agent.HasAgentDescriptive(), loadAgentIdsFunc),
 		IdsOfAgentIsps: filterRelationIdsOnInt16(filters.Agent.IspIds),
@@ -339,6 +336,26 @@ func buildNqmDslByCompoundQuery(q *model.CompoundQuery) *NqmDsl {
 		CityRelation: q.GetCityRelation(),
 		NameTagRelation: q.GetNameTagRelation(),
 	}
+
+	timeFilter := filters.Time
+	if !timeFilter.IsMultipleTimeRanges() {
+		startTime, endTime := timeFilter.GetNetTimeRange()
+		nqmDsl.StartTime = toPointerOfEpochTime(startTime.Unix())
+		nqmDsl.EndTime = toPointerOfEpochTime(endTime.Unix())
+	} else {
+		timeRanges := timeFilter.GetMultipleTimeRanges(time.Now())
+
+		nqmDsl.TimeRanges = make([]*TimeRangeOfDsl, len(timeRanges))
+
+		for i, t := range timeRanges {
+			nqmDsl.TimeRanges[i] = &TimeRangeOfDsl {
+				StartTime: EpochTime(t.StartTime.Unix()),
+				EndTime: EpochTime(t.EndTime.Unix()),
+			}
+		}
+	}
+
+	return nqmDsl
 }
 
 func loadInt32Ids(

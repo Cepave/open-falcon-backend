@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/common/compress"
 	"github.com/Cepave/open-falcon-backend/common/digest"
+
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	sjson "github.com/bitly/go-simplejson"
@@ -74,6 +77,12 @@ const (
 
 type MetricsFilterParseError struct {
 	error
+}
+
+// Represents the range of time(by two point of time line)
+type TimeRange struct {
+	StartTime time.Time
+	EndTime time.Time
 }
 
 var supportingTimeUnit = map[string]bool {
@@ -170,6 +179,9 @@ func NewTimeFilter() *TimeFilter {
 type TimeWithUnit struct {
 	Unit string `json:"unit" digest:"1"`
 	Value int `json:"value" digest:"2"`
+
+	StartTimeOfDay *string `json:"start_time_of_day,omitempty" digest:"3"`
+	EndTimeOfDay *string `json:"end_time_of_day,omitempty" digest:"4"`
 }
 
 type QueryOutput struct {
@@ -354,7 +366,7 @@ func (f *CompoundQueryFilter) loadFilterOfTarget(jsonObject *sjson.Json) {
 func (f *CompoundQueryFilter) loadFilterOfMetrics(jsonObject *sjson.Json) {
 	f.Metrics = purifyStringOfJson(jsonObject)
 }
-
+// Implements digest.Digestor
 func (f *TimeFilter) GetDigest() []byte {
 	switch f.timeRangeType {
 	case TimeRangeAbsolute:
@@ -367,6 +379,67 @@ func (f *TimeFilter) GetDigest() []byte {
 	}
 
 	panic(fmt.Sprintf("Unknown type of time filter for digesting: %#v", f))
+}
+
+const dayDuration = time.Duration(24) * time.Hour
+func (f *TimeFilter) GetMultipleTimeRanges(baseTime time.Time) []*TimeRange {
+	timeWithUnit := f.ToNow
+	startDayValue := -timeWithUnit.Value
+
+	addedDaysValue := timeWithUnit.Value
+	if addedDaysValue == 0 {
+		addedDaysValue = 1
+	}
+	totalDays := -1
+
+	var firstDay time.Time
+	switch timeWithUnit.Unit {
+	case TimeUnitYear:
+		firstDay = time.Date(
+			baseTime.Year(), 1, 1, 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(startDayValue, 0, 0)
+		totalDays = int(firstDay.AddDate(addedDaysValue, 0, 0).Sub(firstDay) / dayDuration)
+	case TimeUnitMonth:
+		firstDay = time.Date(
+			baseTime.Year(), baseTime.Month(), 1, 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(0, startDayValue, 0)
+		totalDays = int(firstDay.AddDate(0, addedDaysValue, 0).Sub(firstDay) / dayDuration)
+	case TimeUnitWeek:
+		minusDays := -((int(baseTime.Weekday()) + 6) % 7)
+		firstDay = time.Date(
+			baseTime.Year(), baseTime.Month(), baseTime.Day(), 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(0, 0, minusDays).AddDate(0, 0, startDayValue * 7)
+		totalDays = 7 * addedDaysValue
+	case TimeUnitDay:
+		firstDay = time.Date(
+			baseTime.Year(), baseTime.Month(), baseTime.Day(), 0, 0, 0, 0, baseTime.Location(),
+		).AddDate(0, 0, startDayValue)
+		totalDays = addedDaysValue
+	default:
+		panic("Cannot fetch time range with unit: " + timeWithUnit.Unit)
+	}
+
+	/**
+	 * Builds the time ranges cross days
+	 */
+	startTimeDuraion := *f.ToNow.DurationFromMidnightOfStartTime()
+	endTimeDuraion := *f.ToNow.DurationFromMidnightOfEndTime()
+	timeRanges := make([]*TimeRange, totalDays)
+	for i := 0; i < totalDays; i++ {
+		currentDate := firstDay.AddDate(0, 0, i)
+		timeRanges[i] = &TimeRange {
+			StartTime: currentDate.Add(startTimeDuraion),
+			EndTime: currentDate.Add(endTimeDuraion),
+		}
+	}
+	// :~)
+
+	return timeRanges
+}
+func (f *TimeFilter) IsMultipleTimeRanges() bool {
+	return f.timeRangeType == TimeRangeRelative &&
+		f.ToNow.StartTimeOfDay != nil &&
+		f.ToNow.EndTimeOfDay != nil;
 }
 // Retrieves the start time of net(whether or not the time is absolute or relative)
 func (f *TimeFilter) GetNetTimeRange() (time.Time, time.Time) {
@@ -381,6 +454,20 @@ func (f *TimeFilter) GetNetTimeRange() (time.Time, time.Time) {
 	default:
 		panic("Unknown time type")
 	}
+}
+func (f *TimeFilter) ToJsonOfRelativeTimeRange() *sjson.Json {
+	var json = sjson.New()
+
+	if f.ToNow.StartTimeOfDay == nil {
+		startTime, endTime := f.GetNetTimeRange()
+
+		json.Set("start_time", ojson.JsonTime(startTime))
+		json.Set("end_time", ojson.JsonTime(endTime))
+	}
+
+	json.Set("to_now", f.ToNow)
+
+	return json
 }
 func (f *TimeFilter) getRelativeTimeRangeOfNet(baseTime time.Time) (time.Time, time.Time) {
 	var startTime, endTime time.Time
@@ -453,16 +540,23 @@ func (f *TimeFilter) loadRelativeTimeRange(jsonTime *sjson.Json) *TimeWithUnit {
 		return nil
 	}
 
+	/**
+	 * Loads "to_now"
+	 */
 	stringOfTimeUnit := strings.ToLower(
 		strings.TrimSpace(jsonToNow.GetPath("unit").MustString()),
 	)
 	if _, ok := supportingTimeUnit[stringOfTimeUnit]; !ok {
 		return nil
 	}
+	// :~)
 
+	jsonExtToNow := ojson.ToJsonExt(jsonToNow)
 	return &TimeWithUnit{
 		Unit: stringOfTimeUnit,
 		Value: jsonToNow.Get("value").MustInt(),
+		StartTimeOfDay: jsonExtToNow.GetExt("start_time_of_day").MustStringPtr(),
+		EndTimeOfDay: jsonExtToNow.GetExt("end_time_of_day").MustStringPtr(),
 	}
 }
 func (f *TimeFilter) loadAbsoluteTimeRange(jsonTime *sjson.Json) (time.Time, time.Time) {
@@ -498,8 +592,39 @@ func (o *QueryOutput) HasMetric(metricName string) bool {
 	return false
 }
 
+func (tu *TimeWithUnit) DurationFromMidnightOfStartTime() *time.Duration {
+	return getDurationFromMidnight(tu.StartTimeOfDay)
+}
+func (tu *TimeWithUnit) DurationFromMidnightOfEndTime() *time.Duration {
+	return getDurationFromMidnight(tu.EndTimeOfDay)
+}
 func (tu *TimeWithUnit) String() string {
 	return fmt.Sprintf("%d %s", tu.Value, tu.Unit)
+}
+
+func getDurationFromMidnight(v *string) *time.Duration {
+	if v == nil {
+		return nil
+	}
+
+	matches := regexpTimeInDay.FindStringSubmatch(*v)
+	if matches == nil {
+		return nil
+	}
+
+	var err error
+
+	hours, err := strconv.ParseInt(matches[1], 10, 8)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot parse value: %s to time.Duration(Hour): %v", matches[1], err))
+	}
+	minutes, err := strconv.ParseInt(matches[2], 10, 8)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot parse value: %s to time.Duration(Minute): %v", matches[2], err))
+	}
+
+	duration := time.Duration(hours) * time.Hour + time.Duration(minutes) * time.Minute
+	return &duration
 }
 
 var eachAgentGrouping = map[string]bool {
@@ -648,4 +773,3 @@ func getRelation(arrayOfNumber interface{}) PropRelation {
 
 	return NoCondition
 }
-

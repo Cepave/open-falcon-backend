@@ -87,6 +87,19 @@ func (j *JsonExt) MustUint32() uint32 {
 	return uint32(j.MustUint64())
 }
 
+func (j *JsonExt) IsNil() bool {
+	return j.Interface() == nil
+}
+
+func (j *JsonExt) MustStringPtr() *string {
+	if j.IsNil() {
+		return nil
+	}
+
+	stringValue := j.MustString()
+	return &stringValue
+}
+
 func (j *JsonExt) GetExt(key string) *JsonExt {
 	return &JsonExt{ j.Get(key) }
 }

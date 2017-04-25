@@ -30,8 +30,8 @@ func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 
 		icmpParams := &NqmDsl{
 			GroupingColumns:      []string{"ag_pv_id"},
-			StartTime:            1328407200,
-			EndTime:              1328493600,
+			StartTime:            toPointerOfEpochTime(1328407200),
+			EndTime:              toPointerOfEpochTime(1328493600),
 			IdsOfAgentProvinces:  []int16{testCase.sampleIdOfAgentProvince},
 			IdsOfAgentIsps:       []int16{16},
 			IdsOfTargetProvinces: []int16{31},

@@ -8,11 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/gin-gonic/gin.v1"
 	"github.com/bitly/go-simplejson"
+	"github.com/juju/errors"
 	"github.com/satori/go.uuid"
+	"gopkg.in/gin-gonic/gin.v1"
+	"gopkg.in/go-playground/validator.v9"
 
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
+	ginmvc "github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 
@@ -36,6 +39,11 @@ func configNqmRoutes() {
 func getGinRouter() *gin.Engine {
 	engine := ogin.NewDefaultJsonEngine(&ogin.GinConfig{ Mode: gin.ReleaseMode })
 
+	mvcConfig := ginmvc.NewDefaultMvcConfig()
+	mvcConfig.Validator.RegisterStructValidation(model.ValidateTimeWithUnit, model.TimeWithUnit{})
+
+	mvcBuilder := ginmvc.NewMvcBuilder(mvcConfig)
+
 	engine.GET("/nqm/icmp/list/by-provinces", listIcmpByProvinces)
 	engine.GET("/nqm/icmp/province/:province_id/list/by-targets", listIcmpByTargetsForAProvince)
 	engine.GET("/nqm/province/:province_id/agents", listEffectiveAgentsInProvince)
@@ -43,7 +51,7 @@ func getGinRouter() *gin.Engine {
 	compoundReport := engine.Group("/nqm/icmp/compound-report")
 	{
 		compoundReport.GET("", outputCompondReportOfIcmp)
-		compoundReport.POST("", buildQueryOfIcmp)
+		compoundReport.POST("", mvcBuilder.BuildHandler(buildQueryOfIcmp))
 
 		compoundReport.GET("/query/:query_id", getQueryContentOfIcmp)
 	}
@@ -51,7 +59,10 @@ func getGinRouter() *gin.Engine {
 	return engine
 }
 
-func buildQueryOfIcmp(context *gin.Context) {
+func buildQueryOfIcmp(
+	context *gin.Context,
+	validator *validator.Validate,
+) {
 	compoundQuery, err := buildCompoundQueryOfIcmp(context)
 
 	/**
@@ -70,6 +81,9 @@ func buildQueryOfIcmp(context *gin.Context) {
 	// :~)
 
 	compoundQuery.SetupDefault()
+
+	ogin.ConformAndValidateStruct(compoundQuery, validator)
+
 	query := nqm.BuildQuery(compoundQuery)
 	context.JSON(http.StatusOK, query.ToJson())
 }
@@ -158,13 +172,13 @@ func buildCompoundQueryOfIcmp(context *gin.Context) (*model.CompoundQuery, error
 	if jsonErr == io.EOF {
 		query.UnmarshalJSON([]byte("{}"))
 	} else if jsonErr != nil {
-		return nil, jsonErr
+		return nil, errors.Annotate(jsonErr, "Parse JSON Body")
 	}
 
 	_, parseError := metricDsl.ParseToMetricFilter(query.Filters.Metrics)
 	if parseError != nil {
 		return nil, dslError {
-			1, parseError.Error(),
+			1, errors.Annotate(parseError, "Parse METRIC DSL").Error(),
 		}
 	}
 

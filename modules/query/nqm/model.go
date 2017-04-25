@@ -11,17 +11,29 @@ import (
 type EpochTime int64
 // :~)
 
+func toPointerOfEpochTime(v int64) *EpochTime {
+	epochValue := EpochTime(v)
+	return &epochValue
+}
+
 // This value is used to indicate the non-existing id for data(province, city, or ISP)
 // Instead of -1(e.x. A agent doesn't has information of ISP), this value is used in query.
 const UNKNOWN_ID_FOR_QUERY = -2
 const UNKNOWN_NAME_FOR_QUERY = "<UNKNOWN>"
 
+type TimeRangeOfDsl struct {
+	StartTime EpochTime `json:"start_time"`
+	EndTime EpochTime `json:"end_time"`
+}
+
 // Represents the DSL for query over Icmp log
 type NqmDsl struct {
 	GroupingColumns []string `json:"grouping_columns"`
 
-    StartTime EpochTime `json:"start_time"`
-	EndTime EpochTime `json:"end_time"`
+    StartTime *EpochTime `json:"start_time,omitempty"`
+	EndTime *EpochTime `json:"end_time,omitempty"`
+
+	TimeRanges []*TimeRangeOfDsl `json:"time_ranges"`
 
 	IdsOfAgents []int32 `json:"ids_of_agents"`
 	IdsOfAgentIsps []int16 `json:"ids_of_agent_isps"`
