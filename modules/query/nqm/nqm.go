@@ -223,8 +223,8 @@ func (srv *ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryPara
 // Converts the IR of DSL to specific data for query on Cassandra
 func toNqmDsl(queryParams *dsl.QueryParams) *NqmDsl {
 	nqmDsl := &NqmDsl{
-		StartTime: EpochTime(queryParams.StartTime.Unix()),
-		EndTime: EpochTime(queryParams.EndTime.Unix()),
+		StartTime: toPointerOfEpochTime(queryParams.StartTime.Unix()),
+		EndTime: toPointerOfEpochTime(queryParams.EndTime.Unix()),
 
 		IdsOfAgents: safeIds(queryParams.AgentFilterById.MatchIds),
 		IdsOfTargets: safeIds(queryParams.TargetFilterById.MatchIds),

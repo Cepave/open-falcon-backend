@@ -2,14 +2,16 @@ package nqm
 
 import (
 	"encoding/hex"
+	"reflect"
+	"time"
+
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	t "github.com/Cepave/open-falcon-backend/common/testing"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+
+	t "github.com/Cepave/open-falcon-backend/common/testing"
 	. "gopkg.in/check.v1"
-	"reflect"
-	"time"
 )
 
 type TestQuerySuite struct{}
@@ -85,6 +87,15 @@ func (suite *TestQuerySuite) TestUnmarshalSimpleJSONOfTimeFilter(c *C) {
 			`{
 				"start_time": null, "end_time": null,
 				"to_now": { "unit": "m", "value": 3 }
+			}`,
+		},
+		{
+			`{ "to_now": { "unit": "d", "value": 10, "start_time_of_day": "04:30", "end_time_of_day": "05:30" } }
+			`,
+			TimeRangeRelative,
+			`{
+				"start_time": null, "end_time": null,
+				"to_now": { "unit": "d", "value": 10, "start_time_of_day": "04:30", "end_time_of_day": "05:30" }
 			}`,
 		},
 		{ // "Zero" value of time.Time
@@ -436,6 +447,8 @@ func (suite *TestQuerySuite) TestGetDigestValue(c *C) {
 
 // Tests the digesting for time filter
 func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
+	sPtr := func(v string) *string { return &v }
+
 	testCases := []*struct {
 		sampleFilter *TimeFilter
 		expectedDigest string
@@ -454,6 +467,13 @@ func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
 				timeRangeType: TimeRangeRelative,
 			},
 			"580f6dacf6ac8d59d5ad86d7f0286cf6",
+		},
+		{
+			&TimeFilter {
+				ToNow: &TimeWithUnit { Unit: TimeUnitDay, Value: 3, StartTimeOfDay: sPtr("02:00"), EndTimeOfDay: sPtr("05:00") },
+				timeRangeType: TimeRangeRelative,
+			},
+			"9910f048a2e785e2f3fe5819f3dde52a",
 		},
 	}
 
@@ -567,6 +587,133 @@ func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
 			testedEndTime, ocheck.TimeEquals, expectedEndTime,
 			Commentf("%s End time.", comment.CheckCommentString()),
 		)
+	}
+}
+
+// Tests the getting of time ranges(on relative time)
+func (suite *TestQuerySuite) TestGetMultipleTimeRanges(c *C) {
+	testCases := []*struct {
+		unit string
+		value int
+		startTime string
+		endTime string
+		expectedDays int
+		expectedFirstDay, expectedLastDay string
+	} {
+		/**
+		 * Case for days
+		 */
+		{
+			TimeUnitDay, 0, "05:00", "06:00",
+			1, "04-04", "04-04",
+		},
+		{
+			TimeUnitDay, 1, "02:00", "04:00",
+			1, "04-03", "04-03",
+		},
+		{
+			TimeUnitDay, 3, "20:10", "23:30",
+			3, "04-01", "04-03",
+		},
+		// :~)
+		/**
+		 * Case for weeks
+		 */
+		{
+			TimeUnitWeek, 0, "05:00", "06:00",
+			7, "03-30", "04-05",
+		},
+		{
+			TimeUnitWeek, 1, "05:00", "06:00",
+			7, "03-23", "03-29",
+		},
+		{
+			TimeUnitWeek, 3, "05:00", "06:00",
+			21, "03-09", "03-29",
+		},
+		// :~)
+		/**
+		 * Case for months
+		 */
+		{
+			TimeUnitMonth, 0, "12:00", "13:45",
+			30, "04-01", "04-30",
+		},
+		{
+			TimeUnitMonth, 1, "12:00", "13:45",
+			31, "03-01", "03-31",
+		},
+		{
+			TimeUnitMonth, 2, "08:00", "08:20",
+			59, "02-01", "03-31",
+		},
+		// :~)
+		/**
+		 * Case for years
+		 */
+		{
+			TimeUnitYear, 0, "12:00", "15:00",
+			365, "01-01", "12-31",
+		},
+		{
+			TimeUnitYear, 1, "12:00", "15:00",
+			365, "01-01", "12-31",
+		},
+		{
+			TimeUnitYear, 2, "12:00", "15:00",
+			730, "01-01", "12-31",
+		},
+		// :~)
+	}
+
+	baseTime := t.ParseTime(c, "2015-04-04T10:50:23+08:00")
+	for i, testCase := range testCases {
+		comment := ocheck.TestCaseComment(i)
+		ocheck.LogTestCase(c, testCase)
+
+		timeFilter := &TimeFilter {
+			ToNow: &TimeWithUnit {
+				Unit: testCase.unit,
+				Value: testCase.value,
+				StartTimeOfDay: &testCase.startTime,
+				EndTimeOfDay: &testCase.endTime,
+			},
+		}
+
+		testedResult := timeFilter.GetMultipleTimeRanges(baseTime)
+
+		c.Logf("Result Size: [%v]", len(testedResult))
+
+		c.Assert(testedResult, HasLen, testCase.expectedDays, comment)
+
+		edgeIndex := []int{ 0, len(testedResult) - 1 }
+
+		// Only shows the first/last element
+		for _, i := range edgeIndex {
+			r := testedResult[i]
+
+			startTimeStr := r.StartTime.Format(time.RFC3339)
+			endTimeStr := r.EndTime.Format(time.RFC3339)
+
+			c.Logf("%v ~ %v(Day %d)", startTimeStr, endTimeStr, i + 1)
+
+			/**
+			 * Asserts the time value
+			 */
+			c.Assert(startTimeStr, ocheck.StringContains, testCase.startTime, comment)
+			c.Assert(endTimeStr, ocheck.StringContains, testCase.endTime, comment)
+			// :~)
+
+			/**
+			 * Only asserts the 1st and last day of ranges
+			 */
+			if i == 0 {
+				c.Assert(startTimeStr, ocheck.StringContains, testCase.expectedFirstDay, comment)
+			} else if i == len(testedResult) - 1 {
+				c.Assert(endTimeStr, ocheck.StringContains, testCase.expectedLastDay, comment)
+			}
+			// :~)
+		}
 	}
 }
 
