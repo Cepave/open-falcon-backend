@@ -6,19 +6,18 @@ ARG ENTRYFILE=run.sh
 ENV CI_PROJECT_NAME=open-falcon-backend
 ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
 ENV WORK_PATH=${GOPATH}/src/github.com/Cepave/${CI_PROJECT_NAME}
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:$GOPATH/bin
 
 # Build binary
 COPY . ${WORK_PATH}
 WORKDIR ${WORK_PATH}
 RUN \
-  apk add --no-cache ca-certificates bash curl git iproute2 tzdata jq \
+  apk add --no-cache ca-certificates bash curl git iproute2 jq \
   && mkdir -p ${FALCON_DIR} ${CONFIG_DIR} \
   && apk add --no-cache --virtual .build-deps g++ perl make \
   && make all \
   && make pack \
   && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR} \
-  && rm -rf ${GOPATH} \
+  && rm -rf ${GOPATH} ${WORK_PATH} \
   && apk del .build-deps
 
 # Set timezone
