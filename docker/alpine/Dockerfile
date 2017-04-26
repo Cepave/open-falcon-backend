@@ -11,9 +11,8 @@ ENV GOLANG_SRC_SHA256 4e834513a2079f8cbbd357502cccaac9507fd00a1efe672375798858ff
 
 # Falcon
 ARG ENTRYFILE=run.sh
-ENV CI_PROJECT_NAME=open-falcon-backend
 ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
-ENV WORK_PATH=${GOPATH}/src/github.com/Cepave/${CI_PROJECT_NAME}
+ENV WORK_PATH=${GOPATH}/src/github.com/Cepave/open-falcon-backend
 
 # Copy golang & backend sources
 COPY ${DOCKER_DIR}/alpine/go-wrapper /usr/local/bin/
