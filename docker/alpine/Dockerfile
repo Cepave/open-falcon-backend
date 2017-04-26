@@ -4,89 +4,82 @@ LABEL maintainer cheminlin@cepave.com
 
 ARG ENTRYFILE=run.sh
 ENV CI_PROJECT_NAME=open-falcon-backend
-ENV WORKDIR=/home DOCKERDIR=docker CONFIGDIR=/config
-ENV WORKPATH=${GOPATH}/src/github.com/Cepave/${CI_PROJECT_NAME}
+ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
+ENV WORK_PATH=${GOPATH}/src/github.com/Cepave/${CI_PROJECT_NAME}
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/go/bin:$GOPATH/bin
 
+# Build binary
+COPY . ${WORK_PATH}
+WORKDIR ${WORK_PATH}
 RUN \
-  apk add --update git g++ bash perl make \
-  && mkdir -p ${WORKPATH} ${WORKDIR} ${CONFIGDIR}
-
-COPY . ${WORKPATH}
-WORKDIR ${WORKPATH}
-RUN \
-  make all \
+  apk add --no-cache ca-certificates bash curl git iproute2 tzdata jq \
+  && mkdir -p ${FALCON_DIR} ${CONFIG_DIR} \
+  && apk add --no-cache --virtual .build-deps g++ perl make \
+  && make all \
   && make pack \
-  && tar zxvf open-falcon-v*.tar.gz -C ${WORKDIR} \
-  && rm -rf ${WORKPATH}
+  && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR} \
+  && rm -rf ${GOPATH} \
+  && apk del .build-deps
 
-
-##########
-# BUILD
-##########
-
-# Set timezone, bash, config dir
+# Set timezone
 # Set alias in the case of user want to execute control in their terminal
+# Set soft links
 RUN \
-  apk add --no-cache tzdata bash \
+  apk add --no-cache tzdata \
   && cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime \
   && echo "Asia/Taipei" > /etc/timezone \
-  && echo "alias ps='pstree'" > ~/.bashrc
+  && echo "alias ps='pstree'" > ~/.bashrc \
+  && touch ${CONFIG_DIR}/agent.json \
+  && ln -sf ${CONFIG_DIR}/agent.json ${FALCON_DIR}/agent/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/agent.json \
+  && touch ${CONFIG_DIR}/aggregator.json \
+  && ln -sf ${CONFIG_DIR}/aggregator.json ${FALCON_DIR}/aggregator/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/aggregator.json \
+  && touch ${CONFIG_DIR}/alarm.json \
+  && ln -sf ${CONFIG_DIR}/alarm.json ${FALCON_DIR}/alarm/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/alarm.json \
+  && touch ${CONFIG_DIR}/fe.json \
+  && ln -sf ${CONFIG_DIR}/fe.json ${FALCON_DIR}/fe/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/fe.json \
+  && touch ${CONFIG_DIR}/graph.json \
+  && ln -sf ${CONFIG_DIR}/graph.json ${FALCON_DIR}/graph/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/graph.json \
+  && touch ${CONFIG_DIR}/hbs.json \
+  && ln -sf ${CONFIG_DIR}/hbs.json ${FALCON_DIR}/hbs/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/hbs.json \
+  && touch ${CONFIG_DIR}/judge.json \
+  && ln -sf ${CONFIG_DIR}/judge.json ${FALCON_DIR}/judge/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/judge.json \
+  && touch ${CONFIG_DIR}/nodata.json \
+  && ln -sf ${CONFIG_DIR}/nodata.json ${FALCON_DIR}/nodata/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/nodata.json \
+  && touch ${CONFIG_DIR}/query.json \
+  && ln -sf ${CONFIG_DIR}/query.json ${FALCON_DIR}/query/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/query.json \
+  && touch ${CONFIG_DIR}/sender.json \
+  && ln -sf ${CONFIG_DIR}/sender.json ${FALCON_DIR}/sender/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/sender.json \
+  && touch ${CONFIG_DIR}/task.json \
+  && ln -sf ${CONFIG_DIR}/task.json ${FALCON_DIR}/task/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/task.json \
+  && touch ${CONFIG_DIR}/transfer.json \
+  && ln -sf ${CONFIG_DIR}/transfer.json ${FALCON_DIR}/transfer/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/transfer.json \
+  && touch ${CONFIG_DIR}/nqm-mng.json \
+  && ln -sf ${CONFIG_DIR}/nqm-mng.json ${FALCON_DIR}/nqm-mng/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/nqm-mng.json \
+  && touch ${CONFIG_DIR}/f2e-api.json \
+  && ln -sf ${CONFIG_DIR}/f2e-api.json ${FALCON_DIR}/f2e-api/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/f2e-api.json
 
-# Install Open-Falcon
-RUN apk add --no-cache ca-certificates git iproute2 curl jq
-RUN \
-  touch ${CONFIGDIR}/agent.json && \
-  ln -sf ${CONFIGDIR}/agent.json /home/agent/config/cfg.json && \
-  rm -f ${CONFIGDIR}/agent.json && \
-  touch ${CONFIGDIR}/aggregator.json && \
-  ln -sf ${CONFIGDIR}/aggregator.json /home/aggregator/config/cfg.json && \
-  rm -f ${CONFIGDIR}/aggregator.json && \
-  touch ${CONFIGDIR}/alarm.json && \
-  ln -sf ${CONFIGDIR}/alarm.json /home/alarm/config/cfg.json && \
-  rm -f ${CONFIGDIR}/alarm.json && \
-  touch ${CONFIGDIR}/fe.json && \
-  ln -sf ${CONFIGDIR}/fe.json /home/fe/config/cfg.json && \
-  rm -f ${CONFIGDIR}/fe.json && \
-  touch ${CONFIGDIR}/graph.json && \
-  ln -sf ${CONFIGDIR}/graph.json /home/graph/config/cfg.json && \
-  rm -f ${CONFIGDIR}/graph.json && \
-  touch ${CONFIGDIR}/hbs.json && \
-  ln -sf ${CONFIGDIR}/hbs.json /home/hbs/config/cfg.json && \
-  rm -f ${CONFIGDIR}/hbs.json && \
-  touch ${CONFIGDIR}/judge.json && \
-  ln -sf ${CONFIGDIR}/judge.json /home/judge/config/cfg.json && \
-  rm -f ${CONFIGDIR}/judge.json && \
-  touch ${CONFIGDIR}/nodata.json && \
-  ln -sf ${CONFIGDIR}/nodata.json /home/nodata/config/cfg.json && \
-  rm -f ${CONFIGDIR}/nodata.json && \
-  touch ${CONFIGDIR}/query.json && \
-  ln -sf ${CONFIGDIR}/query.json /home/query/config/cfg.json && \
-  rm -f ${CONFIGDIR}/query.json && \
-  touch ${CONFIGDIR}/sender.json && \
-  ln -sf ${CONFIGDIR}/sender.json /home/sender/config/cfg.json && \
-  rm -f ${CONFIGDIR}/sender.json && \
-  touch ${CONFIGDIR}/task.json && \
-  ln -sf ${CONFIGDIR}/task.json /home/task/config/cfg.json && \
-  rm -f ${CONFIGDIR}/task.json && \
-  touch ${CONFIGDIR}/transfer.json && \
-  ln -sf ${CONFIGDIR}/transfer.json /home/transfer/config/cfg.json && \
-  rm -f ${CONFIGDIR}/transfer.json && \
-  touch ${CONFIGDIR}/nqm-mng.json && \
-  ln -sf ${CONFIGDIR}/nqm-mng.json /home/nqm-mng/config/cfg.json && \
-  rm -f ${CONFIGDIR}/nqm-mng.json && \
-  touch ${CONFIGDIR}/f2e-api.json && \
-  ln -sf ${CONFIGDIR}/f2e-api.json /home/f2e-api/config/cfg.json && \
-  rm -f ${CONFIGDIR}/f2e-api.json
-
-COPY ${DOCKERDIR}/alpine/${ENTRYFILE} ${WORKDIR}/run.sh
-COPY ${DOCKERDIR}/docker-healthcheck /usr/local/bin/
+COPY ${DOCKER_DIR}/alpine/${ENTRYFILE} ${FALCON_DIR}/run.sh
+COPY ${DOCKER_DIR}/docker-healthcheck /usr/local/bin/
 
 # Port
-# rpc:  10070
-# http: 10080 10081
+# Rpc:  10070
+# Http: 10080 10081
 EXPOSE 10070 10080 10081
-WORKDIR ${WORKDIR}
+WORKDIR ${FALCON_DIR}
 
 # Start
 ENTRYPOINT ["/bin/bash", "run.sh"]
