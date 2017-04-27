@@ -1,0 +1,110 @@
+stages:
+  - unit_test
+  - build
+  - test
+  - release
+  - cleanup
+  - deploy
+
+
+variables:
+  DOCKER_IMAGE: openfalcon-backend
+  LABEL_OWL: backend
+
+
+.docker_template: &docker_definition
+  before_script:
+    - export IMAGE=$CI_REGISTRY_IMAGE:`echo $CI_BUILD_REF
+      | head -c 8`
+    - export LATEST_IMAGE=$CI_REGISTRY_IMAGE:latest
+    - docker login
+      -u gitlab-ci-token
+      -p $CI_BUILD_TOKEN
+      $CI_REGISTRY
+  after_script:
+    - docker logout $CI_REGISTRY
+  tags:
+    - docker
+
+
+# Push latest image to gitlab registry
+build_image:
+  <<: *docker_definition
+  only:
+      - master
+      - develop
+  script:
+    - docker image build
+      --pull
+      --quiet
+      --label git.commit=$CI_BUILD_REF
+      --label git.branch=$CI_BUILD_REF_NAME
+      --label git.url=$CI_PROJECT_URL.git
+      --label owl=$LABEL_OWL
+      -f docker/alpine/Dockerfile
+      -t $IMAGE
+      -t $LATEST_IMAGE
+      .
+    - docker image push $IMAGE
+    - docker image push $LATEST_IMAGE
+  stage: build
+
+
+# Push image with tag to gitlab registry and owlemon registry
+version:
+  <<: *docker_definition
+  only:
+    - tags
+  script:
+    - docker login
+      -u $OWLEMON_REGISTRY_USERNAME
+      -p $OWLEMON_REGISTRY_PASSWORD
+      $OWLEMON_REGISTRY
+    - docker login
+      -u $OWLEMON_REGISTRY_USERNAME
+      -p $OWLEMON_REGISTRY_PASSWORD
+      $MIRROR_REGISTRY
+    - docker image pull $IMAGE
+    - export ALIAS_IMAGE=$OWLEMON_REGISTRY/$DOCKER_IMAGE:$CI_BUILD_TAG
+    - docker image tag $IMAGE $ALIAS_IMAGE
+    - docker image push $ALIAS_IMAGE
+    - export ALIAS_IMAGE=$CI_REGISTRY_IMAGE:$CI_BUILD_TAG
+    - docker image tag $IMAGE $ALIAS_IMAGE
+    - docker image push $ALIAS_IMAGE
+    - export ALIAS_IMAGE=$MIRROR_REGISTRY/$DOCKER_IMAGE:$CI_BUILD_TAG
+    - docker image tag $IMAGE $ALIAS_IMAGE
+    - docker image push $ALIAS_IMAGE
+  stage: release
+
+
+# Push latest image to owlemon registry
+push_to_private_registry:
+  <<: *docker_definition
+  only:
+    - master
+    - develop
+    - triggers
+  script:
+    - docker login
+      -u $OWLEMON_REGISTRY_USERNAME
+      -p $OWLEMON_REGISTRY_PASSWORD
+      $OWLEMON_REGISTRY
+    - docker image pull $IMAGE
+    - export ALIAS_IMAGE=$OWLEMON_REGISTRY/$DOCKER_IMAGE:latest
+    - docker image tag $IMAGE $ALIAS_IMAGE
+    - docker image push $ALIAS_IMAGE
+    - docker logout $OWLEMON_REGISTRY
+  stage: release
+
+
+remove_image:
+  allow_failure: true
+  script:
+    - docker image rm
+      `docker image ls -a --filter label=owl=$LABEL_OWL --filter before=$LATEST_IMAGE --format '{{.Repository}}:{{.Tag}}'` || true
+    - docker image rm
+      `docker image ls -a -q --filter 'dangling=true'` || true
+  stage: cleanup
+  tags:
+    - docker
+
