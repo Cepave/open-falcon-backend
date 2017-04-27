@@ -1,10 +1,8 @@
 package nqm
 
 import (
-	"github.com/leebenson/conform"
-
+	"github.com/Cepave/open-falcon-backend/common/conform"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-
 	. "gopkg.in/check.v1"
 )
 
@@ -19,7 +17,7 @@ func (suite *TestPingtaskSuite) TestPingtaskModify(c *C) {
 		Comment: utils.PointerOfCloneString(" 測試用 "),
 	}
 
-	conform.Strings(testCase)
+	conform.MustConform(testCase)
 
 	c.Assert(testCase.Name, DeepEquals, utils.PointerOfCloneString("台灣"))
 	c.Assert(testCase.Comment, DeepEquals, utils.PointerOfCloneString("測試用"))
