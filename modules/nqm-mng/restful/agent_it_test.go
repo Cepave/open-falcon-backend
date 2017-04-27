@@ -359,7 +359,7 @@ func (s *TestAgentItSuite) TearDownTest(c *C) {
 	case "TestAgentItSuite.TestAddNewAgent":
 		inTx(
 			"DELETE FROM nqm_agent WHERE ag_connection_id LIKE 'add-agent%'",
-			"DELETE FROM host WHERE hostname = 'new-agent-blue-1'",
+			"DELETE FROM host WHERE hostname = 'new-host-cccc'",
 			"DELETE FROM owl_name_tag where nt_value LIKE 'add-agent-%'",
 			"DELETE FROM owl_group_tag where gt_name LIKE 'pp-rest-tag-%'",
 		)
