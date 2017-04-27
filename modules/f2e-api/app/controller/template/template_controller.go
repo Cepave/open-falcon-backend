@@ -344,3 +344,128 @@ func UpdateActionToTmplate(c *gin.Context) {
 	h.JSONR(c, fmt.Sprintf("action is updated, row affected: %d", dt.RowsAffected))
 	return
 }
+
+type APICloneTemplateInput struct {
+	ID   int64  `json:"id" validate:"required"`
+	Name string `json:"name"`
+}
+
+func CloneTemplate(c *gin.Context) {
+	var inputs APICloneTemplateInput
+	err := c.Bind(&inputs)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
+	user, _ := h.GetUser(c)
+	dt := db.Falcon.Begin()
+	templ := f.Template{ID: inputs.ID}
+
+	//get clone source of templete
+	dt = dt.Table(templ.TableName()).Where(&templ).Limit(1).Find(&templ)
+	if dt.Error != nil {
+		dt.Rollback()
+		h.JSONR(c, badstatus, dt.Error)
+		return
+	}
+
+	// get action and clone it
+	actionTmp := f.Action{ID: templ.ActionID}
+	if templ.ActionID != 0 {
+		d := db.Falcon.Table(actionTmp.TableName()).Where(&actionTmp).Find(&actionTmp)
+		if d.Error != nil {
+			h.JSONR(c, badstatus, dt.Error)
+			dt.Rollback()
+			return
+		}
+		actionTmp.ID = 0
+		if dt = dt.Table(actionTmp.TableName()).Save(&actionTmp); dt.Error != nil {
+			h.JSONR(c, badstatus, dt.Error)
+			dt.Rollback()
+			return
+		}
+	}
+
+	//check how to deal with action
+	templ.ID = 0
+	templ.CreateUser = user.Name
+	templ.ActionID = actionTmp.ID
+	if inputs.Name == "" {
+		//set default name of this copy
+		templ.Name = fmt.Sprintf("%v_copy", templ.Name)
+	} else {
+		templ.Name = inputs.Name
+	}
+
+	if dt := dt.Table(templ.TableName()).Save(&templ); dt.Error != nil {
+		h.JSONR(c, badstatus, dt.Error)
+		dt.Rollback()
+		return
+	}
+
+	//insert strategy of templete
+	strategys := getStrategys(inputs.ID)
+	dt, err = cloneStrategy(dt, strategys, templ.ID)
+	if err != nil {
+		h.JSONR(c, badstatus, err.Error)
+		dt.Rollback()
+		return
+	}
+
+	//insert host group notifcation of templete
+	grpTpls, err := getGrpTpl(inputs.ID)
+	if err != nil {
+		h.JSONR(c, badstatus, err.Error())
+		dt.Rollback()
+		return
+	}
+	dt, err = cloneGrps(dt, grpTpls, templ.ID, user.Name)
+	if err != nil {
+		h.JSONR(c, badstatus, err.Error())
+		dt.Rollback()
+		return
+	}
+
+	dt.Commit()
+	h.JSONR(c, map[string]interface{}{
+		"message": "template is cloned",
+		"tpl_id":  templ.ID,
+	})
+	return
+}
+
+func getStrategys(tplid int64) []f.Strategy {
+	strahelp := f.Strategy{}
+	strategys := []f.Strategy{}
+	db.Falcon.Table(strahelp.TableName()).Where(f.Strategy{TplId: tplid}).Find(&strategys)
+	return strategys
+}
+
+func getGrpTpl(tplid int64) ([]f.GrpTpl, error) {
+	grpTmpHelp := f.GrpTpl{TplID: tplid}
+	grptpls := []f.GrpTpl{}
+	d := db.Falcon.Table(grpTmpHelp.TableName()).Where("tpl_id = ?", tplid).Find(&grptpls)
+	return grptpls, d.Error
+}
+
+func cloneGrps(dt *gorm.DB, grptpls []f.GrpTpl, tplid int64, binduser string) (*gorm.DB, error) {
+	for _, grp := range grptpls {
+		grp.BindUser = binduser
+		grp.TplID = tplid
+		if dt = dt.Table(grp.TableName()).Save(&grp); dt.Error != nil {
+			return dt, dt.Error
+		}
+	}
+	return dt, nil
+}
+
+func cloneStrategy(dt *gorm.DB, strategys []f.Strategy, tplid int64) (*gorm.DB, error) {
+	for _, st := range strategys {
+		st.ID = 0
+		st.TplId = tplid
+		if dt := dt.Table(st.TableName()).Save(&st); dt.Error != nil {
+			return dt, dt.Error
+		}
+	}
+	return dt, nil
+}

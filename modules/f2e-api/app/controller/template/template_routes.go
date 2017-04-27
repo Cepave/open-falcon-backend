@@ -23,6 +23,7 @@ func Routes(r *gin.Engine) {
 	tmpr.DELETE("/:tpl_id", DeleteTemplate)
 	tmpr.POST("/action", CreateActionToTmplate)
 	tmpr.PUT("/action", UpdateActionToTmplate)
+	tmpr.POST("/clone_tpl", CloneTemplate)
 
 	//simple list for ajax use
 	tmpr2 := r.Group("/api/v1/template_simple")
