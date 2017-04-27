@@ -3,9 +3,9 @@ package template
 import (
 	"net/http"
 
-	"gopkg.in/gin-gonic/gin.v1"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 var db config.DBPool

@@ -6,12 +6,12 @@ import (
 	"regexp"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
-	"gopkg.in/gin-gonic/gin.v1"
-	"github.com/jinzhu/gorm"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	u "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
+	log "github.com/Sirupsen/logrus"
+	"github.com/jinzhu/gorm"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 func GetHostGroups(c *gin.Context) {
