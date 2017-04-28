@@ -300,7 +300,7 @@ func CreateActionToTmplate(c *gin.Context) {
 }
 
 type APIUpdateActionToTmplateInput struct {
-	ID                 int64  `json:"id" validate:"required"`
+	ID                 int64  `json:"id" binding:"required"`
 	UIC                string `json:"uic" binding:"exists"`
 	URL                string `json:"url" binding:"exists"`
 	Callback           int    `json:"callback" binding:"exists"`
@@ -346,7 +346,7 @@ func UpdateActionToTmplate(c *gin.Context) {
 }
 
 type APICloneTemplateInput struct {
-	ID   int64  `json:"id" validate:"required"`
+	ID   int64  `json:"id" binding:"required"`
 	Name string `json:"name"`
 }
 
@@ -354,7 +354,7 @@ func CloneTemplate(c *gin.Context) {
 	var inputs APICloneTemplateInput
 	err := c.Bind(&inputs)
 	if err != nil {
-		h.JSONR(c, badstatus, err)
+		h.JSONR(c, badstatus, err.Error())
 		return
 	}
 	user, _ := h.GetUser(c)
@@ -362,25 +362,25 @@ func CloneTemplate(c *gin.Context) {
 	templ := f.Template{ID: inputs.ID}
 
 	//get clone source of templete
-	dt = dt.Table(templ.TableName()).Where(&templ).Limit(1).Find(&templ)
+	dt = dt.Table(templ.TableName()).Find(&templ)
 	if dt.Error != nil {
 		dt.Rollback()
-		h.JSONR(c, badstatus, dt.Error)
+		h.JSONR(c, badstatus, dt.Error.Error())
 		return
 	}
 
 	// get action and clone it
 	actionTmp := f.Action{ID: templ.ActionID}
 	if templ.ActionID != 0 {
-		d := db.Falcon.Table(actionTmp.TableName()).Where(&actionTmp).Find(&actionTmp)
-		if d.Error != nil {
-			h.JSONR(c, badstatus, dt.Error)
+		dt.Table(actionTmp.TableName()).Find(&actionTmp)
+		if dt.Error != nil {
+			h.JSONR(c, badstatus, dt.Error.Error())
 			dt.Rollback()
 			return
 		}
 		actionTmp.ID = 0
 		if dt = dt.Table(actionTmp.TableName()).Save(&actionTmp); dt.Error != nil {
-			h.JSONR(c, badstatus, dt.Error)
+			h.JSONR(c, badstatus, dt.Error.Error())
 			dt.Rollback()
 			return
 		}
