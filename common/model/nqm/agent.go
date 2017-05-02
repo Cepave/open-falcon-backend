@@ -1,14 +1,17 @@
 package nqm
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"net"
 	"time"
 
+	owlGin "github.com/Cepave/open-falcon-backend/common/gin"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	json "github.com/bitly/go-simplejson"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 type AgentForAdding struct {
@@ -294,4 +297,33 @@ type ClearCacheView struct {
 
 func (l *PingListLog) GetDurationOfLastAccess(checkedTime time.Time) int64 {
 	return int64(checkedTime.Sub(l.AccessTime) / time.Minute)
+}
+
+type AgentHeartbeatRequest struct {
+	// The connection id of the NQM agent
+	ConnectionId string `json:"connectionId"`
+	// The hostname of the machine running NQM agent
+	Hostname string `json:"hostname"`
+	// The IP address of the NQM agent. It supports both IPv4 or IPv6 format
+	IpAddress IPString `json:"ipAddress"`
+}
+
+func (r *AgentHeartbeatRequest) Bind(c *gin.Context) {
+	owlGin.BindJson(c, r)
+}
+
+type IPString string
+
+func (s IPString) Value() (driver.Value, error) {
+	ip := net.ParseIP(string(s))
+	if ip == nil {
+		return nil, fmt.Errorf("Cannot parse IP string: %s\n", s)
+	}
+
+	// If ip is not an IPv4 address, To4 returns nil.
+	if v4 := ip.To4(); v4 != nil {
+		return []byte(v4), nil
+	}
+	// ip must be IPv6 address
+	return []byte(ip.To16()), nil
 }

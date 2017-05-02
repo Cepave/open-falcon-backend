@@ -6,6 +6,7 @@ import (
 	"net"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/jinzhu/gorm"
@@ -962,4 +963,128 @@ func buildGroupTagsForAgent(tx *sqlx.Tx, agentId int32, groupTags []string) {
 			)
 		},
 	)
+}
+
+type refreshNqmAgentProcessor struct {
+	req *nqmModel.AgentHeartbeatRequest
+}
+
+func (p *refreshNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	if p.BootCallback(tx) {
+		p.IfTrue(tx)
+	}
+
+	return commonDb.TxCommit
+}
+
+func (p *refreshNqmAgentProcessor) BootCallback(tx *sqlx.Tx) bool {
+	result := DbFacade.SqlxDb.MustExec(
+		`
+		UPDATE nqm_agent
+		SET ag_hostname = ?,
+			ag_ip_address = ?,
+			ag_last_heartbeat = FROM_UNIXTIME(?)
+		WHERE ag_connection_id = ?
+		`,
+		p.req.Hostname,
+		p.req.IpAddress,
+		time.Now().Unix(),
+		p.req.ConnectionId,
+	)
+
+	return commonDb.ToResultExt(result).RowsAffected() == 0
+}
+
+func (p *refreshNqmAgentProcessor) IfTrue(tx *sqlx.Tx) {
+	tx.MustExec(
+		`
+		INSERT INTO host(hostname, ip, agent_version, plugin_version)
+		VALUES(?, ?, '', '')
+		ON DUPLICATE KEY UPDATE
+			ip = VALUES(ip)
+		`,
+		p.req.Hostname,
+		p.req.IpAddress,
+	)
+	tx.MustExec(
+		`
+		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)
+		SELECT ?, ?, ?, FROM_UNIXTIME(?), id
+		FROM host
+		WHERE hostname = ?
+		ON DUPLICATE KEY UPDATE
+			ag_hostname = VALUES(ag_hostname),
+			ag_ip_address = VALUES(ag_ip_address),
+			ag_last_heartbeat = VALUES(ag_last_heartbeat)
+		`,
+		p.req.ConnectionId,
+		p.req.Hostname,
+		p.req.IpAddress,
+		time.Now().Unix(),
+		p.req.Hostname,
+	)
+}
+
+func AgentHeartbeat(r *nqmModel.AgentHeartbeatRequest) *nqmModel.Agent {
+	refreshTx := &refreshNqmAgentProcessor{
+		req: r,
+	}
+
+	DbFacade.SqlxDbCtrl.InTx(refreshTx)
+
+	var selectAgent = DbFacade.GormDb.Model(&nqmModel.Agent{}).
+		Select(`
+			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
+			COUNT(DISTINCT pt.pt_id) AS ag_num_of_enabled_pingtasks,
+			isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value,
+			GROUP_CONCAT(gt.gt_id ORDER BY gt_name ASC SEPARATOR ',') AS gt_ids,
+			GROUP_CONCAT(gt.gt_name ORDER BY gt_name ASC SEPARATOR '\0') AS gt_names
+		`).
+		Joins(`
+			LEFT JOIN
+			nqm_agent_ping_task AS apt
+			ON ag_id = apt.apt_ag_id
+			LEFT JOIN
+			nqm_ping_task AS pt
+			ON apt.apt_pt_id = pt.pt_id AND pt.pt_enable=true
+			INNER JOIN
+			owl_isp AS isp
+			ON ag_isp_id = isp.isp_id
+			INNER JOIN
+			owl_province AS pv
+			ON ag_pv_id = pv.pv_id
+			INNER JOIN
+			owl_city AS ct
+			ON ag_ct_id = ct.ct_id
+			INNER JOIN
+			owl_name_tag AS nt
+			ON ag_nt_id = nt.nt_id
+			LEFT OUTER JOIN
+			nqm_agent_group_tag AS agt
+			ON ag_id = agt.agt_ag_id
+			LEFT OUTER JOIN
+			owl_group_tag AS gt
+			ON agt.agt_gt_id = gt.gt_id
+		`).
+		Where("ag_connection_id = ?", r.ConnectionId).
+		Group(`
+			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
+			isp_id, isp_name, pv_id, pv_name, ct_id, ct_name, nt_id, nt_value
+		`)
+
+	var loadedAgent = &nqmModel.Agent{}
+	selectAgent = selectAgent.Find(loadedAgent)
+
+	if selectAgent.Error == gorm.ErrRecordNotFound {
+		return nil
+	}
+	gormExt.ToDefaultGormDbExt(selectAgent).PanicIfError()
+
+	loadedAgent.AfterLoad()
+
+	if !loadedAgent.Status {
+		return nil
+	}
+
+	return loadedAgent
 }
