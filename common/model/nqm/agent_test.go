@@ -18,12 +18,14 @@ var _ = Suite(&TestAgentSuite{})
 
 // Tests validation of NQM agent
 func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
+	ps := func(v string) *string { return &v }
+
 	testedAgent := &AgentForAdding {
 		Name: utils.PointerOfCloneString(" name-1 "),
 		ConnectionId: " conn-id-1 ",
 		Comment: utils.PointerOfCloneString(" comment-1 "),
 		Hostname: " hostname-1 ",
-		NameTagValue: " name-tag-1 ",
+		NameTagValue: ps(" name-tag-1 "),
 		GroupTags: []string{ " gt-1 ", " gt-2 " },
 	}
 
@@ -33,7 +35,7 @@ func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 	c.Assert(testedAgent.ConnectionId, Equals, "conn-id-1")
 	c.Assert(testedAgent.Comment, DeepEquals, utils.PointerOfCloneString("comment-1"))
 	c.Assert(testedAgent.Hostname, Equals, "hostname-1")
-	c.Assert(testedAgent.NameTagValue, Equals, "name-tag-1")
+	c.Assert(testedAgent.NameTagValue, DeepEquals, ps("name-tag-1"))
 	c.Assert(testedAgent.GroupTags, DeepEquals, []string{ "gt-1", "gt-2" })
 }
 

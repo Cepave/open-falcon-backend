@@ -15,11 +15,13 @@ var _ = Suite(&TestTargetSuite{})
 
 // Tests validation of NQM target
 func (suite *TestTargetSuite) TestConformOfTargetForAdding(c *C) {
+	ps := func(v string) *string { return &v }
+
 	testedTarget := &TargetForAdding {
 		Name: " name-1 ",
 		Host: " host-1 ",
 		Comment: utils.PointerOfCloneString(" comment-1 "),
-		NameTagValue: " name-tag-1 ",
+		NameTagValue: ps(" name-tag-1 "),
 		GroupTags: []string{ " gt-1 ", " gt-2 " },
 	}
 
@@ -28,7 +30,7 @@ func (suite *TestTargetSuite) TestConformOfTargetForAdding(c *C) {
 	c.Assert(testedTarget.Name, Equals, "name-1")
 	c.Assert(testedTarget.Host, Equals, "host-1")
 	c.Assert(testedTarget.Comment, DeepEquals, utils.PointerOfCloneString("comment-1"))
-	c.Assert(testedTarget.NameTagValue, Equals, "name-tag-1")
+	c.Assert(testedTarget.NameTagValue, DeepEquals, ps("name-tag-1"))
 	c.Assert(testedTarget.GroupTags, DeepEquals, []string{ "gt-1", "gt-2" })
 }
 
