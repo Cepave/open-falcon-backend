@@ -6,7 +6,6 @@ import (
 	"net"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/jinzhu/gorm"
@@ -988,7 +987,7 @@ func (p *refreshNqmAgentProcessor) BootCallback(tx *sqlx.Tx) bool {
 		`,
 		p.req.Hostname,
 		p.req.IpAddress,
-		time.Now().Unix(),
+		p.req.Timestamp,
 		p.req.ConnectionId,
 	)
 
@@ -1020,7 +1019,7 @@ func (p *refreshNqmAgentProcessor) IfTrue(tx *sqlx.Tx) {
 		p.req.ConnectionId,
 		p.req.Hostname,
 		p.req.IpAddress,
-		time.Now().Unix(),
+		p.req.Timestamp,
 		p.req.Hostname,
 	)
 }
