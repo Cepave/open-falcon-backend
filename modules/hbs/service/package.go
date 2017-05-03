@@ -3,6 +3,8 @@ package service
 import (
 	"net/url"
 
+	"github.com/Cepave/open-falcon-backend/common/model/config"
+
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/dghubble/sling"
@@ -13,9 +15,8 @@ var logger = log.NewDefaultLogger("INFO")
 var updateOnlyFlag bool
 var mysqlApiSling *sling.Sling
 
-func InitPackage() {
-	mysqlApiConfig := g.Config().MysqlApi
-	mysqlApiUrl := resolveUrl(mysqlApiConfig.Host, mysqlApiConfig.Resource)
+func InitPackage(cfg *config.MysqlApiConfig) {
+	mysqlApiUrl := resolveUrl(cfg.Host, cfg.Resource)
 	mysqlApiSling = sling.New().Base(mysqlApiUrl)
 
 	if g.Config().Hosts != "" {
