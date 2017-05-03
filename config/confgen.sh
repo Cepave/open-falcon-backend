@@ -18,6 +18,7 @@ confs=(
     [%%TRANSFER_RPC%%]=0.0.0.0:8433
     [%%FE%%]=127.0.0.1:1235
 	[%%CASSANDRA_SERVICE%%]=127.0.0.1:6171
+    [%%MYSQL_SERVICE%%]=127.0.0.1:6040
     [%%MYSQL%%]="root:password@tcp(127.0.0.1:3306)"
 )
 
