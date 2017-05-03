@@ -9,9 +9,10 @@ import (
 )
 
 type AgentHeartbeatService struct {
-	started         bool
-	slingInit       *sling.Sling
-	rowsAffectedCnt int64
+	started          bool
+	slingInit        *sling.Sling
+	rowsAffectedCnt  int64
+	agentsDroppedCnt int64
 }
 
 func NewAgentHeartbeatService(httpClient *http.Client) *AgentHeartbeatService {
@@ -49,6 +50,10 @@ func (s *AgentHeartbeatService) CurrentSize() int {
 	return 0
 }
 
+func (s *AgentHeartbeatService) CumulativeAgentsDropped() int64 {
+	return s.agentsDroppedCnt
+}
+
 func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
 }
@@ -62,6 +67,7 @@ func (s *AgentHeartbeatService) Heartbeat(agents []*model.AgentHeartbeat) {
 	res := model.AgentHeartbeatResult{}
 	err := osling.ToSlintExt(s.slingInit).DoReceive(http.StatusOK, &res)
 	if err != nil {
+		s.agentsDroppedCnt += int64(len(agents))
 		logger.Errorln("Heartbeat:", err)
 	}
 
