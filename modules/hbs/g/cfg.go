@@ -21,6 +21,7 @@ type GlobalConfig struct {
 	Listen    string      `json:"listen"`
 	Trustable []string    `json:"trustable"`
 	Http      *HttpConfig `json:"http"`
+	MysqlApi  string      `json:"mysql_api"`
 }
 
 var (
