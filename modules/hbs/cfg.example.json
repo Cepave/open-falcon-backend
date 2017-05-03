@@ -17,5 +17,8 @@
             "agent_ping_list": 20
         }
     },
-    "mysql_api": "127.0.0.1:6040"
+    "mysql_api": {
+        "host": "http://127.0.0.1:6040",
+        "resource": ""
+    }
 }

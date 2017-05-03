@@ -13,15 +13,20 @@ type HttpConfig struct {
 	Listen  string `json:"listen"`
 }
 
+type MysqlApiConfig struct {
+	Host     string `json:"host"`
+	Resource string `json:"resource"`
+}
+
 type GlobalConfig struct {
-	Debug     bool        `json:"debug"`
-	Hosts     string      `json:"hosts"`
-	Database  string      `json:"database"`
-	MaxIdle   int         `json:"maxIdle"`
-	Listen    string      `json:"listen"`
-	Trustable []string    `json:"trustable"`
-	Http      *HttpConfig `json:"http"`
-	MysqlApi  string      `json:"mysql_api"`
+	Debug     bool            `json:"debug"`
+	Hosts     string          `json:"hosts"`
+	Database  string          `json:"database"`
+	MaxIdle   int             `json:"maxIdle"`
+	Listen    string          `json:"listen"`
+	Trustable []string        `json:"trustable"`
+	Http      *HttpConfig     `json:"http"`
+	MysqlApi  *MysqlApiConfig `json:"mysql_api"`
 }
 
 var (
