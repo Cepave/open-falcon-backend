@@ -969,44 +969,26 @@ type refreshNqmAgentProcessor struct {
 }
 
 func (p *refreshNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	if p.BootCallback(tx) {
-		p.IfTrue(tx)
-	}
-
-	return commonDb.TxCommit
-}
-
-func (p *refreshNqmAgentProcessor) BootCallback(tx *sqlx.Tx) bool {
-	result := DbFacade.SqlxDb.MustExec(
-		`
+	selectStmt := sqlxExt.ToStmtExt(sqlxExt.ToTxExt(tx).Preparex(`
+		SELECT ag_id
+		FROM nqm_agent
+		WHERE ag_connection_id = ?
+	`))
+	updateStmt := sqlxExt.ToTxExt(tx).Preparex(`
 		UPDATE nqm_agent
 		SET ag_hostname = ?,
 			ag_ip_address = ?,
 			ag_last_heartbeat = FROM_UNIXTIME(?)
 		WHERE ag_connection_id = ?
-		`,
-		p.req.Hostname,
-		p.req.IpAddress,
-		p.req.Timestamp,
-		p.req.ConnectionId,
-	)
-
-	return commonDb.ToResultExt(result).RowsAffected() == 0
-}
-
-func (p *refreshNqmAgentProcessor) IfTrue(tx *sqlx.Tx) {
-	tx.MustExec(
-		`
+			AND ag_last_heartbeat < FROM_UNIXTIME(?)
+	`)
+	insertHostStmt := sqlxExt.ToTxExt(tx).Preparex(`
 		INSERT INTO host(hostname, ip, agent_version, plugin_version)
 		VALUES(?, ?, '', '')
 		ON DUPLICATE KEY UPDATE
 			ip = VALUES(ip)
-		`,
-		p.req.Hostname,
-		p.req.IpAddress,
-	)
-	tx.MustExec(
-		`
+	`)
+	insertNqmAgentStmt := sqlxExt.ToTxExt(tx).Preparex(`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)
 		SELECT ?, ?, ?, FROM_UNIXTIME(?), id
 		FROM host
@@ -1015,7 +997,32 @@ func (p *refreshNqmAgentProcessor) IfTrue(tx *sqlx.Tx) {
 			ag_hostname = VALUES(ag_hostname),
 			ag_ip_address = VALUES(ag_ip_address),
 			ag_last_heartbeat = VALUES(ag_last_heartbeat)
-		`,
+	`)
+
+	if p.isExistent(selectStmt) {
+		updateStmt.MustExec(
+			p.req.Hostname,
+			p.req.IpAddress,
+			p.req.Timestamp,
+			p.req.ConnectionId,
+			p.req.Timestamp,
+		)
+	} else {
+		p.insert(insertHostStmt, insertNqmAgentStmt)
+	}
+	return commonDb.TxCommit
+}
+
+func (p *refreshNqmAgentProcessor) isExistent(s *sqlxExt.StmtExt) bool {
+	return s.GetOrNoRow(new(int), p.req.ConnectionId)
+}
+
+func (p *refreshNqmAgentProcessor) insert(hs *sqlx.Stmt, ns *sqlx.Stmt) {
+	hs.MustExec(
+		p.req.Hostname,
+		string(p.req.IpAddress),
+	)
+	ns.MustExec(
 		p.req.ConnectionId,
 		p.req.Hostname,
 		p.req.IpAddress,
