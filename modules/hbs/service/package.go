@@ -22,6 +22,8 @@ func InitPackage(cfg *config.MysqlApiConfig) {
 	if g.Config().Hosts != "" {
 		updateOnlyFlag = true
 	}
+
+	agentHeartbeatService = NewAgentHeartbeatService()
 }
 
 func NewSlingBase() *sling.Sling {
