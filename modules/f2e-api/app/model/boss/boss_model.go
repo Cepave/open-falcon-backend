@@ -20,6 +20,6 @@ func (this BossHost) TableName() string {
 func GetBossObjs() (res []BossHost) {
 	db := con.Con()
 	res = []BossHost{}
-	db.Boss.Select("platform, province, isp, idc, ip, hostname").Table("hosts").Where("exist = 1 and activate = 1").Scan(&res)
+	db.Boss.Select("platform, province, isp, idc, ip, hostname").Table("hosts").Where("exist = 1").Scan(&res)
 	return res
 }
