@@ -3,6 +3,7 @@ package alarm
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
@@ -22,7 +23,7 @@ type APIGetAlarmListsInputs struct {
 	//number of reacord's limit on each page
 	Limit int `json:"limit" form:"limit"`
 	//pagging
-	Page int `json:"page"`
+	Page int `json:"page" form:"page"`
 }
 
 func (input APIGetAlarmListsInputs) checkInputsContain() error {
@@ -89,6 +90,7 @@ func AlarmLists(c *gin.Context) {
 	//set default
 	inputs.Page = -1
 	inputs.Priority = -1
+	inputs.Limit = 50
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
@@ -108,15 +110,33 @@ func AlarmLists(c *gin.Context) {
 			inputs.Limit = 2000
 		}
 		perparedSql = fmt.Sprintf("select * from %s %s order by timestamp DESC limit %d", f.TableName(), filterCollector, inputs.Limit)
+		db.Alarm.Raw(perparedSql).Find(&cevens)
+		h.JSONR(c, map[string]interface{}{
+			"limit":    inputs.Limit,
+			"priority": inputs.Priority,
+			"data":     cevens,
+		})
+		return
 	} else {
 		//set the max limit of each page
 		if inputs.Limit >= 50 {
 			inputs.Limit = 50
 		}
 		perparedSql = fmt.Sprintf("select * from %s %s  order by timestamp DESC limit %d,%d", f.TableName(), filterCollector, inputs.Page, inputs.Limit)
+		db.Alarm.Raw(perparedSql).Find(&cevens)
+		var totalCount int64
+		db.Alarm.Raw(fmt.Sprintf("select count(id) from %s %s ", f.TableName(), filterCollector)).Count(&totalCount)
+		totalPage := math.Ceil(float64(totalCount) / float64(inputs.Limit))
+		h.JSONR(c, map[string]interface{}{
+			"total_count":  totalCount,
+			"total_page":   totalPage,
+			"current_page": inputs.Page,
+			"limit":        inputs.Limit,
+			"priority":     inputs.Priority,
+			"data":         cevens,
+		})
+		return
 	}
-	db.Alarm.Raw(perparedSql).Find(&cevens)
-	h.JSONR(c, cevens)
 }
 
 type APIEventsGetInputs struct {
@@ -156,6 +176,8 @@ func (s APIEventsGetInputs) collectFilters() string {
 func EventsGet(c *gin.Context) {
 	var inputs APIEventsGetInputs
 	inputs.Status = -1
+	inputs.Page = -1
+	inputs.Limit = 10
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
@@ -164,9 +186,6 @@ func EventsGet(c *gin.Context) {
 	//for get correct table name
 	f := alm.Events{}
 	evens := []alm.Events{}
-	if inputs.Limit == 0 || inputs.Limit >= 50 {
-		inputs.Limit = 50
-	}
 	perparedSql := fmt.Sprintf("select id, event_caseId, cond, status, timestamp from %s %s order by timestamp DESC limit %d,%d", f.TableName(), filterCollector, inputs.Page, inputs.Limit)
 	db.Alarm.Raw(perparedSql).Scan(&evens)
 	h.JSONR(c, evens)
