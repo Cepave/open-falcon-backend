@@ -2,6 +2,7 @@ package service
 
 import (
 	"net/http"
+	"sync"
 	"time"
 
 	osling "github.com/Cepave/open-falcon-backend/common/sling"
@@ -12,6 +13,7 @@ import (
 var agentHeartbeatService *AgentHeartbeatService
 
 type AgentHeartbeatService struct {
+	sync.WaitGroup
 	started          bool
 	slingInit        *sling.Sling
 	rowsAffectedCnt  int64
@@ -32,22 +34,45 @@ func (s *AgentHeartbeatService) Start() {
 	 * ToDo
 	 * Initial & start queue
 	 */
-	s.started = true
 
+	s.started = true
+	s.Add(1)
 	go func() {
+		defer s.Done()
+
 		for {
+			if !s.started {
+				break
+			}
+
 			if s.CurrentSize() > 0 {
-				/*
-				 * ToDo
-				 * Get agents from queue
-				 */
-				toDoGetAgents := make([]*model.AgentHeartbeat, 10)
-				s.Heartbeat(toDoGetAgents)
+				s.consumeHeartbeatQueue()
 			} else {
-				time.Sleep(2 * time.Second)
+				time.Sleep(5 * time.Second)
 			}
 		}
+
+		s.flushHeartbeatQueue()
 	}()
+}
+
+func (s *AgentHeartbeatService) consumeHeartbeatQueue() {
+	/*
+	 * ToDo
+	 * Get agents from queue
+	 */
+	toDoGetAgents := make([]*model.AgentHeartbeat, 10)
+	s.Heartbeat(toDoGetAgents)
+}
+
+func (s *AgentHeartbeatService) flushHeartbeatQueue() {
+	/*
+	 * ToDo
+	 * Flush the queue
+	 */
+	for s.CurrentSize() > 0 {
+		s.consumeHeartbeatQueue()
+	}
 }
 
 func (s *AgentHeartbeatService) Stop() {
@@ -66,13 +91,7 @@ func (s *AgentHeartbeatService) Stop() {
 	/**
 	 * Waiting for queue to be processed
 	 */
-	maxTimes := 15
-	for queueSize > 0 && maxTimes > 0 {
-		time.Sleep(2 * time.Second)
-		maxTimes--
-		queueSize = s.CurrentSize()
-		logger.Infof("Sleep for 2 seconds to wait queue to be processed... Current size: [%d]", queueSize)
-	}
+	s.Wait()
 }
 
 func (s *AgentHeartbeatService) CurrentSize() int {
