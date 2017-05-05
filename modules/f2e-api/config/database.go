@@ -13,6 +13,8 @@ type DBPool struct {
 	Graph     *gorm.DB
 	Uic       *gorm.DB
 	Dashboard *gorm.DB
+	Alarm     *gorm.DB
+
 	//fastweb only
 	Boss *gorm.DB
 }
@@ -28,8 +30,12 @@ func Con() DBPool {
 func SetLogLevel(loggerlevel bool) {
 	dbp.Uic.LogMode(loggerlevel)
 	dbp.Graph.LogMode(loggerlevel)
-	dbp.Graph.LogMode(loggerlevel)
+	dbp.Falcon.LogMode(loggerlevel)
+	dbp.Dashboard.LogMode(loggerlevel)
+	dbp.Alarm.LogMode(loggerlevel)
+	dbp.Boss.LogMode(loggerlevel)
 }
+
 func InitDB(loggerlevel bool) (err error) {
 	var p *sql.DB
 	portal, err := gorm.Open("mysql", viper.GetString("db.faclon_portal"))
@@ -71,6 +77,16 @@ func InitDB(loggerlevel bool) (err error) {
 	dashd.SingularTable(true)
 	dbp.Dashboard = dashd
 
+	var alm *sql.DB
+	almd, err := gorm.Open("mysql", viper.GetString("db.alarms"))
+	almd.Dialect().SetDB(alm)
+	almd.LogMode(loggerlevel)
+	if err != nil {
+		return
+	}
+	almd.SingularTable(true)
+	dbp.Alarm = almd
+
 	//fastweb only
 	var b *sql.DB
 	bossd, err := gorm.Open("mysql", viper.GetString("db.boss"))
@@ -104,6 +120,10 @@ func CloseDB() (err error) {
 	if err != nil {
 		return
 	}
+	err = dbp.Alarm.Close()
+	if err != nil {
+		return
+	}
 
 	//fastweb only
 	err = dbp.Boss.Close()
@@ -131,6 +151,10 @@ func (db DBPool) HealthCheck() (errorBool int, errorTable []string) {
 	}
 	if err := db.Uic.DB().Ping(); err != nil {
 		errorTable = append(errorTable, "uic")
+		errorBool = 1
+	}
+	if err := db.Alarm.DB().Ping(); err != nil {
+		errorTable = append(errorTable, "alarm")
 		errorBool = 1
 	}
 	return

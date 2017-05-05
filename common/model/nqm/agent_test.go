@@ -5,9 +5,9 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/common/conform"
 
-	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
 	otest "github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	testV "github.com/Cepave/open-falcon-backend/common/testing/validator"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	. "gopkg.in/check.v1"
 )
@@ -42,26 +42,25 @@ func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 // Tests the data validation of AgentForAdding
 func (suite *TestAgentSuite) TestValidateOfAgentForAdding(c *C) {
 	testCases := []*struct {
-		fieldName string
+		fieldName  string
 		fieldValue interface{}
-	} {
-		{ "ConnectionId", "" },
-		{ "Hostname", "" },
-		{ "IspId", int16(0) },
-		{ "ProvinceId", int16(0) },
-		{ "CityId", int16(0) },
+	}{
+		{"ConnectionId", ""},
+		{"Hostname", ""},
+		{"IspId", int16(0)},
+		{"ProvinceId", int16(0)},
+		{"CityId", int16(0)},
 	}
-
 
 	for _, testCase := range testCases {
 		ocheck.LogTestCase(c, testCase)
 
 		sampleAgent := &AgentForAdding{
 			ConnectionId: "conn_id",
-			Hostname: "hostname",
-			IspId: -1,
-			ProvinceId: -1,
-			CityId: -1,
+			Hostname:     "hostname",
+			IspId:        -1,
+			ProvinceId:   -1,
+			CityId:       -1,
 		}
 
 		// Sets-up should-be-failed property
@@ -78,11 +77,11 @@ func (suite *TestAgentSuite) TestValidateOfAgentForAdding(c *C) {
 // Tests the getting of duration of time
 func (suite *TestAgentSuite) TestGetDurationOfLastAccessOnPingListLog(c *C) {
 	testCases := []*struct {
-		checkedTime string
+		checkedTime     string
 		expectedMinutes int64
-	} {
-		{ "2014-06-07T08:13:07+08:00", 13 },
-		{ "2014-06-07T10:00:33+08:00", 120 },
+	}{
+		{"2014-06-07T08:13:07+08:00", 13},
+		{"2014-06-07T10:00:33+08:00", 120},
 	}
 
 	accessTime := otest.ParseTime(c, "2014-06-07T08:00:00+08:00")
@@ -90,7 +89,7 @@ func (suite *TestAgentSuite) TestGetDurationOfLastAccessOnPingListLog(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		testedLog := &PingListLog{ AccessTime: accessTime }
+		testedLog := &PingListLog{AccessTime: accessTime}
 		checkedTime := otest.ParseTime(c, testCase.checkedTime)
 
 		c.Assert(testedLog.GetDurationOfLastAccess(checkedTime), Equals, testCase.expectedMinutes, comment)

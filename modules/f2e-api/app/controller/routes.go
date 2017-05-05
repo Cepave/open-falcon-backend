@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/alarm"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboardGraphOwl"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboardScreenOWl"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/expression"
@@ -71,5 +72,6 @@ func StartGin(port string, r *gin.Engine) {
 	mockcfg.Routes(r)
 	dashboardScreenOWl.Routes(r)
 	dashboardGraphOwl.Routes(r)
+	alarm.Routes(r)
 	r.Run(port)
 }

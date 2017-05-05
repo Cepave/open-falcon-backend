@@ -691,25 +691,27 @@ var orderByDialectForAgents = commonModel.NewSqlOrderByDialect(
 	},
 )
 
+type myFunc func(*commonModel.OrderByEntity) (string, error)
+
 func init() {
-	originFunc := orderByDialectForAgents.FuncEntityToSyntax
+	agentsOriginFunc := orderByDialectForAgents.FuncEntityToSyntax
 	orderByDialectForAgents.FuncEntityToSyntax = func(entity *commonModel.OrderByEntity) (string, error) {
 		switch entity.Expr {
 		case "group_tag":
 			return owlDb.GetSyntaxOfOrderByGroupTags(entity), nil
 		}
 
-		return originFunc(entity)
+		return agentsOriginFunc(entity)
 	}
 
-	originFunc = orderByDialectForAgentPingListTargets.FuncEntityToSyntax
+	agentPingListTargetsOriginFunc := orderByDialectForAgentPingListTargets.FuncEntityToSyntax
 	orderByDialectForAgentPingListTargets.FuncEntityToSyntax = func(entity *commonModel.OrderByEntity) (string, error) {
 		switch entity.Expr {
 		case "group_tag":
 			return owlDb.GetSyntaxOfOrderByGroupTags(entity), nil
 		}
 
-		return originFunc(entity)
+		return agentPingListTargetsOriginFunc(entity)
 	}
 }
 
