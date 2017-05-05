@@ -66,6 +66,10 @@ func InsertEvent(eve *coommonModel.Event) {
 					strategy_id,
 					template_id
 					) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+		tpl_creator := ""
+		if eve.Tpl() != nil {
+			tpl_creator = eve.Tpl().Creator
+		}
 		sqlLog, errRes = q.Raw(
 			sqltemplete,
 			eve.Id,
@@ -74,7 +78,7 @@ func InsertEvent(eve *coommonModel.Event) {
 			eve.Func(),
 			//cond
 			fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
-			eve.Strategy.Note,
+			eve.Note(),
 			eve.MaxStep(),
 			eve.CurrentStep,
 			eve.Priority(),
@@ -83,7 +87,7 @@ func InsertEvent(eve *coommonModel.Event) {
 			time.Unix(eve.EventTime, 0).Format(timeLayout),
 			//update_at
 			time.Unix(eve.EventTime, 0).Format(timeLayout),
-			eve.Strategy.Tpl.Creator,
+			tpl_creator,
 			eve.ExpressionId(),
 			eve.StrategyId(),
 			//template_id
@@ -108,6 +112,10 @@ func InsertEvent(eve *coommonModel.Event) {
 			sqltemplete = fmt.Sprintf("%v ,process_status = '%s', process_note = %d", sqltemplete, "unresolved", 0)
 		}
 
+		tpl_creator := ""
+		if eve.Tpl() != nil {
+			tpl_creator = eve.Tpl().Creator
+		}
 		if eve.CurrentStep == 1 {
 			//update start time of cases
 			sqltemplete = fmt.Sprintf("%v ,timestamp = ? WHERE id = ?", sqltemplete)
@@ -116,12 +124,12 @@ func InsertEvent(eve *coommonModel.Event) {
 				time.Unix(eve.EventTime, 0).Format(timeLayout),
 				eve.MaxStep(),
 				eve.CurrentStep,
-				eve.Strategy.Note,
+				eve.Note(),
 				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 				eve.Status,
 				eve.Func(),
 				eve.Priority(),
-				eve.Strategy.Tpl.Creator,
+				tpl_creator,
 				eve.ExpressionId(),
 				eve.StrategyId(),
 				eve.TplId(),
@@ -135,12 +143,12 @@ func InsertEvent(eve *coommonModel.Event) {
 				time.Unix(eve.EventTime, 0).Format(timeLayout),
 				eve.MaxStep(),
 				eve.CurrentStep,
-				eve.Strategy.Note,
+				eve.Note(),
 				fmt.Sprintf("%v %v %v", eve.LeftValue, eve.Operator(), eve.RightValue()),
 				eve.Status,
 				eve.Func(),
 				eve.Priority(),
-				eve.Strategy.Tpl.Creator,
+				tpl_creator,
 				eve.ExpressionId(),
 				eve.StrategyId(),
 				eve.TplId(),
