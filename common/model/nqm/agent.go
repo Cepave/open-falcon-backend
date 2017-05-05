@@ -64,7 +64,7 @@ func (agent *AgentForAdding) GetIpAddressAsString() string {
 type Agent struct {
 	Id                    int32   `gorm:"primary_key:true;column:ag_id"`
 	Name                  *string `gorm:"column:ag_name"`
-	ConnectionId          string  `gorm:"column:ag_connection_id""`
+	ConnectionId          string  `gorm:"column:ag_connection_id"`
 	Hostname              string  `gorm:"column:ag_hostname"`
 	NumOfEnabledPingtasks int32   `gorm:"column:ag_num_of_enabled_pingtasks"`
 

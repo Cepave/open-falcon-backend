@@ -10,6 +10,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/jinzhu/gorm"
 	"github.com/jmoiron/sqlx"
+	"github.com/juju/errors"
 
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
@@ -350,7 +351,9 @@ func buildSortingClauseOfAgentPingListTarget(paging *commonModel.Paging) string 
 	}
 
 	querySyntax, err := orderByDialectForAgentPingListTargets.ToQuerySyntax(paging.OrderBy)
-	gormExt.DefaultGormErrorConverter.PanicIfError(err)
+	gormExt.DefaultGormErrorConverter.PanicIfError(
+		errors.Annotate(err, "Order by to query syntax has error"),
+	)
 
 	return querySyntax
 }
@@ -733,7 +736,9 @@ func buildSortingClauseOfAgentsWithPingTask(paging *commonModel.Paging) string {
 	}
 
 	querySyntax, err := orderByDialectForAgents.ToQuerySyntax(paging.OrderBy)
-	gormExt.DefaultGormErrorConverter.PanicIfError(err)
+	gormExt.DefaultGormErrorConverter.PanicIfError(
+		errors.Annotate(err, "Order by to query syntax has error"),
+	)
 
 	return querySyntax
 }
@@ -755,7 +760,9 @@ func buildSortingClauseOfAgents(paging *commonModel.Paging) string {
 	}
 
 	querySyntax, err := orderByDialectForAgents.ToQuerySyntax(paging.OrderBy)
-	gormExt.DefaultGormErrorConverter.PanicIfError(err)
+	gormExt.DefaultGormErrorConverter.PanicIfError(
+		errors.Annotate(err, "Order by to query syntax has error"),
+	)
 
 	return querySyntax
 }
