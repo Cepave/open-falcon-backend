@@ -45,33 +45,35 @@ func (s *AgentHeartbeatService) Start() {
 				break
 			}
 
-			if s.CurrentSize() > 0 {
-				s.consumeHeartbeatQueue()
-			} else {
-				time.Sleep(5 * time.Second)
+			s.consumeHeartbeatQueue(100*time.Millisecond, false)
+
+			if !s.started {
+				break
 			}
+
+			time.Sleep(5 * time.Second)
 		}
 
-		s.flushHeartbeatQueue()
+		s.consumeHeartbeatQueue(0, true)
 	}()
 }
 
-func (s *AgentHeartbeatService) consumeHeartbeatQueue() {
-	/*
-	 * ToDo
-	 * Get agents from queue
-	 */
-	toDoGetAgents := make([]*model.AgentHeartbeat, 10)
-	s.Heartbeat(toDoGetAgents)
-}
+func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration, logFlag bool) {
+	for {
+		/*
+		 * ToDo
+		 * Pop agents from queue.
+		 */
+		toDoPopAgents := make([]*model.AgentHeartbeat, 10)
+		agentsNum := len(toDoPopAgents)
+		if agentsNum == 0 {
+			break
+		}
 
-func (s *AgentHeartbeatService) flushHeartbeatQueue() {
-	/*
-	 * ToDo
-	 * Flush the queue
-	 */
-	for s.CurrentSize() > 0 {
-		s.consumeHeartbeatQueue()
+		s.Heartbeat(toDoPopAgents)
+		if logFlag {
+			logger.Infof("Flushing [%d] agents", agentsNum)
+		}
 	}
 }
 
@@ -85,8 +87,7 @@ func (s *AgentHeartbeatService) Stop() {
 	 * Close/Stop queue
 	 */
 	s.started = false
-	queueSize := s.CurrentSize()
-	logger.Infof("Stopping AgentHeartbeatService. Size of queue: [%d]", queueSize)
+	logger.Infof("Stopping AgentHeartbeatService. Size of queue: [%d]", s.CurrentSize())
 
 	/**
 	 * Waiting for queue to be processed
