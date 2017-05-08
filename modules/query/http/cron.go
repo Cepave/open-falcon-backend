@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -1199,9 +1200,52 @@ func updateIPsTable(IPNames []string, IPsMap map[string]map[string]string) {
 	}
 }
 
+/*
+DROP TEMPORARY TABLE IF EXISTS temp;
+CREATE TEMPORARY TABLE temp LIKE hosts;
+
+# 將資料從「外部」填入 temp 表之中
+# 利用迴圈來建構 SQL 的 values part。
+# 需要注意 mysql max_allowed_packet 的常數。
+INSERT INTO temp
+(hostname, exist, activate, platform, platforms, idc, ip, isp, province, city, updated)
+       VALUES    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW());
+
+# 開始交易
+BEGIN;
+
+UPDATE hosts
+INNER JOIN temp
+ON   hosts.hostname =   temp.hostname
+SET hosts.exist = 1, hosts.activate = temp.activate, hosts.platform = temp.platform,
+    hosts.platforms = temp.platforms, hosts.idc = temp.idc, hosts.ip = temp.ip,
+    hosts.isp = temp.isp, hosts.province = temp.province, hosts.city = temp.city,
+    hosts.updated = temp.updated;
+
+
+INSERT INTO hosts(hostname, exist, activate, platform, platforms, idc, ip, isp, province, city, updated)
+SELECT temp.hostname, temp.exist, temp.activate, temp.platform, temp.platforms, temp.idc,
+       temp.ip, temp.isp, temp.province, temp.city, temp.updated
+FROM temp LEFT JOIN hosts
+ON  temp.hostname = hosts.hostname
+WHERE hosts.hostname IS NULL;
+
+# 結束交易
+COMMIT;
+
+DROP TEMPORARY TABLE temp;
+
+# exist 的處理。
+DROP TEMPORARY TABLE IF EXISTS tt;
+
+CREATE TEMPORARY TABLE tt AS (SELECT id FROM hosts WHERE exist = 1 AND updated <= DATE_SUB(NOW(),INTERVAL 10 MINUTE) LIMIT 30);
+
+UPDATE hosts a INNER JOIN tt b ON a.id = b.id SET a.exist = 0;
+
+DROP TEMPORARY TABLE tt;
+*/
 func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string) {
 	log.Debugf("func updateHostsTable()")
-	now := getNow()
 	idcMap := getIDCMap()
 	hosts := []map[string]string{}
 	for _, hostname := range hostnames {
@@ -1231,67 +1275,99 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 	o := orm.NewOrm()
 	o.Using("boss")
 	var rows []orm.Params
-	sql := "SELECT updated FROM `boss`.`hosts` WHERE exist = 1 ORDER BY updated DESC LIMIT 1"
+	sql := fmt.Sprintf("SELECT updated FROM hosts WHERE exist = 1 AND updated <= DATE_SUB(NOW(), INTERVAL %v SECOND) limit 1;", g.Config().Hosts.Interval)
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
 		log.Errorf(err.Error())
 		return
-	} else if num > 0 {
-		format := "2006-01-02 15:04:05"
-		updatedTime, _ := time.Parse(format, rows[0]["updated"].(string))
-		currentTime, _ := time.Parse(format, getNow())
-		diff := currentTime.Unix() - updatedTime.Unix()
-		if int(diff) < g.Config().Hosts.Interval {
-			return
-		}
+	} else if num == 0 {
+		log.Debugln("boss.hosts have no rows out of date.")
+		return
 	}
 
-	for _, host := range hosts {
-		sql = "SELECT id FROM boss.hosts WHERE hostname = ? LIMIT 1"
-		num, err := o.Raw(sql, host["hostname"]).Values(&rows)
-		if num == 0 {
-			sql := "INSERT INTO boss.hosts("
-			sql += "hostname, exist, activate, platform, platforms, idc, ip, "
-			sql += "isp, province, city, updated) "
-			sql += "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-			_, err := o.Raw(sql, host["hostname"], 1, host["activate"], host["platform"], host["platforms"], host["IDC"], host["IP"], host["ISP"], host["province"], host["city"], now).Exec()
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		} else if err != nil {
-			log.Errorf(err.Error())
-		} else if num > 0 {
-			row := rows[0]
-			ID := row["id"]
-			sql = "UPDATE boss.hosts"
-			sql += " SET exist = ?, activate = ?, platform = ?,"
-			sql += " platforms = ?, idc = ?, ip = ?, isp = ?,"
-			sql += " province = ?, city = ?, updated = ?"
-			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, 1, host["activate"], host["platform"], host["platforms"], host["IDC"], host["IP"], host["ISP"], host["province"], host["city"], now, ID).Exec()
-			if err != nil {
-				log.Errorf(err.Error())
-			}
-		}
-	}
-
-	sql = "SELECT id FROM boss.hosts WHERE exist = ?"
-	sql += " AND updated <= DATE_SUB(CONVERT_TZ(NOW(),@@session.time_zone,'+08:00'),"
-	sql += " INTERVAL 10 MINUTE) LIMIT 30"
-	num, err = o.Raw(sql, 1).Values(&rows)
+	// do real update and insert
+	// put data into temporary table
+	_, err = o.Raw("DROP TEMPORARY TABLE IF EXISTS temp;").Exec()
 	if err != nil {
 		log.Errorf(err.Error())
-	} else if num > 0 {
-		for _, row := range rows {
-			ID := row["id"]
-			sql = "UPDATE boss.hosts"
-			sql += " SET exist = ?"
-			sql += " WHERE id = ?"
-			_, err := o.Raw(sql, 0, ID).Exec()
-			if err != nil {
-				log.Errorf(err.Error())
-			}
+	}
+	_, err = o.Raw("CREATE TEMPORARY TABLE temp LIKE hosts;").Exec()
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	sql = "INSERT INTO temp (hostname, exist, activate, platform, platforms, idc, ip, isp, province, city, updated) VALUES"
+	for i, host := range hosts {
+		if i != 0 {
+			sql += ","
 		}
+		sql += fmt.Sprintf("('%v', %v, %v, '%v', '%v', '%v', '%v', '%v', '%v', '%v', NOW()) ",
+			host["hostname"], 1, host["activate"], host["platform"], host["platforms"], host["IDC"],
+			host["IP"], host["ISP"], host["province"], host["city"])
+		if i == (len(hosts) - 1) {
+			sql += ";"
+		}
+	}
+	_, err = o.Raw(sql).Exec()
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	// begin transaction to join base table with temporary table
+	err = o.Begin()
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	// SQL update statement
+	sql = "UPDATE hosts INNER JOIN temp ON hosts.hostname = temp.hostname "
+	sql += " SET hosts.exist = 1, hosts.activate = temp.activate, hosts.platform = temp.platform,"
+	sql += " hosts.platforms = temp.platforms, hosts.idc = temp.idc, hosts.ip = temp.ip,"
+	sql += " hosts.isp = temp.isp, hosts.province = temp.province, hosts.city = temp.city,"
+	sql += " hosts.updated = temp.updated;"
+	_, UpdateError := o.Raw(sql).Exec()
+	// SQL insert statement
+	sql = "INSERT INTO hosts(hostname, exist, activate, platform, platforms, idc, ip, isp, province, city, updated)"
+	sql += " SELECT temp.hostname, temp.exist, temp.activate, temp.platform, temp.platforms, temp.idc,"
+	sql += " temp.ip, temp.isp, temp.province, temp.city, temp.updated"
+	sql += " FROM temp LEFT JOIN hosts ON  temp.hostname = hosts.hostname"
+	sql += " WHERE hosts.hostname IS NULL;"
+	_, InsertError := o.Raw(sql).Exec()
+	// Commit or Rollback
+	if UpdateError != nil || InsertError != nil {
+		log.Errorf(UpdateError.Error())
+		log.Errorf(InsertError.Error())
+		err := o.Rollback()
+		if err != nil {
+			log.Errorf(err.Error())
+		}
+	} else {
+		err := o.Commit()
+		if err != nil {
+			log.Errorf(err.Error())
+		}
+	}
+	_, err = o.Raw("DROP TEMPORARY TABLE IF EXISTS temp;").Exec()
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	// update the exist attribute of host
+	// put data into temp table
+	_, err = o.Raw("DROP TEMPORARY TABLE IF EXISTS tt;").Exec()
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	sql = "CREATE TEMPORARY TABLE tt AS (SELECT id FROM hosts WHERE exist = 1 AND updated <= DATE_SUB(NOW(), INTERVAL 10 MINUTE) LIMIT 30);"
+	_, err = o.Raw(sql).Exec()
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	// update
+	sql = "UPDATE hosts a INNER JOIN tt b ON a.id = b.id SET a.exist = 0;"
+	_, err = o.Raw(sql).Exec()
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	_, err = o.Raw("DROP TEMPORARY TABLE IF EXISTS tt;").Exec()
+	if err != nil {
+		log.Errorf(err.Error())
 	}
 }
 
