@@ -41,6 +41,8 @@ func StartGin(port string, r *gin.Engine) {
 	}
 	r.Use(cors.Middleware(corsConfig))
 	r.Use(utils.CORS())
+	// document routes
+	r.StaticFS("/doc", http.Dir("doc"))
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello, I'm OWL (｡A｡)")
 		return
