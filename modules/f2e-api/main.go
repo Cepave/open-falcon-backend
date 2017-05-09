@@ -11,9 +11,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/graph"
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gopkg.in/gin-gonic/gin.v1"
-	yaagGin "gopkg.in/masato25/yaag.v1/gin"
-	"gopkg.in/masato25/yaag.v1/yaag"
+	"github.com/gin-gonic/gin"
+	yaagGin "github.com/masato25/yaag/gin"
+	"github.com/masato25/yaag/yaag"
 )
 
 func initGraph() {

@@ -18,8 +18,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
-	"github.com/gin-contrib/cors"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
+	cors "github.com/itsjamie/gin-cors"
 )
 
 var headers = []string{
@@ -32,14 +32,14 @@ var corsConfig cors.Config
 
 func StartGin(port string, r *gin.Engine) {
 	corsConfig = cors.Config{
-		AllowMethods:     []string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "UPDATE"},
-		AllowAllOrigins:  true,
-		AllowHeaders:     headers,
-		ExposeHeaders:    headers,
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		Methods:        strings.Join([]string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "UPDATE"}, ","),
+		Origins:        "*",
+		RequestHeaders: strings.Join(headers, ","),
+		ExposedHeaders: strings.Join(headers, ","),
+		Credentials:    true,
+		MaxAge:         12 * time.Hour,
 	}
-	r.Use(cors.New(corsConfig))
+	r.Use(cors.Middleware(corsConfig))
 	r.Use(utils.CORS())
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello, I'm OWL (｡A｡)")
