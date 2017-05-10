@@ -1,10 +1,17 @@
 package restful
 
 import (
+	"time"
+
+	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
-
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
+	"github.com/jmoiron/sqlx"
 	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -37,6 +44,19 @@ var cacheConfig *CacheConfig = &CacheConfig{}
 
 func InitCache(config *CacheConfig) {
 	cacheConfig = config
+}
+
+type HeartbeatConfig struct {
+	BatchSize int
+	Duration  time.Duration
+}
+
+var heartbeatConfig *HeartbeatConfig = &HeartbeatConfig{}
+
+func InitHeartbeat(config *HeartbeatConfig) {
+	heartbeatConfig = config
+	commonNqmDb.HeartbeatReqQueue = commonQueue.New()
+	go drain()
 }
 
 func initApi() {
@@ -85,4 +105,44 @@ func initApi() {
 	v1.POST("/agent/heartbeat", mvcBuilder.BuildHandler(agentHeartbeat))
 
 	router.GET("/health", health)
+}
+
+type updateNqmAgentProcessor struct {
+	reqs []*nqmModel.AgentHeartbeatRequest
+}
+
+func (p *updateNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	updateStmt := sqlxExt.ToTxExt(tx).Preparex(`
+	UPDATE nqm_agent
+	SET ag_hostname = ?,
+		ag_ip_address = ?,
+		ag_last_heartbeat = FROM_UNIXTIME(?)
+	WHERE ag_connection_id = ?
+		AND ag_last_heartbeat < FROM_UNIXTIME(?)
+	`)
+
+	for _, e := range p.reqs {
+		updateStmt.MustExec(
+			e.Hostname,
+			e.IpAddress,
+			e.Timestamp,
+			e.ConnectionId,
+			e.Timestamp,
+		)
+	}
+	return commonDb.TxCommit
+}
+
+func drain() {
+	for {
+		reqs := commonNqmDb.HeartbeatReqQueue.DrainWithDuration(heartbeatConfig.BatchSize, heartbeatConfig.Duration)
+		var hbreqs []*nqmModel.AgentHeartbeatRequest
+		for _, req := range reqs {
+			hbreqs = append(hbreqs, req.(*nqmModel.AgentHeartbeatRequest))
+		}
+		updateTx := &updateNqmAgentProcessor{
+			reqs: hbreqs,
+		}
+		commonNqmDb.DbFacade.SqlxDbCtrl.InTx(updateTx)
+	}
 }

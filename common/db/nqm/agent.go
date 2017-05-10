@@ -19,6 +19,7 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	tb "github.com/Cepave/open-falcon-backend/common/textbuilder"
 	sqlb "github.com/Cepave/open-falcon-backend/common/textbuilder/sql"
 )
@@ -968,20 +969,14 @@ type refreshNqmAgentProcessor struct {
 	req *nqmModel.AgentHeartbeatRequest
 }
 
+var HeartbeatReqQueue *commonQueue.Queue
+
 func (p *refreshNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	selectStmt := sqlxExt.ToStmtExt(sqlxExt.ToTxExt(tx).Preparex(`
 		SELECT ag_id
 		FROM nqm_agent
 		WHERE ag_connection_id = ?
 	`))
-	updateStmt := sqlxExt.ToTxExt(tx).Preparex(`
-		UPDATE nqm_agent
-		SET ag_hostname = ?,
-			ag_ip_address = ?,
-			ag_last_heartbeat = FROM_UNIXTIME(?)
-		WHERE ag_connection_id = ?
-			AND ag_last_heartbeat < FROM_UNIXTIME(?)
-	`)
 	insertHostStmt := sqlxExt.ToTxExt(tx).Preparex(`
 		INSERT INTO host(hostname, ip, agent_version, plugin_version)
 		VALUES(?, ?, '', '')
@@ -1000,13 +995,7 @@ func (p *refreshNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	`)
 
 	if p.isExistent(selectStmt) {
-		updateStmt.MustExec(
-			p.req.Hostname,
-			p.req.IpAddress,
-			p.req.Timestamp,
-			p.req.ConnectionId,
-			p.req.Timestamp,
-		)
+		HeartbeatReqQueue.Enqueue(p.req)
 	} else {
 		p.insert(insertHostStmt, insertNqmAgentStmt)
 	}

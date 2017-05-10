@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
@@ -34,6 +35,7 @@ func main() {
 	rdb.InitRdb(toRdbConfig(config))
 	restful.InitGin(toGinConfig(config))
 	restful.InitCache(toCacheConfig(config))
+	restful.InitHeartbeat(toHeartbeatConfig(config))
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
 }
@@ -61,6 +63,13 @@ func toCacheConfig(config *viper.Viper) *restful.CacheConfig {
 	return &restful.CacheConfig{
 		Size:     config.GetInt("nqm.pingList.cache.size"),
 		Lifetime: config.GetInt("nqm.pingList.cache.lifetime"),
+	}
+}
+
+func toHeartbeatConfig(config *viper.Viper) *restful.HeartbeatConfig {
+	return &restful.HeartbeatConfig{
+		BatchSize: config.GetInt("heartbeat.nqm.batchSize"),
+		Duration:  time.Duration(config.GetInt("heartbeat.nqm.duration")) * time.Second,
 	}
 }
 
