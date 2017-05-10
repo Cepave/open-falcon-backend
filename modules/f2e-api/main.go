@@ -4,16 +4,18 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/graph"
 	log "github.com/Sirupsen/logrus"
-	"github.com/spf13/viper"
 	"github.com/gin-gonic/gin"
 	yaagGin "github.com/masato25/yaag/gin"
 	"github.com/masato25/yaag/yaag"
+	"github.com/spf13/viper"
 )
 
 func initGraph() {
@@ -64,5 +66,14 @@ func main() {
 	}
 	initGraph()
 	//start gin server
-	controller.StartGin(viper.GetString("web_port"), routes)
+	log.Debugf("will start with port:%v", viper.GetString("web_port"))
+	go controller.StartGin(viper.GetString("web_port"), routes)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		fmt.Println()
+		os.Exit(0)
+	}()
+	select {}
 }
