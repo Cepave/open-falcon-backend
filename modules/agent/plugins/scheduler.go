@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
+	"github.com/Cepave/open-falcon-backend/modules/agent/session"
 	log "github.com/Sirupsen/logrus"
 	"github.com/toolkits/file"
-	"github.com/toolkits/sys"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -133,7 +133,7 @@ func PluginRun(plugin *Plugin) {
 		log.Errorln(fpath, " start fails: ", err)
 	}
 
-	err, isTimeout := sys.CmdRunWithTimeout(cmd, time.Duration(timeout)*time.Millisecond)
+	err, isTimeout := session.CmdSessionRunWithTimeout(cmd, time.Duration(timeout)*time.Millisecond)
 
 	errStr := stderr.String()
 	if errStr != "" {
@@ -187,8 +187,10 @@ func PluginRun(plugin *Plugin) {
 
 	for j := 0; j < len(metrics); j++ {
 		metrics[j].Step = int64(sec)
-		metrics[j].Endpoint = hostname
 		metrics[j].Timestamp = now
+		if metrics[j].Endpoint == "" {
+			metrics[j].Endpoint = hostname
+		}
 	}
 
 	g.SendToTransfer(metrics)

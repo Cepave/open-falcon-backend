@@ -16,34 +16,49 @@ var _ = Suite(&TestQueryDetailSuite{})
 
 // Tests the marshalling of JSON for time filter
 func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
-	sampleRelative := &TimeFilter{
-		timeRangeType: TimeRangeRelative,
-		ToNow: &TimeWithUnit {
-			Unit: TimeUnitHour,
-			Value: 6,
-		},
-	}
-	relativeStartValue, relativeEndValue := sampleRelative.GetNetTimeRange()
-
+	sPtr := func(v string) *string { return &v }
 	testCases := []*struct {
 		timeFilter *TimeFilterDetail
-		expectedJson string
+		expectedJson func(*TimeFilterDetail) string
 	} {
-		{
+		{ // Absolute time
 			&TimeFilterDetail{
 				StartTime: t.ParseTimeToJsonTime(c, "2014-07-23T10:00:00Z"),
 				EndTime: t.ParseTimeToJsonTime(c, "2014-07-23T15:00:00Z"),
 				timeRangeType: TimeRangeAbsolute,
 			},
-			`{ "start_time": 1406109600, "end_time": 1406127600 }`,
+			func(d *TimeFilterDetail) string { return `{ "start_time": 1406109600, "end_time": 1406127600 }` },
 		},
-		{
-			(*TimeFilterDetail)(sampleRelative),
-			fmt.Sprintf(
-				`{ "to_now": { "unit": "h", "value": 6 }, "start_time": %d, "end_time": %d }`,
-				relativeStartValue.Unix(),
-				relativeEndValue.Unix(),
-			),
+		{ // Relative time(simple)
+			&TimeFilterDetail {
+				timeRangeType: TimeRangeRelative,
+				ToNow: &TimeWithUnit {
+					Unit: TimeUnitHour,
+					Value: 6,
+				},
+			},
+			func(d *TimeFilterDetail) string {
+				relativeStartValue, relativeEndValue := ((*TimeFilter)(d)).GetNetTimeRange()
+				return fmt.Sprintf(
+					`{ "to_now": { "unit": "h", "value": 6 }, "start_time": %d, "end_time": %d }`,
+					relativeStartValue.Unix(),
+					relativeEndValue.Unix(),
+				)
+			},
+		},
+		{ // Relative time(cross days)
+			&TimeFilterDetail {
+				timeRangeType: TimeRangeRelative,
+				ToNow: &TimeWithUnit {
+					Unit: TimeUnitMonth,
+					Value: 1,
+					StartTimeOfDay: sPtr("02:00"),
+					EndTimeOfDay: sPtr("05:00"),
+				},
+			},
+			func(d *TimeFilterDetail) string {
+				return `{ "to_now": { "unit": "m", "value": 1, "start_time_of_day": "02:00", "end_time_of_day": "05:00" } }`
+			},
 		},
 	}
 
@@ -51,7 +66,7 @@ func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
 		comment := Commentf("Test Case: %d", i + 1)
 
 		c.Logf("JSON: %s", ojson.MarshalJSON(testCase.timeFilter))
-		c.Assert(testCase.timeFilter, ocheck.JsonEquals, testCase.expectedJson, comment)
+		c.Assert(testCase.timeFilter, ocheck.JsonEquals, testCase.expectedJson(testCase.timeFilter), comment)
 	}
 }
 

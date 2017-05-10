@@ -2,14 +2,18 @@ package nqm
 
 import (
 	"fmt"
+	"reflect"
+	"time"
+
+	"github.com/satori/go.uuid"
+
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	"github.com/satori/go.uuid"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -216,286 +220,208 @@ func (suite *TestCompoundReportSuiteOnDb) TestGetCompoundQueryByUuid(c *C) {
 
 // Tests the building of NQM dsl by compound query
 func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
-	type subCase [][2]interface{}
+	type assertFunc func(v interface{}, comment CommentInterface)
 
-	allTestCases := []*struct {
-		nodeProperty string
-		queryProperty string
-		testedProperty string
-
-		sampleAndExpected subCase
+	testCases := []*struct {
+		queryJson string
+		assertProperties map[string]interface{}
 	} {
-		// For agents
-
-		{
-			"Agent", "Name", "IdsOfAgents",
-			subCase {
-				{ []string{}, []int32{}, },
-				{ []string{ "GC-01" }, []int32{ 1041 }, },
-				{ []string{ "No-1" }, []int32{ -2 }, },
+		{ // Fetch viable nodes
+			`{
+				"filters": {
+					"agent": {
+						"name": [ "GC-01" ],
+						"connection_id": [ "eth3-gc-01" ],
+						"hostname": [ "KCB-01" ],
+						"ip_address": [ "10.91.8.33" ],
+						"isp_ids": [ 10, 20 ],
+						"province_ids": [ 32, 31 ],
+						"city_ids": [ 65, 72 ],
+						"name_tag_ids": [ 101, 114 ],
+						"group_tag_ids": [ 1291, 1309 ]
+					},
+					"target": {
+						"name": [ "ZKP-01" ],
+						"host": [ "ZKP-TTC-33" ],
+						"isp_ids": [ 10, 20 ],
+						"province_ids": [ 32, 31 ],
+						"city_ids": [ 65, 72 ],
+						"name_tag_ids": [ 101, 114 ],
+						"group_tag_ids": [ 1291, 1309 ]
+					}
+				}
+			}`,
+			map[string]interface{}{
+				"IdsOfAgents": []int32{ 1041 },
+				"IdsOfAgentIsps": []int16 { 10, 20 },
+				"IdsOfAgentProvinces": []int16 { 31, 32 },
+				"IdsOfAgentCities": []int16 { 65, 72 },
+				"IdsOfAgentNameTags": []int16 { 101, 114 },
+				"IdsOfAgentGroupTags": []int32 { 1291, 1309 },
+				"IdsOfTargets": []int32{ 2301 },
+				"IdsOfTargetIsps": []int16 { 10, 20 },
+				"IdsOfTargetProvinces": []int16 { 31, 32 },
+				"IdsOfTargetCities": []int16 { 65, 72 },
+				"IdsOfTargetNameTags": []int16 { 101, 114 },
+				"IdsOfTargetGroupTags": []int32 { 1291, 1309 },
 			},
 		},
-		{
-			"Agent", "ConnectionId", "IdsOfAgents",
-			subCase {
-				{ []string{}, []int32{}, },
-				{ []string{ "eth3-gc-01" }, []int32{ 1041 }, },
-				{ []string{ "No-1" }, []int32{ -2 }, },
+		{ // Fetch non-viable nodes
+			`{
+				"filters": {
+					"agent": {
+						"name": [ "no-node" ],
+						"connection_id": [ "no-node" ],
+						"hostname": [ "no-node" ],
+						"ip_address": [ "10.20.31.41" ]
+					},
+					"target": {
+						"name": [ "no-node" ],
+						"host": [ "no-node" ]
+					}
+				}
+			}`,
+			map[string]interface{}{
+				"IdsOfAgents": []int32{ -2 },
+				"IdsOfAgentIsps": []int16 {},
+				"IdsOfAgentProvinces": []int16 {},
+				"IdsOfAgentCities": []int16 {},
+				"IdsOfAgentNameTags": []int16 {},
+				"IdsOfAgentGroupTags": []int32 {},
+				"IdsOfTargets": []int32{ -2 },
+				"IdsOfTargetIsps": []int16 {},
+				"IdsOfTargetProvinces": []int16 {},
+				"IdsOfTargetCities": []int16 {},
+				"IdsOfTargetNameTags": []int16 {},
+				"IdsOfTargetGroupTags": []int32 {},
+				"IspRelation": model.NoCondition,
+				"ProvinceRelation": model.NoCondition,
+				"CityRelation": model.NoCondition,
+				"NameTagRelation": model.NoCondition,
 			},
 		},
-		{
-			"Agent", "Hostname", "IdsOfAgents",
-			subCase {
-				{ []string{}, []int32{}, },
-				{ []string{ "KCB-01" }, []int32{ 1041 }, },
-				{ []string{ "No-1" }, []int32{ -2 }, },
+		{ // Same relation(by agent)
+			`{
+				"filters": {
+					"agent": {
+						"isp_ids": [ -11 ],
+						"province_ids": [ -11 ],
+						"city_ids": [ -11 ],
+						"name_tag_ids": [ -11 ],
+						"group_tag_ids": [ -11 ]
+					}
+				}
+			}`,
+			map[string]interface{}{
+				"IspRelation": model.SameValue,
+				"ProvinceRelation": model.SameValue,
+				"CityRelation": model.SameValue,
+				"NameTagRelation": model.SameValue,
 			},
 		},
-		{
-			"Agent", "IpAddress", "IdsOfAgents",
-			subCase {
-				{ []string{}, []int32{}, },
-				{ []string{ "10.91.8.33" }, []int32{ 1041 }, },
-				{ []string{ "90.11.76.2" }, []int32{ -2 }, },
+		{ // Not same relation(by target)
+			`{
+				"filters": {
+					"target": {
+						"isp_ids": [ -12 ],
+						"province_ids": [ -12 ],
+						"city_ids": [ -12 ],
+						"name_tag_ids": [ -12 ],
+						"group_tag_ids": [ -12 ]
+					}
+				}
+			}`,
+			map[string]interface{}{
+				"IspRelation": model.NotSameValue,
+				"ProvinceRelation": model.NotSameValue,
+				"CityRelation": model.NotSameValue,
+				"NameTagRelation": model.NotSameValue,
 			},
 		},
-		{
-			"Agent", "IspIds", "IdsOfAgentIsps",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 10, 20 }, []int16{ 10, 20 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
+		{ // Fetch absolute time
+			`{
+				"filters": {
+					"time": { "start_time": 70089020, "end_time": 70389020 }
+				}
+			}`,
+			map[string]interface{} {
+				"StartTime": toPointerOfEpochTime(70089020),
+				"EndTime": toPointerOfEpochTime(70389020),
 			},
 		},
-		{
-			"Agent", "IspIds", "IspRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 10, 20 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Agent", "ProvinceIds", "IdsOfAgentProvinces",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 32, 31 }, []int16{ 32, 31 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
-			},
-		},
-		{
-			"Agent", "ProvinceIds", "ProvinceRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 7 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Agent", "CityIds", "IdsOfAgentCities",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 65, 72 }, []int16{ 65, 72 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
-			},
-		},
-		{
-			"Agent", "CityIds", "CityRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 80 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Agent", "NameTagIds", "IdsOfAgentNameTags",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 101, 114 }, []int16{ 101, 114 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
-			},
-		},
-		{
-			"Agent", "NameTagIds", "NameTagRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 29 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Agent", "GroupTagIds", "IdsOfAgentGroupTags",
-			subCase {
-				{ []int32{}, []int32{}, },
-				{ []int32{ 1291, 1309 }, []int32{ 1291, 1309 }, },
-				{ []int32{ model.RelationSame }, []int32{}, },
-				{ []int32{ model.RelationNotSame }, []int32{}, },
-			},
-		},
-
-		// For targets
-		{
-			"Target", "Name", "IdsOfTargets",
-			subCase {
-				{ []string{}, []int32{}, },
-				{ []string{ "ZKP-01" }, []int32{ 2301 }, },
-				{ []string{ "No-1" }, []int32{ -2 }, },
-			},
-		},
-		{
-			"Target", "Host", "IdsOfTargets",
-			subCase {
-				{ []string{}, []int32{}, },
-				{ []string{ "ZKP-TTC-33" }, []int32{ 2301 }, },
-				{ []string{ "No-1" }, []int32{ -2 }, },
-			},
-		},
-		{
-			"Target", "IspIds", "IdsOfTargetIsps",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 10, 20 }, []int16{ 10, 20 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
-			},
-		},
-		{
-			"Target", "IspIds", "IspRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 10, 20 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Target", "ProvinceIds", "IdsOfTargetProvinces",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 32, 31 }, []int16{ 32, 31 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
-			},
-		},
-		{
-			"Target", "ProvinceIds", "ProvinceRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 7 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Target", "CityIds", "IdsOfTargetCities",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 65, 72 }, []int16{ 65, 72 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
-			},
-		},
-		{
-			"Target", "CityIds", "CityRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 80 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Target", "NameTagIds", "IdsOfTargetNameTags",
-			subCase {
-				{ []int16{}, []int16{}, },
-				{ []int16{ 101, 114 }, []int16{ 101, 114 }, },
-				{ []int16{ model.RelationSame }, []int16{}, },
-				{ []int16{ model.RelationNotSame }, []int16{}, },
-			},
-		},
-		{
-			"Target", "NameTagIds", "NameTagRelation",
-			subCase {
-				{ []int16{}, model.NoCondition, },
-				{ []int16{ 29 }, model.NoCondition, },
-				{ []int16{ model.RelationSame }, model.SameValue, },
-				{ []int16{ model.RelationNotSame }, model.NotSameValue, },
-			},
-		},
-		{
-			"Target", "GroupTagIds", "IdsOfTargetGroupTags",
-			subCase {
-				{ []int32{}, []int32{}, },
-				{ []int32{ 1291, 1309 }, []int32{ 1291, 1309 }, },
-				{ []int32{ model.RelationSame }, []int32{}, },
-				{ []int32{ model.RelationNotSame }, []int32{}, },
-			},
-		},
-	}
-
-	var newSampleQuery = func() *model.CompoundQuery {
-		/**
-		 * Prepares compound query of sample
-		 */
-		query := model.NewCompoundQuery()
-		err := query.UnmarshalJSON(
-			[]byte(`
+		{ // Fetch relative time
+			`
 			{
 				"filters": {
 					"time": {
-						"start_time": 12088600,
-						"end_time": 12088800
+						"to_now": { "unit": "d", "value": 5 }
 					}
 				}
 			}
-			`),
-		)
-		c.Assert(err, IsNil)
+			`,
+			map[string]interface{}{
+				"StartTime": assertFunc(func(v interface{}, comment CommentInterface) {
+					timeValue := time.Unix(int64(*(v.(*EpochTime))), 0)
+					c.Logf("Start Time(Relative): %s", timeValue.Format(time.RFC3339))
 
+					c.Assert(timeValue, ocheck.TimeBefore, time.Now().AddDate(0, 0, -4), comment)
+					c.Assert(timeValue, ocheck.TimeAfter, time.Now().AddDate(0, 0, -6), comment)
+				}),
+				"EndTime": assertFunc(func(v interface{}, comment CommentInterface) {
+					timeValue := time.Unix(int64(*(v.(*EpochTime))), 0)
+					c.Logf("End Time(Relative): %s", timeValue.Format(time.RFC3339))
+
+					c.Assert(timeValue, ocheck.TimeBefore, time.Now(), comment)
+					c.Assert(timeValue, ocheck.TimeAfter, time.Now().AddDate(0, 0, -2), comment)
+				}),
+			},
+		},
+		{ // Fetch relative time(multiple time ranges)
+			`
+			{
+				"filters": {
+					"time": {
+						"to_now": { "unit": "d", "value": 3, "start_time_of_day": "03:45", "end_time_of_day": "04:55" }
+					}
+				}
+			}
+			`,
+			map[string]interface{}{
+				"TimeRanges": assertFunc(func(v interface{}, comment CommentInterface) {
+					timeRanges := v.([]*TimeRangeOfDsl)
+					c.Assert(timeRanges, HasLen, 3, comment)
+				}),
+			},
+		},
+	}
+
+	var newSampleQuery = func(jsonQuery string) *model.CompoundQuery {
+		query := model.NewCompoundQuery()
+		c.Assert(query.UnmarshalJSON([]byte(jsonQuery)), IsNil)
+		query.SetupDefault()
 		return query
 	}
 
-	for i, testCase := range allTestCases {
+	for i, testCase := range testCases {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		sampleQuery := newSampleQuery()
+		testedDsl := buildNqmDslByCompoundQuery(
+			newSampleQuery(testCase.queryJson),
+		)
 
-		for _, subCase := range testCase.sampleAndExpected {
-			c.Logf("\tSubCase sample: %v", subCase[0])
+		for name, value := range testCase.assertProperties {
+			testedProperty := reflect.ValueOf(testedDsl).Elem().
+				FieldByName(name)
 
-			oreflect.SetValueOfField(
-				sampleQuery, subCase[0],
-				"Filters", testCase.nodeProperty, testCase.queryProperty,
-			)
+			comment := Commentf("[Case: %s] Check Property: %s.", comment.CheckCommentString(), name)
 
-			testedDsl := buildNqmDslByCompoundQuery(sampleQuery)
+			if assertImpl, ok := value.(assertFunc); ok {
+				assertImpl(testedProperty.Interface(), comment)
+				continue
+			}
 
-			/**
-			 * Asserts time data
-			 */
-			c.Assert(testedDsl.StartTime, Equals, EpochTime(12088600), comment)
-			c.Assert(testedDsl.EndTime, Equals, EpochTime(12088800), comment)
-			// :~)
-
-			/**
-			 * Asserts the tested property
-			 */
-			c.Assert(
-				oreflect.GetValueOfField(testedDsl, testCase.testedProperty),
-				DeepEquals,
-				subCase[1],
-				comment,
-			)
-			// :~)
+			c.Assert(testedProperty.Interface(), DeepEquals, value, comment)
 		}
 	}
 }

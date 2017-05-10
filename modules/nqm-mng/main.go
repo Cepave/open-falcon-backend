@@ -33,6 +33,7 @@ func main() {
 
 	rdb.InitRdb(toRdbConfig(config))
 	restful.InitGin(toGinConfig(config))
+	restful.InitCache(toCacheConfig(config))
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
 }
@@ -48,10 +49,18 @@ func toGinConfig(config *viper.Viper) *commonGin.GinConfig {
 		Port: uint16(config.GetInt("restful.listen.port")),
 	}
 }
+
 func toRdbConfig(config *viper.Viper) *commonDb.DbConfig {
 	return &commonDb.DbConfig{
 		Dsn:     config.GetString("rdb.dsn"),
 		MaxIdle: config.GetInt("rdb.maxIdle"),
+	}
+}
+
+func toCacheConfig(config *viper.Viper) *restful.CacheConfig {
+	return &restful.CacheConfig{
+		Size:     config.GetInt("nqm.pingList.cache.size"),
+		Lifetime: config.GetInt("nqm.pingList.cache.lifetime"),
 	}
 }
 

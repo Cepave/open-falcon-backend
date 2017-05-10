@@ -9,18 +9,15 @@ import (
 
 type TimeFilterDetail TimeFilter
 func (t *TimeFilterDetail) MarshalJSON() ([]byte, error) {
-	json := sjson.New()
+	var json *sjson.Json
 
 	switch t.timeRangeType {
 	case TimeRangeAbsolute:
+		json = sjson.New()
 		json.Set("start_time", t.StartTime)
 		json.Set("end_time", t.EndTime)
 	case TimeRangeRelative:
-		startTime, endTime := (*TimeFilter)(t).GetNetTimeRange()
-
-		json.Set("start_time", ojson.JsonTime(startTime))
-		json.Set("end_time", ojson.JsonTime(endTime))
-		json.Set("to_now", t.ToNow)
+		json = ((*TimeFilter)(t)).ToJsonOfRelativeTimeRange()
 	default:
 		panic(fmt.Sprintf("Unknown type of time filter: %d", t.timeRangeType))
 	}

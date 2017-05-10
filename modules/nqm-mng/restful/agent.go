@@ -99,3 +99,28 @@ func listAgents(
 
 	return resultPaging, mvc.JsonOutputBody(agents)
 }
+
+func listTargetsOfAgentById(
+	c *gin.Context,
+	q *commonNqmModel.TargetsOfAgentQuery,
+	p *struct {
+		Paging *commonModel.Paging `mvc:"pageSize[50] pageOrderBy[status#desc:name#asc:host#asc]"`
+	},
+) (*commonModel.Paging, mvc.OutputBody) {
+	p.Paging = commonGin.PagingByHeader(c, p.Paging)
+	targetList, resultPaging := commonNqmDb.ListTargetsOfAgentById(q, *p.Paging)
+	if targetList != nil {
+		targetList.CacheLifeTime = cacheConfig.Lifetime
+	}
+
+	return resultPaging, mvc.JsonOutputOrNotFound(targetList)
+}
+
+func clearCachedTargetsOfAgentById(
+	q *struct {
+		AgentID int32 `mvc:"param[agent_id]"`
+	},
+) mvc.OutputBody {
+	r := commonNqmDb.DeleteCachedTargetsOfAgentById(q.AgentID)
+	return mvc.JsonOutputOrNotFound(r)
+}

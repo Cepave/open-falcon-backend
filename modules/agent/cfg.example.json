@@ -5,6 +5,9 @@
     "plugin": {
         "enabled": false,
         "dir": "./plugin",
+        "git": "https://coding.net/ulricqin/plugin.git",
+        "autoGitUpdate": true,
+        "autoGitRepoUpdate": true,
         "logs": "./logs"
     },
     "heartbeat": {
