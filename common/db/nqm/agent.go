@@ -972,18 +972,37 @@ type refreshNqmAgentProcessor struct {
 var HeartbeatReqQueue *commonQueue.Queue
 
 func (p *refreshNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	selectStmt := sqlxExt.ToStmtExt(sqlxExt.ToTxExt(tx).Preparex(`
-		SELECT ag_id
-		FROM nqm_agent
-		WHERE ag_connection_id = ?
-	`))
-	insertHostStmt := sqlxExt.ToTxExt(tx).Preparex(`
+	if p.isExistent(tx) {
+		HeartbeatReqQueue.Enqueue(p.req)
+	} else {
+		p.insert(tx)
+	}
+	return commonDb.TxCommit
+}
+
+func (p *refreshNqmAgentProcessor) isExistent(tx *sqlx.Tx) bool {
+	return sqlxExt.ToTxExt(tx).GetOrNoRow(
+		new(int),
+		`
+			SELECT ag_id
+			FROM nqm_agent
+			WHERE ag_connection_id = ?
+		`,
+		p.req.ConnectionId,
+	)
+}
+
+func (p *refreshNqmAgentProcessor) insert(tx *sqlx.Tx) {
+	tx.MustExec(`
 		INSERT INTO host(hostname, ip, agent_version, plugin_version)
 		VALUES(?, ?, '', '')
 		ON DUPLICATE KEY UPDATE
 			ip = VALUES(ip)
-	`)
-	insertNqmAgentStmt := sqlxExt.ToTxExt(tx).Preparex(`
+	`,
+		p.req.Hostname,
+		string(p.req.IpAddress),
+	)
+	tx.MustExec(`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)
 		SELECT ?, ?, ?, FROM_UNIXTIME(?), id
 		FROM host
@@ -992,26 +1011,7 @@ func (p *refreshNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 			ag_hostname = VALUES(ag_hostname),
 			ag_ip_address = VALUES(ag_ip_address),
 			ag_last_heartbeat = VALUES(ag_last_heartbeat)
-	`)
-
-	if p.isExistent(selectStmt) {
-		HeartbeatReqQueue.Enqueue(p.req)
-	} else {
-		p.insert(insertHostStmt, insertNqmAgentStmt)
-	}
-	return commonDb.TxCommit
-}
-
-func (p *refreshNqmAgentProcessor) isExistent(s *sqlxExt.StmtExt) bool {
-	return s.GetOrNoRow(new(int), p.req.ConnectionId)
-}
-
-func (p *refreshNqmAgentProcessor) insert(hs *sqlx.Stmt, ns *sqlx.Stmt) {
-	hs.MustExec(
-		p.req.Hostname,
-		string(p.req.IpAddress),
-	)
-	ns.MustExec(
+	`,
 		p.req.ConnectionId,
 		p.req.Hostname,
 		p.req.IpAddress,
