@@ -2,8 +2,11 @@ package queue
 
 import (
 	"container/list"
+	"reflect"
 	"sync"
 	"time"
+
+	"github.com/mikelue/cepave-owl/common/utils"
 )
 
 type Queue struct {
@@ -130,4 +133,20 @@ func (q *Queue) DrainNWithDuration(c *Config) []interface{} {
 			return elems
 		}
 	}
+}
+
+func (q *Queue) DrainNWithDurationByType(c *Config, eleValue interface{}) interface{} {
+	return q.DrainNWithDurationByReflectType(c, reflect.TypeOf(eleValue))
+}
+
+func (q *Queue) DrainNWithDurationByReflectType(c *Config, eleType reflect.Type) interface{} {
+	popValue := q.DrainNWithDuration(c)
+
+	return utils.MakeAbstractArray(popValue).
+		MapTo(
+			func(v interface{}) interface{} {
+				return reflect.ValueOf(v).Convert(eleType).Interface()
+			},
+			eleType,
+		).GetArray()
 }

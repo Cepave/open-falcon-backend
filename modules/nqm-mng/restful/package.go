@@ -128,13 +128,9 @@ func (p *updateNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 
 func drain() {
 	for {
-		reqs := commonNqmDb.HeartbeatReqQueue.DrainNWithDuration(heartbeatConfig)
-		var hbreqs []*nqmModel.AgentHeartbeatRequest
-		for _, req := range reqs {
-			hbreqs = append(hbreqs, req.(*nqmModel.AgentHeartbeatRequest))
-		}
+		reqs := commonNqmDb.HeartbeatReqQueue.DrainNWithDurationByType(heartbeatConfig, new(nqmModel.AgentHeartbeatRequest)).([]*nqmModel.AgentHeartbeatRequest)
 		updateTx := &updateNqmAgentProcessor{
-			reqs: hbreqs,
+			reqs: reqs,
 		}
 		commonNqmDb.DbFacade.SqlxDbCtrl.InTx(updateTx)
 	}
