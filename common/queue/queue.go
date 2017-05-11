@@ -11,7 +11,7 @@ import (
 
 type Queue struct {
 	l     *list.List // not thead safe
-	mutex sync.RWMutex
+	mutex sync.Mutex
 }
 
 type Config struct {
@@ -25,21 +25,8 @@ func (q *Queue) Enqueue(v interface{}) {
 	q.l.PushBack(v)
 }
 
-func (q *Queue) Dequeue() interface{} {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-	if e := q.l.Front(); e != nil {
-		defer q.l.Remove(e)
-		return e.Value
-	}
-	return nil
-}
-
 // DequeueN dequeues UP TO N elements.
-func (q *Queue) DequeueN(num int) []interface{} {
-	if num < 1 || q.l.Len() == 0 { // No need to use thread-safe Len()
-		return []interface{}{}
-	}
+func (q *Queue) dequeueN(num int) []interface{} {
 	var elems []interface{}
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -54,32 +41,8 @@ func (q *Queue) DequeueN(num int) []interface{} {
 	return elems
 }
 
-func (q *Queue) ThreadUnsafeLen() int { // Not thread-safe, not for accessing the data structure afterwards.
-	return q.l.Len()
-}
-
 func (q *Queue) Len() int {
-	q.mutex.RLock()
-	defer q.mutex.RUnlock()
 	return q.l.Len()
-}
-
-func (q *Queue) PeekFirst() interface{} {
-	q.mutex.RLock()
-	defer q.mutex.RUnlock()
-	if f := q.l.Front(); f != nil {
-		return f.Value
-	}
-	return nil
-}
-
-func (q *Queue) PeekLast() interface{} {
-	q.mutex.RLock()
-	defer q.mutex.RUnlock()
-	if b := q.l.Back(); b != nil {
-		return b.Value
-	}
-	return nil
 }
 
 func New() *Queue {
@@ -88,30 +51,19 @@ func New() *Queue {
 	}
 }
 
-func (q *Queue) Poll(timeout time.Duration) interface{} {
-	t := time.After(timeout)
-	for {
-		select {
-		case <-t:
-			return nil
-		default:
-			if e := q.Dequeue(); e != nil {
-				return e
-			}
-		}
+func (q *Queue) PollN(c *Config) []interface{} {
+	if c.Num < 1 || c.Dur <= 0 {
+		return []interface{}{}
 	}
-}
-
-func (q *Queue) PollN(num int, timeout time.Duration) []interface{} {
-	t := time.After(timeout)
+	t := time.After(c.Dur)
 	var elems []interface{}
-	batchSize := num
+	batchSize := c.Num
 	for {
 		select {
 		case <-t:
 			return elems
 		default:
-			b := q.DequeueN(batchSize)
+			b := q.dequeueN(batchSize)
 			elems = append(elems, b...)
 			if batchSize -= len(b); batchSize == 0 {
 				return elems
@@ -122,9 +74,12 @@ func (q *Queue) PollN(num int, timeout time.Duration) []interface{} {
 }
 
 func (q *Queue) DrainNWithDuration(c *Config) []interface{} {
+	if c.Num < 1 || c.Dur <= 0 {
+		return []interface{}{}
+	}
 	elems := make([]interface{}, 0, c.Num)
 	for {
-		if e := q.PollN(c.Num, c.Dur); len(e) != 0 {
+		if e := q.PollN(c); len(e) != 0 {
 			elems = append(elems, e...)
 			if len(elems) >= c.Num {
 				return elems
@@ -136,10 +91,16 @@ func (q *Queue) DrainNWithDuration(c *Config) []interface{} {
 }
 
 func (q *Queue) DrainNWithDurationByType(c *Config, eleValue interface{}) interface{} {
+	if c.Num < 1 || c.Dur <= 0 {
+		return []interface{}{}
+	}
 	return q.DrainNWithDurationByReflectType(c, reflect.TypeOf(eleValue))
 }
 
 func (q *Queue) DrainNWithDurationByReflectType(c *Config, eleType reflect.Type) interface{} {
+	if c.Num < 1 || c.Dur <= 0 {
+		return []interface{}{}
+	}
 	popValue := q.DrainNWithDuration(c)
 
 	return utils.MakeAbstractArray(popValue).
