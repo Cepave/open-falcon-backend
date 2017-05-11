@@ -1,8 +1,6 @@
 package restful
 
 import (
-	"time"
-
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
@@ -46,14 +44,9 @@ func InitCache(config *CacheConfig) {
 	cacheConfig = config
 }
 
-type HeartbeatConfig struct {
-	BatchSize int
-	Duration  time.Duration
-}
+var heartbeatConfig *commonQueue.Config
 
-var heartbeatConfig *HeartbeatConfig = &HeartbeatConfig{}
-
-func InitHeartbeat(config *HeartbeatConfig) {
+func InitHeartbeat(config *commonQueue.Config) {
 	heartbeatConfig = config
 	commonNqmDb.HeartbeatReqQueue = commonQueue.New()
 	go drain()
@@ -135,7 +128,7 @@ func (p *updateNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 
 func drain() {
 	for {
-		reqs := commonNqmDb.HeartbeatReqQueue.DrainNWithDuration(heartbeatConfig.BatchSize, heartbeatConfig.Duration)
+		reqs := commonNqmDb.HeartbeatReqQueue.DrainNWithDuration(heartbeatConfig)
 		var hbreqs []*nqmModel.AgentHeartbeatRequest
 		for _, req := range reqs {
 			hbreqs = append(hbreqs, req.(*nqmModel.AgentHeartbeatRequest))

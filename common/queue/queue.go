@@ -11,6 +11,11 @@ type Queue struct {
 	mutex sync.RWMutex
 }
 
+type Config struct {
+	Num int
+	Dur time.Duration
+}
+
 func (q *Queue) Enqueue(v interface{}) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
@@ -113,12 +118,12 @@ func (q *Queue) PollN(num int, timeout time.Duration) []interface{} {
 	}
 }
 
-func (q *Queue) DrainNWithDuration(num int, dur time.Duration) []interface{} {
-	elems := make([]interface{}, 0, num)
+func (q *Queue) DrainNWithDuration(c *Config) []interface{} {
+	elems := make([]interface{}, 0, c.Num)
 	for {
-		if e := q.PollN(num, dur); len(e) != 0 {
+		if e := q.PollN(c.Num, c.Dur); len(e) != 0 {
 			elems = append(elems, e...)
-			if len(elems) >= num {
+			if len(elems) >= c.Num {
 				return elems
 			}
 		} else {
