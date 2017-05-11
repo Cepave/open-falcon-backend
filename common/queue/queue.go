@@ -8,7 +8,7 @@ import (
 
 type Queue struct {
 	l     *list.List // not thead safe
-	mutex sync.Mutex
+	mutex sync.RWMutex
 }
 
 func (q *Queue) Enqueue(v interface{}) {
@@ -51,14 +51,14 @@ func (q *Queue) ThreadUnsafeLen() int { // Not thread-safe, not for accessing th
 }
 
 func (q *Queue) Len() int {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
 	return q.l.Len()
 }
 
 func (q *Queue) PeekFirst() interface{} {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
 	if f := q.l.Front(); f != nil {
 		return f.Value
 	}
@@ -66,8 +66,8 @@ func (q *Queue) PeekFirst() interface{} {
 }
 
 func (q *Queue) PeekLast() interface{} {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
+	q.mutex.RLock()
+	defer q.mutex.RUnlock()
 	if b := q.l.Back(); b != nil {
 		return b.Value
 	}
