@@ -27,7 +27,26 @@ func (q *Queue) Dequeue() interface{} {
 	return nil
 }
 
-func (q *Queue) ThreadUnsafeLen() int { // Not thread-safe, not for accessing the data structure afterwards
+// DequeueN dequeues UP TO N elements.
+func (q *Queue) DequeueN(num int) []interface{} {
+	if num < 1 || q.l.Len() == 0 { // No need to use thread-safe Len()
+		return []interface{}{}
+	}
+	var elems []interface{}
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	for i := 0; i < num; i++ {
+		if e := q.l.Front(); e != nil {
+			elems = append(elems, e.Value)
+			q.l.Remove(e)
+		} else {
+			break
+		}
+	}
+	return elems
+}
+
+func (q *Queue) ThreadUnsafeLen() int { // Not thread-safe, not for accessing the data structure afterwards.
 	return q.l.Len()
 }
 
@@ -75,16 +94,35 @@ func (q *Queue) Poll(timeout time.Duration) interface{} {
 	}
 }
 
-func (q *Queue) DrainWithDuration(num int, dur time.Duration) []interface{} {
-	es := make([]interface{}, 0, num)
+func (q *Queue) PollN(num int, timeout time.Duration) []interface{} {
+	t := time.After(timeout)
+	var elems []interface{}
+	batchSize := num
 	for {
-		if e := q.Poll(dur); e != nil {
-			es = append(es, e)
-			if len(es) >= num {
-				return es
+		select {
+		case <-t:
+			return elems
+		default:
+			b := q.DequeueN(batchSize)
+			elems = append(elems, b...)
+			if batchSize -= len(b); batchSize == 0 {
+				return elems
+			}
+		}
+
+	}
+}
+
+func (q *Queue) DrainNWithDuration(num int, dur time.Duration) []interface{} {
+	elems := make([]interface{}, 0, num)
+	for {
+		if e := q.PollN(num, dur); len(e) != 0 {
+			elems = append(elems, e...)
+			if len(elems) >= num {
+				return elems
 			}
 		} else {
-			return es
+			return elems
 		}
 	}
 }
