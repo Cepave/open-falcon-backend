@@ -3,9 +3,9 @@ package graph
 import (
 	"net/http"
 
-	"gopkg.in/gin-gonic/gin.v1"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"github.com/gin-gonic/gin"
 )
 
 var db config.DBPool

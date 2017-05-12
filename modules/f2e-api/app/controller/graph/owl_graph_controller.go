@@ -11,7 +11,7 @@ import (
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper/filter"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/boss"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func HostsSearching(c *gin.Context) {

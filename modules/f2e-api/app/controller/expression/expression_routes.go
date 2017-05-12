@@ -3,7 +3,7 @@ package expression
 import (
 	"net/http"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
 )

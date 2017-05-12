@@ -9,7 +9,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type APILoginInput struct {

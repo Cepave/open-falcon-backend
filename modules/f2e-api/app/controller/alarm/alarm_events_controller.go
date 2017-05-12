@@ -8,7 +8,7 @@ import (
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	alm "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/alarm"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type APIGetAlarmListsInputs struct {

@@ -8,12 +8,12 @@ import (
 	"net/http"
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
-	log "github.com/Sirupsen/logrus"
-	"gopkg.in/gin-gonic/gin.v1"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/graph"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	g "github.com/Cepave/open-falcon-backend/modules/f2e-api/graph"
+	log "github.com/Sirupsen/logrus"
+	"github.com/gin-gonic/gin"
 )
 
 func EndpointRegexpQuery(c *gin.Context) {
