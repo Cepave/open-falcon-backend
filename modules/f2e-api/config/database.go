@@ -2,6 +2,7 @@ package config
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -42,7 +43,7 @@ func InitDB(loggerlevel bool) (err error) {
 	portal.Dialect().SetDB(p)
 	portal.LogMode(loggerlevel)
 	if err != nil {
-		return
+		return fmt.Errorf("connect to falcon_portal: %s", err.Error())
 	}
 	portal.SingularTable(true)
 	dbp.Falcon = portal
@@ -52,7 +53,7 @@ func InitDB(loggerlevel bool) (err error) {
 	graphd.Dialect().SetDB(g)
 	graphd.LogMode(loggerlevel)
 	if err != nil {
-		return
+		return fmt.Errorf("connect to graph: %s", err.Error())
 	}
 	graphd.SingularTable(true)
 	dbp.Graph = graphd
@@ -62,7 +63,7 @@ func InitDB(loggerlevel bool) (err error) {
 	uicd.Dialect().SetDB(u)
 	uicd.LogMode(loggerlevel)
 	if err != nil {
-		return
+		return fmt.Errorf("connect to uic: %s", err.Error())
 	}
 	uicd.SingularTable(true)
 	dbp.Uic = uicd
@@ -72,7 +73,7 @@ func InitDB(loggerlevel bool) (err error) {
 	dashd.Dialect().SetDB(d)
 	dashd.LogMode(loggerlevel)
 	if err != nil {
-		return
+		return fmt.Errorf("connect to dashboard: %s", err.Error())
 	}
 	dashd.SingularTable(true)
 	dbp.Dashboard = dashd
@@ -82,7 +83,7 @@ func InitDB(loggerlevel bool) (err error) {
 	almd.Dialect().SetDB(alm)
 	almd.LogMode(loggerlevel)
 	if err != nil {
-		return
+		return fmt.Errorf("connect to alarms: %s", err.Error())
 	}
 	almd.SingularTable(true)
 	dbp.Alarm = almd
@@ -93,7 +94,7 @@ func InitDB(loggerlevel bool) (err error) {
 	bossd.Dialect().SetDB(b)
 	dashd.LogMode(loggerlevel)
 	if err != nil {
-		return
+		return fmt.Errorf("connect to boss: %s", err.Error())
 	}
 	bossd.SingularTable(true)
 	dbp.Boss = bossd
