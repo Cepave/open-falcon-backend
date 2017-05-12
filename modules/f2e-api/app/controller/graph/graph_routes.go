@@ -24,4 +24,6 @@ func Routes(r *gin.Engine) {
 	owlgraph := r.Group("/api/v1/owlgraph")
 	owlgraph.Use(utils.AuthSessionMidd)
 	owlgraph.GET("/keyword_search", HostsSearching)
+	owlgraph.POST("/cat_counters", EndpointsQuerySubMetric)
+	owlgraph.POST("/cat_gt_counters", EndpointsGetMetricBySubStar)
 }
