@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mikelue/cepave-owl/common/utils"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 type Queue struct {
@@ -27,7 +27,7 @@ func (q *Queue) Enqueue(v interface{}) {
 
 // DequeueN dequeues UP TO N elements.
 func (q *Queue) dequeueN(num int) []interface{} {
-	var elems []interface{}
+	elems := make([]interface{}, 0, num)
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	for i := 0; i < num; i++ {
@@ -51,10 +51,7 @@ func New() *Queue {
 	}
 }
 
-func (q *Queue) PollN(c *Config) []interface{} {
-	if c.Num < 1 || c.Dur <= 0 {
-		return []interface{}{}
-	}
+func (q *Queue) pollN(c *Config) []interface{} {
 	t := time.After(c.Dur)
 	var elems []interface{}
 	batchSize := c.Num
@@ -73,13 +70,10 @@ func (q *Queue) PollN(c *Config) []interface{} {
 	}
 }
 
-func (q *Queue) DrainNWithDuration(c *Config) []interface{} {
-	if c.Num < 1 || c.Dur <= 0 {
-		return []interface{}{}
-	}
+func (q *Queue) drainNWithDuration(c *Config) []interface{} {
 	elems := make([]interface{}, 0, c.Num)
 	for {
-		if e := q.PollN(c); len(e) != 0 {
+		if e := q.pollN(c); len(e) != 0 {
 			elems = append(elems, e...)
 			if len(elems) >= c.Num {
 				return elems
@@ -91,19 +85,20 @@ func (q *Queue) DrainNWithDuration(c *Config) []interface{} {
 }
 
 func (q *Queue) DrainNWithDurationByType(c *Config, eleValue interface{}) interface{} {
-	if c.Num < 1 || c.Dur <= 0 {
-		return []interface{}{}
-	}
-	return q.DrainNWithDurationByReflectType(c, reflect.TypeOf(eleValue))
+	return q.drainNWithDurationByReflectType(c, reflect.TypeOf(eleValue))
 }
 
-func (q *Queue) DrainNWithDurationByReflectType(c *Config, eleType reflect.Type) interface{} {
-	if c.Num < 1 || c.Dur <= 0 {
-		return []interface{}{}
+func (q *Queue) drainNWithDurationByReflectType(c *Config, eleType reflect.Type) interface{} {
+	var result []interface{}
+	if c.Num < 1 {
+		result = []interface{}{}
+	} else if c.Dur <= 0 {
+		result = q.dequeueN(c.Num)
+	} else {
+		result = q.drainNWithDuration(c)
 	}
-	popValue := q.DrainNWithDuration(c)
 
-	return utils.MakeAbstractArray(popValue).
+	return utils.MakeAbstractArray(result).
 		MapTo(
 			func(v interface{}) interface{} {
 				return reflect.ValueOf(v).Convert(eleType).Interface()
