@@ -8,7 +8,7 @@ import (
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	alm "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/alarm"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type APIGetNotesOfAlarmInputs struct {
@@ -136,12 +136,14 @@ func AddNotesToAlarm(c *gin.Context) {
 		return
 	}
 	user, _ := h.GetUser(c)
+	currentTime := time.Now()
 	Anote := alm.EventNote{
 		UserId:      user.ID,
 		Note:        inputs.Note,
 		Status:      inputs.Status,
 		EventCaseId: inputs.EventId,
 		CaseId:      inputs.CaseId,
+		Timestamp:   &currentTime,
 		//time will update on database self
 	}
 	dt := db.Alarm.Begin()

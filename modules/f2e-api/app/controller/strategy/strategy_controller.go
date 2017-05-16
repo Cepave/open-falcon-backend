@@ -9,7 +9,7 @@ import (
 
 	"io/ioutil"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 )

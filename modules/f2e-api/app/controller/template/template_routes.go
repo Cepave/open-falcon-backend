@@ -5,7 +5,7 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 var db config.DBPool
