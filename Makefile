@@ -9,7 +9,7 @@ all: trash $(CMD) $(TARGET)
 
 $(CMD):
 	go get ./modules/$@
-	go build -o bin/$@/falcon-$@ ./modules/$@
+	go build -ldflags "-X main.GitCommit=`git log -n1 --pretty=format:%h modules/$@` -X main.Version=${VERSION}" -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
 	go get .
