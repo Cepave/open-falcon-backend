@@ -55,6 +55,36 @@ func InitRpcClients() {
 	}
 }
 
+func hasMQType(vType string) bool {
+	vTypeSlice := strings.Split(vType, ",")
+	for _, val := range vTypeSlice {
+		if val == "MQ" {
+			return true
+		}
+	}
+	return false
+}
+
+func DemultiplexMetrics(metrics []*model.MetricValueExtend) (metricsToTransfer []*model.MetricValue, metricsToMQ []*model.MetricValueExtend) {
+	for _, value := range metrics {
+		if hasMQType(value.Type) {
+			metricsToMQ = append(metricsToMQ, value)
+		} else {
+			v := &model.MetricValue{
+				Endpoint:  value.Endpoint,
+				Metric:    value.Metric,
+				Value:     value.Value,
+				Step:      value.Step,
+				Type:      value.Type,
+				Tags:      value.Tags,
+				Timestamp: value.Timestamp,
+			}
+			metricsToTransfer = append(metricsToTransfer, v)
+		}
+	}
+	return
+}
+
 func SendToTransfer(metrics []*model.MetricValue) {
 	if len(metrics) == 0 {
 		return

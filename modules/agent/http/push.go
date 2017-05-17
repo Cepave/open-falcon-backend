@@ -15,14 +15,16 @@ func configPushRoutes() {
 		}
 
 		decoder := json.NewDecoder(req.Body)
-		var metrics []*model.MetricValue
+		var metrics []*model.MetricValueExtend
 		err := decoder.Decode(&metrics)
 		if err != nil {
 			http.Error(w, "connot decode body", http.StatusBadRequest)
 			return
 		}
 
-		g.SendToTransfer(metrics)
+		toTransfer, toMQ := g.DemultiplexMetrics(metrics)
+		g.SendToTransfer(toTransfer)
+		go g.SendToMQ(toMQ)
 		w.Write([]byte("success"))
 	})
 }

@@ -170,7 +170,7 @@ func PluginRun(plugin *Plugin) {
 		return
 	}
 
-	var metrics []*model.MetricValue
+	var metrics []*model.MetricValueExtend
 	err = json.Unmarshal(data, &metrics)
 	if err != nil {
 		log.Errorf("json.Unmarshal stdout of %s fail. error:%s stdout: \n%s\n", fpath, err, stdout.String())
@@ -193,5 +193,7 @@ func PluginRun(plugin *Plugin) {
 		}
 	}
 
-	g.SendToTransfer(metrics)
+	toTransfer, toMQ := g.DemultiplexMetrics(metrics)
+	g.SendToTransfer(toTransfer)
+	go g.SendToMQ(toMQ)
 }

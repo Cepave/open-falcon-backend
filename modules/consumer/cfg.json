@@ -1,0 +1,14 @@
+{
+    "logLevel": "debug",
+    "mq": {
+      "user": "mq",
+      "pass": "password",
+      "addr": "10.20.30.40:5672"
+    },
+    "influx": {
+      "user": "root",
+      "pass": "password",
+      "db": "extend",
+      "addr": "http://10.20.30.40:8086"
+    }
+}
