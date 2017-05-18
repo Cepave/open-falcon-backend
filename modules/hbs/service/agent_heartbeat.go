@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	oqueue "github.com/Cepave/open-falcon-backend/common/queue"
 	osling "github.com/Cepave/open-falcon-backend/common/sling"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/dghubble/sling"
@@ -14,6 +15,7 @@ var agentHeartbeatService *AgentHeartbeatService
 
 type AgentHeartbeatService struct {
 	sync.WaitGroup
+	safeQ            *oqueue.Queue
 	started          bool
 	slingInit        *sling.Sling
 	rowsAffectedCnt  int64
@@ -30,12 +32,9 @@ func (s *AgentHeartbeatService) Start() {
 	if s.started {
 		return
 	}
-	/*
-	 * ToDo
-	 * Initial & start queue
-	 */
-
 	s.started = true
+	s.safeQ = oqueue.New()
+
 	s.Add(1)
 	go func() {
 		defer s.Done()
@@ -62,15 +61,19 @@ func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration
 	for {
 		/*
 		 * ToDo
-		 * Pop agents from queue.
+		 * Configuration
+		 * ToReview
 		 */
-		toDoPopAgents := make([]*model.AgentHeartbeat, 10)
-		agentsNum := len(toDoPopAgents)
+		c := oqueue.Config{}
+		var elementType *model.AgentHeartbeat
+		absArray := s.safeQ.DrainNWithDurationByType(&c, elementType)
+		agents := absArray.([]*model.AgentHeartbeat)
+		agentsNum := len(agents)
 		if agentsNum == 0 {
 			break
 		}
 
-		s.Heartbeat(toDoPopAgents)
+		s.heartbeat(agents)
 		if logFlag {
 			logger.Infof("Flushing [%d] agents", agentsNum)
 		}
@@ -82,10 +85,6 @@ func (s *AgentHeartbeatService) Stop() {
 		return
 	}
 
-	/*
-	 * ToDo
-	 * Close/Stop queue
-	 */
 	s.started = false
 	logger.Infof("Stopping AgentHeartbeatService. Size of queue: [%d]", s.CurrentSize())
 
@@ -93,14 +92,18 @@ func (s *AgentHeartbeatService) Stop() {
 	 * Waiting for queue to be processed
 	 */
 	s.Wait()
+	s.safeQ = nil
+}
+
+func (s *AgentHeartbeatService) Put(agent *model.AgentHeartbeat) {
+	if !s.started {
+		return
+	}
+	s.safeQ.Enqueue(agent)
 }
 
 func (s *AgentHeartbeatService) CurrentSize() int {
-	/*
-	 * ToDo
-	 * Return the size of queue
-	 */
-	return 0
+	return s.safeQ.Len()
 }
 
 func (s *AgentHeartbeatService) CumulativeAgentsDropped() int64 {
@@ -111,7 +114,7 @@ func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
 }
 
-func (s *AgentHeartbeatService) Heartbeat(agents []*model.AgentHeartbeat) {
+func (s *AgentHeartbeatService) heartbeat(agents []*model.AgentHeartbeat) {
 	param := struct {
 		UpdateOnly bool `json:"update_only"`
 	}{updateOnlyFlag}
