@@ -7,42 +7,17 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	or "github.com/Cepave/open-falcon-backend/common/reflect"
 )
-
-type Queue struct {
-	l     *list.List // not thead safe
-	mutex sync.Mutex
-}
 
 type Config struct {
 	Num int
 	Dur time.Duration
 }
 
-func (q *Queue) Enqueue(v interface{}) {
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-	q.l.PushBack(v)
-}
-
-// DequeueN dequeues UP TO N elements.
-func (q *Queue) dequeueN(num int) []interface{} {
-	elems := make([]interface{}, 0, num)
-	q.mutex.Lock()
-	defer q.mutex.Unlock()
-	for i := 0; i < num; i++ {
-		if e := q.l.Front(); e != nil {
-			elems = append(elems, e.Value)
-			q.l.Remove(e)
-		} else {
-			break
-		}
-	}
-	return elems
-}
-
-func (q *Queue) Len() int {
-	return q.l.Len()
+type Queue struct {
+	l     *list.List // not thead safe
+	mutex sync.Mutex
 }
 
 func New() *Queue {
@@ -51,58 +26,76 @@ func New() *Queue {
 	}
 }
 
-func (q *Queue) pollN(c *Config) []interface{} {
-	t := time.After(c.Dur)
-	var elems []interface{}
-	batchSize := c.Num
-	for {
-		select {
-		case <-t:
-			return elems
-		default:
-			b := q.dequeueN(batchSize)
-			elems = append(elems, b...)
-			if batchSize -= len(b); batchSize == 0 {
-				return elems
-			}
-		}
-
-	}
+func (q *Queue) Enqueue(v interface{}) {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+	q.l.PushBack(v)
 }
+func (q *Queue) DrainNWithDuration(c *Config) []interface{} {
+	result := make([]interface{}, 0)
 
-func (q *Queue) drainNWithDuration(c *Config) []interface{} {
-	elems := make([]interface{}, 0, c.Num)
-	for {
-		if e := q.pollN(c); len(e) != 0 {
-			elems = append(elems, e...)
-			if len(elems) >= c.Num {
-				return elems
+	haveWaited := false
+	config := *c
+	for config.Num > 0 {
+		batchResult := q.dequeueN(config.Num)
+		config.Num -= len(batchResult)
+
+		/**
+		 * Waiting and fetch next batch of data.
+		 *
+		 * If the next batch is still nothing after waiting, stop fetching process.
+		 */
+		if len(batchResult) == 0 {
+			if haveWaited {
+				break
 			}
-		} else {
-			return elems
-		}
-	}
-}
 
+			haveWaited = true
+			if config.Dur > time.Duration(0) {
+				time.Sleep(config.Dur)
+			}
+			continue
+		}
+		// :~)
+
+		haveWaited = false
+		result = append(result, batchResult...)
+	}
+
+	return result
+}
 func (q *Queue) DrainNWithDurationByType(c *Config, eleValue interface{}) interface{} {
-	return q.drainNWithDurationByReflectType(c, reflect.TypeOf(eleValue))
+	return q.DrainNWithDurationByReflectType(c, or.TypeOfValue(eleValue))
 }
-
-func (q *Queue) drainNWithDurationByReflectType(c *Config, eleType reflect.Type) interface{} {
-	var result []interface{}
-	if c.Num < 1 {
-		result = []interface{}{}
-	} else if c.Dur <= 0 {
-		result = q.dequeueN(c.Num)
-	} else {
-		result = q.drainNWithDuration(c)
-	}
-
-	return utils.MakeAbstractArray(result).
+func (q *Queue) DrainNWithDurationByReflectType(c *Config, eleType reflect.Type) interface{} {
+	return utils.MakeAbstractArray(
+		q.DrainNWithDuration(c),
+	).
 		MapTo(
 			func(v interface{}) interface{} {
 				return reflect.ValueOf(v).Convert(eleType).Interface()
 			},
 			eleType,
 		).GetArray()
+}
+func (q *Queue) Len() int {
+	return q.l.Len()
+}
+
+// DequeueN dequeues UP TO N elements.
+func (q *Queue) dequeueN(num int) []interface{} {
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	elems := make([]interface{}, 0, num)
+	for i := 0; i < num; i++ {
+		e := q.l.Front();
+		if e == nil {
+			break
+		}
+
+		q.l.Remove(e)
+		elems = append(elems, e.Value)
+	}
+	return elems
 }
