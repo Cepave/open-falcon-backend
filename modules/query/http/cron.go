@@ -1264,13 +1264,13 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, FROM_UNIXTIME(?))
 	`
+	o.Begin()
 	p, err := o.Raw(sql).Prepare()
 	if err != nil {
 		log.Errorf(err.Error())
 		return
 	}
 	// use transation to batch insert multiple values
-	o.Begin()
 	for _, host := range hosts {
 		_, err := p.Exec(
 			host["hostname"], 1, host["activate"], host["platform"], host["platforms"], host["IDC"],
