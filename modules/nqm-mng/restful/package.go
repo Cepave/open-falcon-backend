@@ -81,7 +81,7 @@ func initApi() {
 	v1.GET("/owl/grouptags", mvcBuilder.BuildHandler(listGroupTags))
 	v1.GET("/owl/grouptag/:group_tag_id", mvcBuilder.BuildHandler(getGroupTagById))
 
-	v1.POST("/agent/heartbeat", mvcBuilder.BuildHandler(agentHeartbeat))
+	v1.POST("/agent/heartbeat", mvcBuilder.BuildHandler(falconAgentHeartbeat))
 
 	router.GET("/health", health)
 }

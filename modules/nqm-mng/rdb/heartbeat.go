@@ -21,14 +21,14 @@ var updateSql = `
 		AND update_at < FROM_UNIXTIME(?)
 `
 
-func AgentHeartbeat(agents []*model.AgentHeartbeat, updateOnly bool) *model.AgentHeartbeatResult {
+func FalconAgentHeartbeat(agents []*model.FalconAgentHeartbeat, updateOnly bool) *model.FalconAgentHeartbeatResult {
 	if updateOnly {
 		return updateHost(agents)
 	}
 	return updateOrInsertHost(agents)
 }
 
-func updateOrInsertHost(agents []*model.AgentHeartbeat) *model.AgentHeartbeatResult {
+func updateOrInsertHost(agents []*model.FalconAgentHeartbeat) *model.FalconAgentHeartbeatResult {
 	updateOrInsertHosts := &updateOrInsertHostsInTx{
 		hosts: agents,
 	}
@@ -38,7 +38,7 @@ func updateOrInsertHost(agents []*model.AgentHeartbeat) *model.AgentHeartbeatRes
 	return &updateOrInsertHosts.result
 }
 
-func updateHost(agents []*model.AgentHeartbeat) *model.AgentHeartbeatResult {
+func updateHost(agents []*model.FalconAgentHeartbeat) *model.FalconAgentHeartbeatResult {
 	updateHosts := &updateHostsInTx{
 		hosts: agents,
 	}
@@ -49,8 +49,8 @@ func updateHost(agents []*model.AgentHeartbeat) *model.AgentHeartbeatResult {
 }
 
 type updateHostsInTx struct {
-	hosts  []*model.AgentHeartbeat
-	result model.AgentHeartbeatResult
+	hosts  []*model.FalconAgentHeartbeat
+	result model.FalconAgentHeartbeatResult
 }
 
 func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
@@ -63,7 +63,7 @@ func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
 	return db.TxCommit
 }
 
-func updateAndGetRowsAffected(updateStmt *sqlx.Stmt, agent *model.AgentHeartbeat) int64 {
+func updateAndGetRowsAffected(updateStmt *sqlx.Stmt, agent *model.FalconAgentHeartbeat) int64 {
 	r := updateStmt.MustExec(
 		agent.IP,
 		agent.AgentVersion,
@@ -76,8 +76,8 @@ func updateAndGetRowsAffected(updateStmt *sqlx.Stmt, agent *model.AgentHeartbeat
 }
 
 type updateOrInsertHostsInTx struct {
-	hosts  []*model.AgentHeartbeat
-	result model.AgentHeartbeatResult
+	hosts  []*model.FalconAgentHeartbeat
+	result model.FalconAgentHeartbeatResult
 }
 
 func (uoiHost *updateOrInsertHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
@@ -113,13 +113,13 @@ func (uoiHost *updateOrInsertHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
 	return db.TxCommit
 }
 
-func (uoiHost *updateOrInsertHostsInTx) isHostExisting(selectExt *sqlxExt.StmtExt, agent *model.AgentHeartbeat) bool {
+func (uoiHost *updateOrInsertHostsInTx) isHostExisting(selectExt *sqlxExt.StmtExt, agent *model.FalconAgentHeartbeat) bool {
 	var count int
 	selectExt.Get(&count, agent.Hostname)
 	return count >= 1
 }
 
-func (uoiHost *updateOrInsertHostsInTx) addHost(insertStmt *sqlx.Stmt, agent *model.AgentHeartbeat) {
+func (uoiHost *updateOrInsertHostsInTx) addHost(insertStmt *sqlx.Stmt, agent *model.FalconAgentHeartbeat) {
 	r := insertStmt.MustExec(
 		agent.Hostname,
 		agent.IP,
@@ -130,15 +130,15 @@ func (uoiHost *updateOrInsertHostsInTx) addHost(insertStmt *sqlx.Stmt, agent *mo
 	uoiHost.result.RowsAffected += db.ToResultExt(r).RowsAffected()
 }
 
-func (uoiHost *updateOrInsertHostsInTx) updateHost(updateStmt *sqlx.Stmt, agent *model.AgentHeartbeat) {
+func (uoiHost *updateOrInsertHostsInTx) updateHost(updateStmt *sqlx.Stmt, agent *model.FalconAgentHeartbeat) {
 	uoiHost.result.RowsAffected += updateAndGetRowsAffected(updateStmt, agent)
 }
 
-type UpdateNqmAgentProcessor struct {
+type UpdateNqmAgentHeartbeatTx struct {
 	Reqs []*model.NqmAgentHeartbeatRequest
 }
 
-func (p *UpdateNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+func (p *UpdateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	updateStmt := sqlxExt.ToTxExt(tx).Preparex(`
 	UPDATE nqm_agent
 	SET ag_hostname = ?,
@@ -160,7 +160,7 @@ func (p *UpdateNqmAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	return commonDb.TxCommit
 }
 
-func SelectByConnId(connId string) *nqmModel.Agent {
+func SelectNqmAgentByConnId(connId string) *nqmModel.Agent {
 	var selectAgent = DbFacade.GormDb.Model(&nqmModel.Agent{}).
 		Select(`
 			ag_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address, ag_status, ag_comment, ag_last_heartbeat,
@@ -218,7 +218,7 @@ func SelectByConnId(connId string) *nqmModel.Agent {
 	return loadedAgent
 }
 
-func NotNew(r *model.NqmAgentHeartbeatRequest) bool {
+func NotNewNqmAgent(r *model.NqmAgentHeartbeatRequest) bool {
 	return DbFacade.SqlxDbCtrl.GetOrNoRow(
 		new(int),
 		`
@@ -230,7 +230,7 @@ func NotNew(r *model.NqmAgentHeartbeatRequest) bool {
 	)
 }
 
-func Insert(r *model.NqmAgentHeartbeatRequest) {
+func InsertNqmAgent(r *model.NqmAgentHeartbeatRequest) {
 	DbFacade.SqlxDb.MustExec(`
 		INSERT INTO host(hostname, ip, agent_version, plugin_version)
 		VALUES(?, ?, '', '')

@@ -10,7 +10,7 @@ import (
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
-type AgentHeartbeat struct {
+type FalconAgentHeartbeat struct {
 	Hostname      string `json:"hostname" conform:"trim"`
 	IP            string `json:"ip" conform:"trim"`
 	AgentVersion  string `json:"agent_version" conform:"trim"`
@@ -18,7 +18,7 @@ type AgentHeartbeat struct {
 	UpdateTime    int64  `json:"update_time" conform:"trim"`
 }
 
-type AgentHeartbeatResult struct {
+type FalconAgentHeartbeatResult struct {
 	RowsAffected int64 `json:"rows_affected"`
 }
 

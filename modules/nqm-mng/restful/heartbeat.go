@@ -9,30 +9,30 @@ import (
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
-type heartbeatOfAgents []*model.AgentHeartbeat
+type heartbeatOfFalconAgents []*model.FalconAgentHeartbeat
 
-func (agents *heartbeatOfAgents) Bind(context *gin.Context) {
+func (agents *heartbeatOfFalconAgents) Bind(context *gin.Context) {
 	ogin.BindJson(context, agents)
 }
 
-func agentHeartbeat(
-	agents *heartbeatOfAgents,
+func falconAgentHeartbeat(
+	agents *heartbeatOfFalconAgents,
 	q *struct {
 		UpdateOnly bool `mvc:"query[update_only]"`
 	},
 ) mvc.OutputBody {
-	retBody := rdb.AgentHeartbeat(*agents, q.UpdateOnly)
+	retBody := rdb.FalconAgentHeartbeat(*agents, q.UpdateOnly)
 	return mvc.JsonOutputBody(retBody)
 }
 
 func nqmAgentHeartbeat(
 	req *model.NqmAgentHeartbeatRequest,
 ) mvc.OutputBody {
-	if rdb.NotNew(req) {
+	if rdb.NotNewNqmAgent(req) {
 		queue.NqmQueue.Put(req)
 	} else {
-		rdb.Insert(req)
+		rdb.InsertNqmAgent(req)
 	}
-	r := rdb.SelectByConnId(req.ConnectionId)
+	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
 	return mvc.JsonOutputBody(r)
 }
