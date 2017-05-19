@@ -6,8 +6,8 @@ import (
 	"time"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	oqueue "github.com/Cepave/open-falcon-backend/common/queue"
-	osling "github.com/Cepave/open-falcon-backend/common/sling"
+	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
+	commonSling "github.com/Cepave/open-falcon-backend/common/sling"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/dghubble/sling"
@@ -15,7 +15,7 @@ import (
 
 type AgentHeartbeatService struct {
 	sync.WaitGroup
-	safeQ            *oqueue.Queue
+	safeQ            *commonQueue.Queue
 	started          bool
 	slingInit        *sling.Sling
 	rowsAffectedCnt  int64
@@ -33,7 +33,7 @@ func (s *AgentHeartbeatService) Start() {
 		return
 	}
 	s.started = true
-	s.safeQ = oqueue.New()
+	s.safeQ = commonQueue.New()
 
 	s.Add(1)
 	go func() {
@@ -64,7 +64,7 @@ func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration
 		 * Configuration
 		 * ToReview
 		 */
-		c := oqueue.Config{}
+		c := commonQueue.Config{}
 		var elementType *model.AgentHeartbeat
 		absArray := s.safeQ.DrainNWithDurationByType(&c, elementType)
 		agents := absArray.([]*model.AgentHeartbeat)
@@ -130,7 +130,7 @@ func (s *AgentHeartbeatService) heartbeat(agents []*model.AgentHeartbeat) {
 	s.slingInit = s.slingInit.BodyJSON(agents).QueryStruct(&param)
 
 	res := model.AgentHeartbeatResult{}
-	err := osling.ToSlintExt(s.slingInit).DoReceive(http.StatusOK, &res)
+	err := commonSling.ToSlintExt(s.slingInit).DoReceive(http.StatusOK, &res)
 	if err != nil {
 		s.agentsDroppedCnt += int64(len(agents))
 		logger.Errorln("Heartbeat:", err)
