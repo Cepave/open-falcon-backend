@@ -4,6 +4,7 @@ import (
 	viper "github.com/spf13/viper"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
 	hbsService "github.com/Cepave/open-falcon-backend/modules/hbs/service"
 )
@@ -40,5 +41,9 @@ func initNqmConfig(config *viper.Viper) {
 }
 
 func initFalconConfig(config *viper.Viper) {
-	agentHeartbeatService = hbsService.NewAgentHeartbeatService()
+	heartbeatConfig := &commonQueue.Config{
+		Num: config.GetInt("heartbeat.falcon.batchSize"),
+		Dur: config.GetDuration("heartbeat.falcon.duration"),
+	}
+	agentHeartbeatService = hbsService.NewAgentHeartbeatService(heartbeatConfig)
 }

@@ -16,14 +16,16 @@ import (
 type AgentHeartbeatService struct {
 	sync.WaitGroup
 	safeQ            *commonQueue.Queue
+	qConfig          *commonQueue.Config
 	started          bool
 	slingInit        *sling.Sling
 	rowsAffectedCnt  int64
 	agentsDroppedCnt int64
 }
 
-func NewAgentHeartbeatService() *AgentHeartbeatService {
+func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService {
 	return &AgentHeartbeatService{
+		qConfig:   config,
 		slingInit: NewSlingBase().Post("api/v1/agent/heartbeat"),
 	}
 }

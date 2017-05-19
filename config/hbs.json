@@ -21,5 +21,11 @@
     "mysql_api": {
         "host": "http://%%MYSQL_SERVICE%%",
         "resource": ""
-    }
+    },
+    "heartbeat" :{
+		"falcon": {
+			"batchSize": 16,
+			"duration": 3
+		}
+	}
 }
