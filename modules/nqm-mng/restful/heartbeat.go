@@ -5,6 +5,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service/queue"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -22,4 +23,16 @@ func agentHeartbeat(
 ) mvc.OutputBody {
 	retBody := rdb.AgentHeartbeat(*agents, q.UpdateOnly)
 	return mvc.JsonOutputBody(retBody)
+}
+
+func nqmAgentHeartbeat(
+	req *model.NqmAgentHeartbeatRequest,
+) mvc.OutputBody {
+	if rdb.NotNew(req) {
+		queue.NqmQueue.Put(req)
+	} else {
+		rdb.Insert(req)
+	}
+	r := rdb.SelectByConnId(req.ConnectionId)
+	return mvc.JsonOutputBody(r)
 }

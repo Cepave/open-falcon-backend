@@ -124,10 +124,3 @@ func clearCachedTargetsOfAgentById(
 	r := commonNqmDb.DeleteCachedTargetsOfAgentById(q.AgentID)
 	return mvc.JsonOutputOrNotFound(r)
 }
-
-func nqmAgentHeartbeat(
-	req *commonNqmModel.AgentHeartbeatRequest,
-) mvc.OutputBody {
-	r := commonNqmDb.AgentHeartbeat(req)
-	return mvc.JsonOutputBody(r)
-}

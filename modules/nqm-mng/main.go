@@ -17,6 +17,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/restful"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service/queue"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -36,7 +37,7 @@ func main() {
 	rdb.InitRdb(toRdbConfig(config))
 	restful.InitGin(toGinConfig(config))
 	restful.InitCache(toCacheConfig(config))
-	restful.InitHeartbeat(toHeartbeatConfig(config))
+	queue.InitNqmHeartbeat(toNqmHeartbeatConfig(config))
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
 }
@@ -67,7 +68,7 @@ func toCacheConfig(config *viper.Viper) *restful.CacheConfig {
 	}
 }
 
-func toHeartbeatConfig(config *viper.Viper) *commonQueue.Config {
+func toNqmHeartbeatConfig(config *viper.Viper) *commonQueue.Config {
 	return &commonQueue.Config{
 		Num: config.GetInt("heartbeat.nqm.batchSize"),
 		Dur: time.Duration(config.GetInt("heartbeat.nqm.duration")) * time.Second,
