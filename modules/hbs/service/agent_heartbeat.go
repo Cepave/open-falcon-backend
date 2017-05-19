@@ -5,8 +5,10 @@ import (
 	"sync"
 	"time"
 
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	oqueue "github.com/Cepave/open-falcon-backend/common/queue"
 	osling "github.com/Cepave/open-falcon-backend/common/sling"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/dghubble/sling"
 )
@@ -93,9 +95,18 @@ func (s *AgentHeartbeatService) Stop() {
 	s.safeQ = nil
 }
 
-func (s *AgentHeartbeatService) Put(agent *model.AgentHeartbeat) {
+func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
 	if !s.started {
 		return
+	}
+	now := time.Now().Unix()
+	cache.Agents.Put(req, now)
+	agent := &model.AgentHeartbeat{
+		Hostname:      req.Hostname,
+		IP:            req.IP,
+		AgentVersion:  req.AgentVersion,
+		PluginVersion: req.PluginVersion,
+		UpdateTime:    now,
 	}
 	s.safeQ.Enqueue(agent)
 }
