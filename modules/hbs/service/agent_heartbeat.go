@@ -11,8 +11,6 @@ import (
 	"github.com/dghubble/sling"
 )
 
-var agentHeartbeatService *AgentHeartbeatService
-
 type AgentHeartbeatService struct {
 	sync.WaitGroup
 	safeQ            *oqueue.Queue

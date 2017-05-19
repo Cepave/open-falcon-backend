@@ -14,7 +14,10 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	hbsService "github.com/Cepave/open-falcon-backend/modules/hbs/service"
 )
+
+var agentHeartbeatService *hbsService.AgentHeartbeatService
 
 func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.AgentPluginsResponse) (err error) {
 	defer rpc.HandleError(&err)()
