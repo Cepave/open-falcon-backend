@@ -30,3 +30,25 @@ func (this DashboardScreen) Graphs() []DashboardGraph {
 	db.Dashboard.Model(&graphs).Where("screen_id = ?", this.ID).Scan(&graphs)
 	return graphs
 }
+
+func (mine DashboardScreen) Exist() bool {
+	db := con.Con()
+	rcount := 0
+	db.Dashboard.Model(&mine).Where("id = ?", mine.ID).Count(&rcount)
+	if rcount != 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (mine DashboardScreen) ExistName() bool {
+	db := con.Con()
+	rcount := 0
+	db.Dashboard.Model(&mine).Where("name = ?", mine.Name).Count(&rcount)
+	if rcount != 0 {
+		return true
+	} else {
+		return false
+	}
+}
