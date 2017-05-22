@@ -1,0 +1,262 @@
+{
+  "ApiSpecs": [
+    {
+      "HttpVerb": "POST",
+      "Path": "/api/v1/dashboard/graph",
+      "Calls": [
+        {
+          "Id": 0,
+          "CurrentPath": "/api/v1/dashboard/graph",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{}",
+          "ResponseBody": "{\"error\":\"Key: 'APIGraphCreateReqData.Endpoints' Error:Field validation for 'Endpoints' failed on the 'required' tag\\nKey: 'APIGraphCreateReqData.ScreenId' Error:Field validation for 'ScreenId' failed on the 'required' tag\\nKey: 'APIGraphCreateReqData.Counters' Error:Field validation for 'Counters' failed on the 'required' tag\\nKey: 'APIGraphCreateReqData.Title' Error:Field validation for 'Title' failed on the 'required' tag\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 1,
+          "CurrentPath": "/api/v1/dashboard/graph",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"0000\",\"screen_id\":0,\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}",
+          "ResponseBody": "{\"error\":\"Key: 'APIGraphCreateReqData.ScreenId' Error:Field validation for 'ScreenId' failed on the 'required' tag\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 2,
+          "CurrentPath": "/api/v1/dashboard/graph",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"no exist\",\"screen_id\":99991,\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}",
+          "ResponseBody": "{\"error\":\"screen id:99991 is not existing\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 3,
+          "CurrentPath": "/api/v1/dashboard/graph",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"no exist\",\"screen_id\":1266,\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}",
+          "ResponseBody": "{\"id\":4912}",
+          "ResponseCode": 200
+        },
+        {
+          "Id": 8,
+          "CurrentPath": "/api/v1/dashboard/graph",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"updated graph\",\"timespan\":222,\"screen_id\":1266,\"id\":4913,\"endpoints\":[\"a\",\"v\"],\"counters\":[\"c7\",\"c3\"]}",
+          "ResponseBody": "{\"error\":\"value of timespan is not vaild: 222\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 9,
+          "CurrentPath": "/api/v1/dashboard/graph",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"updated graph\",\"screen_id\":1266,\"id\":4913,\"endpoints\":[\"a\",\"v\"],\"counters\":[\"c7\",\"c3\"]}",
+          "ResponseBody": "{\"id\":4914}",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "POST",
+      "Path": "/api/v1/dashboard/graph_new_screen",
+      "Calls": [
+        {
+          "Id": 4,
+          "CurrentPath": "/api/v1/dashboard/graph_new_screen",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"no exist\",\"screen_name\":\"test22\",\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}",
+          "ResponseBody": "{\"error\":\"screen name:test22 already existing\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 5,
+          "CurrentPath": "/api/v1/dashboard/graph_new_screen",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"no exist\",\"screen_name\":\"test_new_screen\",\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}",
+          "ResponseBody": "{\"error\":\"screen name:test_new_screen already existing\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 6,
+          "CurrentPath": "/api/v1/dashboard/graph_new_screen",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"title\":\"no exist\",\"screen_name\":\"test_new_screen2\",\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}",
+          "ResponseBody": "{\"id\":4913}",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "GET",
+      "Path": "/api/v1/dashboard/graph/4913",
+      "Calls": [
+        {
+          "Id": 7,
+          "CurrentPath": "/api/v1/dashboard/graph/4913",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "{\"counters\":[\"c1\",\"c2\"],\"endpoints\":[\"a\",\"b\"],\"falcon_tags\":\"\",\"graph_id\":4913,\"graph_type\":\"h\",\"method\":\"\",\"position\":0,\"screen_id\":1270,\"timespan\":3600,\"title\":\"no exist\"}",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "DELETE",
+      "Path": "/api/v1/dashboard/graph/4913",
+      "Calls": [
+        {
+          "Id": 10,
+          "CurrentPath": "/api/v1/dashboard/graph/4913",
+          "MethodType": "DELETE",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "{\"id\":4913}",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "DELETE",
+      "Path": "/api/v1/dashboard/graph/99992",
+      "Calls": [
+        {
+          "Id": 11,
+          "CurrentPath": "/api/v1/dashboard/graph/99992",
+          "MethodType": "DELETE",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "{\"id\":99992}",
+          "ResponseCode": 200
+        }
+      ]
+    }
+  ]
+}
