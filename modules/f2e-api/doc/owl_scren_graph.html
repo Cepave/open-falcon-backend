@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <title> API Documentation </title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <style type="text/css">
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .hidden {
+            display:none;
+        }
+        pre {
+            outline: 1px solid #ccc;
+            padding: 5px; margin: 5px;
+        }
+
+        .string { color: green; }
+        .number { color: darkorange; }
+        .boolean { color: blue; }
+        .null { color: magenta; }
+        .key { color: red; }
+
+    </style>
+    <style type="text/css">
+        pre.prettyprint {
+            border: 1px solid #ccc;
+            margin-bottom: 0;
+            padding: 9.5px;
+        }
+    </style>
+    <script>
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                    } else {
+                        cls = 'string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function spaceJson(json){
+            var validJson = JSON.parse(json);
+            return JSON.stringify(validJson, undefined, 4);
+        }
+    </script>
+
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Gin</a>
+            <p class="navbar-text">Developed by Gophers at <a href="http://betacraft.co">Betacraft</a></p>
+        </div>
+
+
+    </div>
+
+</nav>
+<div class="container-fluid" style="margin-top: 70px;margin-bottom: 20px;">
+    <div class="container-fluid">
+    <div class="col-md-4">
+        <div class="panel panel-default">
+              <div class="panel-heading">Base Urls</div>
+              <div class="panel-body">
+
+                    <p>Production : <strong>/api/v1</strong></p>
+
+                    <p>Staging : <strong>/api/v1</strong></p>
+
+              </div>
+            </div>
+        <ul class="nav nav-pills nav-stacked" role="tablist">
+
+                <li role="presentation"><a href="#0top" role="tab" data-toggle="tab">POST : /api/v1/dashboard/graph</a></li>
+
+                <li role="presentation"><a href="#1top" role="tab" data-toggle="tab">POST : /api/v1/dashboard/graph_new_screen</a></li>
+
+                <li role="presentation"><a href="#2top" role="tab" data-toggle="tab">GET : /api/v1/dashboard/graph/4913</a></li>
+
+                <li role="presentation"><a href="#3top" role="tab" data-toggle="tab">DELETE : /api/v1/dashboard/graph/4913</a></li>
+
+                <li role="presentation"><a href="#4top" role="tab" data-toggle="tab">DELETE : /api/v1/dashboard/graph/99992</a></li>
+
+        <ul>
+    </div>
+    <div class="col-md-8 tab-content">
+
+        <div id="0top"  role="tabpanel" class="tab-pane col-md-10">
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+                
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-0-0" class="prettyprint">{}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{}");
+                            document.getElementById('request-body0-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">400</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-0-0">{&#34;error&#34;:&#34;Key: &#39;APIGraphCreateReqData.Endpoints&#39; Error:Field validation for &#39;Endpoints&#39; failed on the &#39;required&#39; tag\nKey: &#39;APIGraphCreateReqData.ScreenId&#39; Error:Field validation for &#39;ScreenId&#39; failed on the &#39;required&#39; tag\nKey: &#39;APIGraphCreateReqData.Counters&#39; Error:Field validation for &#39;Counters&#39; failed on the &#39;required&#39; tag\nKey: &#39;APIGraphCreateReqData.Title&#39; Error:Field validation for &#39;Title&#39; failed on the &#39;required&#39; tag&#34;}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"error\":\"Key: 'APIGraphCreateReqData.Endpoints' Error:Field validation for 'Endpoints' failed on the 'required' tag\\nKey: 'APIGraphCreateReqData.ScreenId' Error:Field validation for 'ScreenId' failed on the 'required' tag\\nKey: 'APIGraphCreateReqData.Counters' Error:Field validation for 'Counters' failed on the 'required' tag\\nKey: 'APIGraphCreateReqData.Title' Error:Field validation for 'Title' failed on the 'required' tag\"}");
+                            document.getElementById('response-body-0-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-0-1" class="prettyprint">{&#34;title&#34;:&#34;0000&#34;,&#34;screen_id&#34;:0,&#34;endpoints&#34;:[&#34;a&#34;,&#34;b&#34;],&#34;counters&#34;:[&#34;c1&#34;,&#34;c2&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"0000\",\"screen_id\":0,\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}");
+                            document.getElementById('request-body0-1').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">400</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-0-1">{&#34;error&#34;:&#34;Key: &#39;APIGraphCreateReqData.ScreenId&#39; Error:Field validation for &#39;ScreenId&#39; failed on the &#39;required&#39; tag&#34;}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"error\":\"Key: 'APIGraphCreateReqData.ScreenId' Error:Field validation for 'ScreenId' failed on the 'required' tag\"}");
+                            document.getElementById('response-body-0-1').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-0-2" class="prettyprint">{&#34;title&#34;:&#34;no exist&#34;,&#34;screen_id&#34;:99991,&#34;endpoints&#34;:[&#34;a&#34;,&#34;b&#34;],&#34;counters&#34;:[&#34;c1&#34;,&#34;c2&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"no exist\",\"screen_id\":99991,\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}");
+                            document.getElementById('request-body0-2').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">400</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-0-2">{&#34;error&#34;:&#34;screen id:99991 is not existing&#34;}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"error\":\"screen id:99991 is not existing\"}");
+                            document.getElementById('response-body-0-2').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-0-3" class="prettyprint">{&#34;title&#34;:&#34;no exist&#34;,&#34;screen_id&#34;:1266,&#34;endpoints&#34;:[&#34;a&#34;,&#34;b&#34;],&#34;counters&#34;:[&#34;c1&#34;,&#34;c2&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"no exist\",\"screen_id\":1266,\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}");
+                            document.getElementById('request-body0-3').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-0-3">{&#34;id&#34;:4912}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"id\":4912}");
+                            document.getElementById('response-body-0-3').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-0-4" class="prettyprint">{&#34;title&#34;:&#34;updated graph&#34;,&#34;timespan&#34;:222,&#34;screen_id&#34;:1266,&#34;id&#34;:4913,&#34;endpoints&#34;:[&#34;a&#34;,&#34;v&#34;],&#34;counters&#34;:[&#34;c7&#34;,&#34;c3&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"updated graph\",\"timespan\":222,\"screen_id\":1266,\"id\":4913,\"endpoints\":[\"a\",\"v\"],\"counters\":[\"c7\",\"c3\"]}");
+                            document.getElementById('request-body0-4').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">400</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-0-4">{&#34;error&#34;:&#34;value of timespan is not vaild: 222&#34;}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"error\":\"value of timespan is not vaild: 222\"}");
+                            document.getElementById('response-body-0-4').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-0-5" class="prettyprint">{&#34;title&#34;:&#34;updated graph&#34;,&#34;screen_id&#34;:1266,&#34;id&#34;:4913,&#34;endpoints&#34;:[&#34;a&#34;,&#34;v&#34;],&#34;counters&#34;:[&#34;c7&#34;,&#34;c3&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"updated graph\",\"screen_id\":1266,\"id\":4913,\"endpoints\":[\"a\",\"v\"],\"counters\":[\"c7\",\"c3\"]}");
+                            document.getElementById('request-body0-5').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-0-5">{&#34;id&#34;:4914}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"id\":4914}");
+                            document.getElementById('response-body-0-5').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+        </div>
+
+        <div id="1top"  role="tabpanel" class="tab-pane col-md-10">
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-1-0" class="prettyprint">{&#34;title&#34;:&#34;no exist&#34;,&#34;screen_name&#34;:&#34;test22&#34;,&#34;endpoints&#34;:[&#34;a&#34;,&#34;b&#34;],&#34;counters&#34;:[&#34;c1&#34;,&#34;c2&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"no exist\",\"screen_name\":\"test22\",\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}");
+                            document.getElementById('request-body1-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">400</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-1-0">{&#34;error&#34;:&#34;screen name:test22 already existing&#34;}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"error\":\"screen name:test22 already existing\"}");
+                            document.getElementById('response-body-1-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-1-1" class="prettyprint">{&#34;title&#34;:&#34;no exist&#34;,&#34;screen_name&#34;:&#34;test_new_screen&#34;,&#34;endpoints&#34;:[&#34;a&#34;,&#34;b&#34;],&#34;counters&#34;:[&#34;c1&#34;,&#34;c2&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"no exist\",\"screen_name\":\"test_new_screen\",\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}");
+                            document.getElementById('request-body1-1').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">400</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-1-1">{&#34;error&#34;:&#34;screen name:test_new_screen already existing&#34;}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"error\":\"screen name:test_new_screen already existing\"}");
+                            document.getElementById('response-body-1-1').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-1-2" class="prettyprint">{&#34;title&#34;:&#34;no exist&#34;,&#34;screen_name&#34;:&#34;test_new_screen2&#34;,&#34;endpoints&#34;:[&#34;a&#34;,&#34;b&#34;],&#34;counters&#34;:[&#34;c1&#34;,&#34;c2&#34;]}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"myhung\",\"sig\":\"706d501334a311e7ac430242ac120008\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"title\":\"no exist\",\"screen_name\":\"test_new_screen2\",\"endpoints\":[\"a\",\"b\"],\"counters\":[\"c1\",\"c2\"]}");
+                            document.getElementById('request-body1-2').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-1-2">{&#34;id&#34;:4913}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"id\":4913}");
+                            document.getElementById('response-body-1-2').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+        </div>
+
+        <div id="2top"  role="tabpanel" class="tab-pane col-md-10">
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-2-0">{&#34;counters&#34;:[&#34;c1&#34;,&#34;c2&#34;],&#34;endpoints&#34;:[&#34;a&#34;,&#34;b&#34;],&#34;falcon_tags&#34;:&#34;&#34;,&#34;graph_id&#34;:4913,&#34;graph_type&#34;:&#34;h&#34;,&#34;method&#34;:&#34;&#34;,&#34;position&#34;:0,&#34;screen_id&#34;:1270,&#34;timespan&#34;:3600,&#34;title&#34;:&#34;no exist&#34;}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"counters\":[\"c1\",\"c2\"],\"endpoints\":[\"a\",\"b\"],\"falcon_tags\":\"\",\"graph_id\":4913,\"graph_type\":\"h\",\"method\":\"\",\"position\":0,\"screen_id\":1270,\"timespan\":3600,\"title\":\"no exist\"}");
+                            document.getElementById('response-body-2-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+        </div>
+
+        <div id="3top"  role="tabpanel" class="tab-pane col-md-10">
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-3-0">{&#34;id&#34;:4913}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"id\":4913}");
+                            document.getElementById('response-body-3-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+        </div>
+
+        <div id="4top"  role="tabpanel" class="tab-pane col-md-10">
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;: &#34;root&#34;, &#34;sig&#34;: &#34;233fdb00f99811e68a5c001500c6ca5a&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-4-0">{&#34;id&#34;:99992}</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"id\":99992}");
+                            document.getElementById('response-body-4-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+        </div>
+
+    </div>
+</div>
+</div>
+<hr>
+</body>
+</html>

@@ -18,6 +18,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+var (
+	Version   = "<UNDEFINED>"
+	GitCommit = "<UNDEFINED>"
+)
+
 func initGraph() {
 	graph.Start(viper.GetStringMapString("graphs.cluster"))
 }
@@ -29,7 +34,7 @@ func main() {
 	flag.Parse()
 	cfg := *cfgTmp
 	if *version {
-		fmt.Println(config.VERSION)
+		fmt.Printf("version %s, build %s\n", Version, GitCommit)
 		os.Exit(0)
 	}
 
@@ -45,8 +50,11 @@ func main() {
 	cfg = strings.Replace(cfg, ".json", "", 1)
 	viper.SetConfigName(cfg)
 
-	viper.ReadInConfig()
-	err := config.InitLog(viper.GetString("log_level"))
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = config.InitLog(viper.GetString("log_level"))
 	if err != nil {
 		log.Fatal(err)
 	}

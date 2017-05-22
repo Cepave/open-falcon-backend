@@ -101,8 +101,10 @@ func StartGin(port string, r *gin.Engine) {
 	host.Routes(r)
 	expression.Routes(r)
 	mockcfg.Routes(r)
-	dashboardScreenOWl.Routes(r)
-	dashboardGraphOwl.Routes(r)
+	// dashboardScreenOWl.Routes(r)
+	// dashboardGraphOwl.Routes(r)
+	dashboard_graph.Routes(r)
+	dashboard_screen.Routes(r)
 	alarm.Routes(r)
 	r.Run(port)
 }

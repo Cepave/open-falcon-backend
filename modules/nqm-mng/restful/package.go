@@ -46,6 +46,7 @@ func initApi() {
 
 	v1.GET("/nqm/agents", mvcBuilder.BuildHandler(listAgents))
 	v1.GET("/nqm/agent/:agent_id", getAgentById)
+	v1.POST("/heartbeat/nqm/agent", mvcBuilder.BuildHandler(nqmAgentHeartbeat))
 	v1.POST("/nqm/agent", addNewAgent)
 	v1.PUT("/nqm/agent/:agent_id", modifyAgent)
 	v1.POST("/nqm/agent/:agent_id/pingtask", addPingtaskToAgentForAgent)
