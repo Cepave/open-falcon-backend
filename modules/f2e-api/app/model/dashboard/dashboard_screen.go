@@ -14,9 +14,10 @@ import (
 // +-------+------------------+------+-----+-------------------+-----------------------------+
 
 type DashboardScreen struct {
-	ID   int64  `json:"id" gorm:"column:id"`
-	PID  int64  `json:"pid" gorm:"column:pid"`
-	Name string `json:"name" gorm:"column:name"`
+	ID      int64  `json:"id" gorm:"column:id"`
+	PID     int64  `json:"pid" gorm:"column:pid"`
+	Name    string `json:"name" gorm:"column:name"`
+	Creator string `json:"creator" gorm:"column:creator"`
 }
 
 func (this DashboardScreen) TableName() string {
