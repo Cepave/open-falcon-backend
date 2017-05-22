@@ -1,40 +1,24 @@
 package strconv
 
 import (
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestArraySuite struct{}
+var _ = DescribeTable("Split a string to INT array",
+	func(source string, expected []int64) {
+		testedResult := SplitStringToIntArray(source, "#")
+		Expect(testedResult).To(Equal(expected))
+	},
+	Entry("Empty string to empty array of int64", "", []int64{}),
+	Entry("Viable to array of int64", "123#445#-987#-229", []int64{ 123, 445, -987, -229 }),
+)
 
-var _ = Suite(&TestArraySuite{})
-
-// Tests the spliting of a string to int array
-func (suite *TestArraySuite) TestSplitStringToIntArray(c *C) {
-	testCases := []*struct {
-		values string
-		expectedResult []int64
-	} {
-		{ "", []int64 {} },
-		{ "123#445#-987#-229", []int64 { 123, 445, -987, -229 } },
-	}
-
-	for _, testCase := range testCases {
-		testedResult := SplitStringToIntArray(testCase.values, "#")
-		c.Assert(testedResult, DeepEquals, testCase.expectedResult)
-	}
-}
-// Tests the spliting of a string to uint array
-func (suite *TestArraySuite) TestSplitStringToUintArray(c *C) {
-	testCases := []*struct {
-		values string
-		expectedResult []uint64
-	} {
-		{ "", []uint64 {} },
-		{ "1,3,5,7,9", []uint64 { 1, 3, 5, 7, 9 } },
-	}
-
-	for _, testCase := range testCases {
-		testedResult := SplitStringToUintArray(testCase.values, ",")
-		c.Assert(testedResult, DeepEquals, testCase.expectedResult)
-	}
-}
+var _ = DescribeTable("Split a string to UINT array",
+	func(source string, expected []uint64) {
+		testedResult := SplitStringToUintArray(source, "#")
+		Expect(testedResult).To(Equal(expected))
+	},
+	Entry("Empty string to empty array of int64", "", []uint64{}),
+	Entry("Empty string to empty array of uint64", "87#14#44", []uint64{ 87, 14, 44 }),
+)
