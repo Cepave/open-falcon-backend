@@ -102,6 +102,5 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 	dt.Commit()
 	aid := lid[0]
 
-	h.JSONR(c, map[string]interface{}{"id": aid, "screen_id": d.ScreenId})
-
+	h.JSONR(c, map[string]interface{}{"id": aid, "screen_id": d.ScreenId, "screen_name": inputs.ScreenName})
 }
