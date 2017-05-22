@@ -39,6 +39,7 @@ CREATE TABLE `dashboard_graph` (
   `method` char(8) DEFAULT '',
   `position` int(11) unsigned NOT NULL DEFAULT '0',
   `falcon_tags` varchar(512) NOT NULL DEFAULT '',
+  `creator` varchar(50) DEFAULT 'root',
   PRIMARY KEY (`id`),
   KEY `idx_sid` (`screen_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4626 DEFAULT CHARSET=utf8;
@@ -56,6 +57,7 @@ CREATE TABLE `dashboard_screen` (
   `pid` int(11) unsigned NOT NULL DEFAULT '0',
   `name` char(128) NOT NULL,
   `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `creator` varchar(50) DEFAULT 'root',
   PRIMARY KEY (`id`),
   KEY `idx_pid` (`pid`)
 ) ENGINE=InnoDB AUTO_INCREMENT=952 DEFAULT CHARSET=utf8;
