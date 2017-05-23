@@ -34,6 +34,9 @@ func (q *Queue) Count() uint64 {
 }
 
 func (q *Queue) Start() {
+	if q.running {
+		return
+	}
 	q.running = true
 	go q.drain()
 }
@@ -72,10 +75,12 @@ func (q *Queue) drain() {
 }
 
 func (q *Queue) Stop() {
+	if !q.running {
+		return
+	}
 	q.running = false
 	close(q.flush)
 	<-q.done
-	return
 }
 
 func (q *Queue) Put(v interface{}) {
