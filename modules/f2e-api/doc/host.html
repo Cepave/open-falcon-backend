@@ -102,6 +102,8 @@
 
                 <li role="presentation"><a href="#1top" role="tab" data-toggle="tab">GET : /api/v1/host/1647/hostgroup</a></li>
 
+                <li role="presentation"><a href="#2top" role="tab" data-toggle="tab">PUT : /api/v1/host/set_maintain_time</a></li>
+
         <ul>
     </div>
     <div class="col-md-8 tab-content">
@@ -282,6 +284,170 @@
                         try {
                             var jsonStr = spaceJson("[{\"id\":78,\"grp_name\":\"tplB\",\"create_user\":\"userA\"},{\"id\":145,\"grp_name\":\"Owl_Default_Group\",\"create_user\":\"userA\"}]");
                             document.getElementById('response-body-1-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+        </div>
+
+        <div id="2top"  role="tabpanel" class="tab-pane col-md-10">
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;:&#34;root&#34;,&#34;sig&#34;:&#34;427d6803b78311e68afd0242ac130006&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-2-0" class="prettyprint">{&#34;start_time&#34;:1495447254,&#34;hosts&#34;:[&#34;hostA&#34;,&#34;hostB&#34;],&#34;end_time&#34;:1495533650}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"root\",\"sig\":\"427d6803b78311e68afd0242ac130006\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"start_time\":1495447254,\"hosts\":[\"hostA\",\"hostB\"],\"end_time\":1495533650}");
+                            document.getElementById('request-body2-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-2-0">[{&#34;id&#34;:8,&#34;hostname&#34;:&#34;hostB&#34;,&#34;ip&#34;:&#34;0.0.0.1&#34;,&#34;agent_version&#34;:&#34;5.2.0&#34;,&#34;plugin_version&#34;:&#34;e1571b9944626b1aa7ab3075262e9b171854b4c7&#34;,&#34;maintain_begin&#34;:1495447254,&#34;maintain_end&#34;:1495533650},{&#34;id&#34;:1,&#34;hostname&#34;:&#34;hostA&#34;,&#34;ip&#34;:&#34;0.0.0.2&#34;,&#34;agent_version&#34;:&#34;5.1.4&#34;,&#34;plugin_version&#34;:&#34;12155256cec3926186de22e282e67f4ce11cdbf7&#34;,&#34;maintain_begin&#34;:1495447254,&#34;maintain_end&#34;:1495533650}]</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("[{\"id\":8,\"hostname\":\"hostB\",\"ip\":\"0.0.0.1\",\"agent_version\":\"5.2.0\",\"plugin_version\":\"e1571b9944626b1aa7ab3075262e9b171854b4c7\",\"maintain_begin\":1495447254,\"maintain_end\":1495533650},{\"id\":1,\"hostname\":\"hostA\",\"ip\":\"0.0.0.2\",\"agent_version\":\"5.1.4\",\"plugin_version\":\"12155256cec3926186de22e282e67f4ce11cdbf7\",\"maintain_begin\":1495447254,\"maintain_end\":1495533650}]");
+                            document.getElementById('response-body-2-0').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <hr>
+
+
+                <p> <H4> Request Headers </H4> </p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Apitoken</td>
+                        <td> {&#34;name&#34;:&#34;root&#34;,&#34;sig&#34;:&#34;427d6803b78311e68afd0242ac130006&#34;}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td>  application/json</td>
+                    </tr>
+
+                </table>
+
+
+
+
+                <p> <H4> Request Body </H4> </p>
+                <pre id="request-body-2-1" class="prettyprint">{&#34;start_time&#34;:0,&#34;hosts&#34;:[&#34;hostA&#34;,&#34;hostB&#34;],&#34;end_time&#34;:0}</pre>
+                <script>
+
+                    var requestHeader ={"Apitoken":"{\"name\":\"root\",\"sig\":\"427d6803b78311e68afd0242ac130006\"}","Content-Type":" application/json\r"};
+
+                    if (requestHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("{\"start_time\":0,\"hosts\":[\"hostA\",\"hostB\"],\"end_time\":0}");
+                            document.getElementById('request-body2-1').innerHTML = syntaxHighlight(jsonStr);
+                        } catch (e) {
+
+                        }
+                    }
+                </script>
+
+                <p><h4> Response Code</h4></p>
+                <pre class="prettyprint lang-json">200</pre>
+
+                <p><h4> Response Headers</h4></p>
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th>Key</th>
+                        <th>Value</th>
+                    </tr>
+
+                    <tr>
+                        <td>Content-Type</td>
+                        <td> application/json; charset=utf-8</td>
+                    </tr>
+
+                    <tr>
+                        <td>Vary</td>
+                        <td> Origin</td>
+                    </tr>
+
+                </table>
+
+
+                <p> <H4> Response Body </H4> </p>
+                <pre class="prettyprint" id="response-body-2-1">[{&#34;id&#34;:8,&#34;hostname&#34;:&#34;hostB&#34;,&#34;ip&#34;:&#34;0.0.0.1&#34;,&#34;agent_version&#34;:&#34;5.2.0&#34;,&#34;plugin_version&#34;:&#34;e1571b9944626b1aa7ab3075262e9b171854b4c7&#34;,&#34;maintain_begin&#34;:0,&#34;maintain_end&#34;:0},{&#34;id&#34;:1,&#34;hostname&#34;:&#34;hostA&#34;,&#34;ip&#34;:&#34;0.0.0.2&#34;,&#34;agent_version&#34;:&#34;5.1.4&#34;,&#34;plugin_version&#34;:&#34;12155256cec3926186de22e282e67f4ce11cdbf7&#34;,&#34;maintain_begin&#34;:0,&#34;maintain_end&#34;:0}]</pre>
+                <script>
+
+                    var responseHeader ={"Content-Type":"application/json; charset=utf-8","Vary":"Origin"};
+
+                    if (responseHeader["Content-Type"] === "application/json"){
+                        try {
+                            var jsonStr = spaceJson("[{\"id\":8,\"hostname\":\"hostB\",\"ip\":\"0.0.0.1\",\"agent_version\":\"5.2.0\",\"plugin_version\":\"e1571b9944626b1aa7ab3075262e9b171854b4c7\",\"maintain_begin\":0,\"maintain_end\":0},{\"id\":1,\"hostname\":\"hostA\",\"ip\":\"0.0.0.2\",\"agent_version\":\"5.1.4\",\"plugin_version\":\"12155256cec3926186de22e282e67f4ce11cdbf7\",\"maintain_begin\":0,\"maintain_end\":0}]");
+                            document.getElementById('response-body-2-1').innerHTML = syntaxHighlight(jsonStr);
                         } catch (e) {
 
                         }
