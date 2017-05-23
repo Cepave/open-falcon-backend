@@ -94,7 +94,7 @@ func EndpointsQuerySubMetric(c *gin.Context) {
 		inputs.MetricQuery = ".+"
 	}
 	enps := inputs.Endpoints
-	enpids := []int{}
+	enpids := []int64{}
 	db.Graph.Table("endpoint").Select("id").Where("endpoint IN (?)", enps).Pluck("id", &enpids)
 	metricSlist := map[string]int{}
 	if len(enpids) != 0 {
