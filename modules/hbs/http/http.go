@@ -3,7 +3,7 @@ package http
 import (
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	log "github.com/Sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"

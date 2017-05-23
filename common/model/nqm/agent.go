@@ -11,7 +11,7 @@ import (
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	json "github.com/bitly/go-simplejson"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type AgentForAdding struct {

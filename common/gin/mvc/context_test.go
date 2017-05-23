@@ -11,7 +11,7 @@ import (
 	"mime/multipart"
 	"strings"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/validator.v9"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	sjson "github.com/bitly/go-simplejson"

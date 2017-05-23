@@ -99,23 +99,29 @@
 			"versionExact": "v1.6.1"
 		},
 		{
-			"checksumSHA1": "jmOzhNTPx7O3+2V+UKC6oWsIOLc=",
+			"checksumSHA1": "2qJoId7IglY1d3GIEgm1xIBeUwk=",
 			"path": "github.com/gin-contrib/cors",
-			"revision": "fb918bcd825b9e20f0c3c365981baf9454029b6c",
+			"revision": "cf4846e6a636a76237a28d9286f163c132e841bc",
 			"revisionTime": "2016-11-09T06:27:26Z",
 			"version": "=v1.1",
 			"versionExact": "v1.1"
 		},
 		{
+			"checksumSHA1": "RsNwOto8G8aXIiRrlFn4dtU9q/g=",
+			"path": "github.com/gin-gonic/gin",
+			"revision": "e2212d40c62a98b388a5eb48ecbdcf88534688ba",
+			"revisionTime": "2016-12-04T22:13:08Z"
+		},
+		{
 			"checksumSHA1": "UsILDoIB2S7ra+w2fMdb85mX3HM=",
 			"path": "github.com/gin-gonic/gin/binding",
-			"revision": "d5b353c5d5a560322e6d96121c814115562501f7",
+			"revision": "e2212d40c62a98b388a5eb48ecbdcf88534688ba",
 			"revisionTime": "2017-04-28T10:59:23Z"
 		},
 		{
 			"checksumSHA1": "PHv9FNb7YavJWtAHcY6ZgXmkmHs=",
 			"path": "github.com/gin-gonic/gin/render",
-			"revision": "d5b353c5d5a560322e6d96121c814115562501f7",
+			"revision": "e2212d40c62a98b388a5eb48ecbdcf88534688ba",
 			"revisionTime": "2017-04-28T10:59:23Z"
 		},
 		{
@@ -135,12 +141,6 @@
 			"path": "github.com/toolkits/sys",
 			"revision": "c2ba2f18687baca160678068546bec95f7f22380",
 			"revisionTime": "2014-11-16T09:33:26Z"
-		},
-		{
-			"checksumSHA1": "hT+7DPyl8tQ96kUXW3Sr5o0Pcj0=",
-			"path": "gopkg.in/gin-gonic/gin.v1",
-			"revision": "e2212d40c62a98b388a5eb48ecbdcf88534688ba",
-			"revisionTime": "2016-12-04T22:13:08Z"
 		},
 		{
 			"checksumSHA1": "39V1idWER42Lmcmg2Uy40wMzOlo=",

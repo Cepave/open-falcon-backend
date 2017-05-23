@@ -180,7 +180,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"

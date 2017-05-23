@@ -7,7 +7,7 @@ import (
 	owlGin "github.com/Cepave/open-falcon-backend/common/gin"
 	commonOwlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/spf13/cast"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type AgentPingtask struct {
