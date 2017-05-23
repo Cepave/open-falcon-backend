@@ -125,10 +125,28 @@
 			"revisionTime": "2017-04-28T10:59:23Z"
 		},
 		{
+			"checksumSHA1": "6DVd4tXfoer2bc5pcEVOj0bNf7w=",
+			"path": "github.com/itsjamie/gin-cors",
+			"revision": "97b4a9da79331dfa2b6d35f4cdd1e50f5148859c",
+			"revisionTime": "2016-04-20T13:07:02Z"
+		},
+		{
 			"checksumSHA1": "b0T0Hzd+zYk+OCDTFMps+jwa/nY=",
 			"path": "github.com/manucorporat/sse",
 			"revision": "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d",
 			"revisionTime": "2016-01-26T18:01:36Z"
+		},
+		{
+			"checksumSHA1": "0JN3QmYINZcQ72hwXACOtg8SOqk=",
+			"path": "github.com/masato25/yaag/gin",
+			"revision": "b04f9b8a11ae0427e738ef1affd11a3184bb144d",
+			"revisionTime": "2016-12-13T08:39:40Z"
+		},
+		{
+			"checksumSHA1": "KkYjlcGejb/sIXcO+YriMzOaMYw=",
+			"path": "github.com/masato25/yaag/yaag",
+			"revision": "b04f9b8a11ae0427e738ef1affd11a3184bb144d",
+			"revisionTime": "2016-12-13T08:39:40Z"
 		},
 		{
 			"checksumSHA1": "U6lX43KDDlNOn+Z0Yyww+ZzHfFo=",
