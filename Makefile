@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
 TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
 CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng f2e-api
 TARGET = open-falcon
@@ -42,6 +43,12 @@ pack: checkbin
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
 	@rm -rf out
 
+coverage:
+	@echo ">> Sync test/vendor.json before testing code coverage"
+	@cp ./test/vendor.json ./vendor/vendor.json
+	@$(MAKE) -f $(THIS_FILE) install
+	./coverage.sh
+
 clean:
 	@rm -rf ./bin
 	@rm -rf ./out
@@ -49,4 +56,4 @@ clean:
 	@rm -rf ./package_cache_tmp
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
-.PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api
+.PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage

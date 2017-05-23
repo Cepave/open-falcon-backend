@@ -9,5 +9,5 @@ script:
 
 after_success:
   - make clean
-  - go test -race -coverprofile=coverage.txt -covermode=atomic github.com/Cepave/open-falcon-backend/modules/query/http
+  - make coverage
   - bash <(curl -s https://codecov.io/bash)
