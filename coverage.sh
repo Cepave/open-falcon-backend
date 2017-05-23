@@ -17,6 +17,7 @@ for d in $(go list ./... | grep -v vendor | grep -v \
     -e modules/hbs/http \
     -e modules/query/conf \
     -e modules/query/http \
+    -e modules/query/dsl/nqm_parser \
     ); do
     go test -race -coverprofile=profile.out -covermode=atomic $d
     if [ -f profile.out ]; then
