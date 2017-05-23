@@ -134,11 +134,18 @@ func (uoiHost *updateOrInsertHostsInTx) updateHost(updateStmt *sqlx.Stmt, agent 
 	uoiHost.result.RowsAffected += updateAndGetRowsAffected(updateStmt, agent)
 }
 
-type UpdateNqmAgentHeartbeatTx struct {
+func UpdateNqmAgentHeartbeat(reqs []*model.NqmAgentHeartbeatRequest) {
+	updateTx := &updateNqmAgentHeartbeatTx{
+		Reqs: reqs,
+	}
+	DbFacade.SqlxDbCtrl.InTx(updateTx)
+}
+
+type updateNqmAgentHeartbeatTx struct {
 	Reqs []*model.NqmAgentHeartbeatRequest
 }
 
-func (p *UpdateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+func (p *updateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	updateStmt := sqlxExt.ToTxExt(tx).Preparex(`
 	UPDATE nqm_agent
 	SET ag_hostname = ?,

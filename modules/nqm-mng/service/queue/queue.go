@@ -46,30 +46,25 @@ func (q *Queue) drain() {
 		select {
 		default:
 			reqs := q.q.DrainNWithDurationByType(q.c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
-			updateTx := &rdb.UpdateNqmAgentHeartbeatTx{
-				Reqs: reqs,
-			}
-			rdb.DbFacade.SqlxDbCtrl.InTx(updateTx)
-
 			d := uint64(len(reqs))
 			atomic.AddUint64(&q.cnt, d)
-			logger.Debugf("drained %d elements\n", d)
+			logger.Debugf("drained %d NQM agent heartbeat requests from queue\n", d)
+
+			rdb.UpdateNqmAgentHeartbeat(reqs)
 		case <-q.flush:
 			c := &commonQueue.Config{Num: q.c.Num, Dur: 0}
-			for q.q.Len() != 0 {
+			for {
 				reqs := q.q.DrainNWithDurationByType(c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
-				updateTx := &rdb.UpdateNqmAgentHeartbeatTx{
-					Reqs: reqs,
+				if len(reqs) == 0 {
+					close(q.done)
+					return
 				}
-				rdb.DbFacade.SqlxDbCtrl.InTx(updateTx)
-
 				d := uint64(len(reqs))
-
 				atomic.AddUint64(&q.cnt, d)
-				logger.Debugf("flushed %d elements\n", d)
+				logger.Debugf("flushed %d NQM agent heartbeat requests from queue\n", d)
+
+				rdb.UpdateNqmAgentHeartbeat(reqs)
 			}
-			close(q.done)
-			return
 		}
 	}
 }
