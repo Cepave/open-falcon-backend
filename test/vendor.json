@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "8tLSbloQ6bpVBB/CcPbP9sLW45Y=",
+			"path": "github.com/Pallinder/go-randomdata",
+			"revision": "8c3362a5e6781e0d1046f1267b3c1f19b2cde334",
+			"revisionTime": "2017-04-10T16:13:40Z"
+		},
+		{
 			"checksumSHA1": "G0MBhApkgOH9++JlIA8FPfU7j9Y=",
 			"path": "github.com/astaxie/beego",
 			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
@@ -99,6 +105,12 @@
 			"versionExact": "v1.6.1"
 		},
 		{
+			"checksumSHA1": "pE4DO3iIkNvnWzuqnnTNc59PROQ=",
+			"path": "github.com/chyeh/pubip",
+			"revision": "b7e679cf541cd580e99712413b9351008731d09d",
+			"revisionTime": "2017-02-03T09:59:19Z"
+		},
+		{
 			"checksumSHA1": "jmOzhNTPx7O3+2V+UKC6oWsIOLc=",
 			"path": "github.com/gin-contrib/cors",
 			"revision": "fb918bcd825b9e20f0c3c365981baf9454029b6c",
@@ -129,6 +141,30 @@
 			"path": "github.com/mattn/go-isatty",
 			"revision": "fc9e8d8ef48496124e79ae0df75490096eccf6fe",
 			"revisionTime": "2017-03-22T23:44:13Z"
+		},
+		{
+			"checksumSHA1": "M6x7H+L8wUi42x0hHQwoIzh6k34=",
+			"path": "github.com/montanaflynn/stats",
+			"revision": "41c34e4914ec3c05d485e564d9028d8861d5d9ad",
+			"revisionTime": "2017-04-04T20:43:49Z"
+		},
+		{
+			"checksumSHA1": "LEDPmTEIs5Ykna4ahSjtX10Hd7g=",
+			"path": "github.com/parnurzeal/gorequest",
+			"revision": "5bf13be198787abbed057fb7c4007f372083a0f5",
+			"revisionTime": "2017-04-29T06:12:44Z"
+		},
+		{
+			"checksumSHA1": "SQi5yeNb9HnAMRpEhQgcv9x9yKc=",
+			"path": "github.com/patrickmn/go-cache",
+			"revision": "7ac151875ffb48b9f3ccce9ea20f020b0c1596c8",
+			"revisionTime": "2017-04-18T23:29:47Z"
+		},
+		{
+			"checksumSHA1": "f4m09DHEetaanti/GqUJzyCBTaI=",
+			"path": "github.com/smartystreets/goconvey/convey",
+			"revision": "af8e7d560364b90f732a1d119d17b5506e50447d",
+			"revisionTime": "2017-05-08T12:12:05Z"
 		},
 		{
 			"checksumSHA1": "eIx4vdH7NYr6PUoiHSsnTP09szk=",

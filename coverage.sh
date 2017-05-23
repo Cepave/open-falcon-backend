@@ -8,9 +8,15 @@ for d in $(go list ./... | grep -v vendor | grep -v \
     -e common/gorm \
     -e common/runtime \
     -e common/vipercfg \
-    -e modules/agent/session \
     -e scripts/mysql/dbpatch/go/sql \
-    -e open-falcon-backend/modules \
+    \
+    -e modules/agent/session \
+    -e modules/f2e-api/test \
+    -e modules/fe/model/falcon_portal \
+    -e modules/fe/test/portal_test \
+    -e modules/hbs/http \
+    -e modules/query/conf \
+    -e modules/query/http \
     ); do
     go test -race -coverprofile=profile.out -covermode=atomic $d
     if [ -f profile.out ]; then
