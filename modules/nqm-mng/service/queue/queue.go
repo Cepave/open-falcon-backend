@@ -74,10 +74,8 @@ func (q *Queue) drain() {
 func (q *Queue) Stop() {
 	q.running = false
 	close(q.flush)
-	select {
-	case <-q.done:
-		return
-	}
+	<-q.done
+	return
 }
 
 func (q *Queue) Put(v interface{}) {
