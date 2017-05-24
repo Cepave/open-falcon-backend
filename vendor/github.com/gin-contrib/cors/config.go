@@ -3,11 +3,12 @@ package cors
 import (
 	"net/http"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type cors struct {
 	allowAllOrigins  bool
+	allowCredentials bool
 	allowOriginFunc  func(string) bool
 	allowOrigins     []string
 	exposeHeaders    []string
@@ -22,6 +23,7 @@ func newCors(config Config) *cors {
 	return &cors{
 		allowOriginFunc:  config.AllowOriginFunc,
 		allowAllOrigins:  config.AllowAllOrigins,
+		allowCredentials: config.AllowCredentials,
 		allowOrigins:     normalize(config.AllowOrigins),
 		normalHeaders:    generateNormalHeaders(config),
 		preflightHeaders: generatePreflightHeaders(config),

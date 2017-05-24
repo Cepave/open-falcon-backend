@@ -5,7 +5,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	testHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	sjson "github.com/bitly/go-simplejson"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	. "gopkg.in/check.v1"
 )

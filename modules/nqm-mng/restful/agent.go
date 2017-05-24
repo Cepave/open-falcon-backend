@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"

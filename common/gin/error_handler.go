@@ -3,7 +3,7 @@ package gin
 import (
 	"fmt"
 	"net/http"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	json "github.com/bitly/go-simplejson"
 	or "github.com/Cepave/open-falcon-backend/common/runtime"
 )

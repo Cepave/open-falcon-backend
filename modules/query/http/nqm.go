@@ -11,7 +11,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/juju/errors"
 	"github.com/satori/go.uuid"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/validator.v9"
 
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"

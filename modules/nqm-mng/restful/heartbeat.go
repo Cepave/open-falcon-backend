@@ -5,7 +5,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type heartbeatOfAgents []*model.AgentHeartbeat

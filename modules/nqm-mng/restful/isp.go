@@ -5,7 +5,7 @@ import (
 
 	commonOwlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func listISPs(c *gin.Context) {
