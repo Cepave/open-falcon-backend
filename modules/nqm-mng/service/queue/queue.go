@@ -79,10 +79,10 @@ func (q *Queue) Stop() {
 }
 
 func (q *Queue) Put(v interface{}) {
-	if q.running {
-		q.q.Enqueue(v)
+	if !q.running {
+		return
 	}
-	return
+	q.q.Enqueue(v)
 }
 
 func (q *Queue) Len() int {
