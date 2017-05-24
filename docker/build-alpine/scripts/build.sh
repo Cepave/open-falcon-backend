@@ -30,6 +30,7 @@ BUILD() {
 	cd /go/src && go get "$GET_NAME" && cd /go/src/$GET_NAME
 
 	if [ "$GIT_TAG" == "" ]; then git checkout $GIT_BRANCH ; else git checkout "$GIT_TAG"; fi
+	log "Building... (First time)" && make all
 
 	while [ "$GIT_TAG" == "" ]
 	do 
