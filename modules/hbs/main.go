@@ -32,11 +32,11 @@ func main() {
 
 	db.Init()
 	cache.Init()
-	rpc.InitPackage(vipercfg.Config())
 	service.InitPackage(&config.MysqlApiConfig{
 		Host:     vipercfg.Config().GetString("mysql_api.host"),
 		Resource: vipercfg.Config().GetString("mysql_api.resource"),
 	})
+	rpc.InitPackage(vipercfg.Config())
 
 	go cache.DeleteStaleAgents()
 

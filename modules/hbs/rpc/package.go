@@ -45,5 +45,6 @@ func initFalconConfig(config *viper.Viper) {
 		Num: config.GetInt("heartbeat.falcon.batchSize"),
 		Dur: config.GetDuration("heartbeat.falcon.duration"),
 	}
+	logger.Infof("[FALCON] Heartbeat config. BatchSize: %d. Duration: %d ns.", heartbeatConfig.Num, heartbeatConfig.Dur)
 	agentHeartbeatService = hbsService.NewAgentHeartbeatService(heartbeatConfig)
 }
