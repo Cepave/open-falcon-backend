@@ -960,7 +960,7 @@ func syncHostsTable() {
 	sort.Strings(platformNames)
 	log.Debugf("platformNames =", platformNames)
 	updateIPsTable(IPKeys, IPsMap)
-	updateHostsTable(hostnames, hostsMap)
+	// updateHostsTable(hostnames, hostsMap)
 	platformsMap = getPlatformsType(nodes, result, platformsMap)
 	updatePlatformsTable(platformNames, platformsMap)
 	muteFalconHostTable(hostnames, hostsMap)
