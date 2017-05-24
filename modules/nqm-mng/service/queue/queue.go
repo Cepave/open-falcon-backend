@@ -1,6 +1,8 @@
 package queue
 
 import (
+	"sync"
+
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
@@ -14,16 +16,15 @@ type Queue struct {
 	c       *commonQueue.Config
 	cnt     uint64 // counter for the dequeued elements
 	running bool
-	flush   chan struct{}
 	done    chan struct{}
+	mutex   sync.Mutex
 }
 
 func New(c *commonQueue.Config) *Queue {
 	return &Queue{
-		q:     commonQueue.New(),
-		c:     c,
-		flush: make(chan struct{}),
-		done:  make(chan struct{}),
+		q:    commonQueue.New(),
+		c:    c,
+		done: make(chan struct{}),
 	}
 }
 
@@ -32,24 +33,27 @@ func (q *Queue) Count() uint64 {
 }
 
 func (q *Queue) Start() {
+	q.mutex.Lock()
 	if q.running {
+		q.mutex.Unlock()
 		return
 	}
 	q.running = true
+	q.mutex.Unlock()
 	go q.drain()
 }
 
 func (q *Queue) drain() {
 	for {
-		select {
-		default:
+		switch q.running {
+		case true:
 			reqs := q.q.DrainNWithDurationByType(q.c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
 			d := uint64(len(reqs))
 			q.cnt += d
 			logger.Debugf("drained %d NQM agent heartbeat requests from queue\n", d)
 
 			rdb.UpdateNqmAgentHeartbeat(reqs)
-		case <-q.flush:
+		case false:
 			c := &commonQueue.Config{Num: q.c.Num, Dur: 0}
 			for {
 				reqs := q.q.DrainNWithDurationByType(c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
@@ -68,18 +72,23 @@ func (q *Queue) drain() {
 }
 
 func (q *Queue) Stop() {
+	q.mutex.Lock()
 	if !q.running {
+		q.mutex.Unlock()
 		return
 	}
 	q.running = false
-	close(q.flush)
+	q.mutex.Unlock()
 	<-q.done
 }
 
 func (q *Queue) Put(v interface{}) {
+	q.mutex.Lock()
 	if !q.running {
+		q.mutex.Unlock()
 		return
 	}
+	q.mutex.Unlock()
 	q.q.Enqueue(v)
 }
 
