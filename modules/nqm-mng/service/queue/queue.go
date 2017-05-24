@@ -1,8 +1,6 @@
 package queue
 
 import (
-	"sync/atomic"
-
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
@@ -47,7 +45,7 @@ func (q *Queue) drain() {
 		default:
 			reqs := q.q.DrainNWithDurationByType(q.c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
 			d := uint64(len(reqs))
-			atomic.AddUint64(&q.cnt, d)
+			q.cnt += d
 			logger.Debugf("drained %d NQM agent heartbeat requests from queue\n", d)
 
 			rdb.UpdateNqmAgentHeartbeat(reqs)
@@ -60,7 +58,7 @@ func (q *Queue) drain() {
 					return
 				}
 				d := uint64(len(reqs))
-				atomic.AddUint64(&q.cnt, d)
+				q.cnt += d
 				logger.Debugf("flushed %d NQM agent heartbeat requests from queue\n", d)
 
 				rdb.UpdateNqmAgentHeartbeat(reqs)
