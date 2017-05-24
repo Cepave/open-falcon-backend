@@ -85,7 +85,7 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 
 		testedQueue.Start()
 
-		for i := 0; i < 999; i++ {
+		for i := 0; i < 9; i++ {
 			testedQueue.Put(&model.NqmAgentHeartbeatRequest{
 				ConnectionId: "test1-hostname@1.2.3.4",
 				Hostname:     "test1-hostname",
@@ -93,11 +93,9 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 				Timestamp:    ojson.JsonTime(time.Now()),
 			})
 		}
+		Expect(testedQueue.Count()).NotTo(Equal(uint64(9)))
 		Expect(testedQueue.Len()).NotTo(Equal(0))
-
 		testedQueue.Stop()
-		Expect(testedQueue.Count()).To(Equal(uint64(999)))
-		Expect(testedQueue.Len()).To(Equal(0))
 	})
 
 	It("has no elements after Stop() is called", func() {
@@ -106,16 +104,23 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 		testedQueue.Start()
 
 		go func() {
-			for i := 0; i < 999; i++ {
-				testedQueue.Put(&model.NqmAgentHeartbeatRequest{
-					ConnectionId: "test1-hostname@1.2.3.4",
-					Hostname:     "test1-hostname",
-					IpAddress:    "1.2.3.4",
-					Timestamp:    ojson.JsonTime(time.Now()),
-				})
+			t := time.After(500 * time.Millisecond)
+			for {
+				select {
+				default:
+					time.Sleep(100 * time.Millisecond)
+					testedQueue.Put(&model.NqmAgentHeartbeatRequest{
+						ConnectionId: "test1-hostname@1.2.3.4",
+						Hostname:     "test1-hostname",
+						IpAddress:    "1.2.3.4",
+						Timestamp:    ojson.JsonTime(time.Now()),
+					})
+				case <-t:
+					return
+				}
 			}
 		}()
-
+		time.Sleep(200 * time.Millisecond)
 		testedQueue.Stop()
 		Expect(testedQueue.Len()).To(Equal(0))
 	})
