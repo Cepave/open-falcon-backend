@@ -100,7 +100,7 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 		Expect(testedQueue.Len()).To(Equal(0))
 	})
 
-	It("no elements after Stop() is called", func() {
+	It("has no elements after Stop() is called", func() {
 		testedQueue := New(&commonQueue.Config{Num: 10, Dur: 1 * time.Second})
 
 		testedQueue.Start()
