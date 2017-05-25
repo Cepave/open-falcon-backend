@@ -36,6 +36,7 @@ func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService
 
 func (s *AgentHeartbeatService) Start() {
 	if s.started {
+		logger.Infoln("[AgentHeartbeat][Skipped] Service is already started.")
 		return
 	}
 	s.started = true
@@ -76,18 +77,20 @@ func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration
 		s.rowsAffectedCnt += r
 		s.agentsDroppedCnt += d
 		if logFlag {
-			logger.Infof("Flushing [%d] agents", agentsNum)
+			logger.Infof("[AgentHeartbeat] Service is flushing. Number of agents: %d ", agentsNum)
 		}
+		time.Sleep(waitForQueue)
 	}
 }
 
 func (s *AgentHeartbeatService) Stop() {
 	if !s.started {
+		logger.Infoln("[AgentHeartbeat][Skipped] Service is already stopped.")
 		return
 	}
 
 	s.started = false
-	logger.Infof("Stopping AgentHeartbeatService. Size of queue: [%d]", s.CurrentSize())
+	logger.Infof("[AgentHeartbeat] Service is stopping. Size of queue: %d", s.CurrentSize())
 
 	/**
 	 * Waiting for queue to be processed
@@ -98,6 +101,7 @@ func (s *AgentHeartbeatService) Stop() {
 
 func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
 	if !s.started {
+		logger.Infoln("[AgentHeartbeat][Skipped] Put after stopped.")
 		return
 	}
 	now := time.Now().Unix()
@@ -138,7 +142,7 @@ func heartbeat(agents []*model.AgentHeartbeat, slingAPI *sling.Sling) (rowsAffec
 	res := model.AgentHeartbeatResult{}
 	err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
 	if err != nil {
-		logger.Errorln("[Heartbeat]", err)
+		logger.Errorln("[AgentHeartbeat]", err)
 		return 0, int64(len(agents))
 	}
 
