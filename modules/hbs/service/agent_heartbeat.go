@@ -21,10 +21,12 @@ type AgentHeartbeatService struct {
 	slingInit        *sling.Sling
 	rowsAffectedCnt  int64
 	agentsDroppedCnt int64
+	agentsPutCnt     int64
 }
 
 func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService {
 	return &AgentHeartbeatService{
+		safeQ:     commonQueue.New(),
 		qConfig:   config,
 		slingInit: NewSlingBase().Post("api/v1/agent/heartbeat"),
 	}
@@ -35,7 +37,6 @@ func (s *AgentHeartbeatService) Start() {
 		return
 	}
 	s.started = true
-	s.safeQ = commonQueue.New()
 
 	s.Add(1)
 	go func() {
@@ -105,6 +106,7 @@ func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
 		UpdateTime:    now,
 	}
 	s.safeQ.Enqueue(agent)
+	s.agentsPutCnt++
 }
 
 func (s *AgentHeartbeatService) CurrentSize() int {
@@ -113,6 +115,10 @@ func (s *AgentHeartbeatService) CurrentSize() int {
 
 func (s *AgentHeartbeatService) CumulativeAgentsDropped() int64 {
 	return s.agentsDroppedCnt
+}
+
+func (s *AgentHeartbeatService) CumulativeAgentsPut() int64 {
+	return s.agentsPutCnt
 }
 
 func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
