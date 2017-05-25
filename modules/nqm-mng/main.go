@@ -43,6 +43,7 @@ func main() {
 }
 
 func exitApp(signal os.Signal) {
+	queue.CloseNqmHeartbeat()
 	rdb.ReleaseRdb()
 }
 
