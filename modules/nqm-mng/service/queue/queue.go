@@ -52,7 +52,7 @@ func (q *Queue) drain() {
 			reqs := q.q.DrainNWithDurationByType(q.c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
 			d := uint64(len(reqs))
 			q.cnt += d
-			logger.Debugf("drained %d NQM agent heartbeat requests from queue\n", d)
+			logger.Debugf("drained %d NQM agent heartbeat requests from queue", d)
 
 			rdb.UpdateNqmAgentHeartbeat(reqs)
 		case <-q.flush:
@@ -65,7 +65,7 @@ func (q *Queue) drain() {
 				}
 				d := uint64(len(reqs))
 				q.cnt += d
-				logger.Debugf("flushed %d NQM agent heartbeat requests from queue\n", d)
+				logger.Debugf("flushed %d NQM agent heartbeat requests from queue", d)
 
 				rdb.UpdateNqmAgentHeartbeat(reqs)
 			}
