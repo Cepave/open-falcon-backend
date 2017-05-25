@@ -7,7 +7,7 @@ import (
 
 	owlGin "github.com/Cepave/open-falcon-backend/common/gin"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type FalconAgentHeartbeat struct {
