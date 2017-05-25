@@ -94,7 +94,6 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 			})
 		}
 		Ω(testedQueue.Count()).Should(BeNumerically("<", uint64(9)))
-		Ω(testedQueue.Len()).Should(BeNumerically("<", 9))
 		Ω(testedQueue.Len()).Should(BeNumerically(">", 0))
 		testedQueue.Stop()
 	})
