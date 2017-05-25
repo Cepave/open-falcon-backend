@@ -12,7 +12,7 @@ import (
 )
 
 func TestBossSeacher(t *testing.T) {
-	dat, err := ioutil.ReadFile("./fakeData.json")
+	dat, err := ioutil.ReadFile("../fake/fakeData.json")
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -23,29 +23,29 @@ func TestBossSeacher(t *testing.T) {
 	}
 
 	Convey("search platform", t, func() {
-		res := filter.PlatformFilter(testData, "02")
-		So(len(res), ShouldEqual, 3)
-		res = filter.PlatformFilter(testData, "01")
-		So(len(res), ShouldEqual, 13)
-	})
-
-	Convey("search isp", t, func() {
-		res := filter.IspFilter(testData, "ctt")
-		So(len(res), ShouldEqual, 8)
-	})
-
-	Convey("search idc", t, func() {
-		res := filter.IdcFilter(testData, "北京一区讯通")
+		res := filter.PlatformFilter(testData, "02", 10)
+		So(len(res), ShouldEqual, 5)
+		res = filter.PlatformFilter(testData, "01", 20)
 		So(len(res), ShouldEqual, 11)
 	})
 
+	Convey("search isp", t, func() {
+		res := filter.IspFilter(testData, "ctt", 10)
+		So(len(res), ShouldEqual, 5)
+	})
+
+	Convey("search idc", t, func() {
+		res := filter.IdcFilter(testData, "北京一区讯通", 20)
+		So(len(res), ShouldEqual, 6)
+	})
+
 	Convey("search ip", t, func() {
-		res := filter.IpFilter(testData, ".86")
-		So(len(res), ShouldEqual, 2)
+		res := filter.IpFilter(testData, ".84", 10)
+		So(len(res), ShouldEqual, 1)
 	})
 
 	Convey("search hostname", t, func() {
-		res := filter.HostNameFilter(testData, "51-")
+		res := filter.HostNameFilter(testData, "-22", 10)
 		So(len(res), ShouldEqual, 2)
 	})
 
