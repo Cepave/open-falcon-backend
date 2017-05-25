@@ -61,14 +61,8 @@ func (s *AgentHeartbeatService) Start() {
 
 func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration, logFlag bool) {
 	for {
-		/*
-		 * ToDo
-		 * Configuration
-		 * ToReview
-		 */
-		c := commonQueue.Config{}
 		var elementType *model.AgentHeartbeat
-		absArray := s.safeQ.DrainNWithDurationByType(&c, elementType)
+		absArray := s.safeQ.DrainNWithDurationByType(s.qConfig, elementType)
 		agents := absArray.([]*model.AgentHeartbeat)
 		agentsNum := len(agents)
 		if agentsNum == 0 {
