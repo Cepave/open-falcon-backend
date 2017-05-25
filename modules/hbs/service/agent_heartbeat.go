@@ -40,6 +40,7 @@ func (s *AgentHeartbeatService) Start() {
 		return
 	}
 	s.started = true
+	logger.Infoln("[AgentHeartbeat] Service is starting.")
 
 	s.Add(1)
 	go func() {

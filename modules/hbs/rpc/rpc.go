@@ -46,4 +46,5 @@ func Start() {
 }
 func Stop() {
 	nqmAgentHbsService.Stop()
+	agentHeartbeatService.Stop()
 }
