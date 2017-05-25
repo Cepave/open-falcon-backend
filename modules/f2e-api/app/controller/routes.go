@@ -7,8 +7,11 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/alarm"
-	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboardGraphOwl"
-	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboardScreenOWl"
+	"github.com/spf13/viper"
+	// "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboardGraphOwl"
+	// "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboardScreenOWl"
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboard_graph"
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboard_screen"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/expression"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/graph"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/host"
@@ -18,6 +21,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 )
@@ -42,12 +46,18 @@ func StartGin(port string, r *gin.Engine) {
 	r.Use(cors.Middleware(corsConfig))
 	r.Use(utils.CORS())
 	// document routes
-	r.StaticFS("/doc", http.Dir("doc"))
-	r.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello, I'm OWL (｡A｡)")
-		return
-	})
-	r.GET("/health", func(c *gin.Context) {
+	r.StaticFS("doc", http.Dir("doc"))
+	// markdown web page doc site routes
+	if viper.GetBool("web_doc_site.enable") {
+		docSitePath := viper.GetString("web_doc_site.folder")
+		if docSitePath == "" {
+			//default folder
+			docSitePath = "./docs/_site"
+		}
+		log.Infof("markdown web started with path: %s\n", docSitePath)
+		r.Static("docs", docSitePath)
+	}
+	r.GET("health", func(c *gin.Context) {
 		db := config.Con()
 		status, errorTable := db.HealthCheck()
 		message := "everything is works!"
@@ -65,6 +75,25 @@ func StartGin(port string, r *gin.Engine) {
 		})
 		return
 	})
+	// frontend files
+	if viper.GetBool("frontend.enable") {
+		frontendFolder := viper.GetString("frontend.folder")
+		frontendFolderStatic := viper.GetString("frontend.static_path")
+		if frontendFolder == "" {
+			frontendFolder = "./owlight"
+		}
+		if frontendFolderStatic == "" {
+			frontendFolderStatic = "./owlight/static"
+		}
+		log.Infof("frontend started with path: %s, static: %s\n", frontendFolder, frontendFolderStatic)
+		r.Static("web", frontendFolder)
+		r.Static("static", frontendFolderStatic)
+	}
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "Hello, I'm OWL (｡A｡)")
+		return
+	})
+
 	graph.Routes(r)
 	uic.Routes(r)
 	template.Routes(r)
@@ -72,8 +101,10 @@ func StartGin(port string, r *gin.Engine) {
 	host.Routes(r)
 	expression.Routes(r)
 	mockcfg.Routes(r)
-	dashboardScreenOWl.Routes(r)
-	dashboardGraphOwl.Routes(r)
+	// dashboardScreenOWl.Routes(r)
+	// dashboardGraphOwl.Routes(r)
+	dashboard_graph.Routes(r)
+	dashboard_screen.Routes(r)
 	alarm.Routes(r)
 	r.Run(port)
 }

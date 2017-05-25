@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
@@ -123,4 +123,11 @@ func clearCachedTargetsOfAgentById(
 ) mvc.OutputBody {
 	r := commonNqmDb.DeleteCachedTargetsOfAgentById(q.AgentID)
 	return mvc.JsonOutputOrNotFound(r)
+}
+
+func nqmAgentHeartbeat(
+	req *commonNqmModel.AgentHeartbeatRequest,
+) mvc.OutputBody {
+	r := commonNqmDb.AgentHeartbeat(req)
+	return mvc.JsonOutputBody(r)
 }

@@ -2,7 +2,7 @@ package gin
 
 import (
 	"net/http"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"reflect"
 )
 

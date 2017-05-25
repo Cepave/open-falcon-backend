@@ -68,7 +68,7 @@ import (
 	"os"
 	"time"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"github.com/gin-contrib/cors"
 )
 

@@ -26,6 +26,7 @@ type DashboardGraph struct {
 	Method     string `json:"method" gorm:"column:method"`
 	Position   int64  `json:"position" gorm:"column:position"`
 	FalconTags string `json:"falcon_tags" gorm:"column:falcon_tags"`
+	Creator    string `json:"creator" gorm:"column:creator"`
 }
 
 func (this DashboardGraph) TableName() string {

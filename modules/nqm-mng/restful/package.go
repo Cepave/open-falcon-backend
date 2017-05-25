@@ -4,7 +4,7 @@ import (
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 var logger = log.NewDefaultLogger("INFO")

@@ -3,7 +3,7 @@ package http
 import (
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/toolkits/file"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
 )

@@ -7,7 +7,7 @@ import (
 	commonOwlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func listProvinces(c *gin.Context) {
