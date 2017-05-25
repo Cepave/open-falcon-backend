@@ -93,8 +93,9 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 				Timestamp:    ojson.JsonTime(time.Now()),
 			})
 		}
-		Expect(testedQueue.Count()).NotTo(Equal(uint64(9)))
-		Expect(testedQueue.Len()).NotTo(Equal(0))
+		Ω(testedQueue.Count()).Should(BeNumerically("<", uint64(9)))
+		Ω(testedQueue.Len()).Should(BeNumerically("<", 9))
+		Ω(testedQueue.Len()).Should(BeNumerically(">", 0))
 		testedQueue.Stop()
 	})
 
