@@ -16,15 +16,17 @@ type Queue struct {
 	c       *commonQueue.Config
 	cnt     uint64 // counter for the dequeued elements
 	running bool
+	flush   chan struct{}
 	done    chan struct{}
 	mutex   sync.Mutex
 }
 
 func New(c *commonQueue.Config) *Queue {
 	return &Queue{
-		q:    commonQueue.New(),
-		c:    c,
-		done: make(chan struct{}),
+		q:     commonQueue.New(),
+		c:     c,
+		done:  make(chan struct{}),
+		flush: make(chan struct{}),
 	}
 }
 
@@ -45,15 +47,15 @@ func (q *Queue) Start() {
 
 func (q *Queue) drain() {
 	for {
-		switch q.running {
-		case true:
+		select {
+		default:
 			reqs := q.q.DrainNWithDurationByType(q.c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
 			d := uint64(len(reqs))
 			q.cnt += d
 			logger.Debugf("drained %d NQM agent heartbeat requests from queue\n", d)
 
 			rdb.UpdateNqmAgentHeartbeat(reqs)
-		case false:
+		case <-q.flush:
 			c := &commonQueue.Config{Num: q.c.Num, Dur: 0}
 			for {
 				reqs := q.q.DrainNWithDurationByType(c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
@@ -79,6 +81,7 @@ func (q *Queue) Stop() {
 	}
 	q.running = false
 	q.mutex.Unlock()
+	close(q.flush)
 	<-q.done
 }
 
@@ -101,4 +104,10 @@ var NqmQueue *Queue
 func InitNqmHeartbeat(c *commonQueue.Config) {
 	NqmQueue = New(c)
 	NqmQueue.Start()
+}
+
+func CloseNqmHeartbeat() {
+	logger.Info("Closing NQM heartbeat queue service...")
+	NqmQueue.Stop()
+	logger.Info("Closed NQM heartbeat queue service.")
 }
