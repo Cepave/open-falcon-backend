@@ -1,0 +1,323 @@
+{
+  "ApiSpecs": [
+    {
+      "HttpVerb": "POST",
+      "Path": "/api/v1/dashboard/screen",
+      "Calls": [
+        {
+          "Id": 0,
+          "CurrentPath": "/api/v1/dashboard/screen",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"pid\":0,\"name\":\"screen_test\"}",
+          "ResponseBody": "{\"error\":\"screen name 'screen_test' alreay exist\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 1,
+          "CurrentPath": "/api/v1/dashboard/screen",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{}",
+          "ResponseBody": "{\"error\":\"Key: 'APIScreenCreateInput.Name' Error:Field validation for 'Name' failed on the 'required' tag\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 2,
+          "CurrentPath": "/api/v1/dashboard/screen",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"name\":\"\"}",
+          "ResponseBody": "{\"error\":\"Key: 'APIScreenCreateInput.Name' Error:Field validation for 'Name' failed on the 'required' tag\"}",
+          "ResponseCode": 400
+        },
+        {
+          "Id": 3,
+          "CurrentPath": "/api/v1/dashboard/screen",
+          "MethodType": "POST",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"pid\":0,\"name\":\"screen_test1\"}",
+          "ResponseBody": "{\"id\":1255,\"pid\":0,\"name\":\"screen_test1\",\"creator\":\"myhung\"}",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "GET",
+      "Path": "/api/v1/dashboard/screens/pid/99991",
+      "Calls": [
+        {
+          "Id": 4,
+          "CurrentPath": "/api/v1/dashboard/screens/pid/99991",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "[]",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "GET",
+      "Path": "/api/v1/dashboard/screen/1253",
+      "Calls": [
+        {
+          "Id": 5,
+          "CurrentPath": "/api/v1/dashboard/screen/1253",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "{\"error\":\"record not found\"}",
+          "ResponseCode": 400
+        }
+      ]
+    },
+    {
+      "HttpVerb": "GET",
+      "Path": "/api/v1/dashboard/screen/99991",
+      "Calls": [
+        {
+          "Id": 6,
+          "CurrentPath": "/api/v1/dashboard/screen/99991",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "{\"error\":\"record not found\"}",
+          "ResponseCode": 400
+        }
+      ]
+    },
+    {
+      "HttpVerb": "GET",
+      "Path": "/api/v1/dashboard/screens/pid/962",
+      "Calls": [
+        {
+          "Id": 7,
+          "CurrentPath": "/api/v1/dashboard/screens/pid/962",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "[{\"id\":965,\"pid\":962,\"name\":\"net.if.total.bytes\",\"creator\":\"root\"},{\"id\":969,\"pid\":962,\"name\":\"cpu\",\"creator\":\"root\"},{\"id\":972,\"pid\":962,\"name\":\"mem\",\"creator\":\"root\"},{\"id\":973,\"pid\":962,\"name\":\"cpu.load\",\"creator\":\"root\"},{\"id\":976,\"pid\":962,\"name\":\"status\",\"creator\":\"root\"}]",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "GET",
+      "Path": "/api/v1/dashboard/screens",
+      "Calls": [
+        {
+          "Id": 8,
+          "CurrentPath": "/api/v1/dashboard/screens",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {
+            "desc": "false",
+            "limit": "10",
+            "page": "1"
+          },
+          "RequestBody": "",
+          "ResponseBody": "{\"current_page\":1,\"data\":[{\"graph_names\":[],\"id\":962,\"pid\":0,\"name\":\"FCM\",\"creator\":\"root\"},{\"graph_names\":[\"net.if.total.bytes\",\"net.if.total.bytes\"],\"id\":965,\"pid\":962,\"name\":\"net.if.total.bytes\",\"creator\":\"root\"},{\"graph_names\":[],\"id\":967,\"pid\":0,\"name\":\"c01.i36\",\"creator\":\"root\"},{\"graph_names\":[\"cpu\",\"mysql_test\",\"cpu-1\"],\"id\":968,\"pid\":967,\"name\":\"cpu\",\"creator\":\"root\"},{\"graph_names\":[\"cpu\"],\"id\":969,\"pid\":962,\"name\":\"cpu\",\"creator\":\"root\"},{\"graph_names\":[\"net.if.total.bytes\"],\"id\":970,\"pid\":967,\"name\":\"net.if.total.bytes\",\"creator\":\"root\"},{\"graph_names\":[\"mem\"],\"id\":971,\"pid\":967,\"name\":\"mem\",\"creator\":\"root\"},{\"graph_names\":[\"mem\"],\"id\":972,\"pid\":962,\"name\":\"mem\",\"creator\":\"root\"},{\"graph_names\":[\"cpu.load\"],\"id\":973,\"pid\":962,\"name\":\"cpu.load\",\"creator\":\"root\"},{\"graph_names\":[\"cpu.load\"],\"id\":975,\"pid\":967,\"name\":\"cpu.load\",\"creator\":\"root\"}],\"desc_order\":false,\"key_word\":\"\",\"order_by\":\"id\",\"totall_count\":123,\"totall_page\":13}",
+          "ResponseCode": 200
+        },
+        {
+          "Id": 9,
+          "CurrentPath": "/api/v1/dashboard/screens",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {
+            "limit": "10"
+          },
+          "RequestBody": "",
+          "ResponseBody": "[{\"graph_names\":[],\"id\":962,\"pid\":0,\"name\":\"FCM\",\"creator\":\"root\"},{\"graph_names\":[\"net.if.total.bytes\",\"net.if.total.bytes\"],\"id\":965,\"pid\":962,\"name\":\"net.if.total.bytes\",\"creator\":\"root\"},{\"graph_names\":[],\"id\":967,\"pid\":0,\"name\":\"c01.i36\",\"creator\":\"root\"},{\"graph_names\":[\"cpu\",\"mysql_test\",\"cpu-1\"],\"id\":968,\"pid\":967,\"name\":\"cpu\",\"creator\":\"root\"},{\"graph_names\":[\"cpu\"],\"id\":969,\"pid\":962,\"name\":\"cpu\",\"creator\":\"root\"},{\"graph_names\":[\"net.if.total.bytes\"],\"id\":970,\"pid\":967,\"name\":\"net.if.total.bytes\",\"creator\":\"root\"},{\"graph_names\":[\"mem\"],\"id\":971,\"pid\":967,\"name\":\"mem\",\"creator\":\"root\"},{\"graph_names\":[\"mem\"],\"id\":972,\"pid\":962,\"name\":\"mem\",\"creator\":\"root\"},{\"graph_names\":[\"cpu.load\"],\"id\":973,\"pid\":962,\"name\":\"cpu.load\",\"creator\":\"root\"},{\"graph_names\":[\"cpu.load\"],\"id\":975,\"pid\":967,\"name\":\"cpu.load\",\"creator\":\"root\"}]",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "PUT",
+      "Path": "/api/v1/dashboard/screen",
+      "Calls": [
+        {
+          "Id": 10,
+          "CurrentPath": "/api/v1/dashboard/screen",
+          "MethodType": "PUT",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"name\":\"updaredscreen\",\"id\":1253}",
+          "ResponseBody": "{\"message\":\"ok\"}",
+          "ResponseCode": 200
+        },
+        {
+          "Id": 11,
+          "CurrentPath": "/api/v1/dashboard/screen",
+          "MethodType": "PUT",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "{\"name\":\"screen_test1\",\"id\":1253}",
+          "ResponseBody": "{\"message\":\"ok\"}",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "DELETE",
+      "Path": "/api/v1/dashboard/screen/1253",
+      "Calls": [
+        {
+          "Id": 12,
+          "CurrentPath": "/api/v1/dashboard/screen/1253",
+          "MethodType": "DELETE",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}",
+            "Content-Type": " application/json\r"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "{\"deleted_graph_ids\":[],\"deleted_rows\":0,\"message\":\"ok\"}",
+          "ResponseCode": 200
+        }
+      ]
+    },
+    {
+      "HttpVerb": "GET",
+      "Path": "/api/v1/dashboard/screen/962",
+      "Calls": [
+        {
+          "Id": 0,
+          "CurrentPath": "/api/v1/dashboard/screen/962",
+          "MethodType": "GET",
+          "PostForm": null,
+          "RequestHeader": {
+            "Apitoken": "{\"name\": \"root\", \"sig\": \"233fdb00f99811e68a5c001500c6ca5a\"}"
+          },
+          "CommonRequestHeaders": null,
+          "ResponseHeader": {
+            "Content-Type": "application/json; charset=utf-8",
+            "Vary": "Origin"
+          },
+          "RequestUrlParams": {},
+          "RequestBody": "",
+          "ResponseBody": "{\"graphs\":[],\"scren\":{\"id\":962,\"pid\":0,\"name\":\"FCM\",\"creator\":\"root\"}}",
+          "ResponseCode": 200
+        }
+      ]
+    }
+  ]
+}

@@ -4,16 +4,23 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/graph"
 	log "github.com/Sirupsen/logrus"
+	"github.com/gin-gonic/gin"
+	yaagGin "github.com/masato25/yaag/gin"
+	"github.com/masato25/yaag/yaag"
 	"github.com/spf13/viper"
-	"gopkg.in/gin-gonic/gin.v1"
-	yaagGin "gopkg.in/masato25/yaag.v1/gin"
-	"gopkg.in/masato25/yaag.v1/yaag"
+)
+
+var (
+	Version   = "<UNDEFINED>"
+	GitCommit = "<UNDEFINED>"
 )
 
 func initGraph() {
@@ -27,7 +34,7 @@ func main() {
 	flag.Parse()
 	cfg := *cfgTmp
 	if *version {
-		fmt.Println(config.VERSION)
+		fmt.Printf("version %s, build %s\n", Version, GitCommit)
 		os.Exit(0)
 	}
 
@@ -43,8 +50,11 @@ func main() {
 	cfg = strings.Replace(cfg, ".json", "", 1)
 	viper.SetConfigName(cfg)
 
-	viper.ReadInConfig()
-	err := config.InitLog(viper.GetString("log_level"))
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = config.InitLog(viper.GetString("log_level"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,5 +74,14 @@ func main() {
 	}
 	initGraph()
 	//start gin server
-	controller.StartGin(viper.GetString("web_port"), routes)
+	log.Debugf("will start with port:%v", viper.GetString("web_port"))
+	go controller.StartGin(viper.GetString("web_port"), routes)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-sigs
+		fmt.Println()
+		os.Exit(0)
+	}()
+	select {}
 }

@@ -12,7 +12,7 @@ import (
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 )
 

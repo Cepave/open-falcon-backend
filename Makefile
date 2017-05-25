@@ -5,15 +5,22 @@ TARGET = open-falcon
 
 VERSION := $(shell cat VERSION)
 
-all: trash $(CMD) $(TARGET)
+all: install $(CMD) $(TARGET)
 
 $(CMD):
 	go get ./modules/$@
-	go build -o bin/$@/falcon-$@ ./modules/$@
+	go build -ldflags "-X main.GitCommit=`git log -n1 --pretty=format:%h modules/$@` -X main.Version=${VERSION}" -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
 	go get .
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
+
+install:
+	@hash govendor > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get -u github.com/kardianos/govendor; \
+	fi
+	@if [ -f ~/.bash_profile ]; then source ~/.bash_profile; fi
+	govendor sync
 
 checkbin: bin/ config/ open-falcon cfg.json
 pack: checkbin
@@ -40,11 +47,6 @@ clean:
 	@rm -rf ./out
 	@rm -rf ./$(TARGET)
 	@rm -rf ./package_cache_tmp
-	@rm -rf ./vendor
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
-trash:
-	go get -u github.com/rancher/trash
-	trash -k -cache package_cache_tmp
-
-.PHONY: trash clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api
+.PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api

@@ -8,7 +8,7 @@ import (
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 type APIGetTemplatesOutput struct {

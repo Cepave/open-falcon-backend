@@ -3,7 +3,7 @@ package http
 import (
 	"flag"
 	"fmt"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 	check "gopkg.in/check.v1"
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 )

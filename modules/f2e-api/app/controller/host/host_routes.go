@@ -3,9 +3,9 @@ package host
 import (
 	"net/http"
 
-	"gopkg.in/gin-gonic/gin.v1"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"github.com/gin-gonic/gin"
 )
 
 var db config.DBPool
@@ -45,4 +45,5 @@ func Routes(r *gin.Engine) {
 	//host
 	hostr.GET("/host/:host_id/template", GetTplsRelatedHost)
 	hostr.GET("/host/:host_id/hostgroup", GetGrpsRelatedHost)
+	hostr.PUT("/host/set_maintain_time", HostsSetToMaintain)
 }

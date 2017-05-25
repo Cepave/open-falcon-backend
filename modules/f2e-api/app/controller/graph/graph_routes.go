@@ -3,9 +3,9 @@ package graph
 import (
 	"net/http"
 
-	"gopkg.in/gin-gonic/gin.v1"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"github.com/gin-gonic/gin"
 )
 
 var db config.DBPool
@@ -24,4 +24,6 @@ func Routes(r *gin.Engine) {
 	owlgraph := r.Group("/api/v1/owlgraph")
 	owlgraph.Use(utils.AuthSessionMidd)
 	owlgraph.GET("/keyword_search", HostsSearching)
+	owlgraph.POST("/cat_counters", EndpointsQuerySubMetric)
+	owlgraph.POST("/cat_gt_counters", EndpointsGetMetricBySubStar)
 }

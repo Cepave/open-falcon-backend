@@ -27,5 +27,14 @@
   "gen_doc_path": "doc/module.html",
   "salt": "pleaseinputwhichyouareusingnow",
   "web_port": ":8888",
-  "skip_auth": false
+  "skip_auth": false,
+  "frontend": {
+    "enable": false,
+    "folder": "./owlight",
+    "static_path": "./owlight/static"
+  },
+  "web_doc_site":{
+    "enable": false,
+    "folder": "./docs/_site"
+  }
 }

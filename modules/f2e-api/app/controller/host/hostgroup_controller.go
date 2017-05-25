@@ -11,7 +11,7 @@ import (
 	u "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func GetHostGroups(c *gin.Context) {

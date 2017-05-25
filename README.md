@@ -56,22 +56,14 @@ Agent for example:
     ./open-falcon agent [build|pack|start|stop|restart|status|tail]
 
 # Package Management
-## How-to
+
+We use govendor to manage the golang packages. Please install `govendor` before compilation.
+
+    go get -u github.com/kardianos/govendor
+
+Most depended packages are saved under `./vendor` dir. If you want to add or update a package, just run `govendor fetch xxxx@commitID` or `govendor fetch xxxx@v1.x.x`, then you will find the package have been placed in `./vendor` correctly.
 
 Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exported. (`export GODEBUG=cgocheck=0` using Go 1.6+.)
-
- 0. Install `trash` by `go get github.com/rancher/trash`.
- 1. Edit `trash.yml` file to your needs. See the example as follow.
- 2. Run `trash --keep` to download the dependencies.
-
-```yaml
-package: github.com/Cepave/open-falcon-backend
-
-import:
-- package: github.com/Cepave/common              # package name
-  version: origin/develop                        # tag, commit, or branch
-  repo:    https://github.com/Cepave/common.git  # (optional) git URL
-```
 
 # Package Release
 

@@ -11,7 +11,7 @@ import (
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 const mvcTag = "mvc"

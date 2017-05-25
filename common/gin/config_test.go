@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 
 	"gopkg.in/go-playground/validator.v9"
 	sjson "github.com/bitly/go-simplejson"

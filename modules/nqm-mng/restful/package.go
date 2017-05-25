@@ -5,7 +5,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
-	gin "gopkg.in/gin-gonic/gin.v1"
+	gin "github.com/gin-gonic/gin"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -46,6 +46,7 @@ func initApi() {
 
 	v1.GET("/nqm/agents", mvcBuilder.BuildHandler(listAgents))
 	v1.GET("/nqm/agent/:agent_id", getAgentById)
+	v1.POST("/heartbeat/nqm/agent", mvcBuilder.BuildHandler(nqmAgentHeartbeat))
 	v1.POST("/nqm/agent", addNewAgent)
 	v1.PUT("/nqm/agent/:agent_id", modifyAgent)
 	v1.POST("/nqm/agent/:agent_id/pingtask", addPingtaskToAgentForAgent)
