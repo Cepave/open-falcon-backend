@@ -57,8 +57,13 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 		return
 	}
 
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	dt := db.Dashboard.Begin()
-	sc := m.DashboardScreen{Name: inputs.ScreenName}
+	sc := m.DashboardScreen{Name: inputs.ScreenName, Creator: user.Name}
 	dt = dt.Save(&sc)
 	if dt.Error != nil {
 		h.JSONR(c, badstatus, dt.Error)
@@ -72,7 +77,6 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 	sort.Strings(cs)
 	esString := strings.Join(es, TMP_GRAPH_FILED_DELIMITER)
 	csString := strings.Join(cs, TMP_GRAPH_FILED_DELIMITER)
-	user, _ := h.GetUser(c)
 
 	d := m.DashboardGraph{
 		Title:     inputs.Title,
