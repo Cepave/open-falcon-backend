@@ -18,17 +18,19 @@ type AgentHeartbeatService struct {
 	safeQ            *commonQueue.Queue
 	qConfig          *commonQueue.Config
 	started          bool
+	agentsPutCnt     int64
+	heartbeatCall    func([]*model.AgentHeartbeat, *sling.Sling) (int64, int64)
 	slingInit        *sling.Sling
 	rowsAffectedCnt  int64
 	agentsDroppedCnt int64
-	agentsPutCnt     int64
 }
 
 func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService {
 	return &AgentHeartbeatService{
-		safeQ:     commonQueue.New(),
-		qConfig:   config,
-		slingInit: NewSlingBase().Post("api/v1/agent/heartbeat"),
+		safeQ:         commonQueue.New(),
+		qConfig:       config,
+		heartbeatCall: heartbeat,
+		slingInit:     NewSlingBase().Post("api/v1/agent/heartbeat"),
 	}
 }
 
@@ -70,7 +72,9 @@ func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration
 			break
 		}
 
-		s.heartbeat(agents)
+		r, d := s.heartbeatCall(agents, s.slingInit)
+		s.rowsAffectedCnt += r
+		s.agentsDroppedCnt += d
 		if logFlag {
 			logger.Infof("Flushing [%d] agents", agentsNum)
 		}
@@ -125,19 +129,18 @@ func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
 }
 
-func (s *AgentHeartbeatService) heartbeat(agents []*model.AgentHeartbeat) {
+func heartbeat(agents []*model.AgentHeartbeat, slingAPI *sling.Sling) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
 	param := struct {
 		UpdateOnly bool `json:"update_only"`
 	}{updateOnlyFlag}
-	s.slingInit = s.slingInit.BodyJSON(agents).QueryStruct(&param)
+	req := slingAPI.BodyJSON(agents).QueryStruct(&param)
 
 	res := model.AgentHeartbeatResult{}
-	err := commonSling.ToSlintExt(s.slingInit).DoReceive(http.StatusOK, &res)
+	err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
 	if err != nil {
-		s.agentsDroppedCnt += int64(len(agents))
-		logger.Errorln("Heartbeat:", err)
-		return
+		logger.Errorln("[Heartbeat]", err)
+		return 0, int64(len(agents))
 	}
 
-	s.rowsAffectedCnt += res.RowsAffected
+	return res.RowsAffected, 0
 }
