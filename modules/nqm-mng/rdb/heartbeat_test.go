@@ -10,11 +10,11 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-type TestUpdateOrInsertSuite struct{}
+type TestHeartbeatSuite struct{}
 
-var _ = Suite(&TestUpdateOrInsertSuite{})
+var _ = Suite(&TestHeartbeatSuite{})
 
-func (suite *TestUpdateOrInsertSuite) TestAgentHeartbeat(c *C) {
+func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *C) {
 	testCases := []struct {
 		hosts      []string
 		timestamp  string
@@ -57,9 +57,9 @@ func (suite *TestUpdateOrInsertSuite) TestAgentHeartbeat(c *C) {
 		sampleIP, sampleAgentVersion, samplePluginVersion :=
 			"127.0.0."+sampleNumber, "0.0."+sampleNumber, "12345abcd"+sampleNumber
 
-		sampleHosts := make([]*model.AgentHeartbeat, len(testCase.hosts))
+		sampleHosts := make([]*model.FalconAgentHeartbeat, len(testCase.hosts))
 		for idx, hostName := range testCase.hosts {
-			sampleHosts[idx] = &model.AgentHeartbeat{
+			sampleHosts[idx] = &model.FalconAgentHeartbeat{
 				Hostname:      "nqm-mng-tc1-" + hostName,
 				UpdateTime:    sampleTime.Unix(),
 				IP:            sampleIP,
@@ -68,7 +68,7 @@ func (suite *TestUpdateOrInsertSuite) TestAgentHeartbeat(c *C) {
 			}
 		}
 
-		result := AgentHeartbeat(sampleHosts, testCase.updateOnly)
+		result := FalconAgentHeartbeat(sampleHosts, testCase.updateOnly)
 
 		var dbResult int64
 		countStmt.QueryRowxAndScan([]interface{}{sampleTime.Unix(), sampleIP, sampleAgentVersion, samplePluginVersion}, &dbResult)
@@ -77,22 +77,22 @@ func (suite *TestUpdateOrInsertSuite) TestAgentHeartbeat(c *C) {
 	}
 }
 
-func (suite *TestUpdateOrInsertSuite) TearDownTest(c *C) {
+func (suite *TestHeartbeatSuite) TearDownTest(c *C) {
 	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
-	case "TestUpdateOrInsertSuite.TestAgentHeartbeat":
+	case "TestHeartbeatSuite.TestAgentHeartbeat":
 		inTx(
 			`DELETE FROM host WHERE hostname LIKE 'nqm-mng-tc1-%'`,
 		)
 	}
 }
 
-func (suite *TestUpdateOrInsertSuite) SetUpSuite(c *C) {
+func (suite *TestHeartbeatSuite) SetUpSuite(c *C) {
 	DbFacade = dbTest.InitDbFacade(c)
 }
 
-func (suite *TestUpdateOrInsertSuite) TearDownSuite(c *C) {
+func (suite *TestHeartbeatSuite) TearDownSuite(c *C) {
 	dbTest.ReleaseDbFacade(c, DbFacade)
 	DbFacade = nil
 }
