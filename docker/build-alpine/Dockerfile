@@ -24,4 +24,4 @@ RUN \
 WORKDIR /go/src/"$GET_NAME"
 
 ## Start
-ENTRYPOINT ["/bin/bash", "docker/build-alpine/scripts/build.sh"]
+CMD ["/bin/bash", "docker/build-alpine/scripts/build.sh"]

@@ -26,19 +26,23 @@ UPLOAD_FTP() {
 ## -------------------------------------------- ##
 ## Go Get & Build
 
+MAKEALL(){
+	log "Building..." && make all
+	cp -f open-falcon bin
+	find /go/src/$GET_NAME/bin -type f | xargs ls -al | awk '{print $5, $6, $7, $8, $9}' > /go/src/$GET_NAME/bin/info.txt
+}
+
 BUILD() {
 	cd /go/src && go get "$GET_NAME" && cd /go/src/$GET_NAME
 
-	if [ "$GIT_TAG" == "" ]; then git checkout $GIT_BRANCH ; else git checkout "$GIT_TAG"; fi
-	log "Building... (First time)" && make all
+	git checkout $GIT_BRANCH && if [ "$GIT_TAG" != "" ]; then git checkout "$GIT_TAG"; fi
+	MAKEALL && UPLOAD_S3 && UPLOAD_FTP
 
 	while [ "$GIT_TAG" == "" ]
 	do 
 		if [ "$(git pull | grep up-to-date)" == "" ]; then
 			log "Go get codes..." && go get "$GET_NAME"
-			log "Building..." && make all
-			if [ "$(find /go/src/$GET_NAME/open-falcon -mmin -3 -type f)" != "" ]; then cp -f open-falcon bin ; fi
-			UPLOAD_S3 && UPLOAD_FTP
+			MAKEALL && UPLOAD_S3 && UPLOAD_FTP
 		fi
 
 		sleep "$INTERVAL"
