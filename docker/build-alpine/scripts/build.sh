@@ -12,7 +12,7 @@ UPLOAD_S3() {
 }
 
 UPLOAD_FTP() {
-	NEW_BINS=$(find /go/src/$GET_NAME/bin -mmin -3 -type f)
+	NEW_BINS=$(find /go/src/$GET_NAME/bin -mmin -10 -type f)
 	if [ "$NEW_BINS" != "" ] && [ "$FTP_AUTH" != "" ] && [ "$FTP_URL" != "" ] ; then
 		for BIN in $NEW_BINS
 		do
