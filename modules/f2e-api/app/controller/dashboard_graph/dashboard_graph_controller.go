@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/dashboard"
@@ -306,11 +307,12 @@ func DashboardGraphGetsByScreenID(c *gin.Context) {
 }
 
 type APIDashboardGraphCloneInputs struct {
-	ID int64 `json:"id" form:"id" binding:"required"`
+	ID   int64  `json:"id" form:"id" binding:"required"`
+	Name string `json:"name" form:"name"`
 }
 
 func DashboardGraphClone(c *gin.Context) {
-	inputs := APIDashboardGraphCloneInputs{}
+	inputs := APIDashboardGraphCloneInputs{Name: "NaN"}
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, fmt.Errorf("binding inputs got error:%s", err.Error()))
 		return
@@ -325,9 +327,12 @@ func DashboardGraphClone(c *gin.Context) {
 		h.JSONR(c, badstatus, fmt.Errorf("find graph with id: %d, got error:%s", inputs.ID, dt.Error.Error()))
 		return
 	}
+	if inputs.Name == "NaN" {
+		inputs.Name = fmt.Sprintf("%s_copy_%d", originalGraph.Title, time.Now().Unix())
+	}
 	tx := db.Dashboard.Begin()
 	newGraph := m.DashboardGraph{
-		Title:      fmt.Sprintf("%s_copy", originalGraph.Title),
+		Title:      inputs.Name,
 		Hosts:      originalGraph.Hosts,
 		Counters:   originalGraph.Counters,
 		ScreenId:   originalGraph.ScreenId,

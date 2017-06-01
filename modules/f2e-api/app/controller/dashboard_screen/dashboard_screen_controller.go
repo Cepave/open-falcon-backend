@@ -5,7 +5,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"time"
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/dashboard"
@@ -256,11 +255,14 @@ func ScreenUpdate(c *gin.Context) {
 
 // For clone screen by id
 type APIScreenCloneInputs struct {
-	ID int64 `json:"id" form:"id" binding:"required"`
+	ID   int64  `json:"id" form:"id" binding:"required"`
+	Name string `json:"name" form:"name"`
 }
 
 func ScreenClone(c *gin.Context) {
-	inputs := APIScreenCloneInputs{}
+	inputs := APIScreenCloneInputs{
+		Name: "NaN",
+	}
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
@@ -276,12 +278,16 @@ func ScreenClone(c *gin.Context) {
 		return
 	}
 	tx := db.Dashboard.Begin()
+	if inputs.Name == "NaN" {
+		inputs.Name = fmt.Sprintf("%s_copy", originalScreen.Name)
+	}
 	newScreen := m.DashboardScreen{
-		Name:    fmt.Sprintf("%s_copy", originalScreen.Name),
+		Name:    inputs.Name,
 		Creator: user.Name,
 	}
 	if newScreen.ExistName() {
-		newScreen.Name = fmt.Sprintf("%s_%s", newScreen.Name, time.Now().Unix())
+		h.JSONR(c, badstatus, fmt.Errorf("screen name '%s' alreay exist", newScreen.Name))
+		return
 	}
 	if dt := tx.Model(&newScreen).Save(&newScreen); dt.Error != nil {
 		tx.Rollback()
