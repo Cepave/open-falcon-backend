@@ -185,6 +185,10 @@ func GetUser(c *gin.Context) {
 		return
 	}
 	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	if !user.IsAdmin() {
 		h.JSONR(c, badstatus, "only admin user can do this.")
 		return

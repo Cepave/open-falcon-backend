@@ -22,7 +22,11 @@ func ScreenCreate(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	newDS := m.DashboardScreen{
 		PID:     inputs.Pid,
 		Name:    inputs.Name,

@@ -135,7 +135,11 @@ func AddNotesToAlarm(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	currentTime := time.Now()
 	Anote := alm.EventNote{
 		UserId:      user.ID,

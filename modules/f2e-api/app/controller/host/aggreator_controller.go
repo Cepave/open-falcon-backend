@@ -100,7 +100,11 @@ func CreateAggregator(c *gin.Context) {
 		h.JSONR(c, badstatus, fmt.Sprintf("binding error: %v", err))
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	if !user.IsAdmin() {
 		hostgroup := f.HostGroup{ID: inputs.GrpId}
 		if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
@@ -152,7 +156,11 @@ func UpdateAggregator(c *gin.Context) {
 		h.JSONR(c, expecstatus, dt.Error)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	if !user.IsAdmin() {
 		hostgroup := f.HostGroup{ID: aggregator.GrpId}
 		if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
@@ -197,7 +205,11 @@ func DeleteAggregator(c *gin.Context) {
 		h.JSONR(c, expecstatus, fmt.Sprintf("find aggregator got error: %v", dt.Error.Error()))
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	if !user.IsAdmin() {
 		hostgroup := f.HostGroup{ID: aggregator.GrpId}
 		if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
