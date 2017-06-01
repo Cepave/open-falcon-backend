@@ -226,7 +226,7 @@ func SelectNqmAgentByConnId(connId string) *nqmModel.Agent {
 	return loadedAgent
 }
 
-func NotNewNqmAgent(r *model.NqmAgentHeartbeatRequest) bool {
+func NotNewNqmAgent(connId string) bool {
 	return DbFacade.SqlxDbCtrl.GetOrNoRow(
 		new(int),
 		`
@@ -234,7 +234,7 @@ func NotNewNqmAgent(r *model.NqmAgentHeartbeatRequest) bool {
 			FROM nqm_agent
 			WHERE ag_connection_id = ?
 		`,
-		r.ConnectionId,
+		connId,
 	)
 }
 

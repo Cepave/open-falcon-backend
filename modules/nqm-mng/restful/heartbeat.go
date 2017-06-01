@@ -28,7 +28,7 @@ func falconAgentHeartbeat(
 func nqmAgentHeartbeat(
 	req *model.NqmAgentHeartbeatRequest,
 ) mvc.OutputBody {
-	if rdb.NotNewNqmAgent(req) {
+	if rdb.NotNewNqmAgent(req.ConnectionId) {
 		queue.NqmQueue.Put(req)
 	} else {
 		rdb.InsertNqmAgent(req)

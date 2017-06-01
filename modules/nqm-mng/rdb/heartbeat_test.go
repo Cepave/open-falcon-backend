@@ -251,3 +251,27 @@ var _ = Describe("Test SelectNqmAgentByConnId()", ginkgoDb.NeedDb(func() {
 		Entry("case: not existent", "ct-63-1@201.77.23", BeNil()),
 	)
 }))
+
+var _ = Describe("Test NotNewNqmAgent()", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(test.InitNqmAgent...)
+	})
+
+	AfterEach(func() {
+		inTx(test.ClearNqmAgent...)
+	})
+
+	DescribeTable("for existent agents", func(input string, expected types.GomegaMatcher) {
+		r := NotNewNqmAgent(input)
+		Ω(r).Should(expected)
+	},
+		Entry("case: not new", "ct-255-1@201.3.116.1", BeTrue()),
+		Entry("case:  is new", "ct-255-1@201.3.116.", BeFalse()),
+		Entry("case: not new", "ct-255-2@201.3.116.2", BeTrue()),
+		Entry("case:  is new", "ct-255-2@201.3.116.", BeFalse()),
+		Entry("case: not new", "ct-255-3@201.4.23.3", BeTrue()),
+		Entry("case:  is new", "ct-255-3@201.4.23", BeFalse()),
+		Entry("case: not new", "ct-63-1@201.77.23.3", BeTrue()),
+		Entry("case:  is new", "ct-63-1@201.77.23", BeFalse()),
+	)
+}))
