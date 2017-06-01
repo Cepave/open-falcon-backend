@@ -34,7 +34,7 @@ var headers = []string{
 
 var corsConfig cors.Config
 
-func StartGin(port string, r *gin.Engine) {
+func StartGin(port string, r *gin.Engine, testMode bool) *gin.Engine {
 	corsConfig = cors.Config{
 		Methods:        strings.Join([]string{"POST", "GET", "OPTIONS", "PUT", "DELETE", "UPDATE"}, ","),
 		Origins:        "*",
@@ -106,5 +106,8 @@ func StartGin(port string, r *gin.Engine) {
 	dashboard_graph.Routes(r)
 	dashboard_screen.Routes(r)
 	alarm.Routes(r)
-	r.Run(port)
+	if !testMode {
+		r.Run(port)
+	}
+	return r
 }
