@@ -1,0 +1,11 @@
+{
+  "db": {
+    "faclon_portal": "root:password@tcp(0.0.0.0:3306)/falcon_portal?charset=utf8&parseTime=True&loc=Local",
+    "graph": "root:password@tcp(0.0.0.0:3306)/graph?charset=utf8&parseTime=True&loc=Local",
+    "uic": "root:password@tcp(0.0.0.0:3306)/uic?charset=utf8&parseTime=True&loc=Local",
+    "dashboard": "root:password@tcp(0.0.0.0:3306)/dashboard?charset=utf8&parseTime=True&loc=Local",
+    "boss": "root:password@tcp(0.0.0.0:3306)/boss?charset=utf8&parseTime=True&loc=Local",
+    "alarms": "root:password@tcp(0.0.0.0:3306)/falcon_portal?charset=utf8&parseTime=True&loc=Local",
+    "db_bug": true
+  }
+}

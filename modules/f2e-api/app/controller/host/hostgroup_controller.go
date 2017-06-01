@@ -53,7 +53,11 @@ func CrateHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{Name: inputs.Name, CreateUser: user.Name, ComeFrom: 1}
 	if dt := db.Falcon.Create(&hostgroup); dt.Error != nil {
 		h.JSONR(c, expecstatus, dt.Error)
@@ -74,7 +78,11 @@ func BindHostToHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{ID: inputs.HostGroupID}
 	if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
 		h.JSONR(c, expecstatus, dt.Error)
@@ -128,7 +136,11 @@ func UnBindAHostToHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{ID: inputs.HostGroupID}
 	if !user.IsAdmin() {
 		if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
@@ -159,7 +171,11 @@ func DeleteHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{ID: int64(grpID)}
 	if !user.IsAdmin() {
 		if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
@@ -252,7 +268,11 @@ func BindTemplateToGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	grpTpl := f.GrpTpl{
 		GrpID: inputs.GrpID,
 		TplID: inputs.TplID,
@@ -282,7 +302,11 @@ func UnBindTemplateToGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	grpTpl := f.GrpTpl{
 		GrpID: inputs.GrpID,
 		TplID: inputs.TplID,

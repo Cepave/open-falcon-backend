@@ -85,13 +85,18 @@ func Logout(c *gin.Context) {
 }
 
 func AuthSession(c *gin.Context) {
-	auth, err := h.SessionChecking(c)
+	auth, isService, err := h.SessionChecking(c)
 	if err != nil || auth != true {
 		h.JSONR(c, http.StatusUnauthorized, err)
 		return
 	}
-	h.JSONR(c, "session is vaild!")
-	return
+	if isService {
+		h.JSONR(c, "session is vaild, it's servies token")
+		return
+	} else {
+		h.JSONR(c, "session is vaild!")
+		return
+	}
 }
 
 func CreateRoot(c *gin.Context) {

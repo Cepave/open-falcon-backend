@@ -7,9 +7,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"github.com/gin-gonic/gin"
 )
 
 type WebSession struct {
@@ -49,12 +49,22 @@ func GetSession(c *gin.Context) (session WebSession, err error) {
 	return
 }
 
-func SessionChecking(c *gin.Context) (auth bool, err error) {
+func SessionChecking(c *gin.Context) (auth bool, isServiceToken bool, err error) {
 	auth = false
 	var websessio WebSession
 	websessio, err = GetSession(c)
 	if err != nil {
 		return
+	}
+
+	Serieves := config.ApiClient
+	if Serieves.Enable && Serieves.NameIncludes(websessio.Name) {
+		if Serieves.AuthToken(websessio.Name, websessio.Sig) {
+			auth = true
+			isServiceToken = true
+			return
+		}
+		log.Warnf("use %s but got wrong sig (%s). Please need check this session", websessio.Name, websessio.Sig)
 	}
 	db := config.Con().Uic
 	var user uic.User
@@ -76,7 +86,14 @@ func SessionChecking(c *gin.Context) (auth bool, err error) {
 
 func GetUser(c *gin.Context) (user uic.User, err error) {
 	db := config.Con().Uic
-	websession, _ := GetSession(c)
+	websession, err := GetSession(c)
+	if err != nil {
+		return
+	}
+	if v, ok := c.Get("is_service_token"); ok && v.(bool) {
+		err = errors.New("services token no support this kind of action.")
+		return
+	}
 	user = uic.User{
 		Name: websession.Name,
 	}
