@@ -77,7 +77,7 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 	sort.Strings(cs)
 	esString := strings.Join(es, TMP_GRAPH_FILED_DELIMITER)
 	csString := strings.Join(cs, TMP_GRAPH_FILED_DELIMITER)
-	user, err := h.GetUser(c)
+	user, err = h.GetUser(c)
 	if err != nil {
 		h.JSONR(c, badstatus, err)
 		return
