@@ -20,6 +20,7 @@ func Routes(r *gin.Engine) {
 	authapi.Use(utils.AuthSessionMidd)
 	authapi.POST("/tmpgraph", DashboardTmpGraphCreate)
 	authapi.POST("/graph", DashboardGraphCreate)
+	authapi.POST("/graph_clone", DashboardGraphClone)
 	authapi.PUT("/graph", DashboardGraphUpdate)
 	authapi.POST("/graph_new_screen", GraphCreateReqDataWithNewScreen)
 	authapi.GET("/tmpgraph/:id", DashboardTmpGraphQuery)
