@@ -132,60 +132,64 @@ func (mine APIGraphUpdateReqData) Check() (err error) {
 }
 
 func DashboardGraphUpdate(c *gin.Context) {
-	inputs := APIGraphUpdateReqData{}
+	inputs := APIGraphUpdateReqData{Method: "NaN", FalconTags: "NaN"}
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
 	}
 
-	d := m.DashboardGraph{ID: inputs.ID}
+	graph := m.DashboardGraph{ID: inputs.ID}
+	if dt := db.Dashboard.Model(&graph).Where("id = ?", inputs.ID).Scan(&graph); dt.Error != nil {
+		h.JSONR(c, badstatus, fmt.Errorf("get graph id:%d, got error:%s", inputs.ID, dt.Error.Error()))
+		return
+	}
 
 	if len(inputs.Endpoints) != 0 {
 		es := inputs.Endpoints
 		sort.Strings(es)
 		es_string := strings.Join(es, TMP_GRAPH_FILED_DELIMITER)
-		d.Hosts = es_string
+		graph.Hosts = es_string
 	}
 	if len(inputs.Counters) != 0 {
 		cs := inputs.Counters
 		sort.Strings(cs)
 		cs_string := strings.Join(cs, TMP_GRAPH_FILED_DELIMITER)
-		d.Counters = cs_string
+		graph.Counters = cs_string
 	}
 	if inputs.Title != "" {
-		d.Title = inputs.Title
+		graph.Title = inputs.Title
 	}
 	if inputs.ScreenId != 0 {
-		d.ScreenId = int64(inputs.ScreenId)
+		graph.ScreenId = int64(inputs.ScreenId)
 	}
 	if inputs.TimeSpan != 0 {
-		d.TimeSpan = inputs.TimeSpan
+		graph.TimeSpan = inputs.TimeSpan
 	}
 	if inputs.GraphType != "" {
-		d.GraphType = inputs.GraphType
+		graph.GraphType = inputs.GraphType
 	}
-	if inputs.Method != "" {
-		d.Method = inputs.Method
+	//method accpect empty, this is means not SUM action
+	if inputs.Method != "NaN" {
+		graph.Method = inputs.Method
+	} else {
+		graph.Method = ""
 	}
 	if inputs.Position != 0 {
-		d.Position = inputs.Position
+		graph.Position = inputs.Position
 	}
-	if inputs.FalconTags != "" {
-		d.FalconTags = inputs.FalconTags
+	if inputs.FalconTags != "NaN" {
+		graph.FalconTags = inputs.FalconTags
+	} else {
+		graph.FalconTags = ""
 	}
 
 	tx := db.Dashboard.Begin()
-	graph := m.DashboardGraph{}
-	if dt := tx.Model(&graph).Where("id = ?", inputs.ID).Updates(d); dt.Error != nil {
+	if dt := tx.Model(&graph).Where("id = ?", inputs.ID).Save(&graph); dt.Error != nil {
 		tx.Rollback()
 		h.JSONR(c, badstatus, fmt.Errorf("update graph id:%d, got error:%s", inputs.ID, dt.Error.Error()))
 		return
 	}
 	tx.Commit()
-	if dt := db.Dashboard.Model(&graph).Where("id = ?", inputs.ID).Scan(&graph); dt.Error != nil {
-		h.JSONR(c, badstatus, fmt.Errorf("get graph id:%d, got error:%s", inputs.ID, dt.Error.Error()))
-		return
-	}
 	h.JSONR(c, buildGraphGetOutput(graph))
 }
 
