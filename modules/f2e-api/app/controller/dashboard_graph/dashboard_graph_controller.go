@@ -99,8 +99,16 @@ func DashboardGraphCreate(c *gin.Context) {
 }
 
 type APIGraphUpdateReqData struct {
-	ID int64 `json:"id" form:"id" binding:"required"`
-	APIGraphCreateReqData
+	ID         int64    `json:"id" form:"id" binding:"required"`
+	ScreenId   int64    `json:"screen_id" form:"screen_id"`
+	Title      string   `json:"title" form:"title"`
+	Endpoints  []string `json:"endpoints" form:"endpoints"`
+	Counters   []string `json:"counters" form:"counters"`
+	TimeSpan   int64    `json:"timespan" form:"timespan"`
+	GraphType  string   `json:"graph_type" form:"graph_type"`
+	Method     string   `json:"method" form:"method"`
+	Position   int64    `json:"position" form:"position"`
+	FalconTags string   `json:"falcon_tags" form:"falcon_tags"`
 }
 
 func (mine APIGraphUpdateReqData) Check() (err error) {
@@ -166,15 +174,32 @@ func DashboardGraphUpdate(c *gin.Context) {
 		d.FalconTags = inputs.FalconTags
 	}
 
+	tx := db.Dashboard.Begin()
 	graph := m.DashboardGraph{}
-	dt := db.Dashboard.Table(graph.TableName()).Model(&graph).Where("id = ?", inputs.ID).Updates(d)
-	if dt.Error != nil {
-		h.JSONR(c, badstatus, dt.Error)
+	if dt := tx.Model(&graph).Where("id = ?", inputs.ID).Updates(d); dt.Error != nil {
+		tx.Rollback()
+		h.JSONR(c, badstatus, fmt.Errorf("update graph id:%d, got error:%s", inputs.ID, dt.Error.Error()))
 		return
 	}
+	tx.Commit()
+	if dt := db.Dashboard.Model(&graph).Where("id = ?", inputs.ID).Scan(&graph); dt.Error != nil {
+		h.JSONR(c, badstatus, fmt.Errorf("get graph id:%d, got error:%s", inputs.ID, dt.Error.Error()))
+		return
+	}
+	h.JSONR(c, buildGraphGetOutput(graph))
+}
 
-	h.JSONR(c, map[string]int64{"id": inputs.ID})
-
+type APIDashboardGraphGetOuput struct {
+	GraphID    int64    `json:"graph_id" form:"graph_id"`
+	Title      string   `json:"title" form:"title"`
+	ScreenId   int64    `json:"screen_id" form:"screen_id"`
+	Endpoints  []string `json:"endpoints" form:"endpoints"`
+	Counters   []string `json:"counters" form:"counters"`
+	TimeSpan   int64    `json:"timespan" form:"timespan"`
+	GraphType  string   `json:"graph_type" form:"graph_type"`
+	Method     string   `json:"method" form:"method"`
+	Position   int64    `json:"position" form:"position"`
+	FalconTags string   `json:"falcon_tags" form:"falcon_tags"`
 }
 
 func DashboardGraphGet(c *gin.Context) {
@@ -192,22 +217,29 @@ func DashboardGraphGet(c *gin.Context) {
 		return
 	}
 
+	h.JSONR(c, buildGraphGetOutput(graph))
+
+}
+
+func buildGraphGetOutput(graph m.DashboardGraph) APIDashboardGraphGetOuput {
 	es := strings.Split(graph.Hosts, TMP_GRAPH_FILED_DELIMITER)
 	cs := strings.Split(graph.Counters, TMP_GRAPH_FILED_DELIMITER)
+	return APIDashboardGraphGetOuput{
+		GraphID:    graph.ID,
+		Title:      graph.Title,
+		Endpoints:  es,
+		Counters:   cs,
+		ScreenId:   graph.ScreenId,
+		GraphType:  graph.GraphType,
+		TimeSpan:   graph.TimeSpan,
+		Method:     graph.Method,
+		Position:   graph.Position,
+		FalconTags: graph.FalconTags,
+	}
+}
 
-	h.JSONR(c, map[string]interface{}{
-		"graph_id":    graph.ID,
-		"title":       graph.Title,
-		"endpoints":   es,
-		"counters":    cs,
-		"screen_id":   graph.ScreenId,
-		"graph_type":  graph.GraphType,
-		"timespan":    graph.TimeSpan,
-		"method":      graph.Method,
-		"position":    graph.Position,
-		"falcon_tags": graph.FalconTags,
-	})
-
+type APIDashboardGraphDeleteInputs struct {
+	ID int `json:"id" form:"id"  binding:"required"`
 }
 
 func DashboardGraphDelete(c *gin.Context) {
@@ -218,15 +250,16 @@ func DashboardGraphDelete(c *gin.Context) {
 		return
 	}
 
+	tx := db.Dashboard.Begin()
 	graph := m.DashboardGraph{}
-	dt := db.Dashboard.Table("dashboard_graph").Where("id = ?", gid).Delete(&graph)
+	dt := tx.Model(&graph).Where("id = ?", gid).Delete(&graph)
 	if dt.Error != nil {
+		tx.Rollback()
 		h.JSONR(c, badstatus, dt.Error)
 		return
 	}
-
+	tx.Commit()
 	h.JSONR(c, map[string]int{"id": gid})
-
 }
 
 func DashboardGraphGetsByScreenID(c *gin.Context) {
@@ -266,4 +299,46 @@ func DashboardGraphGetsByScreenID(c *gin.Context) {
 	}
 
 	h.JSONR(c, ret)
+}
+
+type APIDashboardGraphCloneInputs struct {
+	ID int64 `json:"id" form:"id" binding:"required"`
+}
+
+func DashboardGraphClone(c *gin.Context) {
+	inputs := APIDashboardGraphCloneInputs{}
+	if err := c.Bind(&inputs); err != nil {
+		h.JSONR(c, badstatus, fmt.Errorf("binding inputs got error:%s", err.Error()))
+		return
+	}
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err.Error())
+		return
+	}
+	originalGraph := m.DashboardGraph{ID: inputs.ID}
+	if dt := db.Dashboard.Model(&originalGraph).Where(&originalGraph).Scan(&originalGraph); dt.Error != nil {
+		h.JSONR(c, badstatus, fmt.Errorf("find graph with id: %d, got error:%s", inputs.ID, dt.Error.Error()))
+		return
+	}
+	tx := db.Dashboard.Begin()
+	newGraph := m.DashboardGraph{
+		Title:      fmt.Sprintf("%s_copy", originalGraph.Title),
+		Hosts:      originalGraph.Hosts,
+		Counters:   originalGraph.Counters,
+		ScreenId:   originalGraph.ScreenId,
+		TimeSpan:   originalGraph.TimeSpan,
+		GraphType:  originalGraph.GraphType,
+		Method:     originalGraph.Method,
+		Position:   originalGraph.Position,
+		FalconTags: originalGraph.FalconTags,
+		Creator:    user.Name,
+	}
+	if dt := tx.Model(&newGraph).Save(&newGraph); dt.Error != nil {
+		tx.Rollback()
+		h.JSONR(c, badstatus, fmt.Errorf("save new graph record got error: %s", dt.Error.Error()))
+		return
+	}
+	tx.Commit()
+	h.JSONR(c, newGraph)
 }

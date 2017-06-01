@@ -21,7 +21,7 @@ import (
 func newTestContext(method, path string, body *[]byte) (w *httptest.ResponseRecorder, r *http.Request) {
 	w = httptest.NewRecorder()
 	if body == nil {
-		r, _ = http.NewRequest(method, path, nil)
+		r, _ = http.NewRequest(method, path, bytes.NewBuffer(nil))
 	} else {
 		r, _ = http.NewRequest(method, path, bytes.NewBuffer(*body))
 	}
