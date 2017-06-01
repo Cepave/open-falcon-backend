@@ -2,19 +2,26 @@ package rdb
 
 import (
 	"strconv"
+	"time"
 
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
-	. "gopkg.in/check.v1"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
+	ch "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
 type TestHeartbeatSuite struct{}
 
-var _ = Suite(&TestHeartbeatSuite{})
+var _ = ch.Suite(&TestHeartbeatSuite{})
 
-func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *C) {
+func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *ch.C) {
 	testCases := []struct {
 		hosts      []string
 		timestamp  string
@@ -72,27 +79,150 @@ func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *C) {
 
 		var dbResult int64
 		countStmt.QueryRowxAndScan([]interface{}{sampleTime.Unix(), sampleIP, sampleAgentVersion, samplePluginVersion}, &dbResult)
-		c.Assert(result.RowsAffected, Equals, testCase.expect, comment)
-		c.Assert(dbResult, Equals, testCase.expect, comment)
+		c.Assert(result.RowsAffected, ch.Equals, testCase.expect, comment)
+		c.Assert(dbResult, ch.Equals, testCase.expect, comment)
 	}
 }
 
-func (suite *TestHeartbeatSuite) TearDownTest(c *C) {
+func (suite *TestHeartbeatSuite) TearDownTest(c *ch.C) {
 	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
-	case "TestHeartbeatSuite.TestAgentHeartbeat":
+	case "TestHeartbeatSuite.TestFalconAgentHeartbeat":
 		inTx(
 			`DELETE FROM host WHERE hostname LIKE 'nqm-mng-tc1-%'`,
 		)
 	}
 }
 
-func (suite *TestHeartbeatSuite) SetUpSuite(c *C) {
+func (suite *TestHeartbeatSuite) SetUpSuite(c *ch.C) {
 	DbFacade = dbTest.InitDbFacade(c)
 }
 
-func (suite *TestHeartbeatSuite) TearDownSuite(c *C) {
+func (suite *TestHeartbeatSuite) TearDownSuite(c *ch.C) {
 	dbTest.ReleaseDbFacade(c, DbFacade)
 	DbFacade = nil
 }
+
+func inTx(sql ...string) {
+	DbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
+}
+
+var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(test.InitNqmAgent...)
+	})
+
+	AfterEach(func() {
+		inTx(test.ClearNqmAgent...)
+	})
+
+	now := time.Now()
+	yesterday := time.Now().Add(-24 * time.Hour)
+	DescribeTable("for newly inserted agents", func(input time.Time) {
+		reqs := []*model.NqmAgentHeartbeatRequest{
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-1@201.3.116.1",
+				Hostname:     "ct-255-1",
+				IpAddress:    "201.3.116.1",
+				Timestamp:    ojson.JsonTime(input),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-2@201.3.116.2",
+				Hostname:     "ct-255-2",
+				IpAddress:    "201.3.116.2",
+				Timestamp:    ojson.JsonTime(input),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-3@201.4.23.3",
+				Hostname:     "ct-255-3",
+				IpAddress:    "201.4.23.3",
+				Timestamp:    ojson.JsonTime(input),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-63-1@201.77.23.3",
+				Hostname:     "ct-63-1",
+				IpAddress:    "201.77.23.3",
+				Timestamp:    ojson.JsonTime(input),
+			},
+		}
+
+		UpdateNqmAgentHeartbeat(reqs)
+		for _, req := range reqs {
+			agent := SelectNqmAgentByConnId(req.ConnectionId)
+			Expect(agent.LastHeartBeat.Unix()).To(Equal(input.Unix()))
+		}
+	},
+		Entry("case: Now", now),
+		Entry("case yesterday", yesterday),
+	)
+
+	existentTime := time.Now().Add(-240 * time.Hour)
+	earlierTime := time.Now().Add(-480 * time.Hour)
+	DescribeTable("for existent agents", func(input time.Time, expected time.Time) {
+		init := []*model.NqmAgentHeartbeatRequest{
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-1@201.3.116.1",
+				Hostname:     "ct-255-1",
+				IpAddress:    "201.3.116.1",
+				Timestamp:    ojson.JsonTime(existentTime),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-2@201.3.116.2",
+				Hostname:     "ct-255-2",
+				IpAddress:    "201.3.116.2",
+				Timestamp:    ojson.JsonTime(existentTime),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-3@201.4.23.3",
+				Hostname:     "ct-255-3",
+				IpAddress:    "201.4.23.3",
+				Timestamp:    ojson.JsonTime(existentTime),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-63-1@201.77.23.3",
+				Hostname:     "ct-63-1",
+				IpAddress:    "201.77.23.3",
+				Timestamp:    ojson.JsonTime(existentTime),
+			},
+		}
+		UpdateNqmAgentHeartbeat(init)
+
+		reqs := []*model.NqmAgentHeartbeatRequest{
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-1@201.3.116.1",
+				Hostname:     "ct-255-1",
+				IpAddress:    "201.3.116.1",
+				Timestamp:    ojson.JsonTime(input),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-2@201.3.116.2",
+				Hostname:     "ct-255-2",
+				IpAddress:    "201.3.116.2",
+				Timestamp:    ojson.JsonTime(input),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-255-3@201.4.23.3",
+				Hostname:     "ct-255-3",
+				IpAddress:    "201.4.23.3",
+				Timestamp:    ojson.JsonTime(input),
+			},
+			&model.NqmAgentHeartbeatRequest{
+				ConnectionId: "ct-63-1@201.77.23.3",
+				Hostname:     "ct-63-1",
+				IpAddress:    "201.77.23.3",
+				Timestamp:    ojson.JsonTime(input),
+			},
+		}
+		UpdateNqmAgentHeartbeat(reqs)
+
+		for _, req := range reqs {
+			agent := SelectNqmAgentByConnId(req.ConnectionId)
+			Expect(agent.LastHeartBeat.Unix()).To(Equal(expected.Unix()))
+		}
+	},
+		Entry("case: now", now, now),
+		Entry("case: yesterday", yesterday, yesterday),
+		Entry("case: earlier than existent value", earlierTime, existentTime),
+	)
+}))

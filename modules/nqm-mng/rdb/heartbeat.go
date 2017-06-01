@@ -152,7 +152,8 @@ func (p *updateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 		ag_ip_address = ?,
 		ag_last_heartbeat = FROM_UNIXTIME(?)
 	WHERE ag_connection_id = ?
-		AND ag_last_heartbeat < FROM_UNIXTIME(?)
+		AND (ag_last_heartbeat < FROM_UNIXTIME(?) OR
+				 ag_last_heartbeat is NULL)
 	`)
 
 	for _, e := range p.Reqs {
