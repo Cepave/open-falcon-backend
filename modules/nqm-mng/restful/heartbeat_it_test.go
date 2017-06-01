@@ -17,7 +17,7 @@ type TestHeartbeatItSuite struct{}
 
 var _ = Suite(&TestHeartbeatItSuite{})
 
-func (s *TestHeartbeatItSuite) TestAgentHeartbeat(c *C) {
+func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *C) {
 	testCases := []struct {
 		hosts      []string
 		timestamp  string
@@ -39,11 +39,11 @@ func (s *TestHeartbeatItSuite) TestAgentHeartbeat(c *C) {
 	}
 
 	for _, testCase := range testCases {
-		sampleHosts := make([]*model.AgentHeartbeat, len(testCase.hosts))
+		sampleHosts := make([]*model.FalconAgentHeartbeat, len(testCase.hosts))
 		sampleTime := testing.ParseTime(c, testCase.timestamp)
 		for idx, hostName := range testCase.hosts {
 			sampleNumber := strconv.Itoa(idx)
-			sampleHosts[idx] = &model.AgentHeartbeat{
+			sampleHosts[idx] = &model.FalconAgentHeartbeat{
 				Hostname:      "nqm-mng-it-tc1-" + hostName,
 				UpdateTime:    sampleTime.Unix(),
 				IP:            "127.0.0." + sampleNumber,
@@ -74,7 +74,7 @@ func (s *TestHeartbeatItSuite) TearDownTest(c *C) {
 	inTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
-	case "TestHeartbeatItSuite.TestAgentHeartbeat":
+	case "TestHeartbeatItSuite.TestFalconAgentHeartbeat":
 		inTx(
 			`DELETE FROM host WHERE hostname LIKE 'nqm-mng-it-tc1-%'`,
 		)
