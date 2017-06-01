@@ -140,9 +140,10 @@ func TestDashboardGraphController(t *testing.T) {
 					Counters:   []string{"c1", "c2"},
 					ID:         int64(testGraphId),
 					TimeSpan:   int64(9999),
-					GraphType:  "s",
+					GraphType:  "a",
 					Method:     "sum",
 					Position:   int64(22),
+					ScreenId:   955,
 					FalconTags: "a=1,b=2",
 				}
 				b, _ := json.Marshal(postb)
@@ -166,6 +167,8 @@ func TestDashboardGraphController(t *testing.T) {
 				So(value.Int(), ShouldResemble, postb.Position)
 				value = gjson.Get(w.Body.String(), "falcon_tags")
 				So(value.String(), ShouldResemble, postb.FalconTags)
+				value = gjson.Get(w.Body.String(), "screen_id")
+				So(value.Int(), ShouldResemble, postb.ScreenId)
 			})
 			Reset(func() {
 				postb := dg.APIGraphUpdateReqData{
