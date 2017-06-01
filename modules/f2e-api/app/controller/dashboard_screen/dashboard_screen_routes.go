@@ -19,6 +19,7 @@ func Routes(r *gin.Engine) {
 	authapi := r.Group("/api/v1/dashboard")
 	authapi.Use(utils.AuthSessionMidd)
 	authapi.POST("/screen", ScreenCreate)
+	authapi.POST("/screen_clone", ScreenClone)
 	authapi.PUT("/screen", ScreenUpdate)
 	authapi.GET("/screen/:screen_id", ScreenGet)
 	authapi.GET("/screens/pid/:pid", ScreenGetsByPid)
