@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 )
 
 type TestHeartbeatSuite struct{}
@@ -224,5 +225,29 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		Entry("case: now", now, now),
 		Entry("case: yesterday", yesterday, yesterday),
 		Entry("case: earlier than existent value", earlierTime, existentTime),
+	)
+}))
+
+var _ = Describe("Test SelectNqmAgentByConnId()", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(test.InitNqmAgent...)
+	})
+
+	AfterEach(func() {
+		inTx(test.ClearNqmAgent...)
+	})
+
+	DescribeTable("for existent agents", func(input string, expected types.GomegaMatcher) {
+		r := SelectNqmAgentByConnId(input)
+		Ω(r).Should(expected)
+	},
+		Entry("case:     existent", "ct-255-1@201.3.116.1", Not(BeNil())),
+		Entry("case: not existent", "ct-255-1@201.3.116.", BeNil()),
+		Entry("case:     existent", "ct-255-2@201.3.116.2", Not(BeNil())),
+		Entry("case: not existent", "ct-255-2@201.3.116.", BeNil()),
+		Entry("case:     existent", "ct-255-3@201.4.23.3", Not(BeNil())),
+		Entry("case: not existent", "ct-255-3@201.4.23", BeNil()),
+		Entry("case:     existent", "ct-63-1@201.77.23.3", Not(BeNil())),
+		Entry("case: not existent", "ct-63-1@201.77.23", BeNil()),
 	)
 }))
