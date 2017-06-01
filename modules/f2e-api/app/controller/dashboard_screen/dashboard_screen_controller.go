@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/dashboard"
@@ -278,6 +279,9 @@ func ScreenClone(c *gin.Context) {
 	newScreen := m.DashboardScreen{
 		Name:    fmt.Sprintf("%s_copy", originalScreen.Name),
 		Creator: user.Name,
+	}
+	if newScreen.ExistName() {
+		newScreen.Name = fmt.Sprintf("%s_%s", newScreen.Name, time.Now().Unix())
 	}
 	if dt := tx.Model(&newScreen).Save(&newScreen); dt.Error != nil {
 		tx.Rollback()
