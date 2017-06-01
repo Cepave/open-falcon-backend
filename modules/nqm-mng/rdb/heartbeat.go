@@ -145,7 +145,7 @@ type updateNqmAgentHeartbeatTx struct {
 	Reqs []*model.NqmAgentHeartbeatRequest
 }
 
-func (p *updateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+func (t *updateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	updateStmt := sqlxExt.ToTxExt(tx).Preparex(`
 	UPDATE nqm_agent
 	SET ag_hostname = ?,
@@ -156,7 +156,7 @@ func (p *updateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 				 ag_last_heartbeat is NULL)
 	`)
 
-	for _, e := range p.Reqs {
+	for _, e := range t.Reqs {
 		updateStmt.MustExec(
 			e.Hostname,
 			e.IpAddress,
@@ -238,15 +238,26 @@ func NotNewNqmAgent(connId string) bool {
 	)
 }
 
-func InsertNqmAgent(r *model.NqmAgentHeartbeatRequest) {
+type insertNqmAgentByHeartbeatTx struct {
+	Req *model.NqmAgentHeartbeatRequest
+}
+
+func InsertNqmAgentByHeartbeat(r *model.NqmAgentHeartbeatRequest) {
+	insertTx := &insertNqmAgentByHeartbeatTx{
+		Req: r,
+	}
+	DbFacade.SqlxDbCtrl.InTx(insertTx)
+}
+
+func (t *insertNqmAgentByHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	DbFacade.SqlxDb.MustExec(`
 		INSERT INTO host(hostname, ip, agent_version, plugin_version)
 		VALUES(?, ?, '', '')
 		ON DUPLICATE KEY UPDATE
 			ip = VALUES(ip)
 	`,
-		r.Hostname,
-		string(r.IpAddress),
+		t.Req.Hostname,
+		string(t.Req.IpAddress),
 	)
 	DbFacade.SqlxDb.MustExec(`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)
@@ -258,10 +269,11 @@ func InsertNqmAgent(r *model.NqmAgentHeartbeatRequest) {
 			ag_ip_address = VALUES(ag_ip_address),
 			ag_last_heartbeat = VALUES(ag_last_heartbeat)
 	`,
-		r.ConnectionId,
-		r.Hostname,
-		r.IpAddress,
-		r.Timestamp,
-		r.Hostname,
+		t.Req.ConnectionId,
+		t.Req.Hostname,
+		t.Req.IpAddress,
+		t.Req.Timestamp,
+		t.Req.Hostname,
 	)
+	return commonDb.TxCommit
 }

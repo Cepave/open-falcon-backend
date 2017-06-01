@@ -1,5 +1,7 @@
 package test
 
+var SetAutoIncForHost = `ALTER TABLE host AUTO_INCREMENT = 36091`
+var ResetAutoIncForHost = `ALTER TABLE host AUTO_INCREMENT = 1`
 var InsertHostSQL = `
 INSERT INTO host(id, hostname, agent_version, plugin_version)
 VALUES
@@ -10,6 +12,8 @@ VALUES
 `
 var DeleteHostSQL = `DELETE FROM host WHERE id >= 36091 AND id <= 36095`
 
+var SetAutoIncForNqmAgent = `ALTER TABLE nqm_agent AUTO_INCREMENT = 24021`
+var ResetAutoIncForNqmAgent = `ALTER TABLE nqm_agent AUTO_INCREMENT = 1`
 var InsertNqmAgentSQL = `
 INSERT INTO nqm_agent(
 	ag_id, ag_hs_id, ag_name, ag_connection_id, ag_hostname, ag_ip_address,
@@ -23,5 +27,5 @@ VALUES
 `
 var DeleteNqmAgentSQL = `DELETE FROM nqm_agent WHERE ag_id >= 24021 AND ag_id <= 24025`
 
-var InitNqmAgent = []string{InsertHostSQL, InsertNqmAgentSQL}
-var ClearNqmAgent = []string{DeleteNqmAgentSQL, DeleteHostSQL}
+var InitNqmAgent = []string{SetAutoIncForHost, SetAutoIncForNqmAgent, InsertHostSQL, InsertNqmAgentSQL}
+var ClearNqmAgent = []string{DeleteNqmAgentSQL, DeleteHostSQL, ResetAutoIncForNqmAgent, ResetAutoIncForHost}

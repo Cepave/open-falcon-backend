@@ -275,3 +275,50 @@ var _ = Describe("Test NotNewNqmAgent()", ginkgoDb.NeedDb(func() {
 		Entry("case:  is new", "ct-63-1@201.77.23", BeFalse()),
 	)
 }))
+
+var _ = Describe("Test InsertNqmAgentByHeartbeat()", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(test.InitNqmAgent...)
+	})
+	AfterEach(func() {
+		inTx(test.ClearNqmAgent...)
+	})
+
+	DescribeTable("insert a new row into the table 'nqm_agent'", func(inputConnId string, inputHostname string, inputIPAddr string) {
+		inputReq := &model.NqmAgentHeartbeatRequest{
+			ConnectionId: inputConnId,
+			Hostname:     inputHostname,
+			IpAddress:    model.IPString(inputIPAddr),
+		}
+
+		InsertNqmAgentByHeartbeat(inputReq)
+		agent := SelectNqmAgentByConnId(inputConnId)
+		Ω(agent.Hostname).Should(Equal(inputHostname))
+		Ω(agent.IpAddress.String()).Should(Equal(inputIPAddr))
+	},
+		Entry("new row", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.11"),
+		Entry("duplicated IP address", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.1"),
+		Entry("duplicated hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.11"),
+		Entry("duplicated IP address and hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
+	)
+
+	DescribeTable("works for the duplicated requests", func(inputConnId string, inputHostname string, inputIPAddr string) {
+		inputReq := &model.NqmAgentHeartbeatRequest{
+			ConnectionId: inputConnId,
+			Hostname:     inputHostname,
+			IpAddress:    model.IPString(inputIPAddr),
+		}
+		for i := 0; i < 5; i++ {
+			InsertNqmAgentByHeartbeat(inputReq)
+		}
+		agent := SelectNqmAgentByConnId(inputConnId)
+		Ω(agent.Hostname).Should(Equal(inputHostname))
+		Ω(agent.IpAddress.String()).Should(Equal(inputIPAddr))
+	},
+		Entry("new row", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.11"),
+		Entry("duplicated IP address", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.1"),
+		Entry("duplicated hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.11"),
+		Entry("duplicated IP address and hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
+	)
+
+}))

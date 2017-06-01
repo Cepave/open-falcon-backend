@@ -31,7 +31,7 @@ func nqmAgentHeartbeat(
 	if rdb.NotNewNqmAgent(req.ConnectionId) {
 		queue.NqmQueue.Put(req)
 	} else {
-		rdb.InsertNqmAgent(req)
+		rdb.InsertNqmAgentByHeartbeat(req)
 	}
 	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
 	return mvc.JsonOutputBody(r)
