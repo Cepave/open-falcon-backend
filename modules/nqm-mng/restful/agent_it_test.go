@@ -86,7 +86,7 @@ var _ = Describe("Adding new NQM agent", ginkgoDb.NeedDb(func() {
 	AfterEach(func() {
 		inTx(
 			"DELETE FROM nqm_agent WHERE ag_connection_id LIKE 'add-agent%'",
-			"DELETE FROM host WHERE hostname = 'new-agent-blue-1'",
+			"DELETE FROM host WHERE hostname = 'new-host-cccc'",
 			"DELETE FROM owl_name_tag where nt_value LIKE 'add-agent-%'",
 			"DELETE FROM owl_group_tag where gt_name LIKE 'pp-rest-tag-%'",
 		)
@@ -103,7 +103,7 @@ var _ = Describe("Adding new NQM agent", ginkgoDb.NeedDb(func() {
 		CityId       int      `json:"city_id"`
 		NameTag      *string  `json:"name_tag"`
 		GroupTags    []string `json:"group_tags"`
-	} {
+	}{
 		Name:       "ko-name-cc1",
 		Comment:    "cc-name-cc1",
 		Hostname:   "new-host-cccc",
@@ -349,7 +349,7 @@ var _ = Describe("Modifying NQM agent", ginkgoDb.NeedDb(func() {
 		CityId     int      `json:"city_id"`
 		NameTag    *string  `json:"name_tag"`
 		GroupTags  []string `json:"group_tags"`
-	} {
+	}{
 		Name:       "Update-Agent-1",
 		Status:     false,
 		Comment:    "This is updated comment",
