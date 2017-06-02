@@ -3,21 +3,28 @@ package restful
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/Cepave/open-falcon-backend/common/testing"
+	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
-	. "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
+	ch "gopkg.in/check.v1"
 )
 
 type TestHeartbeatItSuite struct{}
 
-var _ = Suite(&TestHeartbeatItSuite{})
+var _ = ch.Suite(&TestHeartbeatItSuite{})
 
-func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *C) {
+func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *ch.C) {
 	testCases := []struct {
 		hosts      []string
 		timestamp  string
@@ -58,19 +65,19 @@ func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *C) {
 		jsonResp := slintChecker.GetJsonBody(http.StatusOK)
 
 		c.Logf("[Agent heartbeat] JSON Result: %s", json.MarshalPrettyJSON(jsonResp))
-		c.Assert(jsonResp.Get("rows_affected").MustInt64(), Equals, testCase.expect)
+		c.Assert(jsonResp.Get("rows_affected").MustInt64(), ch.Equals, testCase.expect)
 	}
 
 }
 
-func (s *TestHeartbeatItSuite) SetUpSuite(c *C) {
+func (s *TestHeartbeatItSuite) SetUpSuite(c *ch.C) {
 	testingDb.InitRdb(c)
 }
-func (s *TestHeartbeatItSuite) TearDownSuite(c *C) {
+func (s *TestHeartbeatItSuite) TearDownSuite(c *ch.C) {
 	testingDb.ReleaseRdb(c)
 }
 
-func (s *TestHeartbeatItSuite) TearDownTest(c *C) {
+func (s *TestHeartbeatItSuite) TearDownTest(c *ch.C) {
 	inTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
@@ -80,3 +87,43 @@ func (s *TestHeartbeatItSuite) TearDownTest(c *C) {
 		)
 	}
 }
+
+var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(test.DeleteNqmAgentSQL, test.DeleteHostSQL, test.ResetAutoIncForNqmAgent, test.ResetAutoIncForHost, test.SetAutoIncForHost, test.SetAutoIncForNqmAgent, test.InsertHostSQL, test.InsertNqmAgentSQL)
+	})
+
+	AfterEach(func() {
+		inTx(test.ClearNqmAgent...)
+	})
+
+	DescribeTable("update an existent agent or instert a new agent", func(inputConnId string, inputHostname string, inputIPAddr string) {
+		inputReq := &model.NqmAgentHeartbeatRequest{
+			ConnectionId: inputConnId,
+			Hostname:     inputHostname,
+			IpAddress:    model.IPString(inputIPAddr),
+			Timestamp:    json.JsonTime(time.Now()),
+		}
+		resp := testingHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().
+				Post("api/v1/heartbeat/nqm/agent").
+				BodyJSON(inputReq),
+		)
+		jsonBody := resp.GetBodyAsJson()
+		GinkgoT().Logf("[NQM Agent Heartbeat Response] JSON Result: %s", json.MarshalPrettyJSON(jsonBody))
+		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
+		Expect(jsonBody.Get("connection_id").MustString()).To(Equal(inputReq.ConnectionId))
+		Expect(jsonBody.Get("hostname").MustString()).To(Equal(inputReq.Hostname))
+		Expect(jsonBody.Get("ip_address").MustString()).To(Equal(string(inputReq.IpAddress)))
+		Expect(jsonBody.Get("last_heartbeat_time").Int64()).To(Equal(time.Time(inputReq.Timestamp).Unix()))
+	},
+		Entry("[update] existent agent", "ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
+		Entry("[update] existent agent with duplicated IP address", "ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.1"),
+		Entry("[update] existent agent with duplicated hostname", "ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.11"),
+		Entry("[update] existent agent with duplicated IP address and hostname", "ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.11"),
+		Entry("[insert] new agent", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.11"),
+		Entry("[insert] new agent with duplicated IP address", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.1"),
+		Entry("[insert] new agent with duplicated hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.11"),
+		Entry("[insert] new agent with duplicated IP address and hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
+	)
+}))

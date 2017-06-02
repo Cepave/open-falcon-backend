@@ -1,8 +1,12 @@
 package restful
 
 import (
+	"net"
+	"time"
+
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service/queue"
@@ -28,11 +32,24 @@ func falconAgentHeartbeat(
 func nqmAgentHeartbeat(
 	req *model.NqmAgentHeartbeatRequest,
 ) mvc.OutputBody {
+	var r *nqmModel.Agent
 	if rdb.NotNewNqmAgent(req.ConnectionId) {
 		queue.NqmQueue.Put(req)
+		r = overwrittenNqmAgent(req)
 	} else {
 		rdb.InsertNqmAgentByHeartbeat(req)
+		r = rdb.SelectNqmAgentByConnId(req.ConnectionId)
 	}
-	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
 	return mvc.JsonOutputBody(r)
+}
+
+// overwrittenNqmAgent overwrites the result with the values from the heartbeat
+// request. The values in the database should be identical in the end.
+func overwrittenNqmAgent(req *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
+	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
+	r.ConnectionId = req.ConnectionId
+	r.Hostname = req.Hostname
+	r.IpAddress = net.ParseIP(string(req.IpAddress))
+	r.LastHeartBeat = time.Time(req.Timestamp)
+	return r
 }
