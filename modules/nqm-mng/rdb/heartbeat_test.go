@@ -316,9 +316,9 @@ var _ = Describe("Test InsertNqmAgentByHeartbeat()", ginkgoDb.NeedDb(func() {
 		Ω(agent.IpAddress.String()).Should(Equal(inputIPAddr))
 	},
 		Entry("new row", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.11"),
-		Entry("duplicated IP address", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.1"),
-		Entry("duplicated hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.11"),
-		Entry("duplicated IP address and hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
+		Entry("new row with duplicated IP address", "new-ct-255-1@201.3.116.1", "new-ct-255-1", "201.3.116.1"),
+		Entry("new row with duplicated hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.11"),
+		Entry("new row with duplicated IP address and hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
 	)
 
 }))
