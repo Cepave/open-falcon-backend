@@ -257,7 +257,7 @@ func (t *insertNqmAgentByHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 			ip = VALUES(ip)
 	`,
 		t.Req.Hostname,
-		string(t.Req.IpAddress),
+		t.Req.IpAddress.String(),
 	)
 	DbFacade.SqlxDb.MustExec(`
 		INSERT INTO nqm_agent(ag_connection_id, ag_hostname, ag_ip_address, ag_last_heartbeat, ag_hs_id)

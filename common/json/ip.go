@@ -10,6 +10,14 @@ import (
 // This type of time would be serialized to UNIX time for MarshalJSON()
 type IP net.IP
 
+func NewIP(s string) IP {
+	return IP(net.ParseIP(s))
+}
+
+func (ip IP) String() string {
+	return net.IP(ip).String()
+}
+
 // Implement MarshalJSON() here if needed
 // func (ip IP) MarshalJSON() ([]byte, error) {
 // }

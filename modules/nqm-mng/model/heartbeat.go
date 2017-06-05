@@ -1,10 +1,6 @@
 package model
 
 import (
-	"database/sql/driver"
-	"fmt"
-	"net"
-
 	owlGin "github.com/Cepave/open-falcon-backend/common/gin"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/gin-gonic/gin"
@@ -36,20 +32,4 @@ type NqmAgentHeartbeatRequest struct {
 
 func (r *NqmAgentHeartbeatRequest) Bind(c *gin.Context) {
 	owlGin.BindJson(c, r)
-}
-
-type IPString string
-
-func (s IPString) Value() (driver.Value, error) {
-	ip := net.ParseIP(string(s))
-	if ip == nil {
-		return nil, fmt.Errorf("Cannot parse IP string: %s\n", s)
-	}
-
-	// If ip is not an IPv4 address, To4 returns nil.
-	if v4 := ip.To4(); v4 != nil {
-		return []byte(v4), nil
-	}
-	// ip must be IPv6 address
-	return []byte(ip.To16()), nil
 }
