@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"net"
+	"strconv"
 )
 
 // This type of time would be serialized to UNIX time for MarshalJSON()
@@ -15,7 +16,10 @@ type IP net.IP
 
 // UnmarshalJSON parses the JSON-encoded IP string
 func (ip *IP) UnmarshalJSON(data []byte) error {
-	str := UnmarshalToJson(data).MustString()
+	str, err := strconv.Unquote(string(data))
+	if err != nil {
+		return fmt.Errorf("Unquote string %s error: %s\n", string(data), err)
+	}
 	parsed := net.ParseIP(str)
 	if parsed == nil {
 		return fmt.Errorf("Cannot parse IP string: %s\n", str)
