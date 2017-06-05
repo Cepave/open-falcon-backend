@@ -7,7 +7,6 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
-	"github.com/dghubble/sling"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,9 +22,8 @@ var _ = Describe("Test AgentHeartbeat service", func() {
 			Dur: 3,
 		}
 	)
-	mysqlApiSling = sling.New().Base("dummyString")
 	agentHeartbeatService := NewAgentHeartbeatService(heartbeatConfig)
-	agentHeartbeatService.heartbeatCall = func(agents []*model.AgentHeartbeat, slingAPI *sling.Sling) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
+	agentHeartbeatService.heartbeatCall = func(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
 		rowsAffectedCnt = int64(len(agents))
 		return rowsAffectedCnt, 0
 	}

@@ -11,7 +11,6 @@ import (
 	commonSling "github.com/Cepave/open-falcon-backend/common/sling"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
-	"github.com/dghubble/sling"
 )
 
 var (
@@ -25,8 +24,7 @@ type AgentHeartbeatService struct {
 	qConfig          *commonQueue.Config
 	started          bool
 	agentsPutCnt     int64
-	heartbeatCall    func([]*model.AgentHeartbeat, *sling.Sling) (int64, int64)
-	slingInit        *sling.Sling
+	heartbeatCall    func([]*model.AgentHeartbeat) (int64, int64)
 	rowsAffectedCnt  int64
 	agentsDroppedCnt int64
 }
@@ -36,8 +34,7 @@ func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService
 		wg:            &sync.WaitGroup{},
 		safeQ:         commonQueue.New(),
 		qConfig:       config,
-		heartbeatCall: heartbeat,
-		slingInit:     NewSlingBase().Post("api/v1/agent/heartbeat"),
+		heartbeatCall: buildHeartbeatCall(),
 	}
 }
 
@@ -81,7 +78,7 @@ func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration
 			break
 		}
 
-		r, d := s.heartbeatCall(agents, s.slingInit)
+		r, d := s.heartbeatCall(agents)
 		s.rowsAffectedCnt += r
 		s.agentsDroppedCnt += d
 		if logFlag {
@@ -108,7 +105,7 @@ func (s *AgentHeartbeatService) Stop() {
 
 func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
 	if !s.started {
-		logger.Infoln("[AgentHeartbeat][Skipped] Put after stopped.")
+		logger.Infoln("[AgentHeartbeat][Skipped] Put when stopped.")
 		return
 	}
 	now := time.Now().Unix()
@@ -140,18 +137,21 @@ func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
 }
 
-func heartbeat(agents []*model.AgentHeartbeat, slingAPI *sling.Sling) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
-	param := struct {
-		UpdateOnly bool `json:"update_only"`
-	}{updateOnlyFlag}
-	req := slingAPI.BodyJSON(agents).QueryStruct(&param)
+func buildHeartbeatCall() func([]*model.AgentHeartbeat) (int64, int64) {
 
-	res := model.AgentHeartbeatResult{}
-	err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
-	if err != nil {
-		logger.Errorln("[AgentHeartbeat]", err)
-		return 0, int64(len(agents))
+	return func(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
+		param := struct {
+			UpdateOnly bool `json:"update_only"`
+		}{updateOnlyFlag}
+		req := NewSlingBase().Post("api/v1/agent/heartbeat").BodyJSON(agents).QueryStruct(&param)
+
+		res := model.AgentHeartbeatResult{}
+		err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
+		if err != nil {
+			logger.Errorln("[AgentHeartbeat]", err)
+			return 0, int64(len(agents))
+		}
+
+		return res.RowsAffected, 0
 	}
-
-	return res.RowsAffected, 0
 }
