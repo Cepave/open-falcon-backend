@@ -13,6 +13,11 @@ import (
 	"github.com/dghubble/sling"
 )
 
+var (
+	timeWaitForQueue = 100 * time.Millisecond
+	timeWaitForInput = 5 * time.Second
+)
+
 type AgentHeartbeatService struct {
 	sync.WaitGroup
 	safeQ            *commonQueue.Queue
@@ -51,13 +56,13 @@ func (s *AgentHeartbeatService) Start() {
 				break
 			}
 
-			s.consumeHeartbeatQueue(100*time.Millisecond, false)
+			s.consumeHeartbeatQueue(timeWaitForQueue, false)
 
 			if !s.started {
 				break
 			}
 
-			time.Sleep(5 * time.Second)
+			time.Sleep(timeWaitForInput)
 		}
 
 		s.consumeHeartbeatQueue(0, true)
