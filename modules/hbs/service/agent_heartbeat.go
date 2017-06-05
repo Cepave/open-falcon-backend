@@ -14,7 +14,6 @@ import (
 )
 
 var (
-	timeWaitForQueue = 100 * time.Millisecond
 	timeWaitForInput = 5 * time.Second
 )
 
@@ -55,36 +54,30 @@ func (s *AgentHeartbeatService) Start() {
 				break
 			}
 
-			s.consumeHeartbeatQueue(timeWaitForQueue, false)
-
-			if !s.started {
-				break
-			}
-
-			time.Sleep(timeWaitForInput)
+			s.consumeHeartbeatQueue(false)
 		}
 
-		s.consumeHeartbeatQueue(0, true)
+		s.consumeHeartbeatQueue(true)
 	}()
 }
 
-func (s *AgentHeartbeatService) consumeHeartbeatQueue(waitForQueue time.Duration, logFlag bool) {
-	for {
-		var elementType *model.AgentHeartbeat
-		absArray := s.safeQ.DrainNWithDurationByType(s.qConfig, elementType)
-		agents := absArray.([]*model.AgentHeartbeat)
-		agentsNum := len(agents)
-		if agentsNum == 0 {
-			break
-		}
+func (s *AgentHeartbeatService) consumeHeartbeatQueue(flushing bool) {
+	var elementType *model.AgentHeartbeat
 
-		r, d := s.heartbeatCall(agents)
-		s.rowsAffectedCnt += r
-		s.agentsDroppedCnt += d
-		if logFlag {
-			logger.Infof("[AgentHeartbeat] Service is flushing. Number of agents: %d ", agentsNum)
-		}
-		time.Sleep(waitForQueue)
+	agents := s.safeQ.DrainNWithDurationByType(s.qConfig, elementType).
+		([]*model.AgentHeartbeat)
+
+	if len(agents) == 0 {
+		return
+	}
+
+	r, d := s.heartbeatCall(agents)
+	s.rowsAffectedCnt += r
+	s.agentsDroppedCnt += d
+
+	if flushing {
+		logger.Infof("[AgentHeartbeat] Service is flushing. Number of agents: %d ", len(agents))
+		s.consumeHeartbeatQueue(flushing)
 	}
 }
 
@@ -109,6 +102,7 @@ func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
 		return
 	}
 	now := time.Now().Unix()
+
 	cache.Agents.Put(req, now)
 	agent := &model.AgentHeartbeat{
 		Hostname:      req.Hostname,
