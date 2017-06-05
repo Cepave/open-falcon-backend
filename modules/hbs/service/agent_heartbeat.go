@@ -3,6 +3,7 @@ package service
 import (
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
@@ -120,7 +121,7 @@ func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
 		UpdateTime:    now,
 	}
 	s.safeQ.Enqueue(agent)
-	s.agentsPutCnt++
+	atomic.AddInt64(&(s.agentsPutCnt), 1)
 }
 
 func (s *AgentHeartbeatService) CurrentSize() int {
