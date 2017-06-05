@@ -19,7 +19,7 @@ var (
 )
 
 type AgentHeartbeatService struct {
-	sync.WaitGroup
+	wg               *sync.WaitGroup
 	safeQ            *commonQueue.Queue
 	qConfig          *commonQueue.Config
 	started          bool
@@ -32,6 +32,7 @@ type AgentHeartbeatService struct {
 
 func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService {
 	return &AgentHeartbeatService{
+		wg:            &sync.WaitGroup{},
 		safeQ:         commonQueue.New(),
 		qConfig:       config,
 		heartbeatCall: heartbeat,
@@ -47,9 +48,9 @@ func (s *AgentHeartbeatService) Start() {
 	s.started = true
 	logger.Infoln("[AgentHeartbeat] Service is starting.")
 
-	s.Add(1)
+	s.wg.Add(1)
 	go func() {
-		defer s.Done()
+		defer s.wg.Done()
 
 		for {
 			if !s.started {
@@ -101,8 +102,7 @@ func (s *AgentHeartbeatService) Stop() {
 	/**
 	 * Waiting for queue to be processed
 	 */
-	s.Wait()
-	s.safeQ = nil
+	s.wg.Wait()
 }
 
 func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
