@@ -14,6 +14,59 @@ import (
 
 var _ = Describe("Test AgentHeartbeat service", func() {
 	var (
+		caseNumber            int           = 0
+		sleepTime             time.Duration = time.Second / 2
+		agentHeartbeatService *AgentHeartbeatService
+		data                  *commonModel.AgentReportRequest
+		heartbeatConfig       *commonQueue.Config = &commonQueue.Config{
+			Num: 16,
+			Dur: 100 * time.Millisecond,
+		}
+		fakeHeartbeatCall = func(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
+			rowsAffectedCnt = int64(len(agents))
+			return rowsAffectedCnt, 0
+		}
+	)
+
+	BeforeEach(func() {
+		agentHeartbeatService = NewAgentHeartbeatService(heartbeatConfig)
+		agentHeartbeatService.heartbeatCall = fakeHeartbeatCall
+		sampleNumber := strconv.Itoa(caseNumber)
+		data = &commonModel.AgentReportRequest{
+			Hostname:      "agentHeartbeatService-" + sampleNumber,
+			IP:            "127.0.0." + sampleNumber,
+			AgentVersion:  "0.0." + sampleNumber,
+			PluginVersion: "12345abcde" + sampleNumber,
+		}
+		caseNumber++
+	})
+
+	Describe("Test Put() method", func() {
+		Context("when service is not running", func() {
+			It("should not add data", func() {
+				agentHeartbeatService.Put(data)
+				Expect(agentHeartbeatService.CurrentSize()).To(Equal(0))
+
+				time.Sleep(sleepTime)
+				Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(0)))
+			})
+		})
+
+		Context("when service is running", func() {
+			It("should add data", func() {
+				agentHeartbeatService.Start()
+				agentHeartbeatService.Put(data)
+				Expect(agentHeartbeatService.CurrentSize()).To(Equal(1))
+
+				time.Sleep(sleepTime)
+				Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(1)))
+			})
+		})
+	})
+})
+
+var _ = Describe("Original Test AgentHeartbeat service", func() {
+	var (
 		caseNumber      int   = 0
 		putNumber       int64 = 0
 		data            *commonModel.AgentReportRequest
