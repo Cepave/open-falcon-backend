@@ -19,8 +19,9 @@ var _ = Describe("Test AgentHeartbeat service", func() {
 		data            *commonModel.AgentReportRequest
 		heartbeatConfig *commonQueue.Config = &commonQueue.Config{
 			Num: 16,
-			Dur: 3,
+			Dur: 100 * time.Millisecond,
 		}
+		sleepTime time.Duration = time.Second / 2
 	)
 	agentHeartbeatService := NewAgentHeartbeatService(heartbeatConfig)
 	agentHeartbeatService.heartbeatCall = func(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
@@ -58,7 +59,7 @@ var _ = Describe("Test AgentHeartbeat service", func() {
 			agentHeartbeatService.Put(data)
 			agentHeartbeatService.Put(anotherData)
 			putNumber += 2
-			time.Sleep(timeWaitForQueue)
+			time.Sleep(sleepTime)
 		})
 	})
 
@@ -67,7 +68,7 @@ var _ = Describe("Test AgentHeartbeat service", func() {
 			agentHeartbeatService.Start()
 			agentHeartbeatService.Put(data)
 			putNumber++
-			time.Sleep(timeWaitForQueue + timeWaitForInput)
+			time.Sleep(sleepTime)
 		})
 	})
 
@@ -80,7 +81,7 @@ var _ = Describe("Test AgentHeartbeat service", func() {
 				putNumber++
 			}
 			agentHeartbeatService.Stop()
-			time.Sleep(timeWaitForQueue + timeWaitForInput)
+			time.Sleep(sleepTime)
 		})
 	})
 

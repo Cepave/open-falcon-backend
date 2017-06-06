@@ -2,6 +2,7 @@ package service
 
 import (
 	"net/http"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 var (
-	timeWaitForInput = 5 * time.Second
+	elementType = reflect.TypeOf(new(model.AgentHeartbeat))
 )
 
 type AgentHeartbeatService struct {
@@ -62,10 +63,8 @@ func (s *AgentHeartbeatService) Start() {
 }
 
 func (s *AgentHeartbeatService) consumeHeartbeatQueue(flushing bool) {
-	var elementType *model.AgentHeartbeat
 
-	agents := s.safeQ.DrainNWithDurationByType(s.qConfig, elementType).
-		([]*model.AgentHeartbeat)
+	agents := s.safeQ.DrainNWithDurationByReflectType(s.qConfig, elementType).([]*model.AgentHeartbeat)
 
 	if len(agents) == 0 {
 		return
