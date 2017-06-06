@@ -49,7 +49,7 @@ func overwrittenNqmAgent(req *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
 	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
 	r.ConnectionId = req.ConnectionId
 	r.Hostname = req.Hostname
-	r.IpAddress = net.ParseIP(string(req.IpAddress))
+	r.IpAddress = net.ParseIP(req.IpAddress.String())
 	r.LastHeartBeat = time.Time(req.Timestamp)
 	return r
 }

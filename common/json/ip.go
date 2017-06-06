@@ -2,6 +2,7 @@ package json
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strconv"
@@ -18,9 +19,12 @@ func (ip IP) String() string {
 	return net.IP(ip).String()
 }
 
-// Implement MarshalJSON() here if needed
-// func (ip IP) MarshalJSON() ([]byte, error) {
-// }
+func (ip IP) MarshalJSON() ([]byte, error) {
+	if ip == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal(ip.String())
+}
 
 // UnmarshalJSON parses the JSON-encoded IP string
 func (ip *IP) UnmarshalJSON(data []byte) error {

@@ -101,7 +101,7 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		inputReq := &model.NqmAgentHeartbeatRequest{
 			ConnectionId: inputConnId,
 			Hostname:     inputHostname,
-			IpAddress:    model.IPString(inputIPAddr),
+			IpAddress:    json.NewIP(inputIPAddr),
 			Timestamp:    json.JsonTime(time.Now()),
 		}
 		resp := testingHttp.NewResponseResultBySling(
@@ -114,7 +114,7 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
 		Expect(jsonBody.Get("connection_id").MustString()).To(Equal(inputReq.ConnectionId))
 		Expect(jsonBody.Get("hostname").MustString()).To(Equal(inputReq.Hostname))
-		Expect(jsonBody.Get("ip_address").MustString()).To(Equal(string(inputReq.IpAddress)))
+		Expect(jsonBody.Get("ip_address").MustString()).To(Equal(inputReq.IpAddress.String()))
 		Expect(jsonBody.Get("last_heartbeat_time").Int64()).To(Equal(time.Time(inputReq.Timestamp).Unix()))
 	},
 		Entry("[update] existent agent", "ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
