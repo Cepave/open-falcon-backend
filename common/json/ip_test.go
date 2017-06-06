@@ -15,6 +15,7 @@ var _ = Describe("Test type IP", func() {
 		actual, _ := ip.Value()
 		Expect(actual).To(HaveLen(expected))
 	},
+		Entry("null value", []byte("null"), 0),
 		Entry("IPv4", []byte(`"0.0.0.0"`), 4),
 		Entry("IPv4", []byte(`"10.20.30.40"`), 4),
 		Entry("IPv6", []byte(`"2001:cdba:0000:0000:0000:0000:3257:9652"`), 16),

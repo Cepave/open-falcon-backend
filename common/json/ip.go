@@ -28,7 +28,11 @@ func (ip IP) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON parses the JSON-encoded IP string
 func (ip *IP) UnmarshalJSON(data []byte) error {
-	str, err := strconv.Unquote(string(data))
+	str := string(data)
+	if str == "null" {
+		return nil
+	}
+	str, err := strconv.Unquote(str)
 	if err != nil {
 		return fmt.Errorf("Unquote string %s error: %s\n", string(data), err)
 	}
@@ -45,6 +49,6 @@ func (ip IP) Value() (driver.Value, error) {
 	if v4 := net.IP(ip).To4(); v4 != nil {
 		return []byte(v4), nil
 	}
-	// ip must be IPv6 address
+	// here ip must be IPv6 address or a nil IP
 	return []byte(net.IP(ip).To16()), nil
 }
