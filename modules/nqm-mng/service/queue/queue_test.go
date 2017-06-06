@@ -31,7 +31,7 @@ var _ = Describe("Start(): Start the queue service", ginkgoDb.NeedDb(func() {
 		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
 			ConnectionId: "test1-hostname@1.2.3.4",
 			Hostname:     "test1-hostname",
-			IpAddress:    "1.2.3.4",
+			IpAddress:    ojson.NewIP("1.2.3.4"),
 			Timestamp:    ojson.JsonTime(time.Now()),
 		})
 		Expect(testedQueue.Count()).To(Equal(uint64(0)))
@@ -46,14 +46,14 @@ var _ = Describe("Start(): Start the queue service", ginkgoDb.NeedDb(func() {
 		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
 			ConnectionId: "test1-hostname@1.2.3.4",
 			Hostname:     "test1-hostname",
-			IpAddress:    "1.2.3.4",
+			IpAddress:    ojson.NewIP("1.2.3.4"),
 			Timestamp:    ojson.JsonTime(time.Now()),
 		})
 
 		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
 			ConnectionId: "test2-hostname@1.2.3.4",
 			Hostname:     "test2-hostname",
-			IpAddress:    "1.2.3.4",
+			IpAddress:    ojson.NewIP("1.2.3.4"),
 			Timestamp:    ojson.JsonTime(time.Now()),
 		})
 
@@ -72,7 +72,7 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
 			ConnectionId: "test1-hostname@1.2.3.4",
 			Hostname:     "test1-hostname",
-			IpAddress:    "1.2.3.4",
+			IpAddress:    ojson.NewIP("1.2.3.4"),
 			Timestamp:    ojson.JsonTime(time.Now()),
 		})
 		Expect(testedQueue.Count()).To(Equal(uint64(0)))
@@ -88,7 +88,7 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 			testedQueue.Put(&model.NqmAgentHeartbeatRequest{
 				ConnectionId: "test1-hostname@1.2.3.4",
 				Hostname:     "test1-hostname",
-				IpAddress:    "1.2.3.4",
+				IpAddress:    ojson.NewIP("1.2.3.4"),
 				Timestamp:    ojson.JsonTime(time.Now()),
 			})
 		}
@@ -111,7 +111,7 @@ var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
 					testedQueue.Put(&model.NqmAgentHeartbeatRequest{
 						ConnectionId: "test1-hostname@1.2.3.4",
 						Hostname:     "test1-hostname",
-						IpAddress:    "1.2.3.4",
+						IpAddress:    ojson.NewIP("1.2.3.4"),
 						Timestamp:    ojson.JsonTime(time.Now()),
 					})
 				case <-t:
