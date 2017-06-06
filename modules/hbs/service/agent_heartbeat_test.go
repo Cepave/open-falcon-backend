@@ -33,7 +33,7 @@ func generateRandomHeartbeat() *commonModel.AgentReportRequest {
 	}
 }
 
-var _ = Describe("Test put() of AgentHeartbeat service", func() {
+var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 	var (
 		agentHeartbeatService *AgentHeartbeatService
 		heartbeatImpl         *fakeHeartbeat
@@ -47,6 +47,7 @@ var _ = Describe("Test put() of AgentHeartbeat service", func() {
 		heartbeatImpl = &fakeHeartbeat{alwaysFail: false}
 		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
 	})
+
 	AfterEach(func() {
 		agentHeartbeatService.Stop()
 	})
@@ -65,6 +66,37 @@ var _ = Describe("Test put() of AgentHeartbeat service", func() {
 			agentHeartbeatService.Put(generateRandomHeartbeat())
 
 			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(1)))
+		})
+	})
+})
+
+var _ = Describe("Test Start()/Stop() of AgentHeartbeat service", func() {
+	var (
+		agentHeartbeatService *AgentHeartbeatService
+	)
+
+	BeforeEach(func() {
+		agentHeartbeatService = NewAgentHeartbeatService(
+			&commonQueue.Config{},
+		)
+	})
+
+	AfterEach(func() {
+		agentHeartbeatService.Stop()
+	})
+
+	Context("when service is stopped", func() {
+		It("Stop() should not change the running status", func() {
+			agentHeartbeatService.Stop()
+			Expect(agentHeartbeatService.running).To(Equal(false))
+		})
+	})
+
+	Context("when service is started", func() {
+		It("Start() should not change the running status", func() {
+			agentHeartbeatService.running = true
+			agentHeartbeatService.Start()
+			Expect(agentHeartbeatService.running).To(Equal(true))
 		})
 	})
 })
