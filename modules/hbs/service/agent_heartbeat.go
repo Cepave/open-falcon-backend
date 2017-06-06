@@ -22,7 +22,7 @@ type AgentHeartbeatService struct {
 	wg               *sync.WaitGroup
 	safeQ            *commonQueue.Queue
 	qConfig          *commonQueue.Config
-	started          bool
+	running          bool
 	agentsPutCnt     int64
 	heartbeatCall    func([]*model.AgentHeartbeat) (int64, int64)
 	rowsAffectedCnt  int64
@@ -39,11 +39,11 @@ func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService
 }
 
 func (s *AgentHeartbeatService) Start() {
-	if s.started {
-		logger.Infoln("[AgentHeartbeat][Skipped] Service is already started.")
+	if s.running {
+		logger.Infoln("[AgentHeartbeat][Skipped] Service is already running.")
 		return
 	}
-	s.started = true
+	s.running = true
 	logger.Infoln("[AgentHeartbeat] Service is starting.")
 
 	s.wg.Add(1)
@@ -51,7 +51,7 @@ func (s *AgentHeartbeatService) Start() {
 		defer s.wg.Done()
 
 		for {
-			if !s.started {
+			if !s.running {
 				break
 			}
 
@@ -81,12 +81,12 @@ func (s *AgentHeartbeatService) consumeHeartbeatQueue(flushing bool) {
 }
 
 func (s *AgentHeartbeatService) Stop() {
-	if !s.started {
+	if !s.running {
 		logger.Infoln("[AgentHeartbeat][Skipped] Service is already stopped.")
 		return
 	}
 
-	s.started = false
+	s.running = false
 	logger.Infof("[AgentHeartbeat] Service is stopping. Size of queue: %d", s.CurrentSize())
 
 	/**
@@ -96,7 +96,7 @@ func (s *AgentHeartbeatService) Stop() {
 }
 
 func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
-	if !s.started {
+	if !s.running {
 		logger.Infoln("[AgentHeartbeat][Skipped] Put when stopped.")
 		return
 	}
