@@ -12,19 +12,17 @@ type JsonTime time.Time
 
 // MarshalJSON does the serialization of UNIX timestamp
 func (t JsonTime) MarshalJSON() ([]byte, error) {
-	jsonResult := "null"
-
-	timeValue := time.Time(t)
-	if !timeValue.IsZero() {
-		jsonResult = fmt.Sprintf("%d", timeValue.Unix())
-	}
-
-	return ([]byte)(jsonResult), nil
+	return ([]byte)(t.String()), nil
 }
 
 // UnmarshalJSON does the deserialization of UNIX timestamp
 func (t *JsonTime) UnmarshalJSON(data []byte) error {
-	i, err := strconv.ParseInt(string(data), 10, 64)
+	str := string(data)
+	if str == "null" {
+		*t = JsonTime(time.Time{})
+		return nil
+	}
+	i, err := strconv.ParseInt(str, 10, 64)
 	if err != nil {
 		return fmt.Errorf("Cannot parse timestamp string: %s\n", data)
 	}
@@ -34,4 +32,8 @@ func (t *JsonTime) UnmarshalJSON(data []byte) error {
 
 func (t JsonTime) Value() (driver.Value, error) {
 	return time.Time(t).Unix(), nil
+}
+
+func (t JsonTime) String() string {
+	return fmt.Sprintf("%d", time.Time(t).Unix())
 }

@@ -17,7 +17,7 @@ func (suite *TestTimeSuite) TestMarshalJSON(c *C) {
 		expectedResult string
 	}{
 		{time.Unix(2342377189, 0), "2342377189"},
-		{time.Time{}, "null"},
+		{time.Time{}, "-62135596800"},
 	}
 
 	for i, testCase := range testCases {
@@ -47,7 +47,8 @@ func (suite *TestTimeSuite) TestUnmarshalJSON(c *C) {
 		comment := Commentf("Test Case: %d", i+1)
 
 		var testedJson JsonTime
-		testedJson.UnmarshalJSON(testCase.input)
+		err := testedJson.UnmarshalJSON(testCase.input)
+		c.Assert(err, IsNil)
 
 		c.Logf("JSON; %s, Time: %v", testCase.input, testCase.expected)
 		c.Assert(time.Time(testedJson), Equals, testCase.expected, comment)
