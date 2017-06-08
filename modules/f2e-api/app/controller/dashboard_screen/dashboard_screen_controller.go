@@ -250,7 +250,7 @@ func ScreenUpdate(c *gin.Context) {
 		return
 	}
 
-	h.JSONR(c, "ok")
+	h.JSONR(c, newData)
 }
 
 // For clone screen by id
