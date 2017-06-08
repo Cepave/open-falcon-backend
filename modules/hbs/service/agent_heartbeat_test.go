@@ -12,16 +12,17 @@ import (
 
 type fakeHeartbeat struct {
 	rowsAffectedCnt int
-	alwaysFail      bool
+	alwaysSuccess   bool
 }
 
 func (a *fakeHeartbeat) calling(agents []*model.AgentHeartbeat) (int64, int64) {
-	a.rowsAffectedCnt += len(agents)
+	count := len(agents)
+	a.rowsAffectedCnt += count
 
-	if a.alwaysFail {
-		return int64(len(agents)), 0
+	if a.alwaysSuccess {
+		return int64(count), 0
 	} else {
-		return 0, int64(len(agents))
+		return 0, int64(count)
 	}
 }
 
@@ -44,7 +45,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 			&commonQueue.Config{Num: 16},
 		)
 
-		heartbeatImpl = &fakeHeartbeat{alwaysFail: false}
+		heartbeatImpl = &fakeHeartbeat{alwaysSuccess: true}
 		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
 	})
 
@@ -97,6 +98,78 @@ var _ = Describe("Test Start()/Stop() of AgentHeartbeat service", func() {
 			agentHeartbeatService.running = true
 			agentHeartbeatService.Start()
 			Expect(agentHeartbeatService.running).To(Equal(true))
+		})
+	})
+})
+
+var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func() {
+	var (
+		agentHeartbeatService *AgentHeartbeatService
+		heartbeatImpl         *fakeHeartbeat
+	)
+
+	BeforeEach(func() {
+		heartbeatImpl = &fakeHeartbeat{alwaysSuccess: true}
+	})
+
+	JustBeforeEach(func() {
+		agentHeartbeatService = NewAgentHeartbeatService(
+			&commonQueue.Config{Num: 16},
+		)
+		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
+		agentHeartbeatService.running = true
+	})
+
+	Context("when success", func() {
+		It("rowsAffectedCnt should be incremented normally", func() {
+			agentHeartbeatService.Put(generateRandomHeartbeat())
+			agentHeartbeatService.consumeHeartbeatQueue(false)
+
+			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
+			Expect(agentHeartbeatService.CumulativeRowsAffected()).To(Equal(int64(1)))
+			Expect(agentHeartbeatService.CumulativeAgentsDropped()).To(Equal(int64(0)))
+		})
+	})
+
+	Context("when failure", func() {
+		BeforeEach(func() {
+			heartbeatImpl = &fakeHeartbeat{alwaysSuccess: false}
+		})
+
+		It("agentsDroppedCnt should be incremented normally", func() {
+			agentHeartbeatService.Put(generateRandomHeartbeat())
+			agentHeartbeatService.consumeHeartbeatQueue(false)
+
+			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
+			Expect(agentHeartbeatService.CumulativeRowsAffected()).To(Equal(int64(0)))
+			Expect(agentHeartbeatService.CumulativeAgentsDropped()).To(Equal(int64(1)))
+		})
+	})
+
+	Context("when non-flushing mode", func() {
+		It("should consume an amount of data = batch size", func() {
+			batchSize := agentHeartbeatService.qConfig.Num
+			dataNum := batchSize*2 - 1
+			for i := 0; i < dataNum; i++ {
+				agentHeartbeatService.Put(generateRandomHeartbeat())
+			}
+			agentHeartbeatService.consumeHeartbeatQueue(false)
+
+			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(batchSize))
+			Expect(agentHeartbeatService.CurrentSize()).To(Equal(batchSize - 1))
+		})
+	})
+
+	Context("when flushing mode", func() {
+		It("should flush data to 0", func() {
+			dataNum := agentHeartbeatService.qConfig.Num*2 - 1
+			for i := 0; i < dataNum; i++ {
+				agentHeartbeatService.Put(generateRandomHeartbeat())
+			}
+			agentHeartbeatService.consumeHeartbeatQueue(true)
+
+			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(dataNum))
+			Expect(agentHeartbeatService.CurrentSize()).To(Equal(0))
 		})
 	})
 })
