@@ -83,7 +83,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 	})
 })
 
-var _ = Describe("Test Start()/Stop() of AgentHeartbeat service", func() {
+var _ = Describe("Test Start() of AgentHeartbeat service", func() {
 	var (
 		agentHeartbeatService *AgentHeartbeatService
 	)
@@ -99,9 +99,9 @@ var _ = Describe("Test Start()/Stop() of AgentHeartbeat service", func() {
 	})
 
 	Context("when service is stopped", func() {
-		It("Stop() should not change the running status", func() {
-			agentHeartbeatService.Stop()
-			Expect(agentHeartbeatService.running).To(Equal(false))
+		It("Start() should change the running status", func() {
+			agentHeartbeatService.Start()
+			Expect(agentHeartbeatService.running).To(Equal(true))
 		})
 	})
 
@@ -110,6 +110,33 @@ var _ = Describe("Test Start()/Stop() of AgentHeartbeat service", func() {
 			agentHeartbeatService.running = true
 			agentHeartbeatService.Start()
 			Expect(agentHeartbeatService.running).To(Equal(true))
+		})
+	})
+})
+
+var _ = Describe("Test Stop() of AgentHeartbeat service", func() {
+	var (
+		agentHeartbeatService *AgentHeartbeatService
+	)
+
+	BeforeEach(func() {
+		agentHeartbeatService = NewAgentHeartbeatService(
+			&commonQueue.Config{},
+		)
+	})
+
+	Context("when service is stopped", func() {
+		It("Stop() should not change the running status", func() {
+			agentHeartbeatService.Stop()
+			Expect(agentHeartbeatService.running).To(Equal(false))
+		})
+	})
+
+	Context("when service is started", func() {
+		It("Stop() should change the running status", func() {
+			agentHeartbeatService.running = true
+			agentHeartbeatService.Stop()
+			Expect(agentHeartbeatService.running).To(Equal(false))
 		})
 	})
 })
