@@ -40,6 +40,10 @@ CREATE TABLE `dashboard_graph` (
   `position` int(11) unsigned NOT NULL DEFAULT '0',
   `falcon_tags` varchar(512) NOT NULL DEFAULT '',
   `creator` varchar(50) DEFAULT 'root',
+  `time_range` varchar(150) DEFAULT '3h',
+  `y_scale` varchar(50) DEFAULT NULL,
+  `sort_by` varchar(30) DEFAULT 'a-z',
+  `sample_method` varchar(20) DEFAULT 'AVERAGE',
   PRIMARY KEY (`id`),
   KEY `idx_sid` (`screen_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4626 DEFAULT CHARSET=utf8;
