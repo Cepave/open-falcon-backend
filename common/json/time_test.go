@@ -17,7 +17,7 @@ func (suite *TestTimeSuite) TestMarshalJSON(c *C) {
 		expectedResult string
 	}{
 		{time.Unix(2342377189, 0), "2342377189"},
-		{time.Time{}, "-62135596800"},
+		{time.Time{}, "null"},
 	}
 
 	for i, testCase := range testCases {

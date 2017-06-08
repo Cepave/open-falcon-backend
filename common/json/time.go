@@ -12,6 +12,9 @@ type JsonTime time.Time
 
 // MarshalJSON does the serialization of UNIX timestamp
 func (t JsonTime) MarshalJSON() ([]byte, error) {
+	if time.Time(t).IsZero() {
+		return ([]byte)("null"), nil
+	}
 	return ([]byte)(t.String()), nil
 }
 
