@@ -239,14 +239,16 @@ func NotNewNqmAgent(connId string) bool {
 }
 
 type insertNqmAgentByHeartbeatTx struct {
-	Req *model.NqmAgentHeartbeatRequest
+	Req   *model.NqmAgentHeartbeatRequest
+	Agent *nqmModel.Agent
 }
 
-func InsertNqmAgentByHeartbeat(r *model.NqmAgentHeartbeatRequest) {
+func InsertNqmAgentByHeartbeat(r *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
 	insertTx := &insertNqmAgentByHeartbeatTx{
 		Req: r,
 	}
 	DbFacade.SqlxDbCtrl.InTx(insertTx)
+	return insertTx.Agent
 }
 
 func (t *insertNqmAgentByHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
@@ -275,5 +277,6 @@ func (t *insertNqmAgentByHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 		t.Req.Timestamp,
 		t.Req.Hostname,
 	)
+	t.Agent = SelectNqmAgentByConnId(t.Req.ConnectionId)
 	return commonDb.TxCommit
 }
