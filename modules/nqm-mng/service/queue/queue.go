@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 )
@@ -51,10 +52,20 @@ func (q *Queue) drain() {
 		default:
 			reqs := q.q.DrainNWithDurationByType(q.c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
 			d := uint64(len(reqs))
+			if d == 0 {
+				continue
+			}
 			q.cnt += d
-			logger.Debugf("drained %d NQM agent heartbeat requests from queue", d)
+			logger.Infof("drained %d NQM agent heartbeat requests from queue", d)
 
-			rdb.UpdateNqmAgentHeartbeat(reqs)
+			go utils.BuildPanicCapture(
+				func() {
+					rdb.UpdateNqmAgentHeartbeat(reqs)
+				},
+				func(p interface{}) {
+					logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v)", reqs)
+				},
+			)()
 		case <-q.flush:
 			c := &commonQueue.Config{Num: q.c.Num, Dur: 0}
 			for {
@@ -64,10 +75,19 @@ func (q *Queue) drain() {
 					return
 				}
 				d := uint64(len(reqs))
+				if d == 0 {
+					continue
+				}
 				q.cnt += d
-				logger.Debugf("flushed %d NQM agent heartbeat requests from queue", d)
-
-				rdb.UpdateNqmAgentHeartbeat(reqs)
+				logger.Infof("flushed %d NQM agent heartbeat requests from queue", d)
+				go utils.BuildPanicCapture(
+					func() {
+						rdb.UpdateNqmAgentHeartbeat(reqs)
+					},
+					func(p interface{}) {
+						logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v)", reqs)
+					},
+				)()
 			}
 		}
 	}

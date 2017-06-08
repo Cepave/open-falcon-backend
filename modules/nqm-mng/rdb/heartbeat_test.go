@@ -118,9 +118,9 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		inTx(test.ClearNqmAgent...)
 	})
 
-	now := time.Now()
-	yesterday := time.Now().Add(-24 * time.Hour)
-	DescribeTable("for newly inserted agents", func(input time.Time) {
+	now := ojson.JsonTime(time.Now())
+	yesterday := ojson.JsonTime(time.Now().Add(-24 * time.Hour))
+	DescribeTable("for newly inserted agents", func(input ojson.JsonTime) {
 		reqs := []*model.NqmAgentHeartbeatRequest{
 			&model.NqmAgentHeartbeatRequest{
 				ConnectionId: "ct-255-1@201.3.116.1",
@@ -151,16 +151,16 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		UpdateNqmAgentHeartbeat(reqs)
 		for _, req := range reqs {
 			agent := SelectNqmAgentByConnId(req.ConnectionId)
-			Expect(agent.LastHeartBeat.Unix()).To(Equal(input.Unix()))
+			Expect(agent.LastHeartBeat.String()).To(Equal(input.String()))
 		}
 	},
 		Entry("case: Now", now),
 		Entry("case yesterday", yesterday),
 	)
 
-	existentTime := time.Now().Add(-240 * time.Hour)
-	earlierTime := time.Now().Add(-480 * time.Hour)
-	DescribeTable("for existent agents", func(input time.Time, expected time.Time) {
+	existentTime := ojson.JsonTime(time.Now().Add(-240 * time.Hour))
+	earlierTime := ojson.JsonTime(time.Now().Add(-480 * time.Hour))
+	DescribeTable("for existent agents", func(input ojson.JsonTime, expected ojson.JsonTime) {
 		init := []*model.NqmAgentHeartbeatRequest{
 			&model.NqmAgentHeartbeatRequest{
 				ConnectionId: "ct-255-1@201.3.116.1",
@@ -219,7 +219,7 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 
 		for _, req := range reqs {
 			agent := SelectNqmAgentByConnId(req.ConnectionId)
-			Expect(agent.LastHeartBeat.Unix()).To(Equal(expected.Unix()))
+			Expect(agent.LastHeartBeat.String()).To(Equal(expected.String()))
 		}
 	},
 		Entry("case: now", now, now),

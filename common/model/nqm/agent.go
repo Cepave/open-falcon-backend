@@ -70,9 +70,9 @@ type Agent struct {
 
 	IpAddress net.IP `gorm:"column:ag_ip_address"`
 
-	Status        bool      `gorm:"column:ag_status"`
-	Comment       *string   `gorm:"column:ag_comment"`
-	LastHeartBeat time.Time `gorm:"column:ag_last_heartbeat"`
+	Status        bool           `gorm:"column:ag_status"`
+	Comment       *string        `gorm:"column:ag_comment"`
+	LastHeartBeat ojson.JsonTime `gorm:"column:ag_last_heartbeat"`
 
 	IspId   int16  `gorm:"column:isp_id"`
 	IspName string `gorm:"column:isp_name"`

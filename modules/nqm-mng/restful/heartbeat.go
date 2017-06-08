@@ -2,7 +2,6 @@ package restful
 
 import (
 	"net"
-	"time"
 
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
@@ -50,6 +49,6 @@ func overwrittenNqmAgent(req *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
 	r.ConnectionId = req.ConnectionId
 	r.Hostname = req.Hostname
 	r.IpAddress = net.ParseIP(req.IpAddress.String())
-	r.LastHeartBeat = time.Time(req.Timestamp)
+	r.LastHeartBeat = req.Timestamp
 	return r
 }

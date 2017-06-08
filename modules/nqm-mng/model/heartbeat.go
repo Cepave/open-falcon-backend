@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	owlGin "github.com/Cepave/open-falcon-backend/common/gin"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/gin-gonic/gin"
@@ -31,4 +33,11 @@ type NqmAgentHeartbeatRequest struct {
 
 func (r *NqmAgentHeartbeatRequest) Bind(c *gin.Context) {
 	owlGin.BindJson(c, r)
+}
+
+func (r NqmAgentHeartbeatRequest) String() string {
+	return fmt.Sprintf(
+		"NqmAgentHeartbeatRequest{ConnectionId=%v Hostname=%v IpAddress=%v Timestamp=%v}",
+		r.ConnectionId, r.Hostname, r.IpAddress, r.Timestamp,
+	)
 }
