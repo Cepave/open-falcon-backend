@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
@@ -9,6 +11,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+var dummyTime = time.Now().Unix()
 
 type fakeHeartbeat struct {
 	rowsAffectedCnt int
@@ -55,7 +59,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 
 	Context("when service is not running", func() {
 		It("should not add data", func() {
-			agentHeartbeatService.Put(generateRandomHeartbeat())
+			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
 			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(0)))
 			Expect(agentHeartbeatService.CurrentSize()).To(Equal(0))
 		})
@@ -64,7 +68,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 	Context("when service is running", func() {
 		It("should add data", func() {
 			agentHeartbeatService.Start()
-			agentHeartbeatService.Put(generateRandomHeartbeat())
+			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
 
 			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(1)))
 		})
@@ -122,7 +126,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 
 	Context("when success", func() {
 		It("rowsAffectedCnt should be incremented normally", func() {
-			agentHeartbeatService.Put(generateRandomHeartbeat())
+			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
 			agentHeartbeatService.consumeHeartbeatQueue(false)
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
@@ -137,7 +141,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 		})
 
 		It("agentsDroppedCnt should be incremented normally", func() {
-			agentHeartbeatService.Put(generateRandomHeartbeat())
+			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
 			agentHeartbeatService.consumeHeartbeatQueue(false)
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
@@ -151,7 +155,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 			batchSize := agentHeartbeatService.qConfig.Num
 			dataNum := batchSize*2 - 1
 			for i := 0; i < dataNum; i++ {
-				agentHeartbeatService.Put(generateRandomHeartbeat())
+				agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
 			}
 			agentHeartbeatService.consumeHeartbeatQueue(false)
 
@@ -164,7 +168,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 		It("should flush data to 0", func() {
 			dataNum := agentHeartbeatService.qConfig.Num*2 - 1
 			for i := 0; i < dataNum; i++ {
-				agentHeartbeatService.Put(generateRandomHeartbeat())
+				agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
 			}
 			agentHeartbeatService.consumeHeartbeatQueue(true)
 

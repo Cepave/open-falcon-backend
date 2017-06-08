@@ -5,7 +5,6 @@ import (
 	"reflect"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
@@ -95,20 +94,19 @@ func (s *AgentHeartbeatService) Stop() {
 	s.wg.Wait()
 }
 
-func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest) {
+func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest, updateTime int64) {
 	if !s.running {
 		logger.Infoln("[AgentHeartbeat][Skipped] Put when stopped.")
 		return
 	}
-	now := time.Now().Unix()
 
-	cache.Agents.Put(req, now)
+	cache.Agents.Put(req, updateTime)
 	agent := &model.AgentHeartbeat{
 		Hostname:      req.Hostname,
 		IP:            req.IP,
 		AgentVersion:  req.AgentVersion,
 		PluginVersion: req.PluginVersion,
-		UpdateTime:    now,
+		UpdateTime:    updateTime,
 	}
 	s.safeQ.Enqueue(agent)
 	atomic.AddInt64(&(s.agentsPutCnt), 1)

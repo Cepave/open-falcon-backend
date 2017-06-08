@@ -47,7 +47,7 @@ func (t *Agent) ReportStatus(args *model.AgentReportRequest, reply *model.Simple
 	}
 
 	log.Debugln("show request of ReportStatus: ", args)
-	agentHeartbeatService.Put(args)
+	agentHeartbeatService.Put(args, time.Now().Unix())
 
 	return nil
 }

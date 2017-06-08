@@ -22,9 +22,9 @@ func NewSafeAgents() *SafeAgents {
 	return &SafeAgents{M: make(map[string]*model.AgentUpdateInfo)}
 }
 
-func (this *SafeAgents) Put(req *model.AgentReportRequest, now int64) {
+func (this *SafeAgents) Put(req *model.AgentReportRequest, updateTime int64) {
 	val := &model.AgentUpdateInfo{
-		LastUpdate:    now,
+		LastUpdate:    updateTime,
 		ReportRequest: req,
 	}
 
