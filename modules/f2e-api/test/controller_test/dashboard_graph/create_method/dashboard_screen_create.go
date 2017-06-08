@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -39,14 +38,24 @@ func newTestContext(method, path string, body *[]byte) (w *httptest.ResponseReco
 func setSession(r *http.Request) {
 	r.Header.Set("Apitoken", "{\"name\":\"root\",\"sig\":\"590c949340f811e7b6de001500c6ca5a\"}")
 }
-func TestDashboardScreenController(t *testing.T) {
+
+func convertArrInterfaceToArrString(x []gjson.Result) (output []string) {
+	output = make([]string, len(x))
+	for indx, o := range x {
+		output[indx] = o.String()
+	}
+	return
+}
+
+func TestDashboardGraphController(t *testing.T) {
+	// testGraphId := 4626
 	viper.Set("services", map[string]interface{}{
 		"test":  "test123",
 		"test2": "test456",
 	})
 	viper.Set("enable_services", true)
 	viper.AddConfigPath(".")
-	viper.AddConfigPath("../../")
+	viper.AddConfigPath("../../../")
 	viper.SetConfigName("cfg_test")
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -54,8 +63,7 @@ func TestDashboardScreenController(t *testing.T) {
 	}
 	gin.SetMode(gin.TestMode)
 	log.SetLevel(log.DebugLevel)
-	config.InitDB(true)
-	//viper.GetBool("db.db_debug"))
+	config.InitDB(viper.GetBool("db.db_debug"))
 	config.Init()
 	routes := gin.Default()
 	if viper.GetBool("gen_doc") {
@@ -68,49 +76,29 @@ func TestDashboardScreenController(t *testing.T) {
 		routes.Use(yaagGin.Document())
 	}
 	routes = controller.StartGin(":8088", routes, true)
-	Convey("test screen clone api", t, func() {
+	Convey("create graph with existing id", t, func() {
 		var (
 			w *httptest.ResponseRecorder
 			r *http.Request
 		)
-		Convey("test with no screen id provided", func() {
-			postb := map[string]interface{}{}
+		Convey("invaild values", func() {
+			postb := map[string]interface{}{
+				"screen_id":     1247,
+				"title":         "testiv",
+				"endpoints":     []string{},
+				"counters":      []string{},
+				"graph_type":    "notv",
+				"method":        "notv",
+				"time_range":    "notv",
+				"y_scale":       "notv",
+				"sample_method": "notv",
+				"sort_by":       "notv",
+			}
 			b, _ := json.Marshal(postb)
-			w, r = newTestContext("POST", "/api/v1/dashboard/screen_clone", &b)
+			w, r = newTestContext("POST", "/api/v1/dashboard/graph", &b)
 			routes.ServeHTTP(w, r)
-			log.Debug(w.Body.String())
+			So(w.Body.String(), ShouldEqual, "")
 			So(w.Code, ShouldEqual, 400)
-		})
-		Convey("test with not found screen id provided", func() {
-			postb := map[string]interface{}{"id": 99998}
-			b, _ := json.Marshal(postb)
-			w, r = newTestContext("POST", "/api/v1/dashboard/screen_clone", &b)
-			routes.ServeHTTP(w, r)
-			log.Debug(w.Body.String())
-			So(w.Code, ShouldEqual, 400)
-		})
-		Convey("test update screen with existing name", func() {
-			postb := map[string]interface{}{"id": 1233, "name": "1111"}
-			b, _ := json.Marshal(postb)
-			w, r := newTestContext("PUT", "/api/v1/dashboard/screen", &b)
-			routes.ServeHTTP(w, r)
-			log.Debug(w.Body.String())
-			So(w.Code, ShouldEqual, 200)
-		})
-		Convey("test clone screen scuessful", func() {
-			postb := map[string]interface{}{"id": 965}
-			b, _ := json.Marshal(postb)
-			w, r = newTestContext("POST", "/api/v1/dashboard/screen_clone", &b)
-			routes.ServeHTTP(w, r)
-			log.Debug(w.Body.String())
-			So(w.Code, ShouldEqual, 200)
-			//for reset delete cloned screen & graph
-			Reset(func() {
-				value := gjson.Get(w.Body.String(), "id")
-				w, r = newTestContext("DELETE", fmt.Sprintf("/api/v1/dashboard/screen/%d", value.Int()), nil)
-				routes.ServeHTTP(w, r)
-				log.Debug(w.Body.String())
-			})
 		})
 	})
 }
