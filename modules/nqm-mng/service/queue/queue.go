@@ -12,6 +12,13 @@ import (
 
 var logger = log.NewDefaultLogger("INFO")
 
+type mode byte
+
+const (
+	DRAIN mode = 1
+	FLUSH mode = 2
+)
+
 type Queue struct {
 	q       *commonQueue.Queue
 	c       *commonQueue.Config
@@ -50,43 +57,50 @@ func (q *Queue) drain() {
 	for {
 		select {
 		default:
-			reqs := q.q.DrainNWithDurationByType(q.c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
-			d := uint64(len(reqs))
-			if d == 0 {
-				continue
+			reqs := q.drainByMode(DRAIN, *q.c)
+			if n := q.numToAccum(len(reqs)); n != 0 {
+				update(reqs)
+				logger.Infof("drained %d NQM agent heartbeat requests from queue", n)
 			}
-			q.cnt += d
-			logger.Infof("drained %d NQM agent heartbeat requests from queue", d)
-			go utils.BuildPanicCapture(
-				func() {
-					rdb.UpdateNqmAgentHeartbeat(reqs)
-				},
-				func(p interface{}) {
-					logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v)", reqs)
-				},
-			)()
 		case <-q.flush:
-			c := &commonQueue.Config{Num: q.c.Num, Dur: 0}
 			for {
-				reqs := q.q.DrainNWithDurationByType(c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
-				d := uint64(len(reqs))
-				if d == 0 {
+				reqs := q.drainByMode(FLUSH, *q.c)
+				if n := q.numToAccum(len(reqs)); n != 0 {
+					update(reqs)
+					logger.Infof("flushed %d NQM agent heartbeat requests from queue", n)
+				} else {
 					close(q.done)
 					return
 				}
-				q.cnt += d
-				logger.Infof("flushed %d NQM agent heartbeat requests from queue", d)
-				go utils.BuildPanicCapture(
-					func() {
-						rdb.UpdateNqmAgentHeartbeat(reqs)
-					},
-					func(p interface{}) {
-						logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v)", reqs)
-					},
-				)()
 			}
 		}
 	}
+}
+
+func (q *Queue) drainByMode(m mode, c commonQueue.Config) []*model.NqmAgentHeartbeatRequest {
+	if m == FLUSH {
+		c.Dur = 0
+	}
+	return q.q.DrainNWithDurationByType(&c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
+}
+
+func (q *Queue) numToAccum(n int) int {
+	if n == 0 {
+		return 0
+	}
+	q.cnt += uint64(n)
+	return n
+}
+
+func update(reqs []*model.NqmAgentHeartbeatRequest) {
+	go utils.BuildPanicCapture(
+		func() {
+			rdb.UpdateNqmAgentHeartbeat(reqs)
+		},
+		func(p interface{}) {
+			logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v)", reqs)
+		},
+	)()
 }
 
 func (q *Queue) Stop() {
