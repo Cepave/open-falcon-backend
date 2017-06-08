@@ -57,7 +57,6 @@ func (q *Queue) drain() {
 			}
 			q.cnt += d
 			logger.Infof("drained %d NQM agent heartbeat requests from queue", d)
-
 			go utils.BuildPanicCapture(
 				func() {
 					rdb.UpdateNqmAgentHeartbeat(reqs)
@@ -70,13 +69,10 @@ func (q *Queue) drain() {
 			c := &commonQueue.Config{Num: q.c.Num, Dur: 0}
 			for {
 				reqs := q.q.DrainNWithDurationByType(c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
-				if len(reqs) == 0 {
-					close(q.done)
-					return
-				}
 				d := uint64(len(reqs))
 				if d == 0 {
-					continue
+					close(q.done)
+					return
 				}
 				q.cnt += d
 				logger.Infof("flushed %d NQM agent heartbeat requests from queue", d)
