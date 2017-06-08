@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"sync"
+	"time"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
@@ -26,7 +26,6 @@ type Queue struct {
 	running bool
 	flush   chan struct{}
 	done    chan struct{}
-	mutex   sync.Mutex
 }
 
 func New(c *commonQueue.Config) *Queue {
@@ -43,13 +42,10 @@ func (q *Queue) Count() uint64 {
 }
 
 func (q *Queue) Start() {
-	q.mutex.Lock()
 	if q.running {
-		q.mutex.Unlock()
 		return
 	}
 	q.running = true
-	q.mutex.Unlock()
 	go q.drain()
 }
 
@@ -104,24 +100,19 @@ func update(reqs []*model.NqmAgentHeartbeatRequest) {
 }
 
 func (q *Queue) Stop() {
-	q.mutex.Lock()
 	if !q.running {
-		q.mutex.Unlock()
 		return
 	}
 	q.running = false
-	q.mutex.Unlock()
+	time.Sleep(q.c.Dur) // for all `q.q.Enqueue()`s to be done
 	close(q.flush)
 	<-q.done
 }
 
 func (q *Queue) Put(v interface{}) {
-	q.mutex.Lock()
 	if !q.running {
-		q.mutex.Unlock()
 		return
 	}
-	q.mutex.Unlock()
 	q.q.Enqueue(v)
 }
 
