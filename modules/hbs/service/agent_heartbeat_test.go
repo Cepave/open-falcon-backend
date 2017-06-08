@@ -5,6 +5,7 @@ import (
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/icrowley/fake"
 
@@ -42,24 +43,25 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 	var (
 		agentHeartbeatService *AgentHeartbeatService
 		heartbeatImpl         *fakeHeartbeat
+		now                   int64
 	)
 
 	BeforeEach(func() {
 		agentHeartbeatService = NewAgentHeartbeatService(
 			&commonQueue.Config{Num: 16},
 		)
-
 		heartbeatImpl = &fakeHeartbeat{alwaysSuccess: true}
 		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
-	})
-
-	AfterEach(func() {
-		agentHeartbeatService.Stop()
+		now = time.Now().Unix()
 	})
 
 	Context("when service is not running", func() {
 		It("should not add data", func() {
-			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+			data := generateRandomHeartbeat()
+			agentHeartbeatService.Put(data, now)
+			_, ok := cache.Agents.Get(data.Hostname)
+
+			Expect(ok).To(Equal(false))
 			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(0)))
 			Expect(agentHeartbeatService.CurrentSize()).To(Equal(0))
 		})
@@ -67,10 +69,16 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 
 	Context("when service is running", func() {
 		It("should add data", func() {
-			agentHeartbeatService.Start()
-			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+			data := generateRandomHeartbeat()
+			agentHeartbeatService.running = true
+			agentHeartbeatService.Put(data, now)
+			val, ok := cache.Agents.Get(data.Hostname)
 
+			Expect(ok).To(Equal(true))
+			Expect(val.ReportRequest.Hostname).To(Equal(data.Hostname))
+			Expect(val.LastUpdate).To(Equal(now))
 			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(1)))
+			Expect(agentHeartbeatService.CurrentSize()).To(Equal(1))
 		})
 	})
 })
