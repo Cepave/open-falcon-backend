@@ -69,7 +69,7 @@ func DashboardGraphCreate(c *gin.Context) {
 	}
 	dt.Commit()
 	db.Dashboard.Model(&screen).Where("id = ?", screen.ID).Scan(&screen)
-	h.JSONR(c, map[string]interface{}{"graph": buildGraphGetOutput(d), "screen_id": screen.ID, "screen_name": screen.Name})
+	h.JSONR(c, map[string]interface{}{"graph": BuildGraphGetOutput(d), "screen_id": screen.ID, "screen_name": screen.Name})
 }
 
 func DashboardGraphUpdate(c *gin.Context) {
@@ -146,7 +146,7 @@ func DashboardGraphUpdate(c *gin.Context) {
 		return
 	}
 	tx.Commit()
-	h.JSONR(c, buildGraphGetOutput(graph))
+	h.JSONR(c, BuildGraphGetOutput(graph))
 }
 
 type APIDashboardGraphGetOuput struct {
@@ -181,11 +181,11 @@ func DashboardGraphGet(c *gin.Context) {
 		return
 	}
 
-	h.JSONR(c, buildGraphGetOutput(graph))
+	h.JSONR(c, BuildGraphGetOutput(graph))
 
 }
 
-func buildGraphGetOutput(graph m.DashboardGraph) APIDashboardGraphGetOuput {
+func BuildGraphGetOutput(graph m.DashboardGraph) APIDashboardGraphGetOuput {
 	es := strings.Split(graph.Hosts, TMP_GRAPH_FILED_DELIMITER)
 	cs := strings.Split(graph.Counters, TMP_GRAPH_FILED_DELIMITER)
 	return APIDashboardGraphGetOuput{
@@ -248,7 +248,7 @@ func DashboardGraphGetsByScreenID(c *gin.Context) {
 
 	ret := make([]APIDashboardGraphGetOuput, len(graphs))
 	for _, graph := range graphs {
-		r := buildGraphGetOutput(graph)
+		r := BuildGraphGetOutput(graph)
 		ret = append(ret, r)
 	}
 
@@ -302,5 +302,5 @@ func DashboardGraphClone(c *gin.Context) {
 		return
 	}
 	tx.Commit()
-	h.JSONR(c, buildGraphGetOutput(newGraph))
+	h.JSONR(c, BuildGraphGetOutput(newGraph))
 }

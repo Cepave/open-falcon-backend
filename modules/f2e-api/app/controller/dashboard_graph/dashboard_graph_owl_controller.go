@@ -77,5 +77,5 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 	}
 	dt.Commit()
 
-	h.JSONR(c, map[string]interface{}{"graph": buildGraphGetOutput(d), "screen_id": d.ScreenId, "screen_name": inputs.ScreenName})
+	h.JSONR(c, map[string]interface{}{"graph": BuildGraphGetOutput(d), "screen_id": d.ScreenId, "screen_name": inputs.ScreenName})
 }
