@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 
+	dgraph "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboard_graph"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/dashboard"
 	"github.com/gin-gonic/gin"
@@ -76,22 +76,9 @@ func ScreenGet(c *gin.Context) {
 
 	graphsTmp := []m.DashboardGraph{}
 	db.Dashboard.Model(&graphsTmp).Where("screen_id = ?", screen.ID).Scan(&graphsTmp)
-	graphs := []map[string]interface{}{}
-	for _, graph := range graphsTmp {
-		es := strings.Split(graph.Hosts, TMP_GRAPH_FILED_DELIMITER)
-		cs := strings.Split(graph.Counters, TMP_GRAPH_FILED_DELIMITER)
-		graphs = append(graphs, map[string]interface{}{
-			"graph_id":    graph.ID,
-			"title":       graph.Title,
-			"endpoints":   es,
-			"counters":    cs,
-			"screen_id":   graph.ScreenId,
-			"graph_type":  graph.GraphType,
-			"timespan":    graph.TimeSpan,
-			"method":      graph.Method,
-			"position":    graph.Position,
-			"falcon_tags": graph.FalconTags,
-		})
+	graphs := make([]dgraph.APIDashboardGraphGetOuput, len(graphsTmp))
+	for indx, graph := range graphsTmp {
+		graphs[indx] = dgraph.BuildGraphGetOutput(graph)
 	}
 	h.JSONR(c, map[string]interface{}{
 		"scren":  screen,
