@@ -26,4 +26,11 @@ func Routes(r *gin.Engine) {
 	owlgraph.GET("/keyword_search", HostsSearching)
 	owlgraph.POST("/cat_counters", EndpointsQuerySubMetric)
 	owlgraph.POST("/cat_gt_counters", EndpointsGetMetricBySubStar)
+
+	// grafana routes
+	grfanaapi := r.Group("/api")
+	grfanaapi.GET("/v1/grafana", GrafanaMainQuery)
+	grfanaapi.GET("/v1/grafana/metrics/find", GrafanaMainQuery)
+	grfanaapi.POST("/v1/grafana/render", GrafanaRender)
+	grfanaapi.GET("/v1/grafana/render", GrafanaRender)
 }
