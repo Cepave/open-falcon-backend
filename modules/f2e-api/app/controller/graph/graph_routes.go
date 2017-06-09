@@ -21,6 +21,8 @@ func Routes(r *gin.Engine) {
 	grphapi.GET("/endpoint_counter", EndpointCounterRegexpQuery)
 	grphapi.GET("/endpointstr_counter", EndpointStrCounterRegexpQuery)
 	grphapi.POST("/history", QueryGraphDrawData)
+	grphapi.POST("/graph/lastpoint", QueryGraphLastPoint)
+
 	owlgraph := r.Group("/api/v1/owlgraph")
 	owlgraph.Use(utils.AuthSessionMidd)
 	owlgraph.GET("/keyword_search", HostsSearching)
