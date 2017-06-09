@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
-	"time"
 
+	dgraph "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboard_graph"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/dashboard"
 	"github.com/gin-gonic/gin"
@@ -77,22 +76,9 @@ func ScreenGet(c *gin.Context) {
 
 	graphsTmp := []m.DashboardGraph{}
 	db.Dashboard.Model(&graphsTmp).Where("screen_id = ?", screen.ID).Scan(&graphsTmp)
-	graphs := []map[string]interface{}{}
-	for _, graph := range graphsTmp {
-		es := strings.Split(graph.Hosts, TMP_GRAPH_FILED_DELIMITER)
-		cs := strings.Split(graph.Counters, TMP_GRAPH_FILED_DELIMITER)
-		graphs = append(graphs, map[string]interface{}{
-			"graph_id":    graph.ID,
-			"title":       graph.Title,
-			"endpoints":   es,
-			"counters":    cs,
-			"screen_id":   graph.ScreenId,
-			"graph_type":  graph.GraphType,
-			"timespan":    graph.TimeSpan,
-			"method":      graph.Method,
-			"position":    graph.Position,
-			"falcon_tags": graph.FalconTags,
-		})
+	graphs := make([]dgraph.APIDashboardGraphGetOuput, len(graphsTmp))
+	for indx, graph := range graphsTmp {
+		graphs[indx] = dgraph.BuildGraphGetOutput(graph)
 	}
 	h.JSONR(c, map[string]interface{}{
 		"scren":  screen,
@@ -141,7 +127,8 @@ func ScreenGetsAll(c *gin.Context) {
 	totallCount := 0
 	dt := db.Dashboard.Model(&screens)
 	if inputs.KeyWord != "" {
-		dt = dt.Where("name like ?", "%"+inputs.KeyWord+"%")
+		filterKeyForSql := "%" + inputs.KeyWord + "%"
+		dt = dt.Where("name like ? OR creator like ?", filterKeyForSql, filterKeyForSql)
 	}
 	if inputs.Page <= 0 {
 		if inputs.Order {
@@ -251,16 +238,19 @@ func ScreenUpdate(c *gin.Context) {
 		return
 	}
 
-	h.JSONR(c, "ok")
+	h.JSONR(c, newData)
 }
 
 // For clone screen by id
 type APIScreenCloneInputs struct {
-	ID int64 `json:"id" form:"id" binding:"required"`
+	ID   int64  `json:"id" form:"id" binding:"required"`
+	Name string `json:"name" form:"name"`
 }
 
 func ScreenClone(c *gin.Context) {
-	inputs := APIScreenCloneInputs{}
+	inputs := APIScreenCloneInputs{
+		Name: "NaN",
+	}
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
@@ -276,12 +266,16 @@ func ScreenClone(c *gin.Context) {
 		return
 	}
 	tx := db.Dashboard.Begin()
+	if inputs.Name == "NaN" {
+		inputs.Name = fmt.Sprintf("%s_copy", originalScreen.Name)
+	}
 	newScreen := m.DashboardScreen{
-		Name:    fmt.Sprintf("%s_copy", originalScreen.Name),
+		Name:    inputs.Name,
 		Creator: user.Name,
 	}
 	if newScreen.ExistName() {
-		newScreen.Name = fmt.Sprintf("%s_%s", newScreen.Name, time.Now().Unix())
+		h.JSONR(c, badstatus, fmt.Errorf("screen name '%s' alreay exist", newScreen.Name))
+		return
 	}
 	if dt := tx.Model(&newScreen).Save(&newScreen); dt.Error != nil {
 		tx.Rollback()

@@ -139,11 +139,10 @@ func TestDashboardGraphController(t *testing.T) {
 					Endpoints:  []string{"a1", "a2"},
 					Counters:   []string{"c1", "c2"},
 					ID:         int64(testGraphId),
-					TimeSpan:   int64(9999),
 					GraphType:  "a",
 					Method:     "sum",
 					Position:   int64(22),
-					ScreenId:   955,
+					ScreenId:   1247,
 					FalconTags: "a=1,b=2",
 				}
 				b, _ := json.Marshal(postb)
@@ -157,8 +156,6 @@ func TestDashboardGraphController(t *testing.T) {
 				So(convertArrInterfaceToArrString(value.Array()), ShouldResemble, postb.Endpoints)
 				value = gjson.Get(w.Body.String(), "counters")
 				So(convertArrInterfaceToArrString(value.Array()), ShouldResemble, postb.Counters)
-				value = gjson.Get(w.Body.String(), "timespan")
-				So(value.Int(), ShouldResemble, postb.TimeSpan)
 				value = gjson.Get(w.Body.String(), "graph_type")
 				So(value.String(), ShouldResemble, postb.GraphType)
 				value = gjson.Get(w.Body.String(), "method")
