@@ -4,10 +4,10 @@ import (
 	"time"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	commonModelConfig "github.com/Cepave/open-falcon-backend/common/model/config"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
-	"github.com/dghubble/sling"
 	"github.com/icrowley/fake"
 
 	. "github.com/onsi/ginkgo"
@@ -219,7 +219,7 @@ var _ = Describe("Test buildHeartbeatCall() of AgentHeartbeat service", func() {
 		It("should return correct dropped amount", func() {
 			dataNum := 3
 			agents := make([]*model.AgentHeartbeat, dataNum)
-			mysqlApiSling = sling.New().Base("errorHost")
+			InitPackage(&commonModelConfig.MysqlApiConfig{Host: "dummyHost"}, "")
 			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
 			Expect(rowsAffectedCnt).To(Equal(int64(0)))

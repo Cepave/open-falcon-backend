@@ -6,7 +6,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model/config"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/dghubble/sling"
 )
 
@@ -15,11 +14,11 @@ var logger = log.NewDefaultLogger("INFO")
 var updateOnlyFlag bool
 var mysqlApiSling *sling.Sling
 
-func InitPackage(cfg *config.MysqlApiConfig) {
+func InitPackage(cfg *config.MysqlApiConfig, hosts string) {
 	mysqlApiUrl := resolveUrl(cfg.Host, cfg.Resource)
 	mysqlApiSling = sling.New().Base(mysqlApiUrl)
 
-	if g.Config().Hosts != "" {
+	if hosts != "" {
 		updateOnlyFlag = true
 	}
 }

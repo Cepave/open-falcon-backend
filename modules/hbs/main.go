@@ -35,7 +35,9 @@ func main() {
 	service.InitPackage(&config.MysqlApiConfig{
 		Host:     vipercfg.Config().GetString("mysql_api.host"),
 		Resource: vipercfg.Config().GetString("mysql_api.resource"),
-	})
+	},
+		vipercfg.Config().GetString("hosts"),
+	)
 	rpc.InitPackage(vipercfg.Config())
 
 	go cache.DeleteStaleAgents()
