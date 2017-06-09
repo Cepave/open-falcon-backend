@@ -7,6 +7,7 @@ import (
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
+	"github.com/dghubble/sling"
 	"github.com/icrowley/fake"
 
 	. "github.com/onsi/ginkgo"
@@ -209,6 +210,21 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(dataNum))
 			Expect(agentHeartbeatService.CurrentSize()).To(Equal(0))
+		})
+	})
+})
+
+var _ = Describe("Test buildHeartbeatCall() of AgentHeartbeat service", func() {
+	Context("when the call fail", func() {
+		It("should return correct dropped amount", func() {
+			dataNum := 3
+			agents := make([]*model.AgentHeartbeat, dataNum)
+			mysqlApiSling = sling.New().Base("errorHost")
+			fakeCall := buildHeartbeatCall()
+			rowsAffectedCnt, agentsDroppedCnt := fakeCall(agents)
+
+			Expect(rowsAffectedCnt).To(Equal(int64(0)))
+			Expect(agentsDroppedCnt).To(Equal(int64(dataNum)))
 		})
 	})
 })
