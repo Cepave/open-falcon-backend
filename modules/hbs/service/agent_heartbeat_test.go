@@ -220,8 +220,7 @@ var _ = Describe("Test buildHeartbeatCall() of AgentHeartbeat service", func() {
 			dataNum := 3
 			agents := make([]*model.AgentHeartbeat, dataNum)
 			mysqlApiSling = sling.New().Base("errorHost")
-			fakeCall := buildHeartbeatCall()
-			rowsAffectedCnt, agentsDroppedCnt := fakeCall(agents)
+			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
 			Expect(rowsAffectedCnt).To(Equal(int64(0)))
 			Expect(agentsDroppedCnt).To(Equal(int64(dataNum)))

@@ -33,7 +33,7 @@ func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService
 		wg:            &sync.WaitGroup{},
 		safeQ:         commonQueue.New(),
 		qConfig:       config,
-		heartbeatCall: buildHeartbeatCall(),
+		heartbeatCall: agentHeartbeatCall,
 	}
 }
 
@@ -128,21 +128,18 @@ func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
 }
 
-func buildHeartbeatCall() func([]*model.AgentHeartbeat) (int64, int64) {
+func agentHeartbeatCall(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
+	param := struct {
+		UpdateOnly bool `json:"update_only"`
+	}{updateOnlyFlag}
+	req := NewSlingBase().Post("api/v1/agent/heartbeat").BodyJSON(agents).QueryStruct(&param)
 
-	return func(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
-		param := struct {
-			UpdateOnly bool `json:"update_only"`
-		}{updateOnlyFlag}
-		req := NewSlingBase().Post("api/v1/agent/heartbeat").BodyJSON(agents).QueryStruct(&param)
-
-		res := model.AgentHeartbeatResult{}
-		err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
-		if err != nil {
-			logger.Errorln("[AgentHeartbeat]", err)
-			return 0, int64(len(agents))
-		}
-
-		return res.RowsAffected, 0
+	res := model.AgentHeartbeatResult{}
+	err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
+	if err != nil {
+		logger.Errorln("[AgentHeartbeat]", err)
+		return 0, int64(len(agents))
 	}
+
+	return res.RowsAffected, 0
 }
