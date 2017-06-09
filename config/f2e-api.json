@@ -22,6 +22,12 @@
     "call_timeout": 5000,
     "numberOfReplicas": 500
   },
+  "boss_api": {
+    "boss_f_token": "boss_token",
+    "boss_host": "https://myboss.com",
+    "user_query_key": "boss_auth_key",
+    "boss_get_info_v2": "https://myboss.com/url/url/url"
+  },
   "access_control": true,
   "gen_doc": false,
   "gen_doc_path": "doc/module.html",
