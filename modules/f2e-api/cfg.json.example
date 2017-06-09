@@ -27,7 +27,6 @@
   "gen_doc_path": "doc/module.html",
   "salt": "pleaseinputwhichyouareusingnow",
   "web_port": ":8888",
-  "skip_auth": false,
   "enable_services": false,
   "services": {
     "services_name": "services_token"

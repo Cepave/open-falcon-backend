@@ -64,19 +64,11 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	var session uic.Session
-	response := map[string]string{}
-	s := db.Uic.Table("session").Where("uid = ?", user.ID).Scan(&session)
-	if s.Error != nil && s.Error.Error() != "record not found" {
-		h.JSONR(c, http.StatusBadRequest, s.Error)
-		return
-	} else if session.ID == 0 {
-		session.Sig = utils.GenerateUUID()
-		session.Expired = int(time.Now().Unix()) + 3600*24*30
-		session.Uid = user.ID
-		db.Uic.Create(&session)
+	session := uic.Session{
+		Uid: user.ID,
 	}
-	log.Debugf("%v", session)
+	session = session.FindVaildSession()
+	response := map[string]string{}
 	response["sig"] = session.Sig
 	response["name"] = user.Name
 	h.JSONR(c, http.StatusOK, response)
@@ -147,6 +139,9 @@ func ChangePassword(c *gin.Context) {
 		return
 	case user.Passwd != utils.HashIt(inputs.OldPassword):
 		h.JSONR(c, http.StatusBadRequest, "oldPassword is not match current one")
+		return
+	case user.IsThirdPartyUser():
+		h.JSONR(c, http.StatusBadRequest, "can not change password for thrid party login account")
 		return
 	case user.Passwd != "":
 		h.JSONR(c, http.StatusBadRequest, "Password can not be blank")

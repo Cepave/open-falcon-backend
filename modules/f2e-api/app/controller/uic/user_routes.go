@@ -43,4 +43,10 @@ func Routes(r *gin.Engine) {
 	authapi_team.POST("/team", CreateTeam)
 	authapi_team.PUT("/team", UpdateTeam)
 	authapi_team.DELETE("/team/:team_id", DeleteTeam)
+
+	//third party
+	third_party := r.Group("/api/v1")
+	third_party.GET("/third-party/forwarding", ForwardToBossLoginPage)
+	third_party.GET("/third-party/auth/login/:utoken", BossRedirectLogin)
+	third_party.GET("/third-party/bossinfo", GetBossUserInfoByCookie)
 }
