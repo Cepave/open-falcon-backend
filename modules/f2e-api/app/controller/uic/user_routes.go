@@ -3,9 +3,9 @@ package uic
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"github.com/gin-gonic/gin"
 )
 
 var db config.DBPool
@@ -46,7 +46,7 @@ func Routes(r *gin.Engine) {
 
 	//third party
 	third_party := r.Group("/api/v1")
-	third_party.GET("/third-party/forwarding", ForwardToBossLoginPage)
-	third_party.GET("/third-party/auth/login/:utoken", BossRedirectLogin)
+	//third_party.GET("/third-party/forwarding", ForwardToBossLoginPage)
+	//third_party.GET("/third-party/auth/login/:utoken", BossRedirectLogin)
 	third_party.GET("/third-party/bossinfo", GetBossUserInfoByCookie)
 }
