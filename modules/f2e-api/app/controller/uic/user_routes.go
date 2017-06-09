@@ -48,5 +48,5 @@ func Routes(r *gin.Engine) {
 	third_party := r.Group("/api/v1")
 	//third_party.GET("/third-party/forwarding", ForwardToBossLoginPage)
 	//third_party.GET("/third-party/auth/login/:utoken", BossRedirectLogin)
-	third_party.GET("/third-party/bossinfo", GetBossUserInfoByCookie)
+	third_party.GET("/third-party/auth_session", GetBossUserInfoByCookie)
 }
