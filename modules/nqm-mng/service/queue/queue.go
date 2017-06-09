@@ -56,7 +56,7 @@ func (q *Queue) drain() {
 			reqs := q.drainByMode(DRAIN, *q.c)
 			if n := q.numToAccum(len(reqs)); n != 0 {
 				update(reqs)
-				logger.Infof("drained %d NQM agent heartbeat requests from queue", n)
+				logger.Debugf("drained %d NQM agent heartbeat requests from queue", n)
 			}
 		case <-q.flush:
 			for {
@@ -94,7 +94,7 @@ func update(reqs []*model.NqmAgentHeartbeatRequest) {
 			rdb.UpdateNqmAgentHeartbeat(reqs)
 		},
 		func(p interface{}) {
-			logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v)", reqs)
+			logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v): %v", reqs, p)
 		},
 	)()
 }
