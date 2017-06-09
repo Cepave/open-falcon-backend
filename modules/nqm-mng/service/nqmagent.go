@@ -123,8 +123,12 @@ func (q *nqmAgentUpdateService) syncToDatabase(m mode) {
 	q.cnt += uint64(len(reqs))
 	q.updateToDatabase(reqs)
 
-	if m == _FLUSH && len(reqs) > 0 {
-		q.syncToDatabase(m)
+	if len(reqs) > 0 {
+		logger.Debugf("[%d] heartbeats of NQM agent from queue", len(reqs))
+
+		if m == _FLUSH {
+			q.syncToDatabase(m)
+		}
 	}
 }
 
