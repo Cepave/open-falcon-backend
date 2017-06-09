@@ -89,7 +89,7 @@ func (q *Queue) numToAccum(n int) int {
 }
 
 func update(reqs []*model.NqmAgentHeartbeatRequest) {
-	go utils.BuildPanicCapture(
+	utils.BuildPanicCapture(
 		func() {
 			rdb.UpdateNqmAgentHeartbeat(reqs)
 		},
