@@ -127,7 +127,8 @@ func ScreenGetsAll(c *gin.Context) {
 	totallCount := 0
 	dt := db.Dashboard.Model(&screens)
 	if inputs.KeyWord != "" {
-		dt = dt.Where("name like ?", "%"+inputs.KeyWord+"%")
+		filterKeyForSql := "%" + inputs.KeyWord + "%"
+		dt = dt.Where("name like ? OR creator like ?", filterKeyForSql, filterKeyForSql)
 	}
 	if inputs.Page <= 0 {
 		if inputs.Order {
