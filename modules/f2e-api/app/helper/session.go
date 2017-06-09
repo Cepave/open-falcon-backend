@@ -86,8 +86,9 @@ func SessionChecking(c *gin.Context) (auth bool, isServiceToken bool, err error)
 
 func GetUser(c *gin.Context) (user uic.User, err error) {
 	db := config.Con().Uic
-	websession, err := GetSession(c)
-	if err != nil {
+	websession, getserr := GetSession(c)
+	if getserr != nil {
+		err = getserr
 		return
 	}
 	if v, ok := c.Get("is_service_token"); ok && v.(bool) {

@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
-	log "github.com/Sirupsen/logrus"
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	log "github.com/Sirupsen/logrus"
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 type CTeam struct {
@@ -291,6 +291,46 @@ func GetTeam(c *gin.Context) {
 	db.Uic.Table("rel_team_user").Select("uid").Where(&uic.RelTeamUser{Tid: int64(team_id)}).Find(&uidarr)
 	if err != nil {
 		log.Debug(err.Error())
+	}
+	var resp APIGetTeamOutput
+	resp.Team = team
+	resp.Users = []uic.User{}
+	if len(uidarr) != 0 {
+		uids := ""
+		for indx, v := range uidarr {
+			if indx == 0 {
+				uids = fmt.Sprintf("%v", v.Uid)
+			} else {
+				uids = fmt.Sprintf("%v,%v", uids, v.Uid)
+			}
+		}
+		log.Debugf("uids:%s", uids)
+		var users []uic.User
+		db.Uic.Table("user").Where(fmt.Sprintf("id IN (%s)", uids)).Find(&users)
+		resp.Users = users
+	}
+	h.JSONR(c, resp)
+	return
+}
+
+func GetTeamByName(c *gin.Context) {
+	name := c.Params.ByName("team_name")
+	if name == "" {
+		h.JSONR(c, badstatus, "team name is missing")
+		return
+	}
+	var team uic.Team
+
+	dt := db.Uic.Table("team").Where(&uic.Team{Name: name}).Find(&team)
+	if dt.Error != nil {
+		h.JSONR(c, badstatus, dt.Error)
+		return
+	}
+
+	var uidarr []uic.RelTeamUser
+	dt = db.Uic.Table("rel_team_user").Select("uid").Where(&uic.RelTeamUser{Tid: team.ID}).Find(&uidarr)
+	if dt.Error != nil {
+		log.Debug(dt.Error)
 	}
 	var resp APIGetTeamOutput
 	resp.Team = team

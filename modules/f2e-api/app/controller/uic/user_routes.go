@@ -40,6 +40,7 @@ func Routes(r *gin.Engine) {
 	authapi_team.Use(utils.AuthSessionMidd)
 	authapi_team.GET("/team", Teams)
 	authapi_team.GET("/team/:team_id", GetTeam)
+	authapi_team.GET("/team/name/:team_name", GetTeamByName)
 	authapi_team.POST("/team", CreateTeam)
 	authapi_team.PUT("/team", UpdateTeam)
 	authapi_team.DELETE("/team/:team_id", DeleteTeam)
