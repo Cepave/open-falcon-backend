@@ -1,4 +1,4 @@
-package queue
+package service
 
 import (
 	"time"
@@ -15,11 +15,11 @@ var logger = log.NewDefaultLogger("INFO")
 type mode byte
 
 const (
-	DRAIN mode = 1
-	FLUSH mode = 2
+	_DRAIN mode = 1
+	_FLUSH mode = 2
 )
 
-type Queue struct {
+type nqmAgentUpdateService struct {
 	q       *commonQueue.Queue
 	c       *commonQueue.Config
 	cnt     uint64 // counter for the dequeued elements
@@ -28,8 +28,8 @@ type Queue struct {
 	done    chan struct{}
 }
 
-func New(c *commonQueue.Config) *Queue {
-	return &Queue{
+func New(c *commonQueue.Config) *nqmAgentUpdateService {
+	return &nqmAgentUpdateService{
 		q:     commonQueue.New(),
 		c:     c,
 		done:  make(chan struct{}),
@@ -37,11 +37,11 @@ func New(c *commonQueue.Config) *Queue {
 	}
 }
 
-func (q *Queue) Count() uint64 {
+func (q *nqmAgentUpdateService) Count() uint64 {
 	return q.cnt
 }
 
-func (q *Queue) Start() {
+func (q *nqmAgentUpdateService) Start() {
 	if q.running {
 		return
 	}
@@ -49,18 +49,17 @@ func (q *Queue) Start() {
 	go q.drain()
 }
 
-func (q *Queue) drain() {
+func (q *nqmAgentUpdateService) drain() {
 	for {
 		select {
 		default:
-			reqs := q.drainByMode(DRAIN, *q.c)
+			reqs := q.drainByMode(_DRAIN, *q.c)
 			if n := q.numToAccum(len(reqs)); n != 0 {
 				update(reqs)
-				logger.Infof("drained %d NQM agent heartbeat requests from queue", n)
 			}
 		case <-q.flush:
 			for {
-				reqs := q.drainByMode(FLUSH, *q.c)
+				reqs := q.drainByMode(_FLUSH, *q.c)
 				if n := q.numToAccum(len(reqs)); n != 0 {
 					update(reqs)
 					logger.Infof("flushed %d NQM agent heartbeat requests from queue", n)
@@ -73,14 +72,14 @@ func (q *Queue) drain() {
 	}
 }
 
-func (q *Queue) drainByMode(m mode, c commonQueue.Config) []*model.NqmAgentHeartbeatRequest {
-	if m == FLUSH {
+func (q *nqmAgentUpdateService) drainByMode(m mode, c commonQueue.Config) []*model.NqmAgentHeartbeatRequest {
+	if m == _FLUSH {
 		c.Dur = 0
 	}
 	return q.q.DrainNWithDurationByType(&c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
 }
 
-func (q *Queue) numToAccum(n int) int {
+func (q *nqmAgentUpdateService) numToAccum(n int) int {
 	if n == 0 {
 		return 0
 	}
@@ -99,7 +98,7 @@ func update(reqs []*model.NqmAgentHeartbeatRequest) {
 	)()
 }
 
-func (q *Queue) Stop() {
+func (q *nqmAgentUpdateService) Stop() {
 	if !q.running {
 		return
 	}
@@ -109,18 +108,18 @@ func (q *Queue) Stop() {
 	<-q.done
 }
 
-func (q *Queue) Put(v interface{}) {
+func (q *nqmAgentUpdateService) Put(v interface{}) {
 	if !q.running {
 		return
 	}
 	q.q.Enqueue(v)
 }
 
-func (q *Queue) Len() int {
+func (q *nqmAgentUpdateService) Len() int {
 	return q.q.Len()
 }
 
-var NqmQueue *Queue
+var NqmQueue *nqmAgentUpdateService
 
 func InitNqmHeartbeat(c *commonQueue.Config) {
 	NqmQueue = New(c)
@@ -130,5 +129,5 @@ func InitNqmHeartbeat(c *commonQueue.Config) {
 func CloseNqmHeartbeat() {
 	logger.Info("Closing NQM heartbeat queue service...")
 	NqmQueue.Stop()
-	logger.Info("Closed NQM heartbeat queue service.")
+	logger.Info("Finish.")
 }

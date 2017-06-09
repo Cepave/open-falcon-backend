@@ -17,7 +17,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/restful"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service/queue"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -37,13 +37,13 @@ func main() {
 	rdb.InitRdb(toRdbConfig(config))
 	restful.InitGin(toGinConfig(config))
 	restful.InitCache(toCacheConfig(config))
-	queue.InitNqmHeartbeat(toNqmHeartbeatConfig(config))
+	service.InitNqmHeartbeat(toNqmHeartbeatConfig(config))
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
 }
 
 func exitApp(signal os.Signal) {
-	queue.CloseNqmHeartbeat()
+	service.CloseNqmHeartbeat()
 	rdb.ReleaseRdb()
 }
 

@@ -8,7 +8,7 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service/queue"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,7 +33,7 @@ func nqmAgentHeartbeat(
 ) mvc.OutputBody {
 	var r *nqmModel.Agent
 	if rdb.NotNewNqmAgent(req.ConnectionId) {
-		queue.NqmQueue.Put(req)
+		service.NqmQueue.Put(req)
 		r = overwrittenNqmAgent(req)
 	} else {
 		r = rdb.InsertNqmAgentByHeartbeat(req)
