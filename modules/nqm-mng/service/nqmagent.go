@@ -1,6 +1,7 @@
 package service
 
 import (
+	"reflect"
 	"time"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
@@ -19,6 +20,21 @@ const (
 	_FLUSH mode = 2
 )
 
+var NqmQueue *nqmAgentUpdateService
+
+func InitNqmHeartbeat(c *commonQueue.Config) {
+	NqmQueue = newNqmAgentUpdateService(c)
+	NqmQueue.updateToDatabase = updateNqmAgentHeartbeatImpl
+	NqmQueue.Start()
+}
+
+func CloseNqmHeartbeat() {
+	logger.Info("Closing NQM heartbeat queue service...")
+	NqmQueue.Stop()
+	logger.Info("Finish.")
+}
+
+var typeOfNqmAgentHeartbeat = reflect.TypeOf(new(model.NqmAgentHeartbeatRequest))
 type nqmAgentUpdateService struct {
 	q       *commonQueue.Queue
 	c       *commonQueue.Config
@@ -26,9 +42,10 @@ type nqmAgentUpdateService struct {
 	running bool
 	flush   chan struct{}
 	done    chan struct{}
+	updateToDatabase func([]*model.NqmAgentHeartbeatRequest)
 }
 
-func New(c *commonQueue.Config) *nqmAgentUpdateService {
+func newNqmAgentUpdateService(c *commonQueue.Config) *nqmAgentUpdateService {
 	return &nqmAgentUpdateService{
 		q:     commonQueue.New(),
 		c:     c,
@@ -37,8 +54,14 @@ func New(c *commonQueue.Config) *nqmAgentUpdateService {
 	}
 }
 
-func (q *nqmAgentUpdateService) Count() uint64 {
+// Gets the number of consumed updating requests(not guarantee on database)
+func (q *nqmAgentUpdateService) ConsumedCount() uint64 {
 	return q.cnt
+}
+
+// Gets the number of pending request of heartbeats
+func (q *nqmAgentUpdateService) PendingLen() int {
+	return q.q.Len()
 }
 
 func (q *nqmAgentUpdateService) Start() {
@@ -46,56 +69,7 @@ func (q *nqmAgentUpdateService) Start() {
 		return
 	}
 	q.running = true
-	go q.drain()
-}
-
-func (q *nqmAgentUpdateService) drain() {
-	for {
-		select {
-		default:
-			reqs := q.drainByMode(_DRAIN, *q.c)
-			if n := q.numToAccum(len(reqs)); n != 0 {
-				update(reqs)
-			}
-		case <-q.flush:
-			for {
-				reqs := q.drainByMode(_FLUSH, *q.c)
-				if n := q.numToAccum(len(reqs)); n != 0 {
-					update(reqs)
-					logger.Infof("flushed %d NQM agent heartbeat requests from queue", n)
-				} else {
-					close(q.done)
-					return
-				}
-			}
-		}
-	}
-}
-
-func (q *nqmAgentUpdateService) drainByMode(m mode, c commonQueue.Config) []*model.NqmAgentHeartbeatRequest {
-	if m == _FLUSH {
-		c.Dur = 0
-	}
-	return q.q.DrainNWithDurationByType(&c, new(model.NqmAgentHeartbeatRequest)).([]*model.NqmAgentHeartbeatRequest)
-}
-
-func (q *nqmAgentUpdateService) numToAccum(n int) int {
-	if n == 0 {
-		return 0
-	}
-	q.cnt += uint64(n)
-	return n
-}
-
-func update(reqs []*model.NqmAgentHeartbeatRequest) {
-	go utils.BuildPanicCapture(
-		func() {
-			rdb.UpdateNqmAgentHeartbeat(reqs)
-		},
-		func(p interface{}) {
-			logger.Errorf("[PANIC] NQM agent's heartbeat requests(%v)", reqs)
-		},
-	)()
+	go q.draining()
 }
 
 func (q *nqmAgentUpdateService) Stop() {
@@ -103,31 +77,70 @@ func (q *nqmAgentUpdateService) Stop() {
 		return
 	}
 	q.running = false
+
 	time.Sleep(q.c.Dur) // for all `q.q.Enqueue()`s to be done
+
 	close(q.flush)
 	<-q.done
 }
 
-func (q *nqmAgentUpdateService) Put(v interface{}) {
+func (q *nqmAgentUpdateService) Put(req *model.NqmAgentHeartbeatRequest) {
 	if !q.running {
 		return
 	}
-	q.q.Enqueue(v)
+	q.q.Enqueue(req)
 }
 
-func (q *nqmAgentUpdateService) Len() int {
-	return q.q.Len()
+func (q *nqmAgentUpdateService) draining() {
+	for {
+		select {
+		default:
+			q.syncToDatabase(_DRAIN)
+		case <-q.flush:
+			q.syncToDatabase(_FLUSH)
+			close(q.done)
+			return
+		}
+	}
 }
 
-var NqmQueue *nqmAgentUpdateService
+func (q *nqmAgentUpdateService) syncToDatabase(m mode) {
+	var config commonQueue.Config = *q.c
 
-func InitNqmHeartbeat(c *commonQueue.Config) {
-	NqmQueue = New(c)
-	NqmQueue.Start()
+	var reqs []*model.NqmAgentHeartbeatRequest
+
+	switch m {
+	case _FLUSH:
+		config.Dur = 0
+		reqs = q.drainFromQueue(&config)
+		if len(reqs) > 0 {
+			logger.Infof("Flushing [%d] heartbeats of NQM agent from queue", len(reqs))
+		}
+	default:
+		reqs = q.drainFromQueue(&config)
+	}
+
+	q.cnt += uint64(len(reqs))
+	q.updateToDatabase(reqs)
+
+	if m == _FLUSH && len(reqs) > 0 {
+		q.syncToDatabase(m)
+	}
 }
 
-func CloseNqmHeartbeat() {
-	logger.Info("Closing NQM heartbeat queue service...")
-	NqmQueue.Stop()
-	logger.Info("Finish.")
+func (q *nqmAgentUpdateService) drainFromQueue(config *commonQueue.Config) []*model.NqmAgentHeartbeatRequest {
+	return q.q.DrainNWithDurationByType(
+		config, typeOfNqmAgentHeartbeat,
+	).([]*model.NqmAgentHeartbeatRequest)
+}
+
+func updateNqmAgentHeartbeatImpl(reqs []*model.NqmAgentHeartbeatRequest) {
+	utils.BuildPanicCapture(
+		func() {
+			rdb.UpdateNqmAgentHeartbeat(reqs)
+		},
+		func(p interface{}) {
+			logger.Errorf("[PANIC] Update heartbeats of NQM agent[#%d]: %v", len(reqs), p)
+		},
+	)()
 }

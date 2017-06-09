@@ -1,136 +1,179 @@
 package service
 
 import (
-	"flag"
-	"testing"
+	"fmt"
 	"time"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"math/rand"
 
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
+	"github.com/icrowley/fake"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func init() {
-	flag.Parse()
+type dbNqmHeartbeatCapture int
+func (db *dbNqmHeartbeatCapture) updator(agents []*model.NqmAgentHeartbeatRequest) {
+	v := int(*db)
+	v += len(agents)
+
+	*db = dbNqmHeartbeatCapture(v)
+}
+func (db *dbNqmHeartbeatCapture) getNumber() int {
+	return int(*db)
 }
 
-func TestByGinkgo(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Base Suite")
+func mockNqmHeartbeatOnDb(agents []*model.NqmAgentHeartbeatRequest) {}
+
+var _ = Describe("Tests Put() function", func() {
+	var testedService *nqmAgentUpdateService
+	var numberOfSampleHeartbeats = 4
+
+	BeforeEach(func() {
+		testedService = newNqmAgentUpdateServiceForTesting(&commonQueue.Config{Num: numberOfSampleHeartbeats, Dur: 0}, mockNqmHeartbeatOnDb)
+	})
+	AfterEach(func() {
+		testedService.Stop()
+	})
+
+	It("Running service(effective operation)", func() {
+		testedService.Start()
+		putRandomHeartbeat(testedService, numberOfSampleHeartbeats)
+
+		eventuallyWithTimeout(
+			func() uint64 {
+				count := testedService.ConsumedCount()
+				GinkgoT().Logf("Current consumed count: %d", count)
+				return count
+			},
+			2 * time.Second,
+		).Should(Equal(uint64(numberOfSampleHeartbeats)))
+	})
+
+	It("Stopped service(un-effective operation)", func() {
+		putRandomHeartbeat(testedService, numberOfSampleHeartbeats)
+		assertNumbersOfService(testedService, 0, 0)
+	})
+})
+var _ = Describe("Tests syncToDatabase()", func() {
+	var testedService *nqmAgentUpdateService
+	var numberOfSampleHeartbeats = 6
+	var dbCallingCapture *dbNqmHeartbeatCapture
+
+	BeforeEach(func() {
+		dbCallingCapture = new(dbNqmHeartbeatCapture)
+
+		testedService = newNqmAgentUpdateServiceForTesting(&commonQueue.Config{Num: 3, Dur: 0}, dbCallingCapture.updator)
+		testedService.running = true
+		putRandomHeartbeat(testedService, numberOfSampleHeartbeats)
+	})
+
+	It("In normal mode(as running service)", func() {
+		testedService.syncToDatabase(_DRAIN)
+		Expect(testedService.ConsumedCount()).To(Equal(uint64(3)))
+		Expect(testedService.PendingLen()).To(Equal(3))
+		Expect(dbCallingCapture.getNumber()).To(Equal(3))
+	})
+
+	It("In flush mode(as stopping service)", func() {
+		testedService.syncToDatabase(_FLUSH)
+		Expect(testedService.ConsumedCount()).To(Equal(uint64(6)))
+		Expect(testedService.PendingLen()).To(Equal(0))
+		Expect(dbCallingCapture.getNumber()).To(Equal(6))
+	})
+})
+var _ = Describe("Tests running flag", func() {
+	var testedService *nqmAgentUpdateService
+
+	BeforeEach(func() {
+		testedService = newNqmAgentUpdateServiceForTesting(&commonQueue.Config{Num: 3, Dur: 0}, mockNqmHeartbeatOnDb)
+	})
+	AfterEach(func() {
+		testedService.Stop()
+	})
+
+	It("By Start()", func() {
+		Expect(testedService.running).To(BeFalse())
+		testedService.Start()
+		Expect(testedService.running).To(BeTrue())
+	})
+
+	It("By Stop()", func() {
+		testedService.Start()
+		Expect(testedService.running).To(BeTrue())
+		testedService.Stop()
+		Expect(testedService.running).To(BeFalse())
+	})
+})
+
+var _ = Describe("Tests functions of service on full lifecycle", func() {
+	numberOfHeartbeat := 512
+	var dbCallingCapture = new(dbNqmHeartbeatCapture)
+	testedService := newNqmAgentUpdateServiceForTesting(&commonQueue.Config{Num: 64, Dur: 0}, dbCallingCapture.updator)
+
+	BeforeEach(func() {
+		testedService.Start()
+		GinkgoT().Logf("Puts %d heartbeats", numberOfHeartbeat)
+		putRandomHeartbeat(testedService, numberOfHeartbeat)
+	})
+	AfterEach(func() {
+		testedService.Stop()
+	})
+
+	It("Tests the consumer number", func() {
+		eventuallyWithTimeout(
+			func() int { return int(testedService.ConsumedCount()) },
+			3 * time.Second,
+		).Should(Equal(numberOfHeartbeat));
+
+		Expect(testedService.PendingLen()).To(Equal(0))
+		Expect(dbCallingCapture.getNumber()).To(Equal(numberOfHeartbeat))
+	})
+})
+
+func assertNumbersOfService(testedService *nqmAgentUpdateService, expectedConsumedCount uint64, expectedPendingLen uint64) {
+	consumedCount := testedService.ConsumedCount()
+	pendingLen := testedService.PendingLen()
+
+	GinkgoT().Logf("Consumed count: %d. Pending len: %d.", consumedCount, pendingLen)
+
+	Ω(consumedCount).Should(Equal(consumedCount))
+	Ω(pendingLen).Should(Equal(pendingLen))
 }
 
-var _ = Describe("Start(): Start the queue service", ginkgoDb.NeedDb(func() {
-	It("can't be put elements without calling Start() in advance", func() {
-		testedQueue := New(&commonQueue.Config{Num: 1, Dur: 0})
+func eventuallyWithTimeout(valueGetter interface{}, timeout time.Duration) GomegaAsyncAssertion {
+	return Eventually(
+		valueGetter, timeout, timeout / 8,
+	)
+}
 
-		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
-			ConnectionId: "test1-hostname@1.2.3.4",
-			Hostname:     "test1-hostname",
-			IpAddress:    ojson.NewIP("1.2.3.4"),
-			Timestamp:    ojson.JsonTime(time.Now()),
-		})
-		Expect(testedQueue.Count()).To(Equal(uint64(0)))
-		Expect(testedQueue.Len()).To(Equal(0))
-	})
+func putRandomHeartbeat(srv *nqmAgentUpdateService, number int) {
+	for i := 0; i < number; i++ {
+		srv.Put(buildRandomRequest())
+	}
+}
+func buildRandomRequest() *model.NqmAgentHeartbeatRequest {
+	hostname := fake.UserName()
+	ip := fake.IPv4()
 
-	It("can be put elements by calling Start() in advance", func() {
-		testedQueue := New(&commonQueue.Config{Num: 1, Dur: 0})
+	// 2012-04-04T00:00:00Z
+	var startTime int64 = 1333497600
+	// 2013-04-04T00:00:00Z
+	var endTime int64 = 1365033600
 
-		testedQueue.Start()
+	return &model.NqmAgentHeartbeatRequest{
+		ConnectionId: fmt.Sprintf("%s@%s", hostname, ip),
+		Hostname:     hostname,
+		IpAddress:    ojson.NewIP(ip),
+		Timestamp:    ojson.JsonTime(time.Unix(startTime + rand.Int63n(endTime), 0)),
+	}
+}
 
-		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
-			ConnectionId: "test1-hostname@1.2.3.4",
-			Hostname:     "test1-hostname",
-			IpAddress:    ojson.NewIP("1.2.3.4"),
-			Timestamp:    ojson.JsonTime(time.Now()),
-		})
+func newNqmAgentUpdateServiceForTesting(queueConfig *commonQueue.Config, dbUpdator func([]*model.NqmAgentHeartbeatRequest)) *nqmAgentUpdateService {
+	testedService := newNqmAgentUpdateService(queueConfig)
+	testedService.updateToDatabase = dbUpdator
 
-		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
-			ConnectionId: "test2-hostname@1.2.3.4",
-			Hostname:     "test2-hostname",
-			IpAddress:    ojson.NewIP("1.2.3.4"),
-			Timestamp:    ojson.JsonTime(time.Now()),
-		})
-
-		testedQueue.Stop()
-		Expect(testedQueue.Count()).To(Equal(uint64(2)))
-	})
-}))
-
-var _ = Describe("Stop(): Stop the queue service", ginkgoDb.NeedDb(func() {
-	It("can't be put elements after being stopped", func() {
-		testedQueue := New(&commonQueue.Config{Num: 1, Dur: 0})
-
-		testedQueue.Start()
-		testedQueue.Stop()
-
-		testedQueue.Put(&model.NqmAgentHeartbeatRequest{
-			ConnectionId: "test1-hostname@1.2.3.4",
-			Hostname:     "test1-hostname",
-			IpAddress:    ojson.NewIP("1.2.3.4"),
-			Timestamp:    ojson.JsonTime(time.Now()),
-		})
-		Expect(testedQueue.Count()).To(Equal(uint64(0)))
-		Expect(testedQueue.Len()).To(Equal(0))
-	})
-
-	It("doesn't flush elements until Stop() is called", func() {
-		testedQueue := New(&commonQueue.Config{Num: 10, Dur: 1 * time.Second})
-
-		testedQueue.Start()
-
-		for i := 0; i < 9; i++ {
-			testedQueue.Put(&model.NqmAgentHeartbeatRequest{
-				ConnectionId: "test1-hostname@1.2.3.4",
-				Hostname:     "test1-hostname",
-				IpAddress:    ojson.NewIP("1.2.3.4"),
-				Timestamp:    ojson.JsonTime(time.Now()),
-			})
-		}
-		Ω(testedQueue.Count()).Should(BeNumerically("<", uint64(9)))
-		Ω(testedQueue.Len()).Should(BeNumerically(">", 0))
-		testedQueue.Stop()
-	})
-
-	It("has no elements after Stop() is called", func() {
-		testedQueue := New(&commonQueue.Config{Num: 10, Dur: 1 * time.Second})
-
-		testedQueue.Start()
-
-		go func() {
-			t := time.After(500 * time.Millisecond)
-			for {
-				select {
-				default:
-					time.Sleep(100 * time.Millisecond)
-					testedQueue.Put(&model.NqmAgentHeartbeatRequest{
-						ConnectionId: "test1-hostname@1.2.3.4",
-						Hostname:     "test1-hostname",
-						IpAddress:    ojson.NewIP("1.2.3.4"),
-						Timestamp:    ojson.JsonTime(time.Now()),
-					})
-				case <-t:
-					return
-				}
-			}
-		}()
-		time.Sleep(200 * time.Millisecond)
-		testedQueue.Stop()
-		Expect(testedQueue.Len()).To(Equal(0))
-	})
-}))
-
-var ginkgoDb = &dbTest.GinkgoDb{}
-
-var _ = BeforeSuite(func() {
-	rdb.DbFacade = ginkgoDb.InitDbFacade()
-})
-
-var _ = AfterSuite(func() {
-	ginkgoDb.ReleaseDbFacade(rdb.DbFacade)
-})
+	return testedService
+}
