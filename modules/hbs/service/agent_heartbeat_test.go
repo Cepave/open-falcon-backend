@@ -95,6 +95,10 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 		now = time.Now().Unix()
 	})
 
+	AfterEach(func() {
+		cache.Agents = cache.NewSafeAgents()
+	})
+
 	Context("when service is not running", func() {
 		It("should not add data", func() {
 			data := generateRandomHeartbeat()
