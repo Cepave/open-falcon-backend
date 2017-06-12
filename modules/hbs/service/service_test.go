@@ -53,7 +53,7 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
 			Expect(rowsAffectedCnt).To(Equal(int64(dataNum)))
-			Expect(agentsDroppedCnt).To(Equal(int64(0)))
+			Expect(agentsDroppedCnt).To(BeZero())
 		})
 	})
 
@@ -62,7 +62,7 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 			InitPackage(&commonModelConfig.MysqlApiConfig{Host: "dummyHost"}, "")
 			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
-			Expect(rowsAffectedCnt).To(Equal(int64(0)))
+			Expect(rowsAffectedCnt).To(BeZero())
 			Expect(agentsDroppedCnt).To(Equal(int64(dataNum)))
 		})
 	})

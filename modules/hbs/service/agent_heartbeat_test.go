@@ -101,9 +101,9 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 			agentHeartbeatService.Put(data, now)
 			_, ok := cache.Agents.Get(data.Hostname)
 
-			Expect(ok).To(Equal(false))
-			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(0)))
-			Expect(agentHeartbeatService.CurrentSize()).To(Equal(0))
+			Expect(ok).To(BeFalse())
+			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(BeZero())
+			Expect(agentHeartbeatService.CurrentSize()).To(BeZero())
 		})
 	})
 
@@ -114,7 +114,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 			agentHeartbeatService.Put(data, now)
 			val, ok := cache.Agents.Get(data.Hostname)
 
-			Expect(ok).To(Equal(true))
+			Expect(ok).To(BeTrue())
 			Expect(val.ReportRequest.Hostname).To(Equal(data.Hostname))
 			Expect(val.LastUpdate).To(Equal(now))
 			Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(1)))
@@ -141,7 +141,7 @@ var _ = Describe("Test Start() of AgentHeartbeat service", func() {
 	Context("when service is stopped", func() {
 		It("Start() should change the running status", func() {
 			agentHeartbeatService.Start()
-			Expect(agentHeartbeatService.running).To(Equal(true))
+			Expect(agentHeartbeatService.running).To(BeTrue())
 		})
 	})
 
@@ -149,7 +149,7 @@ var _ = Describe("Test Start() of AgentHeartbeat service", func() {
 		It("Start() should not change the running status", func() {
 			agentHeartbeatService.running = true
 			agentHeartbeatService.Start()
-			Expect(agentHeartbeatService.running).To(Equal(true))
+			Expect(agentHeartbeatService.running).To(BeTrue())
 		})
 	})
 })
@@ -168,7 +168,7 @@ var _ = Describe("Test Stop() of AgentHeartbeat service", func() {
 	Context("when service is stopped", func() {
 		It("Stop() should not change the running status", func() {
 			agentHeartbeatService.Stop()
-			Expect(agentHeartbeatService.running).To(Equal(false))
+			Expect(agentHeartbeatService.running).To(BeFalse())
 		})
 	})
 
@@ -176,7 +176,7 @@ var _ = Describe("Test Stop() of AgentHeartbeat service", func() {
 		It("Stop() should change the running status", func() {
 			agentHeartbeatService.running = true
 			agentHeartbeatService.Stop()
-			Expect(agentHeartbeatService.running).To(Equal(false))
+			Expect(agentHeartbeatService.running).To(BeFalse())
 		})
 	})
 })
@@ -206,7 +206,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
 			Expect(agentHeartbeatService.CumulativeRowsAffected()).To(Equal(int64(1)))
-			Expect(agentHeartbeatService.CumulativeAgentsDropped()).To(Equal(int64(0)))
+			Expect(agentHeartbeatService.CumulativeAgentsDropped()).To(BeZero())
 		})
 	})
 
@@ -220,7 +220,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 			agentHeartbeatService.consumeHeartbeatQueue(false)
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
-			Expect(agentHeartbeatService.CumulativeRowsAffected()).To(Equal(int64(0)))
+			Expect(agentHeartbeatService.CumulativeRowsAffected()).To(BeZero())
 			Expect(agentHeartbeatService.CumulativeAgentsDropped()).To(Equal(int64(1)))
 		})
 	})
@@ -248,7 +248,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 			agentHeartbeatService.consumeHeartbeatQueue(true)
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(dataNum))
-			Expect(agentHeartbeatService.CurrentSize()).To(Equal(0))
+			Expect(agentHeartbeatService.CurrentSize()).To(BeZero())
 		})
 	})
 })
