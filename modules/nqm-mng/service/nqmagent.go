@@ -35,13 +35,14 @@ func CloseNqmHeartbeat() {
 }
 
 var typeOfNqmAgentHeartbeat = reflect.TypeOf(new(model.NqmAgentHeartbeatRequest))
+
 type nqmAgentUpdateService struct {
-	q       *commonQueue.Queue
-	c       *commonQueue.Config
-	cnt     uint64 // counter for the dequeued elements
-	running bool
-	flush   chan struct{}
-	done    chan struct{}
+	q                *commonQueue.Queue
+	c                *commonQueue.Config
+	cnt              uint64 // counter for the dequeued elements
+	running          bool
+	flush            chan struct{}
+	done             chan struct{}
 	updateToDatabase func([]*model.NqmAgentHeartbeatRequest)
 }
 
@@ -120,8 +121,8 @@ func (q *nqmAgentUpdateService) syncToDatabase(m mode) {
 		reqs = q.drainFromQueue(&config)
 	}
 
-	q.cnt += uint64(len(reqs))
 	q.updateToDatabase(reqs)
+	q.cnt += uint64(len(reqs))
 
 	if len(reqs) > 0 {
 		logger.Debugf("[%d] heartbeats of NQM agent from queue", len(reqs))
