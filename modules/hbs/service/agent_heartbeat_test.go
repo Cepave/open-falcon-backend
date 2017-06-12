@@ -39,6 +39,46 @@ func generateRandomHeartbeat() *commonModel.AgentReportRequest {
 	}
 }
 
+func eventuallyWithTimeout(valueGetter interface{}, timeout time.Duration) GomegaAsyncAssertion {
+	return Eventually(
+		valueGetter, timeout, timeout/8,
+	)
+}
+
+var _ = Describe("Test the behavior of AgentHeartbeat service", func() {
+	var (
+		agentHeartbeatService *AgentHeartbeatService
+		heartbeatImpl         *fakeHeartbeat
+	)
+
+	BeforeEach(func() {
+		agentHeartbeatService = NewAgentHeartbeatService(
+			&commonQueue.Config{Num: 16, Dur: 100 * time.Millisecond},
+		)
+		heartbeatImpl = &fakeHeartbeat{alwaysSuccess: true}
+		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
+	})
+
+	It("should work normally during its life cycle", func() {
+		batchSize := agentHeartbeatService.qConfig.Num
+		dataNum := batchSize * 2
+
+		agentHeartbeatService.Start()
+		for i := 0; i < dataNum; i++ {
+			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+		}
+		agentHeartbeatService.Stop()
+
+		Expect(agentHeartbeatService.CumulativeAgentsPut()).To(Equal(int64(dataNum)))
+		eventuallyWithTimeout(func() int {
+			return heartbeatImpl.rowsAffectedCnt
+		}, time.Second).Should(Equal(dataNum))
+		eventuallyWithTimeout(func() int {
+			return agentHeartbeatService.CurrentSize()
+		}, time.Second).Should(BeZero())
+	})
+})
+
 var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 	var (
 		agentHeartbeatService *AgentHeartbeatService
