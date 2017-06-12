@@ -1,14 +1,12 @@
 package service
 
 import (
-	"net/http"
 	"reflect"
 	"sync"
 	"sync/atomic"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
-	commonSling "github.com/Cepave/open-falcon-backend/common/sling"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 )
@@ -126,20 +124,4 @@ func (s *AgentHeartbeatService) CumulativeAgentsPut() int64 {
 
 func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
-}
-
-func agentHeartbeatCall(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
-	param := struct {
-		UpdateOnly bool `json:"update_only"`
-	}{updateOnlyFlag}
-	req := NewSlingBase().Post("api/v1/agent/heartbeat").BodyJSON(agents).QueryStruct(&param)
-
-	res := model.AgentHeartbeatResult{}
-	err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
-	if err != nil {
-		logger.Errorln("[AgentHeartbeat]", err)
-		return 0, int64(len(agents))
-	}
-
-	return res.RowsAffected, 0
 }
