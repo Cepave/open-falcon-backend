@@ -62,6 +62,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("db conn failed with error %s", err.Error())
 	}
+	config.Init()
 	routes := gin.Default()
 	if viper.GetBool("gen_doc") {
 		yaag.Init(&yaag.Config{
