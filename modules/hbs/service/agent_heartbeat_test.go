@@ -31,7 +31,7 @@ func (a *fakeHeartbeat) calling(agents []*model.AgentHeartbeat) (int64, int64) {
 	}
 }
 
-func generateRandomHeartbeat() *commonModel.AgentReportRequest {
+func generateRandomRequest() *commonModel.AgentReportRequest {
 	return &commonModel.AgentReportRequest{
 		Hostname:     fake.DomainName(),
 		IP:           fake.IPv4(),
@@ -65,7 +65,7 @@ var _ = Describe("Test the behavior of AgentHeartbeat service", func() {
 
 		agentHeartbeatService.Start()
 		for i := 0; i < dataNum; i++ {
-			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+			agentHeartbeatService.Put(generateRandomRequest(), dummyTime)
 		}
 		agentHeartbeatService.Stop()
 
@@ -101,7 +101,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 
 	Context("when service is not running", func() {
 		It("should not add data", func() {
-			data := generateRandomHeartbeat()
+			data := generateRandomRequest()
 			agentHeartbeatService.Put(data, now)
 			_, ok := cache.Agents.Get(data.Hostname)
 
@@ -113,7 +113,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 
 	Context("when service is running", func() {
 		It("should add data", func() {
-			data := generateRandomHeartbeat()
+			data := generateRandomRequest()
 			agentHeartbeatService.running = true
 			agentHeartbeatService.Put(data, now)
 			val, ok := cache.Agents.Get(data.Hostname)
@@ -205,7 +205,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 
 	Context("when success", func() {
 		It("rowsAffectedCnt should be incremented normally", func() {
-			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+			agentHeartbeatService.Put(generateRandomRequest(), dummyTime)
 			agentHeartbeatService.consumeHeartbeatQueue(false)
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
@@ -220,7 +220,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 		})
 
 		It("agentsDroppedCnt should be incremented normally", func() {
-			agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+			agentHeartbeatService.Put(generateRandomRequest(), dummyTime)
 			agentHeartbeatService.consumeHeartbeatQueue(false)
 
 			Expect(heartbeatImpl.rowsAffectedCnt).To(Equal(1))
@@ -234,7 +234,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 			batchSize := agentHeartbeatService.qConfig.Num
 			dataNum := batchSize*2 - 1
 			for i := 0; i < dataNum; i++ {
-				agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+				agentHeartbeatService.Put(generateRandomRequest(), dummyTime)
 			}
 			agentHeartbeatService.consumeHeartbeatQueue(false)
 
@@ -247,7 +247,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 		It("should flush data to 0", func() {
 			dataNum := agentHeartbeatService.qConfig.Num*2 - 1
 			for i := 0; i < dataNum; i++ {
-				agentHeartbeatService.Put(generateRandomHeartbeat(), dummyTime)
+				agentHeartbeatService.Put(generateRandomRequest(), dummyTime)
 			}
 			agentHeartbeatService.consumeHeartbeatQueue(true)
 

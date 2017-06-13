@@ -99,14 +99,8 @@ func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest, updateT
 	}
 
 	cache.Agents.Put(req, updateTime)
-	agent := &model.AgentHeartbeat{
-		Hostname:      req.Hostname,
-		IP:            req.IP,
-		AgentVersion:  req.AgentVersion,
-		PluginVersion: req.PluginVersion,
-		UpdateTime:    updateTime,
-	}
-	s.safeQ.Enqueue(agent)
+	hb := requestToHeartbeat(req, updateTime)
+	s.safeQ.Enqueue(hb)
 	atomic.AddInt64(&(s.agentsPutCnt), 1)
 }
 
@@ -124,4 +118,14 @@ func (s *AgentHeartbeatService) CumulativeAgentsPut() int64 {
 
 func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
+}
+
+func requestToHeartbeat(req *commonModel.AgentReportRequest, updateTime int64) *model.AgentHeartbeat {
+	return &model.AgentHeartbeat{
+		Hostname:      req.Hostname,
+		IP:            req.IP,
+		AgentVersion:  req.AgentVersion,
+		PluginVersion: req.PluginVersion,
+		UpdateTime:    updateTime,
+	}
 }

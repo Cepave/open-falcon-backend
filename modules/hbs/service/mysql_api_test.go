@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	commonModelConfig "github.com/Cepave/open-falcon-backend/common/model/config"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
@@ -19,7 +20,10 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 	)
 
 	BeforeEach(func() {
-		agents = make([]*model.AgentHeartbeat, dataNum)
+		agents = make([]*model.AgentHeartbeat, 0)
+		for i := 0; i < dataNum; i++ {
+			agents = append(agents, requestToHeartbeat(generateRandomRequest(), time.Now().Unix()))
+		}
 	})
 
 	Context("when the call succeed", func() {
