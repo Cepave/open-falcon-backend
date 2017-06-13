@@ -17,6 +17,17 @@
 			"cache": {
 				"size": 8,
 				"lifetime": 20
+			}
+		}
+	},
+	"heartbeat" :{
+		"falcon": {
+			"batchSize": 16,
+			"duration": 3
+		},
+		"nqm": {
+			"batchSize": 16,
+			"duration": 3
 		}
 	}
 }

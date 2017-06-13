@@ -7,6 +7,14 @@ import (
 
 var TypeOfReflectType = TypeOfInterface((*reflect.Type)(nil))
 
+func TypeOfValue(v interface{}) reflect.Type {
+	if reflectType, ok := v.(reflect.Type); ok {
+		return reflectType
+	}
+
+	return reflect.TypeOf(v)
+}
+
 // Gets the type of interface, which is short function of:
 //
 // 	reflect.TypeOf(nilPointerToInterface).Elem()

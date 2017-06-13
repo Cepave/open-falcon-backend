@@ -1,262 +1,29 @@
 package restful
 
 import (
+	"fmt"
 	"net/http"
 
-	nqmTestingDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
+	nqmSql "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
 	json "github.com/Cepave/open-falcon-backend/common/json"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
+	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
+	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 
-	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestAgentItSuite struct{}
-
-var _ = Suite(&TestAgentItSuite{})
-
-// Tests the getting of agent by id
-func (suite *TestAgentItSuite) TestGetAgentById(c *C) {
-	client := httpClientConfig.NewSlingByBase().
-		Get("api/v1/nqm/agent/36771")
-
-	slintChecker := testingHttp.NewCheckSlint(c, client)
-	jsonResult := slintChecker.GetJsonBody(http.StatusOK)
-
-	c.Logf("[Get A Agent] JSON Result: %s", json.MarshalPrettyJSON(jsonResult))
-	c.Assert(jsonResult.Get("id").MustInt(), Equals, 36771)
+func inTx(sql ...string) {
+	dbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
 }
 
-// Tests the adding of new agent
-func (suite *TestAgentItSuite) TestAddNewAgent(c *C) {
-	sPtr := func(v string) *string { return &v }
-
-	jsonBody := &struct {
-		Name         string   `json:"name"`
-		Comment      string   `json:"comment"`
-		Hostname     string   `json:"hostname"`
-		ConnectionId string   `json:"connection_id"`
-		Status       bool     `json:status`
-		IspId        int      `json:"isp_id"`
-		ProvinceId   int      `json:"province_id"`
-		CityId       int      `json:"city_id"`
-		NameTag      *string  `json:"name_tag"`
-		GroupTags    []string `json:"group_tags"`
-	}{
-		Name:       "ko-name-cc1",
-		Comment:    "cc-name-cc1",
-		Hostname:   "new-host-cccc",
-		Status:     true,
-		IspId:      8,
-		ProvinceId: 9,
-		CityId:     130,
-		GroupTags:  []string{"pp-rest-tag-1", "pp-rest-tag-2"},
-	}
-
-	testCases := []*struct {
-		connectionId      string
-		nameTag           *string
-		expectedStatus    int
-		expectedErrorCode int
-	}{
-		{"@192.33.9.1", sPtr("add-agent-nt-1"), http.StatusOK, -1},
-		{"@192.33.9.2", nil, http.StatusOK, -1},
-		{"@192.33.9.1", sPtr("add-agent-nt-1"), http.StatusConflict, 1},
-	}
-
-	for _, testCase := range testCases {
-		jsonBody.ConnectionId = "add-agent-" + testCase.connectionId
-		jsonBody.NameTag = testCase.nameTag
-
-		client := httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent").
-			BodyJSON(jsonBody)
-
-		slintChecker := testingHttp.NewCheckSlint(c, client)
-
-		jsonResp := slintChecker.GetJsonBody(testCase.expectedStatus)
-
-		c.Logf("[Add Agent] JSON Result: %s", json.MarshalPrettyJSON(jsonResp))
-
-		switch testCase.expectedStatus {
-		case http.StatusConflict:
-			c.Assert(jsonResp.Get("error_code").MustInt(), Equals, testCase.expectedErrorCode)
-		}
-
-		if testCase.expectedStatus != http.StatusOK {
-			continue
-		}
-
-		c.Assert(jsonResp.Get("name").MustString(), Equals, jsonBody.Name)
-		c.Assert(jsonResp.Get("comment").MustString(), Equals, jsonBody.Comment)
-		c.Assert(jsonResp.Get("connection_id").MustString(), Equals, jsonBody.ConnectionId)
-		c.Assert(jsonResp.Get("ip_address").MustString(), Equals, "0.0.0.0")
-		c.Assert(jsonResp.Get("hostname").MustString(), Equals, jsonBody.Hostname)
-		c.Assert(jsonResp.Get("status").MustBool(), Equals, jsonBody.Status)
-		c.Assert(jsonResp.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId)
-		c.Assert(jsonResp.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId)
-		c.Assert(jsonResp.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId)
-
-		if jsonBody.NameTag != nil {
-			c.Assert(jsonResp.Get("name_tag").Get("value").MustString(), Equals, *jsonBody.NameTag)
-		} else {
-			c.Assert(jsonResp.Get("name_tag").Get("id").MustInt(), Equals, -1)
-		}
-
-		c.Assert(jsonResp.Get("group_tags").MustArray(), HasLen, len(jsonBody.GroupTags))
-	}
+func sPtr(v string) *string {
+	return &v
 }
 
-// Tests the listing of agents
-func (suite *TestAgentItSuite) TestListAgents(c *C) {
-	client := httpClientConfig.NewSlingByBase().Get("api/v1/nqm/agents")
-
-	slintChecker := testingHttp.NewCheckSlint(c, client)
-
-	slintChecker.AssertHasPaging()
-	message := slintChecker.GetJsonBody(http.StatusOK)
-
-	c.Logf("[List Agents] JSON Result: %s", json.MarshalPrettyJSON(message))
-	c.Assert(len(message.MustArray()), Equals, 3)
-}
-
-func (suite *TestAgentItSuite) TestListTargetsOfAgentById(c *C) {
-	testCases := []*struct {
-		input          string
-		expectedStatus int
-	}{
-		{"24021", http.StatusOK},
-		{"24022", http.StatusOK},
-		{"24023", http.StatusOK},
-		{"0", http.StatusNotFound},
-	}
-
-	for i, testCase := range testCases {
-		client := httpClientConfig.NewSlingByBase().Get("api/v1/nqm/agent/" + testCase.input + "/targets")
-
-		slintChecker := testingHttp.NewCheckSlint(c, client)
-		jsonResult := slintChecker.GetJsonBody(testCase.expectedStatus)
-
-		c.Logf("Case[%d] [Get A Agent] JSON Result: %s", i, json.MarshalPrettyJSON(jsonResult))
-
-		switch i {
-		case 0, 1:
-			c.Assert(jsonResult.Get("cache_refresh_time").MustInt(), Equals, 1483200000, Commentf("Test Case: %d", i+1))
-		case 2:
-			c.Assert(jsonResult.Get("cache_refresh_time").Interface(), IsNil, Commentf("Test Case: %d", i+1))
-		case 3:
-			c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1, Commentf("Test Case: %d", i+1))
-		}
-
-	}
-}
-
-func (suite *TestAgentItSuite) TestClearCachedTargetsOfAgentById(c *C) {
-	testCases := []*struct {
-		input                string
-		expectedRowsAffected int
-		expectedStatus       int
-	}{
-		{"24021", 1, http.StatusOK},
-		{"24021", 0, http.StatusOK},
-		{"24022", 1, http.StatusOK},
-		{"24022", 0, http.StatusOK},
-		{"24023", 0, http.StatusOK},
-		{"0", -1, http.StatusNotFound},
-	}
-
-	for i, testCase := range testCases {
-		client := httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent/" + testCase.input + "/targets/clear")
-
-		slintChecker := testingHttp.NewCheckSlint(c, client)
-		jsonResult := slintChecker.GetJsonBody(testCase.expectedStatus)
-
-		c.Logf("Case[%d] [Get A Agent] JSON Result: %s", i, json.MarshalPrettyJSON(jsonResult))
-
-		if i == 5 {
-			c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1, Commentf("Test Case: %d", i+1))
-			continue
-		}
-		c.Assert(jsonResult.Get("rows_affected").MustInt(), Equals, testCase.expectedRowsAffected, Commentf("Test Case: %d", i+1))
-	}
-}
-
-// Tests the modifying of agent
-func (suite *TestAgentItSuite) TestModifyAgent(c *C) {
-	jsonBody := &struct {
-		Name       string   `json:"name"`
-		Status     bool     `json:status`
-		Comment    string   `json:"comment"`
-		IspId      int      `json:"isp_id"`
-		ProvinceId int      `json:"province_id"`
-		CityId     int      `json:"city_id"`
-		NameTag    *string  `json:"name_tag"`
-		GroupTags  []string `json:"group_tags"`
-	}{
-		Name:       "Update-Agent-1",
-		Status:     false,
-		Comment:    "This is updated comment",
-		IspId:      3,
-		ProvinceId: 11,
-		CityId:     230,
-	}
-
-	sPtr := func(v string) *string { return &v }
-	testCases := []*struct {
-		nameTag   *string
-		groupTags []string
-	}{
-		{sPtr("rest-nt-9"), []string{"rest-gt-91", "rest-gt-92", "rest-gt-93"}},
-		{nil, []string{}},
-	}
-
-	for i, testCase := range testCases {
-		comment := ocheck.TestCaseComment(i)
-		ocheck.LogTestCase(c, testCase)
-
-		jsonBody.NameTag = testCase.nameTag
-		jsonBody.GroupTags = testCase.groupTags
-
-		client := httpClientConfig.NewSlingByBase().Put("api/v1/nqm/agent/23041").
-			BodyJSON(jsonBody)
-
-		slintChecker := testingHttp.NewCheckSlint(c, client)
-
-		jsonResult := slintChecker.GetJsonBody(http.StatusOK)
-
-		c.Logf("Update agent: %v", json.MarshalPrettyJSON(jsonResult))
-
-		c.Assert(jsonResult.Get("name").MustString(), Equals, jsonBody.Name, comment)
-		c.Assert(jsonResult.Get("comment").MustString(), Equals, jsonBody.Comment, comment)
-		c.Assert(jsonResult.Get("status").MustBool(), Equals, jsonBody.Status, comment)
-		c.Assert(jsonResult.Get("isp").Get("id").MustInt(), Equals, jsonBody.IspId, comment)
-		c.Assert(jsonResult.Get("province").Get("id").MustInt(), Equals, jsonBody.ProvinceId, comment)
-		c.Assert(jsonResult.Get("city").Get("id").MustInt(), Equals, jsonBody.CityId, comment)
-
-		if jsonBody.NameTag != nil {
-			c.Assert(jsonResult.Get("name_tag").Get("value").MustString(), Equals, *jsonBody.NameTag, comment)
-		} else {
-			c.Assert(jsonResult.Get("name_tag").Get("id").MustInt(), Equals, -1, comment)
-		}
-
-		c.Assert(jsonResult.Get("group_tags").MustArray(), HasLen, len(testCase.groupTags), comment)
-	}
-}
-
-func (s *TestAgentItSuite) SetUpSuite(c *C) {
-	testingDb.InitRdb(c)
-}
-func (s *TestAgentItSuite) TearDownSuite(c *C) {
-	testingDb.ReleaseRdb(c)
-}
-
-func (s *TestAgentItSuite) SetUpTest(c *C) {
-	inTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
-
-	switch c.TestName() {
-	case "TestAgentItSuite.TestGetAgentById":
+var _ = Describe("Getting NQM agent by id", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
 		inTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
@@ -285,7 +52,127 @@ func (s *TestAgentItSuite) SetUpTest(c *C) {
 			VALUES(36771, 50091), (36771, 50092), (36771, 50093)
 			`,
 		)
-	case "TestAgentItSuite.TestListAgents":
+	})
+
+	AfterEach(func() {
+		inTx(
+			`DELETE FROM nqm_agent WHERE ag_id = 36771`,
+			`DELETE FROM host WHERE id = 25101`,
+			`DELETE FROM owl_name_tag WHERE nt_id = 407`,
+			`
+			DELETE FROM owl_group_tag
+			WHERE gt_id >= 50091 AND
+				gt_id <= 50093
+			`,
+		)
+	})
+
+	It("Get data of a NQM agent", func() {
+		resp := tHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().
+				Get("api/v1/nqm/agent/36771"),
+		)
+
+		jsonBody := resp.GetBodyAsJson()
+		GinkgoT().Logf("[Get A Agent] JSON Result: %s", json.MarshalPrettyJSON(jsonBody))
+
+		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
+		Expect(jsonBody.Get("id").MustInt()).To(Equal(36771))
+		Expect(jsonBody.Get("group_tags").MustArray()).To(HaveLen(3))
+	})
+}))
+
+var _ = Describe("Adding new NQM agent", ginkgoDb.NeedDb(func() {
+	AfterEach(func() {
+		inTx(
+			"DELETE FROM nqm_agent WHERE ag_connection_id LIKE 'add-agent%'",
+			"DELETE FROM host WHERE hostname = 'new-host-cccc'",
+			"DELETE FROM owl_name_tag where nt_value LIKE 'add-agent-%'",
+			"DELETE FROM owl_group_tag where gt_name LIKE 'pp-rest-tag-%'",
+		)
+	})
+
+	reqBody := &struct {
+		Name         string   `json:"name"`
+		Comment      string   `json:"comment"`
+		Hostname     string   `json:"hostname"`
+		ConnectionId string   `json:"connection_id"`
+		Status       bool     `json:status`
+		IspId        int      `json:"isp_id"`
+		ProvinceId   int      `json:"province_id"`
+		CityId       int      `json:"city_id"`
+		NameTag      *string  `json:"name_tag"`
+		GroupTags    []string `json:"group_tags"`
+	}{
+		Name:       "ko-name-cc1",
+		Comment:    "cc-name-cc1",
+		Hostname:   "new-host-cccc",
+		Status:     true,
+		IspId:      8,
+		ProvinceId: 9,
+		CityId:     130,
+		GroupTags:  []string{"pp-rest-tag-1", "pp-rest-tag-2"},
+	}
+
+	callApi := func(jsonBody interface{}) *tHttp.ResponseResult {
+		return tHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent").
+				BodyJSON(reqBody),
+		)
+	}
+
+	DescribeTable("Success adding",
+		func(connectionId string, nameTag *string) {
+			reqBody.ConnectionId = "add-agent-" + connectionId
+			reqBody.NameTag = nameTag
+
+			respResult := callApi(reqBody)
+
+			jsonBody := respResult.GetBodyAsJson()
+			GinkgoT().Logf("[Add Agent] JSON Result: %s", json.MarshalPrettyJSON(jsonBody))
+
+			Expect(jsonBody.Get("name").MustString()).To(Equal(reqBody.Name))
+			Expect(jsonBody.Get("comment").MustString()).To(Equal(reqBody.Comment))
+			Expect(jsonBody.Get("connection_id").MustString()).To(Equal(reqBody.ConnectionId))
+			Expect(jsonBody.Get("ip_address").MustString()).To(Equal("0.0.0.0"))
+			Expect(jsonBody.Get("hostname").MustString()).To(Equal(reqBody.Hostname))
+			Expect(jsonBody.Get("status").MustBool()).To(Equal(reqBody.Status))
+			Expect(jsonBody.Get("isp").Get("id").MustInt()).To(Equal(reqBody.IspId))
+			Expect(jsonBody.Get("province").Get("id").MustInt()).To(Equal(reqBody.ProvinceId))
+			Expect(jsonBody.Get("city").Get("id").MustInt()).To(Equal(reqBody.CityId))
+
+			if nameTag != nil {
+				Expect(jsonBody.Get("name_tag").Get("value").MustString()).To(Equal(*nameTag))
+			} else {
+				Expect(jsonBody.Get("name_tag").Get("id").MustInt()).To(Equal(-1))
+			}
+
+			Expect(jsonBody.Get("group_tags").MustArray()).To(HaveLen(2))
+		},
+		Entry("Viable name tag", "@192.33.9.1", sPtr("add-agent-nt-1")),
+		Entry("Nil name tag", "@192.33.9.2", nil),
+	)
+
+	It("Adding error with conflict connection id", func() {
+		reqBody.ConnectionId = "add-agent-@existing-gc01"
+		reqBody.NameTag = nil
+
+		By("Prepare existing data")
+		prepareResult := callApi(reqBody)
+		Expect(prepareResult).To(ogko.MatchHttpStatus(http.StatusOK))
+
+		By("Asserts the conflict result")
+		conflictResult := callApi(reqBody)
+		Expect(conflictResult).To(ogko.MatchHttpStatus(http.StatusConflict))
+
+		jsonBody := conflictResult.GetBodyAsJson()
+		GinkgoT().Logf("Conflict body: %s", json.MarshalPrettyJSON(jsonBody))
+		Expect(jsonBody.Get("error_code").MustInt()).To(Equal(1))
+	})
+}))
+
+var _ = Describe("Listing agents", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
 		inTx(
 			`
 			INSERT INTO host(id, hostname, agent_version, plugin_version)
@@ -298,7 +185,128 @@ func (s *TestAgentItSuite) SetUpTest(c *C) {
 				(4323, 22091, 'agent-it-03', 'agent-03@28.71.19.23', 'agent-03.fb.com', x'1C471318', 7)
 			`,
 		)
-	case "TestAgentItSuite.TestModifyAgent":
+	})
+
+	AfterEach(func() {
+		inTx(
+			"DELETE FROM nqm_agent WHERE ag_id >= 4321 AND ag_id <= 4323",
+			"DELETE FROM host WHERE id = 22091",
+		)
+	})
+
+	It("Listing without any conditions", func() {
+		result := tHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().Get("api/v1/nqm/agents"),
+		)
+		Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
+
+		jsonBody := result.GetBodyAsJson()
+		GinkgoT().Logf("[List Agents] JSON Result: %s", json.MarshalPrettyJSON(jsonBody))
+
+		Expect(jsonBody.MustArray()).To(HaveLen(3))
+	})
+}))
+
+var _ = Describe("Listing targets of agent(ping list)", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(nqmSql.InitNqmCacheAgentPingList...)
+	})
+
+	AfterEach(func() {
+		inTx(nqmSql.ClearNqmCacheAgentPingList...)
+	})
+
+	pInt64 := func(v int64) *int64 { return &v }
+	fetchTargets := func(agentId int) *tHttp.ResponseResult {
+		return tHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().Get(
+				fmt.Sprintf("api/v1/nqm/agent/%d/targets", agentId),
+			),
+		)
+	}
+
+	DescribeTable("Normal NQM agent(exsiting)",
+		func(agentId int, expectedRefreshTime *int64) {
+			respResult := fetchTargets(agentId)
+
+			Expect(respResult).To(ogko.MatchHttpStatus(http.StatusOK))
+
+			jsonBody := respResult.GetBodyAsJson()
+			GinkgoT().Logf("List of targets(JSON): %s", json.MarshalPrettyJSON(jsonBody))
+
+			if expectedRefreshTime != nil {
+				Expect(jsonBody.Get("cache_refresh_time").MustInt64()).To(Equal(*expectedRefreshTime))
+			} else {
+				Expect(jsonBody.Get("cache_refresh_time").Interface()).To(BeNil())
+			}
+		},
+		Entry("Has cache", 24021, pInt64(1483200000)),
+		Entry("Has cache", 24022, pInt64(1483200000)),
+		Entry("Has no cache", 24023, nil),
+	)
+
+	It("Not exising NQM agent", func() {
+		respResult := fetchTargets(99801)
+
+		Expect(respResult).To(ogko.MatchHttpStatus(http.StatusNotFound))
+
+		jsonBody := respResult.GetBodyAsJson()
+		GinkgoT().Logf("Error content: %s", json.MarshalPrettyJSON(jsonBody))
+		Expect(jsonBody.Get("error_code").MustInt()).To(Equal(-1))
+	})
+}))
+
+var _ = Describe("Clearing cache of target(ping list) on a agent", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(nqmSql.InitNqmCacheAgentPingList...)
+	})
+
+	AfterEach(func() {
+		inTx(nqmSql.ClearNqmCacheAgentPingList...)
+	})
+
+	callApi := func(agentId int) *tHttp.ResponseResult {
+		return tHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().Post(
+				fmt.Sprintf("api/v1/nqm/agent/%d/targets/clear", agentId),
+			),
+		)
+	}
+
+	DescribeTable("Normal agents",
+		func(agentId int, expectedRowsAffected int) {
+			callAndCheck := func(expectedAffectedRow int) {
+				result := callApi(agentId)
+
+				Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
+				jsonBody := result.GetBodyAsJson()
+				GinkgoT().Logf("Clear cache: %s", json.MarshalPrettyJSON(jsonBody))
+				Expect(jsonBody.Get("rows_affected").MustInt()).To(Equal(expectedAffectedRow))
+			}
+
+			By("First time of clearing")
+			callAndCheck(expectedRowsAffected)
+
+			By("Second time of clearing")
+			callAndCheck(0)
+		},
+		Entry("Cache has viable targets", 24021, 1),
+		Entry("Cache has non-viable target", 24022, 1),
+		Entry("No cache for the agent", 24023, 0),
+	)
+
+	It("Clear non-existing NQM agent", func() {
+		result := callApi(90051)
+
+		Expect(result).To(ogko.MatchHttpStatus(http.StatusNotFound))
+		jsonBody := result.GetBodyAsJson()
+		GinkgoT().Logf("Error result: %s", json.MarshalPrettyJSON(jsonBody))
+		Expect(jsonBody.Get("error_code").MustInt()).To(Equal(-1))
+	})
+}))
+
+var _ = Describe("Modifying NQM agent", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
 		inTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
@@ -321,58 +329,66 @@ func (s *TestAgentItSuite) SetUpTest(c *C) {
 			VALUES(23041, 20871),(23041, 20872)
 			`,
 		)
-	case "TestAgentItSuite.TestListTargetsOfAgentById":
-		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
-	case "TestAgentItSuite.TestClearCachedTargetsOfAgentById":
-		inTx(nqmTestingDb.InitNqmCacheAgentPingList...)
-	}
-}
-func (s *TestAgentItSuite) TearDownTest(c *C) {
-	inTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
+	})
 
-	switch c.TestName() {
-	case "TestAgentItSuite.TestGetAgentById":
-		inTx(
-			`
-			DELETE FROM nqm_agent
-			WHERE ag_id = 36771
-			`,
-			`
-			DELETE FROM host
-			WHERE id = 25101
-			`,
-			`
-			DELETE FROM owl_name_tag
-			WHERE nt_id = 407
-			`,
-			`
-			DELETE FROM owl_group_tag
-			WHERE gt_id >= 50091 AND
-				gt_id <= 50093
-			`,
-		)
-	case "TestAgentItSuite.TestListAgents":
-		inTx(
-			"DELETE FROM nqm_agent WHERE ag_id >= 4321 AND ag_id <= 4323",
-			"DELETE FROM host WHERE id = 22091",
-		)
-	case "TestAgentItSuite.TestAddNewAgent":
-		inTx(
-			"DELETE FROM nqm_agent WHERE ag_connection_id LIKE 'add-agent%'",
-			"DELETE FROM host WHERE hostname = 'new-host-cccc'",
-			"DELETE FROM owl_name_tag where nt_value LIKE 'add-agent-%'",
-			"DELETE FROM owl_group_tag where gt_name LIKE 'pp-rest-tag-%'",
-		)
-	case "TestAgentItSuite.TestModifyAgent":
+	AfterEach(func() {
 		inTx(
 			"DELETE FROM nqm_agent WHERE ag_id = 23041",
 			"DELETE FROM host WHERE id = 4401",
 			"DELETE FROM owl_name_tag WHERE nt_value LIKE 'rest-nt-%'",
 			"DELETE FROM owl_group_tag WHERE gt_name LIKE 'rest-gt-%'",
 		)
-	case "TestAgentItSuite.TestListTargetsOfAgentById":
-		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
-	case "TestAgentItSuite.TestClearCachedTargetsOfAgentById":
-		inTx(nqmTestingDb.ClearNqmCacheAgentPingList...)
+	})
+
+	reqJson := &struct {
+		Name       string   `json:"name"`
+		Status     bool     `json:status`
+		Comment    string   `json:"comment"`
+		IspId      int      `json:"isp_id"`
+		ProvinceId int      `json:"province_id"`
+		CityId     int      `json:"city_id"`
+		NameTag    *string  `json:"name_tag"`
+		GroupTags  []string `json:"group_tags"`
+	}{
+		Name:       "Update-Agent-1",
+		Status:     false,
+		Comment:    "This is updated comment",
+		IspId:      3,
+		ProvinceId: 11,
+		CityId:     230,
 	}
-}
+
+	DescribeTable("",
+		func(nameTag *string, groupTags []string) {
+			reqJson.NameTag = nameTag
+			reqJson.GroupTags = groupTags
+
+			result := tHttp.NewResponseResultBySling(
+				httpClientConfig.NewSlingByBase().Put(
+					fmt.Sprintf("api/v1/nqm/agent/23041"),
+				).BodyJSON(reqJson),
+			)
+
+			Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
+
+			jsonBody := result.GetBodyAsJson()
+			GinkgoT().Logf("Update agent: %s", json.MarshalPrettyJSON(jsonBody))
+
+			Expect(jsonBody.Get("name").MustString()).To(Equal(reqJson.Name))
+			Expect(jsonBody.Get("status").MustBool()).To(Equal(reqJson.Status))
+			Expect(jsonBody.Get("isp").Get("id").MustInt()).To(Equal(reqJson.IspId))
+			Expect(jsonBody.Get("province").Get("id").MustInt()).To(Equal(reqJson.ProvinceId))
+			Expect(jsonBody.Get("city").Get("id").MustInt()).To(Equal(reqJson.CityId))
+
+			if nameTag != nil {
+				Expect(jsonBody.Get("name_tag").Get("value").MustString()).To(Equal(*nameTag))
+			} else {
+				Expect(jsonBody.Get("name_tag").Get("id").MustInt()).To(Equal(-1))
+			}
+
+			Expect(jsonBody.Get("group_tags").MustArray()).To(HaveLen(len(groupTags)))
+		},
+		Entry("Set name tag, group tags to viable value", sPtr("rest-nt-9"), []string{"rest-gt-91", "rest-gt-92", "rest-gt-93"}),
+		Entry("Set name tag, group tags to non-viable value", nil, []string{}),
+	)
+}))

@@ -2,7 +2,6 @@ package json
 
 import (
 	sjson "github.com/bitly/go-simplejson"
-	//ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 )
 

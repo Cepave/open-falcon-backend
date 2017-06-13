@@ -18,12 +18,14 @@ var _ = Suite(&TestAgentSuite{})
 
 // Tests validation of NQM agent
 func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
+	ps := func(v string) *string { return &v }
+
 	testedAgent := &AgentForAdding{
 		Name:         utils.PointerOfCloneString(" name-1 "),
 		ConnectionId: " conn-id-1 ",
 		Comment:      utils.PointerOfCloneString(" comment-1 "),
 		Hostname:     " hostname-1 ",
-		NameTagValue: utils.PointerOfCloneString(" name-tag-1 "),
+		NameTagValue: ps(" name-tag-1 "),
 		GroupTags:    []string{" gt-1 ", " gt-2 "},
 	}
 
@@ -33,7 +35,7 @@ func (suite *TestAgentSuite) TestConformOfAgentForAdding(c *C) {
 	c.Assert(testedAgent.ConnectionId, Equals, "conn-id-1")
 	c.Assert(testedAgent.Comment, DeepEquals, utils.PointerOfCloneString("comment-1"))
 	c.Assert(testedAgent.Hostname, Equals, "hostname-1")
-	c.Assert(testedAgent.NameTagValue, DeepEquals, utils.PointerOfCloneString("name-tag-1"))
+	c.Assert(testedAgent.NameTagValue, DeepEquals, ps("name-tag-1"))
 	c.Assert(testedAgent.GroupTags, DeepEquals, []string{"gt-1", "gt-2"})
 }
 
@@ -91,22 +93,5 @@ func (suite *TestAgentSuite) TestGetDurationOfLastAccessOnPingListLog(c *C) {
 		checkedTime := otest.ParseTime(c, testCase.checkedTime)
 
 		c.Assert(testedLog.GetDurationOfLastAccess(checkedTime), Equals, testCase.expectedMinutes, comment)
-	}
-}
-
-func (suite *TestNqmAgentSuite) TestIPStringOfAgentHeartbeatRequest(c *C) {
-	var testedCases = []*struct {
-		input    AgentHeartbeatRequest
-		expected int
-	}{
-		{input: AgentHeartbeatRequest{IpAddress: "0.0.0.0"}, expected: 4},
-		{input: AgentHeartbeatRequest{IpAddress: "10.20.30.40"}, expected: 4},
-		{input: AgentHeartbeatRequest{IpAddress: "2001:cdba:0000:0000:0000:0000:3257:9652"}, expected: 16},
-	}
-
-	for i, v := range testedCases {
-		expectedValue, err := v.input.IpAddress.Value()
-		c.Assert(err, IsNil)
-		c.Assert(len(expectedValue.([]byte)), Equals, v.expected, Commentf("Test Case: %d", i+1))
 	}
 }
