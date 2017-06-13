@@ -31,10 +31,10 @@ func falconAgentHeartbeat(
 func nqmAgentHeartbeat(
 	req *model.NqmAgentHeartbeatRequest,
 ) mvc.OutputBody {
-	var r *nqmModel.Agent
-	if rdb.NotNewNqmAgent(req.ConnectionId) {
+	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
+	if r != nil {
 		service.NqmQueue.Put(req)
-		r = overwrittenNqmAgent(req)
+		r = overwriteNqmAgent(r, req)
 	} else {
 		r = rdb.InsertNqmAgentByHeartbeat(req)
 	}
@@ -43,8 +43,7 @@ func nqmAgentHeartbeat(
 
 // overwrittenNqmAgent overwrites the result with the values from the heartbeat
 // request. The values in the database should be identical in the end.
-func overwrittenNqmAgent(req *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
-	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
+func overwriteNqmAgent(r *nqmModel.Agent, req *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
 	r.ConnectionId = req.ConnectionId
 	r.Hostname = req.Hostname
 	r.IpAddress = net.ParseIP(req.IpAddress.String())

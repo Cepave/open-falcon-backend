@@ -226,18 +226,6 @@ func SelectNqmAgentByConnId(connId string) *nqmModel.Agent {
 	return loadedAgent
 }
 
-func NotNewNqmAgent(connId string) bool {
-	return DbFacade.SqlxDbCtrl.GetOrNoRow(
-		new(int),
-		`
-			SELECT ag_id
-			FROM nqm_agent
-			WHERE ag_connection_id = ?
-		`,
-		connId,
-	)
-}
-
 type insertNqmAgentByHeartbeatTx struct {
 	Req   *model.NqmAgentHeartbeatRequest
 	Agent *nqmModel.Agent
