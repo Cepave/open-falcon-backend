@@ -219,10 +219,6 @@ func SelectNqmAgentByConnId(connId string) *nqmModel.Agent {
 
 	loadedAgent.AfterLoad()
 
-	if !loadedAgent.Status {
-		return nil
-	}
-
 	return loadedAgent
 }
 
