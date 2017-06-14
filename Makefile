@@ -55,6 +55,7 @@ coverage: checkvendor
 	govendor fetch github.com/patrickmn/go-cache@7ac151875ffb48b9f3ccce9ea20f020b0c1596c8
 	govendor fetch github.com/smartystreets/goconvey/convey@af8e7d560364b90f732a1d119d17b5506e50447d
 	govendor fetch gopkg.in/check.v1@20d25e2804050c1cd24a7eea1e7a6447dd0e74ec
+	govendor fetch github.com/onsi/ginkgo@502bce873ec80059e9465bf32a9aa61e891b7009
 	@$(MAKE) -f $(THIS_FILE) install
 	./coverage.sh
 
