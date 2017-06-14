@@ -286,16 +286,20 @@ func ScreenClone(c *gin.Context) {
 	graphNames := make([]string, len(originalGList))
 	for indx, gh := range originalGList {
 		newGraph := m.DashboardGraph{
-			Title:      gh.Title,
-			Hosts:      gh.Hosts,
-			Counters:   gh.Counters,
-			ScreenId:   newScreen.ID,
-			TimeSpan:   gh.TimeSpan,
-			GraphType:  gh.GraphType,
-			Method:     gh.Method,
-			Position:   gh.Position,
-			FalconTags: gh.FalconTags,
-			Creator:    user.Name,
+			Title:        gh.Title,
+			Hosts:        gh.Hosts,
+			Counters:     gh.Counters,
+			ScreenId:     newScreen.ID,
+			TimeSpan:     gh.TimeSpan,
+			GraphType:    gh.GraphType,
+			Method:       gh.Method,
+			Position:     gh.Position,
+			FalconTags:   gh.FalconTags,
+			Creator:      user.Name,
+			TimeRange:    gh.TimeRange,
+			YScale:       gh.YScale,
+			SortBy:       gh.SortBy,
+			SampleMethod: gh.SampleMethod,
 		}
 		if dt := tx.Model(&newGraph).Save(&newGraph); dt.Error != nil {
 			tx.Rollback()
