@@ -47,17 +47,18 @@ pack: checkbin
 
 coverage: checkvendor
 	@echo ">> Sync vendor files before testing code coverage"
-	govendor fetch github.com/jpillora/backoff@06c7a16c845dc8e0bf575fafeeca0f5462f5eb4d
 	govendor fetch github.com/Pallinder/go-randomdata@8c3362a5e6781e0d1046f1267b3c1f19b2cde334
 	govendor fetch github.com/chyeh/pubip@b7e679cf541cd580e99712413b9351008731d09d
+	govendor fetch github.com/icrowley/fake@9f67e8561905ff9c2b64fdd801ee70cf852b3b89
+	govendor fetch github.com/jpillora/backoff@06c7a16c845dc8e0bf575fafeeca0f5462f5eb4d
 	govendor fetch github.com/montanaflynn/stats@41c34e4914ec3c05d485e564d9028d8861d5d9ad
+	govendor fetch github.com/onsi/ginkgo@502bce873ec80059e9465bf32a9aa61e891b7009
+	govendor fetch github.com/onsi/ginkgo/extensions/table@502bce873ec80059e9465bf32a9aa61e891b7009
+	govendor fetch github.com/onsi/gomega@00acfa9d92a386415bd235ab069c52063f925998
 	govendor fetch github.com/parnurzeal/gorequest@5bf13be198787abbed057fb7c4007f372083a0f5
 	govendor fetch github.com/patrickmn/go-cache@7ac151875ffb48b9f3ccce9ea20f020b0c1596c8
 	govendor fetch github.com/smartystreets/goconvey/convey@af8e7d560364b90f732a1d119d17b5506e50447d
 	govendor fetch gopkg.in/check.v1@20d25e2804050c1cd24a7eea1e7a6447dd0e74ec
-	govendor fetch github.com/onsi/ginkgo@502bce873ec80059e9465bf32a9aa61e891b7009
-	govendor fetch github.com/onsi/ginkgo/extensions/table@502bce873ec80059e9465bf32a9aa61e891b7009
-	govendor fetch github.com/onsi/gomega@00acfa9d92a386415bd235ab069c52063f925998
 	@$(MAKE) -f $(THIS_FILE) install
 	./coverage.sh
 
