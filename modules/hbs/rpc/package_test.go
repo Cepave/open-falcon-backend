@@ -24,6 +24,7 @@ func TestByCheck(t *testing.T) {
 
 var DbFacade *f.DbFacade = db.DbFacade
 var ginkgoJsonRpc = &tJsonRpc.GinkgoJsonRpc{}
+var MOCK_URL = "localhost:5566"
 
 func init() {
 	flag.Parse()
