@@ -20,7 +20,7 @@ type fakeHeartbeat struct {
 	alwaysSuccess   bool
 }
 
-func (a *fakeHeartbeat) calling(agents []*model.AgentHeartbeat) (int64, int64) {
+func (a *fakeHeartbeat) calling(agents []*model.FalconAgentHeartbeat) (int64, int64) {
 	count := len(agents)
 	a.rowsAffectedCnt += count
 

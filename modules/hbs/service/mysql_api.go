@@ -7,13 +7,13 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 )
 
-func agentHeartbeatCall(agents []*model.AgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
+func agentHeartbeatCall(agents []*model.FalconAgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {
 	param := struct {
 		UpdateOnly bool `json:"update_only"`
 	}{updateOnlyFlag}
 	req := NewSlingBase().Post("api/v1/agent/heartbeat").BodyJSON(agents).QueryStruct(&param)
 
-	res := model.AgentHeartbeatResult{}
+	res := model.FalconAgentHeartbeatResult{}
 	err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
 	if err != nil {
 		logger.Errorln("[AgentHeartbeat]", err)

@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	elementType = reflect.TypeOf(new(model.AgentHeartbeat))
+	elementType = reflect.TypeOf(new(model.FalconAgentHeartbeat))
 )
 
 type AgentHeartbeatService struct {
@@ -21,7 +21,7 @@ type AgentHeartbeatService struct {
 	qConfig          *commonQueue.Config
 	running          bool
 	agentsPutCnt     int64
-	heartbeatCall    func([]*model.AgentHeartbeat) (int64, int64)
+	heartbeatCall    func([]*model.FalconAgentHeartbeat) (int64, int64)
 	rowsAffectedCnt  int64
 	agentsDroppedCnt int64
 }
@@ -61,7 +61,7 @@ func (s *AgentHeartbeatService) Start() {
 
 func (s *AgentHeartbeatService) consumeHeartbeatQueue(flushing bool) {
 
-	agents := s.safeQ.DrainNWithDurationByReflectType(s.qConfig, elementType).([]*model.AgentHeartbeat)
+	agents := s.safeQ.DrainNWithDurationByReflectType(s.qConfig, elementType).([]*model.FalconAgentHeartbeat)
 
 	if len(agents) == 0 {
 		return
@@ -120,8 +120,8 @@ func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
 }
 
-func requestToHeartbeat(req *commonModel.AgentReportRequest, updateTime int64) *model.AgentHeartbeat {
-	return &model.AgentHeartbeat{
+func requestToHeartbeat(req *commonModel.AgentReportRequest, updateTime int64) *model.FalconAgentHeartbeat {
+	return &model.FalconAgentHeartbeat{
 		Hostname:      req.Hostname,
 		IP:            req.IP,
 		AgentVersion:  req.AgentVersion,

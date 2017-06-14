@@ -16,11 +16,11 @@ import (
 var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 	var (
 		dataNum int = 3
-		agents  []*model.AgentHeartbeat
+		agents  []*model.FalconAgentHeartbeat
 	)
 
 	BeforeEach(func() {
-		agents = make([]*model.AgentHeartbeat, 0)
+		agents = make([]*model.FalconAgentHeartbeat, 0)
 		for i := 0; i < dataNum; i++ {
 			agents = append(agents, requestToHeartbeat(generateRandomRequest(), time.Now().Unix()))
 		}
@@ -32,14 +32,14 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 		BeforeEach(func() {
 			ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				decorder := json.NewDecoder(r.Body)
-				var rAgents []*model.AgentHeartbeat
+				var rAgents []*model.FalconAgentHeartbeat
 				err := decorder.Decode(&rAgents)
 				if err != nil {
 					Fail(err.Error())
 				}
 				defer r.Body.Close()
 				rowsAffectedCnt := int64(len(rAgents))
-				res := model.AgentHeartbeatResult{rowsAffectedCnt}
+				res := model.FalconAgentHeartbeatResult{rowsAffectedCnt}
 				if resp, err := json.Marshal(res); err != nil {
 					Fail(err.Error())
 				} else {
