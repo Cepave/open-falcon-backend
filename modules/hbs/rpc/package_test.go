@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
+	tJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	ch "gopkg.in/check.v1"
 
@@ -22,6 +23,7 @@ func TestByCheck(t *testing.T) {
 }
 
 var DbFacade *f.DbFacade = db.DbFacade
+var ginkgoJsonRpc = &tJsonRpc.GinkgoJsonRpc{}
 
 func init() {
 	flag.Parse()

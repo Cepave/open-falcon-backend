@@ -21,3 +21,15 @@ func (g *GinkgoJsonRpc) OpenClient(callback FuncJsonRpcClientCallback) {
 
 	callback(client)
 }
+
+func (g *GinkgoJsonRpc) NeedJsonRpc(src func()) func() {
+	return func() {
+		BeforeEach(func() {
+			if *jsonRpcFlag == false {
+				Skip("Skip json-rpc testing. Needs \"-jsonrpc\"")
+			}
+		})
+
+		src()
+	}
+}
