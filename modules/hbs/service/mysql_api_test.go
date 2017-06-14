@@ -34,17 +34,14 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 				decorder := json.NewDecoder(r.Body)
 				var rAgents []*model.FalconAgentHeartbeat
 				err := decorder.Decode(&rAgents)
-				if err != nil {
-					Fail(err.Error())
-				}
+				Expect(err).To(BeNil())
 				defer r.Body.Close()
+
 				rowsAffectedCnt := int64(len(rAgents))
 				res := model.FalconAgentHeartbeatResult{rowsAffectedCnt}
-				if resp, err := json.Marshal(res); err != nil {
-					Fail(err.Error())
-				} else {
-					w.Write(resp)
-				}
+				resp, err := json.Marshal(res)
+				Expect(err).To(BeNil())
+				w.Write(resp)
 			}))
 		})
 

@@ -31,24 +31,20 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 			decorder := json.NewDecoder(r.Body)
 			var rAgents []*apiModel.FalconAgentHeartbeat
 			err := decorder.Decode(&rAgents)
-			if err != nil {
-				Fail(err.Error())
-			}
+			Expect(err).To(BeNil())
 			defer r.Body.Close()
+
 			rowsAffectedCnt := int64(len(rAgents))
 			res := apiModel.FalconAgentHeartbeatResult{rowsAffectedCnt}
-			if resp, err := json.Marshal(res); err != nil {
-				Fail(err.Error())
-			} else {
-				w.Write(resp)
-			}
+			resp, err := json.Marshal(res)
+			Expect(err).To(BeNil())
+			w.Write(resp)
 		}))
 		l, err := net.Listen("tcp", MOCK_URL)
-		if err != nil {
-			Fail(err.Error())
-		}
+		Expect(err).To(BeNil())
 		ts.Listener = l
 		ts.Start()
+
 		GinkgoT().Logf("Mock server at: %s", ts.URL)
 		GinkgoT().Log("Please set 'mysql_api.host' in hbs to addr of mock server")
 	})
