@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/rpc"
+	"time"
 
 	apiModel "github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	coModel "github.com/open-falcon/common/model"
 
+	sjson "github.com/bitly/go-simplejson"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -22,19 +24,24 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 			AgentVersion:  "4.5.31",
 			PluginVersion: "1.2.12",
 		}
-		response = coModel.SimpleRpcResponse{}
-		ts       *httptest.Server
+		response   = coModel.SimpleRpcResponse{}
+		ts         *httptest.Server
+		receiveCnt int64
 	)
 
 	BeforeEach(func() {
 		ts = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
-			decorder := json.NewDecoder(r.Body)
-			var rAgents []*apiModel.FalconAgentHeartbeat
-			err := decorder.Decode(&rAgents)
+			j, err := sjson.NewFromReader(r.Body)
+			Expect(err).To(BeNil())
+			arr, err := j.Array()
 			Expect(err).To(BeNil())
 
-			rowsAffectedCnt := int64(len(rAgents))
+			rowsAffectedCnt := int64(len(arr))
+			defer func() {
+				receiveCnt = rowsAffectedCnt
+				GinkgoT().Logf("Receive count = %d", receiveCnt)
+			}()
 			res := apiModel.FalconAgentHeartbeatResult{rowsAffectedCnt}
 			resp, err := json.Marshal(res)
 			Expect(err).To(BeNil())
@@ -60,5 +67,8 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 			Expect(err).To(BeNil())
 		})
 
+		Eventually(func() int64 {
+			return receiveCnt
+		}, time.Second, time.Second/8).Should(Equal(int64(1)))
 	})
 }))
