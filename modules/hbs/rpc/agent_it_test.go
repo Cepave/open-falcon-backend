@@ -1,14 +1,12 @@
 package rpc
 
 import (
-	"encoding/json"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/rpc"
 	"time"
 
-	apiModel "github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	coModel "github.com/open-falcon/common/model"
 
 	sjson "github.com/bitly/go-simplejson"
@@ -39,13 +37,12 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 
 			rowsAffectedCnt := int64(len(arr))
 			defer func() {
+				GinkgoT().Log("Mock rowsAffectedCnt:", rowsAffectedCnt)
 				receiveCnt = rowsAffectedCnt
-				GinkgoT().Logf("Receive count = %d", receiveCnt)
 			}()
-			res := apiModel.FalconAgentHeartbeatResult{rowsAffectedCnt}
-			resp, err := json.Marshal(res)
-			Expect(err).To(BeNil())
-			w.Write(resp)
+
+			resp := `{}`
+			w.Write([]byte(resp))
 		}))
 		l, err := net.Listen("tcp", MOCK_URL)
 		Expect(err).To(BeNil())
