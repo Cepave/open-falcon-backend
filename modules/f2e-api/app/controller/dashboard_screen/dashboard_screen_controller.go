@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 
+	dgraph "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboard_graph"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/dashboard"
 	"github.com/gin-gonic/gin"
@@ -22,7 +22,11 @@ func ScreenCreate(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	newDS := m.DashboardScreen{
 		PID:     inputs.Pid,
 		Name:    inputs.Name,
@@ -72,22 +76,9 @@ func ScreenGet(c *gin.Context) {
 
 	graphsTmp := []m.DashboardGraph{}
 	db.Dashboard.Model(&graphsTmp).Where("screen_id = ?", screen.ID).Scan(&graphsTmp)
-	graphs := []map[string]interface{}{}
-	for _, graph := range graphsTmp {
-		es := strings.Split(graph.Hosts, TMP_GRAPH_FILED_DELIMITER)
-		cs := strings.Split(graph.Counters, TMP_GRAPH_FILED_DELIMITER)
-		graphs = append(graphs, map[string]interface{}{
-			"graph_id":    graph.ID,
-			"title":       graph.Title,
-			"endpoints":   es,
-			"counters":    cs,
-			"screen_id":   graph.ScreenId,
-			"graph_type":  graph.GraphType,
-			"timespan":    graph.TimeSpan,
-			"method":      graph.Method,
-			"position":    graph.Position,
-			"falcon_tags": graph.FalconTags,
-		})
+	graphs := make([]dgraph.APIDashboardGraphGetOuput, len(graphsTmp))
+	for indx, graph := range graphsTmp {
+		graphs[indx] = dgraph.BuildGraphGetOutput(graph)
 	}
 	h.JSONR(c, map[string]interface{}{
 		"scren":  screen,
@@ -136,7 +127,8 @@ func ScreenGetsAll(c *gin.Context) {
 	totallCount := 0
 	dt := db.Dashboard.Model(&screens)
 	if inputs.KeyWord != "" {
-		dt = dt.Where("name like ?", "%"+inputs.KeyWord+"%")
+		filterKeyForSql := "%" + inputs.KeyWord + "%"
+		dt = dt.Where("name like ? OR creator like ?", filterKeyForSql, filterKeyForSql)
 	}
 	if inputs.Page <= 0 {
 		if inputs.Order {
@@ -190,25 +182,23 @@ func ScreenDelete(c *gin.Context) {
 		return
 	}
 
-	dt := db.Dashboard.Begin()
+	tx := db.Dashboard.Begin()
 	screen := m.DashboardScreen{ID: int64(sid)}
-	if tm := dt.Model(&screen).Delete(&screen); tm.Error != nil {
-		dt.Rollback()
-		h.JSONR(c, badstatus, tm.Error)
+	if dt := tx.Model(&screen).Where(&screen).Delete(&screen); dt.Error != nil {
+		tx.Rollback()
+		h.JSONR(c, badstatus, dt.Error)
 		return
 	}
 	graph := m.DashboardGraph{ScreenId: int64(sid)}
 	graphsID := []int64{}
-	dt.Model(&graph).Where(&graph).Pluck("id", &graphsID)
-	if len(graphsID) != 0 {
-		dt = dt.Table(graph.TableName()).Where(&graph).Delete(&graph)
-		if dt.Error != nil {
-			dt.Rollback()
-			h.JSONR(c, badstatus, dt.Error)
-			return
-		}
+	tx.Model(&graph).Where(&graph).Pluck("id", &graphsID)
+	dt := tx.Model(&graph).Where(&graph).Delete(&graph)
+	if dt := tx.Model(&graph).Where(&graph).Delete(&graph); dt.Error != nil {
+		tx.Rollback()
+		h.JSONR(c, badstatus, dt.Error)
+		return
 	}
-	dt.Commit()
+	tx.Commit()
 	h.JSONR(c, map[string]interface{}{
 		"message":           "ok",
 		"deleted_rows":      dt.RowsAffected,
@@ -248,7 +238,81 @@ func ScreenUpdate(c *gin.Context) {
 		return
 	}
 
-	h.JSONR(c, "ok")
+	h.JSONR(c, newData)
+}
+
+// For clone screen by id
+type APIScreenCloneInputs struct {
+	ID   int64  `json:"id" form:"id" binding:"required"`
+	Name string `json:"name" form:"name"`
+}
+
+func ScreenClone(c *gin.Context) {
+	inputs := APIScreenCloneInputs{
+		Name: "NaN",
+	}
+	if err := c.Bind(&inputs); err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
+	originalScreen := m.DashboardScreen{ID: inputs.ID}
+	if dt := db.Dashboard.Model(&originalScreen).Where(&originalScreen).Scan(&originalScreen); dt.Error != nil {
+		h.JSONR(c, badstatus, fmt.Errorf("find screen by id:%d, got error:%s", inputs.ID, dt.Error.Error()))
+		return
+	}
+	tx := db.Dashboard.Begin()
+	if inputs.Name == "NaN" {
+		inputs.Name = fmt.Sprintf("%s_copy", originalScreen.Name)
+	}
+	newScreen := m.DashboardScreen{
+		Name:    inputs.Name,
+		Creator: user.Name,
+	}
+	if newScreen.ExistName() {
+		h.JSONR(c, badstatus, fmt.Errorf("screen name '%s' alreay exist", newScreen.Name))
+		return
+	}
+	if dt := tx.Model(&newScreen).Save(&newScreen); dt.Error != nil {
+		tx.Rollback()
+		h.JSONR(c, badstatus, fmt.Errorf("create new screen got error:%s", dt.Error.Error()))
+		return
+	}
+	originalGList := originalScreen.Graphs()
+	graphNames := make([]string, len(originalGList))
+	for indx, gh := range originalGList {
+		newGraph := m.DashboardGraph{
+			Title:        gh.Title,
+			Hosts:        gh.Hosts,
+			Counters:     gh.Counters,
+			ScreenId:     newScreen.ID,
+			TimeSpan:     gh.TimeSpan,
+			GraphType:    gh.GraphType,
+			Method:       gh.Method,
+			Position:     gh.Position,
+			FalconTags:   gh.FalconTags,
+			Creator:      user.Name,
+			TimeRange:    gh.TimeRange,
+			YScale:       gh.YScale,
+			SortBy:       gh.SortBy,
+			SampleMethod: gh.SampleMethod,
+		}
+		if dt := tx.Model(&newGraph).Save(&newGraph); dt.Error != nil {
+			tx.Rollback()
+			h.JSONR(c, badstatus, fmt.Errorf("create new graph with graph id: %d ,got error:%s", gh.ID, dt.Error.Error()))
+			return
+		}
+		graphNames[indx] = gh.Title
+	}
+	tx.Commit()
+	h.JSONR(c, APIScreenCreateOutput{
+		DashboardScreen: newScreen,
+		GraphNames:      graphNames,
+	})
 }
 
 func builtAllScreenOuput(screens []m.DashboardScreen) []APIScreenCreateOutput {

@@ -357,7 +357,11 @@ func CloneTemplate(c *gin.Context) {
 		h.JSONR(c, badstatus, err.Error())
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	dt := db.Falcon.Begin()
 	templ := f.Template{ID: inputs.ID}
 

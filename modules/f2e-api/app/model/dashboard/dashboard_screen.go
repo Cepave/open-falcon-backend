@@ -45,7 +45,11 @@ func (mine DashboardScreen) Exist() bool {
 func (mine DashboardScreen) ExistName() bool {
 	db := con.Con()
 	rcount := 0
-	db.Dashboard.Model(&mine).Where("name = ?", mine.Name).Count(&rcount)
+	if mine.ID == 0 {
+		db.Dashboard.Model(&mine).Where("name = ?", mine.Name).Count(&rcount)
+	} else {
+		db.Dashboard.Table(mine.TableName()).Where("name = ? AND id != ?", mine.Name, mine.ID).Count(&rcount)
+	}
 	if rcount != 0 {
 		return true
 	} else {

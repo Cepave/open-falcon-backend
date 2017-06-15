@@ -6,15 +6,16 @@ import (
 )
 
 type User struct {
-	ID     int64  `json:"id" `
-	Name   string `json:"name"`
-	Cnname string `json:"cnname"`
-	Passwd string `json:"-"`
-	Email  string `json:"email"`
-	Phone  string `json:"phone"`
-	IM     string `json:"im" gorm:"column:im"`
-	QQ     string `json:"qq" gorm:"column:qq"`
-	Role   int    `json:"role"`
+	ID      int64  `json:"id" `
+	Name    string `json:"name"`
+	Cnname  string `json:"cnname"`
+	Passwd  string `json:"-"`
+	Email   string `json:"email"`
+	Phone   string `json:"phone"`
+	IM      string `json:"im" gorm:"column:im"`
+	QQ      string `json:"qq" gorm:"column:qq"`
+	Role    int    `json:"role"`
+	Creator int    `json:"creator"`
 }
 
 func skipAccessControll() bool {
@@ -22,9 +23,6 @@ func skipAccessControll() bool {
 }
 
 func (this User) IsAdmin() bool {
-	if skipAccessControll() {
-		return true
-	}
 	if this.Role == 2 || this.Role == 1 {
 		return true
 	}
@@ -32,10 +30,14 @@ func (this User) IsAdmin() bool {
 }
 
 func (this User) IsSuperAdmin() bool {
-	if skipAccessControll() {
+	if this.Role == 2 {
 		return true
 	}
-	if this.Role == 2 {
+	return false
+}
+
+func (this User) IsThirdPartyUser() bool {
+	if this.Creator == 1 {
 		return true
 	}
 	return false
@@ -52,15 +54,17 @@ func (this User) FindUser() (user User, err error) {
 	return
 }
 
-type Session struct {
-	ID      int64
-	Uid     int64
-	Sig     string
-	Expired int
-}
-
-func (this Session) TableName() string {
-	return "session"
+func (this User) UserNameExist() bool {
+	db := con.Con()
+	if this.Name == "" {
+		return false
+	}
+	counter := 0
+	db.Uic.Model(&this).Where("name = ?", this.Name).Count(&counter)
+	if counter != 0 {
+		return true
+	}
+	return false
 }
 
 func (this User) TableName() string {

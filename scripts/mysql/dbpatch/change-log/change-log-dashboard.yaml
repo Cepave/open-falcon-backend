@@ -8,5 +8,10 @@
         id: "masato-2",
         filename: "masato-2.sql",
         comment: "add creator field to dashboard_graph & dsahboard_screen"
+    },
+    {
+        id: "masato-3",
+        filename: "masato-3.sql",
+        comment: "add more field to dashboard_graph, let it can store more info"
     }
 ]

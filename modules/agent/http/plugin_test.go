@@ -9,13 +9,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-func TestDeleteAndCloneRepo(t *testing.T) {
-	out := DeleteAndCloneRepo("./plugin", "https://github.com/humorless/openfalcon-plugin.git")
-	t.Log("test deleteAndCloneRepo: ", out)
-	out = DeleteAndCloneRepo("/", "https://github.com/humorless/openfalcon-plugin.git")
-	t.Log("test deleteAndCloneRepo: ", out)
-}
-
 func TestRunCmdFamilyWithTimeout(t *testing.T) {
 	log.SetLevel(log.DebugLevel)
 	t1 := time.Now()

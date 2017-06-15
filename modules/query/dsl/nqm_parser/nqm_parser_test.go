@@ -24,12 +24,13 @@ type timeParamsTestCase struct {
 	expectedEndTime time.Time
 }
 func (suite *TestNqmDslParserSuite) TestTimeParams(c *C) {
+	timezoneFormat := time.Now().Format(time.RFC3339)[19:]
 	testCases := []*timeParamsTestCase {
 		&timeParamsTestCase{ "1273053600", "1273312800", time.Unix(1273053600, 0), time.Unix(1273312800, 0) },
-		&timeParamsTestCase{ "2011-10-01", "2011-10-03", parseTime("2011-10-01T00:00:00+08:00"), parseTime("2011-10-03T00:00:00+08:00") },
-		&timeParamsTestCase{ "2011-08-20T10", "2011-08-20T16", parseTime("2011-08-20T10:00:00+08:00"), parseTime("2011-08-20T16:00:00+08:00") },
-		&timeParamsTestCase{ "2011-07-11T10:30", "2011-07-11T11:30", parseTime("2011-07-11T10:30:00+08:00"), parseTime("2011-07-11T11:30:00+08:00") },
 		&timeParamsTestCase{ "2011-06-03T10:00+04:00", "2011-06-03T12:00+04:00", parseTime("2011-06-03T10:00:00+04:00"), parseTime("2011-06-03T12:00:00+04:00") },
+		&timeParamsTestCase{ "2011-10-01", "2011-10-03", parseTime("2011-10-01T00:00:00"+timezoneFormat), parseTime("2011-10-03T00:00:00"+timezoneFormat) },
+		&timeParamsTestCase{ "2011-08-20T10", "2011-08-20T16", parseTime("2011-08-20T10:00:00"+timezoneFormat), parseTime("2011-08-20T16:00:00"+timezoneFormat) },
+		&timeParamsTestCase{ "2011-07-11T10:30", "2011-07-11T11:30", parseTime("2011-07-11T10:30:00"+timezoneFormat), parseTime("2011-07-11T11:30:00"+timezoneFormat) },
 	}
 
 	for _, testCase := range testCases {

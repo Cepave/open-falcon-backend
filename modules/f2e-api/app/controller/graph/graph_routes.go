@@ -21,9 +21,18 @@ func Routes(r *gin.Engine) {
 	grphapi.GET("/endpoint_counter", EndpointCounterRegexpQuery)
 	grphapi.GET("/endpointstr_counter", EndpointStrCounterRegexpQuery)
 	grphapi.POST("/history", QueryGraphDrawData)
+	grphapi.POST("/graph/lastpoint", QueryGraphLastPoint)
+
 	owlgraph := r.Group("/api/v1/owlgraph")
 	owlgraph.Use(utils.AuthSessionMidd)
 	owlgraph.GET("/keyword_search", HostsSearching)
 	owlgraph.POST("/cat_counters", EndpointsQuerySubMetric)
 	owlgraph.POST("/cat_gt_counters", EndpointsGetMetricBySubStar)
+
+	// grafana routes
+	grfanaapi := r.Group("/api")
+	grfanaapi.GET("/v1/grafana", GrafanaMainQuery)
+	grfanaapi.GET("/v1/grafana/metrics/find", GrafanaMainQuery)
+	grfanaapi.POST("/v1/grafana/render", GrafanaRender)
+	grfanaapi.GET("/v1/grafana/render", GrafanaRender)
 }

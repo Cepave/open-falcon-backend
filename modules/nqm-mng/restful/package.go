@@ -3,9 +3,8 @@ package restful
 import (
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
-
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
-	gin "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -82,7 +81,7 @@ func initApi() {
 	v1.GET("/owl/grouptags", mvcBuilder.BuildHandler(listGroupTags))
 	v1.GET("/owl/grouptag/:group_tag_id", mvcBuilder.BuildHandler(getGroupTagById))
 
-	v1.POST("/agent/heartbeat", mvcBuilder.BuildHandler(agentHeartbeat))
+	v1.POST("/agent/heartbeat", mvcBuilder.BuildHandler(falconAgentHeartbeat))
 
 	router.GET("/health", health)
 }

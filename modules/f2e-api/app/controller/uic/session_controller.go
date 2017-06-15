@@ -2,14 +2,12 @@ package uic
 
 import (
 	"net/http"
-	"time"
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
-	log "github.com/Sirupsen/logrus"
-	"github.com/spf13/viper"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 type APILoginInput struct {
@@ -38,19 +36,10 @@ func Login(c *gin.Context) {
 		h.JSONR(c, badstatus, "password error")
 		return
 	}
-	var session uic.Session
-	// response := map[string]string{}
-	s := db.Uic.Table("session").Where("uid = ?", user.ID).Scan(&session)
-	if s.Error != nil && s.Error.Error() != "record not found" {
-		h.JSONR(c, badstatus, s.Error)
-		return
-	} else if session.ID == 0 {
-		session.Sig = utils.GenerateUUID()
-		session.Expired = int(time.Now().Unix()) + 3600*24*30
-		session.Uid = user.ID
-		db.Uic.Create(&session)
+	session := uic.Session{
+		Uid: user.ID,
 	}
-	log.Debugf("session: %v", session)
+	session = session.FindVaildSession()
 	resp := struct {
 		Sig   string `json:"sig,omitempty"`
 		Name  string `json:"name,omitempty"`
@@ -85,13 +74,18 @@ func Logout(c *gin.Context) {
 }
 
 func AuthSession(c *gin.Context) {
-	auth, err := h.SessionChecking(c)
+	auth, isService, err := h.SessionChecking(c)
 	if err != nil || auth != true {
 		h.JSONR(c, http.StatusUnauthorized, err)
 		return
 	}
-	h.JSONR(c, "session is vaild!")
-	return
+	if isService {
+		h.JSONR(c, "session is vaild, it's servies token")
+		return
+	} else {
+		h.JSONR(c, "session is vaild!")
+		return
+	}
 }
 
 func CreateRoot(c *gin.Context) {

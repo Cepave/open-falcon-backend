@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 func GetExpressionList(c *gin.Context) {
@@ -57,7 +57,7 @@ func GetExpression(c *gin.Context) {
 		h.JSONR(c, badstatus, dt.Error)
 		return
 	}
-	action := f.Action{ID: expression.ID}
+	action := f.Action{ID: expression.ActionId}
 	if dt := db.Falcon.Find(&action); dt.Error != nil {
 		h.JSONR(c, badstatus, fmt.Sprintf("find action got error: %v", dt.Error.Error()))
 		return
@@ -114,7 +114,11 @@ func CreateExrpession(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	tx := db.Falcon.Begin()
 	action := f.Action{
 		UIC:                strings.Join(inputs.Action.UIC, ","),
@@ -199,7 +203,11 @@ func UpdateExrpession(c *gin.Context) {
 		return
 	}
 	tx := db.Falcon.Begin()
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	expression := f.Expression{ID: inputs.ID}
 	if dt := tx.Find(&expression); dt.Error != nil {
 		h.JSONR(c, expecstatus, fmt.Sprintf(
@@ -272,7 +280,11 @@ func DeleteExpression(c *gin.Context) {
 		return
 	}
 	tx := db.Falcon.Begin()
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	expression := f.Expression{ID: int64(eid)}
 	if !user.IsAdmin() {
 		tx.Find(&expression)

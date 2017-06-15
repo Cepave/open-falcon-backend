@@ -10,8 +10,8 @@ import (
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	u "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	log "github.com/Sirupsen/logrus"
-	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 func GetHostGroups(c *gin.Context) {
@@ -53,7 +53,11 @@ func CrateHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{Name: inputs.Name, CreateUser: user.Name, ComeFrom: 1}
 	if dt := db.Falcon.Create(&hostgroup); dt.Error != nil {
 		h.JSONR(c, expecstatus, dt.Error)
@@ -74,7 +78,11 @@ func BindHostToHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{ID: inputs.HostGroupID}
 	if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
 		h.JSONR(c, expecstatus, dt.Error)
@@ -128,14 +136,18 @@ func UnBindAHostToHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{ID: inputs.HostGroupID}
 	if !user.IsAdmin() {
 		if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
 			h.JSONR(c, badstatus, dt.Error)
 			return
 		}
-		if hostgroup.CreateUser == user.Name {
+		if hostgroup.CreateUser != user.Name {
 			h.JSONR(c, badstatus, "You don't have permission!")
 			return
 		}
@@ -159,14 +171,18 @@ func DeleteHostGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	hostgroup := f.HostGroup{ID: int64(grpID)}
 	if !user.IsAdmin() {
 		if dt := db.Falcon.Find(&hostgroup); dt.Error != nil {
 			h.JSONR(c, badstatus, dt.Error)
 			return
 		}
-		if hostgroup.CreateUser == user.Name {
+		if hostgroup.CreateUser != user.Name {
 			h.JSONR(c, badstatus, "You don't have permission!")
 			return
 		}
@@ -252,13 +268,17 @@ func BindTemplateToGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	grpTpl := f.GrpTpl{
 		GrpID: inputs.GrpID,
 		TplID: inputs.TplID,
 	}
 	db.Falcon.Where("grp_id = ? and tpl_id = ?", inputs.GrpID, inputs.TplID).Find(&grpTpl)
-	if grpTpl.BindUser == "" {
+	if grpTpl.BindUser != "" {
 		h.JSONR(c, badstatus, errors.New("this binding already existing, reject!"))
 		return
 	}
@@ -282,7 +302,11 @@ func UnBindTemplateToGroup(c *gin.Context) {
 		h.JSONR(c, badstatus, err)
 		return
 	}
-	user, _ := h.GetUser(c)
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	grpTpl := f.GrpTpl{
 		GrpID: inputs.GrpID,
 		TplID: inputs.TplID,

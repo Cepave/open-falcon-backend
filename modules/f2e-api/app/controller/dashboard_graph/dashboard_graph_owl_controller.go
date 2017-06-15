@@ -1,7 +1,6 @@
 package dashboard_graph
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 
@@ -10,43 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type APIGraphCreateReqDataWithNewScreenInputs struct {
-	ScreenName string   `json:"screen_name" form:"screen_name" binding:"required"`
-	Title      string   `json:"title" form:"title" binding:"required"`
-	Endpoints  []string `json:"endpoints" form:"endpoints" binding:"required"`
-	Counters   []string `json:"counters" form:"counters" binding:"required"`
-	TimeSpan   int64    `json:"timespan" form:"timespan"`
-	GraphType  string   `json:"graph_type" form:"graph_type" binding:"required"`
-	Method     string   `json:"method" form:"method"`
-	Position   int64    `json:"position" form:"position"`
-	FalconTags string   `json:"falcon_tags" form:"falcon_tags"`
-}
-
-func (mine APIGraphCreateReqDataWithNewScreenInputs) Check() (err error) {
-	sc := m.DashboardScreen{Name: mine.ScreenName}
-	// check screen_id
-	if sc.ExistName() {
-		err = fmt.Errorf("screen name:%v already existing", mine.ScreenName)
-		return
-	}
-
-	if mine.TimeSpan%60 != 0 {
-		err = fmt.Errorf("value of timespan is not vaild: %v", mine.TimeSpan)
-		return
-	}
-
-	if mine.GraphType != "h" && mine.GraphType != "k" && mine.GraphType != "a" {
-		err = fmt.Errorf("value of graph_type only accpet 'k' or 'h' or 'a', you typed: %v", mine.GraphType)
-		return
-	}
-	return
-}
-
 func GraphCreateReqDataWithNewScreen(c *gin.Context) {
-	inputs := APIGraphCreateReqDataWithNewScreenInputs{}
 	// set default value
-	inputs.TimeSpan = 3600
-	inputs.GraphType = "h"
+	inputs := APIGraphCreateReqDataWithNewScreenInputs{
+		TimeSpan:     3600,
+		GraphType:    "h",
+		TimeRange:    "3h",
+		SortBy:       "a-z",
+		SampleMethod: "AVERAGE",
+	}
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
@@ -57,8 +28,13 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 		return
 	}
 
+	user, err := h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 	dt := db.Dashboard.Begin()
-	sc := m.DashboardScreen{Name: inputs.ScreenName}
+	sc := m.DashboardScreen{Name: inputs.ScreenName, Creator: user.Name}
 	dt = dt.Save(&sc)
 	if dt.Error != nil {
 		h.JSONR(c, badstatus, dt.Error)
@@ -72,18 +48,26 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 	sort.Strings(cs)
 	esString := strings.Join(es, TMP_GRAPH_FILED_DELIMITER)
 	csString := strings.Join(cs, TMP_GRAPH_FILED_DELIMITER)
-	user, _ := h.GetUser(c)
+	user, err = h.GetUser(c)
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
 
 	d := m.DashboardGraph{
-		Title:     inputs.Title,
-		Hosts:     esString,
-		Counters:  csString,
-		ScreenId:  sc.ID,
-		TimeSpan:  inputs.TimeSpan,
-		GraphType: inputs.GraphType,
-		Method:    inputs.Method,
-		Position:  inputs.Position,
-		Creator:   user.Name,
+		Title:        inputs.Title,
+		Hosts:        esString,
+		Counters:     csString,
+		ScreenId:     sc.ID,
+		TimeSpan:     inputs.TimeSpan,
+		GraphType:    inputs.GraphType,
+		Method:       inputs.Method,
+		Position:     inputs.Position,
+		Creator:      user.Name,
+		TimeRange:    inputs.TimeRange,
+		SortBy:       inputs.SortBy,
+		SampleMethod: inputs.SampleMethod,
+		YScale:       inputs.YScale,
 	}
 	dt = dt.Save(&d)
 	if dt.Error != nil {
@@ -91,16 +75,7 @@ func GraphCreateReqDataWithNewScreen(c *gin.Context) {
 		h.JSONR(c, badstatus, dt.Error)
 		return
 	}
-
-	var lid []int
-	dt = dt.Table(d.TableName()).Raw("select LAST_INSERT_ID() as id").Pluck("id", &lid)
-	if dt.Error != nil {
-		dt.Rollback()
-		h.JSONR(c, badstatus, dt.Error)
-		return
-	}
 	dt.Commit()
-	aid := lid[0]
 
-	h.JSONR(c, map[string]interface{}{"id": aid, "screen_id": d.ScreenId, "screen_name": inputs.ScreenName})
+	h.JSONR(c, map[string]interface{}{"graph": BuildGraphGetOutput(d), "screen_id": d.ScreenId, "screen_name": inputs.ScreenName})
 }

@@ -10,6 +10,68 @@ import (
 	checker "gopkg.in/check.v1"
 )
 
+// Performs request and reads the body into []byte
+func NewResponseResultBySling(slingObj *sling.Sling) *ResponseResult {
+	/**
+	 * Builds request
+	 */
+	req, err := slingObj.Request()
+	if err != nil {
+		panic(err)
+	}
+	// :~)
+
+	return NewResponseResultByRequest(req)
+}
+
+// Performs request and reads the body into []byte
+func NewResponseResultByRequest(req *http.Request) *ResponseResult {
+	/**
+	 * Performs request
+	 */
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	// :~)
+
+	return NewResponseResultByResponse(resp)
+}
+
+func NewResponseResultByResponse(resp *http.Response) *ResponseResult {
+	/**
+	 * Reads body of response
+	 */
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	// :~)
+
+	return &ResponseResult{
+		Response: resp,
+		body: bodyBytes,
+	}
+}
+
+type ResponseResult struct {
+	Response *http.Response
+	body []byte
+}
+func (r *ResponseResult) GetBodyAsString() string {
+	return string(r.body)
+}
+func (r *ResponseResult) GetBodyAsJson() *json.Json {
+	jsonResult, err := json.NewJson(r.body)
+	if err != nil {
+		panic(err)
+	}
+
+	return jsonResult
+}
+
 // Slint with checker
 type CheckSlint struct {
 	Slint *sling.Sling

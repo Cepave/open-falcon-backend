@@ -3,9 +3,9 @@ package uic
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"github.com/gin-gonic/gin"
 )
 
 var db config.DBPool
@@ -40,7 +40,15 @@ func Routes(r *gin.Engine) {
 	authapi_team.Use(utils.AuthSessionMidd)
 	authapi_team.GET("/team", Teams)
 	authapi_team.GET("/team/:team_id", GetTeam)
+	// conflict routes above, disabled here. (this routes is copy from falcon_plus)
+	//authapi_team.GET("/team/name/:team_name", GetTeamByName)
 	authapi_team.POST("/team", CreateTeam)
 	authapi_team.PUT("/team", UpdateTeam)
 	authapi_team.DELETE("/team/:team_id", DeleteTeam)
+
+	//third party
+	third_party := r.Group("/api/v1")
+	//third_party.GET("/third-party/forwarding", ForwardToBossLoginPage)
+	//third_party.GET("/third-party/auth/login/:utoken", BossRedirectLogin)
+	third_party.GET("/third-party/auth_session", GetBossUserInfoByCookie)
 }
