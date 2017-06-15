@@ -31,11 +31,11 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 
 		BeforeEach(func() {
 			ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				defer r.Body.Close()
 				decorder := json.NewDecoder(r.Body)
 				var rAgents []*model.FalconAgentHeartbeat
 				err := decorder.Decode(&rAgents)
 				Expect(err).To(BeNil())
-				defer r.Body.Close()
 
 				rowsAffectedCnt := int64(len(rAgents))
 				res := model.FalconAgentHeartbeatResult{rowsAffectedCnt}

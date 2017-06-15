@@ -25,8 +25,8 @@ func (g *GinkgoJsonRpc) OpenClient(callback FuncJsonRpcClientCallback) {
 func (g *GinkgoJsonRpc) NeedJsonRpc(src func()) func() {
 	return func() {
 		BeforeEach(func() {
-			if *jsonRpcFlag == false {
-				Skip("Skip json-rpc testing. Needs \"-jsonrpc\"")
+			if *jsonRpcHost == "" {
+				Skip("Skip json-rpc testing. Needs \"-jsonrpc.host=<Host address of JSON-RPC>\"")
 			}
 		})
 

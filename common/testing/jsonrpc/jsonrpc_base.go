@@ -6,8 +6,7 @@ import (
 	"net/rpc"
 )
 
-var jsonRpcFlag = flag.Bool("jsonrpc", false, "Enable JSON-RPC")
-var jsonRpcHost = flag.String("jsonrpc.host", "localhost", "Host of JSON-RPC")
+var jsonRpcHost = flag.String("jsonrpc.host", "", "Host of JSON-RPC")
 var jsonRpcPort = flag.Int("jsonrpc.port", 80, "Port of JSON-RPC")
 
 // Callback used to use an opened client and safty-close

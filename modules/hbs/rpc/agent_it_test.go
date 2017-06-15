@@ -28,11 +28,11 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 
 	BeforeEach(func() {
 		ts = httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			defer r.Body.Close()
 			decorder := json.NewDecoder(r.Body)
 			var rAgents []*apiModel.FalconAgentHeartbeat
 			err := decorder.Decode(&rAgents)
 			Expect(err).To(BeNil())
-			defer r.Body.Close()
 
 			rowsAffectedCnt := int64(len(rAgents))
 			res := apiModel.FalconAgentHeartbeatResult{rowsAffectedCnt}
@@ -59,5 +59,6 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 
 			Expect(err).To(BeNil())
 		})
+
 	})
 }))
