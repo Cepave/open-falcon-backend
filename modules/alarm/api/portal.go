@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/toolkits/net/httplib"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"sync"
 	"time"
 )

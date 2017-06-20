@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"

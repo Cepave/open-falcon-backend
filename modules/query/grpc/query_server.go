@@ -10,7 +10,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	pb "github.com/Cepave/open-falcon-backend/modules/query/grpc/proto/owlquery"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

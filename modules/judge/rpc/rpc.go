@@ -5,7 +5,7 @@ import (
 	"net/rpc"
 
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func Start(pid chan string) {

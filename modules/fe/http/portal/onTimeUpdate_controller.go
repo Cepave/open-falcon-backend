@@ -9,7 +9,7 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	event "github.com/Cepave/open-falcon-backend/modules/fe/model/falcon_portal"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type UpdatedEvents struct {

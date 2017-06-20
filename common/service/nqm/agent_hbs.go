@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	utils "github.com/Cepave/open-falcon-backend/common/utils"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"

@@ -2,7 +2,7 @@ package service
 
 import (
 	"database/sql"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 	"sync"
 

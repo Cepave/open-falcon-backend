@@ -3,7 +3,7 @@ package test
 import (
 	"database/sql"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	tknet "github.com/toolkits/net"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"

@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type SafeGitRepo struct {

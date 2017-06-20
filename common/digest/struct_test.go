@@ -6,7 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha512"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	. "gopkg.in/check.v1"
 )
 

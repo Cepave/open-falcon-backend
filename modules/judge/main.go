@@ -12,7 +12,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/judge/http"
 	"github.com/Cepave/open-falcon-backend/modules/judge/rpc"
 	"github.com/Cepave/open-falcon-backend/modules/judge/store"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/sender/proc"
 	"github.com/Cepave/open-falcon-backend/modules/sender/redis"
 	//"github.com/toolkits/net/httplib"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os/exec"
 	"time"
 )

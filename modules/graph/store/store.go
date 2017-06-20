@@ -3,7 +3,7 @@ package store
 import (
 	"container/list"
 	"errors"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"hash/crc32"
 	"sync"
 

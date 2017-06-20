@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const RootLoggerName = "ROOT"
@@ -94,7 +94,7 @@ func (hook stackHook) Fire(entry *log.Entry) error {
 	for i := 0; i < cnt; i++ {
 		fu := runtime.FuncForPC(pc[i] - 1)
 		name := fu.Name()
-		if !strings.Contains(name, "github.com/Sirupsen/logrus") {
+		if !strings.Contains(name, "github.com/sirupsen/logrus") {
 			file, line := fu.FileLine(pc[i] - 1)
 			f := funcInfo{
 				file: file,

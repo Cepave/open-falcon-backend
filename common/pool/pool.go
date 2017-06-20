@@ -2,7 +2,7 @@ package pool
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net"
 	"net/rpc"

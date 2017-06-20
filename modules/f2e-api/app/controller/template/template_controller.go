@@ -6,7 +6,7 @@ import (
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
 )

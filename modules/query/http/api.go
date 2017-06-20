@@ -16,7 +16,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	"github.com/Cepave/open-falcon-backend/modules/query/proc"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
 )

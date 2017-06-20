@@ -8,7 +8,7 @@ import (
 
 	coommonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 )
 

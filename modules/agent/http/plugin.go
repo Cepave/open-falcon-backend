@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
 	"github.com/Cepave/open-falcon-backend/modules/agent/plugins"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/toolkits/file"
 	"net/http"
 	"os/exec"

@@ -10,7 +10,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/dashboard"
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/toolkits/sys"
 )
 

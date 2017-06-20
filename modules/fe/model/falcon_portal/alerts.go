@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/boss"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/emirpasic/gods/sets/hashset"
 )
 

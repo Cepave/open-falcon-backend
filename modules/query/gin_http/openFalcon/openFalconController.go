@@ -10,7 +10,7 @@ import (
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	"github.com/Cepave/open-falcon-backend/modules/query/model"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 )
 

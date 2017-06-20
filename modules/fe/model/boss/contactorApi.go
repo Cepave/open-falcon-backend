@@ -9,7 +9,7 @@ import (
 	"github.com/emirpasic/gods/sets/hashset"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func QueryContact(platformName string) (contactList []Contactor, err error) {

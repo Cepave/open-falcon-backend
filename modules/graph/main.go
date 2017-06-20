@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
