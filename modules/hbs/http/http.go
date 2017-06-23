@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/gin-gonic/gin"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
 )

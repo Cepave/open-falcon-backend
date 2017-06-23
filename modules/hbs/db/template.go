@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/Cepave/open-falcon-backend/common/model"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func QueryGroupTemplates() (map[int][]int, error) {

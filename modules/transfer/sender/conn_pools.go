@@ -6,7 +6,7 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	cpool "github.com/Cepave/open-falcon-backend/modules/transfer/sender/conn_pool"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	nset "github.com/toolkits/container/set"
 )
 

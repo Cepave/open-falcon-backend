@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func QueryConfig(key string) (*model.Config, error) {

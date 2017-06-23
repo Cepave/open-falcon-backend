@@ -8,7 +8,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	eventmodel "github.com/Cepave/open-falcon-backend/modules/alarm/model/event"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
 )
 

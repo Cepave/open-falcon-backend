@@ -5,7 +5,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/toolkits/container/set"
 	"github.com/toolkits/net/httplib"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"strings"
 	"sync"
 	"time"

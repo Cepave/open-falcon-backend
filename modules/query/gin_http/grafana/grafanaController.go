@@ -11,7 +11,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/gin_http/openFalcon"
 	"github.com/Cepave/open-falcon-backend/modules/query/model"
 	"github.com/Jeffail/gabs"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/gin-gonic/gin"
 	"github.com/robertkrimen/otto"

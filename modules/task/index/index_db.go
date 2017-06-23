@@ -2,7 +2,7 @@ package index
 
 import (
 	"database/sql"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/Cepave/open-falcon-backend/modules/task/g"

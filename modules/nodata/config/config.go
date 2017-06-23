@@ -1,7 +1,7 @@
 package config
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"sync"
 
 	cmodel "github.com/open-falcon/common/model"

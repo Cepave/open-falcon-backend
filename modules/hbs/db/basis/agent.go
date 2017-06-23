@@ -5,7 +5,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func UpdateAgent(agentInfo *model.AgentUpdateInfo) error {

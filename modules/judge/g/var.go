@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type SafeStrategyMap struct {

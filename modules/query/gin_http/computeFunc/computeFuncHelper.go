@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/conf"
 	"github.com/Cepave/open-falcon-backend/modules/query/model"
