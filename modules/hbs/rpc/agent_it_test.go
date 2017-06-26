@@ -66,6 +66,6 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 
 		Eventually(func() int64 {
 			return receiveCnt
-		}, time.Second, time.Second/8).Should(Equal(int64(1)))
+		}, time.Second*4, time.Second/2).Should(Equal(int64(1)))
 	})
 }))
