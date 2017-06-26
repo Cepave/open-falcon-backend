@@ -1,6 +1,8 @@
 package rpc
 
 import (
+	"time"
+
 	viper "github.com/spf13/viper"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
@@ -43,8 +45,8 @@ func initNqmConfig(config *viper.Viper) {
 func initFalconConfig(config *viper.Viper) {
 	heartbeatConfig := &commonQueue.Config{
 		Num: config.GetInt("heartbeat.falcon.batchSize"),
-		Dur: config.GetDuration("heartbeat.falcon.duration"),
+		Dur: config.GetDuration("heartbeat.falcon.duration") * time.Second,
 	}
-	logger.Infof("[FALCON] Heartbeat config. BatchSize: %d. Duration: %d ns.", heartbeatConfig.Num, heartbeatConfig.Dur)
+	logger.Infof("[FALCON] Heartbeat config. BatchSize: %d. Duration: %d sec.", heartbeatConfig.Num, heartbeatConfig.Dur/time.Second)
 	agentHeartbeatService = hbsService.NewAgentHeartbeatService(heartbeatConfig)
 }

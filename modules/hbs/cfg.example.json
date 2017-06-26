@@ -24,7 +24,7 @@
     "heartbeat" :{
 		"falcon": {
 			"batchSize": 16,
-			"duration": 3
+			"duration": 1
 		}
 	}
 }
