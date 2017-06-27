@@ -19,8 +19,9 @@ import (
 // 5.1.10: Fix and modify builtin metrics.
 // 5.2.0: Fix agent orphan processes problem and add /v1/tail API
 // 6.0.0: Use new plugin/git repo updating mechanism.
+// 6.1.0: Add timeout mechanism on 'git fetch', 'git clone', 'git ls-remote' command
 const (
-	VERSION          = "6.0.0"
+	VERSION          = "6.1.0"
 	COLLECT_INTERVAL = time.Second
 	URL_CHECK_HEALTH = "url.check.health"
 	NET_PORT_LISTEN  = "net.port.listen"
