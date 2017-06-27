@@ -304,6 +304,21 @@ func (this *Graph) Last(param cmodel.GraphLastParam, resp *cmodel.GraphLastResp)
 	return nil
 }
 
+func (this *Graph) LastBatch(params []cmodel.GraphLastParam, resps []*cmodel.GraphLastResp) error {
+	// statistics
+	proc.GraphLastCnt.IncrBy(int64(len(params)))
+
+	for _, param := range params {
+		resp := cmodel.GraphLastResp{}
+		resp.Endpoint = param.Endpoint
+		resp.Counter = param.Counter
+		resp.Value = GetLast(param.Endpoint, param.Counter)
+		resps = append(resps, &resp)
+	}
+
+	return nil
+}
+
 func (this *Graph) LastRaw(param cmodel.GraphLastParam, resp *cmodel.GraphLastResp) error {
 	// statistics
 	proc.GraphLastRawCnt.Incr()
