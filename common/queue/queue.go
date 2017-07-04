@@ -17,12 +17,13 @@ type Config struct {
 
 type Queue struct {
 	l     *list.List // not thead safe
-	mutex sync.Mutex
+	mutex *sync.Mutex
 }
 
 func New() *Queue {
 	return &Queue{
 		l: list.New(),
+		mutex: &sync.Mutex{},
 	}
 }
 

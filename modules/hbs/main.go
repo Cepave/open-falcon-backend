@@ -2,16 +2,19 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"syscall"
+
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/model/config"
+	oos "github.com/Cepave/open-falcon-backend/common/os"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/http"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
-	oos "github.com/Cepave/open-falcon-backend/common/os"
-	"os"
-	"syscall"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/service"
 )
 
 func main() {
@@ -29,6 +32,12 @@ func main() {
 
 	db.Init()
 	cache.Init()
+	service.InitPackage(&config.MysqlApiConfig{
+		Host:     vipercfg.Config().GetString("mysql_api.host"),
+		Resource: vipercfg.Config().GetString("mysql_api.resource"),
+	},
+		vipercfg.Config().GetString("hosts"),
+	)
 	rpc.InitPackage(vipercfg.Config())
 
 	go cache.DeleteStaleAgents()

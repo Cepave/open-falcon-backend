@@ -14,7 +14,10 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	hbsService "github.com/Cepave/open-falcon-backend/modules/hbs/service"
 )
+
+var agentHeartbeatService *hbsService.AgentHeartbeatService
 
 func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.AgentPluginsResponse) (err error) {
 	defer rpc.HandleError(&err)()
@@ -44,7 +47,7 @@ func (t *Agent) ReportStatus(args *model.AgentReportRequest, reply *model.Simple
 	}
 
 	log.Debugln("show request of ReportStatus: ", args)
-	cache.Agents.Put(args)
+	agentHeartbeatService.Put(args, time.Now().Unix())
 
 	return nil
 }
