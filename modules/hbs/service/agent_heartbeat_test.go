@@ -3,10 +3,9 @@ package service
 import (
 	"time"
 
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
+	cModel "github.com/Cepave/open-falcon-backend/common/model"
+	cQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/icrowley/fake"
 
 	. "github.com/onsi/ginkgo"
@@ -20,7 +19,7 @@ type fakeHeartbeat struct {
 	alwaysSuccess   bool
 }
 
-func (a *fakeHeartbeat) calling(agents []*model.FalconAgentHeartbeat) (int64, int64) {
+func (a *fakeHeartbeat) calling(agents []*cModel.FalconAgentHeartbeat) (int64, int64) {
 	count := len(agents)
 	a.rowsAffectedCnt += count
 
@@ -31,8 +30,8 @@ func (a *fakeHeartbeat) calling(agents []*model.FalconAgentHeartbeat) (int64, in
 	}
 }
 
-func generateRandomRequest() *commonModel.AgentReportRequest {
-	return &commonModel.AgentReportRequest{
+func generateRandomRequest() *cModel.AgentReportRequest {
+	return &cModel.AgentReportRequest{
 		Hostname:     fake.DomainName(),
 		IP:           fake.IPv4(),
 		AgentVersion: fake.Digits(),
@@ -53,7 +52,7 @@ var _ = Describe("Test the behavior of AgentHeartbeat service", func() {
 
 	BeforeEach(func() {
 		agentHeartbeatService = NewAgentHeartbeatService(
-			&commonQueue.Config{Num: 16, Dur: 100 * time.Millisecond},
+			&cQueue.Config{Num: 16, Dur: 100 * time.Millisecond},
 		)
 		heartbeatImpl = &fakeHeartbeat{alwaysSuccess: true}
 		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
@@ -88,7 +87,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 
 	BeforeEach(func() {
 		agentHeartbeatService = NewAgentHeartbeatService(
-			&commonQueue.Config{Num: 16},
+			&cQueue.Config{Num: 16},
 		)
 		heartbeatImpl = &fakeHeartbeat{alwaysSuccess: true}
 		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
@@ -134,7 +133,7 @@ var _ = Describe("Test Start() of AgentHeartbeat service", func() {
 
 	BeforeEach(func() {
 		agentHeartbeatService = NewAgentHeartbeatService(
-			&commonQueue.Config{},
+			&cQueue.Config{},
 		)
 	})
 
@@ -165,7 +164,7 @@ var _ = Describe("Test Stop() of AgentHeartbeat service", func() {
 
 	BeforeEach(func() {
 		agentHeartbeatService = NewAgentHeartbeatService(
-			&commonQueue.Config{},
+			&cQueue.Config{},
 		)
 	})
 
@@ -197,7 +196,7 @@ var _ = Describe("Test consumeHeartbeatQueue() of AgentHeartbeat service", func(
 
 	JustBeforeEach(func() {
 		agentHeartbeatService = NewAgentHeartbeatService(
-			&commonQueue.Config{Num: 16},
+			&cQueue.Config{Num: 16},
 		)
 		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
 		agentHeartbeatService.running = true

@@ -5,31 +5,30 @@ import (
 	"sync"
 	"sync/atomic"
 
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
+	cModel "github.com/Cepave/open-falcon-backend/common/model"
+	cQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 )
 
 var (
-	elementType = reflect.TypeOf(new(model.FalconAgentHeartbeat))
+	elementType = reflect.TypeOf(new(cModel.FalconAgentHeartbeat))
 )
 
 type AgentHeartbeatService struct {
 	wg               *sync.WaitGroup
-	safeQ            *commonQueue.Queue
-	qConfig          *commonQueue.Config
+	safeQ            *cQueue.Queue
+	qConfig          *cQueue.Config
 	running          bool
 	agentsPutCnt     int64
-	heartbeatCall    func([]*model.FalconAgentHeartbeat) (int64, int64)
+	heartbeatCall    func([]*cModel.FalconAgentHeartbeat) (int64, int64)
 	rowsAffectedCnt  int64
 	agentsDroppedCnt int64
 }
 
-func NewAgentHeartbeatService(config *commonQueue.Config) *AgentHeartbeatService {
+func NewAgentHeartbeatService(config *cQueue.Config) *AgentHeartbeatService {
 	return &AgentHeartbeatService{
 		wg:            &sync.WaitGroup{},
-		safeQ:         commonQueue.New(),
+		safeQ:         cQueue.New(),
 		qConfig:       config,
 		heartbeatCall: agentHeartbeatCall,
 	}
@@ -61,7 +60,7 @@ func (s *AgentHeartbeatService) Start() {
 
 func (s *AgentHeartbeatService) consumeHeartbeatQueue(flushing bool) {
 
-	agents := s.safeQ.DrainNWithDurationByReflectType(s.qConfig, elementType).([]*model.FalconAgentHeartbeat)
+	agents := s.safeQ.DrainNWithDurationByReflectType(s.qConfig, elementType).([]*cModel.FalconAgentHeartbeat)
 
 	if len(agents) == 0 {
 		return
@@ -92,7 +91,7 @@ func (s *AgentHeartbeatService) Stop() {
 	s.wg.Wait()
 }
 
-func (s *AgentHeartbeatService) Put(req *commonModel.AgentReportRequest, updateTime int64) {
+func (s *AgentHeartbeatService) Put(req *cModel.AgentReportRequest, updateTime int64) {
 	if !s.running {
 		logger.Infoln("[AgentHeartbeat][Skipped] Put when stopped.")
 		return
@@ -120,8 +119,8 @@ func (s *AgentHeartbeatService) CumulativeRowsAffected() int64 {
 	return s.rowsAffectedCnt
 }
 
-func requestToHeartbeat(req *commonModel.AgentReportRequest, updateTime int64) *model.FalconAgentHeartbeat {
-	return &model.FalconAgentHeartbeat{
+func requestToHeartbeat(req *cModel.AgentReportRequest, updateTime int64) *cModel.FalconAgentHeartbeat {
+	return &cModel.FalconAgentHeartbeat{
 		Hostname:      req.Hostname,
 		IP:            req.IP,
 		AgentVersion:  req.AgentVersion,

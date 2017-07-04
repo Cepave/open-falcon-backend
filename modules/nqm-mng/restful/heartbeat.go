@@ -5,6 +5,7 @@ import (
 
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
+	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
@@ -12,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type heartbeatOfFalconAgents []*model.FalconAgentHeartbeat
+type heartbeatOfFalconAgents []*cModel.FalconAgentHeartbeat
 
 func (agents *heartbeatOfFalconAgents) Bind(context *gin.Context) {
 	ogin.BindJson(context, agents)

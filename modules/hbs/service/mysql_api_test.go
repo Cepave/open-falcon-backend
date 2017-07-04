@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"time"
 
-	commonModelConfig "github.com/Cepave/open-falcon-backend/common/model/config"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
+	cModel "github.com/Cepave/open-falcon-backend/common/model"
+	cModelConfig "github.com/Cepave/open-falcon-backend/common/model/config"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,11 +16,11 @@ import (
 var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 	var (
 		dataNum int = 3
-		agents  []*model.FalconAgentHeartbeat
+		agents  []*cModel.FalconAgentHeartbeat
 	)
 
 	BeforeEach(func() {
-		agents = make([]*model.FalconAgentHeartbeat, 0)
+		agents = make([]*cModel.FalconAgentHeartbeat, 0)
 		for i := 0; i < dataNum; i++ {
 			agents = append(agents, requestToHeartbeat(generateRandomRequest(), time.Now().Unix()))
 		}
@@ -33,12 +33,12 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 			ts = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				defer r.Body.Close()
 				decorder := json.NewDecoder(r.Body)
-				var rAgents []*model.FalconAgentHeartbeat
+				var rAgents []*cModel.FalconAgentHeartbeat
 				err := decorder.Decode(&rAgents)
 				Expect(err).To(BeNil())
 
 				rowsAffectedCnt := int64(len(rAgents))
-				res := model.FalconAgentHeartbeatResult{rowsAffectedCnt}
+				res := cModel.FalconAgentHeartbeatResult{rowsAffectedCnt}
 				resp, err := json.Marshal(res)
 				Expect(err).To(BeNil())
 				w.Write(resp)
@@ -50,7 +50,7 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 		})
 
 		It("should return correct affected amount", func() {
-			InitPackage(&commonModelConfig.MysqlApiConfig{Host: ts.URL}, "")
+			InitPackage(&cModelConfig.MysqlApiConfig{Host: ts.URL}, "")
 			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
 			Expect(rowsAffectedCnt).To(Equal(int64(dataNum)))
@@ -60,7 +60,7 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 
 	Context("when the call fail", func() {
 		It("should return correct dropped amount", func() {
-			InitPackage(&commonModelConfig.MysqlApiConfig{Host: "dummyHost"}, "")
+			InitPackage(&cModelConfig.MysqlApiConfig{Host: "dummyHost"}, "")
 			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
 			Expect(rowsAffectedCnt).To(BeZero())

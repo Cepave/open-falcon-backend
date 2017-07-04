@@ -5,6 +5,7 @@ import (
 	"time"
 
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
@@ -65,9 +66,9 @@ func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *ch.C) {
 		sampleIP, sampleAgentVersion, samplePluginVersion :=
 			"127.0.0."+sampleNumber, "0.0."+sampleNumber, "12345abcd"+sampleNumber
 
-		sampleHosts := make([]*model.FalconAgentHeartbeat, len(testCase.hosts))
+		sampleHosts := make([]*cModel.FalconAgentHeartbeat, len(testCase.hosts))
 		for idx, hostName := range testCase.hosts {
-			sampleHosts[idx] = &model.FalconAgentHeartbeat{
+			sampleHosts[idx] = &cModel.FalconAgentHeartbeat{
 				Hostname:      "nqm-mng-tc1-" + hostName,
 				UpdateTime:    sampleTime.Unix(),
 				IP:            sampleIP,

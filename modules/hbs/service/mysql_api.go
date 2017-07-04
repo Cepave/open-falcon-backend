@@ -3,8 +3,8 @@ package service
 import (
 	"net/http"
 
+	"github.com/Cepave/open-falcon-backend/common/model"
 	commonSling "github.com/Cepave/open-falcon-backend/common/sling"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 )
 
 func agentHeartbeatCall(agents []*model.FalconAgentHeartbeat) (rowsAffectedCnt int64, agentsDroppedCnt int64) {

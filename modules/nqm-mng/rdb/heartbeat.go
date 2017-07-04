@@ -5,6 +5,7 @@ import (
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
+	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/jinzhu/gorm"
@@ -21,14 +22,14 @@ var updateSql = `
 		AND update_at < FROM_UNIXTIME(?)
 `
 
-func FalconAgentHeartbeat(agents []*model.FalconAgentHeartbeat, updateOnly bool) *model.FalconAgentHeartbeatResult {
+func FalconAgentHeartbeat(agents []*cModel.FalconAgentHeartbeat, updateOnly bool) *cModel.FalconAgentHeartbeatResult {
 	if updateOnly {
 		return updateHost(agents)
 	}
 	return updateOrInsertHost(agents)
 }
 
-func updateOrInsertHost(agents []*model.FalconAgentHeartbeat) *model.FalconAgentHeartbeatResult {
+func updateOrInsertHost(agents []*cModel.FalconAgentHeartbeat) *cModel.FalconAgentHeartbeatResult {
 	updateOrInsertHosts := &updateOrInsertHostsInTx{
 		hosts: agents,
 	}
@@ -38,7 +39,7 @@ func updateOrInsertHost(agents []*model.FalconAgentHeartbeat) *model.FalconAgent
 	return &updateOrInsertHosts.result
 }
 
-func updateHost(agents []*model.FalconAgentHeartbeat) *model.FalconAgentHeartbeatResult {
+func updateHost(agents []*cModel.FalconAgentHeartbeat) *cModel.FalconAgentHeartbeatResult {
 	updateHosts := &updateHostsInTx{
 		hosts: agents,
 	}
@@ -49,8 +50,8 @@ func updateHost(agents []*model.FalconAgentHeartbeat) *model.FalconAgentHeartbea
 }
 
 type updateHostsInTx struct {
-	hosts  []*model.FalconAgentHeartbeat
-	result model.FalconAgentHeartbeatResult
+	hosts  []*cModel.FalconAgentHeartbeat
+	result cModel.FalconAgentHeartbeatResult
 }
 
 func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
@@ -63,7 +64,7 @@ func (uHost *updateHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
 	return db.TxCommit
 }
 
-func updateAndGetRowsAffected(updateStmt *sqlx.Stmt, agent *model.FalconAgentHeartbeat) int64 {
+func updateAndGetRowsAffected(updateStmt *sqlx.Stmt, agent *cModel.FalconAgentHeartbeat) int64 {
 	r := updateStmt.MustExec(
 		agent.IP,
 		agent.AgentVersion,
@@ -76,8 +77,8 @@ func updateAndGetRowsAffected(updateStmt *sqlx.Stmt, agent *model.FalconAgentHea
 }
 
 type updateOrInsertHostsInTx struct {
-	hosts  []*model.FalconAgentHeartbeat
-	result model.FalconAgentHeartbeatResult
+	hosts  []*cModel.FalconAgentHeartbeat
+	result cModel.FalconAgentHeartbeatResult
 }
 
 func (uoiHost *updateOrInsertHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
@@ -113,13 +114,13 @@ func (uoiHost *updateOrInsertHostsInTx) InTx(tx *sqlx.Tx) db.TxFinale {
 	return db.TxCommit
 }
 
-func (uoiHost *updateOrInsertHostsInTx) isHostExisting(selectExt *sqlxExt.StmtExt, agent *model.FalconAgentHeartbeat) bool {
+func (uoiHost *updateOrInsertHostsInTx) isHostExisting(selectExt *sqlxExt.StmtExt, agent *cModel.FalconAgentHeartbeat) bool {
 	var count int
 	selectExt.Get(&count, agent.Hostname)
 	return count >= 1
 }
 
-func (uoiHost *updateOrInsertHostsInTx) addHost(insertStmt *sqlx.Stmt, agent *model.FalconAgentHeartbeat) {
+func (uoiHost *updateOrInsertHostsInTx) addHost(insertStmt *sqlx.Stmt, agent *cModel.FalconAgentHeartbeat) {
 	r := insertStmt.MustExec(
 		agent.Hostname,
 		agent.IP,
@@ -130,7 +131,7 @@ func (uoiHost *updateOrInsertHostsInTx) addHost(insertStmt *sqlx.Stmt, agent *mo
 	uoiHost.result.RowsAffected += db.ToResultExt(r).RowsAffected()
 }
 
-func (uoiHost *updateOrInsertHostsInTx) updateHost(updateStmt *sqlx.Stmt, agent *model.FalconAgentHeartbeat) {
+func (uoiHost *updateOrInsertHostsInTx) updateHost(updateStmt *sqlx.Stmt, agent *cModel.FalconAgentHeartbeat) {
 	uoiHost.result.RowsAffected += updateAndGetRowsAffected(updateStmt, agent)
 }
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
+	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
@@ -46,11 +47,11 @@ func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *ch.C) {
 	}
 
 	for _, testCase := range testCases {
-		sampleHosts := make([]*model.FalconAgentHeartbeat, len(testCase.hosts))
+		sampleHosts := make([]*cModel.FalconAgentHeartbeat, len(testCase.hosts))
 		sampleTime := testing.ParseTime(c, testCase.timestamp)
 		for idx, hostName := range testCase.hosts {
 			sampleNumber := strconv.Itoa(idx)
-			sampleHosts[idx] = &model.FalconAgentHeartbeat{
+			sampleHosts[idx] = &cModel.FalconAgentHeartbeat{
 				Hostname:      "nqm-mng-it-tc1-" + hostName,
 				UpdateTime:    sampleTime.Unix(),
 				IP:            "127.0.0." + sampleNumber,
