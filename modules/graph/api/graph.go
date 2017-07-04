@@ -86,6 +86,23 @@ func handleItems(items []*cmodel.GraphItem) {
 	}
 }
 
+func (this *Graph) BatchQuery(params []cmodel.GraphQueryParam, resps []*cmodel.GraphQueryResponse) error {
+	var errors []error
+	for _, param := range params {
+		var resp *cmodel.GraphQueryResponse
+		err := this.Query(param, resp)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		resps = append(resps, resp)
+	}
+	if len(errors) == 0 {
+		return nil
+	} else {
+		return fmt.Errorf("%v\n", errors)
+	}
+}
+
 func (this *Graph) Query(param cmodel.GraphQueryParam, resp *cmodel.GraphQueryResponse) error {
 	var (
 		datas      []*cmodel.RRDData
@@ -300,6 +317,21 @@ func (this *Graph) Last(param cmodel.GraphLastParam, resp *cmodel.GraphLastResp)
 	resp.Endpoint = param.Endpoint
 	resp.Counter = param.Counter
 	resp.Value = GetLast(param.Endpoint, param.Counter)
+
+	return nil
+}
+
+func (this *Graph) LastBatch(params []cmodel.GraphLastParam, resps []*cmodel.GraphLastResp) error {
+	// statistics
+	proc.GraphLastCnt.IncrBy(int64(len(params)))
+
+	for _, param := range params {
+		resp := cmodel.GraphLastResp{}
+		resp.Endpoint = param.Endpoint
+		resp.Counter = param.Counter
+		resp.Value = GetLast(param.Endpoint, param.Counter)
+		resps = append(resps, &resp)
+	}
 
 	return nil
 }

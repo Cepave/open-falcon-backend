@@ -155,10 +155,22 @@
 			"revisionTime": "2017-03-22T23:44:13Z"
 		},
 		{
+			"checksumSHA1": "VHULZdEZKBxJvlZnlhX7Ug19lgY=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "85b1699d505667d13f8ac4478c1debbf85d6c5de",
+			"revisionTime": "2017-06-08T22:14:41Z"
+		},
+		{
 			"checksumSHA1": "eIx4vdH7NYr6PUoiHSsnTP09szk=",
 			"path": "github.com/toolkits/sys",
 			"revision": "c2ba2f18687baca160678068546bec95f7f22380",
 			"revisionTime": "2014-11-16T09:33:26Z"
+		},
+		{
+			"checksumSHA1": "rIYurTMbnyUj/eMHsaxTBnTvSnY=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "fb4cac33e3196ff7f507ab9b2d2a44b0142f5b5a",
+			"revisionTime": "2017-06-14T06:48:48Z"
 		},
 		{
 			"checksumSHA1": "39V1idWER42Lmcmg2Uy40wMzOlo=",

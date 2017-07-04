@@ -13,7 +13,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	dg "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/dashboard_graph"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	yaagGin "github.com/masato25/yaag/gin"
 	"github.com/masato25/yaag/yaag"

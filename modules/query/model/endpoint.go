@@ -7,7 +7,7 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/query/database"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type Endpoint struct {

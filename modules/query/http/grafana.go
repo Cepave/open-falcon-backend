@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func doHTTPQuery(url string) map[string]interface{} {

@@ -2,7 +2,7 @@ package cron
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
 	"github.com/open-falcon/sdk/portal"
 	"github.com/open-falcon/sdk/sender"

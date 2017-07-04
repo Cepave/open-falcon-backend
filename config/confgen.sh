@@ -26,8 +26,14 @@ configurer() {
     do
         search=$i
         replace=${confs[$i]}
-        # Note the "" after -i, needed in OS X
-        find ./out/*/config/*.json -type f -exec sed -i "s/${search}/${replace}/g" {} \;
+
+        uname=`uname`
+        if [ "$uname" == "Darwin" ] ; then
+            # Note the "" and -e  after -i, needed in OS X
+            find ./out/*/config/*.json -type f -exec sed -i .tpl -e "s/${search}/${replace}/g" {} \;
+        else
+            find ./out/*/config/*.json -type f -exec sed -i "s/${search}/${replace}/g" {} \;
+        fi
     done
 }
 configurer

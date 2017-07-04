@@ -2,7 +2,7 @@ package g
 
 import (
 	"github.com/garyburd/redigo/redis"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 

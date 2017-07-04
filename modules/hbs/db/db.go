@@ -6,7 +6,7 @@ import (
 	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 )
 

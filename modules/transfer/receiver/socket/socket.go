@@ -2,7 +2,7 @@ package socket
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"net"
 )
 

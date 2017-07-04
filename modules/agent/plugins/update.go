@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/agent/g"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/toolkits/file"
 	"github.com/toolkits/sys"
 )
@@ -119,7 +119,7 @@ func UpdatePlugin(ver string, repo string) error {
 		lastPluginUpdate = time.Now().Unix()
 
 		buf.Reset()
-		cmd := exec.Command("git", "fetch")
+		cmd := exec.Command("timeout", "60s", "git", "fetch")
 		cmd.Dir = cfg.Dir
 		cmd.Stdout = &buf
 		cmd.Stderr = &buf
@@ -147,7 +147,7 @@ func UpdatePlugin(ver string, repo string) error {
 		log.Println("Begin update plugins by clone")
 		lastPluginUpdate = time.Now().Unix()
 		buf.Reset()
-		cmd := exec.Command("git", "clone", repo, file.Basename(cfg.Dir))
+		cmd := exec.Command("timeout", "200s", "git", "clone", repo, file.Basename(cfg.Dir))
 		cmd.Dir = parentDir
 		cmd.Stdout = &buf
 		cmd.Stderr = &buf
@@ -176,7 +176,7 @@ func UpdatePlugin(ver string, repo string) error {
 
 func GitLsRemote(gitRepo string, refs string) (string, error) {
 	// This function depends on git command
-	if resultStr, err := sys.CmdOut("git", "ls-remote", gitRepo, refs); err != nil {
+	if resultStr, err := sys.CmdOut("timeout", "30s", "git", "ls-remote", gitRepo, refs); err != nil {
 		return "", err
 	} else {
 		// resultStr should be:

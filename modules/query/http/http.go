@@ -6,7 +6,7 @@ import (
 	_ "net/http/pprof"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/astaxie/beego/orm"

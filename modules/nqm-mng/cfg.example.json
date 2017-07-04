@@ -21,13 +21,9 @@
 		}
 	},
 	"heartbeat" :{
-		"falcon": {
-			"batchSize": 16,
-			"duration": 3
-		},
 		"nqm": {
-			"batchSize": 16,
-			"duration": 3
+			"batchSize": 64,
+			"duration": 2
 		}
 	}
 }

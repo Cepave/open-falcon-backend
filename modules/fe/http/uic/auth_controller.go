@@ -14,7 +14,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/base"
 	. "github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/fe/utils"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/toolkits/str"
 )
 

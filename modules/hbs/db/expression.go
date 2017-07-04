@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func QueryExpressions() (ret []*model.Expression, err error) {
