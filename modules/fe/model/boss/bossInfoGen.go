@@ -24,7 +24,7 @@ func GetIPMap() (hostmap map[string]Hosts) {
 func Gethosts() (hosts []Hosts) {
 	q := getOrmObj()
 	hosts = []Hosts{}
-	q.Raw("select * from `hosts` where exist = 1 and activate = 1").QueryRows(&hosts)
+	q.Raw("select * from `hosts` where exist = 1").QueryRows(&hosts)
 	return
 }
 
