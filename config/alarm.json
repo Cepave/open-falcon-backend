@@ -16,6 +16,11 @@
         "idle": 10,
         "max": 100
     },
+    "boss": {
+        "addr": "%%MYSQL%%/boss?charset=utf8&loc=Asia%2FChongqing",
+        "idle": 10,
+        "max": 100
+    },
     "redis": {
         "addr": "%%REDIS%%",
         "maxIdle": 5,
@@ -30,6 +35,14 @@
         "lowQueues": [
             "event:p6"
         ],
+        "externalQueues":{
+          "enable": false,
+          "queues": [ "extnal_event:all"]
+        },
+        "errorQueues": {
+          "enable": false,
+          "queue": "error_event:all"
+        },
         "userSmsQueue": "/queue/user/sms",
         "userMailQueue": "/queue/user/mail",
         "userQQQueue": "/queue/user/qq",
