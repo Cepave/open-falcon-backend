@@ -29,46 +29,46 @@ type Contactor struct {
 
 //orm model
 type IDC struct {
-	Id       int       `orm:"id"`
-	PopId    int       `orm:"pop_id"`
-	Name     string    `orm:"name"`
-	Count    int       `orm:"count"`
-	Area     string    `orm:"area"`
-	Province string    `orm:"province"`
-	City     string    `orm:"city"`
-	UpdatAt  time.Time `orm:"update_at"`
+	Id       int       `orm:"column(id)"`
+	PopId    int       `orm:"column(pop_id)"`
+	Name     string    `orm:"column(name)"`
+	Count    int       `orm:"column(count)"`
+	Area     string    `orm:"column(area)"`
+	Province string    `orm:"column(province)"`
+	City     string    `orm:"column(city)"`
+	UpdatAt  time.Time `orm:"column(update_at)"`
 }
 
 //orm model
 type Hosts struct {
-	Id       int       `orm:"id"`
-	Hostname string    `orm:"hostnam"`
-	Exist    int       `orm:"exist"`
-	Activate int       `orm:"activate"`
-	Platform string    `orm:"platform"`
-	Idc      string    `orm:"idc"`
-	Ip       string    `orm:"ip"`
-	Isp      string    `orm:"isp"`
-	Province string    `orm:"province"`
-	City     string    `orm:"city"`
-	Status   string    `orm:"status"`
-	Updated  time.Time `orm:"updated"`
+	Id       int       `orm:"column(id)"`
+	Hostname string    `orm:"column(hostname)"`
+	Exist    int       `orm:"column(exist)"`
+	Activate int       `orm:"column(activate)"`
+	Platform string    `orm:"column(platform)"`
+	Idc      string    `orm:"column(idc)"`
+	Ip       string    `orm:"column(ip)"`
+	Isp      string    `orm:"column(isp)"`
+	Province string    `orm:"column(province)"`
+	City     string    `orm:"column(city)"`
+	Status   string    `orm:"column(status)"`
+	Updated  time.Time `orm:"column(updated)"`
 }
 
 //orm model
 type Platforms struct {
-	Id       int       `orm:"id"`
-	Platform string    `orm:"platform"`
-	Contacts string    `orm:"contacts"`
-	Count    int       `orm:"count"`
-	Updated  time.Time `orm:"updated"`
+	Id       int       `orm:"column(id)"`
+	Platform string    `orm:"column(platform)"`
+	Contacts string    `orm:"column(contacts)"`
+	Count    int       `orm:"column(count)"`
+	Updated  time.Time `orm:"column(updated)"`
 }
 
 //orm model
 type Contacts struct {
-	Id      int       `orm:"id"`
-	Name    string    `orm:"name"`
-	Phone   string    `orm:"phone"`
-	Email   string    `orm:"email"`
-	Updated time.Time `orm:"updated"`
+	Id      int       `orm:"column(id)"`
+	Name    string    `orm:"column(name)"`
+	Phone   string    `orm:"column(phone)"`
+	Email   string    `orm:"column(email)"`
+	Updated time.Time `orm:"column(updated)"`
 }
