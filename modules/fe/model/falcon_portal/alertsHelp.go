@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/boss"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
+	log "github.com/sirupsen/logrus"
 )
 
 // //make compatible for overall , if need it, please uncomment below
@@ -26,9 +26,9 @@ import (
 
 type PlatformExtend struct {
 	Contact  []boss.Contactor `json:"contact"`
-	IDC      string              `json:"idc"`
-	IP       string              `json:"ip"`
-	Platform string              `json:"platform"`
+	IDC      string           `json:"idc"`
+	IP       string           `json:"ip"`
+	Platform string           `json:"platform"`
 }
 
 type AlertsResp struct {
@@ -36,6 +36,7 @@ type AlertsResp struct {
 	// AlarmResp
 	PlatformExtend
 	Hash       string `json:"hash"`
+	CTmpName   string `json:"c_tmp_name"`
 	HostName   string `json:"hostname"`
 	Metric     string `json:"metric"`
 	Author     string `json:"author"`
@@ -47,9 +48,8 @@ type AlertsResp struct {
 	//metricTyoe
 	Type       string              `json:"type"`
 	Content    string              `json:"content"`
-	TimeStart  string              `json:"timeStart"`
-	TimeUpdate string              `json:"timeUpdate"`
-	Duration   string              `json:"duration"`
+	TimeStart  int64               `json:"timeStart"`
+	TimeUpdate int64               `json:"timeUpdate"`
 	Notes      []map[string]string `json:"notes"`
 	Events     []*Events           `json:"events"`
 	Process    string              `json:"process"`
@@ -57,6 +57,11 @@ type AlertsResp struct {
 	Condition  string              `json:"condition"`
 	StepLimit  int                 `json:"stepLimit"`
 	Step       int                 `json:"step"`
+	// add by 201707
+	Activate     int    `json:"active"`
+	AlarmType    string `json:"alarm_type"`
+	ExtendedBlob string `json:"extended_blob"`
+	InternalData int    `json:"internal_data"`
 }
 
 func getSeverity(priority string) string {
@@ -106,11 +111,11 @@ func getDuration(timeTriggered string) string {
 	return fmt.Sprintf("%d days ago", diff/3600/24)
 }
 
-func getNote(hash string, timestamp string) []map[string]string {
+func getNote(hash string, timestamp int64) []map[string]string {
 	o := orm.NewOrm()
 	var rows []orm.Params
 	queryStr := fmt.Sprintf(`SELECT note.id as id, note.event_caseId as event_caseId, note.note as note, note.case_id as case_id, note.status as status, note.timestamp as timestamp, user.name as name from
-	(SELECT * from falcon_portal.event_note WHERE event_caseId = '%s' AND timestamp >= '%s')
+	(SELECT * from falcon_portal.event_note WHERE event_caseId = '%s' AND timestamp >= FROM_UNIXTIME(%d))
 	 note LEFT JOIN uic.user as user on note.user_id = user.id;`, hash, timestamp)
 
 	num, err := o.Raw(queryStr).Values(&rows)

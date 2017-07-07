@@ -1,10 +1,6 @@
 package boss
 
-import (
-	"strings"
-
-	"github.com/astaxie/beego/orm"
-)
+import "github.com/astaxie/beego/orm"
 
 func getOrmObj() (q orm.Ormer) {
 	q = orm.NewOrm()
@@ -43,19 +39,11 @@ func GetContactIfo() (contmap map[string]Contactor) {
 	return
 }
 
-func GenContactMap() (platmap map[string][]Contactor) {
-	q := getOrmObj()
-	plat := []Platforms{}
-	q.Raw("select * from `platforms`").QueryRows(&plat)
+func GenContactMap() (contactMap map[string]Contactor) {
+	contactMap = map[string]Contactor{}
 	contmap := GetContactIfo()
-	platmap = map[string][]Contactor{}
-	for _, p := range plat {
-		names := strings.Split(p.Contacts, ",")
-		contacts := make([]Contactor, len(names))
-		for ind, n := range names {
-			contacts[ind] = contmap[n]
-		}
-		platmap[p.Platform] = contacts
+	for _, ct := range contmap {
+		contactMap[ct.Name] = ct
 	}
 	return
 }
