@@ -141,7 +141,7 @@ func popExternalEvent(queues []string) error {
 	err = eventmodel.InsertExternalEvent(event)
 	if err != nil {
 		log.Error(err.Error())
-		errMsg = fmt.Sprintf("insert event got error: %v, event: %v", err.Error(), event)
+		errMsg := fmt.Sprintf("insert event got error: %v, event: %v", err.Error(), event)
 		if g.Config().Redis.ErrorQueue.Enable {
 			params := []interface{}{g.Config().Redis.ErrorQueue.Queue, errMsg}
 			_, err := rc.Do("LPUSH", params...)
