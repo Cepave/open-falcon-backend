@@ -30,15 +30,33 @@ type FalconPortalConfig struct {
 	Max  int    `json:"max"`
 }
 
+type BossConfig struct {
+	Addr string `json:"addr"`
+	Idle int    `json:"idle"`
+	Max  int    `json:"max"`
+}
+
 type RedisConfig struct {
-	Addr                string   `json:"addr"`
-	MaxIdle             int      `json:"maxIdle"`
-	HighQueues          []string `json:"highQueues"`
-	LowQueues           []string `json:"lowQueues"`
-	UserSmsQueue        string   `json:"userSmsQueue"`
-	UserMailQueue       string   `json:"userMailQueue"`
-	UserQQQueue         string   `json:"userQQQueue"`
-	UserServerchanQueue string   `json:"userServerchanQueue"`
+	Addr                string          `json:"addr"`
+	MaxIdle             int             `json:"maxIdle"`
+	HighQueues          []string        `json:"highQueues"`
+	LowQueues           []string        `json:"lowQueues"`
+	ExternalQueues      ExternalQueueSt `json:"externalQueues"`
+	ErrorQueue          ErrorQueueSt    `json:"errorQueues"`
+	UserSmsQueue        string          `json:"userSmsQueue"`
+	UserMailQueue       string          `json:"userMailQueue"`
+	UserQQQueue         string          `json:"userQQQueue"`
+	UserServerchanQueue string          `json:"userServerchanQueue"`
+}
+
+type ExternalQueueSt struct {
+	Enable bool     `json:"enable"`
+	Queues []string `json:"queues"`
+}
+
+type ErrorQueueSt struct {
+	Enable bool   `json:"enable"`
+	Queue  string `json:"queue"`
 }
 
 type ApiConfig struct {
@@ -65,6 +83,7 @@ type GlobalConfig struct {
 	UicToken     string              `json:"uicToken"`
 	Http         *HttpConfig         `json:"http"`
 	FalconPortal *FalconPortalConfig `json:"falcon_portal"`
+	BossConfig   *BossConfig         `json:"boss"`
 	Queue        *QueueConfig        `json:"queue"`
 	Redis        *RedisConfig        `json:"redis"`
 	Api          *ApiConfig          `json:"api"`

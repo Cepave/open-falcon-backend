@@ -153,3 +153,8 @@
     filename: "mike-29.sql",
     comment: "[OWL-1442] Add cache table for NQM ping list of agent"
 }
+- {
+    id: "masato-30",
+    filename: "masato-30.sql",
+    comment: "add alarm_type & boss info fields into eventCase table"
+}
