@@ -153,6 +153,9 @@ func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bo
 		item.Contact = []boss.Contactor{contactor}
 		if result, ok := hostmap[item.HostName]; ok {
 			item.Activate = result.Activate
+		} else {
+			// 2 means unknown, for not exist hostname & exnternal alarm
+			item.Activate = 2
 		}
 		respCompleteTmp = append(respCompleteTmp, item)
 	}
