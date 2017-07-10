@@ -1,33 +1,44 @@
 package rdb
 
 import (
+	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
+	"github.com/jinzhu/gorm"
 )
 
+// ListHosts returns the info of hosts by host ID
 func ListHosts(paging commonModel.Paging) ([]*model.HostsResult, *commonModel.Paging) {
 	var result []*model.HostsResult
-	hostsSql := `
-	SELECT h.hostname, h.id, GROUP_CONCAT(g.id ORDER BY g.id ASC SEPARATOR ',') AS gid, GROUP_CONCAT(g.grp_name ORDER BY g.id ASC SEPARATOR '\0') AS gname
-	FROM host h
-	  LEFT JOIN grp_host gh
-	  ON h.id = gh.host_id
-	  LEFT JOIN grp g
-	  ON gh.grp_id = g.id
-	GROUP BY h.id, h.hostname
-	ORDER BY h.id ASC
-	LIMIT 2, 15
-	`
 
-	hostgroupsSql := `
-	SELECT g.id, g.grp_name, GROUP_CONCAT(pd.id ORDER BY pd.id ASC SEPARATOR ',') AS pdid, GROUP_CONCAT(pd.dir ORDER BY pd.id ASC SEPARATOR '\0') AS pddir
-	FROM grp g
-	  LEFT JOIN plugin_dir pd
-	  ON g.id = pd.grp_id
-	GROUP BY g.id, g.grp_name
-	ORDER BY g.id ASC
-	LIMIT 2, 15
-	`
+	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
+		var dbListHosts = txGormDb.Model(&model.HostsResult{}).
+			Select(`SQL_CALC_FOUND_ROWS
+				host.hostname,
+				host.id,
+				GROUP_CONCAT(g.id ORDER BY g.id ASC SEPARATOR ',') AS gid,
+				GROUP_CONCAT(g.grp_name ORDER BY g.id ASC SEPARATOR '\0') AS gname
+			`).
+			Joins(`
+				LEFT JOIN grp_host gh
+				ON host.id = gh.host_id
+				LEFT JOIN grp g
+				ON gh.grp_id = g.id`).
+			Group(`host.id, host.hostname`).
+			Limit(paging.Size).
+			Order(`host.id ASC`).
+			Offset(paging.GetOffset())
+
+		selectHost := dbListHosts.Find(&result)
+		gormExt.ToDefaultGormDbExt(selectHost).PanicIfError()
+
+		return commonDb.TxCommit
+	}
+
+	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
+		funcTxLoader, &paging,
+	)
 
 	return result, &paging
 }
