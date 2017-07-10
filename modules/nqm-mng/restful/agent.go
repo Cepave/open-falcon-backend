@@ -11,6 +11,7 @@ import (
 	mvc "github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service"
 )
 
 func addNewAgent(c *gin.Context) {
@@ -123,4 +124,13 @@ func clearCachedTargetsOfAgentById(
 ) mvc.OutputBody {
 	r := commonNqmDb.DeleteCachedTargetsOfAgentById(q.AgentID)
 	return mvc.JsonOutputOrNotFound(r)
+}
+
+func nqmAgentHeartbeatTargetList(
+	p *struct {
+		AgentID int32 `mvc:"param[agent_id]"`
+	},
+) mvc.OutputBody {
+	l := service.NqmCachedTargetList.Load(p.AgentID)
+	return mvc.JsonOutputBody(l)
 }

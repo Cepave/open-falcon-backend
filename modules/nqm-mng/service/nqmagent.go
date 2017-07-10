@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"reflect"
 	"time"
 
@@ -148,4 +149,118 @@ func updateNqmAgentHeartbeatImpl(reqs []*model.NqmAgentHeartbeatRequest) {
 			logger.Errorf("[PANIC] Update heartbeats of NQM agent[#%d]: %v", len(reqs), p)
 		},
 	)()
+}
+
+var NqmCachedTargetList *nqmCachedTargetListService
+
+func InitCachedTargetList(c *NqmCachedTargetListConfig) {
+	NqmCachedTargetList = newNqmCachedTargetListService(c)
+	logger.Infof("Target list service for agent. Timeout: %v. Queue Size: %v", c.Dur, c.Size)
+	NqmCachedTargetList.Start()
+}
+
+func CloseCachedTargetList() {
+	logger.Info("Closing NQM target list service...")
+	NqmCachedTargetList.Stop()
+	logger.Info("Finish.")
+}
+
+type NqmCachedTargetListConfig struct {
+	Size int
+	Dur  time.Duration
+}
+
+func newNqmCachedTargetListService(c *NqmCachedTargetListConfig) *nqmCachedTargetListService {
+	return &nqmCachedTargetListService{
+		agentIDQueueForRefreshCache: make(chan int32, c.Size),
+		cacheTimeout:                c.Dur,
+	}
+}
+
+type nqmCachedTargetListService struct {
+	cacheTimeout                time.Duration
+	agentIDQueueForRefreshCache chan int32
+}
+
+// Load get the current cached target list for an agent
+func (s *nqmCachedTargetListService) Load(agentID int32) []*model.NqmTarget {
+	result, cacheLog := rdb.GetPingListFromCache(agentID, time.Now())
+
+	go utils.BuildPanicCapture(
+		func() {
+			s.addRefreshCache(agentID, cacheLog)
+		},
+		func(p interface{}) {
+			logger.Errorf("Cannot add agent id [%d] to queue: %v", agentID, p)
+		},
+	)()
+
+	return result
+}
+
+// Start the service for refreshing cache of ping list
+func (s *nqmCachedTargetListService) Start() {
+	go func() {
+		for agentID := range s.agentIDQueueForRefreshCache {
+			logger.Debugf("Refresh cache for agent: [%d]", agentID)
+
+			err := s.buildCacheOfPingList(agentID)
+			if err != nil {
+				logger.Errorf("Agent[%d]. Refresh has error: %v", agentID, err)
+			}
+		}
+	}()
+}
+
+// Release resources of this service
+func (s *nqmCachedTargetListService) Stop() {
+	queueSize := len(s.agentIDQueueForRefreshCache)
+	logger.Infof("Stopping nqmCachedTargetListService. Size of queue(refreshing cache): [%d]", queueSize)
+
+	close(s.agentIDQueueForRefreshCache)
+
+	/**
+	 * Waiting for queue to be processed
+	 */
+	maxTimes := 30
+	for queueSize > 0 && maxTimes > 0 {
+		logger.Infof("Sleep for 2 seconds to wait queue to be processed... Current size: [%d]", queueSize)
+		time.Sleep(2 * time.Second)
+		maxTimes--
+		queueSize = len(s.agentIDQueueForRefreshCache)
+	}
+	// :~)
+}
+
+func (s *nqmCachedTargetListService) addRefreshCache(agentID int32, cacheLog *model.PingListLog) {
+	now := time.Now()
+
+	/**
+	 * If the timeout has reached, adds the id of agent into queue for refreshing cache
+	 */
+	diffDuration := now.Sub(cacheLog.RefreshTime)
+
+	logger.Debugf(
+		"Queue Size(refreshing cache of ping list): [%d]. Minutes: [%d]",
+		len(s.agentIDQueueForRefreshCache),
+		diffDuration/time.Minute,
+	)
+
+	if now.Sub(cacheLog.RefreshTime) >= s.cacheTimeout {
+		s.agentIDQueueForRefreshCache <- agentID
+	}
+	// :~)
+}
+
+func (s *nqmCachedTargetListService) buildCacheOfPingList(agentID int32) (err error) {
+	defer func() {
+		p := recover()
+		if p != nil {
+			err = fmt.Errorf("%v", p)
+		}
+	}()
+
+	rdb.BuildCacheOfPingList(agentID, time.Now())
+
+	return nil
 }
