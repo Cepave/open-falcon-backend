@@ -24,6 +24,24 @@ type EventCases struct {
 	StrategyId    int       `json:"strategy_id"`
 	TemplateId    int       `json:"template_id"`
 	Events        []*Events `json:"evevnts" orm:"reverse(many)"`
+	AlarmTypeId   int       `json:"alarm_type_id"`
+	Ip            string    `json:"ip" orm:"column(ip)`
+	Platform      string    `json:"platform" orm:"column(platform)`
+	Idc           string    `json:"idc" orm:"column(idc)"`
+	Contact       string    `json:"contact" orm:"column(contact)"`
+	ExtendedBlob  string    `json:"extended_blob" orm:"column(extended_blob)"`
+}
+
+type AlarmType struct {
+	Id           int       `json:"id" orm:"pk"`
+	Name         string    `json:"name" orm:"column(name)"`
+	InternalData int       `json:"internal_data" orm:"column(internal_data)"`
+	Description  string    `json:"description" orm:"column(description)"`
+	Created      time.Time `json:"created" orm:"column(created)"`
+}
+
+func (mine EventCases) AlarmType() AlarmType {
+	return GetAlarmTypeById(mine.AlarmTypeId)
 }
 
 type Events struct {
@@ -74,12 +92,12 @@ type EventNote struct {
 	Status      string    `json:"status"`
 	Timestamp   time.Time `json:"timestamp"`
 	UserId      int64     `json:"-"`
-	UserName    string    `json:"user_name" orm:"user_name"`
+	UserName    string    `json:"user_name" orm:"column(user_name)"`
 }
 
 type Host struct {
 	Id            int    `json:"id" orm:"pk"`
-	Hostname      string `json:"hostname" orm:"hostname"`
+	Hostname      string `json:"hostname" orm:"column(hostname)"`
 	Ip            string
 	AgentVersion  string
 	PluginVersion string
