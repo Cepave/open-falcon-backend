@@ -17,8 +17,8 @@ func ListHosts(paging commonModel.Paging) ([]*model.HostsResult, *commonModel.Pa
 			Select(`SQL_CALC_FOUND_ROWS
 				host.hostname,
 				host.id,
-				GROUP_CONCAT(g.id ORDER BY g.id ASC SEPARATOR ',') AS gid,
-				GROUP_CONCAT(g.grp_name ORDER BY g.id ASC SEPARATOR '\0') AS gname
+				GROUP_CONCAT(g.id ORDER BY g.id ASC SEPARATOR ',') AS gt_ids,
+				GROUP_CONCAT(g.grp_name ORDER BY g.id ASC SEPARATOR '\0') AS gt_names
 			`).
 			Joins(`
 				LEFT JOIN grp_host gh
@@ -39,6 +39,13 @@ func ListHosts(paging commonModel.Paging) ([]*model.HostsResult, *commonModel.Pa
 	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
 		funcTxLoader, &paging,
 	)
+
+	/**
+	 * Loads group tags
+	 */
+	for _, host := range result {
+		host.AfterLoad()
+	}
 
 	return result, &paging
 }

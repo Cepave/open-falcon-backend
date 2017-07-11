@@ -106,10 +106,6 @@ func (suite *TestHeartbeatSuite) TearDownSuite(c *ch.C) {
 	DbFacade = nil
 }
 
-func inTx(sql ...string) {
-	DbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
-}
-
 var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	BeforeEach(func() {
 		inTx(test.InitNqmAgent...)
