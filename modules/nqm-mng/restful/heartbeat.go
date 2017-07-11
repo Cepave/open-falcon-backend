@@ -7,7 +7,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service"
 	"github.com/gin-gonic/gin"
@@ -30,7 +29,7 @@ func falconAgentHeartbeat(
 }
 
 func nqmAgentHeartbeat(
-	req *model.NqmAgentHeartbeatRequest,
+	req *nqmModel.HeartbeatRequest,
 ) mvc.OutputBody {
 	r := rdb.SelectNqmAgentByConnId(req.ConnectionId)
 	if r != nil {
@@ -44,7 +43,7 @@ func nqmAgentHeartbeat(
 
 // overwrittenNqmAgent overwrites the result with the values from the heartbeat
 // request. The values in the database should be identical in the end.
-func overwriteNqmAgent(r *nqmModel.Agent, req *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
+func overwriteNqmAgent(r *nqmModel.Agent, req *nqmModel.HeartbeatRequest) *nqmModel.Agent {
 	r.ConnectionId = req.ConnectionId
 	r.Hostname = req.Hostname
 	r.IpAddress = net.ParseIP(req.IpAddress.String())

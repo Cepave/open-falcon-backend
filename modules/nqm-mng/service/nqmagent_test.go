@@ -2,12 +2,12 @@ package service
 
 import (
 	"fmt"
-	"time"
 	"math/rand"
+	"time"
 
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/icrowley/fake"
 
 	. "github.com/onsi/ginkgo"
@@ -15,7 +15,8 @@ import (
 )
 
 type dbNqmHeartbeatCapture int
-func (db *dbNqmHeartbeatCapture) updator(agents []*model.NqmAgentHeartbeatRequest) {
+
+func (db *dbNqmHeartbeatCapture) updator(agents []*nqmModel.HeartbeatRequest) {
 	v := int(*db)
 	v += len(agents)
 
@@ -25,7 +26,7 @@ func (db *dbNqmHeartbeatCapture) getNumber() int {
 	return int(*db)
 }
 
-func mockNqmHeartbeatOnDb(agents []*model.NqmAgentHeartbeatRequest) {}
+func mockNqmHeartbeatOnDb(agents []*nqmModel.HeartbeatRequest) {}
 
 var _ = Describe("Tests Put() function", func() {
 	var testedService *nqmAgentUpdateService
@@ -48,7 +49,7 @@ var _ = Describe("Tests Put() function", func() {
 				GinkgoT().Logf("Current consumed count: %d", count)
 				return count
 			},
-			2 * time.Second,
+			2*time.Second,
 		).Should(Equal(uint64(numberOfSampleHeartbeats)))
 	})
 
@@ -125,8 +126,8 @@ var _ = Describe("Tests functions of service on full lifecycle", func() {
 	It("Tests the consumer number", func() {
 		eventuallyWithTimeout(
 			func() int { return int(testedService.ConsumedCount()) },
-			3 * time.Second,
-		).Should(Equal(numberOfHeartbeat));
+			3*time.Second,
+		).Should(Equal(numberOfHeartbeat))
 
 		Expect(testedService.PendingLen()).To(Equal(0))
 		Expect(dbCallingCapture.getNumber()).To(Equal(numberOfHeartbeat))
@@ -145,7 +146,7 @@ func assertNumbersOfService(testedService *nqmAgentUpdateService, expectedConsum
 
 func eventuallyWithTimeout(valueGetter interface{}, timeout time.Duration) GomegaAsyncAssertion {
 	return Eventually(
-		valueGetter, timeout, timeout / 8,
+		valueGetter, timeout, timeout/8,
 	)
 }
 
@@ -154,7 +155,7 @@ func putRandomHeartbeat(srv *nqmAgentUpdateService, number int) {
 		srv.Put(buildRandomRequest())
 	}
 }
-func buildRandomRequest() *model.NqmAgentHeartbeatRequest {
+func buildRandomRequest() *nqmModel.HeartbeatRequest {
 	hostname := fake.UserName()
 	ip := fake.IPv4()
 
@@ -163,15 +164,15 @@ func buildRandomRequest() *model.NqmAgentHeartbeatRequest {
 	// 2013-04-04T00:00:00Z
 	var endTime int64 = 1365033600
 
-	return &model.NqmAgentHeartbeatRequest{
+	return &nqmModel.HeartbeatRequest{
 		ConnectionId: fmt.Sprintf("%s@%s", hostname, ip),
 		Hostname:     hostname,
 		IpAddress:    ojson.NewIP(ip),
-		Timestamp:    ojson.JsonTime(time.Unix(startTime + rand.Int63n(endTime), 0)),
+		Timestamp:    ojson.JsonTime(time.Unix(startTime+rand.Int63n(endTime), 0)),
 	}
 }
 
-func newNqmAgentUpdateServiceForTesting(queueConfig *commonQueue.Config, dbUpdator func([]*model.NqmAgentHeartbeatRequest)) *nqmAgentUpdateService {
+func newNqmAgentUpdateServiceForTesting(queueConfig *commonQueue.Config, dbUpdator func([]*nqmModel.HeartbeatRequest)) *nqmAgentUpdateService {
 	testedService := newNqmAgentUpdateService(queueConfig)
 	testedService.updateToDatabase = dbUpdator
 

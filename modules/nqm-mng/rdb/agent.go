@@ -6,13 +6,14 @@ import (
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	osqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/jmoiron/sqlx"
 )
 
 // Gets the ping list from cache
-func GetPingListFromCache(agentID int32, checkedTime time.Time) ([]*model.NqmTarget, *model.PingListLog) {
+func GetPingListFromCache(agentID int32, checkedTime time.Time) ([]*nqmModel.HeartbeatTarget, *model.PingListLog) {
 	pingListLog := getCacheLogOfPingList(agentID)
 
 	/**
@@ -314,10 +315,10 @@ func (t *updateRefreshTime) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 
 // 1. Update the access time
 // 2. Retrieve the ping list
-func getPingList(agentID int32, checkedTime time.Time) []*model.NqmTarget {
-	var result []*model.NqmTarget
+func getPingList(agentID int32, checkedTime time.Time) []*nqmModel.HeartbeatTarget {
+	var result []*nqmModel.HeartbeatTarget
 
-	var dbListTargets = DbFacade.GormDb.Model(&model.NqmTarget{}).
+	var dbListTargets = DbFacade.GormDb.Model(&nqmModel.HeartbeatTarget{}).
 		Select(`
 			apl_tg_id, tg_host,
 			isp_id, isp_name,

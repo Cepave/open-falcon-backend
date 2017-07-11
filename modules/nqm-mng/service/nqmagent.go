@@ -6,6 +6,7 @@ import (
 	"time"
 
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
@@ -35,7 +36,7 @@ func CloseNqmHeartbeat() {
 	logger.Info("Finish.")
 }
 
-var typeOfNqmAgentHeartbeat = reflect.TypeOf(new(model.NqmAgentHeartbeatRequest))
+var typeOfNqmAgentHeartbeat = reflect.TypeOf(new(nqmModel.HeartbeatRequest))
 
 type nqmAgentUpdateService struct {
 	q                *commonQueue.Queue
@@ -44,7 +45,7 @@ type nqmAgentUpdateService struct {
 	running          bool
 	flush            chan struct{}
 	done             chan struct{}
-	updateToDatabase func([]*model.NqmAgentHeartbeatRequest)
+	updateToDatabase func([]*nqmModel.HeartbeatRequest)
 }
 
 func newNqmAgentUpdateService(c *commonQueue.Config) *nqmAgentUpdateService {
@@ -86,7 +87,7 @@ func (q *nqmAgentUpdateService) Stop() {
 	<-q.done
 }
 
-func (q *nqmAgentUpdateService) Put(req *model.NqmAgentHeartbeatRequest) {
+func (q *nqmAgentUpdateService) Put(req *nqmModel.HeartbeatRequest) {
 	if !q.running {
 		return
 	}
@@ -109,7 +110,7 @@ func (q *nqmAgentUpdateService) draining() {
 func (q *nqmAgentUpdateService) syncToDatabase(m mode) {
 	var config commonQueue.Config = *q.c
 
-	var reqs []*model.NqmAgentHeartbeatRequest
+	var reqs []*nqmModel.HeartbeatRequest
 
 	switch m {
 	case _FLUSH:
@@ -134,13 +135,13 @@ func (q *nqmAgentUpdateService) syncToDatabase(m mode) {
 	}
 }
 
-func (q *nqmAgentUpdateService) drainFromQueue(config *commonQueue.Config) []*model.NqmAgentHeartbeatRequest {
+func (q *nqmAgentUpdateService) drainFromQueue(config *commonQueue.Config) []*nqmModel.HeartbeatRequest {
 	return q.q.DrainNWithDurationByType(
 		config, typeOfNqmAgentHeartbeat,
-	).([]*model.NqmAgentHeartbeatRequest)
+	).([]*nqmModel.HeartbeatRequest)
 }
 
-func updateNqmAgentHeartbeatImpl(reqs []*model.NqmAgentHeartbeatRequest) {
+func updateNqmAgentHeartbeatImpl(reqs []*nqmModel.HeartbeatRequest) {
 	utils.BuildPanicCapture(
 		func() {
 			rdb.UpdateNqmAgentHeartbeat(reqs)
@@ -183,7 +184,7 @@ type nqmCachedTargetListService struct {
 }
 
 // Load get the current cached target list for an agent
-func (s *nqmCachedTargetListService) Load(agentID int32) []*model.NqmTarget {
+func (s *nqmCachedTargetListService) Load(agentID int32) []*nqmModel.HeartbeatTarget {
 	result, cacheLog := rdb.GetPingListFromCache(agentID, time.Now())
 
 	go utils.BuildPanicCapture(

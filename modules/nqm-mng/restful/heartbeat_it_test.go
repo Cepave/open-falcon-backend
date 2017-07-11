@@ -7,10 +7,10 @@ import (
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	cModel "github.com/Cepave/open-falcon-backend/common/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
@@ -99,7 +99,7 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	})
 
 	DescribeTable("update an existent agent or instert a new agent", func(inputConnId string, inputHostname string, inputIPAddr string) {
-		inputReq := &model.NqmAgentHeartbeatRequest{
+		inputReq := &nqmModel.HeartbeatRequest{
 			ConnectionId: inputConnId,
 			Hostname:     inputHostname,
 			IpAddress:    json.NewIP(inputIPAddr),
