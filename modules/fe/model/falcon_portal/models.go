@@ -35,6 +35,7 @@ type EventCases struct {
 type AlarmType struct {
 	Id           int       `json:"id" orm:"pk"`
 	Name         string    `json:"name" orm:"column(name)"`
+	Color        string    `json:"color" orm:"column(color)"`
 	InternalData int       `json:"internal_data" orm:"column(internal_data)"`
 	Description  string    `json:"description" orm:"column(description)"`
 	Created      time.Time `json:"created" orm:"column(created)"`
