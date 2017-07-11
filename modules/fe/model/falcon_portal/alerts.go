@@ -45,6 +45,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne.IP = item.Ip
 		recordOne.IDC = item.Idc
 		recordOne.AlarmType = aType.Name
+		recordOne.AlarmColor = aType.Color
 		recordOne.InternalData = aType.InternalData
 		recordOne.ExtendedBlob = item.ExtendedBlob
 		// ///make compatible for overall , if need it, please uncomment below
