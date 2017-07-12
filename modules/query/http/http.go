@@ -18,30 +18,43 @@ type Dto struct {
 	Data interface{} `json:"data"`
 }
 
-func InitDatabase() {
+func InitDatabase() error {
 	config := g.Config()
 	// set default database
 	//
-	orm.RegisterDataBase("default", "mysql", config.Db.Addr, config.Db.Idle, config.Db.Max)
+	if err := orm.RegisterDataBase("default", "mysql", config.Db.Addr, config.Db.Idle, config.Db.Max); err != nil {
+		return err
+	}
 	// register model
 	orm.RegisterModel(new(Host), new(Grp), new(Grp_host), new(Grp_tpl), new(Plugin_dir), new(Tpl))
+
 	// set grafana database
 	strConn := strings.Replace(config.Db.Addr, "falcon_portal", "grafana", 1)
 
-	orm.RegisterDataBase("grafana", "mysql", strConn, config.Db.Idle, config.Db.Max)
+	if err := orm.RegisterDataBase("grafana", "mysql", strConn, config.Db.Idle, config.Db.Max); err != nil {
+		return err
+	}
 	orm.RegisterModel(new(Province), new(City), new(Idc))
 
-	orm.RegisterDataBase("apollo", "mysql", config.ApolloDB.Addr, config.ApolloDB.Idle, config.ApolloDB.Max)
+	if err := orm.RegisterDataBase("apollo", "mysql", config.ApolloDB.Addr, config.ApolloDB.Idle, config.ApolloDB.Max); err != nil {
+		return err
+	}
+	if err := orm.RegisterDataBase("boss", "mysql", config.BossDB.Addr, config.BossDB.Idle, config.BossDB.Max); err != nil {
+		return err
+	}
 
-	orm.RegisterDataBase("boss", "mysql", config.BossDB.Addr, config.BossDB.Idle, config.BossDB.Max)
 	orm.RegisterModel(new(Contacts), new(Hosts), new(Idcs), new(Ips), new(Platforms))
+	if err := orm.RegisterDataBase("gz_nqm", "mysql", config.Nqm.Addr, config.Nqm.Idle, config.Nqm.Max); err != nil {
+		return err
+	}
 
-	orm.RegisterDataBase("gz_nqm", "mysql", config.Nqm.Addr, config.Nqm.Idle, config.Nqm.Max)
 	orm.RegisterModel(new(Nqm_node))
 
 	if config.Debug == true {
 		orm.Debug = true
 	}
+
+	return nil
 }
 
 func Start() {
@@ -62,7 +75,10 @@ func Start() {
 	configNQMRoutes()
 
 	// start mysql database
-	InitDatabase()
+	if err := InitDatabase(); err != nil {
+		log.Fatalln(err)
+	}
+
 	go SyncHostsAndContactsTable()
 
 	// start http server
