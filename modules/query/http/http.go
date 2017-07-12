@@ -76,7 +76,7 @@ func Start() {
 
 	// start mysql database
 	if err := InitDatabase(); err != nil {
-		log.Fatalln(err)
+		log.Error(err)
 	}
 
 	go SyncHostsAndContactsTable()
