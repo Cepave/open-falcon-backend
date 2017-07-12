@@ -45,6 +45,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne.IP = item.Ip
 		recordOne.IDC = item.Idc
 		recordOne.AlarmType = aType.Name
+		recordOne.AlarmColor = aType.Color
 		recordOne.InternalData = aType.InternalData
 		recordOne.ExtendedBlob = item.ExtendedBlob
 		// ///make compatible for overall , if need it, please uncomment below
@@ -153,6 +154,9 @@ func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bo
 		item.Contact = []boss.Contactor{contactor}
 		if result, ok := hostmap[item.HostName]; ok {
 			item.Activate = result.Activate
+		} else {
+			// 2 means unknown, for not exist hostname & exnternal alarm
+			item.Activate = 2
 		}
 		respCompleteTmp = append(respCompleteTmp, item)
 	}
