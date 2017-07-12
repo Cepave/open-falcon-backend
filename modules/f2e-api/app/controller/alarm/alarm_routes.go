@@ -23,4 +23,5 @@ func Routes(r *gin.Engine) {
 	alarmapi.GET("/events", EventsGet)
 	alarmapi.POST("/event_note", AddNotesToAlarm)
 	alarmapi.GET("/event_note", GetNotesOfAlarm)
+	alarmapi.POST("/external_feeds", InputExternalAlertsToAlarm)
 }
