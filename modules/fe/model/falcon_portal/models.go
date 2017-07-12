@@ -58,6 +58,7 @@ type EventsRsp struct {
 	Id         int       `json:"id"`
 	Step       int       `json:"step"`
 	Cond       string    `json:"cond"`
+	Status     int       `json:"status"`
 	Timestamp  time.Time `json:"timestamp"`
 	Eid        string    `json:"event_caseId" orm:"column(eid)"`
 	TplCreator string    `json:"tpl_creator"`
