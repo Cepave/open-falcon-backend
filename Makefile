@@ -53,7 +53,6 @@ clean:
 	@rm -rf ./bin
 	@rm -rf ./out
 	@rm -rf ./$(TARGET)
-	@rm -rf ./package_cache_tmp
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage
