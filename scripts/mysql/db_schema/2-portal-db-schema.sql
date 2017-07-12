@@ -236,7 +236,7 @@ CREATE TABLE `alarm_types` (
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
-INSERT INTO `alarm_types` (id, name, internal_data, color, description) VALUES (1, 'owl', 1, 'blue', 'default type of owl');
+INSERT INTO `alarm_types` (id, name, internal_data, description) VALUES (1, 'owl', 1, 'purple', 'default type of owl');
 
 DROP TABLE IF EXISTS event_cases;
 CREATE TABLE event_cases (
