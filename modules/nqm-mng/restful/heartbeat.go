@@ -50,3 +50,12 @@ func overwriteNqmAgent(r *nqmModel.Agent, req *nqmModel.HeartbeatRequest) *nqmMo
 	r.LastHeartBeat = req.Timestamp
 	return r
 }
+
+func nqmAgentHeartbeatTargetList(
+	p *struct {
+		AgentID int32 `mvc:"param[agent_id]"`
+	},
+) mvc.OutputBody {
+	l := service.NqmCachedTargetList.Load(p.AgentID)
+	return mvc.JsonOutputBody(l)
+}
