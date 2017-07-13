@@ -5,15 +5,15 @@
         "listen": "%%QUERY_HTTP%%"
     },
     "hosts": {
-        "enabled": true,
+        "enabled": false,
         "interval": 60
     },
     "contacts": {
-        "enabled": true,
+        "enabled": false,
         "interval": 3600
     },
     "gin_http": {
-        "enabled":  true,
+        "enabled":  false,
         "listen":   "%%GIN_HTTP%%"
     },
     "graph": {
@@ -27,7 +27,7 @@
         }
     },
     "grpc": {
-      "enabled":  true,
+      "enabled":  false,
       "port": 1235
     },
     "api": {
