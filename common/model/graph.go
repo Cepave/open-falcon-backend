@@ -152,3 +152,11 @@ type GraphLastResp struct {
 	Counter  string   `json:"counter"`
 	Value    *RRDData `json:"value"`
 }
+
+type GraphLastRespList struct {
+	List *[]GraphLastResp
+}
+
+type GraphQueryResponseList struct {
+	List *[]*GraphQueryResponse
+}
