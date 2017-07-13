@@ -257,7 +257,7 @@ func (suite *TestNqmSuite) TestJsonOfCityMetric(c *C) {
 	// :~)
 }
 
-// Tests the convertion from IR of NQM DSL to query parameters on ICMP log(Cassandra)
+// Tests the conversion from IR of NQM DSL to query parameters on ICMP log(Cassandra)
 func (suite *TestNqmSuite) TestToNqmDsl(c *C) {
 	sampleQueryParam := dsl.QueryParams{
 		AgentFilter: dsl.NodeFilter{

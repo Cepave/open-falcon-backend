@@ -778,12 +778,12 @@ func (suite *TestQuerySuite) TestGetPropRelation(c *C) {
 			&nqmModel.TargetFilter{},
 			[]PropRelation{NoCondition, NoCondition, NoCondition, NoCondition},
 		},
-		{ // Same realtion(by agent)
+		{ // Same relation(by agent)
 			&nqmModel.AgentFilter{IspIds: []int16{RelationSame}, ProvinceIds: []int16{RelationSame}, CityIds: []int16{RelationSame}, NameTagIds: []int16{RelationSame}},
 			&nqmModel.TargetFilter{},
 			[]PropRelation{SameValue, SameValue, SameValue, SameValue},
 		},
-		{ // Same realtion(by target)
+		{ // Same relation(by target)
 			&nqmModel.AgentFilter{},
 			&nqmModel.TargetFilter{IspIds: []int16{RelationSame}, ProvinceIds: []int16{RelationSame}, CityIds: []int16{RelationSame}, NameTagIds: []int16{RelationSame}},
 			[]PropRelation{SameValue, SameValue, SameValue, SameValue},

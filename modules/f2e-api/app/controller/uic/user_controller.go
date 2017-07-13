@@ -161,7 +161,7 @@ func ChangePassword(c *gin.Context) {
 		h.JSONR(c, http.StatusBadRequest, "oldPassword is not match current one")
 		return
 	case user.IsThirdPartyUser():
-		h.JSONR(c, http.StatusBadRequest, "can not change password for thrid party login account")
+		h.JSONR(c, http.StatusBadRequest, "can not change password for third party login account")
 		return
 	case user.Passwd != "":
 		h.JSONR(c, http.StatusBadRequest, "Password can not be blank")

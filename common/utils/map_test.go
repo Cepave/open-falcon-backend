@@ -8,7 +8,7 @@ type TestMapSuite struct{}
 
 var _ = Suite(&TestMapSuite{})
 
-// Tests the convertion of types for a map
+// Tests the conversion of types for a map
 func (suite *TestMapSuite) Test(c *C) {
 	type s2 string
 

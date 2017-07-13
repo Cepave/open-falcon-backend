@@ -84,7 +84,7 @@ func (suite *ChangeLogSuite) TestLoadScripts(c *C) {
 	c.Assert(testScripts[2], Matches, "CREATE PROCEDURE proc().+UPDATE tab_1 SET id = 20;.+")
 }
 
-// Global usage(packge level)
+// Global usage(package level)
 var dbConfig *patchsql.DatabaseConfig = nil
 
 // 1. Setup connection of database

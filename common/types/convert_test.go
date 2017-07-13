@@ -15,7 +15,7 @@ type TestConvertSuite struct{}
 
 var _ = Suite(&TestConvertSuite{})
 
-// Tests the defalt service of convertion on added convertion
+// Tests the defalt service of conversion on added conversion
 func (suite *TestConvertSuite) TestAddConverter(c *C) {
 	srv := NewDefaultConversionService()
 	srv.AddConverter(
@@ -103,7 +103,7 @@ func (suite *TestConvertSuite) TestConvertToComplexType(c *C) {
 	}
 }
 
-// Test the convertion for channel type
+// Test the conversion for channel type
 func (suite *TestConvertSuite) TestConvertToChannel(c *C) {
 	var v1, v2 uint32 = 20, 40
 
@@ -276,7 +276,7 @@ func (suite *TestConvertSuite) TestComplexTypesToArray(c *C) {
 	}
 }
 
-// Tests the convertion of map
+// Tests the conversion of map
 func (suite *TestConvertSuite) TestMapConversion(c *C) {
 	np := oreflect.NewPointerValue
 

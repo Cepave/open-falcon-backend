@@ -67,7 +67,7 @@ func (p *QueryParams) CheckRationalOfParameters() error {
 	return nil
 }
 
-// Checks the paramters
+// Checks the parameters
 //
 // 1. provinces and cities cannot be assigned at the same time(except auto-condition)
 // 2. duplicated value would be eliminated

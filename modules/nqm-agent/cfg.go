@@ -102,7 +102,7 @@ func connectionID() string {
 		return connectionID
 	}
 
-	// Logically it shouldn't happen because ConnectionID is alwasy generated
+	// Logically it shouldn't happen because ConnectionID is always generated
 	// after Hostname and IPAddress are set.
 	if Meta().Hostname == "" || Meta().IPAddress == "" {
 		log.Fatalln("ConnectionID not set in config, generating...failed!")

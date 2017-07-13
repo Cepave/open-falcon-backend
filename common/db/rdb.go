@@ -360,7 +360,7 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 		PanicIfError(utils.BuildErrorWithCallerInfo(err, callerInfo))
 
 		/**
-		 * Rollback the transaction when panic is rised
+		 * Rollback the transaction when panic is raised
 		 */
 		defer func() {
 			p := recover()

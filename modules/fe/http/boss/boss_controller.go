@@ -25,7 +25,7 @@ func (this *BossController) GetContact() {
 	baseResp := this.BasicRespGen()
 	platform := this.GetString("platform", "")
 	if platform == "" {
-		this.ResposeError(baseResp, "platfrom is empty")
+		this.ResposeError(baseResp, "platform is empty")
 		return
 	}
 	res, err := boss.QueryContact(platform)

@@ -61,7 +61,7 @@ func (b basicAuthImpl) getParam(context *gin.Context, paramName string, defaultV
 	username, password, ok := context.Request.BasicAuth()
 
 	if !ok {
-		panic("No basic authenticaion")
+		panic("No basic authentication")
 	}
 
 	switch paramName {

@@ -39,9 +39,9 @@ func BuildRepeatByLen(v interface{}) Breeder {
 	}
 }
 
-func BuildJoin(seperator TextGetter) Distiller {
+func BuildJoin(separator TextGetter) Distiller {
 	return func(list TextList) TextGetter {
-		return &joinImpl{seperator, list}
+		return &joinImpl{separator, list}
 	}
 }
 
@@ -101,7 +101,7 @@ func (s *surroundingImpl) Post() PostProcessor {
 }
 
 type joinImpl struct {
-	seperator TextGetter
+	separator TextGetter
 	getters   TextList
 }
 
@@ -117,7 +117,7 @@ func (j *joinImpl) String() string {
 		resultOfGetters = append(resultOfGetters, getterResult)
 	}
 
-	return strings.Join(resultOfGetters, j.seperator.String())
+	return strings.Join(resultOfGetters, j.separator.String())
 }
 func (j *joinImpl) Post() PostProcessor {
 	return NewPost(j)

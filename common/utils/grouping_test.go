@@ -31,7 +31,7 @@ func (suite *TestGroupingSuite) TestGroupingProcessor(c *C) {
 	c.Assert(testedProcessor.Children(sampleKey("GD-2")), HasLen, 2)
 }
 
-// Tests the type convertion of grouping
+// Tests the type conversion of grouping
 func (suite *TestGroupingSuite) TestTypedValues(c *C) {
 	testedProcessor := NewGroupingProcessorOfTargetType(int(0))
 

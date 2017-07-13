@@ -251,7 +251,7 @@ func (s *DefaultConversionService) defaultConvert(
 		return converter(sourceObject)
 	}
 
-	// Uses default convertion of types
+	// Uses default conversion of types
 	return utils.ConvertTo(sourceObject, targetType)
 }
 

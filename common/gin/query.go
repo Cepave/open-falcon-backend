@@ -7,7 +7,7 @@ import (
 
 // QueryWrapper for gin.Context
 //
-// You may like to use "gin/mvc" framework instead of this utility to convert data by youself.
+// You may like to use "gin/mvc" framework instead of this utility to convert data by yourself.
 type QueryWrapper gin.Context
 
 // NewQueryWrapper converts *gin.Context to *QueryWrapper

@@ -1,9 +1,12 @@
 language: go
 
 go:
-  - 1.7
+  - 1.7.x
+  - 1.8.x
+  - master
 
 script:
+  - make misspell-check
   - make fmt-check
   - make all
   - make pack
