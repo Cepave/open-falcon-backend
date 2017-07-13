@@ -24,18 +24,15 @@ fmt-check:
 	fi;
 
 $(CMD):
-	go get ./modules/$@
 	go build -ldflags "-X main.GitCommit=`git log -n1 --pretty=format:%h modules/$@` -X main.Version=${VERSION}" -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
-	go get .
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
 
 checkvendor:
 	@hash govendor > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/kardianos/govendor; \
 	fi
-	@if [ -f ~/.bash_profile ]; then source ~/.bash_profile; fi
 
 install: checkvendor
 	govendor sync
