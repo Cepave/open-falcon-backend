@@ -125,6 +125,7 @@ func GetValueOfFieldByReflect(v reflect.Value, tree ...string) reflect.Value {
 
 	return currentValue
 }
+
 // Sets value of field, supporting tree visiting whether or not the value is
 // struct or pointer to struct.
 func SetValueOfFieldByReflect(v reflect.Value, newFieldValue reflect.Value, tree ...string) {

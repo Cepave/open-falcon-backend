@@ -1,9 +1,9 @@
 package owl
 
 import (
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 	"time"
@@ -14,7 +14,7 @@ type TestNameTagSuite struct{}
 var _ = Suite(&TestNameTagSuite{})
 
 var testedNameTagService = NewNameTagService(
-	cache.DataCacheConfig {
+	cache.DataCacheConfig{
 		MaxSize: 5, Duration: time.Minute * 5,
 	},
 )
@@ -24,13 +24,13 @@ func (suite *TestNameTagSuite) TestGetNameTagById(c *C) {
 	testCases := []*struct {
 		sampleId int16
 		hasFound bool
-	} {
-		{ 3021, true },
-		{ -10, false },
+	}{
+		{3021, true},
+		{-10, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testedNameTagService.GetNameTagById(testCase.sampleId)
 

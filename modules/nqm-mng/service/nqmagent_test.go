@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
-	"time"
 	"math/rand"
+	"time"
 
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
@@ -15,6 +15,7 @@ import (
 )
 
 type dbNqmHeartbeatCapture int
+
 func (db *dbNqmHeartbeatCapture) updator(agents []*model.NqmAgentHeartbeatRequest) {
 	v := int(*db)
 	v += len(agents)
@@ -48,7 +49,7 @@ var _ = Describe("Tests Put() function", func() {
 				GinkgoT().Logf("Current consumed count: %d", count)
 				return count
 			},
-			2 * time.Second,
+			2*time.Second,
 		).Should(Equal(uint64(numberOfSampleHeartbeats)))
 	})
 
@@ -125,8 +126,8 @@ var _ = Describe("Tests functions of service on full lifecycle", func() {
 	It("Tests the consumer number", func() {
 		eventuallyWithTimeout(
 			func() int { return int(testedService.ConsumedCount()) },
-			3 * time.Second,
-		).Should(Equal(numberOfHeartbeat));
+			3*time.Second,
+		).Should(Equal(numberOfHeartbeat))
 
 		Expect(testedService.PendingLen()).To(Equal(0))
 		Expect(dbCallingCapture.getNumber()).To(Equal(numberOfHeartbeat))
@@ -145,7 +146,7 @@ func assertNumbersOfService(testedService *nqmAgentUpdateService, expectedConsum
 
 func eventuallyWithTimeout(valueGetter interface{}, timeout time.Duration) GomegaAsyncAssertion {
 	return Eventually(
-		valueGetter, timeout, timeout / 8,
+		valueGetter, timeout, timeout/8,
 	)
 }
 
@@ -167,7 +168,7 @@ func buildRandomRequest() *model.NqmAgentHeartbeatRequest {
 		ConnectionId: fmt.Sprintf("%s@%s", hostname, ip),
 		Hostname:     hostname,
 		IpAddress:    ojson.NewIP(ip),
-		Timestamp:    ojson.JsonTime(time.Unix(startTime + rand.Int63n(endTime), 0)),
+		Timestamp:    ojson.JsonTime(time.Unix(startTime+rand.Int63n(endTime), 0)),
 	}
 }
 

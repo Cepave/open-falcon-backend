@@ -2,9 +2,9 @@ package nqm_parser
 
 import (
 	"fmt"
-	"testing"
 	"log"
 	"strings"
+	"testing"
 	"time"
 
 	. "gopkg.in/check.v1"
@@ -18,19 +18,20 @@ var _ = Suite(&TestNqmDslParserSuite{})
 
 // Tests the parsing for time parameters
 type timeParamsTestCase struct {
-	sampleStartTime string
-	sampleEndTime string
+	sampleStartTime   string
+	sampleEndTime     string
 	expectedStartTime time.Time
-	expectedEndTime time.Time
+	expectedEndTime   time.Time
 }
+
 func (suite *TestNqmDslParserSuite) TestTimeParams(c *C) {
 	timezoneFormat := time.Now().Format(time.RFC3339)[19:]
-	testCases := []*timeParamsTestCase {
-		&timeParamsTestCase{ "1273053600", "1273312800", time.Unix(1273053600, 0), time.Unix(1273312800, 0) },
-		&timeParamsTestCase{ "2011-06-03T10:00+04:00", "2011-06-03T12:00+04:00", parseTime("2011-06-03T10:00:00+04:00"), parseTime("2011-06-03T12:00:00+04:00") },
-		&timeParamsTestCase{ "2011-10-01", "2011-10-03", parseTime("2011-10-01T00:00:00"+timezoneFormat), parseTime("2011-10-03T00:00:00"+timezoneFormat) },
-		&timeParamsTestCase{ "2011-08-20T10", "2011-08-20T16", parseTime("2011-08-20T10:00:00"+timezoneFormat), parseTime("2011-08-20T16:00:00"+timezoneFormat) },
-		&timeParamsTestCase{ "2011-07-11T10:30", "2011-07-11T11:30", parseTime("2011-07-11T10:30:00"+timezoneFormat), parseTime("2011-07-11T11:30:00"+timezoneFormat) },
+	testCases := []*timeParamsTestCase{
+		{"1273053600", "1273312800", time.Unix(1273053600, 0), time.Unix(1273312800, 0)},
+		{"2011-06-03T10:00+04:00", "2011-06-03T12:00+04:00", parseTime("2011-06-03T10:00:00+04:00"), parseTime("2011-06-03T12:00:00+04:00")},
+		{"2011-10-01", "2011-10-03", parseTime("2011-10-01T00:00:00" + timezoneFormat), parseTime("2011-10-03T00:00:00" + timezoneFormat)},
+		{"2011-08-20T10", "2011-08-20T16", parseTime("2011-08-20T10:00:00" + timezoneFormat), parseTime("2011-08-20T16:00:00" + timezoneFormat)},
+		{"2011-07-11T10:30", "2011-07-11T11:30", parseTime("2011-07-11T10:30:00" + timezoneFormat), parseTime("2011-07-11T11:30:00" + timezoneFormat)},
 	}
 
 	for _, testCase := range testCases {
@@ -51,7 +52,7 @@ func (suite *TestNqmDslParserSuite) TestTimeParams(c *C) {
 
 type assertionFunc func(testedQueryParam *QueryParams)
 type nodeParamsTestCase struct {
-	dsl string
+	dsl           string
 	assertionImpl assertionFunc
 }
 
@@ -67,27 +68,28 @@ func parseTime(timeStr string) time.Time {
 
 // Test the error for unknown parameters
 type unknownParamTestCase struct {
-	sampleDsl string
+	sampleDsl  string
 	errorMatch string
 }
+
 func (suite *TestNqmDslParserSuite) TestUnknownParam(c *C) {
-	testCases := []*unknownParamTestCase {
-		&unknownParamTestCase{ "starttime", ".*missed.*" },
-		&unknownParamTestCase{ "starttime=", ".*need set.*" },
-		&unknownParamTestCase{ "starttime=ggaa", ".*cannot accept.*" },
-		&unknownParamTestCase{ "target.isp", ".*missed.*" },
-		&unknownParamTestCase{ "agent.isp=a1,,=2j", ".*,=2j.*" },
-		&unknownParamTestCase{ "agent.isp==,", ".*=,.*" },
-		&unknownParamTestCase{ "param1=20", ".*param1.*" },
-		&unknownParamTestCase{ "agent.gogo", ".*agent.gogo.*" },
-		&unknownParamTestCase{ "starttime9=33 starttime=10 endtime=20", ".*starttime9.*" },
-		&unknownParamTestCase{ "starttime=10 endtime=20 endtime9=22", ".*endtime9.*" },
-		&unknownParamTestCase{ "agent.isp=%AC1%", ".*auto-condition.*" },
-		&unknownParamTestCase{ "agent.province=%AC1%", ".*auto-condition.*" },
-		&unknownParamTestCase{ "agent.city=%AC1%", ".*auto-condition.*" },
-		&unknownParamTestCase{ "target.isp=%TC2%", ".*auto-condition.*" },
-		&unknownParamTestCase{ "target.province=%TC2%", ".*auto-condition.*" },
-		&unknownParamTestCase{ "target.city=%TC2%", ".*auto-condition.*" },
+	testCases := []*unknownParamTestCase{
+		{"starttime", ".*missed.*"},
+		{"starttime=", ".*need set.*"},
+		{"starttime=ggaa", ".*cannot accept.*"},
+		{"target.isp", ".*missed.*"},
+		{"agent.isp=a1,,=2j", ".*,=2j.*"},
+		{"agent.isp==,", ".*=,.*"},
+		{"param1=20", ".*param1.*"},
+		{"agent.gogo", ".*agent.gogo.*"},
+		{"starttime9=33 starttime=10 endtime=20", ".*starttime9.*"},
+		{"starttime=10 endtime=20 endtime9=22", ".*endtime9.*"},
+		{"agent.isp=%AC1%", ".*auto-condition.*"},
+		{"agent.province=%AC1%", ".*auto-condition.*"},
+		{"agent.city=%AC1%", ".*auto-condition.*"},
+		{"target.isp=%TC2%", ".*auto-condition.*"},
+		{"target.province=%TC2%", ".*auto-condition.*"},
+		{"target.city=%TC2%", ".*auto-condition.*"},
 	}
 
 	for _, testCase := range testCases {

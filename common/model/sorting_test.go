@@ -13,45 +13,45 @@ func (suite *TestSortingSuite) TestNewSqlOrderByDialect(c *C) {
 	testCases := []*struct {
 		sampleEntities []*OrderByEntity
 		expectedSyntax string
-		hasError bool
-	} {
+		hasError       bool
+	}{
 		{ // Only one soring entity
-			[]*OrderByEntity {
-				&OrderByEntity{ "name", Descending },
+			[]*OrderByEntity{
+				{"name", Descending},
 			},
 			"tb_name DESC",
 			false,
 		},
 		{ // Multiple sorting entities
-			[]*OrderByEntity {
-				&OrderByEntity{ "name", DefaultDirection },
-				&OrderByEntity{ "age", Ascending },
-				&OrderByEntity{ "address", Descending },
+			[]*OrderByEntity{
+				{"name", DefaultDirection},
+				{"age", Ascending},
+				{"address", Descending},
 			},
 			"tb_name, tb_age ASC, tb_address DESC",
 			false,
 		},
 		{ // Empty
-			[]*OrderByEntity {}, "", false,
+			[]*OrderByEntity{}, "", false,
 		},
 		{ // Error case(no mapping of property)
-			[]*OrderByEntity {
-				&OrderByEntity{ "name2", DefaultDirection },
+			[]*OrderByEntity{
+				{"name2", DefaultDirection},
 			},
 			"", true,
 		},
 		{ // Error case(no mapping of direction)
-			[]*OrderByEntity {
-				&OrderByEntity{ "name", 99 },
+			[]*OrderByEntity{
+				{"name", 99},
 			},
 			"", true,
 		},
 	}
 
 	testedDialect := NewSqlOrderByDialect(
-		map[string]string {
-			"name": "tb_name",
-			"age": "tb_age",
+		map[string]string{
+			"name":    "tb_name",
+			"age":     "tb_age",
 			"address": "tb_address",
 		},
 	)

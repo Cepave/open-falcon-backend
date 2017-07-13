@@ -3,10 +3,25 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
 CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng f2e-api
 TARGET = open-falcon
-
 VERSION := $(shell cat VERSION)
+GOFILES := $(shell find . -name "*.go" -type f ! -path "./vendor/*")
+GOFMT ?= gofmt -s
 
 all: install $(CMD) $(TARGET)
+
+.PHONY: fmt
+fmt:
+	$(GOFMT) -w $(GOFILES)
+
+.PHONY: fmt-check
+fmt-check:
+	# get all go files and run go fmt on them
+	@diff=$$($(GOFMT) -d $(GOFILES)); \
+	if [ -n "$$diff" ]; then \
+		echo "Please run 'make fmt' and commit the result:"; \
+		echo "$${diff}"; \
+		exit 1; \
+	fi;
 
 $(CMD):
 	go get ./modules/$@

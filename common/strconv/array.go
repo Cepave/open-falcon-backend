@@ -18,8 +18,7 @@ func SplitStringToIntArray(values string, seperator string) []int64 {
 		var intValue int64
 		var parseError error
 
-		if intValue, parseError = strconv.ParseInt(v, 10, 64)
-			parseError != nil {
+		if intValue, parseError = strconv.ParseInt(v, 10, 64); parseError != nil {
 			panic(fmt.Errorf("Cannot parse value in array to Int. Index: [%d]. Value: [%v]", i, v))
 		}
 
@@ -40,8 +39,7 @@ func SplitStringToUintArray(values string, seperator string) []uint64 {
 		var uintValue uint64
 		var parseError error
 
-		if uintValue, parseError = strconv.ParseUint(v, 10, 64)
-			parseError != nil {
+		if uintValue, parseError = strconv.ParseUint(v, 10, 64); parseError != nil {
 			panic(fmt.Errorf("Cannot parse value in array to Uint. Index: [%d]. Value: [%v]", i, v))
 		}
 

@@ -8,49 +8,49 @@ import (
 )
 
 var (
-	TypeOfInt = ot.TypeOfInt
-	TypeOfInt64 = ot.TypeOfInt64
-	TypeOfInt32 = ot.TypeOfInt32
-	TypeOfInt16 = ot.TypeOfInt16
-	TypeOfInt8 = ot.TypeOfInt8
-	TypeOfUint = ot.TypeOfUint
+	TypeOfInt    = ot.TypeOfInt
+	TypeOfInt64  = ot.TypeOfInt64
+	TypeOfInt32  = ot.TypeOfInt32
+	TypeOfInt16  = ot.TypeOfInt16
+	TypeOfInt8   = ot.TypeOfInt8
+	TypeOfUint   = ot.TypeOfUint
 	TypeOfUint64 = ot.TypeOfUint64
 	TypeOfUint32 = ot.TypeOfUint32
 	TypeOfUint16 = ot.TypeOfUint16
-	TypeOfUint8 = ot.TypeOfUint8
+	TypeOfUint8  = ot.TypeOfUint8
 
 	TypeOfFloat32 = ot.TypeOfFloat32
 	TypeOfFloat64 = ot.TypeOfFloat64
 
-	TypeOfComplex64 = ot.TypeOfComplex64
+	TypeOfComplex64  = ot.TypeOfComplex64
 	TypeOfComplex128 = ot.TypeOfComplex128
 
-	TypeOfByte = ot.TypeOfByte
-	TypeOfBool = ot.TypeOfBool
+	TypeOfByte   = ot.TypeOfByte
+	TypeOfBool   = ot.TypeOfBool
 	TypeOfString = ot.TypeOfString
 
-	ATypeOfInt = ot.STypeOfInt
-	ATypeOfInt64 = ot.STypeOfInt64
-	ATypeOfInt32 = ot.STypeOfInt32
-	ATypeOfInt16 = ot.STypeOfInt16
-	ATypeOfInt8 = ot.STypeOfInt8
-	ATypeOfUint = ot.STypeOfUint
+	ATypeOfInt    = ot.STypeOfInt
+	ATypeOfInt64  = ot.STypeOfInt64
+	ATypeOfInt32  = ot.STypeOfInt32
+	ATypeOfInt16  = ot.STypeOfInt16
+	ATypeOfInt8   = ot.STypeOfInt8
+	ATypeOfUint   = ot.STypeOfUint
 	ATypeOfUint64 = ot.STypeOfUint64
 	ATypeOfUint32 = ot.STypeOfUint32
 	ATypeOfUint16 = ot.STypeOfUint16
-	ATypeOfUint8 = ot.STypeOfUint8
+	ATypeOfUint8  = ot.STypeOfUint8
 
 	ATypeOfFloat32 = ot.STypeOfFloat32
 	ATypeOfFloat64 = ot.STypeOfFloat64
 
-	ATypeOfComplex64 = ot.STypeOfComplex64
+	ATypeOfComplex64  = ot.STypeOfComplex64
 	ATypeOfComplex128 = ot.STypeOfComplex128
 
-	ATypeOfByte = ot.STypeOfByte
-	ATypeOfBool = ot.STypeOfBool
+	ATypeOfByte   = ot.STypeOfByte
+	ATypeOfBool   = ot.STypeOfBool
 	ATypeOfString = ot.STypeOfString
 
-	TrueValue = ot.TrueValue
+	TrueValue  = ot.TrueValue
 	FalseValue = ot.FalseValue
 )
 
@@ -108,6 +108,7 @@ func IsViable(v interface{}) bool {
 
 // Alias of reflect.Value, provides some convenient functions for programming on reflection.
 type ValueExt reflect.Value
+
 // Returns true value if the value is array or slice
 func (v ValueExt) IsArray() bool {
 	switch reflect.Value(v).Kind() {
@@ -117,6 +118,7 @@ func (v ValueExt) IsArray() bool {
 
 	return false
 }
+
 // Returns true value if the value is reflect.Ptr, reflect.Uintptr, or reflect.UnsafePointer
 func (v ValueExt) IsPointer() bool {
 	switch reflect.Value(v).Kind() {

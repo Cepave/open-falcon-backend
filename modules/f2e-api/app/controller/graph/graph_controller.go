@@ -12,9 +12,9 @@ import (
 	m "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/graph"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	g "github.com/Cepave/open-falcon-backend/modules/f2e-api/graph"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 type APIEndpointRegexpQueryInputs struct {

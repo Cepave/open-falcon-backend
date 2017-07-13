@@ -60,8 +60,8 @@ func Start() {
 		return
 	}
 	s := &http.Server{
-		Addr: addr,
-		Handler: ginRouter,
+		Addr:           addr,
+		Handler:        ginRouter,
 		MaxHeaderBytes: 1 << 30,
 	}
 

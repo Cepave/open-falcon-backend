@@ -12,7 +12,7 @@ var _ = Suite(&TestMapSuite{})
 func (suite *TestMapSuite) Test(c *C) {
 	type s2 string
 
-	sampleAMap := MakeAbstractMap(map[int16]s2 {
+	sampleAMap := MakeAbstractMap(map[int16]s2{
 		1: "Nice",
 		2: "Good",
 	})

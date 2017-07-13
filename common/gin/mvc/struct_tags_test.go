@@ -10,10 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/common/utils"
 	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
-	ot "github.com/Cepave/open-falcon-backend/common/types"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	ot "github.com/Cepave/open-falcon-backend/common/types"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	. "gopkg.in/check.v1"
 )
 
@@ -49,11 +49,11 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 	}
 
 	testCases := []*struct {
-		sampleType reflect.Type
-		sampleTag reflect.StructTag
-		setupFunc func(*gin.Context)
+		sampleType    reflect.Type
+		sampleTag     reflect.StructTag
+		setupFunc     func(*gin.Context)
 		expectedValue interface{}
-	} {
+	}{
 		/**
 		 * Query parameters
 		 */
@@ -83,15 +83,15 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 		},
 		{ // Viable slice
 			rt.STypeOfString, `mvc:"query[nv]"`,
-			getReqSetup, []string{ "32", "76" },
+			getReqSetup, []string{"32", "76"},
 		},
 		{ // Vialbe slice with type conversion
 			rt.STypeOfUint16, `mvc:"query[nv]"`,
-			getReqSetup, []uint16{ 32, 76 },
+			getReqSetup, []uint16{32, 76},
 		},
 		{ // Default value
 			rt.STypeOfUint32, `mvc:"query[nv9] default[88,76,39]"`,
-			getReqSetup, []uint32{ 88, 76, 39 },
+			getReqSetup, []uint32{88, 76, 39},
 		},
 		// :~)
 
@@ -124,15 +124,15 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 		},
 		{ // Viable slice
 			rt.STypeOfString, `mvc:"form[fv-2]"`,
-			postReqSetup, []string{ "23", "56" },
+			postReqSetup, []string{"23", "56"},
 		},
 		{ // Vialbe slice with type conversion
 			rt.STypeOfUint16, `mvc:"form[fv-2]"`,
-			postReqSetup, []uint16{ 23, 56 },
+			postReqSetup, []uint16{23, 56},
 		},
 		{ // Default value
 			rt.STypeOfUint32, `mvc:"form[ng55] default[28,176,89]"`,
-			postReqSetup, []uint32{ 28, 176, 89 },
+			postReqSetup, []uint32{28, 176, 89},
 		},
 		// :~)
 
@@ -236,10 +236,10 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		fieldType := reflect.StructField {
+		fieldType := reflect.StructField{
 			Name: "FieldValue1",
 			Type: testCase.sampleType,
-			Tag: testCase.sampleTag,
+			Tag:  testCase.sampleTag,
 		}
 
 		paramLoader := buildParamLoader(fieldType, convSrv)
@@ -247,7 +247,7 @@ func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
 			continue
 		}
 
-		context := &gin.Context {}
+		context := &gin.Context{}
 		testCase.setupFunc(context)
 
 		testedValue := paramLoader(context)
@@ -262,16 +262,16 @@ func (suite *TestStructTagsSuite) TestPaging(c *C) {
 	}
 
 	testCases := []*struct {
-		requestSetup func(*http.Request)
-		expectedSize int32
+		requestSetup    func(*http.Request)
+		expectedSize    int32
 		expectedOrderBy []*model.OrderByEntity
-	} {
+	}{
 		{
 			func(req *http.Request) {},
 			17,
-			[]*model.OrderByEntity {
-				{ Expr: "ak_1", Direction: utils.DefaultDirection },
-				{ Expr: "bd_2", Direction: utils.DefaultDirection },
+			[]*model.OrderByEntity{
+				{Expr: "ak_1", Direction: utils.DefaultDirection},
+				{Expr: "bd_2", Direction: utils.DefaultDirection},
 			},
 		},
 		{
@@ -281,9 +281,9 @@ func (suite *TestStructTagsSuite) TestPaging(c *C) {
 				req.Header.Set("order-by", "cp_1#asc:cp_2#desc")
 			},
 			39,
-			[]*model.OrderByEntity {
-				{ Expr: "cp_1", Direction: utils.Ascending },
-				{ Expr: "cp_2", Direction: utils.Descending },
+			[]*model.OrderByEntity{
+				{Expr: "cp_1", Direction: utils.Ascending},
+				{Expr: "cp_2", Direction: utils.Descending},
 			},
 		},
 	}
@@ -295,7 +295,7 @@ func (suite *TestStructTagsSuite) TestPaging(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		context := &gin.Context {
+		context := &gin.Context{
 			Request: httptest.NewRequest(http.MethodPost, "/", nil),
 		}
 		testCase.requestSetup(context.Request)

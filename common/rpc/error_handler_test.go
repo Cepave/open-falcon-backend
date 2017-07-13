@@ -14,11 +14,11 @@ var _ = Suite(&TestErrorSuite{})
 // Tests the capture of error object
 func (suite *TestErrorSuite) TestHandleError(c *C) {
 	testCases := []*struct {
-		sampleError interface{}
+		sampleError   interface{}
 		expectedError string
-	} {
-		{ "P1", "P1" },
-		{ errors.New("E1"), "E1" },
+	}{
+		{"P1", "P1"},
+		{errors.New("E1"), "E1"},
 	}
 
 	for i, testCase := range testCases {
@@ -27,7 +27,7 @@ func (suite *TestErrorSuite) TestHandleError(c *C) {
 
 		testedError := samplePanic(testCase.sampleError)
 
-		c.Assert(testedError.Error(), Matches, ".*" + testCase.expectedError + ".*", comment)
+		c.Assert(testedError.Error(), Matches, ".*"+testCase.expectedError+".*", comment)
 	}
 }
 

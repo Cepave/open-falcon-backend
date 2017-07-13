@@ -1,8 +1,8 @@
 package pflag
 
 import (
-	"os"
 	"github.com/spf13/pflag"
+	"os"
 )
 
 // Prints default by pflag and exit the application with 0

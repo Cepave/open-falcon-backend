@@ -2,12 +2,12 @@ package http
 
 import (
 	"github.com/astaxie/beego/orm"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
-	log "github.com/sirupsen/logrus"
 )
 
 type Nqm_node struct {
@@ -377,12 +377,12 @@ func getSnorlax(rw http.ResponseWriter, req *http.Request) {
 		begin := 0
 		end := 19
 		begin = (page - 1) * rowsPerPage
-		end =  begin + rowsPerPage
+		end = begin + rowsPerPage
 		lastIndex := len(timestamps)
-		if (begin > lastIndex) {
+		if begin > lastIndex {
 			begin = lastIndex
 		}
-		if (end > lastIndex) {
+		if end > lastIndex {
 			end = lastIndex
 		}
 		timestamps = timestamps[begin:end]
@@ -450,16 +450,16 @@ func getPhoenix(rw http.ResponseWriter, req *http.Request) {
 			row := rows[0]
 			node = map[string]string{
 				"node": nodeName,
-				"IP": row["ip"].(string),
+				"IP":   row["ip"].(string),
 			}
 			for _, row := range rows {
 				IP := row["dest_ip"].(string)
 				destination := map[string]string{
-					"IDC": row["dest_id"].(string),
-					"IP": IP,
-					"max": row["max"].(string),
-					"min": row["min"].(string),
-					"avg": row["avg"].(string),
+					"IDC":  row["dest_id"].(string),
+					"IP":   IP,
+					"max":  row["max"].(string),
+					"min":  row["min"].(string),
+					"avg":  row["avg"].(string),
 					"loss": row["loss"].(string),
 					"time": time.Unix(timestampNearest, 0).Format("2006-01-02 15:04"),
 				}

@@ -2,8 +2,8 @@ package owl
 
 import (
 	"flag"
-	"testing"
 	ch "gopkg.in/check.v1"
+	"testing"
 
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "github.com/onsi/ginkgo"

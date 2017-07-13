@@ -14,10 +14,10 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/emirpasic/gods/maps/hashmap"
 	"github.com/emirpasic/gods/sets/hashset"
+	log "github.com/sirupsen/logrus"
 )
 
 func getFctoken() string {

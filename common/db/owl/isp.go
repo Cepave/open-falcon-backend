@@ -8,7 +8,7 @@ import (
 func GetISPsByName(name string) []*owlModel.Isp {
 	var q = DbFacade.GormDb.Model(&owlModel.Isp{}).
 		Select(`*`).
-		Where(`isp_name LIKE ?`, name + "%")
+		Where(`isp_name LIKE ?`, name+"%")
 
 	var results []*owlModel.Isp
 

@@ -2,13 +2,13 @@ package nqm
 
 import (
 	"database/sql"
-	"time"
-	"github.com/jmoiron/sqlx"
-	osqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
-	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
+	osqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	utils "github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/jmoiron/sqlx"
+	"time"
 )
 
 // Inserts a new agent or updates existing one
@@ -16,7 +16,7 @@ import (
 // returns true if the agent is enabled
 func RefreshAgentInfo(agent *nqmModel.NqmAgent, checkedTime time.Time) *commonModel.NqmAgent {
 	refreshTx := &refreshAgentProcessor{
-		agent: agent,
+		agent:       agent,
 		checkedTime: checkedTime,
 	}
 
@@ -33,7 +33,7 @@ func RefreshAgentInfo(agent *nqmModel.NqmAgent, checkedTime time.Time) *commonMo
 		FROM nqm_agent
 		WHERE ag_connection_id = ?
 		`,
-		[]interface{} { agent.ConnectionId() },
+		[]interface{}{agent.ConnectionId()},
 		&refreshTx.agent.Id,
 		&isAgentEnable,
 	)
@@ -50,9 +50,10 @@ func RefreshAgentInfo(agent *nqmModel.NqmAgent, checkedTime time.Time) *commonMo
  * Refresh agent or add a new one
  */
 type refreshAgentProcessor struct {
-	agent *nqmModel.NqmAgent
+	agent       *nqmModel.NqmAgent
 	checkedTime time.Time
 }
+
 func (self *refreshAgentProcessor) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	if self.BootCallback(tx) {
 		self.IfTrue(tx)
@@ -182,35 +183,36 @@ func updateAccessTime(agentId int32, accessTime time.Time) {
 }
 
 type nqmTargetImpl struct {
-	Id int `db:"apl_tg_id"`
+	Id   int    `db:"apl_tg_id"`
 	Host string `db:"tg_host"`
 
-	IspId int16 `db:"isp_id"`
+	IspId   int16  `db:"isp_id"`
 	IspName string `db:"isp_name"`
 
-	ProvinceId int16 `db:"pv_id"`
+	ProvinceId   int16  `db:"pv_id"`
 	ProvinceName string `db:"pv_name"`
 
-	CityId int16 `db:"ct_id"`
+	CityId   int16  `db:"ct_id"`
 	CityName string `db:"ct_name"`
 
-	NameTagId int16 `db:"nt_id"`
+	NameTagId    int16  `db:"nt_id"`
 	NameTagValue string `db:"nt_value"`
 
 	StreamOfGroupTagIds sql.NullString `db:"gts"`
 }
+
 func (t *nqmTargetImpl) toNqmTarget() commonModel.NqmTarget {
 	return commonModel.NqmTarget{
-		Id: t.Id,
-		Host: t.Host,
-		IspId: t.IspId,
-		IspName: t.IspName,
-		ProvinceId: t.ProvinceId,
+		Id:           t.Id,
+		Host:         t.Host,
+		IspId:        t.IspId,
+		IspName:      t.IspName,
+		ProvinceId:   t.ProvinceId,
 		ProvinceName: t.ProvinceName,
-		CityId: t.CityId,
-		CityName: t.CityName,
-		NameTagId: t.NameTagId,
-		NameTag: t.NameTagValue,
+		CityId:       t.CityId,
+		CityName:     t.CityName,
+		NameTagId:    t.NameTagId,
+		NameTag:      t.NameTagValue,
 		GroupTagIds: utils.IntTo32(
 			commonDb.GroupedStringToIntArray(t.StreamOfGroupTagIds, ","),
 		),
@@ -302,32 +304,33 @@ func getCacheLogOfPingList(agentId int32) *nqmModel.PingListLog {
 
 	return listLog
 }
+
 // 1. Update(or INSERT) the refresh time
 // 2. Re-build the list of targets
 func BuildCacheOfPingList(agentId int32, checkedTime time.Time) *nqmModel.PingListLog {
 	logger.Debugf("Agent Id[%d] -> Set to be delete flags...", agentId)
 	DbFacade.SqlxDbCtrl.InTx(
-		&toBeDeletedTargets{ agentId: agentId },
+		&toBeDeletedTargets{agentId: agentId},
 	)
 	logger.Debugf("Agent Id[%d] -> Finish", agentId)
 
 	logger.Debugf("Agent Id[%d] -> Refresh targets...", agentId)
 	DbFacade.SqlxDbCtrl.InTx(
-		&refreshTargets{ agentId: agentId },
+		&refreshTargets{agentId: agentId},
 	)
 	logger.Debugf("Agent Id[%d] -> Finish", agentId)
 
 	logger.Debugf("Agent Id[%d] -> Remove to-be-deleted targets...", agentId)
 	DbFacade.SqlxDbCtrl.InTx(
-		&removeToBeDeletedTargets{ agentId: agentId },
+		&removeToBeDeletedTargets{agentId: agentId},
 	)
 	logger.Debugf("Agent Id[%d] -> Finish", agentId)
 
 	logger.Debugf("Agent Id[%d] -> Update final status of cache log...", agentId)
-	resultTx := &updateRefreshTime {
-		agentId: agentId,
+	resultTx := &updateRefreshTime{
+		agentId:     agentId,
 		checkedTime: checkedTime,
-		logObject: &nqmModel.PingListLog{},
+		logObject:   &nqmModel.PingListLog{},
 	}
 	DbFacade.SqlxDbCtrl.InTx(resultTx)
 	logger.Debugf("Agent Id[%d] -> Finish", agentId)
@@ -338,6 +341,7 @@ func BuildCacheOfPingList(agentId int32, checkedTime time.Time) *nqmModel.PingLi
 type toBeDeletedTargets struct {
 	agentId int32
 }
+
 func (t *toBeDeletedTargets) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	/**
 	 * Sets the status to `1`
@@ -377,6 +381,7 @@ func (t *toBeDeletedTargets) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 type refreshTargets struct {
 	agentId int32
 }
+
 func (t *refreshTargets) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	/**
 	 * Sets the status of cache to `2`
@@ -452,6 +457,7 @@ func (t *refreshTargets) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 type removeToBeDeletedTargets struct {
 	agentId int32
 }
+
 func (t *removeToBeDeletedTargets) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	/**
 	 * Sets the status of cache to `3`
@@ -484,10 +490,11 @@ func (t *removeToBeDeletedTargets) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 }
 
 type updateRefreshTime struct {
-	agentId int32
+	agentId     int32
 	checkedTime time.Time
-	logObject *nqmModel.PingListLog
+	logObject   *nqmModel.PingListLog
 }
+
 func (t *updateRefreshTime) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	/**
 	 * Updates the number of targets in cache
@@ -589,7 +596,6 @@ func loadAgentDetail(agentId int) *commonModel.NqmAgent {
 		// :~)
 		agentId,
 	)
-
 
 	return loadedAgent
 }

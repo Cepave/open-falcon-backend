@@ -3,9 +3,9 @@ package http
 import (
 	"flag"
 	"fmt"
+	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/gin-gonic/gin"
 	check "gopkg.in/check.v1"
-	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 )
 
 var webMode = flag.String("test.gin_mode", gin.DebugMode, "Mode of gin freamework(debug/release/test)")
@@ -28,7 +28,7 @@ func GetGinConfig(c *check.C) *ogin.GinConfig {
 		return nil
 	}
 
-	return &ogin.GinConfig {
+	return &ogin.GinConfig{
 		Mode: *webMode,
 		Host: GetWebHost(),
 		Port: uint16(*webPort),

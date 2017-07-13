@@ -1,11 +1,11 @@
 package changelog
 
 import (
-	"testing"
 	dbsql "database/sql"
-	patchsql "github.com/Cepave/open-falcon-backend/scripts/mysql/dbpatch/go/sql"
 	"flag"
+	patchsql "github.com/Cepave/open-falcon-backend/scripts/mysql/dbpatch/go/sql"
 	. "gopkg.in/check.v1"
+	"testing"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 	 * Defines the flags for teste depend on real connection of database
 	 */
 	driverName = flag.String("driverName", "", "Name of driver of database")
-	dsn = flag.String("dsn", "", "Data source name for database")
+	dsn        = flag.String("dsn", "", "Data source name for database")
 	// :~)
 )
 
@@ -25,8 +25,7 @@ type ChangeLogSuite struct{}
 
 var _ = Suite(&ChangeLogSuite{})
 
-const SAMPLE_YAML =
-`
+const SAMPLE_YAML = `
 - {
 	id: "bob-1",
 	filename: "bob-1.sql",
@@ -73,7 +72,7 @@ func (suite *ChangeLogSuite) TestLoadChangeLogFromFile(c *C) {
  */
 func (suite *ChangeLogSuite) TestLoadScripts(c *C) {
 	var samplePatchConfig = PatchConfig{
-		Id: "hello-1",
+		Id:       "hello-1",
 		Filename: "../test/hello-1.sql",
 	}
 
@@ -100,8 +99,7 @@ func (s *ChangeLogSuite) SetUpSuite(c *C) {
 	c.Logf("Connect to database. Driver Name: [%v]. DSN: [%v]", *driverName, *dsn)
 
 	var err error
-	if dbConfig, err = patchsql.NewDatabaseConfig(*driverName, *dsn)
-		err != nil {
+	if dbConfig, err = patchsql.NewDatabaseConfig(*driverName, *dsn); err != nil {
 
 		c.Fatalf("Connect database error: %v", err)
 	}
@@ -186,11 +184,10 @@ func (s *ChangeLogSuite) SetUpTest(c *C) {
 				return
 			},
 			// :~)
-		)
-			err != nil {
+		); err != nil {
 			c.Fatalf("Cannot prepare data: %v", err)
 		}
-	// :~)
+		// :~)
 	}
 }
 
@@ -200,7 +197,7 @@ func (s *ChangeLogSuite) TearDownTest(c *C) {
 	 * Remove the schema of tables created by test
 	 */
 	case "ChangeLogSuite.TestApplyPatch":
-		dbConfig.Execute(func (db *dbsql.DB) (err error) {
+		dbConfig.Execute(func(db *dbsql.DB) (err error) {
 			_, err = db.Exec(
 				"DROP TABLE IF EXISTS sample_patch_1",
 			)
@@ -212,12 +209,12 @@ func (s *ChangeLogSuite) TearDownTest(c *C) {
 		"ChangeLogSuite.TestNewChangeLogFunc",
 		"ChangeLogSuite.TestApplyPatchWithError",
 		"ChangeLogSuite.TestUpdateChangeLogFunc":
-		dbConfig.Execute(func (db *dbsql.DB) (err error) {
+		dbConfig.Execute(func(db *dbsql.DB) (err error) {
 			_, err = db.Exec(
 				"DROP TABLE IF EXISTS sysdb_change_log",
 			)
 			return
 		})
-	// :~)
+		// :~)
 	}
 }

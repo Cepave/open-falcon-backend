@@ -21,9 +21,9 @@ var numberOfRoutines = 16
 
 // Tests the NQM agent HBS in stress condition
 func (suite *NqmAgentStressSuite) TestTask(c *C) {
-	idsPool := &connIdsPool {
-		ids: connectionIds,
-		len: len(connectionIds),
+	idsPool := &connIdsPool{
+		ids:   connectionIds,
+		len:   len(connectionIds),
 		index: 0,
 		mutex: &sync.Mutex{},
 	}
@@ -77,13 +77,14 @@ func (suite *NqmAgentStressSuite) TestTask(c *C) {
 }
 
 type connIdsPool struct {
-	ids []string
-	len int
+	ids   []string
+	len   int
 	index int
 	mutex *sync.Mutex
 
 	ip1 int
 }
+
 func (p *connIdsPool) getNextConnId() string {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -99,16 +100,15 @@ func (p *connIdsPool) getNextIpAddress() string {
 	defer p.mutex.Unlock()
 
 	p.ip1++
-	p.ip1 = p.ip1 % 254 + 1
+	p.ip1 = p.ip1%254 + 1
 
 	return fmt.Sprintf(
 		"%d.%d.%d.%d",
 		p.ip1,
-		rand.Int31n(255) + 1,
-		rand.Int31n(255) + 1,
-		rand.Int31n(255) + 1,
+		rand.Int31n(255)+1,
+		rand.Int31n(255)+1,
+		rand.Int31n(255)+1,
 	)
 }
 
-var connectionIds = []string{
-}
+var connectionIds = []string{}

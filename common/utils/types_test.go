@@ -13,6 +13,7 @@ type car struct{}
 type func1 func()
 
 type g1Err struct{}
+
 func (e *g1Err) Error() string {
 	return "OK"
 }
@@ -27,30 +28,30 @@ func (suite *TestTypesSuite) TestIsViable(c *C) {
 
 	testCases := []*struct {
 		sampleValue interface{}
-		expected bool
-	} {
-		{ 30, true },
-		{ 0, true },
-		{ &car{}, true },
-		{ (*car)(nil), false },
-		{ []int{ 20 }, true },
-		{ []int{}, false },
-		{ []string(nil), false },
-		{ []*car{ &car{} }, true },
-		{ []*car{}, false },
-		{ map[int]bool{ 20: true }, true },
-		{ map[int]bool{}, false },
-		{ func1(func(){}), true },
-		{ func1(nil), false },
-		{ ch1, true },
-		{ ch2, false },
-		{ nilErr1, false },
-		{ nilErr2, false },
-		{ (error)(nil), false },
+		expected    bool
+	}{
+		{30, true},
+		{0, true},
+		{&car{}, true},
+		{(*car)(nil), false},
+		{[]int{20}, true},
+		{[]int{}, false},
+		{[]string(nil), false},
+		{[]*car{{}}, true},
+		{[]*car{}, false},
+		{map[int]bool{20: true}, true},
+		{map[int]bool{}, false},
+		{func1(func() {}), true},
+		{func1(nil), false},
+		{ch1, true},
+		{ch2, false},
+		{nilErr1, false},
+		{nilErr2, false},
+		{(error)(nil), false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedValue := reflect.ValueOf(testCase.sampleValue)
 		testedResult := ValueExt(testedValue).IsViable()
@@ -80,20 +81,20 @@ func (suite *TestTypesSuite) TestConvertToForReal(c *C) {
 	testCases := []*struct {
 		sourceValue interface{}
 		targetValue interface{}
-	} {
-		{ int8(10), int16(10) },
-		{ int8(11), int32(11) },
-		{ int8(12), int64(12) },
-		{ uint8(13), uint16(13) },
-		{ uint8(14), uint32(14) },
-		{ uint8(15), uint64(15) },
-		{ int8(16), uint16(16) },
-		{ uint64(33), int8(33) },
-		{ float64(31.77), float32(31.77) },
+	}{
+		{int8(10), int16(10)},
+		{int8(11), int32(11)},
+		{int8(12), int64(12)},
+		{uint8(13), uint16(13)},
+		{uint8(14), uint32(14)},
+		{uint8(15), uint64(15)},
+		{int8(16), uint16(16)},
+		{uint64(33), int8(33)},
+		{float64(31.77), float32(31.77)},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := ConvertToTargetType(
 			testCase.sourceValue, testCase.targetValue,
@@ -105,13 +106,13 @@ func (suite *TestTypesSuite) TestConvertToForReal(c *C) {
 
 func (suite *TestTypesSuite) TestConvertStruct(c *C) {
 	type car struct {
-		age int
+		age  int
 		name string
 	}
 
 	type carV1 car
 
-	c1 := car{ 20, "LBUE-98" }
+	c1 := car{20, "LBUE-98"}
 
 	testedCar := ConvertToTargetType(c1, carV1{}).(carV1)
 	c.Assert(testedCar.age, Equals, c1.age)

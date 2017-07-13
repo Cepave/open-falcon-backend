@@ -5,17 +5,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
-	"net/http/httptest"
 	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"strings"
 
+	"github.com/Cepave/open-falcon-backend/common/model"
+	ot "github.com/Cepave/open-falcon-backend/common/types"
+	sjson "github.com/bitly/go-simplejson"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/validator.v9"
-	"github.com/Cepave/open-falcon-backend/common/model"
-	sjson "github.com/bitly/go-simplejson"
-	ot "github.com/Cepave/open-falcon-backend/common/types"
 
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
@@ -28,11 +28,11 @@ var _ = Suite(&TestContextSuite{})
 // Tests the building of handler
 func (suite *TestContextSuite) TestBuildHandler(c *C) {
 	testCases := []*struct {
-		url string
+		url         string
 		handlerFunc interface{}
-		req *http.Request
-		assertFunc func(*C, *httptest.ResponseRecorder, CommentInterface)
-	} {
+		req         *http.Request
+		assertFunc  func(*C, *httptest.ResponseRecorder, CommentInterface)
+	}{
 		{ // text/plain output
 			"/plain-1",
 			func() string {
@@ -67,7 +67,7 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 		{ // Json(by JsonOutputBody)
 			"/json-2",
 			func() OutputBody {
-				return JsonOutputBody(&car{ Name: "Start-V8", Weight: 1280 })
+				return JsonOutputBody(&car{Name: "Start-V8", Weight: 1280})
 			},
 			httptest.NewRequest(http.MethodGet, "/json-2", nil),
 			func(c *C, r *httptest.ResponseRecorder, comment CommentInterface) {
@@ -122,8 +122,8 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 				return JsonOutputBody(jsonBody)
 			},
 			func() *http.Request {
-				form := url.Values {
-					"fv-1": []string { "671" },
+				form := url.Values{
+					"fv-1": []string{"671"},
 				}
 
 				req := httptest.NewRequest(http.MethodPost, "/full-input/9810", strings.NewReader(form.Encode()))
@@ -197,7 +197,7 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 			"/sfile-upload",
 			func(
 				f *struct {
-					SingleFile multipart.File `mvc:"file[csv_f_1]"`
+					SingleFile    multipart.File   `mvc:"file[csv_f_1]"`
 					MultipleFiles []multipart.File `mvc:"file[csv_f_2]"`
 				},
 			) *sjson.Json {
@@ -272,16 +272,16 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 			"/all_params/:gd_id",
 			func(
 				v *struct {
-					ParamValue uint16 `mvc:"param[gd_id]"`
-					QueryParam []int32 `mvc:"query[qa]"`
-					CookieValue string `mvc:"cookie[session_id]"`
-					FormAge []uint16 `mvc:"form[age]"`
+					ParamValue  uint16   `mvc:"param[gd_id]"`
+					QueryParam  []int32  `mvc:"query[qa]"`
+					CookieValue string   `mvc:"cookie[session_id]"`
+					FormAge     []uint16 `mvc:"form[age]"`
 					FormAgentId []uint32 `mvc:"form[user_id]"`
-					Header string `mvc:"header[hv]"`
-					Method string `mvc:"req[Method]"`
-					CarV *car `mvc:"key[key-cc-01]"`
-					Username string `mvc:"basicAuth[username]"`
-					Password string `mvc:"basicAuth[password]"`
+					Header      string   `mvc:"header[hv]"`
+					Method      string   `mvc:"req[Method]"`
+					CarV        *car     `mvc:"key[key-cc-01]"`
+					Username    string   `mvc:"basicAuth[username]"`
+					Password    string   `mvc:"basicAuth[password]"`
 				},
 			) *sjson.Json {
 				jsonResult := sjson.New()
@@ -301,16 +301,16 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 				return jsonResult
 			},
 			func() *http.Request {
-				form := url.Values {
-					"age": []string { "6", "33" },
-					"user_id": []string { "131", "8716" },
+				form := url.Values{
+					"age":     []string{"6", "33"},
+					"user_id": []string{"131", "8716"},
 				}
 
 				req := httptest.NewRequest(http.MethodPost, "/all_params/8806?qa=98&qa=99", strings.NewReader(form.Encode()))
 				req.SetBasicAuth("ug@mail.com", "pac@9081")
 				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 				req.Header.Set("hv", "32768")
-				req.AddCookie(&http.Cookie{ Name: "session_id", Value: "pk228c122" })
+				req.AddCookie(&http.Cookie{Name: "session_id", Value: "pk228c122"})
 
 				return req
 			}(),
@@ -392,7 +392,7 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 			func(
 				p *struct {
 					Name string `mvc:"query[name1]"`
-					N1 *struct {
+					N1   *struct {
 						Name1 string `mvc:"query[name2]"`
 					}
 					N2 struct {
@@ -427,7 +427,7 @@ func (suite *TestContextSuite) TestBuildHandler(c *C) {
 		gin.SetMode(gin.ReleaseMode)
 		engine := gin.Default()
 		engine.Use(func(context *gin.Context) {
-			context.Set("key-cc-01", &car{ "Cool!", 88 })
+			context.Set("key-cc-01", &car{"Cool!", 88})
 		})
 		engine.Any(
 			testCase.url,
@@ -482,14 +482,15 @@ func (suite *TestContextSuite) TestValidation(c *C) {
 }
 
 type car struct {
-	Name string `json:"name"`
-	Weight int `json:"weight"`
+	Name   string `json:"name"`
+	Weight int    `json:"weight"`
 }
 
 type car2 struct {
 	name string
-	age int
+	age  int
 }
+
 func (c *car2) Bind(context *gin.Context) {
 	c.name = "context-name"
 	c.age = 55
@@ -497,8 +498,9 @@ func (c *car2) Bind(context *gin.Context) {
 
 type car3 struct {
 	Key int32
-	V1 string
+	V1  string
 }
+
 func (c *car3) UnmarshalJSON(rawJson []byte) error {
 	jsonObject, err := sjson.NewJson(rawJson)
 	if err != nil {
@@ -513,13 +515,14 @@ func (c *car3) UnmarshalJSON(rawJson []byte) error {
 
 type box struct {
 	Name string `json:"name"`
-	Size int `json:"size"`
+	Size int    `json:"size"`
 }
+
 func (b *box) UnmarshalJSON([]byte) error {
 	return nil
 }
 
-type sampleParamBinding struct {}
+type sampleParamBinding struct{}
 
 func makeFile(
 	c *C,
@@ -536,4 +539,3 @@ func makeFile(
 func (s *TestStructTagsSuite) SetUpSuite(c *C) {
 	gin.SetMode(gin.ReleaseMode)
 }
-

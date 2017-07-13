@@ -20,11 +20,13 @@ func SumAllToMd5(rest ...Digestor) Md5DigestValue {
 }
 
 type StringMd5Digestor string
+
 func (d StringMd5Digestor) GetDigest() []byte {
 	return Md5SumFunc([]byte(d))
 }
 
 type BytesMd5Digestor []byte
+
 func (d BytesMd5Digestor) GetDigest() []byte {
 	return Md5SumFunc(d)
 }

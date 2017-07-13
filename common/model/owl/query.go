@@ -10,8 +10,8 @@ import (
 type Query struct {
 	Uuid db.DbUuid `db:"qr_uuid"`
 
-	NamedId string `db:"qr_named_id"`
-	Content []byte `db:"qr_content"`
+	NamedId    string     `db:"qr_named_id"`
+	Content    []byte     `db:"qr_content"`
 	Md5Content db.Bytes16 `db:"qr_md5_content"`
 }
 
@@ -29,7 +29,7 @@ func (q *Query) String() string {
 }
 
 func (q *Query) ToJson() map[string]interface{} {
-	return map[string]interface{} {
+	return map[string]interface{}{
 		"query_id": uuid.UUID(q.Uuid).String(),
 	}
 }

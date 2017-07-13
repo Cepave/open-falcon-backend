@@ -3,11 +3,11 @@ package facade
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	commonSqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
-	"github.com/jinzhu/gorm"
+	commonSqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 // Gives facade interface supporting multiple object of db
@@ -18,10 +18,10 @@ import (
 // 	database/sql.DB
 // 	dbCtrl
 type DbFacade struct {
-	SqlDb *sql.DB
-	SqlDbCtrl *commonDb.DbController
-	GormDb *gorm.DB
-	SqlxDb *sqlx.DB
+	SqlDb      *sql.DB
+	SqlDbCtrl  *commonDb.DbController
+	GormDb     *gorm.DB
+	SqlxDb     *sqlx.DB
 	SqlxDbCtrl *commonSqlx.DbController
 
 	initialized bool
@@ -57,6 +57,7 @@ func (facade *DbFacade) Open(dbConfig *commonDb.DbConfig) (err error) {
 
 	return
 }
+
 // Close the database, release the resources
 func (facade *DbFacade) Release() {
 	if !facade.initialized {
@@ -73,10 +74,12 @@ func (facade *DbFacade) Release() {
 
 	facade.initialized = false
 }
+
 // Generates a new controller of sql.DB
 func (facade *DbFacade) NewDbCtrl() *commonDb.DbController {
 	return commonDb.NewDbController(facade.SqlDb)
 }
+
 // Generates a new controller of sqlx.DB
 func (facade *DbFacade) NewSqlxDbCtrl() *commonSqlx.DbController {
 	return commonSqlx.NewDbController(facade.SqlxDb)

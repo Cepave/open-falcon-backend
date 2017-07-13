@@ -64,7 +64,7 @@ func UnmarshalToJsonExt(v interface{}) *JsonExt {
 }
 
 func ToJsonExt(sjson *sjson.Json) *JsonExt {
-	return &JsonExt{ sjson }
+	return &JsonExt{sjson}
 }
 
 func (j *JsonExt) MustInt8() int8 {
@@ -101,17 +101,17 @@ func (j *JsonExt) MustStringPtr() *string {
 }
 
 func (j *JsonExt) GetExt(key string) *JsonExt {
-	return &JsonExt{ j.Get(key) }
+	return &JsonExt{j.Get(key)}
 }
 func (j *JsonExt) GetIndexExt(index int) *JsonExt {
-	return &JsonExt{ j.GetIndex(index) }
+	return &JsonExt{j.GetIndex(index)}
 }
 func (j *JsonExt) GetPathExt(branch ...string) *JsonExt {
-	return &JsonExt{ j.GetPath(branch...) }
+	return &JsonExt{j.GetPath(branch...)}
 }
 func (j *JsonExt) CheckGetExt(key string) (*JsonExt, bool) {
 	sjson, check := j.CheckGet(key)
-	return &JsonExt{ sjson }, check
+	return &JsonExt{sjson}, check
 }
 
 // Gets the JSON

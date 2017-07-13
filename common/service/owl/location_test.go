@@ -1,9 +1,9 @@
 package owl
 
 import (
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 	"time"
@@ -14,7 +14,7 @@ type TestLocationSuite struct{}
 var _ = Suite(&TestLocationSuite{})
 
 var testedProvinceService = NewProvinceService(
-	cache.DataCacheConfig {
+	cache.DataCacheConfig{
 		MaxSize: 10, Duration: time.Minute * 5,
 	},
 )
@@ -24,13 +24,13 @@ func (suite *TestLocationSuite) TestGetProvinceById(c *C) {
 	testCases := []*struct {
 		sampleId int16
 		hasFound bool
-	} {
-		{ 1, true },
-		{ -10, false },
+	}{
+		{1, true},
+		{-10, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testedProvinceService.GetProvinceById(testCase.sampleId)
 		c.Assert(testedResult, ocheck.ViableValue, testCase.hasFound, comment)
@@ -45,15 +45,15 @@ func (suite *TestLocationSuite) TestGetProvinceById(c *C) {
 // Tests the loading of provinces by name
 func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
 	testCases := []*struct {
-		sampleName string
+		sampleName    string
 		expectedFound int
-	} {
-		{ "广", 2 },
-		{ "無此處", 0 },
+	}{
+		{"广", 2},
+		{"無此處", 0},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testedProvinceService.GetProvincesByName(testCase.sampleName)
 		c.Assert(testedResult, HasLen, testCase.expectedFound, comment)
@@ -66,7 +66,7 @@ func (suite *TestLocationSuite) TestGetProvincesByName(c *C) {
 }
 
 var testedCityService = NewCityService(
-	cache.DataCacheConfig {
+	cache.DataCacheConfig{
 		MaxSize: 10, Duration: time.Minute * 5,
 	},
 )
@@ -76,13 +76,13 @@ func (suite *TestLocationSuite) TestGetCity2ById(c *C) {
 	testCases := []*struct {
 		sampleId int16
 		hasFound bool
-	} {
-		{ 1, true },
-		{ -10, false },
+	}{
+		{1, true},
+		{-10, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testedCityService.GetCity2ById(testCase.sampleId)
 		c.Assert(testedResult, ocheck.ViableValue, testCase.hasFound, comment)
@@ -97,15 +97,15 @@ func (suite *TestLocationSuite) TestGetCity2ById(c *C) {
 // Tests the loading of citys by name
 func (suite *TestLocationSuite) TestGetCity2sByName(c *C) {
 	testCases := []*struct {
-		sampleName string
+		sampleName    string
 		expectedFound int
-	} {
-		{ "长", 3 },
-		{ "無此處", 0 },
+	}{
+		{"长", 3},
+		{"無此處", 0},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testedCityService.GetCity2sByName(testCase.sampleName)
 		c.Assert(testedResult, HasLen, testCase.expectedFound, comment)

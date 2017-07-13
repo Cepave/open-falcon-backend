@@ -21,9 +21,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
+	log "github.com/sirupsen/logrus"
 )
 
 var headers = []string{

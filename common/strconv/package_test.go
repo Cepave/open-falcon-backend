@@ -1,8 +1,8 @@
 package strconv
 
 import (
-	"testing"
 	ch "gopkg.in/check.v1"
+	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

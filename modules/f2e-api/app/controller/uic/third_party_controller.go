@@ -11,9 +11,9 @@ import (
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/masato25/resty"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 

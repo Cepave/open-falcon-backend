@@ -2,14 +2,14 @@ package nqm
 
 import (
 	"encoding/json"
-	"sort"
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
-	"github.com/bitly/go-simplejson"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
+	"github.com/bitly/go-simplejson"
 	. "gopkg.in/check.v1"
+	"sort"
 )
 
 type TestNqmSuite struct{}
@@ -18,7 +18,7 @@ var _ = Suite(&TestNqmSuite{})
 
 type targetType nqmModel.SimpleTarget1
 
-func (s *TestNqmSuite) SetUpSuite(c *C) {}
+func (s *TestNqmSuite) SetUpSuite(c *C)    {}
 func (s *TestNqmSuite) TearDownSuite(c *C) {}
 
 // Tests the merging of data for provinces(by mocked data source)
@@ -26,15 +26,15 @@ func (suite *TestNqmSuite) TestListByProvincesByMockData(c *C) {
 	srv := ServiceController{
 		GetStatisticsOfIcmpByDsl: func(nqmDsl *NqmDsl) ([]IcmpResult, error) {
 			return []IcmpResult{
-				IcmpResult{
+				{
 					grouping: []int32{11},
 					metrics:  &model.Metrics{Max: 31},
 				},
-				IcmpResult{
+				{
 					grouping: []int32{12},
 					metrics:  &model.Metrics{Max: 32},
 				},
-				IcmpResult{
+				{
 					grouping: []int32{13},
 					metrics:  &model.Metrics{Max: 33},
 				},
@@ -74,11 +74,11 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 			 */
 			case 1:
 				return []IcmpResult{
-					IcmpResult{
+					{
 						grouping: []int32{41},
 						metrics:  &model.Metrics{Max: 87},
 					},
-					IcmpResult{
+					{
 						grouping: []int32{42},
 						metrics:  &model.Metrics{Max: 62},
 					},
@@ -89,19 +89,19 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 			 */
 			case 3:
 				return []IcmpResult{
-					IcmpResult{
+					{
 						grouping: []int32{2001, 41, 81},
 						metrics:  &model.Metrics{Max: 79},
 					},
-					IcmpResult{
+					{
 						grouping: []int32{2002, 41, 81},
 						metrics:  &model.Metrics{Max: 62},
 					},
-					IcmpResult{
+					{
 						grouping: []int32{2003, 42, 81},
 						metrics:  &model.Metrics{Max: 71},
 					},
-					IcmpResult{
+					{
 						grouping: []int32{2004, 42, 81},
 						metrics:  &model.Metrics{Max: 68},
 					},
@@ -179,11 +179,11 @@ func (suite *TestNqmSuite) TestListTargetsWithCityDetail(c *C) {
 // Tests the content of JSON for metric grouping with provinces
 func (suite *TestNqmSuite) TestJsonOfProvinceMetric(c *C) {
 	sampleData := []ProvinceMetric{
-		ProvinceMetric{
+		{
 			Province: &owlModel.Province{Id: 20, Name: "Dog-1"},
 			Metrics:  &model.Metrics{Max: 40, Min: 30, Avg: 33.45},
 		},
-		ProvinceMetric{
+		{
 			Province: &owlModel.Province{Id: 21, Name: "Dog-2"},
 			Metrics:  &model.Metrics{Max: 50, Min: 43, Avg: 44.5},
 		},
@@ -203,29 +203,29 @@ func (suite *TestNqmSuite) TestJsonOfProvinceMetric(c *C) {
 // Tests the content of JSON for metric grouping with cities
 func (suite *TestNqmSuite) TestJsonOfCityMetric(c *C) {
 	sampleData := []CityMetric{
-		CityMetric{
+		{
 			City:    &owlModel.City2{Id: 51, Name: "小黃瓜城市"},
 			Metrics: &model.Metrics{Max: 82, Min: 33, Avg: 62.81},
 			Targets: []TargetMetric{
-				TargetMetric{
+				{
 					Id: 4021, Host: "h1.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
 					Metrics: &model.Metrics{Max: 101, Min: 63, Avg: 77.3},
 				},
-				TargetMetric{
+				{
 					Id: 4022, Host: "h2.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
 					Metrics: &model.Metrics{Max: 93, Min: 77, Avg: 82.5},
 				},
 			},
 		},
-		CityMetric{
+		{
 			City:    &owlModel.City2{Id: 52, Name: "高麗菜城市"},
 			Metrics: &model.Metrics{Max: 32, Min: 12, Avg: 22.3},
 			Targets: []TargetMetric{
-				TargetMetric{
+				{
 					Id: 4031, Host: "g1.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
 					Metrics: &model.Metrics{Max: 62, Min: 37, Avg: 40.25},
 				},
-				TargetMetric{
+				{
 					Id: 4032, Host: "g2.ping.org", Isp: &owlModel.Isp{Id: 91, Name: "山東網路"},
 					Metrics: &model.Metrics{Max: 35, Min: 22, Avg: 29.1},
 				},

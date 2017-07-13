@@ -2,10 +2,10 @@ package nqm
 
 import (
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 	"time"
 )
@@ -15,8 +15,8 @@ type TestTargetSuite struct{}
 var _ = Suite(&TestTargetSuite{})
 
 var testedTargetService = NewTargetService(
-	cache.DataCacheConfig {
-		MaxSize: 10,
+	cache.DataCacheConfig{
+		MaxSize:  10,
 		Duration: time.Minute * 5,
 	},
 )
@@ -26,13 +26,13 @@ func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
 	testCases := []*struct {
 		sampleId int32
 		hasFound bool
-	} {
-		{ 44023, true },
-		{ 44024, false },
+	}{
+		{44023, true},
+		{44024, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		/**
 		 * Asserts the found data
@@ -54,33 +54,33 @@ func (suite *TestTargetSuite) TestGetSimpleTarget1ById(c *C) {
 // Tests the loading of SimpleTarget1 by filter
 func (suite *TestTargetSuite) TestGetSimpleTarget1sByFilter(c *C) {
 	testCases := []*struct {
-		sampleFilter *nqmModel.TargetFilter
-		expectedCache []int32
+		sampleFilter   *nqmModel.TargetFilter
+		expectedCache  []int32
 		expectedNumber int
-	} {
+	}{
 		{
-			&nqmModel.TargetFilter {
-				Host: []string { "no-such-1" },
+			&nqmModel.TargetFilter{
+				Host: []string{"no-such-1"},
 			},
-			[]int32 {},
+			[]int32{},
 			0,
 		},
 		{
-			&nqmModel.TargetFilter {
-				Host: []string { "20.45.71" },
+			&nqmModel.TargetFilter{
+				Host: []string{"20.45.71"},
 			},
-			[]int32 { 32071, 32072 },
+			[]int32{32071, 32072},
 			2,
 		},
 		{
-			&nqmModel.TargetFilter {},
-			[]int32 { 32071, 32072, 32073 },
+			&nqmModel.TargetFilter{},
+			[]int32{32071, 32072, 32073},
 			3,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testedTargetService.GetSimpleTarget1sByFilter(testCase.sampleFilter)
 		c.Assert(testedResult, HasLen, testCase.expectedNumber, comment)

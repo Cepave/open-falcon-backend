@@ -2,12 +2,12 @@ package owl
 
 import (
 	"encoding/hex"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	db "github.com/Cepave/open-falcon-backend/common/db"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	t "github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 	"time"
 )
@@ -25,19 +25,19 @@ var testedQueryService = NewQueryService(
 // Tests the loading of query by uuid
 func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
 	testCases := []*struct {
-		sampleUuid string
+		sampleUuid         string
 		expectedMd5Content string
-		inCache bool
-	} {
-		{ "890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", false }, // Load data into cache
-		{ "120818a7d438495bb79a1ac0abf1eae2", "", false }, // Nothing found
-		{ "120818a7d438495bb79a1ac0abf1eae2", "", false }, // Nothing found
-		{ "890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", true }, // Update access time
+		inCache            bool
+	}{
+		{"890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", false}, // Load data into cache
+		{"120818a7d438495bb79a1ac0abf1eae2", "", false},                                 // Nothing found
+		{"120818a7d438495bb79a1ac0abf1eae2", "", false},                                 // Nothing found
+		{"890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", true},  // Update access time
 	}
 
 	var lastAccessTime time.Time = time.Now()
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		sampleUuid := t.ParseUuid(c, testCase.sampleUuid)
 
@@ -84,9 +84,9 @@ func (suite *TestQuerySuite) TestCreateOrLoadQuery(c *C) {
 	(&md5Value).Scan("810512c76a1c44ddb0d6097ef4ef156e")
 
 	sampleQuery := &owlModel.Query{
-		NamedId: "gp-query-1",
+		NamedId:    "gp-query-1",
 		Md5Content: md5Value,
-		Content: md5Value[:],
+		Content:    md5Value[:],
 	}
 
 	testedQueryService.CreateOrLoadQuery(sampleQuery)
@@ -102,9 +102,9 @@ func (suite *TestQuerySuite) TestCreateOrLoadQuery(c *C) {
 	 * Trying to loads the same query with the same md5 value
 	 */
 	sampleQuery_2 := &owlModel.Query{
-		NamedId: "gp-query-1",
+		NamedId:    "gp-query-1",
 		Md5Content: md5Value,
-		Content: md5Value[:],
+		Content:    md5Value[:],
 	}
 	testedQueryService.CreateOrLoadQuery(sampleQuery_2)
 	c.Assert(sampleQuery_2.Uuid, DeepEquals, sampleQuery.Uuid)
@@ -119,7 +119,7 @@ func getAccessTimeByUuid(uuid db.DbUuid) time.Time {
 		FROM owl_query
 		WHERE qr_uuid = ?
 		`,
-		[]interface{} { uuid },
+		[]interface{}{uuid},
 		&timeValue,
 	)
 

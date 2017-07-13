@@ -9,7 +9,7 @@ import (
 func KeysOfMap(m map[string]string) []string {
 	keys := make([]string, len(m))
 	i := 0
-	for key, _ := range m {
+	for key := range m {
 		keys[i] = key
 		i++
 	}
@@ -28,7 +28,7 @@ func MakeAbstractMap(sourceMap interface{}) *AbstractMap {
 		panic(fmt.Sprintf("The type of object is not map: [%T]", sourceMap))
 	}
 
-	return &AbstractMap{ sourceMap }
+	return &AbstractMap{sourceMap}
 }
 
 // Gets map of desired type

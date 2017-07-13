@@ -12,25 +12,25 @@ var _ = Suite(&TestMd5Suite{})
 // Tests the digesting of MD5 from multiple Digestor
 func (suite *TestMd5Suite) TestSumAllToMd5(c *C) {
 	testCases := []*struct {
-		sourceData []StringMd5Digestor
+		sourceData  []StringMd5Digestor
 		expectedMd5 string
-	} {
+	}{
 		{
-			[]StringMd5Digestor { "", "" },
+			[]StringMd5Digestor{"", ""},
 			"5873dd45edd01f09c1ef2e7819369e8e",
 		},
 		{
-			[]StringMd5Digestor { "", "", "" },
+			[]StringMd5Digestor{"", "", ""},
 			"2bc3f09a6fbadbe687825030c6e7b9a4",
 		},
 		{
-			[]StringMd5Digestor { "this-1", "that-2" },
+			[]StringMd5Digestor{"this-1", "that-2"},
 			"c9a528931f6a9001d2fcbb11d0e600d3",
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		expectedResult, err := hex.DecodeString(testCase.expectedMd5)
 		c.Assert(err, IsNil)

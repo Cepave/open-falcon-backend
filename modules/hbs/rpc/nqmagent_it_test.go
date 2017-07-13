@@ -6,9 +6,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	testJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 
 	. "gopkg.in/check.v1"
 )
@@ -20,17 +20,17 @@ var _ = Suite(&TestNqmAgentSuite{})
 // Tests the refreshing and retrieving list of targets for NQM agent
 func (suite *TestNqmAgentSuite) TestTask(c *C) {
 	testCases := []*struct {
-		req model.NqmTaskRequest
-		needPing bool
+		req               model.NqmTaskRequest
+		needPing          bool
 		expectedTargetIds []int32
-	} {
+	}{
 		{
 			model.NqmTaskRequest{
 				ConnectionId: "ag-rpc-1",
 				Hostname:     "rpc-1.org",
 				IpAddress:    "45.65.0.1",
 			},
-			true, []int32{ 630001, 630002, 630003 },
+			true, []int32{630001, 630002, 630003},
 		},
 		{
 			model.NqmTaskRequest{
@@ -81,14 +81,14 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 		c.Assert(resp.NeedPing, Equals, true)
 		c.Assert(
 			resp.Agent, DeepEquals,
-			&model.NqmAgent {
-				Id:405001,
-				Name:"ag-name-1",
-				IspId:3, IspName:"移动",
-				ProvinceId:2, ProvinceName:"山西",
-				CityId:-1, CityName:"<UNDEFINED>",
-				NameTagId:-1,
-				GroupTagIds:[]int32{9081, 9082},
+			&model.NqmAgent{
+				Id:    405001,
+				Name:  "ag-name-1",
+				IspId: 3, IspName: "移动",
+				ProvinceId: 2, ProvinceName: "山西",
+				CityId: -1, CityName: "<UNDEFINED>",
+				NameTagId:   -1,
+				GroupTagIds: []int32{9081, 9082},
 			},
 		)
 
@@ -181,4 +181,3 @@ func (s *TestNqmAgentSuite) TearDownTest(c *C) {
 		)
 	}
 }
-

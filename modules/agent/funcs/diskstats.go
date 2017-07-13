@@ -120,7 +120,7 @@ func IOStatsMetrics() (L []*model.MetricValue) {
 	defer dsLock.RUnlock()
 
 	ioUtilMax := 0.0
-	for device, _ := range diskStatsMap {
+	for device := range diskStatsMap {
 		if !ShouldHandleDevice(device) {
 			continue
 		}
@@ -169,7 +169,7 @@ func IOStatsForPage() (L [][]string) {
 	dsLock.RLock()
 	defer dsLock.RUnlock()
 
-	for device, _ := range diskStatsMap {
+	for device := range diskStatsMap {
 		if !ShouldHandleDevice(device) {
 			continue
 		}

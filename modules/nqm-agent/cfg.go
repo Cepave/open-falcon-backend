@@ -9,8 +9,8 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	log "github.com/sirupsen/logrus"
 	"github.com/chyeh/pubip"
+	log "github.com/sirupsen/logrus"
 )
 
 type AgentConfig struct {

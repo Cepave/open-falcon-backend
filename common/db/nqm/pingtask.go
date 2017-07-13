@@ -374,13 +374,14 @@ func UpdateAndGetPingtask(id int32, pm *nqmModel.PingtaskModify) *nqmModel.Pingt
 	return GetPingtaskById(txProcessor.pingtaskID)
 }
 
-var pingTaskFilterModifiers = map[string]*filterModifier {
-	"isp":  newFilterModifier("isp", "tfisp", "isp_id"),
-	"province": newFilterModifier("province", "tfpv", "pv_id"),
-	"city": newFilterModifier("city", "tfct", "ct_id"),
-	"name_tag": newFilterModifier("name_tag", "tfnt", "nt_id"),
+var pingTaskFilterModifiers = map[string]*filterModifier{
+	"isp":       newFilterModifier("isp", "tfisp", "isp_id"),
+	"province":  newFilterModifier("province", "tfpv", "pv_id"),
+	"city":      newFilterModifier("city", "tfct", "ct_id"),
+	"name_tag":  newFilterModifier("name_tag", "tfnt", "nt_id"),
 	"group_tag": newFilterModifier("group_tag", "tfgt", "gt_id"),
 }
+
 type updatePingtaskTx struct {
 	pingtask   *nqmModel.PingtaskModify
 	pingtaskID int32
@@ -419,7 +420,7 @@ func newFilterModifier(
 	columnPrefix string,
 	propertySuffix string,
 ) *filterModifier {
-	return &filterModifier {
+	return &filterModifier{
 		deleteSql: fmt.Sprintf(
 			`
 			DELETE FROM nqm_pt_target_filter_%s WHERE %s_pt_id = ?
@@ -439,9 +440,10 @@ func newFilterModifier(
 }
 
 type filterModifier struct {
-	deleteSql string
+	deleteSql     string
 	insertSqlTmpl string
 }
+
 func (m *filterModifier) setData(tx *sqlx.Tx, pingTaskId int32, data interface{}) {
 	buildDataSql, params := m.buildSqlOfNewData(pingTaskId, data)
 
@@ -465,7 +467,7 @@ func (m *filterModifier) buildSqlOfNewData(pingTaskId int32, data interface{}) (
 	}
 
 	newValuesSql := make([]string, values.Len())
-	sqlParams := make([]interface{}, values.Len() * 2)
+	sqlParams := make([]interface{}, values.Len()*2)
 
 	p := 0
 	for i := 0; i < values.Len(); i++ {

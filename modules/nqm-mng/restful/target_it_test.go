@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 
 	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 
@@ -41,9 +41,9 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 		IspId       int      `json:"isp_id"`
 		ProvinceId  int      `json:"province_id"`
 		CityId      int      `json:"city_id"`
-		NameTag     *string   `json:"name_tag"`
+		NameTag     *string  `json:"name_tag"`
 		GroupTags   []string `json:"group_tags"`
-	} {
+	}{
 		Status:      true,
 		ProbedByAll: true,
 		Comment:     "This is new target by red 33.72 ***",
@@ -54,15 +54,15 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 
 	sPtr := func(v string) *string { return &v }
 	testCases := []*struct {
-		host string
-		nameTag *string
-		groupTags []string
+		host              string
+		nameTag           *string
+		groupTags         []string
 		expectedStatus    int
 		expectedErrorCode int
-	} {
-		{ "54", nil, []string{}, http.StatusOK, -1},
-		{ "55", sPtr("tg-nt-1"), []string{ "tg-rest-tag-1", "tg-rest-tag-2" }, http.StatusOK, -1},
-		{ "54", nil, []string{}, http.StatusConflict, 1},
+	}{
+		{"54", nil, []string{}, http.StatusOK, -1},
+		{"55", sPtr("tg-nt-1"), []string{"tg-rest-tag-1", "tg-rest-tag-2"}, http.StatusOK, -1},
+		{"54", nil, []string{}, http.StatusConflict, 1},
 	}
 
 	for i, testCase := range testCases {
@@ -122,9 +122,9 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 		IspId       int      `json:"isp_id"`
 		ProvinceId  int      `json:"province_id"`
 		CityId      int      `json:"city_id"`
-		NameTag     *string   `json:"name_tag"`
+		NameTag     *string  `json:"name_tag"`
 		GroupTags   []string `json:"group_tags"`
-	} {
+	}{
 		Name:        "Updated-Target-1",
 		Status:      false,
 		ProbedByAll: false,
@@ -136,11 +136,11 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 
 	sPtr := func(v string) *string { return &v }
 	testCases := []*struct {
-		nameTag *string
+		nameTag   *string
 		groupTags []string
-	} {
-		{ sPtr("tg-nt-3"), []string{"blue-utg-3", "blue-utg-4", "blue-utg-5"} },
-		{ nil, []string{} },
+	}{
+		{sPtr("tg-nt-3"), []string{"blue-utg-3", "blue-utg-4", "blue-utg-5"}},
+		{nil, []string{}},
 	}
 
 	for i, testCase := range testCases {

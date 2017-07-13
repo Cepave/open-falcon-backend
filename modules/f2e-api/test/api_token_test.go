@@ -11,8 +11,8 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/spf13/viper"
 )

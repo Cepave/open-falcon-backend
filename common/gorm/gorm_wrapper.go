@@ -3,10 +3,10 @@ package gorm
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"github.com/Cepave/open-falcon-backend/common/db"
-	"github.com/Cepave/open-falcon-backend/common/utils"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/jinzhu/gorm"
 )
 
 type GormDbExt struct {
@@ -23,6 +23,7 @@ type TxCallback interface {
 
 // the function object delegates the TxCallback interface
 type TxCallbackFunc func(*gorm.DB) db.TxFinale
+
 func (callbackFunc TxCallbackFunc) InTx(gormDB *gorm.DB) db.TxFinale {
 	return callbackFunc(gormDB)
 }
@@ -42,6 +43,7 @@ func (self ErrorConverter) PanicIfDbError(gormDb *gorm.DB) {
 		),
 	)
 }
+
 // Raise panic if the error is not nil
 func (self ErrorConverter) PanicIfError(err error) {
 	if !utils.IsViable(err) {
@@ -58,9 +60,9 @@ func sameError(err error) error {
 
 // Converts gorm.DB to GormDbExt
 func ToGormDbExt(gormDb *gorm.DB) *GormDbExt {
-	return &GormDbExt {
+	return &GormDbExt{
 		ConvertError: sameError,
-		gormDb: gormDb,
+		gormDb:       gormDb,
 	}
 }
 
@@ -102,7 +104,7 @@ func (self *GormDbExt) IterateRows(
 
 	for rows.Next() {
 		if rowsCallback.NextRow(rows) == db.IterateStop {
-			break;
+			break
 		}
 	}
 }

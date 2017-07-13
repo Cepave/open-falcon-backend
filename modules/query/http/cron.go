@@ -417,8 +417,8 @@ func getDurationForNetTableQuery(offset int) (int64, int64) {
 
 func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]map[string]int, string, map[string]int) {
 	data := map[string]map[string]int{
-		"in":  map[string]int{},
-		"out": map[string]int{},
+		"in":  {},
+		"out": {},
 	}
 	date := ""
 	counts := map[string]int{
@@ -461,8 +461,8 @@ func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]m
 		}
 	}
 	dataRaw := map[string]map[string]float64{
-		"in":  map[string]float64{},
-		"out": map[string]float64{},
+		"in":  {},
+		"out": {},
 	}
 	tickers := []string{}
 	if len(responses) > 0 {

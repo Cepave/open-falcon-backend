@@ -17,7 +17,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne := AlertsResp{}
 		priority := strconv.Itoa(item.Priority)
 		aType := item.AlarmType()
-		contacts := []boss.Contactor{boss.Contactor{Name: "-", Phone: "-", Email: "-"}}
+		contacts := []boss.Contactor{{Name: "-", Phone: "-", Email: "-"}}
 		recordOne.Hash = item.Id
 		recordOne.HostName = item.Endpoint
 		recordOne.Metric = item.Metric
