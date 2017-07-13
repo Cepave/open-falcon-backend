@@ -1,13 +1,16 @@
 language: go
 
 go:
-  - 1.7
+  - 1.7.x
+  - 1.8.x
+  - master
 
 script:
-  - make all 
+  - make misspell-check
+  - make fmt-check
+  - make all
   - make pack
+  - make coverage
 
 after_success:
-  - make clean
-  - make coverage
   - bash <(curl -s https://codecov.io/bash)

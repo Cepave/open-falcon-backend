@@ -1,8 +1,8 @@
 package validator
 
 import (
-	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/check.v1"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // Asserts that there is an field error with specifying name

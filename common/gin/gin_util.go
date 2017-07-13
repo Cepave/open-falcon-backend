@@ -2,19 +2,19 @@ package gin
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	model "github.com/Cepave/open-falcon-backend/common/model"
+	"github.com/gin-gonic/gin"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 const (
-	headerPageSize = "page-size"
-	headerPagePos = "page-pos"
+	headerPageSize   = "page-size"
+	headerPagePos    = "page-pos"
 	headerTotalCount = "total-count"
-	headerPageMore = "page-more"
-	headerOrderBy = "order-by"
+	headerPageMore   = "page-more"
+	headerOrderBy    = "order-by"
 )
 
 // Defines the error while binding json
@@ -30,7 +30,7 @@ func (err BindJsonError) Error() string {
 // Binds JSON and panic with JsonBindError if there is error
 func BindJson(context *gin.Context, object interface{}) {
 	if err := context.BindJSON(object); err != nil {
-		panic(BindJsonError{ err })
+		panic(BindJsonError{err})
 	}
 }
 
@@ -46,8 +46,7 @@ func BindJson(context *gin.Context, object interface{}) {
 func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Paging {
 	finalPaging := *defaultPaging
 
-	if pageSize := context.Request.Header.Get(headerPageSize)
-		pageSize != "" {
+	if pageSize := context.Request.Header.Get(headerPageSize); pageSize != "" {
 
 		parsedValue, err := strconv.ParseInt(pageSize, 10, 32)
 		// If the parsing has error, use the value of default paging
@@ -55,16 +54,14 @@ func PagingByHeader(context *gin.Context, defaultPaging *model.Paging) *model.Pa
 			finalPaging.Size = int32(parsedValue)
 		}
 	}
-	if pagePos := context.Request.Header.Get(headerPagePos)
-		pagePos != "" {
+	if pagePos := context.Request.Header.Get(headerPagePos); pagePos != "" {
 
 		parsedValue, err := strconv.ParseInt(pagePos, 10, 32)
 		if err == nil {
 			finalPaging.Position = int32(parsedValue)
 		}
 	}
-	if orderBy := context.Request.Header.Get(headerOrderBy)
-		orderBy != "" {
+	if orderBy := context.Request.Header.Get(headerOrderBy); orderBy != "" {
 
 		parsedValue, err := ParseOrderBy(orderBy)
 		if err == nil {
@@ -93,6 +90,7 @@ func int32ToString(v int32) string {
 }
 
 var regexpOrderValue = regexp.MustCompile(`^\w+(?:#(?:a|d|asc|desc|ascending|descending))?(?::\w+(?:#(?:a|d|asc|desc|ascending|descending))?)*$`)
+
 func ParseOrderBy(headerValueOfOrderBy string) ([]*model.OrderByEntity, error) {
 	var result []*model.OrderByEntity
 

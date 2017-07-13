@@ -3,8 +3,8 @@ package reflect
 import (
 	"reflect"
 
+	. "github.com/Cepave/open-falcon-backend/common/reflect/types"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	. "./types"
 	. "gopkg.in/check.v1"
 )
 
@@ -15,15 +15,15 @@ var _ = Suite(&TestReflectSuite{})
 // Tests the getting value of field by strings
 func (suite *TestReflectSuite) TestGetValueOfField(c *C) {
 	type sampleBox struct {
-		Age int
-		Name string
-		ChildBox *sampleBox
+		Age        int
+		Name       string
+		ChildBox   *sampleBox
 		ChildBoxL2 **sampleBox
 	}
 
-	box1 := sampleBox { Age: 30, Name: "b1" }
-	box2 := &sampleBox { Age: 33, ChildBox: &box1 }
-	box3 := &sampleBox { ChildBoxL2: &box2 }
+	box1 := sampleBox{Age: 30, Name: "b1"}
+	box2 := &sampleBox{Age: 33, ChildBox: &box1}
+	box3 := &sampleBox{ChildBoxL2: &box2}
 
 	c.Assert(GetValueOfField(box1, "Age"), Equals, 30)
 
@@ -40,17 +40,17 @@ func (suite *TestReflectSuite) TestSetValueOfField(c *C) {
 		Age int
 	}
 	type sampleBox struct {
-		Age int
-		Name string
-		ChildBox *sampleBox
+		Age        int
+		Name       string
+		ChildBox   *sampleBox
 		ChildBoxL2 **sampleBox
 
 		BlueBox blueBox
 	}
 
-	box1 := &sampleBox { Age: 35 }
-	box2 := &sampleBox { Age: 77 }
-	box3 := &sampleBox { Age: 491 }
+	box1 := &sampleBox{Age: 35}
+	box2 := &sampleBox{Age: 77}
+	box3 := &sampleBox{Age: 491}
 
 	/**
 	 * Sets the field value by pointer
@@ -58,7 +58,7 @@ func (suite *TestReflectSuite) TestSetValueOfField(c *C) {
 	SetValueOfField(box1, 77, "Age")
 	c.Assert(box1.Age, Equals, 77)
 
-	SetValueOfField(box1, blueBox{ Age: 62 }, "BlueBox")
+	SetValueOfField(box1, blueBox{Age: 62}, "BlueBox")
 	c.Assert(box1.BlueBox.Age, Equals, 62)
 
 	SetValueOfField(box1, 53, "BlueBox", "Age")
@@ -75,12 +75,12 @@ func (suite *TestReflectSuite) TestSetValueOfField(c *C) {
 // Test the extraction for final pointed type
 func (suite *TestReflectSuite) TestFinalPointedType(c *C) {
 	testCases := []*struct {
-		sampleType interface{}
+		sampleType   interface{}
 		expectedType reflect.Type
-	} {
-		{ int32(45), TypeOfInt32 },
-		{ new(**int32), TypeOfInt32 },
-		{ new(****int32), TypeOfInt32 },
+	}{
+		{int32(45), TypeOfInt32},
+		{new(**int32), TypeOfInt32},
+		{new(****int32), TypeOfInt32},
 	}
 
 	for i, testCase := range testCases {
@@ -100,15 +100,15 @@ func (suite *TestReflectSuite) TestGetPointedValue(c *C) {
 	v2 := &v1
 
 	testCases := []*struct {
-		sampleValue interface{}
+		sampleValue   interface{}
 		expectedValue interface{}
-	} {
-		{ &v, v },
-		{ v1, v },
-		{ v2, v },
-		{ (*uint16)(nil), (*uint16)(nil) },
-		{ (**uint16)(nil), (**uint16)(nil) },
-		{ (****uint16)(nil), (****uint16)(nil) },
+	}{
+		{&v, v},
+		{v1, v},
+		{v2, v},
+		{(*uint16)(nil), (*uint16)(nil)},
+		{(**uint16)(nil), (**uint16)(nil)},
+		{(****uint16)(nil), (****uint16)(nil)},
 	}
 
 	for i, testCase := range testCases {
@@ -126,11 +126,11 @@ func (suite *TestReflectSuite) TestGetPointedValue(c *C) {
 // Tests the new() of final value from pointer type
 func (suite *TestReflectSuite) TestNewFinalValue(c *C) {
 	testCases := []*struct {
-		sampleType reflect.Type
+		sampleType    reflect.Type
 		expectedValue interface{}
-	} {
-		{ TypeOfInt8, int8(0) },
-		{ reflect.TypeOf(new(**string)), "" },
+	}{
+		{TypeOfInt8, int8(0)},
+		{reflect.TypeOf(new(**string)), ""},
 	}
 
 	for i, testCase := range testCases {
@@ -151,13 +151,13 @@ func (suite *TestReflectSuite) TestNewFinalValueFrom(c *C) {
 	v3 := &v2
 
 	testCases := []*struct {
-		sampleValue interface{}
-		finalType reflect.Type
+		sampleValue    interface{}
+		finalType      reflect.Type
 		expectedResult interface{}
-	} {
-		{ int64(99), TypeOfInt64, int64(99) },
-		{ v, reflect.TypeOf(new(*int32)), v2 },
-		{ v, reflect.TypeOf(new(**int32)), v3 },
+	}{
+		{int64(99), TypeOfInt64, int64(99)},
+		{v, reflect.TypeOf(new(*int32)), v2},
+		{v, reflect.TypeOf(new(**int32)), v3},
 	}
 
 	for i, testCase := range testCases {

@@ -2,16 +2,16 @@ package nqm
 
 import (
 	"fmt"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser" // As NQM intermediate representation
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"reflect"
 	"time"
 
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
-	owlService "github.com/Cepave/open-falcon-backend/common/service/owl"
 	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
+	owlService "github.com/Cepave/open-falcon-backend/common/service/owl"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
@@ -21,15 +21,16 @@ import (
  */
 type ServiceController struct {
 	GetStatisticsOfIcmpByDsl func(*NqmDsl) ([]IcmpResult, error)
-	GetProvinceById func(int16) *owlModel.Province
-	GetIspById func(int16) *owlModel.Isp
-	GetCityById func(int16) *owlModel.City2
-	GetTargetById func(int32) *nqmModel.SimpleTarget1
+	GetProvinceById          func(int16) *owlModel.Province
+	GetIspById               func(int16) *owlModel.Isp
+	GetCityById              func(int16) *owlModel.City2
+	GetTargetById            func(int32) *nqmModel.SimpleTarget1
 }
 
 func GetDefaultServiceController() *ServiceController {
 	return &ServiceController{}
 }
+
 // :~)
 
 var queryService *owlService.QueryService
@@ -59,7 +60,7 @@ const queryNamedId = "nqm.compound.report"
 
 func initServices() {
 	queryService = owlService.NewQueryService(
-		owlService.QueryServiceConfig {
+		owlService.QueryServiceConfig{
 			queryNamedId,
 			8,
 			time.Hour * 8,
@@ -108,7 +109,7 @@ func (srv *ServiceController) ListByProvinces(dslParams *dsl.QueryParams) []Prov
 	 * 2. Only for inter-province
 	 */
 	nqmDsl := toNqmDsl(dslParams)
-	nqmDsl.GroupingColumns = []string { "ag_pv_id" }
+	nqmDsl.GroupingColumns = []string{"ag_pv_id"}
 	nqmDsl.ProvinceRelation = model.SameValue
 	// :~)
 
@@ -144,7 +145,7 @@ func (srv *ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryPara
 	 * Loads data with grouping by id of cities
 	 */
 	dslGroupByCity := toNqmDsl(dslParams)
-	dslGroupByCity.GroupingColumns = []string { "tg_ct_id" }
+	dslGroupByCity.GroupingColumns = []string{"tg_ct_id"}
 	dslGroupByCity.ProvinceRelation = model.SameValue
 	rawIcmpGroupByCity, errForCityReport := srv.GetStatisticsOfIcmpByDsl(dslGroupByCity)
 	if errForCityReport != nil {
@@ -165,7 +166,7 @@ func (srv *ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryPara
 		result = append(
 			result,
 			CityMetric{
-				City: srv.GetCityById(cityId),
+				City:    srv.GetCityById(cityId),
 				Metrics: rowByCity.metrics,
 				Targets: make([]TargetMetric, 0),
 			},
@@ -178,7 +179,7 @@ func (srv *ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryPara
 	 * Loads data with grouping by id of targets
 	 */
 	dslGroupByTarget := toNqmDsl(dslParams)
-	dslGroupByTarget.GroupingColumns = []string { "tg_id", "tg_ct_id", "tg_isp_id" }
+	dslGroupByTarget.GroupingColumns = []string{"tg_id", "tg_ct_id", "tg_isp_id"}
 	rawIcmpGroupByTarget, errForTargetReport := srv.GetStatisticsOfIcmpByDsl(dslGroupByTarget)
 	if errForTargetReport != nil {
 		panic(errForTargetReport)
@@ -206,10 +207,10 @@ func (srv *ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryPara
 		 */
 		cityRow.Targets = append(
 			cityRow.Targets,
-			TargetMetric {
-				Id: targetNode.Id,
-				Host: targetNode.Host,
-				Isp: srv.GetIspById(ispId),
+			TargetMetric{
+				Id:      targetNode.Id,
+				Host:    targetNode.Host,
+				Isp:     srv.GetIspById(ispId),
 				Metrics: rowByTarget.metrics,
 			},
 		)
@@ -224,15 +225,15 @@ func (srv *ServiceController) ListTargetsWithCityDetail(dslParams *dsl.QueryPara
 func toNqmDsl(queryParams *dsl.QueryParams) *NqmDsl {
 	nqmDsl := &NqmDsl{
 		StartTime: toPointerOfEpochTime(queryParams.StartTime.Unix()),
-		EndTime: toPointerOfEpochTime(queryParams.EndTime.Unix()),
+		EndTime:   toPointerOfEpochTime(queryParams.EndTime.Unix()),
 
-		IdsOfAgents: safeIds(queryParams.AgentFilterById.MatchIds),
+		IdsOfAgents:  safeIds(queryParams.AgentFilterById.MatchIds),
 		IdsOfTargets: safeIds(queryParams.TargetFilterById.MatchIds),
 
-		IspRelation: queryParams.IspRelation,
+		IspRelation:      queryParams.IspRelation,
 		ProvinceRelation: queryParams.ProvinceRelation,
-		CityRelation: queryParams.CityRelation,
-		NameTagRelation: -1,
+		CityRelation:     queryParams.CityRelation,
+		NameTagRelation:  -1,
 	}
 
 	/**
@@ -303,7 +304,7 @@ func loadIdsOrUnknown(idObjects interface{}) []int16 {
 	valueOfObjects := reflect.ValueOf(idObjects)
 
 	if valueOfObjects.Len() == 0 {
-		return []int16{ UNKNOWN_ID_FOR_QUERY }
+		return []int16{UNKNOWN_ID_FOR_QUERY}
 	}
 
 	ids := make([]int16, valueOfObjects.Len())

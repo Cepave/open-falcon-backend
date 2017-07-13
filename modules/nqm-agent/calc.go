@@ -13,7 +13,7 @@ func convToFloat(samples []string) []float64 {
 		if sample != "-" {
 			rtt, err := strconv.ParseFloat(sample, 64)
 			if err != nil {
-				log.Println("error occured:", err)
+				log.Println("error occurred:", err)
 				continue
 			}
 			if rtt < float64(1000) {

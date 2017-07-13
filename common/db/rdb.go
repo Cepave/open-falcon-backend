@@ -4,20 +4,20 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/Cepave/open-falcon-backend/common/utils"
 	or "github.com/Cepave/open-falcon-backend/common/runtime"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 type TxFinale byte
 
 const (
-	TxCommit TxFinale = 1
+	TxCommit   TxFinale = 1
 	TxRollback TxFinale = 2
 )
 
 // Configuration of database
 type DbConfig struct {
-	Dsn string
+	Dsn     string
 	MaxIdle int
 }
 
@@ -33,7 +33,7 @@ func (config *DbConfig) String() string {
 
 // Main controller of database
 type DbController struct {
-	dbObject *sql.DB
+	dbObject      *sql.DB
 	panicHandlers []utils.PanicHandler
 }
 
@@ -44,6 +44,7 @@ type DbCallback interface {
 
 // The function object delegates the DbCallback interface
 type DbCallbackFunc func(*sql.DB)
+
 func (f DbCallbackFunc) OnDb(db *sql.DB) {
 	f(db)
 }
@@ -55,6 +56,7 @@ type RowsCallback interface {
 
 // The function object delegates the RowsCallback interface
 type RowsCallbackFunc func(*sql.Rows) IterateControl
+
 func (callbackFunc RowsCallbackFunc) NextRow(rows *sql.Rows) IterateControl {
 	return callbackFunc(rows)
 }
@@ -66,6 +68,7 @@ type RowCallback interface {
 
 // The function object delegates the RowCallback interface
 type RowCallbackFunc func(*sql.Row)
+
 func (callbackFunc RowCallbackFunc) ResultRow(row *sql.Row) {
 	callbackFunc(row)
 }
@@ -77,12 +80,13 @@ type TxCallback interface {
 
 // The function object delegates the TxCallback interface
 type TxCallbackFunc func(*sql.Tx) TxFinale
+
 func (callbackFunc TxCallbackFunc) InTx(tx *sql.Tx) TxFinale {
 	return callbackFunc(tx)
 }
 
 // BuildTxForSqls builds function for exeuction of multiple SQLs
-func BuildTxForSqls(queries... string) TxCallback {
+func BuildTxForSqls(queries ...string) TxCallback {
 	return TxCallbackFunc(func(tx *sql.Tx) TxFinale {
 		txExt := ToTxExt(tx)
 
@@ -111,7 +115,7 @@ func ToRowsExt(rows *sql.Rows) *RowsExt {
 }
 
 // Gets columns, with panic instead of returned error
-func (rowsExt *RowsExt) Columns() ([]string) {
+func (rowsExt *RowsExt) Columns() []string {
 	columns, err := ((*sql.Rows)(rowsExt)).Columns()
 	PanicIfError(utils.BuildErrorWithCaller(err))
 
@@ -212,8 +216,8 @@ type ResultExt struct {
 }
 
 // Converts sql.Result to ResultExt
-func ToResultExt (result sql.Result) *ResultExt {
-	return &ResultExt{ result }
+func ToResultExt(result sql.Result) *ResultExt {
+	return &ResultExt{result}
 }
 
 // Gets last id of insert with panic instead of returned error
@@ -234,9 +238,10 @@ func (resultExt *ResultExt) RowsAffected() int64 {
 
 // The control of iterating
 type IterateControl byte
+
 const (
 	IterateContinue = IterateControl(1)
-	IterateStop = IterateControl(0)
+	IterateStop     = IterateControl(0)
 )
 
 // Initialize a controller for database
@@ -251,7 +256,7 @@ func NewDbController(newDbObject *sql.DB) *DbController {
 	}
 
 	return &DbController{
-		dbObject: newDbObject,
+		dbObject:      newDbObject,
 		panicHandlers: make([]utils.PanicHandler, 0),
 	}
 }
@@ -355,7 +360,7 @@ func (dbController *DbController) InTx(txCallback TxCallback) {
 		PanicIfError(utils.BuildErrorWithCallerInfo(err, callerInfo))
 
 		/**
-		 * Rollback the transaction when panic is rised
+		 * Rollback the transaction when panic is raised
 		 */
 		defer func() {
 			p := recover()
@@ -410,7 +415,7 @@ func (dbController *DbController) InTxForIf(ifCallbacks ExecuteIfByTx) {
 }
 
 // Executes in transaction
-func (dbController *DbController) ExecQueriesInTx(queries... string) {
+func (dbController *DbController) ExecQueriesInTx(queries ...string) {
 	defer utils.DeferCatchPanicWithCaller()()
 	dbController.InTx(BuildTxForSqls(queries...))
 }

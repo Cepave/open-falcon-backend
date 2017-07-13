@@ -22,14 +22,14 @@ func (suite *TestParseProcessorSuite) TestParseUnixTime(c *C) {
 
 // Tests the parsing for node parameters
 func (suite *TestParseProcessorSuite) TestNodeParams(c *C) {
-	testCases := []*nodeParamsTestCase {
-		&nodeParamsTestCase{ // Tests normal value of agent's property
+	testCases := []*nodeParamsTestCase{
+		{ // Tests normal value of agent's property
 			"agent.isp=i1,i2 agent.province=pv1,pv2 agent.city=ct1,ct2",
-			func (testedQueryParam *QueryParams) {
+			func(testedQueryParam *QueryParams) {
 				c.Assert(
-					[]string{ "i1", "i2", "pv1", "pv2", "ct1", "ct2" },
+					[]string{"i1", "i2", "pv1", "pv2", "ct1", "ct2"},
 					DeepEquals,
-					[]string {
+					[]string{
 						testedQueryParam.AgentFilter.MatchIsps[0],
 						testedQueryParam.AgentFilter.MatchIsps[1],
 						testedQueryParam.AgentFilter.MatchProvinces[0],
@@ -43,13 +43,13 @@ func (suite *TestParseProcessorSuite) TestNodeParams(c *C) {
 				c.Assert(testedQueryParam.CityRelation, Equals, model.NoCondition)
 			},
 		},
-		&nodeParamsTestCase{ // Tests normal value of target's property
+		{ // Tests normal value of target's property
 			"target.isp=i3,i4 target.province=pv3,pv4 target.city=ct3,ct4",
-			func (testedQueryParam *QueryParams) {
+			func(testedQueryParam *QueryParams) {
 				c.Assert(
-					[]string{ "i3", "i4", "pv3", "pv4", "ct3", "ct4" },
+					[]string{"i3", "i4", "pv3", "pv4", "ct3", "ct4"},
 					DeepEquals,
-					[]string {
+					[]string{
 						testedQueryParam.TargetFilter.MatchIsps[0],
 						testedQueryParam.TargetFilter.MatchIsps[1],
 						testedQueryParam.TargetFilter.MatchProvinces[0],
@@ -63,25 +63,25 @@ func (suite *TestParseProcessorSuite) TestNodeParams(c *C) {
 				c.Assert(testedQueryParam.CityRelation, Equals, model.NoCondition)
 			},
 		},
-		&nodeParamsTestCase{ // Agent's auto-condition
+		{ // Agent's auto-condition
 			"agent.isp=%NOT_MATCH_ANOTHER% agent.province=%MATCH_ANOTHER% agent.city=%MATCH_ANOTHER%",
-			func (testedQueryParam *QueryParams) {
+			func(testedQueryParam *QueryParams) {
 				c.Assert(testedQueryParam.IspRelation, Equals, model.NotSameValue)
 				c.Assert(testedQueryParam.ProvinceRelation, Equals, model.SameValue)
 				c.Assert(testedQueryParam.CityRelation, Equals, model.SameValue)
 			},
 		},
-		&nodeParamsTestCase{ // Agent's auto-condition
+		{ // Agent's auto-condition
 			"target.isp=%NOT_MATCH_ANOTHER% target.province=%MATCH_ANOTHER% target.city=%MATCH_ANOTHER%",
-			func (testedQueryParam *QueryParams) {
+			func(testedQueryParam *QueryParams) {
 				c.Assert(testedQueryParam.IspRelation, Equals, model.NotSameValue)
 				c.Assert(testedQueryParam.ProvinceRelation, Equals, model.SameValue)
 				c.Assert(testedQueryParam.CityRelation, Equals, model.SameValue)
 			},
 		},
-		&nodeParamsTestCase{ // Duplicated condition
+		{ // Duplicated condition
 			"agent.isp=%NOT_MATCH_ANOTHER% target.isp=%MATCH_ANOTHER%",
-			func (testedQueryParam *QueryParams) {
+			func(testedQueryParam *QueryParams) {
 				c.Assert(testedQueryParam.IspRelation, Equals, model.SameValue)
 			},
 		},
@@ -102,14 +102,15 @@ func (suite *TestParseProcessorSuite) TestNodeParams(c *C) {
 
 // Tests the combination for string literals
 type combineStringLiteralsTestCase struct {
-	first string
-	rest []interface{}
+	first          string
+	rest           []interface{}
 	expectedResult []string
 }
+
 func (suite *TestParseProcessorSuite) TestCombineStringLiterals(c *C) {
-	testCases := []*combineStringLiteralsTestCase {
-		&combineStringLiteralsTestCase{ "a1", []interface{}{ "b1", "b2" }, []string{ "a1", "b1", "b2" } },
-		&combineStringLiteralsTestCase{ "a9", nil, []string{ "a9" } },
+	testCases := []*combineStringLiteralsTestCase{
+		{"a1", []interface{}{"b1", "b2"}, []string{"a1", "b1", "b2"}},
+		{"a9", nil, []string{"a9"}},
 	}
 
 	for _, testCase := range testCases {
@@ -119,16 +120,17 @@ func (suite *TestParseProcessorSuite) TestCombineStringLiterals(c *C) {
 
 // Tests the parsing for ISO8601 with various format of input
 type parseIso8601Case struct {
-	sampleValue string
+	sampleValue  string
 	expectedYear int
 	expectedHour int
 }
+
 func (suite *TestParseProcessorSuite) TestParseIso8601(c *C) {
-	testCases := []parseIso8601Case {
-		{ "2012-10-10T14:10+04:00", 2012, 14 },
-		{ "2008-02-15T07:10", 2008, 7 },
-		{ "2009-03-07T08", 2009, 8 },
-		{ "2011-04-02", 2011, 0 },
+	testCases := []parseIso8601Case{
+		{"2012-10-10T14:10+04:00", 2012, 14},
+		{"2008-02-15T07:10", 2008, 7},
+		{"2009-03-07T08", 2009, 8},
+		{"2011-04-02", 2011, 0},
 	}
 
 	for _, testCase := range testCases {
@@ -143,8 +145,8 @@ func (suite *TestParseProcessorSuite) TestParseIso8601(c *C) {
 }
 
 func buildCurrent(value string) *current {
-	return &current {
-		pos: position{},
+	return &current{
+		pos:  position{},
 		text: []byte(value),
 	}
 }

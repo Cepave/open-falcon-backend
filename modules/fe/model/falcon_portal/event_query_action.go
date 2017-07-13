@@ -8,8 +8,8 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/g"
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
+	log "github.com/sirupsen/logrus"
 )
 
 //generate status filter SQL templete
@@ -129,6 +129,7 @@ func GetEvents(startTime int64, endTime int64, status string, limit int, caseId 
 				events.cond as cond,
 				events.timestamp as timestamp,
 				events.event_caseId as eid,
+				events.status as status,
 				event_cases.tpl_creator as tpl_creator,
 				event_cases.metric as metric,
 				event_cases.endpoint as endpoint
@@ -139,6 +140,14 @@ func GetEvents(startTime int64, endTime int64, status string, limit int, caseId 
 		result = []EventsRsp{}
 	}
 	return
+}
+
+func GetAlarmTypeById(id int) AlarmType {
+	q := orm.NewOrm()
+	q.Using("falcon_portal")
+	aType := AlarmType{}
+	q.Raw("select * from alarm_types where id = ?", id).QueryRow(&aType)
+	return aType
 }
 
 func CountNumOfTlp() (c int, err error) {

@@ -31,7 +31,7 @@ func init() {
 	size := len(file)
 	suffix := len("github.com/Cepave/open-falcon-backend/common/runtime/stack.go")
 
-	goPath = file[0:size-suffix]
+	goPath = file[0 : size-suffix]
 	prefixLength = len(goPath)
 	// :~)
 }
@@ -40,11 +40,12 @@ func init() {
 type CallerInfo struct {
 	Line int
 
-	file string
+	file    string
 	rawFile string
 }
 
 type CallerStack []*CallerInfo
+
 func (s CallerStack) AsStringStack() []string {
 	callerStackString := make([]string, 0)
 	for _, caller := range s {
@@ -72,7 +73,7 @@ func (c *CallerInfo) String() string {
 // Gets stack of caller info
 func GetCallerInfoStack(startDepth int, endDepth int) CallerStack {
 	callers := make([]*CallerInfo, 0)
-	for i := startDepth + 1; i < endDepth + 1; i++ {
+	for i := startDepth + 1; i < endDepth+1; i++ {
 		callerInfo := GetCallerInfoWithDepth(i)
 		if callerInfo == nil {
 			break
@@ -88,6 +89,7 @@ func GetCallerInfoStack(startDepth int, endDepth int) CallerStack {
 func GetCallerInfo() *CallerInfo {
 	return GetCallerInfoWithDepth(1)
 }
+
 // Gets caller info with depth.
 //
 // N means the Nth caller of caller.
@@ -97,9 +99,9 @@ func GetCallerInfoWithDepth(depth int) *CallerInfo {
 		return nil
 	}
 
-	return &CallerInfo {
+	return &CallerInfo{
 		rawFile: file,
-		Line: line,
+		Line:    line,
 	}
 }
 

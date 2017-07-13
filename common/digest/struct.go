@@ -1,14 +1,14 @@
 package digest
 
 import (
-	"encoding/binary"
 	"bytes"
+	"encoding/binary"
 	"fmt"
+	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
-	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"unicode"
 )
 
@@ -18,17 +18,22 @@ type BytesGetter func() []byte
 
 const DigestTagName = "digest"
 
-var zeroBytes = []byte { 0 }
+var zeroBytes = []byte{0}
+
 // Gets the function provides constant zero bytes(not empty array)
 func ZeroBytesFunc() []byte {
 	return zeroBytes
 }
+
 // Gets the function provides constant non-zero bytes
-var nonZeroBytes = []byte { 1 }
+var nonZeroBytes = []byte{1}
+
 func NonZeroBytesFunc() []byte {
 	return nonZeroBytes
 }
+
 var noByte = []byte{}
+
 // Gets the function provides constant no byte(empty array)
 func NoByteFunc() []byte {
 	return noByte
@@ -179,11 +184,11 @@ func digestStructForReal(valueOfInput reflect.Value, sumFunc SumFunc) []byte {
 		bytesOfField := funcBytesGetter()
 
 		if len(bytesOfField) == 0 {
-			continue;
+			continue
 		}
 
 		bytesOfStruct = append(
-			bytesOfStruct, []byte(fieldToBeDigested.name + "|")...
+			bytesOfStruct, []byte(fieldToBeDigested.name+"|")...,
 		)
 		bytesOfStruct = append(
 			bytesOfStruct, bytesOfField...,
@@ -208,6 +213,7 @@ func buildPointerBytesGetter(v reflect.Value, sumFunc SumFunc) BytesGetter {
 }
 
 var typeOfString = reflect.TypeOf("")
+
 func buildStringBytesGetter(v reflect.Value) BytesGetter {
 	stringValue := v.Convert(typeOfString)
 
@@ -280,7 +286,7 @@ func buildArrayBytesGetter(
 }
 
 type fieldWithSequence struct {
-	name string
+	name     string
 	sequence int
 }
 
@@ -289,6 +295,7 @@ func (f *fieldWithSequence) String() string {
 }
 
 type sortingFields []*fieldWithSequence
+
 func (f sortingFields) Len() int           { return len(f) }
 func (f sortingFields) Swap(i, j int)      { f[i], f[j] = f[j], f[i] }
 func (f sortingFields) Less(i, j int) bool { return f[i].sequence < f[j].sequence }
@@ -325,7 +332,7 @@ func loadDigestingSequence(typeOfStruct reflect.Type) sortingFields {
 
 		fieldsToBeDigested = append(
 			fieldsToBeDigested,
-			&fieldWithSequence{ field.Name, int(sequence) },
+			&fieldWithSequence{field.Name, int(sequence)},
 		)
 	}
 
@@ -336,6 +343,7 @@ func loadDigestingSequence(typeOfStruct reflect.Type) sortingFields {
 type showType struct {
 	typeObject reflect.Type
 }
+
 func (t *showType) String() string {
 	typeObject := t.typeObject
 

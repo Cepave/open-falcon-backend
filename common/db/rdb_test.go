@@ -1,10 +1,10 @@
 package db
 
 import (
-	"testing"
 	"database/sql"
-	. "gopkg.in/check.v1"
 	_ "github.com/mattn/go-sqlite3"
+	. "gopkg.in/check.v1"
+	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -18,15 +18,15 @@ func (suite *TestRdbSuite) TestOperateOnDbWithPanic(c *C) {
 	testedCtrl := buildSampleDbController(c)
 	defer testedCtrl.Release()
 
-	var testedFunc = func () {
-		testedCtrl.OperateOnDb(DbCallbackFunc(func (db *sql.DB) {
+	var testedFunc = func() {
+		testedCtrl.OperateOnDb(DbCallbackFunc(func(db *sql.DB) {
 			panic("Test Panic")
 		}))
 	}
 
 	defer func() {
 		c.Assert(testedFunc, PanicMatches, ".*Test Panic.*")
-	} ()
+	}()
 }
 
 // Tests the operate on database
@@ -56,7 +56,7 @@ func (suite *TestRdbSuite) TestRelease(c *C) {
 	defer func() {
 		panicObject := recover()
 		c.Assert(panicObject, NotNil)
-	} ()
+	}()
 
 	testedCtrl.Release()
 }
@@ -157,7 +157,6 @@ func (suite *TestRdbSuite) TestInTx(c *C) {
 	assertNumberOfDataInTx(c, testedCtrl, 3)
 	// :~)
 
-
 	/**
 	 * Builds rollbacked data
 	 */
@@ -183,8 +182,8 @@ func (suite *TestRdbSuite) TestInTxForIf(c *C) {
 	testedCtrl := buildSampleDbController(c)
 	defer testedCtrl.Release()
 
-	testedTrueSample := &ifSample { true, false }
-	testedFalseSample := &ifSample { false, false }
+	testedTrueSample := &ifSample{true, false}
+	testedFalseSample := &ifSample{false, false}
 
 	testedCtrl.InTxForIf(testedTrueSample)
 	testedCtrl.InTxForIf(testedFalseSample)
@@ -220,7 +219,7 @@ func (suite *TestRdbSuite) TestExecQueriesInTx(c *C) {
 }
 
 type ifSample struct {
-	ifValue bool
+	ifValue   bool
 	getCalled bool
 }
 
@@ -237,7 +236,7 @@ func assertNumberOfDataInTx(
 ) {
 	var testedNumber int
 	testedCtrl.QueryForRow(
-		RowCallbackFunc(func (row *sql.Row) {
+		RowCallbackFunc(func(row *sql.Row) {
 			err := row.Scan(&testedNumber)
 			c.Assert(err, IsNil)
 		}),
@@ -248,7 +247,7 @@ func assertNumberOfDataInTx(
 }
 
 func buildSampleDbController(c *C) *DbController {
-	db, err := sql.Open("sqlite3", ":memory:");
+	db, err := sql.Open("sqlite3", ":memory:")
 
 	if err != nil {
 		c.Fatalf("Open Databae Error. %v", err)

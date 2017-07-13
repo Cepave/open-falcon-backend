@@ -64,7 +64,7 @@ func TypedFuncToFilter(anyFunc interface{}) FilterFunc {
 		funcInputType := typeOfFunc.In(0)
 
 		inputValue := ConvertToByReflect(reflect.ValueOf(v), funcInputType)
-		outputValue := valueOfFunc.Call([]reflect.Value{ inputValue })[0]
+		outputValue := valueOfFunc.Call([]reflect.Value{inputValue})[0]
 
 		return outputValue.Bool()
 	}
@@ -120,7 +120,7 @@ func TypedFuncToMapper(anyFunc interface{}) MapperFunc {
 	funcValue := reflect.ValueOf(anyFunc)
 	return func(v interface{}) interface{} {
 		inputValue := ConvertToByReflect(reflect.ValueOf(v), mapperTypes[0])
-		outputValue := funcValue.Call([]reflect.Value{ inputValue })[0]
+		outputValue := funcValue.Call([]reflect.Value{inputValue})[0]
 
 		return outputValue.Interface()
 	}
@@ -129,7 +129,7 @@ func TypedFuncToMapper(anyFunc interface{}) MapperFunc {
 // Abstract array to provide various function for processing array
 type AbstractArray struct {
 	arrayElementType reflect.Type
-	anyArrayValue reflect.Value
+	anyArrayValue    reflect.Value
 }
 
 // Constructs an array of abstract
@@ -142,7 +142,7 @@ func MakeAbstractArray(sourceSlice interface{}) *AbstractArray {
 		panic(fmt.Errorf("Cannot support of type for abstract array: %v", valueOfArray.Kind()))
 	}
 
-	return &AbstractArray { valueOfArray.Type().Elem(), valueOfArray }
+	return &AbstractArray{valueOfArray.Type().Elem(), valueOfArray}
 }
 
 // Gets the result array
@@ -217,6 +217,7 @@ func (a *AbstractArray) FilterWith(filter FilterFunc) *AbstractArray {
 
 	return MakeAbstractArray(newArray.Interface())
 }
+
 // Maps the elements in array(with target type of result array)
 func (a *AbstractArray) MapTo(mapper MapperFunc, eleType reflect.Type) *AbstractArray {
 	valueOfAnyArray := a.anyArrayValue
@@ -246,5 +247,5 @@ func getMapperTypes(mapperFunc interface{}) []reflect.Type {
 		panic(fmt.Errorf("Need in(1) and out(1) for mapper func"))
 	}
 
-	return []reflect.Type{ funcType.In(0), funcType.Out(0) }
+	return []reflect.Type{funcType.In(0), funcType.Out(0)}
 }

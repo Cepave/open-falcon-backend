@@ -10,17 +10,17 @@ type KeyGetter interface {
 }
 
 type GroupingProcessor struct {
-	mapOfKeys map[interface{}]KeyGetter
+	mapOfKeys     map[interface{}]KeyGetter
 	mapOfChildren map[interface{}]reflect.Value
 
 	typeOfElem reflect.Type
 }
 
 func NewGroupingProcessor(typeOfElem reflect.Type) *GroupingProcessor {
-	return &GroupingProcessor {
-		mapOfKeys: make(map[interface{}]KeyGetter),
+	return &GroupingProcessor{
+		mapOfKeys:     make(map[interface{}]KeyGetter),
 		mapOfChildren: make(map[interface{}]reflect.Value),
-		typeOfElem: typeOfElem,
+		typeOfElem:    typeOfElem,
 	}
 }
 func NewGroupingProcessorOfTargetType(target interface{}) *GroupingProcessor {

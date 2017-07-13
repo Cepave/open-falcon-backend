@@ -22,8 +22,8 @@ func PanicIfError(err error) {
 func NewDatabaseError(err error) *DbError {
 	stackError, ok := err.(*utils.StackError)
 	if ok {
-		return &DbError { stackError }
+		return &DbError{stackError}
 	}
 
-	return &DbError { utils.BuildErrorWithCaller(err) }
+	return &DbError{utils.BuildErrorWithCaller(err)}
 }

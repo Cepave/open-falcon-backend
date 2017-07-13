@@ -3,16 +3,16 @@ package test
 import (
 	"database/sql"
 	"fmt"
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	testDb "github.com/Cepave/open-falcon-backend/common/testing/db"
 	log "github.com/sirupsen/logrus"
 	tknet "github.com/toolkits/net"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
-	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
-	testDb "github.com/Cepave/open-falcon-backend/common/testing/db"
+	"gopkg.in/check.v1"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"time"
-	"gopkg.in/check.v1"
 )
 
 var DbForTest *sql.DB

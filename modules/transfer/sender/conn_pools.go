@@ -67,7 +67,7 @@ func parseDSN(dsn string) (cfg *cpool.InfluxdbConnection, err error) {
 			}
 
 			// /dbname
-			cfg.DBName = dsn[i+1 : len(dsn)]
+			cfg.DBName = dsn[i+1:]
 
 			break
 		}

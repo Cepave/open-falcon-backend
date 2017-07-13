@@ -15,7 +15,7 @@ func TestUpdateHostsTable(t *testing.T) {
 			"host-01", "host-02", "host-03",
 		},
 		map[string]map[string]string{
-			"host-01": map[string]string{
+			"host-01": {
 				"hostname":  "host-01",
 				"isp":       "isp-1",
 				"province":  "province-1",
@@ -24,7 +24,7 @@ func TestUpdateHostsTable(t *testing.T) {
 				"platform":  "p1",
 				"activate":  "1",
 			},
-			"host-02": map[string]string{
+			"host-02": {
 				"hostname":  "host-02",
 				"isp":       "isp-2",
 				"province":  "province-2",
@@ -33,7 +33,7 @@ func TestUpdateHostsTable(t *testing.T) {
 				"platform":  "p1",
 				"activate":  "1",
 			},
-			"host-03": map[string]string{
+			"host-03": {
 				"hostname":  "host-03",
 				"isp":       "isp-3",
 				"province":  "province-3",

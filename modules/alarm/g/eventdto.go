@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-    "sort"
+	"sort"
 	"sync"
 )
 
@@ -89,7 +89,7 @@ func (this *SafeEvents) CloneToOrderedEvents() OrderedEvents {
 		sortedEvent[i] = event
 		i++
 	}
-    // Sorted by Timestamp of EventDto
+	// Sorted by Timestamp of EventDto
 	sort.Sort(OrderedEvents(sortedEvent))
 	return OrderedEvents(sortedEvent)
 }

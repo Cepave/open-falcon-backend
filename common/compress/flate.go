@@ -3,9 +3,9 @@ package compress
 import (
 	"bytes"
 	"compress/flate"
+	"fmt"
 	"io"
 	"io/ioutil"
-	"fmt"
 	"strings"
 )
 
@@ -16,7 +16,7 @@ type FlateCompressor struct {
 }
 
 func NewDefaultFlateCompressor() *FlateCompressor {
-	return &FlateCompressor {
+	return &FlateCompressor{
 		Level: flate.DefaultCompression,
 	}
 }
@@ -26,7 +26,7 @@ func (c *FlateCompressor) CompressString(v string) (result []byte, err error) {
 	var flateWriter *flate.Writer
 
 	flateWriter, err = flate.NewWriter(b, c.Level)
-	if err != nil{
+	if err != nil {
 		return nil, fmt.Errorf("Cannot initialize flate compressor. Error: %v", err)
 	}
 

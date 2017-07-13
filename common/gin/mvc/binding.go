@@ -180,8 +180,8 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/gin-gonic/gin"
 
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 )
@@ -193,8 +193,10 @@ type MvcHandler interface{}
 type ContextBinder interface {
 	Bind(*gin.Context)
 }
+
 // Function type of "ContextBuilder"
 type ContextBinderFunc func(*gin.Context)
+
 func (f ContextBinderFunc) Bind(context *gin.Context) {
 	f(context)
 }
@@ -218,6 +220,7 @@ func (f OutputBodyFunc) Output(context *gin.Context) {
 func JsonOutputBody(v interface{}) OutputBody {
 	return JsonOutputBody2(http.StatusOK, v)
 }
+
 // Uses "(*gin.Context).JSON(code, v)" to perform response
 func JsonOutputBody2(code int, v interface{}) OutputBody {
 	return OutputBodyFunc(func(context *gin.Context) {
@@ -238,6 +241,7 @@ func JsonOutputOrNotFound(v interface{}) OutputBody {
 func TextOutputBody(v interface{}) OutputBody {
 	return TextOutputBody2(http.StatusOK, v)
 }
+
 // Uses "(*gin.Context).String(code, v)" to perform response
 func TextOutputBody2(code int, v interface{}) OutputBody {
 	return OutputBodyFunc(func(context *gin.Context) {
@@ -258,6 +262,7 @@ func TextOutputOrNotFound(v interface{}) OutputBody {
 func HtmlOutputBody(name string, v interface{}) OutputBody {
 	return HtmlOutputBody2(http.StatusOK, name, v)
 }
+
 // Uses "(*gin.Context).HTML(code, name, v)" to perform response
 func HtmlOutputBody2(code int, name string, v interface{}) OutputBody {
 	return OutputBodyFunc(func(context *gin.Context) {
@@ -278,6 +283,7 @@ func HtmlOutputOrNotFound(name string, v interface{}) OutputBody {
 func XmlOutputBody(v interface{}) OutputBody {
 	return XmlOutputBody2(http.StatusOK, v)
 }
+
 // Uses "(*gin.Context).XML(code, v)" to perform response
 func XmlOutputBody2(code int, v interface{}) OutputBody {
 	return OutputBodyFunc(func(context *gin.Context) {
@@ -298,6 +304,7 @@ func XmlOutputOrNotFound(v interface{}) OutputBody {
 func YamlOutputBody(v interface{}) OutputBody {
 	return YamlOutputBody2(http.StatusOK, v)
 }
+
 // Uses "(*gin.Context).YAML(code, v)" to perform response
 func YamlOutputBody2(code int, v interface{}) OutputBody {
 	return OutputBodyFunc(func(context *gin.Context) {

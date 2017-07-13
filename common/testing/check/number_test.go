@@ -12,18 +12,18 @@ var _ = Suite(&TestNumberSuite{})
 func (suite *TestNumberSuite) TestLargerThan(c *C) {
 	testCases := []*struct {
 		sampleLeft, sampleRight int
-		expectedResult bool
-	} {
-		{ 4, 3, true },
-		{ 3, 3, false },
-		{ 2, 3, false },
+		expectedResult          bool
+	}{
+		{4, 3, true},
+		{3, 3, false},
+		{2, 3, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult, _ := LargerThan.Check(
-			[]interface{} { testCase.sampleLeft, testCase.sampleRight },
+			[]interface{}{testCase.sampleLeft, testCase.sampleRight},
 			[]string{},
 		)
 
@@ -35,18 +35,18 @@ func (suite *TestNumberSuite) TestLargerThan(c *C) {
 func (suite *TestNumberSuite) TestLargerThanOrEqualTo(c *C) {
 	testCases := []*struct {
 		sampleLeft, sampleRight int
-		expectedResult bool
-	} {
-		{ 4, 3, true },
-		{ 3, 3, true },
-		{ 2, 3, false },
+		expectedResult          bool
+	}{
+		{4, 3, true},
+		{3, 3, true},
+		{2, 3, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult, _ := LargerThanOrEqualTo.Check(
-			[]interface{} { testCase.sampleLeft, testCase.sampleRight },
+			[]interface{}{testCase.sampleLeft, testCase.sampleRight},
 			[]string{},
 		)
 
@@ -58,18 +58,18 @@ func (suite *TestNumberSuite) TestLargerThanOrEqualTo(c *C) {
 func (suite *TestNumberSuite) TestSmallerThan(c *C) {
 	testCases := []*struct {
 		sampleLeft, sampleRight int
-		expectedResult bool
-	} {
-		{ 3, 4, true },
-		{ 3, 3, false },
-		{ 4, 3, false },
+		expectedResult          bool
+	}{
+		{3, 4, true},
+		{3, 3, false},
+		{4, 3, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult, _ := SmallerThan.Check(
-			[]interface{} { testCase.sampleLeft, testCase.sampleRight },
+			[]interface{}{testCase.sampleLeft, testCase.sampleRight},
 			[]string{},
 		)
 
@@ -81,18 +81,18 @@ func (suite *TestNumberSuite) TestSmallerThan(c *C) {
 func (suite *TestNumberSuite) TestSmallerThanOrEqualTo(c *C) {
 	testCases := []*struct {
 		sampleLeft, sampleRight int
-		expectedResult bool
-	} {
-		{ 2, 3, true },
-		{ 3, 3, true },
-		{ 4, 3, false },
+		expectedResult          bool
+	}{
+		{2, 3, true},
+		{3, 3, true},
+		{4, 3, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult, _ := SmallerThanOrEqualTo.Check(
-			[]interface{} { testCase.sampleLeft, testCase.sampleRight },
+			[]interface{}{testCase.sampleLeft, testCase.sampleRight},
 			[]string{},
 		)
 
@@ -104,15 +104,15 @@ func (suite *TestNumberSuite) TestSmallerThanOrEqualTo(c *C) {
 func (suite *TestNumberSuite) TestPerformCompare(c *C) {
 	testCases := []*struct {
 		leftValue, rightValue interface{}
-		expectedResult bool
-	} {
-		{ int(3), int8(44), false },
-		{ uint(20), uint8(7), true },
-		{ float32(20.509), float64(7.87), true },
+		expectedResult        bool
+	}{
+		{int(3), int8(44), false},
+		{uint(20), uint8(7), true},
+		{float32(20.509), float64(7.87), true},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		expectedResult := performCompare(
 			testCase.leftValue, testCase.rightValue,

@@ -1,12 +1,12 @@
 package ccache
 
 import (
-	 "github.com/karlseguin/ccache"
-	 "time"
+	"github.com/karlseguin/ccache"
+	"time"
 )
 
 type DataCacheConfig struct {
-	MaxSize int64
+	MaxSize  int64
 	Duration time.Duration
 }
 

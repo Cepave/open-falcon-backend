@@ -33,16 +33,16 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 
 	testCases := []*struct {
 		targetName string
-		host string
-		nameTag *string
-		groupTags []string
-		cityId int16
-		errorType   interface{}
-	} {
-		{ "tg-1", "1", nil, []string{}, 6, nil },
-		{ "tg-1", "1", nil, []string{}, 6, ErrDuplicatedNqmTarget{} }, // Duplicated host
-		{ "tg-2-1", "2", sPtr("IBM-1"), []string{ "KSC-1", "KSC-32" }, 6, nil },
-		{ "tg-2-2", "3", sPtr("IBM-1"), []string{ "KSC-1", "KSC-32" }, 112, owlDb.ErrNotInSameHierarchy{} }, // Location is not consistent
+		host       string
+		nameTag    *string
+		groupTags  []string
+		cityId     int16
+		errorType  interface{}
+	}{
+		{"tg-1", "1", nil, []string{}, 6, nil},
+		{"tg-1", "1", nil, []string{}, 6, ErrDuplicatedNqmTarget{}}, // Duplicated host
+		{"tg-2-1", "2", sPtr("IBM-1"), []string{"KSC-1", "KSC-32"}, 6, nil},
+		{"tg-2-2", "3", sPtr("IBM-1"), []string{"KSC-1", "KSC-32"}, 112, owlDb.ErrNotInSameHierarchy{}}, // Location is not consistent
 	}
 
 	for _, testCase := range testCases {
@@ -55,7 +55,7 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 		newTarget, err := AddTarget(sampleTarget)
 
 		/**
-		 * Asserts the occuring error
+		 * Asserts the occurring error
 		 */
 		if testCase.errorType != nil {
 			c.Assert(newTarget, IsNil)
@@ -91,20 +91,20 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 func (suite *TestTargetSuite) TestUpdateTarget(c *C) {
 	sPtr := func(v string) *string { return &v }
 	modifiedTarget := &nqmModel.TargetForAdding{
-		Name:         "new-tg-1",
-		Comment:      utils.PointerOfCloneString("new-comment-1"),
-		Status:       false,
-		ProvinceId:   26,
-		CityId:       194,
-		IspId:        2,
+		Name:       "new-tg-1",
+		Comment:    utils.PointerOfCloneString("new-comment-1"),
+		Status:     false,
+		ProvinceId: 26,
+		CityId:     194,
+		IspId:      2,
 	}
 
 	testCases := []*struct {
-		nameTag *string
+		nameTag   *string
 		groupTags []string
-	} {
-		{ sPtr("tg-nt-2"), []string{ "tg-gt-3", "tg-gt-4", "tg-gt-5" } },
-		{ nil, []string{} },
+	}{
+		{sPtr("tg-nt-2"), []string{"tg-gt-3", "tg-gt-4", "tg-gt-5"}},
+		{nil, []string{}},
 	}
 
 	for i, testCase := range testCases {
@@ -168,38 +168,38 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 		expectedCountOfAll         int32
 	}{
 		{ // All data
-			&nqmModel.TargetQuery{ IspId: -2, HasStatusParam: false },
+			&nqmModel.TargetQuery{IspId: -2, HasStatusParam: false},
 			10, 1, 3, 3,
 		},
 		{ // 2nd page
-			&nqmModel.TargetQuery{ IspId: -2, HasStatusParam: false },
+			&nqmModel.TargetQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
-			&nqmModel.TargetQuery{ IspId: -2, HasStatusParam: false },
+		{ // Match nothing for further page
+			&nqmModel.TargetQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},
 		{ // Match 1 row by all of the conditions
 			&nqmModel.TargetQuery{
-				Name:               "tg-name-1",
-				Host:               "tg-host-1",
-				IspId:              3,
+				Name:           "tg-name-1",
+				Host:           "tg-host-1",
+				IspId:          3,
 				HasStatusParam: true,
-				Status:             true,
+				Status:         true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match 1 row(by ISP id)
 			&nqmModel.TargetQuery{
-				IspId:    5,
+				IspId:         5,
 				HasIspIdParam: true,
 			}, 10, 1, 1, 1,
 		},
 		{ // Match nothing
 			&nqmModel.TargetQuery{
-				IspId: -2,
+				IspId:          -2,
 				HasStatusParam: false,
-				Name: "tg-easy-1",
-				Host: "tg-host-1",
+				Name:           "tg-easy-1",
+				Host:           "tg-host-1",
 			}, 10, 1, 0, 0,
 		},
 	}
@@ -209,17 +209,17 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 			Size:     testCase.pageSize,
 			Position: testCase.pagePosition,
 			OrderBy: []*commonModel.OrderByEntity{
-				&commonModel.OrderByEntity{"id", commonModel.Descending},
-				&commonModel.OrderByEntity{"name", commonModel.Ascending},
-				&commonModel.OrderByEntity{"status", commonModel.Ascending},
-				&commonModel.OrderByEntity{"host", commonModel.Ascending},
-				&commonModel.OrderByEntity{"comment", commonModel.Ascending},
-				&commonModel.OrderByEntity{"isp", commonModel.Ascending},
-				&commonModel.OrderByEntity{"province", commonModel.Ascending},
-				&commonModel.OrderByEntity{"city", commonModel.Ascending},
-				&commonModel.OrderByEntity{"creation_time", commonModel.Ascending},
-				&commonModel.OrderByEntity{"name_tag", commonModel.Ascending},
-				&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
+				{"id", commonModel.Descending},
+				{"name", commonModel.Ascending},
+				{"status", commonModel.Ascending},
+				{"host", commonModel.Ascending},
+				{"comment", commonModel.Ascending},
+				{"isp", commonModel.Ascending},
+				{"province", commonModel.Ascending},
+				{"city", commonModel.Ascending},
+				{"creation_time", commonModel.Ascending},
+				{"name_tag", commonModel.Ascending},
+				{"group_tag", commonModel.Descending},
 			},
 		}
 

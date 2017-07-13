@@ -9,7 +9,7 @@ import (
 
 func listGroupTags(
 	p *struct {
-		Name string `mvc:"query[name]"`
+		Name   string        `mvc:"query[name]"`
 		Paging *model.Paging `mvc:"pageSize[100] pageOrderBy[name#asc]"`
 	},
 ) (*model.Paging, mvc.OutputBody) {

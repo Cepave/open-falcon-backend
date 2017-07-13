@@ -41,7 +41,10 @@ func main() {
 	go cron.CombineMail()
 	go cron.CombineQQ()
 	go cron.CombineServerchan()
-
+	// read external alarms
+	if g.Config().Redis.ExternalQueues.Enable {
+		go cron.ReadExternalEvent()
+	}
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {

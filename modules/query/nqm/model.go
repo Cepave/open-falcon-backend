@@ -9,6 +9,7 @@ import (
  * Aliases of type for DSL
  */
 type EpochTime int64
+
 // :~)
 
 func toPointerOfEpochTime(v int64) *EpochTime {
@@ -23,55 +24,55 @@ const UNKNOWN_NAME_FOR_QUERY = "<UNKNOWN>"
 
 type TimeRangeOfDsl struct {
 	StartTime EpochTime `json:"start_time"`
-	EndTime EpochTime `json:"end_time"`
+	EndTime   EpochTime `json:"end_time"`
 }
 
 // Represents the DSL for query over Icmp log
 type NqmDsl struct {
 	GroupingColumns []string `json:"grouping_columns"`
 
-    StartTime *EpochTime `json:"start_time,omitempty"`
-	EndTime *EpochTime `json:"end_time,omitempty"`
+	StartTime *EpochTime `json:"start_time,omitempty"`
+	EndTime   *EpochTime `json:"end_time,omitempty"`
 
 	TimeRanges []*TimeRangeOfDsl `json:"time_ranges"`
 
-	IdsOfAgents []int32 `json:"ids_of_agents"`
-	IdsOfAgentIsps []int16 `json:"ids_of_agent_isps"`
+	IdsOfAgents         []int32 `json:"ids_of_agents"`
+	IdsOfAgentIsps      []int16 `json:"ids_of_agent_isps"`
 	IdsOfAgentProvinces []int16 `json:"ids_of_agent_provinces"`
-	IdsOfAgentCities []int16 `json:"ids_of_agent_cities"`
-	IdsOfAgentNameTags []int16 `json:"ids_of_agent_name_tags"`
+	IdsOfAgentCities    []int16 `json:"ids_of_agent_cities"`
+	IdsOfAgentNameTags  []int16 `json:"ids_of_agent_name_tags"`
 	IdsOfAgentGroupTags []int32 `json:"ids_of_agent_group_tags"`
 
-	IdsOfTargets []int32 `json:"ids_of_targets"`
+	IdsOfTargets         []int32 `json:"ids_of_targets"`
 	IdsOfTargetProvinces []int16 `json:"ids_of_target_provinces"`
-	IdsOfTargetIsps []int16 `json:"ids_of_target_isps"`
-	IdsOfTargetCities []int16 `json:"ids_of_target_cities"`
-	IdsOfTargetNameTags []int16 `json:"ids_of_target_name_tags"`
+	IdsOfTargetIsps      []int16 `json:"ids_of_target_isps"`
+	IdsOfTargetCities    []int16 `json:"ids_of_target_cities"`
+	IdsOfTargetNameTags  []int16 `json:"ids_of_target_name_tags"`
 	IdsOfTargetGroupTags []int32 `json:"ids_of_target_group_tags"`
 
-	IspRelation model.PropRelation `json:"isp_relation"`
+	IspRelation      model.PropRelation `json:"isp_relation"`
 	ProvinceRelation model.PropRelation `json:"province_relation"`
-	CityRelation model.PropRelation `json:"city_relation"`
-	NameTagRelation model.PropRelation `json:"name_tag_relation"`
+	CityRelation     model.PropRelation `json:"city_relation"`
+	NameTagRelation  model.PropRelation `json:"name_tag_relation"`
 }
 
 // The data used for reporting of ICMP statistics(grouping by provinces of agents)
 type ProvinceMetric struct {
 	Province *owlModel.Province `json:"province"`
-	Metrics *model.Metrics `json:"metrics"`
+	Metrics  *model.Metrics     `json:"metrics"`
 }
 
 // The data used for reporting of ICMP statistics, which contains detail of target node(grouping by city)
 type CityMetric struct {
-	City *owlModel.City2 `json:"city"`
-	Metrics *model.Metrics `json:"metrics"`
-	Targets []TargetMetric `json:"targets"`
+	City    *owlModel.City2 `json:"city"`
+	Metrics *model.Metrics  `json:"metrics"`
+	Targets []TargetMetric  `json:"targets"`
 }
 
 // The data used for reporting of ICMP statistics target node
 type TargetMetric struct {
-	Id int32 `json:"id"`
-	Host string `json:"host"`
-	Isp *owlModel.Isp `json:"isp"`
+	Id      int32          `json:"id"`
+	Host    string         `json:"host"`
+	Isp     *owlModel.Isp  `json:"isp"`
 	Metrics *model.Metrics `json:"metrics"`
 }

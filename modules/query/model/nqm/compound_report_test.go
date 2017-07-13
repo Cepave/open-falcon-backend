@@ -14,11 +14,11 @@ var _ = Suite(&TestCompountReportSuite{})
 // Tests the marshalling of JSON on metrics
 func (suite *TestCompountReportSuite) TestMarshalJSONOnDynamicMetrics(c *C) {
 	testCases := []*struct {
-		columns []string
+		columns        []string
 		expectedResult string
-	} {
+	}{
 		{ // Everything
-			[]string { MetricMax, MetricMin, MetricAvg, MetricMed, MetricMdev, MetricLoss, MetricCount, MetricPckSent, MetricPckReceived, MetricNumAgent, MetricNumTarget },
+			[]string{MetricMax, MetricMin, MetricAvg, MetricMed, MetricMdev, MetricLoss, MetricCount, MetricPckSent, MetricPckReceived, MetricNumAgent, MetricNumTarget},
 			`
 			{
 				"max": 78,
@@ -36,19 +36,19 @@ func (suite *TestCompountReportSuite) TestMarshalJSONOnDynamicMetrics(c *C) {
 			`,
 		},
 		{ // Nothing
-			[]string {},
+			[]string{},
 			"{}",
 		},
 	}
 
-	sampleMetrics := &DynamicMetrics {
-		Metrics: &Metrics {
+	sampleMetrics := &DynamicMetrics{
+		Metrics: &Metrics{
 			Max: 78, Min: 21, Avg: 45.67, Med: 32, Mdev: 5.81, Loss: 0.04,
 			Count: 100, NumberOfSentPackets: 2300, NumberOfReceivedPackets: 2045, NumberOfAgents: 10, NumberOfTargets: 15,
 		},
 	}
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		sampleMetrics.Output = &testCase.columns
 
@@ -60,14 +60,14 @@ func (suite *TestCompountReportSuite) TestMarshalJSONOnDynamicMetrics(c *C) {
 // Tests the comparison of host of targets
 func (suite *TestCompountReportSuite) TestCompareForHostOfTargets(c *C) {
 	testCases := []*struct {
-		leftHost string
+		leftHost  string
 		rightHost string
-		expected int
-	} {
-		{ "22.20.30.40", "103.20.30.40", utils.SeqHigher },
-		{ "10.20.30.40", "google.com", utils.SeqHigher },
-		{ "10.20.30.40", "10.20.30.40", utils.SeqEqual },
-		{ "wine.com.cn", "wine.com.cn", utils.SeqEqual },
+		expected  int
+	}{
+		{"22.20.30.40", "103.20.30.40", utils.SeqHigher},
+		{"10.20.30.40", "google.com", utils.SeqHigher},
+		{"10.20.30.40", "10.20.30.40", utils.SeqEqual},
+		{"wine.com.cn", "wine.com.cn", utils.SeqEqual},
 	}
 
 	for i, testCase := range testCases {
@@ -75,13 +75,13 @@ func (suite *TestCompountReportSuite) TestCompareForHostOfTargets(c *C) {
 		ocheck.LogTestCase(c, testCase)
 
 		testedResult := CompareFunctions["target_host"](
-			&DynamicRecord {
-				Target: &DynamicTargetProps {
+			&DynamicRecord{
+				Target: &DynamicTargetProps{
 					Host: testCase.leftHost,
 				},
 			},
-			&DynamicRecord {
-				Target: &DynamicTargetProps {
+			&DynamicRecord{
+				Target: &DynamicTargetProps{
 					Host: testCase.rightHost,
 				},
 			},
@@ -94,26 +94,26 @@ func (suite *TestCompountReportSuite) TestCompareForHostOfTargets(c *C) {
 // Tests the compare functions for special(-1) values on NQM metrics
 func (suite *TestCompountReportSuite) TestCompareSpecialValues(c *C) {
 	testCases := []*struct {
-		leftValue *Metrics
-		rightValue *Metrics
+		leftValue       *Metrics
+		rightValue      *Metrics
 		compareFuncName string
-		expectedResult int
-	} {
-		{ &Metrics{ Max: 10 }, &Metrics{ Max: 20 }, MetricMax, -1, },
-		{ &Metrics{ Max: -1 }, &Metrics{ Max: 10 }, MetricMax, 1, },
-		{ &Metrics{ Max: 10 }, &Metrics{ Max: -1 }, MetricMax, -1, },
-		{ &Metrics{ Min: 10 }, &Metrics{ Min: 20 }, MetricMin, -1, },
-		{ &Metrics{ Min: -1 }, &Metrics{ Min: 10 }, MetricMin, 1, },
-		{ &Metrics{ Min: 10 }, &Metrics{ Min: -1 }, MetricMin, -1, },
-		{ &Metrics{ Med: 10 }, &Metrics{ Med: 20 }, MetricMed, -1, },
-		{ &Metrics{ Med: -1 }, &Metrics{ Med: 10 }, MetricMed, 1, },
-		{ &Metrics{ Med: 10 }, &Metrics{ Med: -1 }, MetricMed, -1, },
-		{ &Metrics{ Avg: 10.34 }, &Metrics{ Avg: 20.33 }, MetricAvg, -1, },
-		{ &Metrics{ Avg: -1 }, &Metrics{ Avg: 20.33 }, MetricAvg, 1, },
-		{ &Metrics{ Avg: 10.34 }, &Metrics{ Avg: -1 }, MetricAvg, -1, },
-		{ &Metrics{ Mdev: 10.34 }, &Metrics{ Mdev: 20.33 }, MetricMdev, -1, },
-		{ &Metrics{ Mdev: -1 }, &Metrics{ Mdev: 20.33 }, MetricMdev, 1, },
-		{ &Metrics{ Mdev: 10.34 }, &Metrics{ Mdev: -1 }, MetricMdev, -1, },
+		expectedResult  int
+	}{
+		{&Metrics{Max: 10}, &Metrics{Max: 20}, MetricMax, -1},
+		{&Metrics{Max: -1}, &Metrics{Max: 10}, MetricMax, 1},
+		{&Metrics{Max: 10}, &Metrics{Max: -1}, MetricMax, -1},
+		{&Metrics{Min: 10}, &Metrics{Min: 20}, MetricMin, -1},
+		{&Metrics{Min: -1}, &Metrics{Min: 10}, MetricMin, 1},
+		{&Metrics{Min: 10}, &Metrics{Min: -1}, MetricMin, -1},
+		{&Metrics{Med: 10}, &Metrics{Med: 20}, MetricMed, -1},
+		{&Metrics{Med: -1}, &Metrics{Med: 10}, MetricMed, 1},
+		{&Metrics{Med: 10}, &Metrics{Med: -1}, MetricMed, -1},
+		{&Metrics{Avg: 10.34}, &Metrics{Avg: 20.33}, MetricAvg, -1},
+		{&Metrics{Avg: -1}, &Metrics{Avg: 20.33}, MetricAvg, 1},
+		{&Metrics{Avg: 10.34}, &Metrics{Avg: -1}, MetricAvg, -1},
+		{&Metrics{Mdev: 10.34}, &Metrics{Mdev: 20.33}, MetricMdev, -1},
+		{&Metrics{Mdev: -1}, &Metrics{Mdev: 20.33}, MetricMdev, 1},
+		{&Metrics{Mdev: 10.34}, &Metrics{Mdev: -1}, MetricMdev, -1},
 	}
 
 	for i, testCase := range testCases {
@@ -122,8 +122,8 @@ func (suite *TestCompountReportSuite) TestCompareSpecialValues(c *C) {
 
 		testedFunc := CompareFunctions[testCase.compareFuncName]
 		testedResult := testedFunc(
-			&DynamicRecord{ Metrics: &DynamicMetrics { Metrics: testCase.leftValue } },
-			&DynamicRecord{ Metrics: &DynamicMetrics { Metrics: testCase.rightValue } },
+			&DynamicRecord{Metrics: &DynamicMetrics{Metrics: testCase.leftValue}},
+			&DynamicRecord{Metrics: &DynamicMetrics{Metrics: testCase.rightValue}},
 			utils.Descending,
 		)
 

@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/common/compress"
 	"github.com/Cepave/open-falcon-backend/common/digest"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 
-	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	sjson "github.com/bitly/go-simplejson"
 )
 
@@ -25,9 +25,9 @@ type PropRelation int8
 
 const (
 	/**
-	 * Input value of realtion
+	 * Input value of relation
 	 */
-	RelationSame = -11
+	RelationSame    = -11
 	RelationNotSame = -12
 	// :~)
 
@@ -40,38 +40,38 @@ const (
 )
 
 const (
-	MetricMax = "max"
-    MetricMin = "min"
-    MetricAvg = "avg"
-    MetricMed = "med"
-    MetricMdev = "mdev"
-    MetricLoss = "loss"
-    MetricCount = "count"
-    MetricPckSent = "pck_sent"
-    MetricPckReceived = "pck_received"
-    MetricNumAgent = "num_agent"
-    MetricNumTarget = "num_target"
+	MetricMax         = "max"
+	MetricMin         = "min"
+	MetricAvg         = "avg"
+	MetricMed         = "med"
+	MetricMdev        = "mdev"
+	MetricLoss        = "loss"
+	MetricCount       = "count"
+	MetricPckSent     = "pck_sent"
+	MetricPckReceived = "pck_received"
+	MetricNumAgent    = "num_agent"
+	MetricNumTarget   = "num_target"
 
-	AgentGroupingName = "name"
+	AgentGroupingName      = "name"
 	AgentGroupingIpAddress = "ip_address"
-	AgentGroupingHostname = "hostname"
+	AgentGroupingHostname  = "hostname"
 
 	TargetGroupingName = "name"
 	TargetGroupingHost = "host"
 
 	GroupingProvince = "province"
-	GroupingCity = "city"
-	GroupingIsp = "isp"
-	GroupingNameTag = "name_tag"
+	GroupingCity     = "city"
+	GroupingIsp      = "isp"
+	GroupingNameTag  = "name_tag"
 
 	TimeRangeAbsolute byte = 1
 	TimeRangeRelative byte = 2
 
-	TimeUnitYear = "y"
-	TimeUnitMonth = "m"
-	TimeUnitWeek = "w"
-	TimeUnitDay = "d"
-	TimeUnitHour = "h"
+	TimeUnitYear   = "y"
+	TimeUnitMonth  = "m"
+	TimeUnitWeek   = "w"
+	TimeUnitDay    = "d"
+	TimeUnitHour   = "h"
 	TimeUnitMinute = "n"
 )
 
@@ -82,49 +82,49 @@ type MetricsFilterParseError struct {
 // Represents the range of time(by two point of time line)
 type TimeRange struct {
 	StartTime time.Time
-	EndTime time.Time
+	EndTime   time.Time
 }
 
-var supportingTimeUnit = map[string]bool {
-	TimeUnitYear: false,
-	TimeUnitMonth: false,
-	TimeUnitWeek: false,
-	TimeUnitDay: false,
-	TimeUnitHour: false,
+var supportingTimeUnit = map[string]bool{
+	TimeUnitYear:   false,
+	TimeUnitMonth:  false,
+	TimeUnitWeek:   false,
+	TimeUnitDay:    false,
+	TimeUnitHour:   false,
 	TimeUnitMinute: false,
 }
 
-var supportingOutput = map[string]bool {
-	MetricMax: true,
-    MetricMin: true,
-    MetricAvg: true,
-    MetricMed: true,
-    MetricMdev: true,
-    MetricLoss: true,
-    MetricCount: true,
-    MetricPckSent: true,
-    MetricPckReceived: true,
-    MetricNumAgent: true,
-    MetricNumTarget: true,
+var supportingOutput = map[string]bool{
+	MetricMax:         true,
+	MetricMin:         true,
+	MetricAvg:         true,
+	MetricMed:         true,
+	MetricMdev:        true,
+	MetricLoss:        true,
+	MetricCount:       true,
+	MetricPckSent:     true,
+	MetricPckReceived: true,
+	MetricNumAgent:    true,
+	MetricNumTarget:   true,
 }
 
-var supportingAgentGrouping = map[string]bool {
-	AgentGroupingName: true,
+var supportingAgentGrouping = map[string]bool{
+	AgentGroupingName:      true,
 	AgentGroupingIpAddress: true,
-	AgentGroupingHostname: true,
-	GroupingProvince: true,
-	GroupingCity: true,
-	GroupingIsp: true,
-	GroupingNameTag: true,
+	AgentGroupingHostname:  true,
+	GroupingProvince:       true,
+	GroupingCity:           true,
+	GroupingIsp:            true,
+	GroupingNameTag:        true,
 }
 
-var supportingTargetGrouping = map[string]bool {
+var supportingTargetGrouping = map[string]bool{
 	TargetGroupingName: true,
 	TargetGroupingHost: true,
-	GroupingProvince: true,
-	GroupingCity: true,
-	GroupingIsp: true,
-	GroupingNameTag: true,
+	GroupingProvince:   true,
+	GroupingCity:       true,
+	GroupingIsp:        true,
+	GroupingNameTag:    true,
 }
 
 // The main object of query for compound report
@@ -141,47 +141,47 @@ type CompoundQuery struct {
 }
 
 func NewCompoundQuery() *CompoundQuery {
-	return &CompoundQuery {
-		Output: &QueryOutput { },
-		Grouping: &QueryGrouping { },
-		Filters: &CompoundQueryFilter {
-			Time: NewTimeFilter(),
-			Agent: &nqmModel.AgentFilter{},
+	return &CompoundQuery{
+		Output:   &QueryOutput{},
+		Grouping: &QueryGrouping{},
+		Filters: &CompoundQueryFilter{
+			Time:   NewTimeFilter(),
+			Agent:  &nqmModel.AgentFilter{},
 			Target: &nqmModel.TargetFilter{},
 		},
 	}
 }
 
 type CompoundQueryFilter struct {
-	Time *TimeFilter `json:"time" digest:"1"`
-	Agent *nqmModel.AgentFilter `json:"agent" digest:"2"`
-	Target *nqmModel.TargetFilter `json:"target" digest:"3"`
-	Metrics string `json:"metrics" digest:"4"`
+	Time    *TimeFilter            `json:"time" digest:"1"`
+	Agent   *nqmModel.AgentFilter  `json:"agent" digest:"2"`
+	Target  *nqmModel.TargetFilter `json:"target" digest:"3"`
+	Metrics string                 `json:"metrics" digest:"4"`
 }
 
 type TimeFilter struct {
 	StartTime ojson.JsonTime `json:"start_time"`
-	EndTime ojson.JsonTime `json:"end_time"`
-	ToNow *TimeWithUnit `json:"to_now"`
+	EndTime   ojson.JsonTime `json:"end_time"`
+	ToNow     *TimeWithUnit  `json:"to_now"`
 
 	netStartTime time.Time
-	netEndTime time.Time
+	netEndTime   time.Time
 
 	timeRangeType byte
 }
 
 func NewTimeFilter() *TimeFilter {
-	return &TimeFilter {
+	return &TimeFilter{
 		timeRangeType: 0,
 	}
 }
 
 type TimeWithUnit struct {
-	Unit string `json:"unit" digest:"1"`
-	Value int `json:"value" digest:"2"`
+	Unit  string `json:"unit" digest:"1"`
+	Value int    `json:"value" digest:"2"`
 
 	StartTimeOfDay *string `json:"start_time_of_day,omitempty" digest:"3"`
-	EndTimeOfDay *string `json:"end_time_of_day,omitempty" digest:"4"`
+	EndTimeOfDay   *string `json:"end_time_of_day,omitempty" digest:"4"`
 }
 
 type QueryOutput struct {
@@ -189,7 +189,7 @@ type QueryOutput struct {
 }
 
 type QueryGrouping struct {
-	Agent []string `json:"agent" digest:"1"`
+	Agent  []string `json:"agent" digest:"1"`
 	Target []string `json:"target" digest:"2"`
 }
 
@@ -276,8 +276,8 @@ func (query *CompoundQuery) SetupDefault() {
 		}
 	}
 
-	if len(query.Grouping.Agent) + len(query.Grouping.Target) == 0 {
-		query.Grouping.Agent = []string {
+	if len(query.Grouping.Agent)+len(query.Grouping.Target) == 0 {
+		query.Grouping.Agent = []string{
 			AgentGroupingName, AgentGroupingIpAddress,
 			GroupingProvince, GroupingCity, GroupingIsp, GroupingNameTag,
 		}
@@ -286,16 +286,15 @@ func (query *CompoundQuery) SetupDefault() {
 	timeRange := query.Filters.Time
 	if timeRange.timeRangeType == 0 {
 		timeRange.timeRangeType = TimeRangeRelative
-		timeRange.ToNow = &TimeWithUnit {
-			Unit: TimeUnitHour,
+		timeRange.ToNow = &TimeWithUnit{
+			Unit:  TimeUnitHour,
 			Value: 1,
 		}
 	}
 }
 
 func (f *CompoundQueryFilter) UnmarshalSimpleJSON(jsonObject *sjson.Json) (err error) {
-	if err = f.Time.UnmarshalSimpleJSON(jsonObject.Get("time"))
-		err != nil {
+	if err = f.Time.UnmarshalSimpleJSON(jsonObject.Get("time")); err != nil {
 		return
 	}
 
@@ -366,6 +365,7 @@ func (f *CompoundQueryFilter) loadFilterOfTarget(jsonObject *sjson.Json) {
 func (f *CompoundQueryFilter) loadFilterOfMetrics(jsonObject *sjson.Json) {
 	f.Metrics = purifyStringOfJson(jsonObject)
 }
+
 // Implements digest.Digestor
 func (f *TimeFilter) GetDigest() []byte {
 	switch f.timeRangeType {
@@ -382,6 +382,7 @@ func (f *TimeFilter) GetDigest() []byte {
 }
 
 const dayDuration = time.Duration(24) * time.Hour
+
 func (f *TimeFilter) GetMultipleTimeRanges(baseTime time.Time) []*TimeRange {
 	timeWithUnit := f.ToNow
 	startDayValue := -timeWithUnit.Value
@@ -408,7 +409,7 @@ func (f *TimeFilter) GetMultipleTimeRanges(baseTime time.Time) []*TimeRange {
 		minusDays := -((int(baseTime.Weekday()) + 6) % 7)
 		firstDay = time.Date(
 			baseTime.Year(), baseTime.Month(), baseTime.Day(), 0, 0, 0, 0, baseTime.Location(),
-		).AddDate(0, 0, minusDays).AddDate(0, 0, startDayValue * 7)
+		).AddDate(0, 0, minusDays).AddDate(0, 0, startDayValue*7)
 		totalDays = 7 * addedDaysValue
 	case TimeUnitDay:
 		firstDay = time.Date(
@@ -427,9 +428,9 @@ func (f *TimeFilter) GetMultipleTimeRanges(baseTime time.Time) []*TimeRange {
 	timeRanges := make([]*TimeRange, totalDays)
 	for i := 0; i < totalDays; i++ {
 		currentDate := firstDay.AddDate(0, 0, i)
-		timeRanges[i] = &TimeRange {
+		timeRanges[i] = &TimeRange{
 			StartTime: currentDate.Add(startTimeDuraion),
-			EndTime: currentDate.Add(endTimeDuraion),
+			EndTime:   currentDate.Add(endTimeDuraion),
 		}
 	}
 	// :~)
@@ -439,8 +440,9 @@ func (f *TimeFilter) GetMultipleTimeRanges(baseTime time.Time) []*TimeRange {
 func (f *TimeFilter) IsMultipleTimeRanges() bool {
 	return f.timeRangeType == TimeRangeRelative &&
 		f.ToNow.StartTimeOfDay != nil &&
-		f.ToNow.EndTimeOfDay != nil;
+		f.ToNow.EndTimeOfDay != nil
 }
+
 // Retrieves the start time of net(whether or not the time is absolute or relative)
 func (f *TimeFilter) GetNetTimeRange() (time.Time, time.Time) {
 	switch f.timeRangeType {
@@ -494,8 +496,8 @@ func (f *TimeFilter) getRelativeTimeRangeOfNet(baseTime time.Time) (time.Time, t
 		minusDays := -((int(baseTime.Weekday()) + 6) % 7)
 		startTime = time.Date(
 			baseTime.Year(), baseTime.Month(), baseTime.Day(), 0, 0, 0, 0, baseTime.Location(),
-		).AddDate(0, 0, minusDays).AddDate(0, 0, -startTimeValue * 7)
-		endTime = startTime.AddDate(0, 0, endTimeValue * 7)
+		).AddDate(0, 0, minusDays).AddDate(0, 0, -startTimeValue*7)
+		endTime = startTime.AddDate(0, 0, endTimeValue*7)
 	case TimeUnitDay:
 		startTime = time.Date(
 			baseTime.Year(), baseTime.Month(), baseTime.Day(), 0, 0, 0, 0, baseTime.Location(),
@@ -520,14 +522,12 @@ func (f *TimeFilter) UnmarshalSimpleJSON(jsonObject *sjson.Json) error {
 		return nil
 	}
 
-	if startTime, endTime := f.loadAbsoluteTimeRange(jsonObject)
-		!startTime.IsZero() && !endTime.IsZero() {
+	if startTime, endTime := f.loadAbsoluteTimeRange(jsonObject); !startTime.IsZero() && !endTime.IsZero() {
 		f.timeRangeType = TimeRangeAbsolute
 		f.StartTime = ojson.JsonTime(startTime)
 		f.EndTime = ojson.JsonTime(endTime)
 		f.ToNow = nil
-	} else if timeWithUnit := f.loadRelativeTimeRange(jsonObject)
-		timeWithUnit != nil {
+	} else if timeWithUnit := f.loadRelativeTimeRange(jsonObject); timeWithUnit != nil {
 		f.timeRangeType = TimeRangeRelative
 		f.ToNow = timeWithUnit
 	}
@@ -553,10 +553,10 @@ func (f *TimeFilter) loadRelativeTimeRange(jsonTime *sjson.Json) *TimeWithUnit {
 
 	jsonExtToNow := ojson.ToJsonExt(jsonToNow)
 	return &TimeWithUnit{
-		Unit: stringOfTimeUnit,
-		Value: jsonToNow.Get("value").MustInt(),
+		Unit:           stringOfTimeUnit,
+		Value:          jsonToNow.Get("value").MustInt(),
 		StartTimeOfDay: jsonExtToNow.GetExt("start_time_of_day").MustStringPtr(),
-		EndTimeOfDay: jsonExtToNow.GetExt("end_time_of_day").MustStringPtr(),
+		EndTimeOfDay:   jsonExtToNow.GetExt("end_time_of_day").MustStringPtr(),
 	}
 }
 func (f *TimeFilter) loadAbsoluteTimeRange(jsonTime *sjson.Json) (time.Time, time.Time) {
@@ -623,16 +623,16 @@ func getDurationFromMidnight(v *string) *time.Duration {
 		panic(fmt.Sprintf("Cannot parse value: %s to time.Duration(Minute): %v", matches[2], err))
 	}
 
-	duration := time.Duration(hours) * time.Hour + time.Duration(minutes) * time.Minute
+	duration := time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute
 	return &duration
 }
 
-var eachAgentGrouping = map[string]bool {
-	AgentGroupingName: true,
+var eachAgentGrouping = map[string]bool{
+	AgentGroupingName:      true,
 	AgentGroupingIpAddress: true,
-	AgentGroupingHostname: true,
+	AgentGroupingHostname:  true,
 }
-var eachTargetGrouping = map[string]bool {
+var eachTargetGrouping = map[string]bool{
 	TargetGroupingName: true,
 	TargetGroupingHost: true,
 }
@@ -687,7 +687,7 @@ func purifyNumberArrayOfJson(jsonObject *sjson.Json, targetType reflect.Type) in
 	uniqueFilter := utils.NewUniqueFilter(utils.TypeOfInt)
 	arrayObject := utils.MakeAbstractArray(jsonObject.MustArray()).
 		MapTo(
-			func (v interface{}) interface{} {
+			func(v interface{}) interface{} {
 				int64Value, err := v.(json.Number).Int64()
 				if err != nil {
 					panic(err)
@@ -724,7 +724,7 @@ func purifyStringArrayOfJsonForDomain(jsonObject *sjson.Json, domain map[string]
 	arrayObject := utils.MakeAbstractArray(jsonObject.MustStringArray()).
 		MapTo(
 			utils.TypedFuncToMapper(
-				func (v string) string {
+				func(v string) string {
 					return strings.ToLower(strings.TrimSpace(v))
 				},
 			),

@@ -1,9 +1,9 @@
 package testing
 
 import (
-	"time"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	"gopkg.in/check.v1"
+	"time"
 )
 
 func ParseTime(c *check.C, timeAsString string) time.Time {

@@ -2,8 +2,8 @@ package restful
 
 import (
 	"flag"
-	"testing"
 	ch "gopkg.in/check.v1"
+	"testing"
 
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	tDb "github.com/Cepave/open-falcon-backend/common/testing/db"

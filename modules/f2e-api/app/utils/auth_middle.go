@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 

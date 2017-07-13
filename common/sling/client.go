@@ -16,7 +16,7 @@ func (c *SlintExt) DoReceive(expectedStatus int, successV interface{}) error {
 
 	jsonError := sjson.New()
 
-	resp, err := slingClient.Receive(successV, jsonError);
+	resp, err := slingClient.Receive(successV, jsonError)
 	if err != nil {
 		return fmt.Errorf("HTTP request error: %v.", err)
 	}

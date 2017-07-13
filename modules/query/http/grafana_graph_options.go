@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
+	log "github.com/sirupsen/logrus"
 )
 
 type Idc struct {

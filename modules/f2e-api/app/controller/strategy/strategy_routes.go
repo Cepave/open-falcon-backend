@@ -3,9 +3,9 @@ package strategy
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	"github.com/gin-gonic/gin"
 )
 
 var db config.DBPool

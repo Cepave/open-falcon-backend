@@ -2,8 +2,8 @@ package redis
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/sender/g"
-	log "github.com/sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 

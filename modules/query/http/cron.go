@@ -16,10 +16,17 @@ import (
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/jasonlvhit/gocron"
+	log "github.com/sirupsen/logrus"
 )
+
+type IDCMapItem struct {
+	Popid    int
+	Idc      string
+	Province string
+	City     string
+}
 
 type Contacts struct {
 	Id      int
@@ -121,15 +128,15 @@ func SyncHostsAndContactsTable() {
 func getIDCMap() map[string]interface{} {
 	idcMap := map[string]interface{}{}
 	o := orm.NewOrm()
-	o.Using("grafana")
-	var idcs []Idc
-	sqlcommand := "SELECT pop_id, name, province, city FROM `grafana`.`idc` ORDER BY pop_id ASC"
+	o.Using("boss")
+	var idcs []IDCMapItem
+	sqlcommand := "SELECT `popid`, `idc`, `province`, `city` FROM `idcs` ORDER BY popid ASC"
 	_, err := o.Raw(sqlcommand).QueryRows(&idcs)
 	if err != nil {
 		log.Errorf(err.Error())
 	}
 	for _, idc := range idcs {
-		idcMap[strconv.Itoa(idc.Pop_id)] = idc
+		idcMap[strconv.Itoa(idc.Popid)] = idc
 	}
 	return idcMap
 }
@@ -410,8 +417,8 @@ func getDurationForNetTableQuery(offset int) (int64, int64) {
 
 func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]map[string]int, string, map[string]int) {
 	data := map[string]map[string]int{
-		"in":  map[string]int{},
-		"out": map[string]int{},
+		"in":  {},
+		"out": {},
 	}
 	date := ""
 	counts := map[string]int{
@@ -454,8 +461,8 @@ func getPlatformsDailyTrafficData(platformName string, offset int) (map[string]m
 		}
 	}
 	dataRaw := map[string]map[string]float64{
-		"in":  map[string]float64{},
-		"out": map[string]float64{},
+		"in":  {},
+		"out": {},
 	}
 	tickers := []string{}
 	if len(responses) > 0 {
@@ -1221,9 +1228,9 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		host["ISP"] = ISP
 		idcID := host["idcID"]
 		if idc, ok := idcMap[idcID]; ok {
-			host["IDC"] = idc.(Idc).Name
-			host["province"] = idc.(Idc).Province
-			host["city"] = idc.(Idc).City
+			host["IDC"] = idc.(IDCMapItem).Idc
+			host["province"] = idc.(IDCMapItem).Province
+			host["city"] = idc.(IDCMapItem).City
 		}
 		hosts = append(hosts, host)
 	}
@@ -1270,7 +1277,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		log.Errorf(err.Error())
 		return
 	}
-	// use transation to batch insert multiple values
+	// use transition to batch insert multiple values
 	for _, host := range hosts {
 		_, err := p.Exec(
 			host["hostname"], 1, host["activate"], host["platform"], host["platforms"], host["IDC"],

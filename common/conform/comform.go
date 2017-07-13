@@ -5,30 +5,30 @@ package conform
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"reflect"
 	"regexp"
+	"strings"
 	"sync"
 	"unicode"
 	"unicode/utf8"
 
-	e "github.com/juju/errors"
-	"github.com/etgryphon/stringUp"
 	or "github.com/Cepave/open-falcon-backend/common/reflect"
+	"github.com/etgryphon/stringUp"
+	e "github.com/juju/errors"
 )
 
 type ConformService struct {
 	transformers map[string]StringTransformer
 
-	cacheLock *sync.Mutex
+	cacheLock        *sync.Mutex
 	transformerCache map[string][]StringTransformer
 }
 
 func NewConformService() *ConformService {
-	return &ConformService {
-		transformers:  make(map[string]StringTransformer),
+	return &ConformService{
+		transformers: make(map[string]StringTransformer),
 
-		cacheLock: &sync.Mutex{},
+		cacheLock:        &sync.Mutex{},
 		transformerCache: make(map[string][]StringTransformer),
 	}
 }
@@ -88,8 +88,7 @@ func (s *ConformService) conformAnyWithTransformers(anyValue reflect.Value, tran
 		for i := 0; i < finalValueOfAny.Len(); i++ {
 			elemValue := finalValueOfAny.Index(i)
 
-			if err := s.conformAnyWithTransformers(elemValue, transformers);
-				err != nil {
+			if err := s.conformAnyWithTransformers(elemValue, transformers); err != nil {
 				return e.Annotatef(
 					err, "Cannot conform elem[%d]. type: [%v]",
 					i, typeOfAnyValue,
@@ -175,9 +174,11 @@ type StringTransformer func(string) string
 type Conformer interface {
 	ConformSelf(*ConformService)
 }
+
 var _t_Conformer = or.TypeOfInterface((*Conformer)(nil))
 
 var _defaultService = NewConformService()
+
 // Performs must conform with buildin transformers
 func MustConform(v interface{}) {
 	_defaultService.MustConform(v)
@@ -190,8 +191,10 @@ var patterns = map[string]*regexp.Regexp{
 	"nonAlpha":   regexp.MustCompile("[^\\pL]"),
 	"name":       regexp.MustCompile("[\\p{L}]([\\p{L}|[:space:]|-]*[\\p{L}])*"),
 }
+
 const nilString = "<@!NilString!@>"
-var buildinTransformer = map[string]StringTransformer {
+
+var buildinTransformer = map[string]StringTransformer{
 	"trimToNil": func(input string) string {
 		s := strings.TrimSpace(input)
 		if s == "" {
@@ -200,22 +203,22 @@ var buildinTransformer = map[string]StringTransformer {
 
 		return s
 	},
-	"trim": strings.TrimSpace,
-	"ltrim": func (input string) string { return strings.TrimLeft(input, " ") },
-	"rtrim": func (input string) string { return strings.TrimRight(input, " ") },
-	"lower": strings.ToLower,
-	"upper": strings.ToUpper,
-	"title": strings.Title,
-	"camel": stringUp.CamelCase,
-	"snake": func (input string) string { return camelTo(stringUp.CamelCase(input), "_") },
-	"slug": func (input string) string { return camelTo(stringUp.CamelCase(input), "-") },
+	"trim":    strings.TrimSpace,
+	"ltrim":   func(input string) string { return strings.TrimLeft(input, " ") },
+	"rtrim":   func(input string) string { return strings.TrimRight(input, " ") },
+	"lower":   strings.ToLower,
+	"upper":   strings.ToUpper,
+	"title":   strings.Title,
+	"camel":   stringUp.CamelCase,
+	"snake":   func(input string) string { return camelTo(stringUp.CamelCase(input), "_") },
+	"slug":    func(input string) string { return camelTo(stringUp.CamelCase(input), "-") },
 	"ucfirst": ucFirst,
-	"name": formatName,
-	"email": func (input string) string { return strings.ToLower(strings.TrimSpace(input)) },
-	"num": onlyNumbers,
-	"!num": stripNumbers,
-	"alpha": onlyAlpha,
-	"!alpha": stripAlpha,
+	"name":    formatName,
+	"email":   func(input string) string { return strings.ToLower(strings.TrimSpace(input)) },
+	"num":     onlyNumbers,
+	"!num":    stripNumbers,
+	"alpha":   onlyAlpha,
+	"!alpha":  stripAlpha,
 }
 
 func camelTo(s, sep string) string {
@@ -270,8 +273,9 @@ func ucFirst(s string) string {
 }
 
 type x map[string]string
+
 func formatName(s string) string {
-	first := onlyOne(strings.ToLower(s), []x{x{"[^\\pL-\\s]": ""}, x{"\\s": " "}, x{"-": "-"}})
+	first := onlyOne(strings.ToLower(s), []x{{"[^\\pL-\\s]": ""}, {"\\s": " "}, {"-": "-"}})
 	return strings.Title(patterns["name"].FindString(first))
 }
 
@@ -326,6 +330,7 @@ var commonInitialisms = map[string]bool{
 	"VM":    true,
 	"XML":   true,
 }
+
 func startsWithInitialism(s string) string {
 	var initialism string
 	// the longest initialism is 5 char, the shortest 2

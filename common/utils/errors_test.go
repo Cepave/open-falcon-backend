@@ -68,15 +68,15 @@ func ExamplePanicToSimpleErrorWrapper() {
 // Tests the capture of error object
 func (suite *TestErrorsSuite) TestBuildPanicToError(c *C) {
 	testCases := []*struct {
-		needPanic bool
+		needPanic    bool
 		errorChecker Checker
-	} {
-		{ true, NotNil },
-		{ false, IsNil },
+	}{
+		{true, NotNil},
+		{false, IsNil},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("[%d] Test Case: %v", i + 1, testCase)
+		comment := Commentf("[%d] Test Case: %v", i+1, testCase)
 		c.Logf("%s", comment.CheckCommentString())
 
 		var err error

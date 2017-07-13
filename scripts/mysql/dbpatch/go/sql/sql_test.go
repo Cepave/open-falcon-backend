@@ -1,10 +1,10 @@
 package sql
 
 import (
-	"testing"
 	dbsql "database/sql"
-	. "gopkg.in/check.v1"
 	_ "github.com/mattn/go-sqlite3"
+	. "gopkg.in/check.v1"
+	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -27,13 +27,11 @@ func (suite *SqlSuite) TestExecute(c *C) {
 
 	err = sampleDbConfig.Execute(
 		func(db *dbsql.DB) (err error) {
-			if _, err = db.Exec("CREATE TABLE test_execute (te_id INT)")
-				err != nil {
+			if _, err = db.Exec("CREATE TABLE test_execute (te_id INT)"); err != nil {
 				return
 			}
 
-			if _, err = db.Exec("INSERT INTO test_execute VALUES(1)")
-				err != nil {
+			if _, err = db.Exec("INSERT INTO test_execute VALUES(1)"); err != nil {
 				return
 			}
 

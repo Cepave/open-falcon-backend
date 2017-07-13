@@ -5,12 +5,12 @@ import (
 	"net"
 	"time"
 
-	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	otest "github.com/Cepave/open-falcon-backend/common/testing"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 
 	. "gopkg.in/check.v1"
 )
@@ -21,19 +21,19 @@ var _ = Suite(&TestDbNqmSuite{})
 
 func (suite *TestDbNqmSuite) TestRefreshAgentInfo(c *C) {
 	testCases := []*struct {
-		connectionId string
-		hostname string
-		ipAddress string
+		connectionId        string
+		hostname            string
+		ipAddress           string
 		expectedAgentDetail Checker
-	} {
-		{ "agrh33-1@19.20", "rhs1.01.hostname", "20.98.1.31", NotNil }, // New NQM agent
-		{ "agrh33-2@19.20", "rhs1.02.hostname", "20.98.1.32", NotNil }, // refreshed
-		{ "agrh33-3@19.33", "rhs1.99.hostname", "20.98.12.101", IsNil }, // Old NQM agent(disabled)
+	}{
+		{"agrh33-1@19.20", "rhs1.01.hostname", "20.98.1.31", NotNil},  // New NQM agent
+		{"agrh33-2@19.20", "rhs1.02.hostname", "20.98.1.32", NotNil},  // refreshed
+		{"agrh33-3@19.33", "rhs1.99.hostname", "20.98.12.101", IsNil}, // Old NQM agent(disabled)
 	}
 
 	type agentData struct {
-		Hostname string `db:"ag_hostname"`
-		IpAddress net.IP `db:"ag_ip_address"`
+		Hostname      string    `db:"ag_hostname"`
+		IpAddress     net.IP    `db:"ag_ip_address"`
 		HeartbeatTime time.Time `db:"ag_last_heartbeat"`
 	}
 	sampleTime := otest.ParseTime(c, "2016-07-11T10:44:01Z")
@@ -82,9 +82,9 @@ func (suite *TestDbNqmSuite) TestGetCacheLogOfPingList(c *C) {
 	testCases := []*struct {
 		agentId int32
 		checker Checker
-	} {
-		{ 80981, NotNil },
-		{ 80982, IsNil },
+	}{
+		{80981, NotNil},
+		{80982, IsNil},
 	}
 
 	for i, testCase := range testCases {
@@ -98,30 +98,30 @@ func (suite *TestDbNqmSuite) TestGetCacheLogOfPingList(c *C) {
 // Tests the building of cache on ping list
 func (suite *TestDbNqmSuite) TestBuildCacheOfPingList(c *C) {
 	testCases := []*struct {
-		agentId int32
-		checkedTime string
+		agentId                      int32
+		checkedTime                  string
 		expectedTimeOfAccessOnTarget int64
-		expectedPeriod []int16
-	} {
+		expectedPeriod               []int16
+	}{
 		/**
 		 * 1st build
 		 */
-		{ 50761, "2014-05-05T10:20:30Z", 0, []int16{ -1, 20, 20, 20 } },
-		{ 50762, "2014-05-05T10:20:30Z", 1399382640, []int16{ -1, 30, 30 } },
-		{ 50763, "2014-05-05T10:20:30Z", 0, []int16{ -1 } },
+		{50761, "2014-05-05T10:20:30Z", 0, []int16{-1, 20, 20, 20}},
+		{50762, "2014-05-05T10:20:30Z", 1399382640, []int16{-1, 30, 30}},
+		{50763, "2014-05-05T10:20:30Z", 0, []int16{-1}},
 		// :~)
 		/**
 		 * 2nd build
 		 */
-		{ 50761, "2014-05-06T13:30:17Z", 0, []int16{ -1, 20, 20, 20 } },
-		{ 50762, "2014-05-06T13:30:17Z", 1399382640, []int16{ -1, 30, 30 } },
-		{ 50763, "2014-05-06T13:30:17Z", 0, []int16{ -1 } },
+		{50761, "2014-05-06T13:30:17Z", 0, []int16{-1, 20, 20, 20}},
+		{50762, "2014-05-06T13:30:17Z", 1399382640, []int16{-1, 30, 30}},
+		{50763, "2014-05-06T13:30:17Z", 0, []int16{-1}},
 		// :~)
 	}
 
 	type targetPeriod struct {
-		TargetId int32 `db:"apl_tg_id"`
-		Period int16 `db:"apl_min_period"`
+		TargetId   int32     `db:"apl_tg_id"`
+		Period     int16     `db:"apl_min_period"`
 		AccessTime time.Time `db:"apl_time_access"`
 	}
 	for i, testCase := range testCases {
@@ -146,7 +146,7 @@ func (suite *TestDbNqmSuite) TestBuildCacheOfPingList(c *C) {
 		/**
 		 * Asserts the period for each target
 		 */
-		testedList := []*targetPeriod {}
+		testedList := []*targetPeriod{}
 		DbFacade.SqlxDbCtrl.Select(
 			&testedList,
 			`
@@ -173,11 +173,11 @@ func (suite *TestDbNqmSuite) TestBuildCacheOfPingList(c *C) {
 // Tests the getting for list of ping
 func (suite *TestDbNqmSuite) TestGetPingList(c *C) {
 	testCases := []*struct {
-		agentId int32
+		agentId        int32
 		expectedResult []int32
-	} {
-		{ 70071, []int32{ 99021, 99022, 99023 } }, // Access time is elapsed
-		{ 70072, []int32{} }, // Access time is not elapsed
+	}{
+		{70071, []int32{99021, 99022, 99023}}, // Access time is elapsed
+		{70072, []int32{}},                    // Access time is not elapsed
 	}
 
 	sampleTime := otest.ParseTime(c, "2015-06-21T20:33:43Z")
@@ -186,8 +186,8 @@ func (suite *TestDbNqmSuite) TestGetPingList(c *C) {
 		ocheck.LogTestCase(c, testCase)
 
 		testedResult := getPingList(
-			&nqmModel.NqmAgent {
-				Id: int(testCase.agentId),
+			&nqmModel.NqmAgent{
+				Id:        int(testCase.agentId),
 				IpAddress: net.ParseIP("20.91.83.101"),
 			},
 			sampleTime,
@@ -250,15 +250,15 @@ func (suite *TestDbNqmSuite) TestUpdateAccessTime(c *C) {
 // Tests the triggers for filters of PING TASK
 func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
 	testedCases := []*struct {
-		sqls []string
-		expectedNumberOfIspFilters int
+		sqls                            []string
+		expectedNumberOfIspFilters      int
 		expectedNumberOfProvinceFilters int
-		expectedNumberOfCityFilters int
-		expectedNumberOfNameTagFilters int
+		expectedNumberOfCityFilters     int
+		expectedNumberOfNameTagFilters  int
 		expectedNumberOfGroupTagFilters int
-	} {
+	}{
 		{ // Tests the trigger of insertion for filters
-			[]string {
+			[]string{
 				`INSERT INTO nqm_pt_target_filter_name_tag(tfnt_pt_id, tfnt_nt_id) VALUES(9201, 3071), (9201, 3072)`,
 				`INSERT INTO nqm_pt_target_filter_isp(tfisp_pt_id, tfisp_isp_id) VALUES(9201, 2), (9201, 3)`,
 				`INSERT INTO nqm_pt_target_filter_province(tfpv_pt_id, tfpv_pv_id) VALUES(9201, 6), (9201, 7)`,
@@ -268,7 +268,7 @@ func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
 			2, 2, 2, 2, 2,
 		},
 		{ // Tests the trigger of deletion for filters
-			[]string {
+			[]string{
 				`DELETE FROM nqm_pt_target_filter_name_tag WHERE tfnt_pt_id = 9201`,
 				`DELETE FROM nqm_pt_target_filter_isp WHERE tfisp_pt_id = 9201`,
 				`DELETE FROM nqm_pt_target_filter_province WHERE tfpv_pt_id = 9201`,
@@ -308,11 +308,11 @@ func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
 				/**
 				 * Asserts the cached value for number of filters
 				 */
-				c.Assert(numberOfIspFilters, Equals, testCase.expectedNumberOfIspFilters);
-				c.Assert(numberOfProvinceFilters, Equals, testCase.expectedNumberOfProvinceFilters);
-				c.Assert(numberOfCityFilters, Equals, testCase.expectedNumberOfCityFilters);
-				c.Assert(numberOfNameTagFilters, Equals, testCase.expectedNumberOfNameTagFilters);
-				c.Assert(numberOfGroupTagFilters, Equals, testCase.expectedNumberOfGroupTagFilters);
+				c.Assert(numberOfIspFilters, Equals, testCase.expectedNumberOfIspFilters)
+				c.Assert(numberOfProvinceFilters, Equals, testCase.expectedNumberOfProvinceFilters)
+				c.Assert(numberOfCityFilters, Equals, testCase.expectedNumberOfCityFilters)
+				c.Assert(numberOfNameTagFilters, Equals, testCase.expectedNumberOfNameTagFilters)
+				c.Assert(numberOfGroupTagFilters, Equals, testCase.expectedNumberOfGroupTagFilters)
 				// :~)
 			}),
 			`
@@ -334,16 +334,16 @@ func (suite *TestDbNqmSuite) TestTriggersOfFiltersForPingTask(c *C) {
 // Tests the view used to load enabled targets by ping task
 func (suite *TestDbNqmSuite) Test_vw_enabled_targets_by_ping_task(c *C) {
 	testCases := []*struct {
-		pingTaskId int
+		pingTaskId           int
 		expectedIdsOfTargets []int32
-	} {
-		{ 47301, []int32{ 72001 } }, // Matched by ISP
-		{ 47302, []int32{ 72002 } }, // Matched by province
-		{ 47303, []int32{ 72003 } }, // Matched by city
-		{ 47304, []int32{ 72004 } }, // Matched by name tag
-		{ 47305, []int32{ 72005 } }, // Matched by group tag
-		{ 47311, []int32{ 72011 } }, // Matched by all of the properties
-		{ 47312, []int32{ 72001, 72002, 72003, 72004, 72005, 72011 } }, // empty ping task(all of the targets)
+	}{
+		{47301, []int32{72001}},                                    // Matched by ISP
+		{47302, []int32{72002}},                                    // Matched by province
+		{47303, []int32{72003}},                                    // Matched by city
+		{47304, []int32{72004}},                                    // Matched by name tag
+		{47305, []int32{72005}},                                    // Matched by group tag
+		{47311, []int32{72011}},                                    // Matched by all of the properties
+		{47312, []int32{72001, 72002, 72003, 72004, 72005, 72011}}, // empty ping task(all of the targets)
 	}
 
 	for i, testCase := range testCases {

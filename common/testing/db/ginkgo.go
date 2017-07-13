@@ -8,14 +8,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type GinkgoDb struct {}
+type GinkgoDb struct{}
 
 // Constructs "*db/facade/DbFacade" object by configuration of flag.
 //
 // The checker object is used to trigger panic if the database cannot be opened.
 //
 // If the environment is not ready(flag is empty), this function returns "nil"
-func(g *GinkgoDb) InitDbFacade() *f.DbFacade {
+func (g *GinkgoDb) InitDbFacade() *f.DbFacade {
 	var dbFacade = &f.DbFacade{}
 	dbConfig := g.GetDbConfig()
 

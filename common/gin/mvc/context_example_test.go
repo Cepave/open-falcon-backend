@@ -2,16 +2,16 @@ package mvc
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	"net/http/httptest"
+	"net/url"
 	"strings"
-	"encoding/json"
 
+	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/gin-gonic/gin"
-	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 )
 
 func ExampleMvcBuilder_BuildHandler_httpGet() {
@@ -24,7 +24,7 @@ func ExampleMvcBuilder_BuildHandler_httpGet() {
 		mvcBuilder.BuildHandler(
 			func(
 				data *struct {
-					V1 int8 `mvc:"query[v1]"`
+					V1 int8  `mvc:"query[v1]"`
 					V2 int32 `mvc:"query[v2]"`
 				},
 			) string {
@@ -52,7 +52,7 @@ func ExampleMvcBuilder_BuildHandler_httpPost() {
 		mvcBuilder.BuildHandler(
 			func(
 				data *struct {
-					V1 int8 `mvc:"form[v1]"`
+					V1 int8    `mvc:"form[v1]"`
 					V2 []int32 `mvc:"form[v2]"`
 				},
 			) string {
@@ -64,9 +64,9 @@ func ExampleMvcBuilder_BuildHandler_httpPost() {
 	/**
 	 * Form data
 	 */
-	form := url.Values {
-		"v1": []string { "17" },
-		"v2": []string { "230", "232" },
+	form := url.Values{
+		"v1": []string{"17"},
+		"v2": []string{"230", "232"},
 	}
 	// :~)
 
@@ -83,20 +83,21 @@ func ExampleMvcBuilder_BuildHandler_httpPost() {
 
 type sampleCar struct {
 	Name string `json:"name"`
-	Age int `json:"age"`
+	Age  int    `json:"age"`
 }
+
 func (car *sampleCar) Bind(c *gin.Context) {
 	ogin.BindJson(c, car)
 }
 func ExampleMvcBuilder_BuildHandler_json() {
 	/*
-	type sampleCar struct {
-		Name string `json:"name"`
-		Age int `json:"age"`
-	}
-	func (car *sampleCar) Bind(c *gin.Context) {
-		ogin.BindJson(c, car)
-	}
+		type sampleCar struct {
+			Name string `json:"name"`
+			Age int `json:"age"`
+		}
+		func (car *sampleCar) Bind(c *gin.Context) {
+			ogin.BindJson(c, car)
+		}
 	*/
 
 	mvcBuilder := NewMvcBuilder(NewDefaultMvcConfig())
@@ -112,7 +113,7 @@ func ExampleMvcBuilder_BuildHandler_json() {
 		),
 	)
 
-	rawJson, _ := json.Marshal(&sampleCar{ "GTA-99", 3 })
+	rawJson, _ := json.Marshal(&sampleCar{"GTA-99", 3})
 
 	req := httptest.NewRequest(http.MethodPost, "/json-1", bytes.NewReader(rawJson))
 	req.Header.Set("Content-Type", "application/json")

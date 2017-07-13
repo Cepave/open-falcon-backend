@@ -12,39 +12,39 @@ var _ = Suite(&TestQuerySuite{})
 func (suite *TestQuerySuite) TestHasAgentDescriptive(c *C) {
 	testCases := []*struct {
 		sampleFilter *AgentFilter
-		expected bool
-	} {
+		expected     bool
+	}{
 		{
-			&AgentFilter {}, false,
+			&AgentFilter{}, false,
 		},
 		{
-			&AgentFilter {
-				Name: []string { "A" },
+			&AgentFilter{
+				Name: []string{"A"},
 			},
 			true,
 		},
 		{
-			&AgentFilter {
-				Hostname: []string { "A" },
+			&AgentFilter{
+				Hostname: []string{"A"},
 			},
 			true,
 		},
 		{
-			&AgentFilter {
-				IpAddress: []string { "A" },
+			&AgentFilter{
+				IpAddress: []string{"A"},
 			},
 			true,
 		},
 		{
-			&AgentFilter {
-				ConnectionId: []string { "A" },
+			&AgentFilter{
+				ConnectionId: []string{"A"},
 			},
 			true,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testCase.sampleFilter.HasAgentDescriptive()
 		c.Assert(testedResult, Equals, testCase.expected, comment)
@@ -55,27 +55,27 @@ func (suite *TestQuerySuite) TestHasAgentDescriptive(c *C) {
 func (suite *TestQuerySuite) TestHasTargetDescriptive(c *C) {
 	testCases := []*struct {
 		sampleFilter *TargetFilter
-		expected bool
-	} {
+		expected     bool
+	}{
 		{
-			&TargetFilter {}, false,
+			&TargetFilter{}, false,
 		},
 		{
-			&TargetFilter {
-				Name: []string { "A" },
+			&TargetFilter{
+				Name: []string{"A"},
 			},
 			true,
 		},
 		{
-			&TargetFilter {
-				Host: []string { "A" },
+			&TargetFilter{
+				Host: []string{"A"},
 			},
 			true,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testCase.sampleFilter.HasTargetDescriptive()
 		c.Assert(testedResult, Equals, testCase.expected, comment)

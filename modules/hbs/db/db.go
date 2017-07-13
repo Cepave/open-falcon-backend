@@ -2,12 +2,12 @@ package db
 
 import (
 	"database/sql"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
-	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
-	log "github.com/sirupsen/logrus"
+	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	_ "github.com/go-sql-driver/mysql"
+	log "github.com/sirupsen/logrus"
 )
 
 var DB *sql.DB
@@ -16,8 +16,8 @@ var DbFacade = &f.DbFacade{}
 // Initialize the resource for RDB
 func Init() {
 	err := DbInit(
-		&commonDb.DbConfig {
-			Dsn: g.Config().Database,
+		&commonDb.DbConfig{
+			Dsn:     g.Config().Database,
 			MaxIdle: g.Config().MaxIdle,
 		},
 	)

@@ -2,9 +2,9 @@ package nqm_parser
 
 import (
 	"fmt"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	"strconv"
 	"time"
-	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
 
 const (
@@ -16,11 +16,12 @@ const (
 var currentTimeZone = time.Now().Format("Z07:00")
 
 type paramSetter func(*QueryParams)
+
 var empty_param_setter paramSetter = func(queryParams *QueryParams) {}
 
 func buildErrorForInvalidParam(paramName interface{}, assignedValue interface{}) error {
 	if assignedValue == nil {
-		return fmt.Errorf("\"%v\" missed \"=<value>\" ?", paramName);
+		return fmt.Errorf("\"%v\" missed \"=<value>\" ?", paramName)
 	}
 
 	if assignedValue != nil {
@@ -74,14 +75,14 @@ func buildSetterFuncForTime(paramName string, timeValue time.Time) (newSetter pa
 	newSetter = nil
 
 	switch paramName {
-		case "starttime":
-			newSetter = func (p *QueryParams) {
-				p.StartTime = timeValue
-			}
-		case "endtime":
-			newSetter = func (p *QueryParams) {
-				p.EndTime = timeValue
-			}
+	case "starttime":
+		newSetter = func(p *QueryParams) {
+			p.StartTime = timeValue
+		}
+	case "endtime":
+		newSetter = func(p *QueryParams) {
+			p.EndTime = timeValue
+		}
 	}
 
 	if newSetter == nil {
@@ -96,27 +97,27 @@ func buildSetterFuncForStringArray(paramName string, values []string) (newSetter
 
 	switch paramName {
 	case "agent.isp":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			appendForString(&p.AgentFilter.MatchIsps, values)
 		}
 	case "agent.province":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			appendForString(&p.AgentFilter.MatchProvinces, values)
 		}
 	case "agent.city":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			appendForString(&p.AgentFilter.MatchCities, values)
 		}
 	case "target.isp":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			appendForString(&p.TargetFilter.MatchIsps, values)
 		}
 	case "target.province":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			appendForString(&p.TargetFilter.MatchProvinces, values)
 		}
 	case "target.city":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			appendForString(&p.TargetFilter.MatchCities, values)
 		}
 	}
@@ -135,27 +136,27 @@ func buildSetterFuncForPropRelation(paramName string, relationValue model.PropRe
 
 	switch paramName {
 	case "agent.isp":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			p.IspRelation = relationValue
 		}
 	case "agent.province":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			p.ProvinceRelation = relationValue
 		}
 	case "agent.city":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			p.CityRelation = relationValue
 		}
 	case "target.isp":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			p.IspRelation = relationValue
 		}
 	case "target.province":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			p.ProvinceRelation = relationValue
 		}
 	case "target.city":
-		newSetter = func (p *QueryParams) {
+		newSetter = func(p *QueryParams) {
 			p.CityRelation = relationValue
 		}
 	}
@@ -174,7 +175,7 @@ func appendForString(valuesHolder *[]string, values []string) {
 func combineStringLiterals(first interface{}, rest interface{}) []string {
 	allRests := rest.([]interface{})
 
-	result := make([]string, 0, len(allRests) + 1)
+	result := make([]string, 0, len(allRests)+1)
 	result = append(result, first.(string))
 
 	for _, v := range allRests {
@@ -184,7 +185,7 @@ func combineStringLiterals(first interface{}, rest interface{}) []string {
 	return result
 }
 
-// Parses the unix time by string representation of "1213213"(Epoch tiem)
+// Parses the unix time by string representation of "1213213"(Epoch time)
 func parseUnixTime(c *current) (time.Time, error) {
 	unixTimeInt64, parseErr := strconv.ParseInt(string(c.text), 0, 64)
 
@@ -204,7 +205,7 @@ func parseAutoCondition(autoConditionValue interface{}) (model.PropRelation, err
 	case "NOT_MATCH_ANOTHER":
 		return model.NotSameValue, nil
 	default:
-		return model.NoCondition, fmt.Errorf("Unknown auto-condition: %%%v%%", stringValue);
+		return model.NoCondition, fmt.Errorf("Unknown auto-condition: %%%v%%", stringValue)
 	}
 }
 
@@ -219,7 +220,7 @@ func parseAutoCondition(autoConditionValue interface{}) (model.PropRelation, err
 func parseIso8601(c *current) (time.Time, error) {
 	timeStr := string(c.text)
 
-	switch (len(timeStr)) {
+	switch len(timeStr) {
 	case 10:
 		timeStr = fmt.Sprintf("%sT00:00%s", timeStr, currentTimeZone)
 	case 13:
