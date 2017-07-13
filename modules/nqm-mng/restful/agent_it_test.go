@@ -225,7 +225,7 @@ var _ = Describe("Listing targets of agent(ping list)", ginkgoDb.NeedDb(func() {
 		)
 	}
 
-	DescribeTable("Normal NQM agent(exsiting)",
+	DescribeTable("Normal NQM agent(existing)",
 		func(agentId int, expectedRefreshTime *int64) {
 			respResult := fetchTargets(agentId)
 
@@ -245,7 +245,7 @@ var _ = Describe("Listing targets of agent(ping list)", ginkgoDb.NeedDb(func() {
 		Entry("Has no cache", 24023, nil),
 	)
 
-	It("Not exising NQM agent", func() {
+	It("Not existing NQM agent", func() {
 		respResult := fetchTargets(99801)
 
 		Expect(respResult).To(ogko.MatchHttpStatus(http.StatusNotFound))

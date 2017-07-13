@@ -60,7 +60,7 @@ func (suite *TestTypesSuite) TestIsViable(c *C) {
 	}
 }
 
-// Tests the type convertion
+// Tests the type conversion
 func (suite *TestTypesSuite) TestConvertToForPointer(c *C) {
 	type weight int
 	var v1 int = 20
@@ -76,7 +76,7 @@ func (suite *TestTypesSuite) TestConvertToForPointer(c *C) {
 	// :~)
 }
 
-// Tests the convertion for integer types
+// Tests the conversion for integer types
 func (suite *TestTypesSuite) TestConvertToForReal(c *C) {
 	testCases := []*struct {
 		sourceValue interface{}

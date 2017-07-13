@@ -23,7 +23,7 @@
 //
 // 	err := errFunc()
 //
-// Capture panic to speical handler
+// Capture panic to special handler
 //
 // If a go routine gets panic, the process would be terminated by default,
 // you could use "BuildPanicCapture" to prevent the behavior.

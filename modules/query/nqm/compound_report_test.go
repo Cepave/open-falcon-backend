@@ -27,7 +27,7 @@ var (
 	_ = Suite(&TestCompoundReportSuiteOnDb{&dbTestSuite{}})
 )
 
-// Tests the convertion of query to detail information
+// Tests the conversion of query to detail information
 func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	/**
 	 * Sets-up sample query
@@ -104,7 +104,7 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	// :~)
 }
 
-// Tests the convertion of query to deatil information on special conditions
+// Tests the conversion of query to deatil information on special conditions
 //
 // Some properties(isp_ids, province_ids, city_ids, name_tag_ids) supports special values:
 //

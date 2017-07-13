@@ -63,10 +63,10 @@ func PointerOfCloneString(source string) *string {
 	return &source
 }
 
-// Super convertion by reflect
+// Super conversion by reflect
 //
 // 1. Nil pointer would be to nil pointer of target type
-// 2. Othewise, uses the reflect.Value.Convert() function to perform convertion
+// 2. Othewise, uses the reflect.Value.Convert() function to perform conversion
 //
 // See https://golang.org/ref/spec#Conversions
 func ConvertTo(value interface{}, targetType reflect.Type) interface{} {

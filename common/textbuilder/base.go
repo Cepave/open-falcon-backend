@@ -180,7 +180,7 @@ type ListPost interface {
 // Defines operations for a TextList
 type ListPostProcessor interface {
 	Distill(Distiller) TextGetter
-	Join(seperator TextGetter) TextGetter
+	Join(separator TextGetter) TextGetter
 }
 
 // Initialzie an instance of DefaultListPost
@@ -193,8 +193,8 @@ type DefaultListPost struct {
 	list TextList
 }
 
-func (l *DefaultListPost) Join(seperator TextGetter) TextGetter {
-	return JoinTextList(seperator, l.list)
+func (l *DefaultListPost) Join(separator TextGetter) TextGetter {
+	return JoinTextList(separator, l.list)
 }
 func (l *DefaultListPost) Distill(d Distiller) TextGetter {
 	return d(l.list)
@@ -237,7 +237,7 @@ func ToTextGetter(v interface{}) TextGetter {
 	return TextGetterPrintf("%v", v)
 }
 
-// Converts multiple values to TextList, for the convertion of element,  see ToTextGetter
+// Converts multiple values to TextList, for the conversion of element,  see ToTextGetter
 func ToTextList(anyObjects ...interface{}) TextList {
 	getters := make([]TextGetter, len(anyObjects))
 
@@ -302,13 +302,13 @@ func SurroundingSame(s TextGetter, content TextGetter) TextGetter {
 }
 
 // Joining the viable element of getters
-func Join(seperator TextGetter, getters ...TextGetter) TextGetter {
-	return JoinTextList(seperator, TextGetters(getters))
+func Join(separator TextGetter, getters ...TextGetter) TextGetter {
+	return JoinTextList(separator, TextGetters(getters))
 }
 
 // Joining the viable element of TextList
-func JoinTextList(seperator TextGetter, textList TextList) TextGetter {
-	return &joinImpl{seperator, textList}
+func JoinTextList(separator TextGetter, textList TextList) TextGetter {
+	return &joinImpl{separator, textList}
 }
 
 // Repeating the viable element of TextList
@@ -348,11 +348,11 @@ func RepeatByLen(text TextGetter, lenObject interface{}) TextList {
 	return Repeat(text, repeatTimes)
 }
 
-func RepeatAndJoin(text TextGetter, seperator TextGetter, times int) TextGetter {
-	return JoinTextList(seperator, Repeat(text, times))
+func RepeatAndJoin(text TextGetter, separator TextGetter, times int) TextGetter {
+	return JoinTextList(separator, Repeat(text, times))
 }
-func RepeatAndJoinByLen(text TextGetter, seperator TextGetter, lenObject interface{}) TextGetter {
-	return JoinTextList(seperator, RepeatByLen(text, lenObject))
+func RepeatAndJoinByLen(text TextGetter, separator TextGetter, lenObject interface{}) TextGetter {
+	return JoinTextList(separator, RepeatByLen(text, lenObject))
 }
 
 type formatterImpl struct {

@@ -40,7 +40,7 @@ func GetPlatformASJSON() (repons PlatformList, err error) {
 	fctoken := getFctoken()
 	url := config.Api.Map + "/fcname/" + config.Api.Name + "/fctoken/" + fctoken
 	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes.json"
-	log.Debugf("platfrom get url: %s", url)
+	log.Debugf("platform get url: %s", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return

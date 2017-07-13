@@ -185,7 +185,7 @@ func combineStringLiterals(first interface{}, rest interface{}) []string {
 	return result
 }
 
-// Parses the unix time by string representation of "1213213"(Epoch tiem)
+// Parses the unix time by string representation of "1213213"(Epoch time)
 func parseUnixTime(c *current) (time.Time, error) {
 	unixTimeInt64, parseErr := strconv.ParseInt(string(c.text), 0, 64)
 

@@ -13,7 +13,7 @@ type TestStringConvertSuite struct{}
 
 var _ = Suite(&TestStringConvertSuite{})
 
-// Tests the convertion from string to float types
+// Tests the conversion from string to float types
 func (suite *TestStringConvertSuite) TestConvertStringToFloat(c *C) {
 	testCases := []*struct {
 		value          string
@@ -34,7 +34,7 @@ func (suite *TestStringConvertSuite) TestConvertStringToFloat(c *C) {
 	}
 }
 
-// Tests the convertion from string to int types
+// Tests the conversion from string to int types
 func (suite *TestStringConvertSuite) TestConvertStringToInt(c *C) {
 	testCases := []*struct {
 		value          string
@@ -58,7 +58,7 @@ func (suite *TestStringConvertSuite) TestConvertStringToInt(c *C) {
 	}
 }
 
-// Tests the convertion from string to uint types
+// Tests the conversion from string to uint types
 func (suite *TestStringConvertSuite) TestConvertStringToUint(c *C) {
 	testCases := []*struct {
 		value          string
@@ -83,7 +83,7 @@ func (suite *TestStringConvertSuite) TestConvertStringToUint(c *C) {
 	}
 }
 
-// Tests the convertion from string to uint types
+// Tests the conversion from string to uint types
 func (suite *TestStringConvertSuite) TestConvertStringTobool(c *C) {
 	testCases := []*struct {
 		value          string

@@ -40,7 +40,7 @@ func (suite *TestArraySuite) TestMapperTo(c *C) {
 	c.Assert(testedResult.GetArray(), DeepEquals, []int{4, 6, 8})
 }
 
-// Tests the convertion from typed function to filter
+// Tests the conversion from typed function to filter
 func (suite *TestArraySuite) TestTypedFuncToFilter(c *C) {
 	testCases := []*struct {
 		testedFunc   FilterFunc
@@ -67,7 +67,7 @@ func (suite *TestArraySuite) TestTypedFuncToFilter(c *C) {
 	}
 }
 
-// Tests the convertion from typed function to mapper
+// Tests the conversion from typed function to mapper
 func (suite *TestArraySuite) TestTypedFuncToMapper(c *C) {
 	testCases := []*struct {
 		testedFunc   MapperFunc
@@ -157,7 +157,7 @@ func (suite *TestArraySuite) TestNewDomainFilter(c *C) {
 	}
 }
 
-// Tests the getting array by type convertion
+// Tests the getting array by type conversion
 func (suite *TestArraySuite) TestGetArrayAsType(c *C) {
 	testCases := []*struct {
 		sourceArray    interface{}

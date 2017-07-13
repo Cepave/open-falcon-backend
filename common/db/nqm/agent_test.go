@@ -137,7 +137,7 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 		newAgent, err := AddAgent(currentAddedAgent)
 
 		/**
-		 * Asserts the occuring error
+		 * Asserts the occurring error
 		 */
 		if testCase.hasError {
 			c.Assert(newAgent, IsNil)
@@ -182,7 +182,7 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
+		{ // Match nothing for further page
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},
@@ -267,7 +267,7 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
+		{ // Match nothing for further page
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},
@@ -384,7 +384,7 @@ func (suite *TestAgentSuite) TestListTargetsOfAgentById(c *C) {
 			},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
+		{ // Match nothing for further page
 			&nqmModel.TargetsOfAgentQuery{
 				AgentID: 24021,
 				TargetQuery: &nqmModel.TargetQuery{

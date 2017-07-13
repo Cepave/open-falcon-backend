@@ -1277,7 +1277,7 @@ func updateHostsTable(hostnames []string, hostsMap map[string]map[string]string)
 		log.Errorf(err.Error())
 		return
 	}
-	// use transation to batch insert multiple values
+	// use transition to batch insert multiple values
 	for _, host := range hosts {
 		_, err := p.Exec(
 			host["hostname"], 1, host["activate"], host["platform"], host["platforms"], host["IDC"],

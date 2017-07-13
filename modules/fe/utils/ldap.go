@@ -11,7 +11,7 @@ func LdapBind(addr,
 	BindPasswd,
 	UserField,
 	user,
-	password string) (sucess bool, err error) {
+	password string) (success bool, err error) {
 
 	filter := "(" + UserField + "=" + user + ")"
 	conn, err := ldap.Dial("tcp", addr)
@@ -44,7 +44,7 @@ func LdapBind(addr,
 	defer func() {
 		if err := recover(); err != nil {
 			//fmt.Println("ERROR:", err)
-			sucess = false
+			success = false
 		}
 	}()
 	err = conn.Bind(sr.Entries[0].DN, password)

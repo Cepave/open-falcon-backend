@@ -20,7 +20,7 @@ const (
 
 // NqmTaskRequest represents the request for ping task by NQM agent
 type NqmTaskRequest struct {
-	// The connection id of agent(used to identify task configruation)
+	// The connection id of agent(used to identify task configurations)
 	ConnectionId string `valid:"required"`
 	// The hostname of agent
 	Hostname string `valid:"required"`

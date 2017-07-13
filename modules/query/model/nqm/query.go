@@ -25,7 +25,7 @@ type PropRelation int8
 
 const (
 	/**
-	 * Input value of realtion
+	 * Input value of relation
 	 */
 	RelationSame    = -11
 	RelationNotSame = -12

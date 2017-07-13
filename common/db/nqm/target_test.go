@@ -55,7 +55,7 @@ func (suite *TestTargetSuite) TestAddTarget(c *C) {
 		newTarget, err := AddTarget(sampleTarget)
 
 		/**
-		 * Asserts the occuring error
+		 * Asserts the occurring error
 		 */
 		if testCase.errorType != nil {
 			c.Assert(newTarget, IsNil)
@@ -175,7 +175,7 @@ func (suite *TestTargetSuite) TestListTargets(c *C) {
 			&nqmModel.TargetQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
+		{ // Match nothing for further page
 			&nqmModel.TargetQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},

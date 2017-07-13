@@ -9,7 +9,7 @@ type DbUtilTestSuite struct{}
 
 var _ = Suite(&DbUtilTestSuite{})
 
-// Tests the convertion for like clause(SQL) for binary string
+// Tests the conversion for like clause(SQL) for binary string
 func (suite *DbUtilTestSuite) TestIpV4ToBytesForLike(c *C) {
 	testCases := []*struct {
 		sampleIp       string
@@ -43,7 +43,7 @@ func (suite *DbUtilTestSuite) TestIpV4ToBytesForLike(c *C) {
 	}
 }
 
-// Tests the convertion for array of string values
+// Tests the conversion for array of string values
 func (suite *DbUtilTestSuite) TestGroupedStringToStringArray(c *C) {
 	testCases := []*struct {
 		sampleSqlString sql.NullString
@@ -69,7 +69,7 @@ func (suite *DbUtilTestSuite) TestGroupedStringToStringArray(c *C) {
 	}
 }
 
-// Tests the convertion for array of int values
+// Tests the conversion for array of int values
 func (suite *DbUtilTestSuite) TestGroupedStringToIntArray(c *C) {
 	testCases := []*struct {
 		sampleSqlString sql.NullString
@@ -95,7 +95,7 @@ func (suite *DbUtilTestSuite) TestGroupedStringToIntArray(c *C) {
 	}
 }
 
-// Tests the convertion for array of int(unsigned) values
+// Tests the conversion for array of int(unsigned) values
 func (suite *DbUtilTestSuite) TestGroupedStringToUintArray(c *C) {
 	testCases := []*struct {
 		sampleSqlString sql.NullString

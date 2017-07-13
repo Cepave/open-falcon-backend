@@ -17,7 +17,7 @@ func NewCacheCtrl(cache *ccache.Cache) *CacheCtrl {
 	return &CacheCtrl{cache}
 }
 
-// Fetchs object with panic if there is error occured
+// Fetchs object with panic if there is error occurred
 //
 // nil value wouldn't be fetched
 func (cc *CacheCtrl) MustFetch(

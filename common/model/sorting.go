@@ -17,7 +17,7 @@ const (
 // Dialect used to mapping property to column.
 // And direction of sorting
 type OrderByDialect struct {
-	Seperator          string
+	Separator          string
 	PropertyMapping    map[string]string
 	DirectionMapping   map[byte]string
 	FuncEntityToSyntax func(*OrderByEntity) (string, error)
@@ -51,7 +51,7 @@ func (dialect *OrderByDialect) ToQuerySyntax(entities []*OrderByEntity) (string,
 		querySyntaxForOrderBy = append(querySyntaxForOrderBy, syntax)
 	}
 
-	return strings.Join(querySyntaxForOrderBy, dialect.Seperator), nil
+	return strings.Join(querySyntaxForOrderBy, dialect.Separator), nil
 }
 
 var sqlDirectionMapping = map[byte]string{
@@ -77,7 +77,7 @@ func NewSqlOrderByDialect(propertyMapping map[string]string) *OrderByDialect {
 	}
 
 	dialect := &OrderByDialect{
-		Seperator:        ", ",
+		Separator:        ", ",
 		PropertyMapping:  newMapOfProperties,
 		DirectionMapping: newMapOfDirection,
 	}

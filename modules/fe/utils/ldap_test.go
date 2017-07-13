@@ -18,8 +18,8 @@ const (
 var Attributes []string = []string{"cn", "mail", "telephoneNumber"}
 
 func Test_ldap_bind_fe(t *testing.T) {
-	sucess, err := LdapBind(addr, baseDN, bindDN, bindPasswd, UserField, user, password)
-	log.Println("sucess:", sucess)
+	success, err := LdapBind(addr, baseDN, bindDN, bindPasswd, UserField, user, password)
+	log.Println("success:", success)
 	log.Println("err", err)
 }
 func Test_ldap_search_fe(t *testing.T) {
