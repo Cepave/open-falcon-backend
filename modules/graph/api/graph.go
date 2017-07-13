@@ -12,6 +12,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/graph/proc"
 	"github.com/Cepave/open-falcon-backend/modules/graph/rrdtool"
 	"github.com/Cepave/open-falcon-backend/modules/graph/store"
+	log "github.com/sirupsen/logrus"
 )
 
 type Graph int
@@ -86,16 +87,18 @@ func handleItems(items []*cmodel.GraphItem) {
 	}
 }
 
-func (this *Graph) BatchQuery(params []cmodel.GraphQueryParam, resps []*cmodel.GraphQueryResponse) error {
+func (this *Graph) BatchQuery(params []cmodel.GraphQueryParam, resps *cmodel.GraphQueryResponseList) error {
 	var errors []error
+	respsTmp := []*cmodel.GraphQueryResponse{}
 	for _, param := range params {
-		var resp *cmodel.GraphQueryResponse
+		resp := &cmodel.GraphQueryResponse{}
 		err := this.Query(param, resp)
 		if err != nil {
 			errors = append(errors, err)
 		}
-		resps = append(resps, resp)
+		respsTmp = append(respsTmp, resp)
 	}
+	resps.List = &respsTmp
 	if len(errors) == 0 {
 		return nil
 	} else {
@@ -321,18 +324,20 @@ func (this *Graph) Last(param cmodel.GraphLastParam, resp *cmodel.GraphLastResp)
 	return nil
 }
 
-func (this *Graph) LastBatch(params []cmodel.GraphLastParam, resps []*cmodel.GraphLastResp) error {
+func (this *Graph) LastBatch(params []cmodel.GraphLastParam, resps *cmodel.GraphLastRespList) error {
 	// statistics
 	proc.GraphLastCnt.IncrBy(int64(len(params)))
 
+	respsTmp := []cmodel.GraphLastResp{}
 	for _, param := range params {
 		resp := cmodel.GraphLastResp{}
 		resp.Endpoint = param.Endpoint
 		resp.Counter = param.Counter
 		resp.Value = GetLast(param.Endpoint, param.Counter)
-		resps = append(resps, &resp)
+		respsTmp = append(respsTmp, resp)
 	}
 
+	resps.List = &respsTmp
 	return nil
 }
 
