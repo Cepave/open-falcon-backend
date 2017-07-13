@@ -2,11 +2,11 @@ package mvc
 
 import (
 	"fmt"
+	"mime/multipart"
 	"reflect"
 	"regexp"
-	"strings"
-	"mime/multipart"
 	"strconv"
+	"strings"
 
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/model"
@@ -16,23 +16,24 @@ import (
 
 const mvcTag = "mvc"
 
-var defProp = map[string]bool {
-	"file": true,
-	"fileHeader": true,
-	"query": true,
-	"cookie": true,
-	"param": true,
-	"form": true,
-	"header": true,
-	"key": true,
-	"req": true,
-	"basicAuth": true,
-	"pageSize": true,
+var defProp = map[string]bool{
+	"file":        true,
+	"fileHeader":  true,
+	"query":       true,
+	"cookie":      true,
+	"param":       true,
+	"form":        true,
+	"header":      true,
+	"key":         true,
+	"req":         true,
+	"basicAuth":   true,
+	"pageSize":    true,
 	"pageOrderBy": true,
-	"default": true,
+	"default":     true,
 }
 
 var _t_Paging = reflect.TypeOf(&model.Paging{})
+
 func buildParamLoader(field reflect.StructField, convSrv ot.ConversionService) inputParamLoader {
 	/**
 	 * Process paging object
@@ -54,20 +55,21 @@ func buildParamLoader(field reflect.StructField, convSrv ot.ConversionService) i
 }
 
 const (
-	paramGetterType = 1
+	paramGetterType  = 1
 	paramCheckerType = 5
 
-	keyGetterType = 2
-	fileGetterType = 3
+	keyGetterType    = 2
+	fileGetterType   = 3
 	pagingGetterType = 4
 )
 
 type tagContext struct {
-	getterType int
-	getterName string
-	paramName string
+	getterType   int
+	getterName   string
+	paramName    string
 	defaultValue string
 }
+
 func (t *tagContext) getDefaultValueAsSlice() []string {
 	return strings.Split(t.defaultValue, ",")
 }
@@ -139,7 +141,7 @@ func (t *tagContext) getLoader(targetType reflect.Type, convSrv ot.ConversionSer
 
 				switch targetType.Kind() {
 				case reflect.Array, reflect.Slice:
-					return headers;
+					return headers
 				default:
 					return headers[0]
 				}
@@ -151,6 +153,7 @@ func (t *tagContext) getLoader(targetType reflect.Type, convSrv ot.ConversionSer
 }
 
 var propRegExp, _ = regexp.Compile(`^(\w+)\[([^]]+)\]$`)
+
 func loadTag(field reflect.StructField) *tagContext {
 	tagContext := &tagContext{}
 
@@ -204,6 +207,7 @@ func getFileHeaders(context *gin.Context, fieldName string) []*multipart.FileHea
 
 // This function would put opened file into context's value
 const _keyOpenedFiles = "_opened_files_"
+
 func openMultipartFile(context *gin.Context, fileHeader *multipart.FileHeader) multipart.File {
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -235,8 +239,8 @@ func releaseMultipartFiles(context *gin.Context) {
 }
 
 func loadDefaultPaging(tag reflect.StructTag) *model.Paging {
-	paging := &model.Paging {
-		Size: 64,
+	paging := &model.Paging{
+		Size:     64,
 		Position: 1,
 	}
 

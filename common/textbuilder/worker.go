@@ -7,19 +7,19 @@ import (
 
 func BuildPrefix(prefix TextGetter) Transformer {
 	return func(content TextGetter) TextGetter {
-		return &prefixImpl{ prefix, content }
+		return &prefixImpl{prefix, content}
 	}
 }
 
 func BuildSuffix(suffix TextGetter) Transformer {
 	return func(content TextGetter) TextGetter {
-		return &suffixImpl{ content, suffix }
+		return &suffixImpl{content, suffix}
 	}
 }
 
 func BuildSurrounding(prefix TextGetter, suffix TextGetter) Transformer {
 	return func(content TextGetter) TextGetter {
-		return &surroundingImpl{ prefix, content, suffix }
+		return &surroundingImpl{prefix, content, suffix}
 	}
 }
 
@@ -41,17 +41,18 @@ func BuildRepeatByLen(v interface{}) Breeder {
 
 func BuildJoin(seperator TextGetter) Distiller {
 	return func(list TextList) TextGetter {
-		return &joinImpl{ seperator, list }
+		return &joinImpl{seperator, list}
 	}
 }
 
 type prefixImpl struct {
 	prefixImpl TextGetter
-	content TextGetter
+	content    TextGetter
 }
+
 func (p *prefixImpl) String() string {
 	content := p.content.String()
-	if content  != "" {
+	if content != "" {
 		return p.prefixImpl.String() + content
 	}
 
@@ -63,11 +64,12 @@ func (p *prefixImpl) Post() PostProcessor {
 
 type suffixImpl struct {
 	content TextGetter
-	suffix TextGetter
+	suffix  TextGetter
 }
+
 func (s *suffixImpl) String() string {
 	content := s.content.String()
-	if content  != "" {
+	if content != "" {
 		return content + s.suffix.String()
 	}
 
@@ -78,13 +80,14 @@ func (s *suffixImpl) Post() PostProcessor {
 }
 
 type surroundingImpl struct {
-	prefix TextGetter
+	prefix  TextGetter
 	content TextGetter
-	suffix TextGetter
+	suffix  TextGetter
 }
+
 func (s *surroundingImpl) String() string {
 	content := s.content.String()
-	if content  != "" {
+	if content != "" {
 		return fmt.Sprintf(
 			"%s%s%s",
 			s.prefix.String(), s.content.String(), s.suffix.String(),
@@ -99,8 +102,9 @@ func (s *surroundingImpl) Post() PostProcessor {
 
 type joinImpl struct {
 	seperator TextGetter
-	getters TextList
+	getters   TextList
 }
+
 func (j *joinImpl) String() string {
 	resultOfGetters := make([]string, 0)
 

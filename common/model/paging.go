@@ -7,11 +7,11 @@ import (
 
 // The paging object used to hold information
 type Paging struct {
-	Size int32
-	Position int32
+	Size       int32
+	Position   int32
 	TotalCount int32
-	PageMore bool
-	OrderBy []*OrderByEntity
+	PageMore   bool
+	OrderBy    []*OrderByEntity
 }
 
 // Initialize the paging with default values
@@ -22,10 +22,10 @@ type Paging struct {
 // 	Paging.PageMore: false
 func NewUndefinedPaging() *Paging {
 	return &Paging{
-		Size: -1,
-		Position: -1,
+		Size:       -1,
+		Position:   -1,
 		TotalCount: -1,
-		PageMore: false,
+		PageMore:   false,
 	}
 }
 
@@ -49,7 +49,7 @@ func (self *Paging) String() string {
 // Sets the total count of data and set-up PageMore flag
 func (self *Paging) SetTotalCount(totalCount int32) {
 	self.TotalCount = totalCount
-	self.PageMore = self.GetOffset() + self.Size < totalCount
+	self.PageMore = self.GetOffset()+self.Size < totalCount
 }
 
 // Extracts page from array or slice
@@ -67,7 +67,7 @@ func ExtractPage(arrayObject interface{}, paging *Paging) interface{} {
 	/**
 	 * Calculates the boundary of indexes on input array
 	 */
-	startIndex, endIndex := int(paging.GetOffset()), int(paging.GetOffset() + paging.Size)
+	startIndex, endIndex := int(paging.GetOffset()), int(paging.GetOffset()+paging.Size)
 	lenOfArray := arrayValue.Len()
 	if endIndex > lenOfArray {
 		endIndex = lenOfArray

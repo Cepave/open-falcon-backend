@@ -2,10 +2,10 @@ package ccache
 
 import (
 	"fmt"
-	"time"
-	"github.com/karlseguin/ccache"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/karlseguin/ccache"
 	"reflect"
+	"time"
 )
 
 // Used to indicate the controller that it should not put the object into cache
@@ -14,7 +14,7 @@ type CacheCtrl struct {
 }
 
 func NewCacheCtrl(cache *ccache.Cache) *CacheCtrl {
-	return &CacheCtrl { cache }
+	return &CacheCtrl{cache}
 }
 
 // Fetchs object with panic if there is error occured

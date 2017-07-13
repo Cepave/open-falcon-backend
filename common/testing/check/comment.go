@@ -9,5 +9,5 @@ func LogTestCase(c *C, testCase interface{}) {
 }
 
 func TestCaseComment(index int) CommentInterface {
-	return Commentf("Test Case: %d", index + 1)
+	return Commentf("Test Case: %d", index+1)
 }

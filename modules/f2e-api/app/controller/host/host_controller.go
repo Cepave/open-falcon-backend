@@ -8,8 +8,8 @@ import (
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	u "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 func GetHostBindToWhichHostGroup(c *gin.Context) {

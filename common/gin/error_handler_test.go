@@ -2,9 +2,9 @@ package gin
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/http/httptest"
-	"github.com/gin-gonic/gin"
 
 	. "gopkg.in/check.v1"
 )
@@ -14,11 +14,11 @@ type TestErrorHandlerSuite struct{}
 var _ = Suite(&TestErrorHandlerSuite{})
 
 func ExampleDataConflictError() {
-	engine := NewDefaultJsonEngine(&GinConfig{ Mode: gin.ReleaseMode })
+	engine := NewDefaultJsonEngine(&GinConfig{Mode: gin.ReleaseMode})
 	engine.GET(
 		"/data-conflict",
 		func(c *gin.Context) {
-			panic(DataConflictError{ 33, "Sample Conflict" })
+			panic(DataConflictError{33, "Sample Conflict"})
 		},
 	)
 

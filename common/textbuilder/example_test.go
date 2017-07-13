@@ -14,6 +14,7 @@ func ExampleStringGetter() {
 }
 
 type Weight int
+
 func (w Weight) String() string {
 	return fmt.Sprintf("Your weight is %d", w)
 }

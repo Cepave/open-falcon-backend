@@ -2,10 +2,10 @@ package nqm
 
 import (
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	. "gopkg.in/check.v1"
 	"time"
 )
@@ -15,8 +15,8 @@ type TestAgentSuite struct{}
 var _ = Suite(&TestAgentSuite{})
 
 var testedAgentService = NewAgentService(
-	cache.DataCacheConfig {
-		MaxSize: 10,
+	cache.DataCacheConfig{
+		MaxSize:  10,
 		Duration: time.Minute * 5,
 	},
 )
@@ -26,13 +26,13 @@ func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 	testCases := []*struct {
 		sampleId int32
 		hasFound bool
-	} {
-		{ 40571, true },
-		{ 40572, false },
+	}{
+		{40571, true},
+		{40572, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		/**
 		 * Asserts the found data
@@ -54,33 +54,33 @@ func (suite *TestAgentSuite) TestGetSimpleAgent1ById(c *C) {
 // Tests the loading of SimpleAgent1 by filter
 func (suite *TestAgentSuite) TestGetSimpleAgent1sByFilter(c *C) {
 	testCases := []*struct {
-		sampleFilter *nqmModel.AgentFilter
-		expectedCache []int32
+		sampleFilter   *nqmModel.AgentFilter
+		expectedCache  []int32
 		expectedNumber int
-	} {
+	}{
 		{
-			&nqmModel.AgentFilter {
-				Name: []string { "no-such-1" },
+			&nqmModel.AgentFilter{
+				Name: []string{"no-such-1"},
 			},
-			[]int32 {},
+			[]int32{},
 			0,
 		},
 		{
-			&nqmModel.AgentFilter {
-				Name: []string { "ag-tg-1", "ag-tg-2" },
+			&nqmModel.AgentFilter{
+				Name: []string{"ag-tg-1", "ag-tg-2"},
 			},
-			[]int32 { 75061, 75062 },
+			[]int32{75061, 75062},
 			2,
 		},
 		{
-			&nqmModel.AgentFilter {},
-			[]int32 { 75061, 75062, 75063 },
+			&nqmModel.AgentFilter{},
+			[]int32{75061, 75062, 75063},
 			3,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := testedAgentService.GetSimpleAgent1sByFilter(testCase.sampleFilter)
 		c.Assert(testedResult, HasLen, testCase.expectedNumber, comment)

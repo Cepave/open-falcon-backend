@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
-	"github.com/gin-gonic/gin"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 type APICreatePluginInput struct {

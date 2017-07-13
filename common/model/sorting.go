@@ -17,9 +17,9 @@ const (
 // Dialect used to mapping property to column.
 // And direction of sorting
 type OrderByDialect struct {
-	Seperator string
-	PropertyMapping map[string]string
-	DirectionMapping map[byte]string
+	Seperator          string
+	PropertyMapping    map[string]string
+	DirectionMapping   map[byte]string
 	FuncEntityToSyntax func(*OrderByEntity) (string, error)
 }
 
@@ -54,10 +54,10 @@ func (dialect *OrderByDialect) ToQuerySyntax(entities []*OrderByEntity) (string,
 	return strings.Join(querySyntaxForOrderBy, dialect.Seperator), nil
 }
 
-var sqlDirectionMapping = map[byte]string {
+var sqlDirectionMapping = map[byte]string{
 	DefaultDirection: "",
-	Ascending: "ASC",
-	Descending: "DESC",
+	Ascending:        "ASC",
+	Descending:       "DESC",
 }
 
 // Builds a dialect for default SQL language
@@ -76,9 +76,9 @@ func NewSqlOrderByDialect(propertyMapping map[string]string) *OrderByDialect {
 		newMapOfProperties[k] = v
 	}
 
-	dialect := &OrderByDialect {
-		Seperator: ", ",
-		PropertyMapping: newMapOfProperties,
+	dialect := &OrderByDialect{
+		Seperator:        ", ",
+		PropertyMapping:  newMapOfProperties,
 		DirectionMapping: newMapOfDirection,
 	}
 	dialect.FuncEntityToSyntax = func(entity *OrderByEntity) (string, error) {
@@ -92,12 +92,10 @@ func entityToSqlSyntax(dialect *OrderByDialect, entity *OrderByEntity) (string, 
 	var propValue, dirValue string
 	var ok bool
 
-	if propValue, ok = dialect.PropertyMapping[entity.Expr]
-		!ok {
+	if propValue, ok = dialect.PropertyMapping[entity.Expr]; !ok {
 		return "", fmt.Errorf("Cannot find mapping for property: [%s]", entity.Expr)
 	}
-	if dirValue, ok = dialect.DirectionMapping[entity.Direction]
-		!ok {
+	if dirValue, ok = dialect.DirectionMapping[entity.Direction]; !ok {
 		return "", fmt.Errorf("Cannot find mapping for direction: [%d]", entity.Direction)
 	}
 

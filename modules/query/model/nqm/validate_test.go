@@ -17,30 +17,30 @@ func (suite *TestValidateSuite) TestValidateTimeWithUnit(c *C) {
 
 	testCases := []*struct {
 		sampleTimeUnit *TimeWithUnit
-		hasError bool
-	} {
+		hasError       bool
+	}{
 		{
 			&TimeWithUnit{},
 			false,
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitDay, StartTimeOfDay: sPtr("02:00"), EndTimeOfDay: sPtr("04:00") },
+			&TimeWithUnit{Unit: TimeUnitDay, StartTimeOfDay: sPtr("02:00"), EndTimeOfDay: sPtr("04:00")},
 			false,
 		},
 		{
-			&TimeWithUnit{ StartTimeOfDay: sPtr("02:00") },
+			&TimeWithUnit{StartTimeOfDay: sPtr("02:00")},
 			true,
 		},
 		{
-			&TimeWithUnit{ EndTimeOfDay: sPtr("02:00") },
+			&TimeWithUnit{EndTimeOfDay: sPtr("02:00")},
 			true,
 		},
 		{
-			&TimeWithUnit{ StartTimeOfDay: sPtr("0g:00"), EndTimeOfDay: sPtr("02:00") },
+			&TimeWithUnit{StartTimeOfDay: sPtr("0g:00"), EndTimeOfDay: sPtr("02:00")},
 			true,
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitHour, StartTimeOfDay: sPtr("02:00"), EndTimeOfDay: sPtr("04:00") },
+			&TimeWithUnit{Unit: TimeUnitHour, StartTimeOfDay: sPtr("02:00"), EndTimeOfDay: sPtr("04:00")},
 			true,
 		},
 	}

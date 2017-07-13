@@ -1,9 +1,9 @@
 package falcon_portal
 
 import (
-	log "github.com/sirupsen/logrus"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	con "github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	log "github.com/sirupsen/logrus"
 )
 
 type Template struct {

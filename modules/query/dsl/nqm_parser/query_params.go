@@ -2,36 +2,36 @@ package nqm_parser
 
 import (
 	"fmt"
-	"time"
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
+	"time"
 )
 
 // The parameters for query
 type QueryParams struct {
-	StartTime time.Time
-	EndTime time.Time
-	AgentFilter NodeFilter
-	TargetFilter NodeFilter
-	AgentFilterById NodeFilterById
+	StartTime        time.Time
+	EndTime          time.Time
+	AgentFilter      NodeFilter
+	TargetFilter     NodeFilter
+	AgentFilterById  NodeFilterById
 	TargetFilterById NodeFilterById
-	IspRelation model.PropRelation
+	IspRelation      model.PropRelation
 	ProvinceRelation model.PropRelation
-	CityRelation model.PropRelation
+	CityRelation     model.PropRelation
 }
 
 // The filter of node
 type NodeFilter struct {
 	MatchProvinces []string
-	MatchCities []string
-	MatchIsps []string
+	MatchCities    []string
+	MatchIsps      []string
 }
 
 // The filter of node
 type NodeFilterById struct {
-	MatchIds []int32
+	MatchIds       []int32
 	MatchProvinces []int16
-	MatchCities []int16
-	MatchIsps []int16
+	MatchCities    []int16
+	MatchIsps      []int16
 }
 
 // Initialize query parameters with default values
@@ -46,7 +46,7 @@ func NewQueryParams() *QueryParams {
 }
 
 // Sets-up the parameters
-func (p* QueryParams) SetUpParams(paramSetters interface{}) {
+func (p *QueryParams) SetUpParams(paramSetters interface{}) {
 	for _, setterImpl := range paramSetters.([]paramSetter) {
 		setterImpl(p)
 	}
@@ -72,7 +72,8 @@ func (p *QueryParams) CheckRationalOfParameters() error {
 // 1. provinces and cities cannot be assigned at the same time(except auto-condition)
 // 2. duplicated value would be eliminated
 const FORMAT_ERROR_LOCATION_FILTER = "%v filter for provinces:%v and cities:%v are both set"
-func (p* QueryParams) checkParams() (err error) {
+
+func (p *QueryParams) checkParams() (err error) {
 	err = nil
 
 	if err = buildErrorIfBothAreSet(
@@ -115,7 +116,7 @@ func eliminateDuplicatedValues(values []string) []string {
 	}
 
 	resultValues := make([]string, 0, len(mapOfValues))
-	for k, _ := range mapOfValues {
+	for k := range mapOfValues {
 		resultValues = append(resultValues, k)
 	}
 

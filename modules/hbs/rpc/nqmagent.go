@@ -6,16 +6,15 @@ import (
 	"strings"
 	"time"
 
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
 	"github.com/Cepave/open-falcon-backend/common/rpc"
+	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
 	"github.com/asaskevich/govalidator"
 )
 
 var nqmAgentHbsService *nqmService.AgentHbsService = nil
-
 
 // Task retrieves the configuration of measurement tasks for certain client
 //
@@ -77,8 +76,7 @@ func validatePingTask(request *commonModel.NqmTaskRequest) (err error) {
 	 * Checks the validation of IP address
 	 */
 	if err == nil {
-		if ipAddress := net.ParseIP(request.IpAddress)
-			ipAddress == nil {
+		if ipAddress := net.ParseIP(request.IpAddress); ipAddress == nil {
 			err = fmt.Errorf("Cannot parse IP address: [%v]", request.IpAddress)
 		}
 	}

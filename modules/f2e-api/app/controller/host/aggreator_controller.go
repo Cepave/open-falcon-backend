@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 )
 
 func GetAggregatorListOfGrp(c *gin.Context) {

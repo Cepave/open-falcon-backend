@@ -1,13 +1,13 @@
 package http
 
 import (
-	"fmt"
 	"flag"
-	"net/http"
-	"github.com/dghubble/sling"
-	"io/ioutil"
+	"fmt"
 	json "github.com/bitly/go-simplejson"
+	"github.com/dghubble/sling"
 	checker "gopkg.in/check.v1"
+	"io/ioutil"
+	"net/http"
 )
 
 // Performs request and reads the body into []byte
@@ -52,14 +52,15 @@ func NewResponseResultByResponse(resp *http.Response) *ResponseResult {
 
 	return &ResponseResult{
 		Response: resp,
-		body: bodyBytes,
+		body:     bodyBytes,
 	}
 }
 
 type ResponseResult struct {
 	Response *http.Response
-	body []byte
+	body     []byte
 }
+
 func (r *ResponseResult) GetBodyAsString() string {
 	return string(r.body)
 }
@@ -74,7 +75,7 @@ func (r *ResponseResult) GetBodyAsJson() *json.Json {
 
 // Slint with checker
 type CheckSlint struct {
-	Slint *sling.Sling
+	Slint        *sling.Sling
 	LastResponse *http.Response
 
 	checker *checker.C
@@ -83,10 +84,11 @@ type CheckSlint struct {
 // Initialize a checker with slint support
 func NewCheckSlint(checker *checker.C, sling *sling.Sling) *CheckSlint {
 	return &CheckSlint{
-		Slint: sling,
+		Slint:   sling,
 		checker: checker,
 	}
 }
+
 // Gets request of slint
 func (self *CheckSlint) Request() *http.Request {
 	req, err := self.Slint.Request()
@@ -162,9 +164,9 @@ func (self *CheckSlint) GetJsonBody(expectedStatus int) *json.Json {
 
 // The configuration of http client
 type HttpClientConfig struct {
-	Ssl bool
-	Host string
-	Port uint16
+	Ssl      bool
+	Host     string
+	Port     uint16
 	Resource string
 
 	slingBase *sling.Sling
@@ -183,10 +185,10 @@ func NewHttpClientConfigByFlag() *HttpClientConfig {
 
 	flag.Parse()
 
-	config := &HttpClientConfig {
-		Host: *host,
-		Port: uint16(*port),
-		Ssl: *ssl,
+	config := &HttpClientConfig{
+		Host:     *host,
+		Port:     uint16(*port),
+		Ssl:      *ssl,
 		Resource: *resource,
 	}
 	config.slingBase = sling.New().Base(

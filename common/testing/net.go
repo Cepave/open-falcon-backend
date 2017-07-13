@@ -1,8 +1,8 @@
 package testing
 
 import (
-	"net/url"
 	"gopkg.in/check.v1"
+	"net/url"
 )
 
 func ParseUrl(c *check.C, rawurl string) *url.URL {

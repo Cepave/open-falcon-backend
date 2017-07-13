@@ -23,7 +23,7 @@ func updatedMsg(old map[string]model.MeasurementsProperty, updated map[string]mo
 		}
 		return msg
 	}
-	for k, _ := range updated {
+	for k := range updated {
 		if !old[k].Enabled && updated[k].Enabled {
 			msg = msg + fmt.Sprint("<", k, " Enabled> ")
 		}

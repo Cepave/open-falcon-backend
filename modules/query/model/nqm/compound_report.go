@@ -3,28 +3,29 @@ package nqm
 import (
 	"fmt"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	sjson "github.com/bitly/go-simplejson"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	sjson "github.com/bitly/go-simplejson"
 	"net"
 )
 
 type DynamicRecord struct {
-	Agent *DynamicAgentProps `json:"agent,omitempty"`
-	Target *DynamicTargetProps `json:"target,omitempty"`
-	Metrics *DynamicMetrics `json:"metrics"`
+	Agent   *DynamicAgentProps  `json:"agent,omitempty"`
+	Target  *DynamicTargetProps `json:"target,omitempty"`
+	Metrics *DynamicMetrics     `json:"metrics"`
 }
 
 type DynamicAgentProps struct {
-	Id int32
-	Name *string
+	Id        int32
+	Name      *string
 	IpAddress string
-	Hostname string
-	Isp *owlModel.Isp
-	Province *owlModel.Province
-	City *owlModel.City2
-	NameTag *owlModel.NameTag
-	Grouping []string
+	Hostname  string
+	Isp       *owlModel.Isp
+	Province  *owlModel.Province
+	City      *owlModel.City2
+	NameTag   *owlModel.NameTag
+	Grouping  []string
 }
+
 func (p *DynamicAgentProps) MarshalJSON() ([]byte, error) {
 	if len(p.Grouping) == 0 {
 		return []byte("null"), nil
@@ -38,37 +39,39 @@ func (p *DynamicAgentProps) MarshalJSON() ([]byte, error) {
 
 	for _, grouping := range p.Grouping {
 		switch grouping {
-			case AgentGroupingName:
-				json.Set("name", p.Name)
-			case AgentGroupingHostname:
-				json.Set("hostname", p.Hostname)
-			case AgentGroupingIpAddress:
-				json.Set("ip_address", p.IpAddress)
-			case GroupingIsp:
-				json.Set("isp", p.Isp)
-			case GroupingProvince:
-				json.Set("province", p.Province)
-			case GroupingCity:
-				json.Set("city", p.City)
-			case GroupingNameTag:
-				json.Set("name_tag", p.NameTag)
-			default:
-				panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", grouping))
+		case AgentGroupingName:
+			json.Set("name", p.Name)
+		case AgentGroupingHostname:
+			json.Set("hostname", p.Hostname)
+		case AgentGroupingIpAddress:
+			json.Set("ip_address", p.IpAddress)
+		case GroupingIsp:
+			json.Set("isp", p.Isp)
+		case GroupingProvince:
+			json.Set("province", p.Province)
+		case GroupingCity:
+			json.Set("city", p.City)
+		case GroupingNameTag:
+			json.Set("name_tag", p.NameTag)
+		default:
+			panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", grouping))
 		}
 	}
 
 	return json.MarshalJSON()
 }
+
 type DynamicTargetProps struct {
-	Id int32
-	Name string
-	Host string
-	Isp *owlModel.Isp
+	Id       int32
+	Name     string
+	Host     string
+	Isp      *owlModel.Isp
 	Province *owlModel.Province
-	City *owlModel.City2
-	NameTag *owlModel.NameTag
+	City     *owlModel.City2
+	NameTag  *owlModel.NameTag
 	Grouping []string
 }
+
 func (p *DynamicTargetProps) MarshalJSON() ([]byte, error) {
 	if len(p.Grouping) == 0 {
 		return []byte("null"), nil
@@ -82,20 +85,20 @@ func (p *DynamicTargetProps) MarshalJSON() ([]byte, error) {
 
 	for _, grouping := range p.Grouping {
 		switch grouping {
-			case TargetGroupingName:
-				json.Set("name", p.Name)
-			case TargetGroupingHost:
-				json.Set("host", p.Host)
-			case GroupingIsp:
-				json.Set("isp", p.Isp)
-			case GroupingProvince:
-				json.Set("province", p.Province)
-			case GroupingCity:
-				json.Set("city", p.City)
-			case GroupingNameTag:
-				json.Set("name_tag", p.NameTag)
-			default:
-				panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", grouping))
+		case TargetGroupingName:
+			json.Set("name", p.Name)
+		case TargetGroupingHost:
+			json.Set("host", p.Host)
+		case GroupingIsp:
+			json.Set("isp", p.Isp)
+		case GroupingProvince:
+			json.Set("province", p.Province)
+		case GroupingCity:
+			json.Set("city", p.City)
+		case GroupingNameTag:
+			json.Set("name_tag", p.NameTag)
+		default:
+			panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", grouping))
 		}
 	}
 
@@ -104,7 +107,7 @@ func (p *DynamicTargetProps) MarshalJSON() ([]byte, error) {
 
 type DynamicMetrics struct {
 	Metrics *Metrics
-	Output *[]string
+	Output  *[]string
 }
 
 func (m *DynamicMetrics) MarshalJSON() ([]byte, error) {
@@ -146,11 +149,11 @@ type CompareDynamicRecord func(*DynamicRecord, *DynamicRecord, byte) int
 
 const (
 	Larger = 1
-	Equal = 0
+	Equal  = 0
 	Lesser = -1
 )
 
-var CompareFunctions = map[string]CompareDynamicRecord {
+var CompareFunctions = map[string]CompareDynamicRecord{
 	"agent_name": func(left *DynamicRecord, right *DynamicRecord, direction byte) int {
 		if r, hasNil := utils.CompareNil(left.Agent, right.Agent, direction); hasNil {
 			return r
@@ -358,6 +361,7 @@ var CompareFunctions = map[string]CompareDynamicRecord {
 
 // This is impossible value of NQM, because the packet >= 1000ms would be treated as loss packet
 const biggerValueOfNqm = 10240
+
 func compareIntWithNoData(
 	left int64, right int64, direction byte,
 ) int {

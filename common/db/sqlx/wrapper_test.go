@@ -1,11 +1,11 @@
 package sqlx
 
 import (
-	"github.com/jmoiron/sqlx"
 	"github.com/Cepave/open-falcon-backend/common/db"
+	"github.com/jmoiron/sqlx"
 
-	. "gopkg.in/check.v1"
 	_ "github.com/mattn/go-sqlite3"
+	. "gopkg.in/check.v1"
 )
 
 type TestWrapperSuite struct{}
@@ -21,9 +21,9 @@ func (suite *TestWrapperSuite) TestQueryRowxAndScanOfDbCtrl(c *C) {
 	dbCtrl.SqlxDb().MustExec("INSERT INTO pip_307(pi_id, pi_name) VALUES(62, 'Here-2')")
 
 	testedData := struct {
-		Id int
+		Id   int
 		Name string
-	} {}
+	}{}
 	dbCtrl.QueryRowxAndScan(
 		"SELECT * FROM pip_307 WHERE pi_name = 'Here-1'",
 		nil, &testedData.Id, &testedData.Name,
@@ -62,9 +62,9 @@ func (suite *TestWrapperSuite) TestQueryRowxAndStructScanOfDbCtrl(c *C) {
 	dbCtrl.SqlxDb().MustExec("INSERT INTO zoo_604(pi_id, pi_name) VALUES(62, 'Here-2')")
 
 	testedData := struct {
-		Id int `db:"pi_id"`
+		Id   int    `db:"pi_id"`
 		Name string `db:"pi_name"`
-	} {}
+	}{}
 	dbCtrl.QueryRowxAndStructScan(
 		&testedData,
 		"SELECT * FROM zoo_604 WHERE pi_name = 'Here-1'", nil,
@@ -105,10 +105,10 @@ func (suite *TestWrapperSuite) TestGetOfNamedStmt(c *C) {
 	)
 
 	testedData := struct {
-		Id int `db:"pi_id"`
+		Id   int    `db:"pi_id"`
 		Name string `db:"pi_name"`
-	} {}
-	stmtExt.Get(&testedData, map[string]interface{} { "name" : "Here-1" })
+	}{}
+	stmtExt.Get(&testedData, map[string]interface{}{"name": "Here-1"})
 
 	c.Logf("NamedStmt Get: %#v", testedData)
 	c.Assert(testedData.Id, Equals, 61)
@@ -128,9 +128,9 @@ func (suite *TestWrapperSuite) TestGetOfStmt(c *C) {
 	)
 
 	testedData := struct {
-		Id int `db:"pi_id"`
+		Id   int    `db:"pi_id"`
 		Name string `db:"pi_name"`
-	} {}
+	}{}
 	stmtExt.Get(&testedData, "Here-1")
 
 	c.Logf("Stmt Get: %#v", testedData)
@@ -148,6 +148,7 @@ func (suite *TestWrapperSuite) TestMapScanOrNoRowOnRowExt(c *C) {
 
 	c.Assert(testedRowx.MapScanOrNoRow(nil), Equals, false)
 }
+
 // Tests the scanning(on value) for RowExt upon no row case
 func (suite *TestWrapperSuite) TestScanOrNoRowOnRowExt(c *C) {
 	dbCtrl := buildDbCtrl(c)
@@ -158,6 +159,7 @@ func (suite *TestWrapperSuite) TestScanOrNoRowOnRowExt(c *C) {
 
 	c.Assert(testedRowx.ScanOrNoRow(), Equals, false)
 }
+
 // Tests the scanning(on slice) for RowExt upon no row case
 func (suite *TestWrapperSuite) TestSliceScanOrNoRowOnRowExt(c *C) {
 	dbCtrl := buildDbCtrl(c)
@@ -169,6 +171,7 @@ func (suite *TestWrapperSuite) TestSliceScanOrNoRowOnRowExt(c *C) {
 	_, hasRow := testedRowx.SliceScanOrNoRow()
 	c.Assert(hasRow, Equals, false)
 }
+
 // Tests the scanning(on struct) for RowExt upon no row case
 func (suite *TestWrapperSuite) TestStructScanOrNoRowOnRowExt(c *C) {
 	dbCtrl := buildDbCtrl(c)
@@ -177,10 +180,10 @@ func (suite *TestWrapperSuite) TestStructScanOrNoRowOnRowExt(c *C) {
 
 	testedRowx := dbCtrl.QueryRowxExt("SELECT * FROM kcst_8871 WHERE pi_id = 981")
 
-	sampleValue := &struct{
-		Id int `db:"pi_id"`
+	sampleValue := &struct {
+		Id   int    `db:"pi_id"`
 		Name string `db:"pi_name"`
-	} {}
+	}{}
 	c.Assert(testedRowx.StructScanOrNoRow(sampleValue), Equals, false)
 }
 

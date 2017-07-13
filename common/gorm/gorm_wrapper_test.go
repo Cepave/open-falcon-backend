@@ -1,12 +1,12 @@
 package gorm
 
 import (
-	"testing"
 	"database/sql"
-	"github.com/jinzhu/gorm"
 	"github.com/Cepave/open-falcon-backend/common/db"
-	. "gopkg.in/check.v1"
+	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
+	. "gopkg.in/check.v1"
+	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -72,7 +72,7 @@ func (suite *TestGormSuite) TestScanRows(c *C) {
 	rows := dbExt.Rows()
 
 	type sampleRow struct {
-		Id int `gorm:"column:sr_id"`
+		Id   int    `gorm:"column:sr_id"`
 		Name string `gorm:"column:sr_name"`
 	}
 
@@ -102,7 +102,7 @@ func (suite *TestGormSuite) TestIterateRows(c *C) {
 	dbExt := ToDefaultGormDbExt(dbQuery)
 
 	var numberOfRows int = 0
-	dbExt.IterateRows(db.RowsCallbackFunc(func (rows *sql.Rows) db.IterateControl {
+	dbExt.IterateRows(db.RowsCallbackFunc(func(rows *sql.Rows) db.IterateControl {
 		numberOfRows++
 		return db.IterateContinue
 	}))
@@ -132,7 +132,7 @@ func (suite *TestGormSuite) TestInTx(c *C) {
 	gormExtQuery := ToDefaultGormDbExt(dbQuery)
 
 	var numberOfRows int = 0
-	gormExtQuery.IterateRows(db.RowsCallbackFunc(func (rows *sql.Rows) db.IterateControl {
+	gormExtQuery.IterateRows(db.RowsCallbackFunc(func(rows *sql.Rows) db.IterateControl {
 		numberOfRows++
 		return db.IterateContinue
 	}))
@@ -154,7 +154,7 @@ func (suite *TestGormSuite) TestIfRecordNotFound(c *C) {
 
 	idValue := struct {
 		Id int `gorm:"column:ks_id"`
-	} {}
+	}{}
 	gormExt := ToDefaultGormDbExt(
 		ormdb.Table("king_761").Select("ks_id").Where("ks_name = 'oksdfsf'").
 			Scan(&idValue),
@@ -164,7 +164,7 @@ func (suite *TestGormSuite) TestIfRecordNotFound(c *C) {
 }
 
 func buildGormDb(c *C) *gorm.DB {
-	db, err := gorm.Open("sqlite3", ":memory:");
+	db, err := gorm.Open("sqlite3", ":memory:")
 
 	c.Assert(err, IsNil)
 

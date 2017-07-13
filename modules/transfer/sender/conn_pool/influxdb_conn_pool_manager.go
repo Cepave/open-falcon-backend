@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	influxdb "github.com/influxdata/influxdb/client/v2"
 	cmodel "github.com/open-falcon/common/model"
+	log "github.com/sirupsen/logrus"
 )
 
 // InfluxdbClient, 要实现io.Closer接口

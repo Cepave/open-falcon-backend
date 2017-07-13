@@ -9,17 +9,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var paramGetters = map[string]paramGetter {
-	"query": queryGetterImpl(true),
-	"cookie": cookieGetterImpl(true),
-	"param": uriParamGetterImpl(true),
-	"header": headerGetterImpl(true),
-	"form": formGetterImpl(true),
-	"req": reqGetterImpl(true),
+var paramGetters = map[string]paramGetter{
+	"query":     queryGetterImpl(true),
+	"cookie":    cookieGetterImpl(true),
+	"param":     uriParamGetterImpl(true),
+	"header":    headerGetterImpl(true),
+	"form":      formGetterImpl(true),
+	"req":       reqGetterImpl(true),
 	"basicAuth": basicAuthImpl(true),
 }
 
-var paramCheckers = map[string]boolParamChecker {
+var paramCheckers = map[string]boolParamChecker{
 	"query": func(context *gin.Context, paramName string) bool {
 		return isStringViable(context.Query(paramName))
 	},
@@ -56,6 +56,7 @@ func isStringViable(v string) bool {
 var keyGetter = keyGetterImpl(true)
 
 type basicAuthImpl bool
+
 func (b basicAuthImpl) getParam(context *gin.Context, paramName string, defaultValue string) string {
 	username, password, ok := context.Request.BasicAuth()
 
@@ -73,10 +74,11 @@ func (b basicAuthImpl) getParam(context *gin.Context, paramName string, defaultV
 	panic(fmt.Sprintf("Unknown param name for BasicAuth: [%s]", paramName))
 }
 func (b basicAuthImpl) getParamAsArray(context *gin.Context, paramName string, defaultValue []string) []string {
-	return []string{ b.getParam(context, paramName, "") }
+	return []string{b.getParam(context, paramName, "")}
 }
 
 type keyGetterImpl bool
+
 func (k keyGetterImpl) getValue(context *gin.Context, key string, notExistsValue interface{}) interface{} {
 	v, ok := context.Get(key)
 	if !ok {
@@ -92,6 +94,7 @@ type paramGetter interface {
 }
 
 type formGetterImpl bool
+
 func (f formGetterImpl) getParam(context *gin.Context, paramName string, defaultValue string) string {
 	v, _ := context.GetPostForm(paramName)
 	if v == "" {
@@ -120,6 +123,7 @@ func (f formGetterImpl) getParamAsArray(context *gin.Context, paramName string, 
 }
 
 type headerGetterImpl bool
+
 func (h headerGetterImpl) getParam(context *gin.Context, paramName string, defaultValue string) string {
 	v := context.Request.Header.Get(paramName)
 	if v == "" {
@@ -140,6 +144,7 @@ func (h headerGetterImpl) getParamAsArray(context *gin.Context, paramName string
 }
 
 type queryGetterImpl bool
+
 func (g queryGetterImpl) getParam(context *gin.Context, paramName string, defaultValue string) string {
 	v := context.Query(paramName)
 	if v == "" {
@@ -158,6 +163,7 @@ func (g queryGetterImpl) getParamAsArray(context *gin.Context, paramName string,
 }
 
 type cookieGetterImpl bool
+
 func (c cookieGetterImpl) getParam(context *gin.Context, paramName string, defaultValue string) string {
 	v, _ := context.Cookie(paramName)
 
@@ -174,10 +180,11 @@ func (c cookieGetterImpl) getParamAsArray(context *gin.Context, paramName string
 		return defaultValue
 	}
 
-	return []string { v }
+	return []string{v}
 }
 
 type uriParamGetterImpl bool
+
 func (u uriParamGetterImpl) getParam(context *gin.Context, paramName string, defaultValue string) string {
 	v := context.Param(paramName)
 	if v == "" {
@@ -192,58 +199,59 @@ func (u uriParamGetterImpl) getParamAsArray(context *gin.Context, paramName stri
 		return defaultValue
 	}
 
-	return []string { v }
+	return []string{v}
 }
 
-var defReqName = map[string]bool {
-	"ClientIp": true,
-	"ContentType": true,
-	"Referer": true,
-	"UserAgent": true,
-	"Method": true,
-	"Url": true,
-	"Proto": true,
-	"ProtoMajor": true,
-	"ProtoMinor": true,
+var defReqName = map[string]bool{
+	"ClientIp":      true,
+	"ContentType":   true,
+	"Referer":       true,
+	"UserAgent":     true,
+	"Method":        true,
+	"Url":           true,
+	"Proto":         true,
+	"ProtoMajor":    true,
+	"ProtoMinor":    true,
 	"ContentLength": true,
-	"Host": true,
-	"RemoteAddr": true,
-	"RequestURI": true,
+	"Host":          true,
+	"RemoteAddr":    true,
+	"RequestURI":    true,
 }
 
 type reqGetterImpl bool
+
 func (u reqGetterImpl) getParam(context *gin.Context, paramName string, defaultValue string) string {
 	v := ""
 
 	switch paramName {
-		case "ClientIp":
-			v = context.ClientIP()
-		case "ContentType":
-			v = context.ContentType()
-		case "Referer":
-			v = context.Request.Referer()
-		case "UserAgent":
-			v = context.Request.UserAgent()
-		case "Method":
-			v = context.Request.Method
-		case "Url":
-			v = context.Request.URL.String()
-		case "Proto":
-			v = context.Request.Proto
-		case "ProtoMajor":
-			v = strconv.FormatInt(int64(context.Request.ProtoMajor), 10)
-		case "ProtoMinor":
-			v = strconv.FormatInt(int64(context.Request.ProtoMinor), 10)
-		case "ContentLength":
-			v = strconv.FormatInt(context.Request.ContentLength, 10)
-		case "Host":
-			v = context.Request.Host
-		case "RemoteAddr":
-			v = context.Request.RemoteAddr
-		case "RequestURI":
-			v = context.Request.RequestURI
-		default:
-			panic(fmt.Sprintf("Unknown name on request: [%s]", paramName))
+	case "ClientIp":
+		v = context.ClientIP()
+	case "ContentType":
+		v = context.ContentType()
+	case "Referer":
+		v = context.Request.Referer()
+	case "UserAgent":
+		v = context.Request.UserAgent()
+	case "Method":
+		v = context.Request.Method
+	case "Url":
+		v = context.Request.URL.String()
+	case "Proto":
+		v = context.Request.Proto
+	case "ProtoMajor":
+		v = strconv.FormatInt(int64(context.Request.ProtoMajor), 10)
+	case "ProtoMinor":
+		v = strconv.FormatInt(int64(context.Request.ProtoMinor), 10)
+	case "ContentLength":
+		v = strconv.FormatInt(context.Request.ContentLength, 10)
+	case "Host":
+		v = context.Request.Host
+	case "RemoteAddr":
+		v = context.Request.RemoteAddr
+	case "RequestURI":
+		v = context.Request.RequestURI
+	default:
+		panic(fmt.Sprintf("Unknown name on request: [%s]", paramName))
 	}
 
 	v = strings.TrimSpace(v)
@@ -259,7 +267,7 @@ func (u reqGetterImpl) getParamAsArray(context *gin.Context, paramName string, d
 		return defaultValue
 	}
 
-	return []string { value }
+	return []string{value}
 }
 
 type boolParamChecker func(context *gin.Context, paramName string) bool

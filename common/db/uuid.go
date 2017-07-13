@@ -1,8 +1,8 @@
 package db
 
 import (
-	"github.com/satori/go.uuid"
 	"database/sql/driver"
+	"github.com/satori/go.uuid"
 )
 
 // Uses the []byte for database/sql/driver.Value

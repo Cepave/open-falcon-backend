@@ -2,13 +2,13 @@ package http
 
 import (
 	"fmt"
-	"net/http"
-	httpT "github.com/Cepave/open-falcon-backend/common/testing/http"
-	t "github.com/Cepave/open-falcon-backend/modules/query/test"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	httpT "github.com/Cepave/open-falcon-backend/common/testing/http"
+	t "github.com/Cepave/open-falcon-backend/modules/query/test"
 	sjson "github.com/bitly/go-simplejson"
 	. "gopkg.in/check.v1"
+	"net/http"
 )
 
 type TestNqmItSuite struct{}
@@ -20,16 +20,16 @@ var httpClientConfig = httpT.NewHttpClientConfigByFlag()
 // Tests the building of ICMP query
 func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
 	testCases := []*struct {
-		metricFilter string
+		metricFilter   string
 		expectedStatus int
-	} {
-		{ "$min >= 55", http.StatusOK },
-		{ "$min >= invalid", http.StatusBadRequest },
+	}{
+		{"$min >= 55", http.StatusOK},
+		{"$min >= invalid", http.StatusBadRequest},
 	}
 
 	var loadFunc = func(metricFilter string, expectedStatus int) *sjson.Json {
 		jsonBody := ojson.RawJsonForm(fmt.Sprintf(
-			 // Uses default conditions
+			// Uses default conditions
 			`
 			{
 				"filters": {
@@ -53,7 +53,7 @@ func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedJson := loadFunc(testCase.metricFilter, testCase.expectedStatus)
 		testedJsonString, _ := testedJson.MarshalJSON()
@@ -70,20 +70,21 @@ func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
 		}
 	}
 }
+
 // Tests the getting of content for a query by UUID
 func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
 	testCases := []*struct {
-		sampleUuid string
+		sampleUuid     string
 		expectedStatus int
-	} {
-		{ "1B57D5EA-A02D-4942-871E-C9AFC2916BB1", http.StatusOK },
-		{ "046084CD-05F7-09C8-09E9-0209CF8D0543", http.StatusNotFound },
-		{ "046084CD-05F7-09C8-09E9-0209CF8D0543", http.StatusNotFound }, // Repeats the non-existing query
-		{ "zzoo--cc", http.StatusNotFound },
+	}{
+		{"1B57D5EA-A02D-4942-871E-C9AFC2916BB1", http.StatusOK},
+		{"046084CD-05F7-09C8-09E9-0209CF8D0543", http.StatusNotFound},
+		{"046084CD-05F7-09C8-09E9-0209CF8D0543", http.StatusNotFound}, // Repeats the non-existing query
+		{"zzoo--cc", http.StatusNotFound},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		/**
 		 * Calls RESTful service and retrieve data
@@ -117,7 +118,7 @@ func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
 			 * Asserts the 404 result
 			 */
 			c.Assert(jsonBody.Get("error_code").MustInt(), Equals, 1, comment)
-			c.Assert(jsonBody.Get("uri").MustString(), Matches, ".*" + testCase.sampleUuid + ".*", comment)
+			c.Assert(jsonBody.Get("uri").MustString(), Matches, ".*"+testCase.sampleUuid+".*", comment)
 			// :~)
 		default:
 			c.Fail()

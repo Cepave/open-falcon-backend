@@ -2,9 +2,9 @@ package cron
 
 import (
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 )
 
 func BuildCommonSMSContent(event *model.Event) string {
@@ -29,8 +29,8 @@ func BuildCommonMailContent(event *model.Event) string {
 	link := g.Link(event)
 	tdtl := `style="border: 1px solid #ccc; background: #FFF4F4;"`
 	tdtr := `style="border: 1px solid #ccc; border-left: none;"`
-	tdl  := `style="border: 1px solid #ccc; border-top:  none; background: #FFF4F4;"`
-	tdr  := `style="border: 1px solid #ccc; border-top:  none; border-left: none;"`
+	tdl := `style="border: 1px solid #ccc; border-top:  none; background: #FFF4F4;"`
+	tdr := `style="border: 1px solid #ccc; border-top:  none; border-left: none;"`
 	return fmt.Sprintf(
 		`<html><head><meta charset="utf-8"></head>
 		<body>
@@ -79,7 +79,7 @@ func BuildCommonMailContent(event *model.Event) string {
 		tdl, tdr, event.Endpoint,
 		tdl, tdr, event.Metric(),
 		tdl, tdr, utils.SortedTags(event.PushedTags),
-		tdl, event.Func(), tdr, utils.ReadableFloat(event.LeftValue), event.Operator(),	utils.ReadableFloat(event.RightValue()),
+		tdl, event.Func(), tdr, utils.ReadableFloat(event.LeftValue), event.Operator(), utils.ReadableFloat(event.RightValue()),
 		tdl, tdr, event.Note(),
 		tdl, tdr, event.MaxStep(),
 		tdl, tdr, event.CurrentStep,

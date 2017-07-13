@@ -9,15 +9,15 @@ import (
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"github.com/jmoiron/sqlx"
 
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	t "github.com/Cepave/open-falcon-backend/common/textbuilder"
 	tsql "github.com/Cepave/open-falcon-backend/common/textbuilder/sql"
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
 type ProcessGroupTagFunc func(tx *sqlx.Tx, nameOfGroupTag string)
 
 var orderByDialectForGroupTag = model.NewSqlOrderByDialect(
-	map[string]string {
+	map[string]string{
 		"name": "gt_name",
 	},
 )
@@ -26,12 +26,12 @@ func ListGroupTags(name string, p *model.Paging) []*owlModel.GroupTag {
 	var result = make([]*owlModel.GroupTag, 0)
 
 	if len(p.OrderBy) == 0 {
-		p.OrderBy = append(p.OrderBy, &model.OrderByEntity{ "name", utils.Ascending })
+		p.OrderBy = append(p.OrderBy, &model.OrderByEntity{"name", utils.Ascending})
 	}
 
 	var sqlParams = make([]interface{}, 0)
 	if name != "" {
-		sqlParams = append(sqlParams, name + "%")
+		sqlParams = append(sqlParams, name+"%")
 	}
 
 	txFunc := sqlxExt.TxCallbackFunc(func(tx *sqlx.Tx) db.TxFinale {

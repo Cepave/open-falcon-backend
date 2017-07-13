@@ -14,7 +14,7 @@ import (
 var _ = Describe("Tests putting/draining object on queue(single thread)", func() {
 	type sampleCar struct {
 		name string
-		age int
+		age  int
 	}
 
 	DescribeTable("Testing different types:",
@@ -22,11 +22,11 @@ var _ = Describe("Tests putting/draining object on queue(single thread)", func()
 			testedQueue := New()
 			testedQueue.Enqueue(input)
 
-			drainResult := testedQueue.DrainNWithDuration(&Config{ Num:10 })
+			drainResult := testedQueue.DrainNWithDuration(&Config{Num: 10})
 			Expect(drainResult).To(HaveLen(1))
 			Expect(drainResult[0]).To(Equal(input))
 		},
-		Entry("struct value", &sampleCar { "GT-210", 3 }),
+		Entry("struct value", &sampleCar{"GT-210", 3}),
 		Entry("primitive value", 123),
 	)
 })
@@ -39,11 +39,11 @@ var _ = DescribeTable("Tests draining objects(with correct sequence)(single thre
 		}
 		Expect(testedQueue.DrainNWithDurationByType(&Config{Num: num}, int(0))).To(Equal(expected))
 	},
-	Entry("take 2 from a queue of 3 elements", []int{ 1, 2, 3 }, 2, []int{ 1, 2 }),
-	Entry("take 3 from a queue of 3 elements", []int{ 37, 91, 3 }, 3, []int{ 37, 91, 3 }),
-	Entry("take 4 from a queue of 3 elements", []int{ 65, 33, 44 }, 4, []int{ 65, 33, 44 }),
+	Entry("take 2 from a queue of 3 elements", []int{1, 2, 3}, 2, []int{1, 2}),
+	Entry("take 3 from a queue of 3 elements", []int{37, 91, 3}, 3, []int{37, 91, 3}),
+	Entry("take 4 from a queue of 3 elements", []int{65, 33, 44}, 4, []int{65, 33, 44}),
 	Entry("take 3 from an empty queue", []int{}, 3, []int{}),
-	Entry("take 0 from a queue of 3 elements", []int{ 91, 92 }, 0, []int{}),
+	Entry("take 0 from a queue of 3 elements", []int{91, 92}, 0, []int{}),
 	Entry("take 0 from an empty queue", []int{}, 0, []int{}),
 )
 
@@ -96,7 +96,7 @@ var _ = Describe("Tests DrainNWithDuration() by multiple go-routines(consumer)",
 
 		numberOfDrainedElements := int32(0)
 		b.Time("runtime", func() {
-			config := &Config{ Num: drainingBatch }
+			config := &Config{Num: drainingBatch}
 
 			for i := 0; i < numberOfConsumers; i++ {
 				wg.Add(1)
@@ -160,21 +160,21 @@ var _ = Describe("Tests draining before enqueuing(with waiting)", func() {
 		// If the lock is kept holding by draining, the draining should get only 2 elements.
 		Expect(testedResult).To(HaveLen(3))
 		// Asserts that the wating has occurred
-		Expect(waitingTimeOfDraining).To(BeNumerically(">=", 1 * time.Second))
+		Expect(waitingTimeOfDraining).To(BeNumerically(">=", 1*time.Second))
 	})
 })
 
 var _ = Describe("Tests the type conversion", func() {
 	type myFoot struct {
-		color string
+		color  string
 		length int
 	}
 
 	It("Type conversion", func() {
 		testedQueue := New()
-		testedQueue.Enqueue(&myFoot{ "blue", 331 })
+		testedQueue.Enqueue(&myFoot{"blue", 331})
 
-		testedResult := testedQueue.DrainNWithDurationByType(&Config{ Num: 1 }, &myFoot{}).([]*myFoot)
+		testedResult := testedQueue.DrainNWithDurationByType(&Config{Num: 1}, &myFoot{}).([]*myFoot)
 		Expect(testedResult).To(HaveLen(1))
 	})
 })

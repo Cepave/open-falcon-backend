@@ -123,25 +123,25 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	yesterday := ojson.JsonTime(time.Now().Add(-24 * time.Hour))
 	DescribeTable("for newly inserted agents", func(input ojson.JsonTime) {
 		reqs := []*model.NqmAgentHeartbeatRequest{
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-1@201.3.116.1",
 				Hostname:     "ct-255-1",
 				IpAddress:    ojson.NewIP("201.3.116.1"),
 				Timestamp:    ojson.JsonTime(input),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-2@201.3.116.2",
 				Hostname:     "ct-255-2",
 				IpAddress:    ojson.NewIP("201.3.116.2"),
 				Timestamp:    ojson.JsonTime(input),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-3@201.4.23.3",
 				Hostname:     "ct-255-3",
 				IpAddress:    ojson.NewIP("201.4.23.3"),
 				Timestamp:    ojson.JsonTime(input),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-63-1@201.77.23.3",
 				Hostname:     "ct-63-1",
 				IpAddress:    ojson.NewIP("201.77.23.3"),
@@ -163,25 +163,25 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	earlierTime := ojson.JsonTime(time.Now().Add(-480 * time.Hour))
 	DescribeTable("for existent agents", func(input ojson.JsonTime, expected ojson.JsonTime) {
 		init := []*model.NqmAgentHeartbeatRequest{
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-1@201.3.116.1",
 				Hostname:     "ct-255-1",
 				IpAddress:    ojson.NewIP("201.3.116.1"),
 				Timestamp:    ojson.JsonTime(existentTime),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-2@201.3.116.2",
 				Hostname:     "ct-255-2",
 				IpAddress:    ojson.NewIP("201.3.116.2"),
 				Timestamp:    ojson.JsonTime(existentTime),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-3@201.4.23.3",
 				Hostname:     "ct-255-3",
 				IpAddress:    ojson.NewIP("201.4.23.3"),
 				Timestamp:    ojson.JsonTime(existentTime),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-63-1@201.77.23.3",
 				Hostname:     "ct-63-1",
 				IpAddress:    ojson.NewIP("201.77.23.3"),
@@ -191,25 +191,25 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		UpdateNqmAgentHeartbeat(init)
 
 		reqs := []*model.NqmAgentHeartbeatRequest{
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-1@201.3.116.1",
 				Hostname:     "ct-255-1",
 				IpAddress:    ojson.NewIP("201.3.116.1"),
 				Timestamp:    ojson.JsonTime(input),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-2@201.3.116.2",
 				Hostname:     "ct-255-2",
 				IpAddress:    ojson.NewIP("201.3.116.2"),
 				Timestamp:    ojson.JsonTime(input),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-255-3@201.4.23.3",
 				Hostname:     "ct-255-3",
 				IpAddress:    ojson.NewIP("201.4.23.3"),
 				Timestamp:    ojson.JsonTime(input),
 			},
-			&model.NqmAgentHeartbeatRequest{
+			{
 				ConnectionId: "ct-63-1@201.77.23.3",
 				Hostname:     "ct-63-1",
 				IpAddress:    ojson.NewIP("201.77.23.3"),

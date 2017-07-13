@@ -14,10 +14,11 @@ import (
 var ChannelEquals = channelEquals(true)
 
 type channelEquals bool
+
 func (c channelEquals) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: "ChannelEquals",
-		Params: []string{ "obtained", "expected" },
+	return &check.CheckerInfo{
+		Name:   "ChannelEquals",
+		Params: []string{"obtained", "expected"},
 	}
 }
 func (c channelEquals) Check(params []interface{}, names []string) (bool, string) {

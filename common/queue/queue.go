@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Cepave/open-falcon-backend/common/utils"
 	or "github.com/Cepave/open-falcon-backend/common/reflect"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 type Config struct {
@@ -22,7 +22,7 @@ type Queue struct {
 
 func New() *Queue {
 	return &Queue{
-		l: list.New(),
+		l:     list.New(),
 		mutex: &sync.Mutex{},
 	}
 }
@@ -90,7 +90,7 @@ func (q *Queue) dequeueN(num int) []interface{} {
 
 	elems := make([]interface{}, 0, num)
 	for i := 0; i < num; i++ {
-		e := q.l.Front();
+		e := q.l.Front()
 		if e == nil {
 			break
 		}

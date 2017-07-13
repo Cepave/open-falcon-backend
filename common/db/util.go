@@ -3,10 +3,10 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"regexp"
-	"strings"
-	"strconv"
 	csc "github.com/Cepave/open-falcon-backend/common/strconv"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 var ipV4RegExp = regexp.MustCompile("^(?:[0-9]{1,3})(?:\\.[0-9]{1,3})?(?:\\.[0-9]{1,3})?(?:\\.[0-9]{1,3})?$")

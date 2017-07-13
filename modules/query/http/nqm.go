@@ -9,20 +9,20 @@ import (
 	"time"
 
 	"github.com/bitly/go-simplejson"
+	"github.com/gin-gonic/gin"
 	"github.com/juju/errors"
 	"github.com/satori/go.uuid"
-	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/validator.v9"
 
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	ginmvc "github.com/Cepave/open-falcon-backend/common/gin/mvc"
-	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 
-	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
-	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
 	metricDsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/metric_parser"
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
+	"github.com/Cepave/open-falcon-backend/modules/query/nqm"
 )
 
 var nqmService *nqm.ServiceController
@@ -37,7 +37,7 @@ func configNqmRoutes() {
 }
 
 func getGinRouter() *gin.Engine {
-	engine := ogin.NewDefaultJsonEngine(&ogin.GinConfig{ Mode: gin.ReleaseMode })
+	engine := ogin.NewDefaultJsonEngine(&ogin.GinConfig{Mode: gin.ReleaseMode})
 
 	mvcConfig := ginmvc.NewDefaultMvcConfig()
 	mvcConfig.Validator.RegisterStructValidation(model.ValidateTimeWithUnit, model.TimeWithUnit{})
@@ -113,8 +113,8 @@ func outputCompondReportOfIcmp(context *gin.Context) {
 	 */
 	paging := ogin.PagingByHeader(
 		context,
-		&commonModel.Paging {
-			Size: 500,
+		&commonModel.Paging{
+			Size:     500,
 			Position: 1,
 		},
 	)
@@ -132,11 +132,11 @@ func loadCompoundQueryByUuid(context *gin.Context, queryId string, errorFormatte
 	var showNotFound = func() {
 		context.JSON(
 			http.StatusNotFound,
-			map[string] interface{} {
-			  "http_status": http.StatusNotFound,
-			  "uri": fmt.Sprintf(errorFormatter, queryId),
-			  "error_code": 1,
-			  "error_message": "Query id cannot be fetched",
+			map[string]interface{}{
+				"http_status":   http.StatusNotFound,
+				"uri":           fmt.Sprintf(errorFormatter, queryId),
+				"error_code":    1,
+				"error_message": "Query id cannot be fetched",
 			},
 		)
 	}
@@ -156,8 +156,8 @@ func loadCompoundQueryByUuid(context *gin.Context, queryId string, errorFormatte
 }
 
 type dslError struct {
-	ErrorCode int `json:"error_code"`
-	Message string `json:"error_message"`
+	ErrorCode int    `json:"error_code"`
+	Message   string `json:"error_message"`
 }
 
 func (e dslError) Error() string {
@@ -177,7 +177,7 @@ func buildCompoundQueryOfIcmp(context *gin.Context) (*model.CompoundQuery, error
 
 	_, parseError := metricDsl.ParseToMetricFilter(query.Filters.Metrics)
 	if parseError != nil {
-		return nil, dslError {
+		return nil, dslError{
 			1, errors.Annotate(parseError, "Parse METRIC DSL").Error(),
 		}
 	}
@@ -187,14 +187,14 @@ func buildCompoundQueryOfIcmp(context *gin.Context) (*model.CompoundQuery, error
 
 type resultWithDsl struct {
 	queryParams *dsl.QueryParams
-	resultData interface{}
+	resultData  interface{}
 }
 
 func (result *resultWithDsl) MarshalJSON() ([]byte, error) {
 	jsonObject := simplejson.New()
 
-	jsonObject.SetPath([]string{ "dsl", "start_time" }, result.queryParams.StartTime.Unix())
-	jsonObject.SetPath([]string{ "dsl", "end_time" }, result.queryParams.EndTime.Unix())
+	jsonObject.SetPath([]string{"dsl", "start_time"}, result.queryParams.StartTime.Unix())
+	jsonObject.SetPath([]string{"dsl", "end_time"}, result.queryParams.EndTime.Unix())
 	jsonObject.Set("result", result.resultData)
 
 	return jsonObject.MarshalJSON()
@@ -224,7 +224,7 @@ func listIcmpByProvinces(context *gin.Context) {
 		http.StatusOK,
 		&resultWithDsl{
 			queryParams: dslParams,
-			resultData: nqmService.ListByProvinces(dslParams),
+			resultData:  nqmService.ListByProvinces(dslParams),
 		},
 	)
 }
@@ -239,34 +239,33 @@ func listIcmpByTargetsForAProvince(context *gin.Context) {
 	dslParams.AgentFilter.MatchProvinces = make([]string, 0) // Ignores the province of agent
 
 	provinceId, _ := strconv.ParseInt(context.Param("province_id"), 10, 16)
-	dslParams.AgentFilterById.MatchProvinces = []int16 { int16(provinceId) } // Use the id as the filter of agent
+	dslParams.AgentFilterById.MatchProvinces = []int16{int16(provinceId)} // Use the id as the filter of agent
 
-	if agentId, parseErrForAgentId := strconv.ParseInt(context.Query("agent_id"), 10, 16)
-		parseErrForAgentId == nil {
-		dslParams.AgentFilterById.MatchIds = []int32 { int32(agentId) } // Set the filter by agent's id
-	} else if cityId, parseErrForCityId := strconv.ParseInt(context.Query("city_id_of_agent"), 10, 16)
-		parseErrForCityId == nil {
-		dslParams.AgentFilterById.MatchCities = []int16 { int16(cityId) } // Set the filter by city's id
+	if agentId, parseErrForAgentId := strconv.ParseInt(context.Query("agent_id"), 10, 16); parseErrForAgentId == nil {
+		dslParams.AgentFilterById.MatchIds = []int32{int32(agentId)} // Set the filter by agent's id
+	} else if cityId, parseErrForCityId := strconv.ParseInt(context.Query("city_id_of_agent"), 10, 16); parseErrForCityId == nil {
+		dslParams.AgentFilterById.MatchCities = []int16{int16(cityId)} // Set the filter by city's id
 	}
 
 	context.JSON(
 		http.StatusOK,
 		&resultWithDsl{
 			queryParams: dslParams,
-			resultData: nqmService.ListTargetsWithCityDetail(dslParams),
+			resultData:  nqmService.ListTargetsWithCityDetail(dslParams),
 		},
 	)
 }
 
 type jsonDslError struct {
-	Code int `json:"error_code"`
+	Code    int    `json:"error_code"`
 	Message string `json:"error_message"`
 }
+
 func outputDslError(context *gin.Context, err error) {
 	context.JSON(
 		http.StatusBadRequest,
-		&jsonDslError {
-			Code: 1,
+		&jsonDslError{
+			Code:    1,
 			Message: err.Error(),
 		},
 	)
@@ -274,8 +273,8 @@ func outputDslError(context *gin.Context, err error) {
 
 const (
 	defaultDaysForTimeRange = 7
-	after7Days = defaultDaysForTimeRange * 24 * time.Hour
-	before7Days = after7Days * -1
+	after7Days              = defaultDaysForTimeRange * 24 * time.Hour
+	before7Days             = after7Days * -1
 )
 
 // Process DSL and output error
@@ -289,10 +288,10 @@ func processDslAndOutputError(context *gin.Context, dslText string) (*dsl.QueryP
 	context.JSON(
 		http.StatusBadRequest,
 		&struct {
-			Code int `json:"error_code"`
+			Code    int    `json:"error_code"`
 			Message string `json:"error_message"`
-		} {
-			Code: 1,
+		}{
+			Code:    1,
 			Message: err.Error(),
 		},
 	)
@@ -337,7 +336,7 @@ func setupTimeRange(queryParams *dsl.QueryParams) {
 	if queryParams.StartTime.IsZero() && queryParams.EndTime.IsZero() {
 		now := time.Now()
 
-		queryParams.StartTime = now.Add(before7Days) // Include 7 days before
+		queryParams.StartTime = now.Add(before7Days)  // Include 7 days before
 		queryParams.EndTime = now.Add(24 * time.Hour) // Include today
 		return
 	}

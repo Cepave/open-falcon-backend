@@ -9,6 +9,7 @@ type TestGroupingSuite struct{}
 var _ = Suite(&TestGroupingSuite{})
 
 type sampleKey string
+
 func (k sampleKey) GetKey() interface{} {
 	return k
 }

@@ -19,7 +19,7 @@ func integerToAny(source interface{}, typeOfTarget reflect.Type) interface{} {
 // Converts 64 bits integer(unsigned) to 32 bits one
 func UintTo32(source []uint64) []uint32 {
 	if source == nil {
-		return nil;
+		return nil
 	}
 
 	convertedArray := integerToAny(source, TypeOfUint32)
@@ -77,11 +77,13 @@ func IntTo8(source []int64) []int8 {
 }
 
 type Int64Slice []int64
+
 func (s Int64Slice) Len() int           { return len(s) }
 func (s Int64Slice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s Int64Slice) Less(i, j int) bool { return s[i] < s[j] }
 
 type Uint64Slice []uint64
+
 func (s Uint64Slice) Len() int           { return len(s) }
 func (s Uint64Slice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s Uint64Slice) Less(i, j int) bool { return s[i] < s[j] }

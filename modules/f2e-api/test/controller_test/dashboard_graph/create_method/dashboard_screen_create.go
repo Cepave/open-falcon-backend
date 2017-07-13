@@ -11,10 +11,10 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	yaagGin "github.com/masato25/yaag/gin"
 	"github.com/masato25/yaag/yaag"
+	log "github.com/sirupsen/logrus"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/spf13/viper"
 	"github.com/tidwall/gjson"

@@ -1,11 +1,11 @@
 package vipercfg
 
 import (
-	"os"
 	"fmt"
-	"testing"
 	"github.com/spf13/pflag"
 	. "gopkg.in/check.v1"
+	"os"
+	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }

@@ -36,7 +36,7 @@ func StartIndexUpdateAllTask() {
 
 // 手动触发全量更新
 func UpdateAllIndex() {
-	for graphAddr, _ := range g.Config().Index.Cluster {
+	for graphAddr := range g.Config().Index.Cluster {
 		UpdateIndexOfOneGraph(graphAddr, "manual")
 	}
 }

@@ -27,7 +27,7 @@ func InByLen(column tb.TextGetter, arrayObject interface{}) tb.TextGetter {
 
 func sqlInImpl(column tb.TextGetter, list tb.TextList) tb.TextGetter {
 	return tb.Surrounding(
-		t.S(column.String() + " IN ( "),
+		t.S(column.String()+" IN ( "),
 		list.Post().Distill(tb.J[", "]),
 		t.S(")"),
 	)

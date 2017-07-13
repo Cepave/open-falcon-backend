@@ -1,9 +1,9 @@
 package ginkgo
 
 import (
-	"net/http"
 	ohttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	"io"
+	"net/http"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Tests MatchHttpStatus", func() {
-	resp := &http.Response{ StatusCode: 200 }
+	resp := &http.Response{StatusCode: 200}
 
 	DescribeTable("Matching result is true",
 		func(actual interface{}) {
@@ -20,7 +20,7 @@ var _ = Describe("Tests MatchHttpStatus", func() {
 		},
 		Entry("By *http.Response", resp),
 		Entry("By *testing/http.ResponseResult",
-			&ohttp.ResponseResult{ Response: resp },
+			&ohttp.ResponseResult{Response: resp},
 		),
 	)
 
@@ -30,7 +30,7 @@ var _ = Describe("Tests MatchHttpStatus", func() {
 		},
 		Entry("By *http.Response", resp),
 		Entry("By *testing/http.ResponseResult",
-			&ohttp.ResponseResult{ Response: resp },
+			&ohttp.ResponseResult{Response: resp},
 		),
 	)
 })
@@ -39,7 +39,7 @@ var _ = Describe("Tests MatchHttpBodyAsJson", func() {
 	sampleJson := `{ "name": "joe", "age": 33 }`
 
 	newResp := func() *http.Response {
-		return &http.Response{ Body: &stringCloser{ strings.NewReader(sampleJson) } }
+		return &http.Response{Body: &stringCloser{strings.NewReader(sampleJson)}}
 	}
 
 	DescribeTable("Matching result is true",
@@ -52,7 +52,7 @@ var _ = Describe("Tests MatchHttpBodyAsJson", func() {
 
 	DescribeTable("Matching result is false",
 		func(actual interface{}) {
-			Expect(actual).ToNot(MatchHttpBodyAsJson( `{ "name": "joe", "age": 34 }`))
+			Expect(actual).ToNot(MatchHttpBodyAsJson(`{ "name": "joe", "age": 34 }`))
 		},
 		Entry("By *http.Response", newResp()),
 		Entry("By *testing/http.ResponseResult", ohttp.NewResponseResultByResponse(newResp())),
@@ -62,6 +62,7 @@ var _ = Describe("Tests MatchHttpBodyAsJson", func() {
 type stringCloser struct {
 	io.Reader
 }
+
 func (s *stringCloser) Close() error {
 	return nil
 }

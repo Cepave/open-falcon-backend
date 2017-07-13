@@ -12,24 +12,24 @@ var _ = Suite(&DbUtilTestSuite{})
 // Tests the convertion for like clause(SQL) for binary string
 func (suite *DbUtilTestSuite) TestIpV4ToBytesForLike(c *C) {
 	testCases := []*struct {
-		sampleIp string
+		sampleIp       string
 		expectedResult []byte
-	} {
+	}{
 		{
 			"210.20.30.40",
-			[]byte {
+			[]byte{
 				0xD2, 0x14, 0x1E, 0x28, 0x25,
 			},
 		},
 		{
 			"10.20",
-			[]byte {
+			[]byte{
 				0x0A, 0x14, 0x25,
 			},
 		},
 		{
 			"10.37.12",
-			[]byte {
+			[]byte{
 				0x0A, 0x5C, 0x25, 0x0C, 0x25,
 			},
 		},
@@ -47,13 +47,13 @@ func (suite *DbUtilTestSuite) TestIpV4ToBytesForLike(c *C) {
 func (suite *DbUtilTestSuite) TestGroupedStringToStringArray(c *C) {
 	testCases := []*struct {
 		sampleSqlString sql.NullString
-		expectedResult []string
-	} {
+		expectedResult  []string
+	}{
 		{ // Normal data
 			sql.NullString{
 				"v1,v2,v3,v4", true,
 			},
-			[]string { "v1", "v2", "v3", "v4" },
+			[]string{"v1", "v2", "v3", "v4"},
 		},
 		{ // Null data
 			sql.NullString{
@@ -73,13 +73,13 @@ func (suite *DbUtilTestSuite) TestGroupedStringToStringArray(c *C) {
 func (suite *DbUtilTestSuite) TestGroupedStringToIntArray(c *C) {
 	testCases := []*struct {
 		sampleSqlString sql.NullString
-		expectedResult []int64
-	} {
+		expectedResult  []int64
+	}{
 		{ // Normal data
 			sql.NullString{
 				"34|-67|81|-91", true,
 			},
-			[]int64 { 34, -67, 81, -91 },
+			[]int64{34, -67, 81, -91},
 		},
 		{ // Null data
 			sql.NullString{
@@ -99,13 +99,13 @@ func (suite *DbUtilTestSuite) TestGroupedStringToIntArray(c *C) {
 func (suite *DbUtilTestSuite) TestGroupedStringToUintArray(c *C) {
 	testCases := []*struct {
 		sampleSqlString sql.NullString
-		expectedResult []uint64
-	} {
+		expectedResult  []uint64
+	}{
 		{ // Normal data
 			sql.NullString{
 				"22@167@33@42", true,
 			},
-			[]uint64 { 22, 167, 33, 42 },
+			[]uint64{22, 167, 33, 42},
 		},
 		{ // Null data
 			sql.NullString{

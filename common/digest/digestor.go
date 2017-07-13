@@ -7,6 +7,7 @@ type Digestor interface {
 
 // Function object for Digestor
 type DigestorFunc func() []byte
+
 func (f DigestorFunc) GetDigest() []byte {
 	return f()
 }

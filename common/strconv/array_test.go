@@ -11,7 +11,7 @@ var _ = DescribeTable("Split a string to INT array",
 		Expect(testedResult).To(Equal(expected))
 	},
 	Entry("Empty string to empty array of int64", "", []int64{}),
-	Entry("Viable to array of int64", "123#445#-987#-229", []int64{ 123, 445, -987, -229 }),
+	Entry("Viable to array of int64", "123#445#-987#-229", []int64{123, 445, -987, -229}),
 )
 
 var _ = DescribeTable("Split a string to UINT array",
@@ -20,5 +20,5 @@ var _ = DescribeTable("Split a string to UINT array",
 		Expect(testedResult).To(Equal(expected))
 	},
 	Entry("Empty string to empty array of int64", "", []uint64{}),
-	Entry("Empty string to empty array of uint64", "87#14#44", []uint64{ 87, 14, 44 }),
+	Entry("Empty string to empty array of uint64", "87#14#44", []uint64{87, 14, 44}),
 )

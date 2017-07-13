@@ -19,37 +19,37 @@ type TestQuerySuite struct{}
 var _ = Suite(&TestQuerySuite{})
 
 func buildSampleQuery(timeFilter *TimeFilter) *CompoundQuery {
-	return &CompoundQuery {
-		Filters: &CompoundQueryFilter {
+	return &CompoundQuery{
+		Filters: &CompoundQueryFilter{
 			Time: timeFilter,
 			Agent: &nqmModel.AgentFilter{
-				Name: []string { "CB1", "KC2" },
-				Hostname: []string { "GA3", "ZC0" },
-				IpAddress: []string { "10.9", "11.56.71.89" },
-				ConnectionId: []string { "AB@13", "AC@13" },
-				IspIds: []int16 { 11, 12 },
-				ProvinceIds: []int16 { 5, 8, 9 },
-				CityIds: []int16 { 31, 34 },
-				NameTagIds: []int16 { 10, 19 },
-				GroupTagIds: []int32 { 45, 51 },
+				Name:         []string{"CB1", "KC2"},
+				Hostname:     []string{"GA3", "ZC0"},
+				IpAddress:    []string{"10.9", "11.56.71.89"},
+				ConnectionId: []string{"AB@13", "AC@13"},
+				IspIds:       []int16{11, 12},
+				ProvinceIds:  []int16{5, 8, 9},
+				CityIds:      []int16{31, 34},
+				NameTagIds:   []int16{10, 19},
+				GroupTagIds:  []int32{45, 51},
 			},
 			Target: &nqmModel.TargetFilter{
-				Name: []string { "CB1", "KC2" },
-				Host: []string { "GA3", "ZC0" },
-				IspIds: []int16 { 13, 17 },
-				ProvinceIds: []int16 { 24, 39, 81 },
-				CityIds: []int16 { 14, 23 },
-				NameTagIds: []int16 { 39, 46 },
-				GroupTagIds: []int32 { 61, 63 },
+				Name:        []string{"CB1", "KC2"},
+				Host:        []string{"GA3", "ZC0"},
+				IspIds:      []int16{13, 17},
+				ProvinceIds: []int16{24, 39, 81},
+				CityIds:     []int16{14, 23},
+				NameTagIds:  []int16{39, 46},
+				GroupTagIds: []int32{61, 63},
 			},
 			Metrics: "$max > 100 or $min < 30",
 		},
-		Grouping: &QueryGrouping {
-			Agent: []string { AgentGroupingName, GroupingProvince },
-			Target: []string { GroupingIsp },
+		Grouping: &QueryGrouping{
+			Agent:  []string{AgentGroupingName, GroupingProvince},
+			Target: []string{GroupingIsp},
 		},
-		Output: &QueryOutput {
-			Metrics: []string { "min", "loss" },
+		Output: &QueryOutput{
+			Metrics: []string{"min", "loss"},
 		},
 	}
 }
@@ -57,7 +57,7 @@ func buildSampleQuery(timeFilter *TimeFilter) *CompoundQuery {
 // Tests the compression of query
 func (suite *TestQuerySuite) TestGetCompressedQuery(c *C) {
 	sampleQuery := buildSampleQuery(
-		&TimeFilter { ToNow: &TimeWithUnit{ Unit: TimeUnitHour, Value: 77 } },
+		&TimeFilter{ToNow: &TimeWithUnit{Unit: TimeUnitHour, Value: 77}},
 	)
 
 	compressedQuery := sampleQuery.GetCompressedQuery()
@@ -71,10 +71,10 @@ func (suite *TestQuerySuite) TestGetCompressedQuery(c *C) {
 // Tests the loading of filters.time
 func (suite *TestQuerySuite) TestUnmarshalSimpleJSONOfTimeFilter(c *C) {
 	testCases := []*struct {
-		jsonSource string
+		jsonSource            string
 		expectedTimeRangeType byte
-		expectedResult string
-	} {
+		expectedResult        string
+	}{
 		{
 			`{ "start_time": 8977123, "end_time": 19082711 }`,
 			TimeRangeAbsolute,
@@ -128,9 +128,9 @@ func (suite *TestQuerySuite) TestUnmarshalSimpleJSONOfTimeFilter(c *C) {
 // Tests the loading of filters.agent
 func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 	testCases := []*struct {
-		jsonSource string
+		jsonSource   string
 		expectedJson string
-	} {
+	}{
 		{
 			`{
 				"name": [ "G1", "C2", "K3", "G1"],
@@ -175,7 +175,7 @@ func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		filter := &CompoundQueryFilter{ Agent: &nqmModel.AgentFilter{} }
+		filter := &CompoundQueryFilter{Agent: &nqmModel.AgentFilter{}}
 		filter.loadFilterOfAgent(
 			ojson.UnmarshalToJson(testCase.jsonSource),
 		)
@@ -187,9 +187,9 @@ func (suite *TestQuerySuite) TestLoadFiltersOfAgent(c *C) {
 // Tests the loading of filters.target
 func (suite *TestQuerySuite) TestLoadFilterOfTarget(c *C) {
 	testCases := []*struct {
-		jsonSource string
+		jsonSource   string
 		expectedJson string
-	} {
+	}{
 		{
 			`{
 				"name": [ "G1", "C2", "K3", "G1"],
@@ -228,7 +228,7 @@ func (suite *TestQuerySuite) TestLoadFilterOfTarget(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		filter := &CompoundQueryFilter{ Target: &nqmModel.TargetFilter{} }
+		filter := &CompoundQueryFilter{Target: &nqmModel.TargetFilter{}}
 		filter.loadFilterOfTarget(
 			ojson.UnmarshalToJson(testCase.jsonSource),
 		)
@@ -240,12 +240,12 @@ func (suite *TestQuerySuite) TestLoadFilterOfTarget(c *C) {
 // Tests the loading of filters.metrics
 func (suite *TestQuerySuite) TestLoadFilterOfMetrics(c *C) {
 	testCases := []*struct {
-		sampleJson string
+		sampleJson     string
 		expectedResult string
-	} {
-		{ `{ "metrics": " $mAx > 20 aNd $min < 40 " }`, "$max > 20 and $min < 40", },
-		{ `{ "metrics": "" }`, "", },
-		{ `{}`, "", },
+	}{
+		{`{ "metrics": " $mAx > 20 aNd $min < 40 " }`, "$max > 20 and $min < 40"},
+		{`{ "metrics": "" }`, ""},
+		{`{}`, ""},
 	}
 
 	for i, testCase := range testCases {
@@ -263,21 +263,21 @@ func (suite *TestQuerySuite) TestLoadFilterOfMetrics(c *C) {
 
 // Tests the query of loading output
 func (suite *TestQuerySuite) TestLoadOutput(c *C) {
-	testCases := []*struct{
-		sampleJson string
+	testCases := []*struct {
+		sampleJson     string
 		expectedResult []string
-	} {
+	}{
 		{
 			`{ "metrics": [ "max", "no-such-1", "min", "avg" ] }`,
-			[]string { "max", "min", "avg" },
+			[]string{"max", "min", "avg"},
 		},
 		{
 			`{ "metrics": [] }`,
-			[]string {},
+			[]string{},
 		},
 		{ // No output property
 			`{}`,
-			[]string {},
+			[]string{},
 		},
 	}
 
@@ -297,14 +297,14 @@ func (suite *TestQuerySuite) TestLoadOutput(c *C) {
 // Tests the loading of grouping
 func (suite *TestQuerySuite) TestLoadGrouping(c *C) {
 	testCases := []*struct {
-		sampleJson string
-		expectedAgentGrouping []string
+		sampleJson             string
+		expectedAgentGrouping  []string
 		expectedTargetGrouping []string
-	} {
+	}{
 		{
 			`{ "agent": [ "isp", "province", "no-such-1" ], "target": [ "name_tag", "no-such-1" ] }`,
-			[]string{ "isp", "province" },
-			[]string{ "name_tag" },
+			[]string{"isp", "province"},
+			[]string{"name_tag"},
 		},
 		{
 			`{ "grouping": { "agent": [], "target": [] } }`,
@@ -338,29 +338,29 @@ func (suite *TestQuerySuite) TestPurifyNumberArrayOfJson(c *C) {
 	c.Assert(purifyNumberArrayOfJson(nil, utils.TypeOfUint8).([]uint8), DeepEquals, []uint8{})
 
 	testCases := []*struct {
-		jsonSource string
-		targetType reflect.Type
+		jsonSource     string
+		targetType     reflect.Type
 		expectedResult interface{}
-	} {
+	}{
 		{
 			"null",
 			utils.TypeOfInt8,
-			[]int8 {},
+			[]int8{},
 		},
 		{
 			`[ 38, 29, 40, 38, 29 ]`,
 			utils.TypeOfInt8,
-			[]int8 { 29, 38, 40 },
+			[]int8{29, 38, 40},
 		},
 		{
 			`[ 78781, 10981, 78781 ]`,
 			utils.TypeOfUint64,
-			[]uint64 { 10981, 78781 },
+			[]uint64{10981, 78781},
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := purifyNumberArrayOfJson(
 			ojson.UnmarshalToJson(testCase.jsonSource),
@@ -373,25 +373,25 @@ func (suite *TestQuerySuite) TestPurifyNumberArrayOfJson(c *C) {
 // Tests the purifying for array of strings(by doamin)
 func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForDomain(c *C) {
 	testCases := []*struct {
-		jsonSource string
+		jsonSource   string
 		sampleDomain map[string]bool
 		expectedData []string
-	} {
+	}{
 		{
 			`[ "c9", " A1 ", "  ", "no-1", "C1", "c2", "no-3", "A1", " C1 " ]`,
-			map[string]bool { "a1": true, "c1": true, "c9": true },
-			[]string{ "c9", "a1", "c1" },
+			map[string]bool{"a1": true, "c1": true, "c9": true},
+			[]string{"c9", "a1", "c1"},
 		},
-		{ `[ "A1", "A2" ]`, map[string]bool {}, []string{}, },
-		{ `[ "A1", "A2" ]`, nil, []string{}, },
-		{ `[ "  ", "" ]`, map[string]bool { "k1": true }, []string{}, },
-		{ "", map[string]bool { "g1": true }, []string{}, },
-		{ "", nil, []string{}, },
-		{ "null", nil, []string{}, },
+		{`[ "A1", "A2" ]`, map[string]bool{}, []string{}},
+		{`[ "A1", "A2" ]`, nil, []string{}},
+		{`[ "  ", "" ]`, map[string]bool{"k1": true}, []string{}},
+		{"", map[string]bool{"g1": true}, []string{}},
+		{"", nil, []string{}},
+		{"null", nil, []string{}},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := purifyStringArrayOfJsonForDomain(
 			ojson.UnmarshalToJson(testCase.jsonSource),
@@ -405,20 +405,20 @@ func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForDomain(c *C) {
 // Tests the purifying for array of strings(for values)
 func (suite *TestQuerySuite) TestPurifyStringArrayOfJsonForValues(c *C) {
 	testCases := []*struct {
-		jsonSource string
+		jsonSource     string
 		exepctedResult []string
-	} {
+	}{
 		{
 			`[ " A1 ", " b1 ", "A1", "B2", " a1 ", "B2", "C3" ]`,
-			[]string{ "A1", "B2", "C3", "a1", "b1" },
+			[]string{"A1", "B2", "C3", "a1", "b1"},
 		},
-		{ `[ "  ", ""]`, []string{}, },
-		{ "", []string{}, },
-		{ "null", []string{}, },
+		{`[ "  ", ""]`, []string{}},
+		{"", []string{}},
+		{"null", []string{}},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := purifyStringArrayOfJsonForValues(
 			ojson.UnmarshalToJson(testCase.jsonSource),
@@ -433,11 +433,11 @@ func (suite *TestQuerySuite) TestGetDigestValue(c *C) {
 	sampleQuery.Filters.Time.StartTime = ojson.JsonTime(time.Unix(12890090, 0))
 	sampleQuery.Filters.Time.EndTime = ojson.JsonTime(time.Unix(12930090, 0))
 	sampleQuery.Filters.Time.timeRangeType = TimeRangeAbsolute
-	sampleQuery.Filters.Agent.CityIds = []int16 { 18, 92, 154 }
-	sampleQuery.Filters.Target.IspIds = []int16 { 8, 192, 103 }
-	sampleQuery.Grouping.Agent = []string { AgentGroupingIpAddress }
-	sampleQuery.Grouping.Target = []string { GroupingCity }
-	sampleQuery.Output.Metrics = []string{ MetricMax, MetricLoss, MetricNumAgent }
+	sampleQuery.Filters.Agent.CityIds = []int16{18, 92, 154}
+	sampleQuery.Filters.Target.IspIds = []int16{8, 192, 103}
+	sampleQuery.Grouping.Agent = []string{AgentGroupingIpAddress}
+	sampleQuery.Grouping.Target = []string{GroupingCity}
+	sampleQuery.Output.Metrics = []string{MetricMax, MetricLoss, MetricNumAgent}
 
 	hexValue := hex.EncodeToString(sampleQuery.GetDigestValue())
 	c.Logf("Query digest: [%s]", hexValue)
@@ -450,27 +450,27 @@ func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
 	sPtr := func(v string) *string { return &v }
 
 	testCases := []*struct {
-		sampleFilter *TimeFilter
+		sampleFilter   *TimeFilter
 		expectedDigest string
-	} {
+	}{
 		{
-			&TimeFilter {
-				StartTime: ojson.JsonTime(time.Unix(789907610, 0)),
-				EndTime: ojson.JsonTime(time.Unix(789937610, 0)),
+			&TimeFilter{
+				StartTime:     ojson.JsonTime(time.Unix(789907610, 0)),
+				EndTime:       ojson.JsonTime(time.Unix(789937610, 0)),
 				timeRangeType: TimeRangeAbsolute,
 			},
 			"61b6d73fb22673ff28746c847eaef593",
 		},
 		{
-			&TimeFilter {
-				ToNow: &TimeWithUnit { Unit: TimeUnitYear, Value: 3, },
+			&TimeFilter{
+				ToNow:         &TimeWithUnit{Unit: TimeUnitYear, Value: 3},
 				timeRangeType: TimeRangeRelative,
 			},
 			"580f6dacf6ac8d59d5ad86d7f0286cf6",
 		},
 		{
-			&TimeFilter {
-				ToNow: &TimeWithUnit { Unit: TimeUnitDay, Value: 3, StartTimeOfDay: sPtr("02:00"), EndTimeOfDay: sPtr("05:00") },
+			&TimeFilter{
+				ToNow:         &TimeWithUnit{Unit: TimeUnitDay, Value: 3, StartTimeOfDay: sPtr("02:00"), EndTimeOfDay: sPtr("05:00")},
 				timeRangeType: TimeRangeRelative,
 			},
 			"9910f048a2e785e2f3fe5819f3dde52a",
@@ -478,7 +478,7 @@ func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedDigestValue := hex.EncodeToString(testCase.sampleFilter.GetDigest())
 		c.Logf("Time filter: [%v]. Digest value: [%s]", testCase.sampleFilter, testedDigestValue)
@@ -491,71 +491,71 @@ func (suite *TestQuerySuite) TestDigestingOfTimeFilter(c *C) {
 func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
 	testCases := []*struct {
 		sampleTimeWithUnit *TimeWithUnit
-		expectedStartTime string
-		expectedEndTime string
-	} {
+		expectedStartTime  string
+		expectedEndTime    string
+	}{
 		{
-			&TimeWithUnit{ Unit: TimeUnitYear, Value: 2 },
+			&TimeWithUnit{Unit: TimeUnitYear, Value: 2},
 			"2012-01-01T00:00:00Z", "2014-01-01T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitYear, Value: 0 },
+			&TimeWithUnit{Unit: TimeUnitYear, Value: 0},
 			"2014-01-01T00:00:00Z", "2015-01-01T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitMonth, Value: 2 },
+			&TimeWithUnit{Unit: TimeUnitMonth, Value: 2},
 			"2014-04-01T00:00:00Z", "2014-06-01T00:00:00Z",
 		},
 		{ // Cross year for months
-			&TimeWithUnit{ Unit: TimeUnitMonth, Value: 6 },
+			&TimeWithUnit{Unit: TimeUnitMonth, Value: 6},
 			"2013-12-01T00:00:00Z", "2014-06-01T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitMonth, Value: 0 },
+			&TimeWithUnit{Unit: TimeUnitMonth, Value: 0},
 			"2014-06-01T00:00:00Z", "2014-07-01T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitWeek, Value: 2 },
+			&TimeWithUnit{Unit: TimeUnitWeek, Value: 2},
 			"2014-05-26T00:00:00Z", "2014-06-09T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitWeek, Value: 0 },
+			&TimeWithUnit{Unit: TimeUnitWeek, Value: 0},
 			"2014-06-09T00:00:00Z", "2014-06-16T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitDay, Value: 2 },
+			&TimeWithUnit{Unit: TimeUnitDay, Value: 2},
 			"2014-06-08T00:00:00Z", "2014-06-10T00:00:00Z",
 		},
 		{ // Cross month for days
-			&TimeWithUnit{ Unit: TimeUnitDay, Value: 10 },
+			&TimeWithUnit{Unit: TimeUnitDay, Value: 10},
 			"2014-05-31T00:00:00Z", "2014-06-10T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitDay, Value: 0 },
+			&TimeWithUnit{Unit: TimeUnitDay, Value: 0},
 			"2014-06-10T00:00:00Z", "2014-06-11T00:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitHour, Value: 2 },
+			&TimeWithUnit{Unit: TimeUnitHour, Value: 2},
 			"2014-06-10T08:00:00Z", "2014-06-10T10:00:00Z",
 		},
 		{ // Cross day for hours
-			&TimeWithUnit{ Unit: TimeUnitHour, Value: 11 },
+			&TimeWithUnit{Unit: TimeUnitHour, Value: 11},
 			"2014-06-09T23:00:00Z", "2014-06-10T10:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitHour, Value: 0 },
+			&TimeWithUnit{Unit: TimeUnitHour, Value: 0},
 			"2014-06-10T10:00:00Z", "2014-06-10T11:00:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitMinute, Value: 7 },
+			&TimeWithUnit{Unit: TimeUnitMinute, Value: 7},
 			"2014-06-10T10:13:00Z", "2014-06-10T10:20:00Z",
 		},
 		{ // Corss hour for minutes
-			&TimeWithUnit{ Unit: TimeUnitMinute, Value: 25 },
+			&TimeWithUnit{Unit: TimeUnitMinute, Value: 25},
 			"2014-06-10T09:55:00Z", "2014-06-10T10:20:00Z",
 		},
 		{
-			&TimeWithUnit{ Unit: TimeUnitMinute, Value: 0 },
+			&TimeWithUnit{Unit: TimeUnitMinute, Value: 0},
 			"2014-06-10T10:20:00Z", "2014-06-10T10:21:00Z",
 		},
 	}
@@ -563,9 +563,9 @@ func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
 	baseTime := t.ParseTime(c, "2014-06-10T10:20:30Z")
 	c.Logf("Base time: %s", baseTime.Format(time.RFC3339))
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d.", i + 1)
+		comment := Commentf("Test Case: %d.", i+1)
 
-		testedTime := &TimeFilter {
+		testedTime := &TimeFilter{
 			ToNow: testCase.sampleTimeWithUnit,
 		}
 
@@ -576,7 +576,7 @@ func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
 
 		c.Logf(
 			"Case [%d]. [%v] Start time: %s. End time: %s",
-			i + 1, testedTime.ToNow,
+			i+1, testedTime.ToNow,
 			testedStartTime.Format(time.RFC3339), testedEndTime.Format(time.RFC3339),
 		)
 		c.Assert(
@@ -593,13 +593,13 @@ func (suite *TestQuerySuite) TestGetRelativeTimeRangeOfNet(c *C) {
 // Tests the getting of time ranges(on relative time)
 func (suite *TestQuerySuite) TestGetMultipleTimeRanges(c *C) {
 	testCases := []*struct {
-		unit string
-		value int
-		startTime string
-		endTime string
-		expectedDays int
+		unit                              string
+		value                             int
+		startTime                         string
+		endTime                           string
+		expectedDays                      int
 		expectedFirstDay, expectedLastDay string
-	} {
+	}{
 		/**
 		 * Case for days
 		 */
@@ -671,12 +671,12 @@ func (suite *TestQuerySuite) TestGetMultipleTimeRanges(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		timeFilter := &TimeFilter {
-			ToNow: &TimeWithUnit {
-				Unit: testCase.unit,
-				Value: testCase.value,
+		timeFilter := &TimeFilter{
+			ToNow: &TimeWithUnit{
+				Unit:           testCase.unit,
+				Value:          testCase.value,
 				StartTimeOfDay: &testCase.startTime,
-				EndTimeOfDay: &testCase.endTime,
+				EndTimeOfDay:   &testCase.endTime,
 			},
 		}
 
@@ -686,7 +686,7 @@ func (suite *TestQuerySuite) TestGetMultipleTimeRanges(c *C) {
 
 		c.Assert(testedResult, HasLen, testCase.expectedDays, comment)
 
-		edgeIndex := []int{ 0, len(testedResult) - 1 }
+		edgeIndex := []int{0, len(testedResult) - 1}
 
 		// Only shows the first/last element
 		for _, i := range edgeIndex {
@@ -695,7 +695,7 @@ func (suite *TestQuerySuite) TestGetMultipleTimeRanges(c *C) {
 			startTimeStr := r.StartTime.Format(time.RFC3339)
 			endTimeStr := r.EndTime.Format(time.RFC3339)
 
-			c.Logf("%v ~ %v(Day %d)", startTimeStr, endTimeStr, i + 1)
+			c.Logf("%v ~ %v(Day %d)", startTimeStr, endTimeStr, i+1)
 
 			/**
 			 * Asserts the time value
@@ -709,7 +709,7 @@ func (suite *TestQuerySuite) TestGetMultipleTimeRanges(c *C) {
 			 */
 			if i == 0 {
 				c.Assert(startTimeStr, ocheck.StringContains, testCase.expectedFirstDay, comment)
-			} else if i == len(testedResult) - 1 {
+			} else if i == len(testedResult)-1 {
 				c.Assert(endTimeStr, ocheck.StringContains, testCase.expectedLastDay, comment)
 			}
 			// :~)
@@ -721,18 +721,18 @@ func (suite *TestQuerySuite) TestGetMultipleTimeRanges(c *C) {
 func (suite *TestQuerySuite) TestIsForEachAgentOfGrouping(c *C) {
 	testCases := []*struct {
 		agentGrouping []string
-		expected bool
-	} {
-		{ []string { GroupingIsp, GroupingCity, GroupingProvince, GroupingNameTag }, false, },
-		{ []string { GroupingCity, AgentGroupingName }, true, },
-		{ []string { GroupingCity, AgentGroupingHostname }, true, },
-		{ []string { GroupingCity, AgentGroupingIpAddress }, true, },
+		expected      bool
+	}{
+		{[]string{GroupingIsp, GroupingCity, GroupingProvince, GroupingNameTag}, false},
+		{[]string{GroupingCity, AgentGroupingName}, true},
+		{[]string{GroupingCity, AgentGroupingHostname}, true},
+		{[]string{GroupingCity, AgentGroupingIpAddress}, true},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
-		testedResult := (&QueryGrouping{ Agent: testCase.agentGrouping }).IsForEachAgent()
+		testedResult := (&QueryGrouping{Agent: testCase.agentGrouping}).IsForEachAgent()
 		c.Assert(testedResult, Equals, testCase.expected, comment)
 	}
 }
@@ -741,17 +741,17 @@ func (suite *TestQuerySuite) TestIsForEachAgentOfGrouping(c *C) {
 func (suite *TestQuerySuite) TestIsForEachTargetOfGrouping(c *C) {
 	testCases := []*struct {
 		targetGrouping []string
-		expected bool
-	} {
-		{ []string { GroupingIsp, GroupingCity, GroupingProvince, GroupingNameTag }, false, },
-		{ []string { GroupingCity, TargetGroupingName }, true, },
-		{ []string { GroupingCity, TargetGroupingHost }, true, },
+		expected       bool
+	}{
+		{[]string{GroupingIsp, GroupingCity, GroupingProvince, GroupingNameTag}, false},
+		{[]string{GroupingCity, TargetGroupingName}, true},
+		{[]string{GroupingCity, TargetGroupingHost}, true},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
-		testedResult := (&QueryGrouping{ Target: testCase.targetGrouping }).IsForEachTarget()
+		testedResult := (&QueryGrouping{Target: testCase.targetGrouping}).IsForEachTarget()
 		c.Assert(testedResult, Equals, testCase.expected, comment)
 	}
 }
@@ -759,49 +759,49 @@ func (suite *TestQuerySuite) TestIsForEachTargetOfGrouping(c *C) {
 // Tests the getting functions for reation
 func (suite *TestQuerySuite) TestGetPropRelation(c *C) {
 	testCases := []*struct {
-		agentFilter *nqmModel.AgentFilter
+		agentFilter  *nqmModel.AgentFilter
 		targetFilter *nqmModel.TargetFilter
-		expected []PropRelation
-	} {
+		expected     []PropRelation
+	}{
 		{ // By agent
-			&nqmModel.AgentFilter { IspIds: []int16 { 20, 21 }, ProvinceIds: []int16 { 3 }, CityIds: []int16{ 101, 102 }, NameTagIds: []int16{ 10, 11 } },
-			&nqmModel.TargetFilter {},
-			[]PropRelation { NoCondition, NoCondition, NoCondition, NoCondition },
+			&nqmModel.AgentFilter{IspIds: []int16{20, 21}, ProvinceIds: []int16{3}, CityIds: []int16{101, 102}, NameTagIds: []int16{10, 11}},
+			&nqmModel.TargetFilter{},
+			[]PropRelation{NoCondition, NoCondition, NoCondition, NoCondition},
 		},
 		{ // By target
-			&nqmModel.AgentFilter {},
-			&nqmModel.TargetFilter { IspIds: []int16 { 20, 21 }, ProvinceIds: []int16 { 3 }, CityIds: []int16{ 101, 102 }, NameTagIds: []int16{ 10, 11 } },
-			[]PropRelation { NoCondition, NoCondition, NoCondition, NoCondition },
+			&nqmModel.AgentFilter{},
+			&nqmModel.TargetFilter{IspIds: []int16{20, 21}, ProvinceIds: []int16{3}, CityIds: []int16{101, 102}, NameTagIds: []int16{10, 11}},
+			[]PropRelation{NoCondition, NoCondition, NoCondition, NoCondition},
 		},
 		{ // No filters
-			&nqmModel.AgentFilter {},
-			&nqmModel.TargetFilter {},
-			[]PropRelation { NoCondition, NoCondition, NoCondition, NoCondition },
+			&nqmModel.AgentFilter{},
+			&nqmModel.TargetFilter{},
+			[]PropRelation{NoCondition, NoCondition, NoCondition, NoCondition},
 		},
 		{ // Same realtion(by agent)
-			&nqmModel.AgentFilter { IspIds: []int16 { RelationSame }, ProvinceIds: []int16 { RelationSame }, CityIds: []int16{ RelationSame }, NameTagIds: []int16{RelationSame } },
-			&nqmModel.TargetFilter {},
-			[]PropRelation { SameValue, SameValue, SameValue, SameValue },
+			&nqmModel.AgentFilter{IspIds: []int16{RelationSame}, ProvinceIds: []int16{RelationSame}, CityIds: []int16{RelationSame}, NameTagIds: []int16{RelationSame}},
+			&nqmModel.TargetFilter{},
+			[]PropRelation{SameValue, SameValue, SameValue, SameValue},
 		},
 		{ // Same realtion(by target)
-			&nqmModel.AgentFilter {},
-			&nqmModel.TargetFilter { IspIds: []int16 { RelationSame }, ProvinceIds: []int16 { RelationSame }, CityIds: []int16{ RelationSame }, NameTagIds: []int16{RelationSame } },
-			[]PropRelation { SameValue, SameValue, SameValue, SameValue },
+			&nqmModel.AgentFilter{},
+			&nqmModel.TargetFilter{IspIds: []int16{RelationSame}, ProvinceIds: []int16{RelationSame}, CityIds: []int16{RelationSame}, NameTagIds: []int16{RelationSame}},
+			[]PropRelation{SameValue, SameValue, SameValue, SameValue},
 		},
 		{ // Not same(by agent)
-			&nqmModel.AgentFilter { IspIds: []int16 { RelationNotSame }, ProvinceIds: []int16 { RelationNotSame }, CityIds: []int16{ RelationNotSame }, NameTagIds: []int16{RelationNotSame } },
-			&nqmModel.TargetFilter {},
-			[]PropRelation { NotSameValue, NotSameValue, NotSameValue, NotSameValue },
+			&nqmModel.AgentFilter{IspIds: []int16{RelationNotSame}, ProvinceIds: []int16{RelationNotSame}, CityIds: []int16{RelationNotSame}, NameTagIds: []int16{RelationNotSame}},
+			&nqmModel.TargetFilter{},
+			[]PropRelation{NotSameValue, NotSameValue, NotSameValue, NotSameValue},
 		},
 		{ // Not same(by target)
-			&nqmModel.AgentFilter {},
-			&nqmModel.TargetFilter { IspIds: []int16 { RelationNotSame }, ProvinceIds: []int16 { RelationNotSame }, CityIds: []int16{ RelationNotSame }, NameTagIds: []int16{RelationNotSame } },
-			[]PropRelation { NotSameValue, NotSameValue, NotSameValue, NotSameValue },
+			&nqmModel.AgentFilter{},
+			&nqmModel.TargetFilter{IspIds: []int16{RelationNotSame}, ProvinceIds: []int16{RelationNotSame}, CityIds: []int16{RelationNotSame}, NameTagIds: []int16{RelationNotSame}},
+			[]PropRelation{NotSameValue, NotSameValue, NotSameValue, NotSameValue},
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		sampleQuery := NewCompoundQuery()
 		sampleQuery.Filters.Agent = testCase.agentFilter

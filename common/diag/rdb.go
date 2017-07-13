@@ -7,10 +7,10 @@ import (
 )
 
 type RdbDiagnosis struct {
-	Dsn string `json:"dsn"`
-	OpenConnections int `json:"open_connections"`
-	PingResult int `json:"ping_result"`
-	PingMessage string `json:"ping_message"`
+	Dsn             string `json:"dsn"`
+	OpenConnections int    `json:"open_connections"`
+	PingResult      int    `json:"ping_result"`
+	PingMessage     string `json:"ping_message"`
 }
 
 // Performs the diagnosis to RDB
@@ -25,11 +25,11 @@ func DiagnoseRdb(dsn string, db *sql.DB) *RdbDiagnosis {
 		pingMessage = err.Error()
 	}
 
-	return &RdbDiagnosis {
-		Dsn: hidePasswordOfDsn(dsn),
+	return &RdbDiagnosis{
+		Dsn:             hidePasswordOfDsn(dsn),
 		OpenConnections: db.Stats().OpenConnections,
-		PingResult: pingResult,
-		PingMessage: pingMessage,
+		PingResult:      pingResult,
+		PingMessage:     pingMessage,
 	}
 }
 
