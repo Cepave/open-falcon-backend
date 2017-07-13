@@ -22,7 +22,7 @@ func (mine InputExternalAlertsToAlarmInputs) CheckAlarmName() error {
 	if dt.Error != nil && dt.Error.Error() != "record not found" {
 		return dt.Error
 	}
-	if atype.ID == 0 || dt.Error.Error() == "record not found" {
+	if atype.ID == 0 {
 		return fmt.Errorf("alarm type: %v not found", mine.AlarmType)
 	}
 	return nil
