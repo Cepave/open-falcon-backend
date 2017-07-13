@@ -12,7 +12,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/graph/proc"
 	"github.com/Cepave/open-falcon-backend/modules/graph/rrdtool"
 	"github.com/Cepave/open-falcon-backend/modules/graph/store"
-	log "github.com/sirupsen/logrus"
 )
 
 type Graph int
