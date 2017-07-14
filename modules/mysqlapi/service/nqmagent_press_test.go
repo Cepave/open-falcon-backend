@@ -7,8 +7,8 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/test"
 	"github.com/icrowley/fake"
 
 	. "github.com/onsi/ginkgo"

@@ -8,7 +8,7 @@ import (
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/jmoiron/sqlx"
 )
 

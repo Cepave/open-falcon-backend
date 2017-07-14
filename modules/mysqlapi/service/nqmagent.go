@@ -9,8 +9,8 @@ import (
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 )
 
 var logger = log.NewDefaultLogger("INFO")

@@ -2,7 +2,7 @@ package testing
 
 import (
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 	check "gopkg.in/check.v1"
 )
 

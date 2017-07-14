@@ -7,8 +7,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
 	"github.com/gin-gonic/gin"
 )
 

@@ -10,7 +10,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/test"
 	ch "gopkg.in/check.v1"
 
 	. "github.com/onsi/ginkgo"
@@ -51,7 +51,7 @@ func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *ch.C) {
 		SELECT COUNT(*)
 		FROM host
 		WHERE update_at = FROM_UNIXTIME(?)
-			AND hostname LIKE 'nqm-mng-tc1-%'
+			AND hostname LIKE 'mysqlapi-tc1-%'
 			AND ip = ?
 			AND agent_version = ?
 			AND plugin_version = ?
@@ -69,7 +69,7 @@ func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *ch.C) {
 		sampleHosts := make([]*cModel.FalconAgentHeartbeat, len(testCase.hosts))
 		for idx, hostName := range testCase.hosts {
 			sampleHosts[idx] = &cModel.FalconAgentHeartbeat{
-				Hostname:      "nqm-mng-tc1-" + hostName,
+				Hostname:      "mysqlapi-tc1-" + hostName,
 				UpdateTime:    sampleTime.Unix(),
 				IP:            sampleIP,
 				AgentVersion:  sampleAgentVersion,
@@ -92,7 +92,7 @@ func (suite *TestHeartbeatSuite) TearDownTest(c *ch.C) {
 	switch c.TestName() {
 	case "TestHeartbeatSuite.TestFalconAgentHeartbeat":
 		inTx(
-			`DELETE FROM host WHERE hostname LIKE 'nqm-mng-tc1-%'`,
+			`DELETE FROM host WHERE hostname LIKE 'mysqlapi-tc1-%'`,
 		)
 	}
 }

@@ -3,14 +3,14 @@ set -eo pipefail
 
 declare -A arr=(["agent"]=1988 ["aggregator"]=10080 ["alarm"]=10080 ["fe"]=10080)
 arr+=(["graph"]=10080 ["hbs"]=10080 ["judge"]=10080 ["nodata"]=10080 ["query"]=10080)
-arr+=(["sender"]=10080 ["task"]=10080 ["transfer"]=10080 ["nqm-mng"]=10080 ["f2e-api"]=10080)
+arr+=(["sender"]=10080 ["task"]=10080 ["transfer"]=10080 ["mysqlapi"]=10080 ["f2e-api"]=10080)
 
 if [ -z ${MODULE_NAME+x} ]; then
   echo >&2 "Health check error: MODULE_NAME is unset"
   exit 1
 fi
 
-if [ "$MODULE_NAME" == "nqm-mng" ] || [ "$MODULE_NAME" == "f2e-api" ]; then
+if [ "$MODULE_NAME" == "mysqlapi" ] || [ "$MODULE_NAME" == "f2e-api" ]; then
   json=$(curl -sSf http://localhost:${arr[$MODULE_NAME]}/health) || exit 1
   ret=$(jq -r .rdb.ping_result <<< "$json")
   jq -r . <<< "$json" && exit $ret
