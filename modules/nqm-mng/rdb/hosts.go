@@ -59,10 +59,6 @@ var orderByDialectForHosts = commonModel.NewSqlOrderByDialect(
 )
 
 func buildSortingClauseOfHosts(paging *commonModel.Paging) string {
-	if len(paging.OrderBy) == 1 && paging.OrderBy[0].Expr == "name" {
-		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"id", commonModel.Ascending})
-	}
-
 	querySyntax, err := orderByDialectForHosts.ToQuerySyntax(paging.OrderBy)
 	gormExt.DefaultGormErrorConverter.PanicIfError(
 		errors.Annotate(err, "Order by to query syntax has error"),

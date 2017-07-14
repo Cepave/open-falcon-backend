@@ -86,9 +86,9 @@ var _ = Describe("[Unit] Test buildSortingClauseOfHosts(...)", func() {
 			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"id", cModel.Ascending}}},
 			"id ASC",
 		),
-		Entry("Sort by name ASC then id ASC",
+		Entry("Sort by name ASC",
 			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"name", cModel.Ascending}}},
-			"hostname ASC, id ASC",
+			"hostname ASC",
 		),
 	)
 })
