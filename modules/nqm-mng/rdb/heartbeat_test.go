@@ -6,10 +6,10 @@ import (
 
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	cModel "github.com/Cepave/open-falcon-backend/common/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
 	ch "gopkg.in/check.v1"
 
@@ -122,7 +122,7 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	now := ojson.JsonTime(time.Now())
 	yesterday := ojson.JsonTime(time.Now().Add(-24 * time.Hour))
 	DescribeTable("for newly inserted agents", func(input ojson.JsonTime) {
-		reqs := []*model.NqmAgentHeartbeatRequest{
+		reqs := []*nqmModel.HeartbeatRequest{
 			{
 				ConnectionId: "ct-255-1@201.3.116.1",
 				Hostname:     "ct-255-1",
@@ -162,7 +162,7 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	existentTime := ojson.JsonTime(time.Now().Add(-240 * time.Hour))
 	earlierTime := ojson.JsonTime(time.Now().Add(-480 * time.Hour))
 	DescribeTable("for existent agents", func(input ojson.JsonTime, expected ojson.JsonTime) {
-		init := []*model.NqmAgentHeartbeatRequest{
+		init := []*nqmModel.HeartbeatRequest{
 			{
 				ConnectionId: "ct-255-1@201.3.116.1",
 				Hostname:     "ct-255-1",
@@ -190,7 +190,7 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		}
 		UpdateNqmAgentHeartbeat(init)
 
-		reqs := []*model.NqmAgentHeartbeatRequest{
+		reqs := []*nqmModel.HeartbeatRequest{
 			{
 				ConnectionId: "ct-255-1@201.3.116.1",
 				Hostname:     "ct-255-1",
@@ -286,7 +286,7 @@ var _ = Describe("Test InsertNqmAgentByHeartbeat()", ginkgoDb.NeedDb(func() {
 	})
 
 	DescribeTable("insert a new row into the table 'nqm_agent'", func(inputConnId string, inputHostname string, inputIPAddr string) {
-		inputReq := &model.NqmAgentHeartbeatRequest{
+		inputReq := &nqmModel.HeartbeatRequest{
 			ConnectionId: inputConnId,
 			Hostname:     inputHostname,
 			IpAddress:    ojson.NewIP(inputIPAddr),
@@ -304,7 +304,7 @@ var _ = Describe("Test InsertNqmAgentByHeartbeat()", ginkgoDb.NeedDb(func() {
 	)
 
 	DescribeTable("works for the duplicated requests", func(inputConnId string, inputHostname string, inputIPAddr string) {
-		inputReq := &model.NqmAgentHeartbeatRequest{
+		inputReq := &nqmModel.HeartbeatRequest{
 			ConnectionId: inputConnId,
 			Hostname:     inputHostname,
 			IpAddress:    ojson.NewIP(inputIPAddr),

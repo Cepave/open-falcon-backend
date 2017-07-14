@@ -27,5 +27,30 @@ VALUES
 `
 var DeleteNqmAgentSQL = `DELETE FROM nqm_agent WHERE ag_id >= 24021 AND ag_id <= 24025`
 
+var InsertNqmtargetSQL = `
+INSERT INTO nqm_target(tg_id, tg_name, tg_host, tg_available, tg_status)
+VALUES
+  (80921, 'pl-tg-1', '10.81.7.1', TRUE, TRUE),
+  (80922, 'pl-tg-2', '10.81.7.2', TRUE, TRUE),
+  (80923, 'pl-tg-3', '10.81.7.3', TRUE, TRUE)
+`
+var DeleteNqmtargetSQL = "DELETE FROM nqm_target WHERE tg_id >= 80921 AND tg_id <= 80923"
+
+var InsertNqmPingtaskSQL = `
+INSERT INTO nqm_ping_task(
+  pt_id, pt_period
+)
+VALUES
+  (83051, 1)
+`
+var DeletetNqmPingtaskSQL = `DELETE FROM nqm_ping_task WHERE pt_id = 83051`
+
+var InsertNqmAgentPingtaskSQL = `
+INSERT INTO nqm_agent_ping_task(apt_ag_id, apt_pt_id)
+VALUES
+  (24022, 83051)
+`
+var DeleteNqmAgentPingtaskSQL = "DELETE FROM nqm_agent_ping_task WHERE apt_ag_id = 24022"
+
 var InitNqmAgent = []string{SetAutoIncForHost, SetAutoIncForNqmAgent, InsertHostSQL, InsertNqmAgentSQL}
 var ClearNqmAgent = []string{DeleteNqmAgentSQL, DeleteHostSQL, ResetAutoIncForNqmAgent, ResetAutoIncForHost}

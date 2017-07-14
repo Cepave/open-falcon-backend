@@ -4,9 +4,9 @@ import (
 	"time"
 
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
 	"github.com/icrowley/fake"
@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/ginkgo"
 )
 
-var heartbeatRequests = make(map[int]*model.NqmAgentHeartbeatRequest)
+var heartbeatRequests = make(map[int]*nqmModel.HeartbeatRequest)
 
 var ginkgoDb = &dbTest.GinkgoDb{}
 
@@ -58,7 +58,7 @@ var _ = Describe("Pressure Test", ginkgoDb.NeedDb(func() {
 		NqmQueue.Start()
 		b.Time("runtime", func() {
 			for _, req := range heartbeatRequests {
-				func(r *model.NqmAgentHeartbeatRequest) {
+				func(r *nqmModel.HeartbeatRequest) {
 					NqmQueue.Put(req)
 				}(req)
 			}
@@ -72,11 +72,11 @@ func inTx(sql ...string) {
 	rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
 }
 
-func randomHeartbeatRequest() *model.NqmAgentHeartbeatRequest {
+func randomHeartbeatRequest() *nqmModel.HeartbeatRequest {
 	hostname := fake.CharactersN(20)
 	ipAddr := fake.IPv4()
 	connID := hostname + "@" + ipAddr
-	return &model.NqmAgentHeartbeatRequest{
+	return &nqmModel.HeartbeatRequest{
 		Hostname:     hostname,
 		IpAddress:    ojson.NewIP(ipAddr),
 		ConnectionId: connID,
@@ -84,7 +84,7 @@ func randomHeartbeatRequest() *model.NqmAgentHeartbeatRequest {
 	}
 }
 
-func insert(r *model.NqmAgentHeartbeatRequest) {
+func insert(r *nqmModel.HeartbeatRequest) {
 	rdb.DbFacade.SqlxDb.MustExec(`
 			INSERT INTO host(hostname, ip, agent_version, plugin_version)
 			VALUES(?, ?, '', '')

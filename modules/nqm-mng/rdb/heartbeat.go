@@ -7,7 +7,6 @@ import (
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/jinzhu/gorm"
 	"github.com/jmoiron/sqlx"
 )
@@ -135,7 +134,7 @@ func (uoiHost *updateOrInsertHostsInTx) updateHost(updateStmt *sqlx.Stmt, agent 
 	uoiHost.result.RowsAffected += updateAndGetRowsAffected(updateStmt, agent)
 }
 
-func UpdateNqmAgentHeartbeat(reqs []*model.NqmAgentHeartbeatRequest) {
+func UpdateNqmAgentHeartbeat(reqs []*nqmModel.HeartbeatRequest) {
 	updateTx := &updateNqmAgentHeartbeatTx{
 		Reqs: reqs,
 	}
@@ -143,7 +142,7 @@ func UpdateNqmAgentHeartbeat(reqs []*model.NqmAgentHeartbeatRequest) {
 }
 
 type updateNqmAgentHeartbeatTx struct {
-	Reqs []*model.NqmAgentHeartbeatRequest
+	Reqs []*nqmModel.HeartbeatRequest
 }
 
 func (t *updateNqmAgentHeartbeatTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
@@ -224,11 +223,11 @@ func SelectNqmAgentByConnId(connId string) *nqmModel.Agent {
 }
 
 type insertNqmAgentByHeartbeatTx struct {
-	Req   *model.NqmAgentHeartbeatRequest
+	Req   *nqmModel.HeartbeatRequest
 	Agent *nqmModel.Agent
 }
 
-func InsertNqmAgentByHeartbeat(r *model.NqmAgentHeartbeatRequest) *nqmModel.Agent {
+func InsertNqmAgentByHeartbeat(r *nqmModel.HeartbeatRequest) *nqmModel.Agent {
 	insertTx := &insertNqmAgentByHeartbeatTx{
 		Req: r,
 	}

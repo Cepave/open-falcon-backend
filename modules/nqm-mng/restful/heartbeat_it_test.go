@@ -7,10 +7,10 @@ import (
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	cModel "github.com/Cepave/open-falcon-backend/common/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
 	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
@@ -91,7 +91,16 @@ func (s *TestHeartbeatItSuite) TearDownTest(c *ch.C) {
 
 var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	BeforeEach(func() {
-		inTx(test.DeleteNqmAgentSQL, test.DeleteHostSQL, test.ResetAutoIncForNqmAgent, test.ResetAutoIncForHost, test.SetAutoIncForHost, test.SetAutoIncForNqmAgent, test.InsertHostSQL, test.InsertNqmAgentSQL)
+		inTx(
+			test.DeleteNqmAgentSQL,
+			test.DeleteHostSQL,
+			test.ResetAutoIncForNqmAgent,
+			test.ResetAutoIncForHost,
+			test.SetAutoIncForHost,
+			test.SetAutoIncForNqmAgent,
+			test.InsertHostSQL,
+			test.InsertNqmAgentSQL,
+		)
 	})
 
 	AfterEach(func() {
@@ -99,7 +108,7 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	})
 
 	DescribeTable("update an existent agent or instert a new agent", func(inputConnId string, inputHostname string, inputIPAddr string) {
-		inputReq := &model.NqmAgentHeartbeatRequest{
+		inputReq := &nqmModel.HeartbeatRequest{
 			ConnectionId: inputConnId,
 			Hostname:     inputHostname,
 			IpAddress:    json.NewIP(inputIPAddr),
@@ -127,4 +136,62 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 		Entry("[insert] new agent with duplicated hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.11"),
 		Entry("[insert] new agent with duplicated IP address and hostname", "new-ct-255-1@201.3.116.1", "ct-255-1", "201.3.116.1"),
 	)
+}))
+
+var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", ginkgoDb.NeedDb(func() {
+	BeforeEach(func() {
+		inTx(
+			test.DeleteNqmAgentSQL,
+			test.DeleteHostSQL,
+			test.ResetAutoIncForNqmAgent,
+			test.ResetAutoIncForHost,
+			test.SetAutoIncForHost,
+			test.SetAutoIncForNqmAgent,
+			test.InsertHostSQL,
+			test.InsertNqmAgentSQL,
+			test.InsertNqmtargetSQL,
+			test.InsertNqmPingtaskSQL,
+			test.InsertNqmAgentPingtaskSQL,
+		)
+	})
+
+	AfterEach(func() {
+		inTx(
+			test.DeleteNqmAgentPingtaskSQL,
+			test.DeletetNqmPingtaskSQL,
+			test.DeleteNqmtargetSQL,
+			test.DeleteNqmAgentSQL,
+			test.DeleteHostSQL,
+			test.ResetAutoIncForNqmAgent,
+			test.ResetAutoIncForHost,
+		)
+	})
+
+	It("gets an empyt target list of an existent agent[24021]", func() {
+		resp := testingHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().
+				Get("api/v1/heartbeat/nqm/agent/24021/targets"),
+		)
+		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
+	})
+
+	It("gets the target list of 3 targets from an existent agent[24022]", func() {
+		resp := testingHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().
+				Get("api/v1/heartbeat/nqm/agent/24022/targets"),
+		)
+		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
+
+		jsonBody := resp.GetBodyAsJson()
+		GinkgoT().Logf("[List Agents] JSON Result: %s", json.MarshalPrettyJSON(jsonBody))
+		Expect(jsonBody.MustArray()).To(HaveLen(3))
+	})
+
+	It("gets error code 500 for an nonexistent agent[24020]", func() {
+		resp := testingHttp.NewResponseResultBySling(
+			httpClientConfig.NewSlingByBase().
+				Get("api/v1/heartbeat/nqm/agent/24020/targets"),
+		)
+		Expect(resp).To(ogko.MatchHttpStatus(http.StatusInternalServerError))
+	})
 }))

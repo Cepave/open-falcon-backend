@@ -38,12 +38,14 @@ func main() {
 	restful.InitGin(toGinConfig(config))
 	restful.InitCache(toCacheConfig(config))
 	service.InitNqmHeartbeat(toNqmHeartbeatConfig(config))
+	service.InitCachedTargetList(toTargetListConfig(config))
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
 }
 
 func exitApp(signal os.Signal) {
 	service.CloseNqmHeartbeat()
+	service.CloseCachedTargetList()
 	rdb.ReleaseRdb()
 }
 
@@ -73,6 +75,13 @@ func toNqmHeartbeatConfig(config *viper.Viper) *commonQueue.Config {
 	return &commonQueue.Config{
 		Num: config.GetInt("heartbeat.nqm.batchSize"),
 		Dur: time.Duration(config.GetInt("heartbeat.nqm.duration")) * time.Second,
+	}
+}
+
+func toTargetListConfig(config *viper.Viper) *service.NqmCachedTargetListConfig {
+	return &service.NqmCachedTargetListConfig{
+		Size: config.GetInt("heartbeat.nqm.targetList.size"),
+		Dur:  time.Duration(config.GetInt("heartbeat.nqm.targetList.duration")) * time.Minute,
 	}
 }
 

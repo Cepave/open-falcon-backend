@@ -6,8 +6,8 @@ import (
 	"time"
 
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/icrowley/fake"
 
 	. "github.com/onsi/ginkgo"
@@ -16,7 +16,7 @@ import (
 
 type dbNqmHeartbeatCapture int
 
-func (db *dbNqmHeartbeatCapture) updator(agents []*model.NqmAgentHeartbeatRequest) {
+func (db *dbNqmHeartbeatCapture) updator(agents []*nqmModel.HeartbeatRequest) {
 	v := int(*db)
 	v += len(agents)
 
@@ -26,7 +26,7 @@ func (db *dbNqmHeartbeatCapture) getNumber() int {
 	return int(*db)
 }
 
-func mockNqmHeartbeatOnDb(agents []*model.NqmAgentHeartbeatRequest) {}
+func mockNqmHeartbeatOnDb(agents []*nqmModel.HeartbeatRequest) {}
 
 var _ = Describe("Tests Put() function", func() {
 	var testedService *nqmAgentUpdateService
@@ -155,7 +155,7 @@ func putRandomHeartbeat(srv *nqmAgentUpdateService, number int) {
 		srv.Put(buildRandomRequest())
 	}
 }
-func buildRandomRequest() *model.NqmAgentHeartbeatRequest {
+func buildRandomRequest() *nqmModel.HeartbeatRequest {
 	hostname := fake.UserName()
 	ip := fake.IPv4()
 
@@ -164,7 +164,7 @@ func buildRandomRequest() *model.NqmAgentHeartbeatRequest {
 	// 2013-04-04T00:00:00Z
 	var endTime int64 = 1365033600
 
-	return &model.NqmAgentHeartbeatRequest{
+	return &nqmModel.HeartbeatRequest{
 		ConnectionId: fmt.Sprintf("%s@%s", hostname, ip),
 		Hostname:     hostname,
 		IpAddress:    ojson.NewIP(ip),
@@ -172,7 +172,7 @@ func buildRandomRequest() *model.NqmAgentHeartbeatRequest {
 	}
 }
 
-func newNqmAgentUpdateServiceForTesting(queueConfig *commonQueue.Config, dbUpdator func([]*model.NqmAgentHeartbeatRequest)) *nqmAgentUpdateService {
+func newNqmAgentUpdateServiceForTesting(queueConfig *commonQueue.Config, dbUpdator func([]*nqmModel.HeartbeatRequest)) *nqmAgentUpdateService {
 	testedService := newNqmAgentUpdateService(queueConfig)
 	testedService.updateToDatabase = dbUpdator
 
