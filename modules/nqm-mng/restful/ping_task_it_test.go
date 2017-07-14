@@ -5,9 +5,9 @@ import (
 
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
+	testingDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/testing"
 
-	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
+	rdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 
 	. "gopkg.in/check.v1"
 )

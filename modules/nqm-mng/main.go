@@ -15,9 +15,9 @@ import (
 	commonOs "github.com/Cepave/open-falcon-backend/common/os"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/restful"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/service"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
 )
 
 var logger = log.NewDefaultLogger("INFO")

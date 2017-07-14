@@ -7,8 +7,8 @@ import (
 	nqmTestinglDb "github.com/Cepave/open-falcon-backend/common/db/nqm/testing"
 	"github.com/Cepave/open-falcon-backend/common/json"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	rdb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
+	rdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
+	testingDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/testing"
 
 	. "gopkg.in/check.v1"
 )

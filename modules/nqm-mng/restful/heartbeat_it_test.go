@@ -11,9 +11,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/testing"
 	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	testingHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/rdb/test"
-	testingDb "github.com/Cepave/open-falcon-backend/modules/nqm-mng/testing"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/test"
+	testingDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -52,7 +52,7 @@ func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *ch.C) {
 		for idx, hostName := range testCase.hosts {
 			sampleNumber := strconv.Itoa(idx)
 			sampleHosts[idx] = &cModel.FalconAgentHeartbeat{
-				Hostname:      "nqm-mng-it-tc1-" + hostName,
+				Hostname:      "mysqlapi-it-tc1-" + hostName,
 				UpdateTime:    sampleTime.Unix(),
 				IP:            "127.0.0." + sampleNumber,
 				AgentVersion:  "0.0." + sampleNumber,
@@ -84,7 +84,7 @@ func (s *TestHeartbeatItSuite) TearDownTest(c *ch.C) {
 	switch c.TestName() {
 	case "TestHeartbeatItSuite.TestFalconAgentHeartbeat":
 		inTx(
-			`DELETE FROM host WHERE hostname LIKE 'nqm-mng-it-tc1-%'`,
+			`DELETE FROM host WHERE hostname LIKE 'mysqlapi-it-tc1-%'`,
 		)
 	}
 }

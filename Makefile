@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
-CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng f2e-api
+CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent mysqlapi f2e-api
 TARGET = open-falcon
 VERSION := $(shell cat VERSION)
 GOFILES := $(shell find . -name "*.go" -type f ! -path "./vendor/*")
