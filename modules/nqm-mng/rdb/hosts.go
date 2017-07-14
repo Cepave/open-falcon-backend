@@ -59,7 +59,7 @@ var orderByDialectForHosts = commonModel.NewSqlOrderByDialect(
 )
 
 func buildSortingClauseOfHosts(paging *commonModel.Paging) string {
-	if len(paging.OrderBy) == 1 && paging.OrderBy[0].Expr == "hostname" {
+	if len(paging.OrderBy) == 1 && paging.OrderBy[0].Expr == "name" {
 		paging.OrderBy = append(paging.OrderBy, &commonModel.OrderByEntity{"id", commonModel.Ascending})
 	}
 
