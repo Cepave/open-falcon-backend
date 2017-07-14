@@ -23,7 +23,11 @@
 	"heartbeat" :{
 		"nqm": {
 			"batchSize": 64,
-			"duration": 2
+			"duration": 2,
+			"targetList": {
+				"size": 8,
+				"duration": 20
+			}
 		}
 	}
 }
