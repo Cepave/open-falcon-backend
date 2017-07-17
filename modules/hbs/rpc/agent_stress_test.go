@@ -16,7 +16,7 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 		routines           chan bool
 
 		numberOfFakeAgent    int = 1000
-		numberOfTotalRequest int = 2000
+		numberOfTotalRequest int = 0
 		stepOfHeartbeat      int = 30
 	)
 
@@ -29,7 +29,12 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 	})
 
 	It("Should run without error msg", func() {
+		if numberOfTotalRequest == 0 {
+			Skip("Number of total request is 0. See numberOfTotalRequest in code")
+		}
+
 		for i := 0; i < numberOfTotalRequest; i++ {
+			// Simulate the heartbeat interval
 			if i > 0 && (i%numberOfFakeAgent == 0) {
 				time.Sleep(time.Duration(stepOfHeartbeat) * time.Second)
 			}
