@@ -319,3 +319,48 @@ func (r HeartbeatRequest) String() string {
 		r.ConnectionId, r.Hostname, r.IpAddress, r.Timestamp,
 	)
 }
+
+type AgentView struct {
+	Id                    int32            `json:"id"`
+	Name                  *string          `json:"name"`
+	ConnectionId          string           `json:"connection_id"`
+	Hostname              string           `json:"hostname"`
+	IpAddress             net.IP           `json:"ip_address"`
+	Status                bool             `json:"status"`
+	Comment               *string          `json:"comment"`
+	LastHeartBeat         owlJson.JsonTime `json:"last_heartbeat_time"`
+	NumOfEnabledPingtasks int32            `json:"num_of_enabled_pingtasks"`
+
+	ISP       *ISP      `json:"isp"`
+	Province  *Province `json:"province"`
+	City      *City     `json:"city"`
+	NameTag   *NameTag  `json:"name_tag"`
+	GroupTags []int32   `json:"group_tags"`
+}
+
+func (a AgentView) String() string {
+	return fmt.Sprintf(
+		"Id: [%d]. Name: [%s]. Connection Id: [%s]. IpAddress: [%s]. Hostname: [%s]. Status: [%v]",
+		a.Id, a.Name, a.ConnectionId, a.IpAddress, a.Hostname, a.Status,
+	)
+}
+
+type ISP struct {
+	ID   int16  `json:"id"`
+	Name string `json:"name"`
+}
+
+type Province struct {
+	ID   int16  `json:"id"`
+	Name string `json:"name"`
+}
+
+type City struct {
+	ID   int16  `json:"id"`
+	Name string `json:"name"`
+}
+
+type NameTag struct {
+	ID    int16  `json:"id"`
+	Value string `json:"value"`
+}
