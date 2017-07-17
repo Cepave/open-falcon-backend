@@ -175,6 +175,10 @@ var tsRsps = []string{
 
 // Tests the refreshing and retrieving list of targets for NQM agent
 func (suite *TestNqmAgentSuite) TestTask(c *C) {
+	if !testJsonRpc.HasJsonRpcServ(c) {
+		return
+	}
+
 	testCases := []*struct {
 		req               model.NqmTaskRequest
 		needPing          bool
