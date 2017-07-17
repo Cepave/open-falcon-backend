@@ -11,11 +11,11 @@ import (
 
 var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJsonRpc(func() {
 	var (
-		numberOfGoRoutines int = 20
+		numberOfGoRoutines int = 50
 		pool               *agentPool
 		routines           chan bool
 
-		numberOfFakeAgent    int = 500
+		numberOfFakeAgent    int = 1000
 		numberOfTotalRequest int = 2000
 		stepOfHeartbeat      int = 30
 	)
@@ -47,10 +47,10 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 					"Agent.ReportStatus", request, &resp,
 				)
 
-				if err != nil {
+				if err != nil || resp.Code == 1 {
 					GinkgoT().Errorf("[%s] Has error: %v", request.AgentVersion, err)
 				} else {
-					GinkgoT().Logf("[%s/%d] Success.", request.AgentVersion, numberOfTotalRequest)
+					GinkgoT().Logf("[%s/%d] Success.", request.PluginVersion, numberOfTotalRequest)
 				}
 			})
 		}
@@ -66,10 +66,11 @@ type agentPool struct {
 }
 
 func (ap *agentPool) getNextRequest(requestNumber int) *coModel.AgentReportRequest {
-	agentIdx := strconv.Itoa(requestNumber % ap.ringSize)
+	agentIdx := strconv.Itoa((requestNumber % ap.ringSize) + 1)
 	return &coModel.AgentReportRequest{
-		Hostname:     "stress-reportstatus-" + agentIdx,
-		IP:           "127.0.0.56",
-		AgentVersion: agentIdx,
+		Hostname:      "stress-reportstatus-" + agentIdx,
+		IP:            "127.0.0.56",
+		AgentVersion:  agentIdx,
+		PluginVersion: strconv.Itoa(requestNumber + 1),
 	}
 }
