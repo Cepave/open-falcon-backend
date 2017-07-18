@@ -1,26 +1,28 @@
 package restful
 
 import (
-	"net/http"
-
-	"github.com/Cepave/open-falcon-backend/common/diag"
+	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
-	gin "github.com/gin-gonic/gin"
-	json "gopkg.in/bitly/go-simplejson.v0"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
 )
 
-func health(context *gin.Context) {
-	diagRdb := diag.DiagnoseRdb(
+func health() mvc.OutputBody {
+	diagRdb := rdb.DiagnoseRdb(
 		rdb.DbConfig.Dsn,
 		rdb.DbFacade.SqlDb,
 	)
+	resp := &model.HealthView{
+		Rdb: diagRdb,
+		Http: &model.Http{
+			Listening: GinConfig.GetAddress(),
+		},
+		Nqm: &model.Nqm{
+			Heartbeat: &model.Heartbeat{
+				Count: service.NqmQueue.ConsumedCount(),
+			},
+		},
+	}
 
-	jsonResp := json.New()
-	jsonResp.Set("rdb", diagRdb)
-
-	jsonHttp := json.New()
-	jsonHttp.Set("listening", GinConfig.GetAddress())
-	jsonResp.Set("http", jsonHttp)
-
-	context.JSON(http.StatusOK, jsonResp)
+	return mvc.JsonOutputBody(resp)
 }
