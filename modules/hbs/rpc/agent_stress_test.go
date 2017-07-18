@@ -3,7 +3,6 @@ package rpc
 import (
 	"net/rpc"
 	"strconv"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	coModel "github.com/open-falcon/common/model"
@@ -15,12 +14,18 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 		pool               *agentPool
 		routines           chan bool
 
-		numberOfFakeAgent    int = 1000
-		numberOfTotalRequest int = 0
-		stepOfHeartbeat      int = 30
+		numberOfFakeAgent int = 0
 	)
 
+	checkSkipCondition := func() {
+		if numberOfFakeAgent == 0 {
+			Skip("Number of total request is 0. See numberOfFakeAgent in code")
+		}
+	}
+
 	BeforeEach(func() {
+		checkSkipCondition()
+
 		pool = &agentPool{numberOfFakeAgent}
 		routines = make(chan bool, numberOfGoRoutines)
 		for i := 0; i < numberOfGoRoutines; i++ {
@@ -28,42 +33,37 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 		}
 	})
 
-	It("Should run without error msg", func() {
-		if numberOfTotalRequest == 0 {
-			Skip("Number of total request is 0. See numberOfTotalRequest in code")
-		}
+	Measure("It should serve lots rpc-clients efficiently", func(b Benchmarker) {
+		checkSkipCondition()
+		b.Time("runtime", func() {
+			for i := 0; i < numberOfFakeAgent; i++ {
+				request := pool.getNextRequest(i)
+				var resp coModel.SimpleRpcResponse
 
-		for i := 0; i < numberOfTotalRequest; i++ {
-			// Simulate the heartbeat interval
-			if i > 0 && (i%numberOfFakeAgent == 0) {
-				time.Sleep(time.Duration(stepOfHeartbeat) * time.Second)
+				<-routines
+
+				go ginkgoJsonRpc.OpenClient(func(jsonRpcClient *rpc.Client) {
+					defer func() {
+						routines <- true
+					}()
+
+					err := jsonRpcClient.Call(
+						"Agent.ReportStatus", request, &resp,
+					)
+
+					if err != nil || resp.Code == 1 {
+						GinkgoT().Errorf("[%s] Has error: %v", request.AgentVersion, err)
+					} else {
+						GinkgoT().Logf("[%s/%d] Success.", request.PluginVersion, numberOfFakeAgent)
+					}
+				})
 			}
-			request := pool.getNextRequest(i)
-			var resp coModel.SimpleRpcResponse
 
-			<-routines
-
-			go ginkgoJsonRpc.OpenClient(func(jsonRpcClient *rpc.Client) {
-				defer func() {
-					routines <- true
-				}()
-
-				err := jsonRpcClient.Call(
-					"Agent.ReportStatus", request, &resp,
-				)
-
-				if err != nil || resp.Code == 1 {
-					GinkgoT().Errorf("[%s] Has error: %v", request.AgentVersion, err)
-				} else {
-					GinkgoT().Logf("[%s/%d] Success.", request.PluginVersion, numberOfTotalRequest)
-				}
-			})
-		}
-
-		for i := 0; i < numberOfGoRoutines; i++ {
-			<-routines
-		}
-	})
+			for i := 0; i < numberOfGoRoutines; i++ {
+				<-routines
+			}
+		})
+	}, 3)
 }))
 
 type agentPool struct {
