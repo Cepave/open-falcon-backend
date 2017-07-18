@@ -84,5 +84,5 @@ func initApi() {
 
 	v1.POST("/agent/heartbeat", mvcBuilder.BuildHandler(falconAgentHeartbeat))
 
-	router.GET("/health", health)
+	router.GET("/health", mvcBuilder.BuildHandler(health))
 }
