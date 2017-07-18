@@ -13,17 +13,12 @@ func health() mvc.OutputBody {
 		rdb.DbFacade.SqlDb,
 	)
 	resp := &model.HealthView{
-		Rdb: model.Rdb{
-			Dsn:             diagRdb.Dsn,
-			OpenConnections: diagRdb.OpenConnections,
-			PingResult:      diagRdb.PingResult,
-			PingMessage:     diagRdb.PingMessage,
-		},
-		Http: model.Http{
+		Rdb: diagRdb,
+		Http: &model.Http{
 			Listening: GinConfig.GetAddress(),
 		},
-		Nqm: model.Nqm{
-			Heartbeat: model.Heartbeat{
+		Nqm: &model.Nqm{
+			Heartbeat: &model.Heartbeat{
 				Count: service.NqmQueue.ConsumedCount(),
 			},
 		},

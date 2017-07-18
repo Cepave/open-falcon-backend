@@ -19,9 +19,9 @@ package model
 //    }
 // }
 type HealthView struct {
-	Rdb  Rdb  `json:"rdb"`
-	Http Http `json:"http"`
-	Nqm  Nqm  `json:"nqm"`
+	Rdb  *Rdb  `json:"rdb"`
+	Http *Http `json:"http"`
+	Nqm  *Nqm  `json:"nqm"`
 }
 
 type Rdb struct {
@@ -36,7 +36,7 @@ type Http struct {
 }
 
 type Nqm struct {
-	Heartbeat Heartbeat `json:"heartbeat"`
+	Heartbeat *Heartbeat `json:"heartbeat"`
 }
 
 type Heartbeat struct {
