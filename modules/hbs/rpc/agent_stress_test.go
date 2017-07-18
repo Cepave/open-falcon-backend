@@ -14,19 +14,20 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 		pool               *agentPool
 		routines           chan bool
 
-		numberOfFakeAgent int = 0
+		numberOfFakeAgents int = 0
+		numberOfSamples    int = 3
 	)
 
 	checkSkipCondition := func() {
-		if numberOfFakeAgent == 0 {
-			Skip("Number of total request is 0. See numberOfFakeAgent in code")
+		if numberOfFakeAgents == 0 {
+			Skip("Number of total request is 0. See numberOfFakeAgents in code")
 		}
 	}
 
 	BeforeEach(func() {
 		checkSkipCondition()
 
-		pool = &agentPool{numberOfFakeAgent}
+		pool = &agentPool{numberOfFakeAgents}
 		routines = make(chan bool, numberOfGoRoutines)
 		for i := 0; i < numberOfGoRoutines; i++ {
 			routines <- true
@@ -36,7 +37,7 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 	Measure("It should serve lots rpc-clients efficiently", func(b Benchmarker) {
 		checkSkipCondition()
 		b.Time("runtime", func() {
-			for i := 0; i < numberOfFakeAgent; i++ {
+			for i := 0; i < numberOfFakeAgents; i++ {
 				request := pool.getNextRequest(i)
 				var resp coModel.SimpleRpcResponse
 
@@ -54,7 +55,7 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 					if err != nil || resp.Code == 1 {
 						GinkgoT().Errorf("[%s] Has error: %v", request.AgentVersion, err)
 					} else {
-						GinkgoT().Logf("[%s/%d] Success.", request.PluginVersion, numberOfFakeAgent)
+						GinkgoT().Logf("[%s/%d] Success.", request.PluginVersion, numberOfFakeAgents)
 					}
 				})
 			}
@@ -63,7 +64,7 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 				<-routines
 			}
 		})
-	}, 3)
+	}, numberOfSamples)
 }))
 
 type agentPool struct {
