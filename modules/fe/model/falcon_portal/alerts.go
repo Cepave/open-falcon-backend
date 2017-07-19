@@ -158,7 +158,12 @@ func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bo
 			// 2 means unknown, for not exist hostname & exnternal alarm
 			item.Activate = 2
 		}
-		respCompleteTmp = append(respCompleteTmp, item)
+
+		if item.Activate != 0 {
+			respCompleteTmp = append(respCompleteTmp, item)
+		} else if showAll {
+			respCompleteTmp = append(respCompleteTmp, item)
+		}
 	}
 	respComplete = respCompleteTmp
 	return
