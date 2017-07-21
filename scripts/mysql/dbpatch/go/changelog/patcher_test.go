@@ -2,8 +2,8 @@ package changelog
 
 import (
 	dbsql "database/sql"
-	. "gopkg.in/check.v1"
 	_ "github.com/go-sql-driver/mysql"
+	. "gopkg.in/check.v1"
 )
 
 /**
@@ -31,7 +31,7 @@ func (suite *ChangeLogSuite) TestCheckChangeLogSchema(c *C) {
 
 func assertChangeLogSchema(c *C) {
 	var result int = -1
-	err := dbConfig.Execute(func (db *dbsql.DB) (err error) {
+	err := dbConfig.Execute(func(db *dbsql.DB) (err error) {
 		err = db.
 			QueryRow(`
 			SELECT COUNT(*)
@@ -39,8 +39,8 @@ func assertChangeLogSchema(c *C) {
 			WHERE TABLE_NAME = ?
 				AND TABLE_SCHEMA = DATABASE()
 			`,
-			"sysdb_change_log",
-		).
+				"sysdb_change_log",
+			).
 			Scan(&result)
 		return
 	})
@@ -64,7 +64,7 @@ func (suite *ChangeLogSuite) TestApplyPatch(c *C) {
 		`,
 	}
 
-	err := applyPatch(dbConfig, &PatchConfig{ Id: "apply-ph-1", Filename: "apply-ph-1.sql" }, scripts)
+	err := applyPatch(dbConfig, &PatchConfig{Id: "apply-ph-1", Filename: "apply-ph-1.sql"}, scripts)
 	c.Assert(err, IsNil)
 
 	/**
@@ -123,7 +123,7 @@ func (suite *ChangeLogSuite) TestApplyPatchWithError(c *C) {
 	/**
 	 * Asserts the error
 	 */
-	err := applyPatch(dbConfig, &PatchConfig{ Id: "err-ph-1", Filename: "apply-ph-1.sql" }, scripts)
+	err := applyPatch(dbConfig, &PatchConfig{Id: "err-ph-1", Filename: "apply-ph-1.sql"}, scripts)
 	c.Assert(err, NotNil)
 	// :~)
 
@@ -156,12 +156,12 @@ func (suite *ChangeLogSuite) TestApplyPatchWithError(c *C) {
  */
 func (suite *ChangeLogSuite) TestHasPatchApplied(c *C) {
 	var testCases = []struct {
-		patchConfig PatchConfig
+		patchConfig    PatchConfig
 		expectedResult bool
-	} {
-		{ PatchConfig { Id: "hp-sample-1" }, true }, // Successful
-		{ PatchConfig { Id: "hp-sample-2" }, false }, // Failed
-		{ PatchConfig { Id: "hp-sample-3" }, false }, // Not applied
+	}{
+		{PatchConfig{Id: "hp-sample-1"}, true},  // Successful
+		{PatchConfig{Id: "hp-sample-2"}, false}, // Failed
+		{PatchConfig{Id: "hp-sample-3"}, false}, // Not applied
 	}
 
 	for _, testCase := range testCases {
@@ -176,8 +176,8 @@ func (suite *ChangeLogSuite) TestHasPatchApplied(c *C) {
  */
 func (suite *ChangeLogSuite) TestUpdateChangeLogFunc(c *C) {
 	var samplePatchContent = patchResult{
-		id: 501,
-		result: 2,
+		id:      501,
+		result:  2,
 		message: "message-1",
 	}
 
@@ -214,8 +214,8 @@ func (suite *ChangeLogSuite) TestUpdateChangeLogFunc(c *C) {
 func (suite *ChangeLogSuite) TestNewChangeLogFunc(c *C) {
 	var testedLogContent = patchResult{
 		patchConfig: &PatchConfig{
-			Id: "bob-1",
-			Comment: "comment-1",
+			Id:       "bob-1",
+			Comment:  "comment-1",
 			Filename: "bob-1.sql",
 		},
 	}

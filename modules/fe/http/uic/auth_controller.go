@@ -86,7 +86,7 @@ func (this *AuthController) LoginPost() {
 	ldapEnabled := this.MustGetBool("ldap", false)
 
 	if ldapEnabled {
-		sucess, err := utils.LdapBind(g.Config().Ldap.Addr,
+		success, err := utils.LdapBind(g.Config().Ldap.Addr,
 			g.Config().Ldap.BaseDN,
 			g.Config().Ldap.BindDN,
 			g.Config().Ldap.BindPasswd,
@@ -98,7 +98,7 @@ func (this *AuthController) LoginPost() {
 			return
 		}
 
-		if !sucess {
+		if !success {
 			this.ServeErrJson("name or password error")
 			return
 		}

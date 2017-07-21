@@ -1,37 +1,38 @@
 package ginkgo
 
 import (
-	"net/http"
 	"fmt"
 	ohttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	. "github.com/onsi/gomega/types"
+	"net/http"
 )
 
 // Matches the status of HTTP response, the type of tested value could be:
 // 	*http.Response
 // 	*testing/http.ResponseResult
 func MatchHttpStatus(status int) GomegaMatcher {
-	return &httpStatusMatcher { status }
+	return &httpStatusMatcher{status}
 }
 
 // Matches the JSON body of HTTP response, the type of tested value could be:
 // 	*http.Response
 // 	*testing/http.ResponseResult
 func MatchHttpBodyAsJson(json interface{}) GomegaMatcher {
-	return &jsonBodyMatcher {
+	return &jsonBodyMatcher{
 		expectedBody: json,
-		matcher: MatchJson(json),
+		matcher:      MatchJson(json),
 	}
 }
 
 type jsonBodyMatcher struct {
 	expectedBody interface{}
-	matcher GomegaMatcher
+	matcher      GomegaMatcher
 }
+
 func (m *jsonBodyMatcher) Match(actual interface{}) (success bool, err error) {
 	respResult := getResponseResult(actual)
 	if respResult == nil {
-		return false,  buildRespError(actual)
+		return false, buildRespError(actual)
 	}
 
 	return m.matcher.Match(respResult.GetBodyAsJson())
@@ -54,6 +55,7 @@ func (m *jsonBodyMatcher) NegatedFailureMessage(actual interface{}) (message str
 type httpStatusMatcher struct {
 	expectedStatus int
 }
+
 func (m *httpStatusMatcher) Match(actual interface{}) (success bool, err error) {
 	resp := getResponse(actual)
 	if resp == nil {

@@ -2,20 +2,20 @@ package owl
 
 import (
 	"fmt"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
 type IspService struct {
-	cache *cache.CacheCtrl
+	cache       *cache.CacheCtrl
 	cacheConfig *cache.DataCacheConfig
 }
 
 func NewIspService(cacheConfig cache.DataCacheConfig) *IspService {
-	return &IspService {
+	return &IspService{
 		cacheConfig: &cacheConfig,
-		cache: cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
+		cache:       cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
 	}
 }
 
@@ -37,6 +37,7 @@ func (s *IspService) GetIspById(ispId int16) *owlModel.Isp {
 
 	return v.(*owlModel.Isp)
 }
+
 // Loads isp by name(or from cache)
 //
 // The name, which cannot find any data, would not be put into cache.

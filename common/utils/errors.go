@@ -23,7 +23,7 @@
 //
 // 	err := errFunc()
 //
-// Capture panic to speical handler
+// Capture panic to special handler
 //
 // If a go routine gets panic, the process would be terminated by default,
 // you could use "BuildPanicCapture" to prevent the behavior.
@@ -126,6 +126,7 @@ func PanicToErrorWrapper(mainFunc func(), errConverter ErrorConverter) func() er
 func PanicToSimpleErrorWrapper(mainFunc func()) func() error {
 	return PanicToErrorWrapper(mainFunc, SimpleErrorConverter)
 }
+
 // Builds simple function, which executes target function with panic handler(panic-free)
 func BuildPanicCapture(targetFunc func(), panicHandler func(interface{})) func() {
 	return func() {
@@ -155,9 +156,10 @@ func BuildPanicToError(targetFunc func(), errHolder *error) func() {
 }
 
 type StackError struct {
-	cause error
+	cause      error
 	callerInfo *gr.CallerInfo
 }
+
 func (e *StackError) Error() string {
 	return fmt.Sprintf("%s:%d:%v", e.callerInfo.GetFile(), e.callerInfo.Line, e.cause)
 }
@@ -207,8 +209,8 @@ func BuildErrorWithCallerInfo(err error, callerInfo *gr.CallerInfo) *StackError 
 		return stackError
 	}
 
-	return &StackError {
-		cause: err,
+	return &StackError{
+		cause:      err,
 		callerInfo: callerInfo,
 	}
 }

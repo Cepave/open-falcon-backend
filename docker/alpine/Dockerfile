@@ -99,9 +99,9 @@ RUN \
   && touch ${CONFIG_DIR}/transfer.json \
   && ln -sf ${CONFIG_DIR}/transfer.json ${FALCON_DIR}/transfer/${CONFIG_LINK} \
   && rm -f ${CONFIG_DIR}/transfer.json \
-  && touch ${CONFIG_DIR}/nqm-mng.json \
-  && ln -sf ${CONFIG_DIR}/nqm-mng.json ${FALCON_DIR}/nqm-mng/${CONFIG_LINK} \
-  && rm -f ${CONFIG_DIR}/nqm-mng.json \
+  && touch ${CONFIG_DIR}/mysqlapi.json \
+  && ln -sf ${CONFIG_DIR}/mysqlapi.json ${FALCON_DIR}/mysqlapi/${CONFIG_LINK} \
+  && rm -f ${CONFIG_DIR}/mysqlapi.json \
   && touch ${CONFIG_DIR}/f2e-api.json \
   && ln -sf ${CONFIG_DIR}/f2e-api.json ${FALCON_DIR}/f2e-api/${CONFIG_LINK} \
   && rm -f ${CONFIG_DIR}/f2e-api.json

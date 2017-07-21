@@ -16,6 +16,7 @@ var _ = Suite(&TestBindingSuite{})
 type gBox struct {
 	name string
 }
+
 func (b *gBox) Bind(sourceObject interface{}) {
 	switch typedV := sourceObject.(type) {
 	case string:
@@ -30,11 +31,11 @@ func (b *gBox) Bind(sourceObject interface{}) {
 // Tests the translation from binding to converter
 func (suite *TestBindingSuite) TestBindingToConverter(c *C) {
 	testCases := []*struct {
-		sourceObj interface{}
+		sourceObj    interface{}
 		expectedName string
-	} {
-		{ "Easy", "string: Easy" },
-		{ int32(91), "int: 91" },
+	}{
+		{"Easy", "string: Easy"},
+		{int32(91), "int: 91"},
 	}
 
 	converter, targetType := BindingToConverter(
@@ -59,6 +60,7 @@ func (suite *TestBindingSuite) TestBindingToConverter(c *C) {
 type MyBox struct {
 	Name string
 }
+
 func (b *MyBox) Bind(source interface{}) {
 	switch v := source.(type) {
 	case int:
@@ -72,19 +74,19 @@ func (b *MyBox) Bind(source interface{}) {
 
 func ExampleBinding() {
 	/*
-	type MyBox struct {
-		Name string
-	}
-	func (b *MyBox) Bind(source interface{}) {
-		switch v := source.(type) {
-		case int:
-			b.Name = fmt.Sprintf("Name by number: %d", v)
-		case string:
-			b.Name = fmt.Sprintf("Name by string: %s", v)
-		default:
-			panic(fmt.Sprintf("Cannot be converted from value of type: %T", source))
+		type MyBox struct {
+			Name string
 		}
-	}
+		func (b *MyBox) Bind(source interface{}) {
+			switch v := source.(type) {
+			case int:
+				b.Name = fmt.Sprintf("Name by number: %d", v)
+			case string:
+				b.Name = fmt.Sprintf("Name by string: %s", v)
+			default:
+				panic(fmt.Sprintf("Cannot be converted from value of type: %T", source))
+			}
+		}
 	*/
 	box := &MyBox{}
 
@@ -102,19 +104,19 @@ func ExampleBinding_conversionService() {
 	convSrv := NewDefaultConversionService()
 
 	/*
-	type MyBox struct {
-		Name string
-	}
-	func (b *MyBox) Bind(source interface{}) {
-		switch v := source.(type) {
-		case int:
-			b.Name = fmt.Sprintf("Name by number: %d", v)
-		case string:
-			b.Name = fmt.Sprintf("Name by string: %s", v)
-		default:
-			panic(fmt.Sprintf("Cannot be converted from value of type: %T", source))
+		type MyBox struct {
+			Name string
 		}
-	}
+		func (b *MyBox) Bind(source interface{}) {
+			switch v := source.(type) {
+			case int:
+				b.Name = fmt.Sprintf("Name by number: %d", v)
+			case string:
+				b.Name = fmt.Sprintf("Name by string: %s", v)
+			default:
+				panic(fmt.Sprintf("Cannot be converted from value of type: %T", source))
+			}
+		}
 	*/
 
 	// Gets the function of conversion and target type

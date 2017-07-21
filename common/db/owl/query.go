@@ -1,17 +1,17 @@
 package owl
 
 import (
-	"github.com/satori/go.uuid"
-	model "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	model "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/jmoiron/sqlx"
+	"github.com/satori/go.uuid"
 	"time"
 )
 
 // Adds a query or refresh an existing one
 func AddOrRefreshQuery(query *model.Query, accessTime time.Time) {
-	DbFacade.SqlxDbCtrl.InTx(&addOrRefreshQueryTx{ query, accessTime })
+	DbFacade.SqlxDbCtrl.InTx(&addOrRefreshQueryTx{query, accessTime})
 }
 
 // Updates access time of a query or adding new one
@@ -50,7 +50,7 @@ func LoadQueryByUuidAndUpdateAccessTime(name string, uuid uuid.UUID, accessTime 
 }
 
 type addOrRefreshQueryTx struct {
-	query *model.Query
+	query      *model.Query
 	accessTime time.Time
 }
 
@@ -81,10 +81,10 @@ func (queryTx *addOrRefreshQueryTx) performAddOrUpdate(txExt *sqlxExt.TxExt) {
 		ON DUPLICATE KEY UPDATE
 			qr_time_access = :access_time
 		`,
-		map[string]interface{} {
-			"uuid": queryObject.Uuid,
-			"named_id": queryObject.NamedId,
-			"content": queryObject.Content,
+		map[string]interface{}{
+			"uuid":        queryObject.Uuid,
+			"named_id":    queryObject.NamedId,
+			"content":     queryObject.Content,
 			"md5_content": queryObject.Md5Content,
 			"access_time": queryTx.accessTime,
 		},
@@ -100,7 +100,7 @@ func (queryTx *addOrRefreshQueryTx) loadUuid(txExt *sqlxExt.TxExt) {
 		WHERE qr_named_id = ?
 			AND qr_md5_content = ?
 		`,
-		[]interface{} {
+		[]interface{}{
 			queryObject.NamedId,
 			queryObject.Md5Content,
 		},
@@ -115,15 +115,17 @@ func updateAccessTimeByUuid(uuid db.DbUuid, accessTime time.Time) {
 		SET qr_time_access = :access_time
 		WHERE qr_uuid = :uuid
 		`,
-		map[string]interface{} {
+		map[string]interface{}{
 			"access_time": accessTime,
-			"uuid": uuid,
+			"uuid":        uuid,
 		},
 	)
 }
 func isQueryExistingByUuid(uuid db.DbUuid) bool {
 	return DbFacade.SqlxDbCtrl.GetOrNoRow(
-		&struct { Uuid db.DbUuid `db:"qr_uuid"` }{},
+		&struct {
+			Uuid db.DbUuid `db:"qr_uuid"`
+		}{},
 		`
 		SELECT qr_uuid
 		FROM owl_query

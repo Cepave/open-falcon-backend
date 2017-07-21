@@ -28,8 +28,7 @@ func LoadChangeLog(changeLogOfYaml []byte) (configOfPatches []PatchConfig, err e
 	 * Unmarshal the content YAML to PatchConfig
 	 */
 	configOfPatches = make([]PatchConfig, 0, 8)
-	if err = yaml.Unmarshal(changeLogOfYaml, &configOfPatches)
-		err != nil {
+	if err = yaml.Unmarshal(changeLogOfYaml, &configOfPatches); err != nil {
 		configOfPatches = nil
 		return
 	}
@@ -42,8 +41,7 @@ func LoadChangeLog(changeLogOfYaml []byte) (configOfPatches []PatchConfig, err e
 func LoadChangeLogFromReader(readerOfchangeLog io.Reader) (configOfPatches []PatchConfig, err error) {
 	var yamlContent []byte
 
-	if yamlContent, err = ioutil.ReadAll(bufio.NewReader(readerOfchangeLog))
-		err != nil {
+	if yamlContent, err = ioutil.ReadAll(bufio.NewReader(readerOfchangeLog)); err != nil {
 		return
 	}
 
@@ -58,8 +56,7 @@ func LoadChangeLogFromFile(changeLogFile string) (configOfPatches []PatchConfig,
 	/**
 	 * Reads change log of YAML
 	 */
-	if fileOfChangeLog, err = os.Open(changeLogFile)
-		err != nil {
+	if fileOfChangeLog, err = os.Open(changeLogFile); err != nil {
 		return nil, err
 	}
 
@@ -69,7 +66,7 @@ func LoadChangeLogFromFile(changeLogFile string) (configOfPatches []PatchConfig,
 	return LoadChangeLogFromReader(fileOfChangeLog)
 }
 
-const ESCAPED_DELIMITER = "!DBPATCH!ESCAPED_DELIMITER!";
+const ESCAPED_DELIMITER = "!DBPATCH!ESCAPED_DELIMITER!"
 
 // Opens the file of patch and reads the script in it(splitted by delimiter)
 func (patchConfig *PatchConfig) loadScripts(folderBase string, delimiter string) (scripts []string, err error) {
@@ -82,8 +79,7 @@ func (patchConfig *PatchConfig) loadScripts(folderBase string, delimiter string)
 	}
 
 	var targetFile *os.File
-	if targetFile, err = os.Open(patchFile)
-		err != nil {
+	if targetFile, err = os.Open(patchFile); err != nil {
 		return
 	}
 
@@ -95,13 +91,12 @@ func (patchConfig *PatchConfig) loadScripts(folderBase string, delimiter string)
 	 * ** Replace the escaped delimiter with special string **
 	 */
 	var contentOfScript []byte
-	if contentOfScript, err = ioutil.ReadAll(targetFile)
-		err != nil {
+	if contentOfScript, err = ioutil.ReadAll(targetFile); err != nil {
 		return
 	}
 
 	stringOfScript := string(contentOfScript)
-	stringOfScript = strings.Replace(stringOfScript, delimiter + delimiter, ESCAPED_DELIMITER, -1)
+	stringOfScript = strings.Replace(stringOfScript, delimiter+delimiter, ESCAPED_DELIMITER, -1)
 
 	var rowScripts = strings.Split(
 		stringOfScript, delimiter,
@@ -114,7 +109,7 @@ func (patchConfig *PatchConfig) loadScripts(folderBase string, delimiter string)
 	 *
 	 * ** Replace back the escaped delimiters**
 	 */
-	scripts = make([]string, 0, len(rowScripts) - 1)
+	scripts = make([]string, 0, len(rowScripts)-1)
 	for _, rowScript := range rowScripts {
 		rowScript = strings.TrimSpace(rowScript)
 		rowScript = strings.Replace(rowScript, ESCAPED_DELIMITER, delimiter, -1)

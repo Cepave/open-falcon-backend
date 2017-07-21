@@ -7,8 +7,8 @@ import (
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 
 	. "gopkg.in/check.v1"
 )
@@ -275,12 +275,12 @@ func (suite *TestPingtaskSuite) TestRemovePingtaskFromAgentForPingtask(c *C) {
 
 func (suite *TestPingtaskSuite) TestListPingtasks(c *C) {
 	orderBy := []*commonModel.OrderByEntity{
-		&commonModel.OrderByEntity{"id", commonModel.Descending},
-		&commonModel.OrderByEntity{"period", commonModel.Descending},
-		&commonModel.OrderByEntity{"name", commonModel.Ascending},
-		&commonModel.OrderByEntity{"enable", commonModel.Ascending},
-		&commonModel.OrderByEntity{"comment", commonModel.Ascending},
-		&commonModel.OrderByEntity{"num_of_enabled_agents", commonModel.Ascending},
+		{"id", commonModel.Descending},
+		{"period", commonModel.Descending},
+		{"name", commonModel.Ascending},
+		{"enable", commonModel.Ascending},
+		{"comment", commonModel.Ascending},
+		{"num_of_enabled_agents", commonModel.Ascending},
 	}
 
 	testCases := []*struct {
@@ -352,19 +352,19 @@ func (suite *TestPingtaskSuite) TestListPingtasks(c *C) {
 
 func (suite *TestPingtaskSuite) TestAddAndGetPingtask(c *C) {
 	sPtr := func(v string) *string { return &v }
-	var newPingTask = &nqmModel.PingtaskModify {
-		Period: 30,
-		Name: sPtr("add-pt-廣東"),
-		Enable: true,
+	var newPingTask = &nqmModel.PingtaskModify{
+		Period:  30,
+		Name:    sPtr("add-pt-廣東"),
+		Enable:  true,
 		Comment: sPtr("This is for some purpose"),
 	}
 
 	testCases := []*struct {
 		filter *nqmModel.PingtaskModifyFilter
-	} {
+	}{
 		{
 			&nqmModel.PingtaskModifyFilter{
-				IspIds: []int16{},
+				IspIds:      []int16{},
 				ProvinceIds: []int16{},
 				CityIds:     []int16{},
 				NameTagIds:  []int16{},
@@ -373,11 +373,11 @@ func (suite *TestPingtaskSuite) TestAddAndGetPingtask(c *C) {
 		},
 		{
 			&nqmModel.PingtaskModifyFilter{
-				IspIds: []int16{ 3, 4 },
-				ProvinceIds: []int16{ 11, 12, 13 },
-				CityIds:     []int16{ 51, 52 },
-				NameTagIds:  []int16{ 7801, 7802 },
-				GroupTagIds: []int32{ 10201, 10202 },
+				IspIds:      []int16{3, 4},
+				ProvinceIds: []int16{11, 12, 13},
+				CityIds:     []int16{51, 52},
+				NameTagIds:  []int16{7801, 7802},
+				GroupTagIds: []int32{10201, 10202},
 			},
 		},
 	}
@@ -411,28 +411,28 @@ func (suite *TestPingtaskSuite) TestAddAndGetPingtask(c *C) {
 
 func (suite *TestPingtaskSuite) TestUpdateAndGetPingtask(c *C) {
 	sPtr := func(v string) *string { return &v }
-	var modifiedPingTask = &nqmModel.PingtaskModify {
-		Period: 78,
-		Enable: false,
-		Name: sPtr("up-name-88"),
+	var modifiedPingTask = &nqmModel.PingtaskModify{
+		Period:  78,
+		Enable:  false,
+		Name:    sPtr("up-name-88"),
 		Comment: sPtr("up-comment-71"),
 	}
 
 	testCases := []*struct {
 		filter *nqmModel.PingtaskModifyFilter
-	} {
+	}{
 		{
 			&nqmModel.PingtaskModifyFilter{
-				IspIds: []int16{ 3, 4 },
-				ProvinceIds: []int16{ 11, 12, 13 },
-				CityIds:     []int16{ 51, 52 },
-				NameTagIds:  []int16{ 6931, 6932 },
-				GroupTagIds: []int32{ 28441, 28442 },
+				IspIds:      []int16{3, 4},
+				ProvinceIds: []int16{11, 12, 13},
+				CityIds:     []int16{51, 52},
+				NameTagIds:  []int16{6931, 6932},
+				GroupTagIds: []int32{28441, 28442},
 			},
 		},
 		{
 			&nqmModel.PingtaskModifyFilter{
-				IspIds: []int16{},
+				IspIds:      []int16{},
 				ProvinceIds: []int16{},
 				CityIds:     []int16{},
 				NameTagIds:  []int16{},

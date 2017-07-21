@@ -1,2 +1,5 @@
 package_cache_tmp
 *.swp
+bin
+open-falcon
+open-falcon*.tar.gz

@@ -8,11 +8,11 @@ type TestMapSuite struct{}
 
 var _ = Suite(&TestMapSuite{})
 
-// Tests the convertion of types for a map
+// Tests the conversion of types for a map
 func (suite *TestMapSuite) Test(c *C) {
 	type s2 string
 
-	sampleAMap := MakeAbstractMap(map[int16]s2 {
+	sampleAMap := MakeAbstractMap(map[int16]s2{
 		1: "Nice",
 		2: "Good",
 	})

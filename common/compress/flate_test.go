@@ -13,8 +13,8 @@ var _ = Suite(&TestFlateSuite{})
 func (suite *TestFlateSuite) TestMustCompressString(c *C) {
 	testCases := []*struct {
 		sampleString string
-	} {
-		{ "{}" },
+	}{
+		{"{}"},
 		{
 			`面對二○一七年全球經濟變局，林全研判，川普不可能揚棄自由貿易的方向，不論TPP替代方案為何，台灣必須準備好。他也第一次披露，行政院即將新訂針對外籍專業人士來台的特別法；及未來三年，台灣將推千億鐵道交通建設；個人與企業所得稅要併案稅改等新建設。`,
 		},
@@ -26,13 +26,13 @@ s":[24,39,81],"city_ids":[14,23],"name_tag_ids":[39,46],"group_tag_ids":[61,63]}
 		},
 	}
 
-	testedCompressor := &FlateCompressor{ flate.DefaultCompression }
+	testedCompressor := &FlateCompressor{flate.DefaultCompression}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResultBytes := testedCompressor.MustCompressString(testCase.sampleString)
-		c.Logf("[Case %d] Source size:[%d] Compressed Size: [%d]", i + 1, len(testCase.sampleString), len(testedResultBytes))
+		c.Logf("[Case %d] Source size:[%d] Compressed Size: [%d]", i+1, len(testCase.sampleString), len(testedResultBytes))
 
 		testedResultString := testedCompressor.MustDecompressToString(testedResultBytes)
 

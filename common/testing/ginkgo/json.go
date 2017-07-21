@@ -3,12 +3,12 @@ package ginkgo
 import (
 	"encoding/json"
 
-	. "github.com/onsi/gomega/types"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/types"
 )
 
 func MatchJson(v interface{}) GomegaMatcher {
-	return &matchJsonImpl {
+	return &matchJsonImpl{
 		MatchJSON(loadJsonString(v)),
 	}
 }

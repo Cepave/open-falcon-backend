@@ -1,8 +1,8 @@
 package http
 
 import (
-	httptesting "github.com/Cepave/open-falcon-backend/common/testing/http"
 	json "github.com/Cepave/open-falcon-backend/common/json"
+	httptesting "github.com/Cepave/open-falcon-backend/common/testing/http"
 	. "gopkg.in/check.v1"
 )
 

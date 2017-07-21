@@ -2,13 +2,13 @@ package nqm
 
 import (
 	"encoding/json"
-	"net/http"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	osling "github.com/Cepave/open-falcon-backend/common/sling"
+	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	sjson "github.com/bitly/go-simplejson"
 	"github.com/dghubble/sling"
-	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
-	"github.com/Cepave/open-falcon-backend/common/utils"
+	"net/http"
 )
 
 var rootClient *sling.Sling

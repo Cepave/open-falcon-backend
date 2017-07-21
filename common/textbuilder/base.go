@@ -42,9 +42,9 @@
 package textbuilder
 
 import (
-	"unicode/utf8"
 	"fmt"
 	"reflect"
+	"unicode/utf8"
 )
 
 // This instance provides string of empty("")
@@ -87,12 +87,14 @@ type PostProcessor interface {
 
 // Initialize a new instance of post processor with default operations
 func NewPost(content TextGetter) *DefaultPost {
-	return &DefaultPost{ content }
+	return &DefaultPost{content}
 }
+
 // Implements default post processor
 type DefaultPost struct {
 	content TextGetter
 }
+
 func (p *DefaultPost) Transform(t Transformer) PostProcessor {
 	p.content = t(p.content)
 	return p
@@ -133,6 +135,7 @@ func (p *DefaultPost) String() string {
 
 // Implements the text getter with string value
 type StringGetter string
+
 func (t StringGetter) String() string {
 	return string(t)
 }
@@ -142,11 +145,13 @@ func (t StringGetter) Post() PostProcessor {
 
 // Converts fmt.Stringer interface to TextGetter
 func NewStringerGetter(v fmt.Stringer) *StringerGetter {
-	return &StringerGetter{ v }
+	return &StringerGetter{v}
 }
+
 type StringerGetter struct {
 	stringer fmt.Stringer
 }
+
 func (s *StringerGetter) String() string {
 	return s.stringer.String()
 }
@@ -175,26 +180,28 @@ type ListPost interface {
 // Defines operations for a TextList
 type ListPostProcessor interface {
 	Distill(Distiller) TextGetter
-	Join(seperator TextGetter) TextGetter
+	Join(separator TextGetter) TextGetter
 }
 
 // Initialzie an instance of DefaultListPost
 func NewListPost(list TextList) *DefaultListPost {
-	return &DefaultListPost { list }
+	return &DefaultListPost{list}
 }
 
 // Implements default post prcessor for a list
 type DefaultListPost struct {
 	list TextList
 }
-func (l *DefaultListPost) Join(seperator TextGetter) TextGetter {
-	return JoinTextList(seperator, l.list)
+
+func (l *DefaultListPost) Join(separator TextGetter) TextGetter {
+	return JoinTextList(separator, l.list)
 }
 func (l *DefaultListPost) Distill(d Distiller) TextGetter {
 	return d(l.list)
 }
 
 type TextGetters []TextGetter
+
 func Getters(getters ...TextGetter) TextGetters {
 	return TextGetters(getters)
 }
@@ -230,7 +237,7 @@ func ToTextGetter(v interface{}) TextGetter {
 	return TextGetterPrintf("%v", v)
 }
 
-// Converts multiple values to TextList, for the convertion of element,  see ToTextGetter
+// Converts multiple values to TextList, for the conversion of element,  see ToTextGetter
 func ToTextList(anyObjects ...interface{}) TextList {
 	getters := make([]TextGetter, len(anyObjects))
 
@@ -276,32 +283,32 @@ func IsViable(value interface{}) bool {
 
 // Prefixing the content(if the content viable)
 func Prefix(prefix TextGetter, content TextGetter) TextGetter {
-	return &prefixImpl { prefix, content }
+	return &prefixImpl{prefix, content}
 }
 
 // Suffixing the content(if the content is viable)
 func Suffix(content TextGetter, suffix TextGetter) TextGetter {
-	return &suffixImpl { content, suffix }
+	return &suffixImpl{content, suffix}
 }
 
 // Surrounding the content(if the content is viable)
 func Surrounding(prefix TextGetter, content TextGetter, suffix TextGetter) TextGetter {
-	return &surroundingImpl { prefix, content, suffix }
+	return &surroundingImpl{prefix, content, suffix}
 }
 
 // Surrounding the content(if the content is viable)
 func SurroundingSame(s TextGetter, content TextGetter) TextGetter {
-	return &surroundingImpl { s, content, s }
+	return &surroundingImpl{s, content, s}
 }
 
 // Joining the viable element of getters
-func Join(seperator TextGetter, getters ...TextGetter) TextGetter {
-	return JoinTextList(seperator, TextGetters(getters))
+func Join(separator TextGetter, getters ...TextGetter) TextGetter {
+	return JoinTextList(separator, TextGetters(getters))
 }
 
 // Joining the viable element of TextList
-func JoinTextList(seperator TextGetter, textList TextList) TextGetter {
-	return &joinImpl { seperator, textList }
+func JoinTextList(separator TextGetter, textList TextList) TextGetter {
+	return &joinImpl{separator, textList}
 }
 
 // Repeating the viable element of TextList
@@ -331,27 +338,28 @@ func RepeatByLen(text TextGetter, lenObject interface{}) TextList {
 	default:
 		value := reflect.ValueOf(lenObject)
 		switch value.Kind() {
-			case reflect.Array, reflect.Slice, reflect.Chan, reflect.Map:
-				repeatTimes = value.Len()
-			default:
-				panic(fmt.Sprintf("Cannot figure out the \"len\" of type[%T].", lenObject))
+		case reflect.Array, reflect.Slice, reflect.Chan, reflect.Map:
+			repeatTimes = value.Len()
+		default:
+			panic(fmt.Sprintf("Cannot figure out the \"len\" of type[%T].", lenObject))
 		}
 	}
 
 	return Repeat(text, repeatTimes)
 }
 
-func RepeatAndJoin(text TextGetter, seperator TextGetter, times int) TextGetter {
-	return JoinTextList(seperator, Repeat(text, times));
+func RepeatAndJoin(text TextGetter, separator TextGetter, times int) TextGetter {
+	return JoinTextList(separator, Repeat(text, times))
 }
-func RepeatAndJoinByLen(text TextGetter, seperator TextGetter, lenObject interface{}) TextGetter {
-	return JoinTextList(seperator, RepeatByLen(text, lenObject));
+func RepeatAndJoinByLen(text TextGetter, separator TextGetter, lenObject interface{}) TextGetter {
+	return JoinTextList(separator, RepeatByLen(text, lenObject))
 }
 
 type formatterImpl struct {
 	formatter string
-	args []interface{}
+	args      []interface{}
 }
+
 func (f *formatterImpl) String() string {
 	return fmt.Sprintf(f.formatter, f.args...)
 }

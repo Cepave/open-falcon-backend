@@ -3,11 +3,12 @@ package nqm
 import (
 	"fmt"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
-	sjson "github.com/bitly/go-simplejson"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	sjson "github.com/bitly/go-simplejson"
 )
 
 type TimeFilterDetail TimeFilter
+
 func (t *TimeFilterDetail) MarshalJSON() ([]byte, error) {
 	var json *sjson.Json
 
@@ -26,40 +27,40 @@ func (t *TimeFilterDetail) MarshalJSON() ([]byte, error) {
 }
 
 type CompoundQueryDetail struct {
-	Time *TimeFilterDetail `json:"time"`
-	Metrics ojson.JsonString `json:"metrics"`
-	Agent *AgentOfQueryDetail `json:"agent"`
-	Target *TargetOfQueryDetail `json:"target"`
-	Output *OutputDetail `json:"output"`
+	Time    *TimeFilterDetail    `json:"time"`
+	Metrics ojson.JsonString     `json:"metrics"`
+	Agent   *AgentOfQueryDetail  `json:"agent"`
+	Target  *TargetOfQueryDetail `json:"target"`
+	Output  *OutputDetail        `json:"output"`
 }
 
 type AgentOfQueryDetail struct {
-	Name []string `json:"name"`
-	Hostname []string `json:"hostname"`
-	IpAddress []string `json:"ip_address"`
+	Name         []string `json:"name"`
+	Hostname     []string `json:"hostname"`
+	IpAddress    []string `json:"ip_address"`
 	ConnectionId []string `json:"connection_id"`
 
-	Isps []*owlModel.Isp `json:"isps"`
+	Isps      []*owlModel.Isp      `json:"isps"`
 	Provinces []*owlModel.Province `json:"provinces"`
-	Cities []*owlModel.City2 `json:"cities"`
+	Cities    []*owlModel.City2    `json:"cities"`
 
-	NameTags []*owlModel.NameTag `json:"name_tags"`
+	NameTags  []*owlModel.NameTag  `json:"name_tags"`
 	GroupTags []*owlModel.GroupTag `json:"group_tags"`
 }
 type TargetOfQueryDetail struct {
 	Name []string `json:"name"`
 	Host []string `json:"host"`
 
-	Isps []*owlModel.Isp `json:"isps"`
+	Isps      []*owlModel.Isp      `json:"isps"`
 	Provinces []*owlModel.Province `json:"provinces"`
-	Cities []*owlModel.City2 `json:"cities"`
+	Cities    []*owlModel.City2    `json:"cities"`
 
-	NameTags []*owlModel.NameTag `json:"name_tags"`
+	NameTags  []*owlModel.NameTag  `json:"name_tags"`
 	GroupTags []*owlModel.GroupTag `json:"group_tags"`
 }
 
 type OutputDetail struct {
-	Agent []string `json:"agent"`
-	Target []string `json:"target"`
+	Agent   []string `json:"agent"`
+	Target  []string `json:"target"`
 	Metrics []string `json:"metrics"`
 }

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 

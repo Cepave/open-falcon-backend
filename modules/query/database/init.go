@@ -6,12 +6,11 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/jinzhu/gorm"
 
-
 	"github.com/Cepave/open-falcon-backend/common/db/facade"
 
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
-	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
@@ -35,8 +34,8 @@ func Init() {
 	 */
 	PortalDbFacade = &facade.DbFacade{}
 	err = PortalDbFacade.Open(
-		&cdb.DbConfig {
-			Dsn: conf.Db.Addr,
+		&cdb.DbConfig{
+			Dsn:     conf.Db.Addr,
 			MaxIdle: conf.Db.Idle,
 		},
 	)

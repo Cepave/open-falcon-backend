@@ -49,7 +49,10 @@ func GetEventCases(includeEvents bool, startTime int64, endTime int64, priority 
 	}
 
 	//fot generate sql filter
-	if startTime != 0 && endTime != 0 {
+	if startTime != 0 {
+		if endTime == 0 {
+			endTime = time.Now().Unix()
+		}
 		whereConditions = append(whereConditions, fmt.Sprintf("update_at BETWEEN FROM_UNIXTIME(%d) AND FROM_UNIXTIME(%d)", startTime, endTime))
 	}
 	if priority != "ALL" {
@@ -129,6 +132,7 @@ func GetEvents(startTime int64, endTime int64, status string, limit int, caseId 
 				events.cond as cond,
 				events.timestamp as timestamp,
 				events.event_caseId as eid,
+				events.status as status,
 				event_cases.tpl_creator as tpl_creator,
 				event_cases.metric as metric,
 				event_cases.endpoint as endpoint

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -118,7 +119,8 @@ func (mine *ExternalEvent) Id() string {
 	bv := fmt.Sprintf("%v_%v_%v_%v", mine.Target, mine.Metric, mine.PushedTags, mine.TriggerId)
 	hasher.Write([]byte(bv))
 	sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-	id := fmt.Sprintf("%v_%v", mine.AlarmType, sha)
+	md5str := utils.Md5(sha)
+	id := fmt.Sprintf("%v_%v", mine.AlarmType, md5str)
 	return id
 }
 

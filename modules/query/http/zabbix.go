@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
+	log "github.com/sirupsen/logrus"
 )
 
 type Host struct {

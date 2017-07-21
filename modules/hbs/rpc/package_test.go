@@ -4,9 +4,7 @@ import (
 	"flag"
 	"testing"
 
-	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	tJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	ch "gopkg.in/check.v1"
 
 	. "github.com/onsi/ginkgo"
@@ -22,7 +20,6 @@ func TestByCheck(t *testing.T) {
 	ch.TestingT(t)
 }
 
-var DbFacade *f.DbFacade = db.DbFacade
 var ginkgoJsonRpc = &tJsonRpc.GinkgoJsonRpc{}
 var MOCK_URL = "localhost:5566"
 

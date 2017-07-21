@@ -45,5 +45,11 @@
   "web_doc_site":{
     "enable": false,
     "folder": "./docs/_site"
+  },
+  "redis": {
+    "enable": false,
+    "address": "127.0.0.1:6397",
+    "password": "",
+    "default_bucket": "extnal_event:all"
   }
 }

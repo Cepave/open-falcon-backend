@@ -1,8 +1,8 @@
 package db
 
 import (
-	"encoding/hex"
 	"database/sql/driver"
+	"encoding/hex"
 	"fmt"
 )
 

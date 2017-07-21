@@ -8,15 +8,15 @@ import (
 
 	"github.com/satori/go.uuid"
 
-	"github.com/Cepave/open-falcon-backend/common/utils"
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
+	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 
-	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	metricDsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/metric_parser"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
 
 // Loads data by compound query.
@@ -62,10 +62,10 @@ func setupSorting(paging *commonModel.Paging, output *model.QueryOutput) {
 	 */
 	if len(orderByEntities) == 0 {
 		if output.HasMetric(model.MetricAvg) {
-			orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ model.MetricAvg, commonModel.Descending })
+			orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{model.MetricAvg, commonModel.Descending})
 		}
 		if output.HasMetric(model.MetricLoss) {
-			orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ model.MetricLoss, commonModel.Descending })
+			orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{model.MetricLoss, commonModel.Descending})
 		}
 
 		/**
@@ -75,7 +75,7 @@ func setupSorting(paging *commonModel.Paging, output *model.QueryOutput) {
 		 */
 		if len(orderByEntities) == 0 {
 			for _, outputColumn := range output.Metrics {
-				orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ outputColumn, commonModel.Descending })
+				orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{outputColumn, commonModel.Descending})
 
 				/**
 				 * Maximum 2 columns for sorting
@@ -93,21 +93,20 @@ func setupSorting(paging *commonModel.Paging, output *model.QueryOutput) {
 	/**
 	 * Adds LOSS metric to last sorting rule
 	 */
-	if orderByEntities[len(orderByEntities) - 1].Expr != model.MetricLoss {
-		orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{ model.MetricLoss, commonModel.Descending })
+	if orderByEntities[len(orderByEntities)-1].Expr != model.MetricLoss {
+		orderByEntities = append(orderByEntities, &commonModel.OrderByEntity{model.MetricLoss, commonModel.Descending})
 	}
 	// :~)
 
 	paging.OrderBy = orderByEntities
 }
 func retrievePage(records []*model.DynamicRecord, paging *commonModel.Paging) []*model.DynamicRecord {
-	sortableRecords := &sortableRecords {
+	sortableRecords := &sortableRecords{
 		records, lessByOrderByEntities(paging.OrderBy).lessImpl,
 	}
 	sort.Sort(sortableRecords)
 
-	return commonModel.ExtractPage(sortableRecords.records, paging).
-		([]*model.DynamicRecord)
+	return commonModel.ExtractPage(sortableRecords.records, paging).([]*model.DynamicRecord)
 }
 func loadIcmpRecords(q *model.CompoundQuery) []*model.DynamicRecord {
 	result := make([]*model.DynamicRecord, 0)
@@ -136,9 +135,9 @@ func loadIcmpRecords(q *model.CompoundQuery) []*model.DynamicRecord {
 			Target: &model.DynamicTargetProps{
 				Grouping: q.Grouping.Target,
 			},
-			Metrics: &model.DynamicMetrics {
+			Metrics: &model.DynamicMetrics{
 				Metrics: icmpLog.metrics,
-				Output: &q.Output.Metrics,
+				Output:  &q.Output.Metrics,
 			},
 		}
 
@@ -194,6 +193,7 @@ type sortRecordFunc func(*model.DynamicRecord, *model.DynamicRecord) bool
 
 // Implementation of less function used to sort *model.DynamicRecord
 type lessByOrderByEntities []*commonModel.OrderByEntity
+
 func (o lessByOrderByEntities) lessImpl(left *model.DynamicRecord, right *model.DynamicRecord) bool {
 	compareResult := 0
 
@@ -216,7 +216,7 @@ func (o lessByOrderByEntities) lessImpl(left *model.DynamicRecord, right *model.
 		 * The comparison is decided
 		 */
 		if compareResult != utils.SeqEqual {
-			break;
+			break
 		}
 		// :~)
 	}
@@ -226,9 +226,10 @@ func (o lessByOrderByEntities) lessImpl(left *model.DynamicRecord, right *model.
 
 // Used to sort records with implementation of sortRecordFunc
 type sortableRecords struct {
-	records []*model.DynamicRecord
+	records  []*model.DynamicRecord
 	lessFunc sortRecordFunc
 }
+
 func (r *sortableRecords) Len() int { return len(r.records) }
 func (r *sortableRecords) Swap(i, j int) {
 	allData := r.records
@@ -242,8 +243,8 @@ func BuildQuery(q *model.CompoundQuery) *owlModel.Query {
 	var digestValue [16]byte
 	copy(digestValue[:], q.GetDigestValue())
 
-	queryObject := &owlModel.Query {
-		Content: q.GetCompressedQuery(),
+	queryObject := &owlModel.Query{
+		Content:    q.GetCompressedQuery(),
 		Md5Content: digestValue,
 	}
 
@@ -266,35 +267,35 @@ func ToQueryDetail(q *model.CompoundQuery) *model.CompoundQueryDetail {
 	targetFilter := q.Filters.Target
 
 	return &model.CompoundQueryDetail{
-		Time: (*model.TimeFilterDetail)(q.Filters.Time),
+		Time:    (*model.TimeFilterDetail)(q.Filters.Time),
 		Metrics: ojson.JsonString(q.Filters.Metrics),
-		Agent: &model.AgentOfQueryDetail {
-			Name: agentFilter.Name,
-			Hostname: agentFilter.Hostname,
-			IpAddress: agentFilter.IpAddress,
+		Agent: &model.AgentOfQueryDetail{
+			Name:         agentFilter.Name,
+			Hostname:     agentFilter.Hostname,
+			IpAddress:    agentFilter.IpAddress,
 			ConnectionId: agentFilter.ConnectionId,
 
-			Isps: getIspsByIds(agentFilter.IspIds...),
+			Isps:      getIspsByIds(agentFilter.IspIds...),
 			Provinces: getProvincesByIds(agentFilter.ProvinceIds...),
-			Cities: getCity2sByIds(agentFilter.CityIds...),
+			Cities:    getCity2sByIds(agentFilter.CityIds...),
 
-			NameTags: getNameTagsByIds(agentFilter.NameTagIds...),
+			NameTags:  getNameTagsByIds(agentFilter.NameTagIds...),
 			GroupTags: groupTagService.GetGroupTagsByIds(agentFilter.GroupTagIds...),
 		},
-		Target: &model.TargetOfQueryDetail {
+		Target: &model.TargetOfQueryDetail{
 			Name: targetFilter.Name,
 			Host: targetFilter.Host,
 
-			Isps: getIspsByIds(targetFilter.IspIds...),
+			Isps:      getIspsByIds(targetFilter.IspIds...),
 			Provinces: getProvincesByIds(targetFilter.ProvinceIds...),
-			Cities: getCity2sByIds(targetFilter.CityIds...),
+			Cities:    getCity2sByIds(targetFilter.CityIds...),
 
-			NameTags: getNameTagsByIds(targetFilter.NameTagIds...),
+			NameTags:  getNameTagsByIds(targetFilter.NameTagIds...),
 			GroupTags: groupTagService.GetGroupTagsByIds(targetFilter.GroupTagIds...),
 		},
-		Output: &model.OutputDetail {
-			Agent: q.Grouping.Agent,
-			Target: q.Grouping.Target,
+		Output: &model.OutputDetail{
+			Agent:   q.Grouping.Agent,
+			Target:  q.Grouping.Target,
 			Metrics: q.Output.Metrics,
 		},
 	}
@@ -314,27 +315,27 @@ func buildNqmDslByCompoundQuery(q *model.CompoundQuery) *NqmDsl {
 		)
 	}
 
-	nqmDsl := &NqmDsl {
+	nqmDsl := &NqmDsl{
 		GroupingColumns: buildGroupingColumnOfDsl(q.Grouping),
 
-		IdsOfAgents: loadInt32Ids(filters.Agent.HasAgentDescriptive(), loadAgentIdsFunc),
-		IdsOfAgentIsps: filterRelationIdsOnInt16(filters.Agent.IspIds),
+		IdsOfAgents:         loadInt32Ids(filters.Agent.HasAgentDescriptive(), loadAgentIdsFunc),
+		IdsOfAgentIsps:      filterRelationIdsOnInt16(filters.Agent.IspIds),
 		IdsOfAgentProvinces: filterRelationIdsOnInt16(filters.Agent.ProvinceIds),
-		IdsOfAgentCities: filterRelationIdsOnInt16(filters.Agent.CityIds),
-		IdsOfAgentNameTags: filterRelationIdsOnInt16(filters.Agent.NameTagIds),
+		IdsOfAgentCities:    filterRelationIdsOnInt16(filters.Agent.CityIds),
+		IdsOfAgentNameTags:  filterRelationIdsOnInt16(filters.Agent.NameTagIds),
 		IdsOfAgentGroupTags: filterRelationIdsOnInt32(filters.Agent.GroupTagIds),
 
-		IdsOfTargets: loadInt32Ids(filters.Target.HasTargetDescriptive(), loadTargetIdsFunc),
-		IdsOfTargetIsps: filterRelationIdsOnInt16(filters.Target.IspIds),
+		IdsOfTargets:         loadInt32Ids(filters.Target.HasTargetDescriptive(), loadTargetIdsFunc),
+		IdsOfTargetIsps:      filterRelationIdsOnInt16(filters.Target.IspIds),
 		IdsOfTargetProvinces: filterRelationIdsOnInt16(filters.Target.ProvinceIds),
-		IdsOfTargetCities: filterRelationIdsOnInt16(filters.Target.CityIds),
-		IdsOfTargetNameTags: filterRelationIdsOnInt16(filters.Target.NameTagIds),
+		IdsOfTargetCities:    filterRelationIdsOnInt16(filters.Target.CityIds),
+		IdsOfTargetNameTags:  filterRelationIdsOnInt16(filters.Target.NameTagIds),
 		IdsOfTargetGroupTags: filterRelationIdsOnInt32(filters.Target.GroupTagIds),
 
-		IspRelation: q.GetIspRelation(),
+		IspRelation:      q.GetIspRelation(),
 		ProvinceRelation: q.GetProvinceRelation(),
-		CityRelation: q.GetCityRelation(),
-		NameTagRelation: q.GetNameTagRelation(),
+		CityRelation:     q.GetCityRelation(),
+		NameTagRelation:  q.GetNameTagRelation(),
 	}
 
 	timeFilter := filters.Time
@@ -348,9 +349,9 @@ func buildNqmDslByCompoundQuery(q *model.CompoundQuery) *NqmDsl {
 		nqmDsl.TimeRanges = make([]*TimeRangeOfDsl, len(timeRanges))
 
 		for i, t := range timeRanges {
-			nqmDsl.TimeRanges[i] = &TimeRangeOfDsl {
+			nqmDsl.TimeRanges[i] = &TimeRangeOfDsl{
 				StartTime: EpochTime(t.StartTime.Unix()),
-				EndTime: EpochTime(t.EndTime.Unix()),
+				EndTime:   EpochTime(t.EndTime.Unix()),
 			}
 		}
 	}
@@ -368,24 +369,25 @@ func loadInt32Ids(
 
 	result := getterFunc().GetInt32s()
 	if len(result) == 0 {
-		return []int32{ -2 }
+		return []int32{-2}
 	}
 
 	return result
 }
 
-var groupingMappingOfAgent = map[string]string {
+var groupingMappingOfAgent = map[string]string{
 	model.GroupingProvince: "ag_pv_id",
-	model.GroupingCity: "ag_ct_id",
-	model.GroupingIsp: "ag_isp_id",
-	model.GroupingNameTag: "ag_nt_id",
+	model.GroupingCity:     "ag_ct_id",
+	model.GroupingIsp:      "ag_isp_id",
+	model.GroupingNameTag:  "ag_nt_id",
 }
-var groupingMappingOfTarget = map[string]string {
+var groupingMappingOfTarget = map[string]string{
 	model.GroupingProvince: "tg_pv_id",
-	model.GroupingCity: "tg_ct_id",
-	model.GroupingIsp: "tg_isp_id",
-	model.GroupingNameTag: "tg_nt_id",
+	model.GroupingCity:     "tg_ct_id",
+	model.GroupingIsp:      "tg_isp_id",
+	model.GroupingNameTag:  "tg_nt_id",
 }
+
 func buildGroupingColumnOfDsl(grouping *model.QueryGrouping) []string {
 	groupingColumns := make([]string, 0)
 
@@ -446,22 +448,22 @@ func processAgentGrouping(agentProps *model.DynamicAgentProps, agentId int32, qu
 	for _, selectedPropOfAgent := range query.Grouping.Agent {
 		agentProps.Id = agentDetail.Id
 		switch selectedPropOfAgent {
-			case model.AgentGroupingName:
-				agentProps.Name = agentDetail.Name
-			case model.AgentGroupingHostname:
-				agentProps.Hostname = agentDetail.Hostname
-			case model.AgentGroupingIpAddress:
-				agentProps.IpAddress = agentDetail.IpAddress.String()
-			case model.GroupingIsp:
-				agentProps.Isp = ispService.GetIspById(agentDetail.IspId)
-			case model.GroupingProvince:
-				agentProps.Province = provinceService.GetProvinceById(agentDetail.ProvinceId)
-			case model.GroupingCity:
-				agentProps.City = cityService.GetCity2ById(agentDetail.CityId)
-			case model.GroupingNameTag:
-				agentProps.NameTag = nameTagService.GetNameTagById(agentDetail.NameTagId)
-			default:
-				panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", selectedPropOfAgent))
+		case model.AgentGroupingName:
+			agentProps.Name = agentDetail.Name
+		case model.AgentGroupingHostname:
+			agentProps.Hostname = agentDetail.Hostname
+		case model.AgentGroupingIpAddress:
+			agentProps.IpAddress = agentDetail.IpAddress.String()
+		case model.GroupingIsp:
+			agentProps.Isp = ispService.GetIspById(agentDetail.IspId)
+		case model.GroupingProvince:
+			agentProps.Province = provinceService.GetProvinceById(agentDetail.ProvinceId)
+		case model.GroupingCity:
+			agentProps.City = cityService.GetCity2ById(agentDetail.CityId)
+		case model.GroupingNameTag:
+			agentProps.NameTag = nameTagService.GetNameTagById(agentDetail.NameTagId)
+		default:
+			panic(fmt.Sprintf("Unsupported grouping for agent: [%s]", selectedPropOfAgent))
 		}
 	}
 }
@@ -475,38 +477,39 @@ func processTargetGrouping(targetProps *model.DynamicTargetProps, targetId int32
 		targetProps.Id = targetDetail.Id
 
 		switch selectedPropOfTarget {
-			case model.TargetGroupingName:
-				targetProps.Name = targetDetail.Name
-			case model.TargetGroupingHost:
-				targetProps.Host = targetDetail.Host
-			case model.GroupingIsp:
-				targetProps.Isp = ispService.GetIspById(targetDetail.IspId)
-			case model.GroupingProvince:
-				targetProps.Province = provinceService.GetProvinceById(targetDetail.ProvinceId)
-			case model.GroupingCity:
-				targetProps.City = cityService.GetCity2ById(targetDetail.CityId)
-			case model.GroupingNameTag:
-				targetProps.NameTag = nameTagService.GetNameTagById(targetDetail.NameTagId)
-			default:
-				panic(fmt.Sprintf("Unsupported grouping for target: [%s]", selectedPropOfTarget))
+		case model.TargetGroupingName:
+			targetProps.Name = targetDetail.Name
+		case model.TargetGroupingHost:
+			targetProps.Host = targetDetail.Host
+		case model.GroupingIsp:
+			targetProps.Isp = ispService.GetIspById(targetDetail.IspId)
+		case model.GroupingProvince:
+			targetProps.Province = provinceService.GetProvinceById(targetDetail.ProvinceId)
+		case model.GroupingCity:
+			targetProps.City = cityService.GetCity2ById(targetDetail.CityId)
+		case model.GroupingNameTag:
+			targetProps.NameTag = nameTagService.GetNameTagById(targetDetail.NameTagId)
+		default:
+			panic(fmt.Sprintf("Unsupported grouping for target: [%s]", selectedPropOfTarget))
 		}
 	}
 }
 
 var typeOfIsp = reflect.TypeOf(&owlModel.Isp{})
+
 func getIspsByIds(ids ...int16) []*owlModel.Isp {
 	return utils.MakeAbstractArray(ids).MapTo(
 		func(v interface{}) interface{} {
 			ispId := v.(int16)
 			switch ispId {
 			case int16(model.RelationSame):
-				return &owlModel.Isp {
-					Id: ispId,
+				return &owlModel.Isp{
+					Id:   ispId,
 					Name: "<RelationSame>",
 				}
 			case int16(model.RelationNotSame):
-				return &owlModel.Isp {
-					Id: ispId,
+				return &owlModel.Isp{
+					Id:   ispId,
 					Name: "<RelationNotSame>",
 				}
 			}
@@ -516,20 +519,22 @@ func getIspsByIds(ids ...int16) []*owlModel.Isp {
 		typeOfIsp,
 	).GetArray().([]*owlModel.Isp)
 }
+
 var typeOfProvince = reflect.TypeOf(&owlModel.Province{})
+
 func getProvincesByIds(provinceIds ...int16) []*owlModel.Province {
 	return utils.MakeAbstractArray(provinceIds).MapTo(
 		func(v interface{}) interface{} {
 			provinceId := v.(int16)
 			switch provinceId {
 			case int16(model.RelationSame):
-				return &owlModel.Province {
-					Id: provinceId,
+				return &owlModel.Province{
+					Id:   provinceId,
 					Name: "<RelationSame>",
 				}
 			case int16(model.RelationNotSame):
-				return &owlModel.Province {
-					Id: provinceId,
+				return &owlModel.Province{
+					Id:   provinceId,
 					Name: "<RelationNotSame>",
 				}
 			}
@@ -539,20 +544,22 @@ func getProvincesByIds(provinceIds ...int16) []*owlModel.Province {
 		typeOfProvince,
 	).GetArray().([]*owlModel.Province)
 }
+
 var typeOfCity2 = reflect.TypeOf(&owlModel.City2{})
+
 func getCity2sByIds(cityIds ...int16) []*owlModel.City2 {
 	return utils.MakeAbstractArray(cityIds).MapTo(
 		func(v interface{}) interface{} {
 			cityId := v.(int16)
 			switch cityId {
 			case int16(model.RelationSame):
-				return &owlModel.City2 {
-					Id: cityId,
+				return &owlModel.City2{
+					Id:   cityId,
 					Name: "<RelationSame>",
 				}
 			case int16(model.RelationNotSame):
-				return &owlModel.City2 {
-					Id: cityId,
+				return &owlModel.City2{
+					Id:   cityId,
 					Name: "<RelationNotSame>",
 				}
 			}
@@ -562,20 +569,22 @@ func getCity2sByIds(cityIds ...int16) []*owlModel.City2 {
 		typeOfCity2,
 	).GetArray().([]*owlModel.City2)
 }
+
 var typeOfNameTag = reflect.TypeOf(&owlModel.NameTag{})
+
 func getNameTagsByIds(nameTagIds ...int16) []*owlModel.NameTag {
 	return utils.MakeAbstractArray(nameTagIds).MapTo(
 		func(v interface{}) interface{} {
 			nameTagId := v.(int16)
 			switch nameTagId {
 			case int16(model.RelationSame):
-				return &owlModel.NameTag {
-					Id: nameTagId,
+				return &owlModel.NameTag{
+					Id:    nameTagId,
 					Value: "<RelationSame>",
 				}
 			case int16(model.RelationNotSame):
-				return &owlModel.NameTag {
-					Id: nameTagId,
+				return &owlModel.NameTag{
+					Id:    nameTagId,
 					Value: "<RelationNotSame>",
 				}
 			}

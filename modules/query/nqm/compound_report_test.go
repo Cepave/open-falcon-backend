@@ -7,27 +7,27 @@ import (
 
 	"github.com/satori/go.uuid"
 
-	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
+	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 
 	. "gopkg.in/check.v1"
 )
 
 type TestCompoundReportSuite struct{}
-type TestCompoundReportSuiteOnDb struct{
+type TestCompoundReportSuiteOnDb struct {
 	*dbTestSuite
 }
 
 var (
 	_ = Suite(&TestCompoundReportSuite{})
-	_ = Suite(&TestCompoundReportSuiteOnDb{ &dbTestSuite{} })
+	_ = Suite(&TestCompoundReportSuiteOnDb{&dbTestSuite{}})
 )
 
-// Tests the convertion of query to detail information
+// Tests the conversion of query to detail information
 func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	/**
 	 * Sets-up sample query
@@ -35,31 +35,31 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	sampleQuery := model.NewCompoundQuery()
 
 	sampleQuery.Filters.Metrics = "$max >= $min"
-	sampleQuery.Grouping.Agent = []string{ model.AgentGroupingHostname, model.GroupingIsp }
-	sampleQuery.Grouping.Target = []string{ model.TargetGroupingHost, model.GroupingProvince, model.GroupingIsp }
-	sampleQuery.Output.Metrics = []string{ model.MetricAvg, model.MetricMax, model.MetricLoss }
+	sampleQuery.Grouping.Agent = []string{model.AgentGroupingHostname, model.GroupingIsp}
+	sampleQuery.Grouping.Target = []string{model.TargetGroupingHost, model.GroupingProvince, model.GroupingIsp}
+	sampleQuery.Output.Metrics = []string{model.MetricAvg, model.MetricMax, model.MetricLoss}
 
 	agentFilter := sampleQuery.Filters.Agent
 
-	agentFilter.Name = []string { "Cool1", "Cool2" }
-	agentFilter.Hostname = []string { "gc1.com", "gc2.com" }
-	agentFilter.IpAddress = []string { "123.71.1", "123.71.2" }
-	agentFilter.ConnectionId = []string { "c01", "c02" }
-	agentFilter.IspIds = []int16 { 2, 3, 4, 1, 5, 6 }
-	agentFilter.ProvinceIds = []int16 { 3, 4, 7, 8 }
-	agentFilter.CityIds = []int16 { 13, 14 }
-	agentFilter.NameTagIds = []int16 { 3375, 3376 }
-	agentFilter.GroupTagIds = []int32 { 90801, 90802, 90803 }
+	agentFilter.Name = []string{"Cool1", "Cool2"}
+	agentFilter.Hostname = []string{"gc1.com", "gc2.com"}
+	agentFilter.IpAddress = []string{"123.71.1", "123.71.2"}
+	agentFilter.ConnectionId = []string{"c01", "c02"}
+	agentFilter.IspIds = []int16{2, 3, 4, 1, 5, 6}
+	agentFilter.ProvinceIds = []int16{3, 4, 7, 8}
+	agentFilter.CityIds = []int16{13, 14}
+	agentFilter.NameTagIds = []int16{3375, 3376}
+	agentFilter.GroupTagIds = []int32{90801, 90802, 90803}
 
 	targetFilter := sampleQuery.Filters.Target
 
-	targetFilter.Name = []string { "Zoo-1", "Zoo-2" }
-	targetFilter.Host = []string { "kz1.com", "kz2.com" }
-	targetFilter.IspIds = []int16 { 5, 7 }
-	targetFilter.ProvinceIds = []int16 { 1, 3, 8 }
-	targetFilter.CityIds = []int16 { 15, 16 }
-	targetFilter.NameTagIds = []int16 { 3375, 3376 }
-	targetFilter.GroupTagIds = []int32 { 90801, 90802, 90803 }
+	targetFilter.Name = []string{"Zoo-1", "Zoo-2"}
+	targetFilter.Host = []string{"kz1.com", "kz2.com"}
+	targetFilter.IspIds = []int16{5, 7}
+	targetFilter.ProvinceIds = []int16{1, 3, 8}
+	targetFilter.CityIds = []int16{15, 16}
+	targetFilter.NameTagIds = []int16{3375, 3376}
+	targetFilter.GroupTagIds = []int32{90801, 90802, 90803}
 	// :~)
 
 	testedDetail := ToQueryDetail(sampleQuery)
@@ -104,7 +104,7 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 	// :~)
 }
 
-// Tests the convertion of query to deatil information on special conditions
+// Tests the conversion of query to deatil information on special conditions
 //
 // Some properties(isp_ids, province_ids, city_ids, name_tag_ids) supports special values:
 //
@@ -118,16 +118,16 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetailOnSpecialValue(c *C) 
 
 	agentFilter := sampleQuery.Filters.Agent
 
-	agentFilter.IspIds = []int16 { -11, -12 }
-	agentFilter.ProvinceIds = []int16 { -11, -12 }
-	agentFilter.CityIds = []int16 { -11, -12 }
-	agentFilter.NameTagIds = []int16 { -11, -12 }
+	agentFilter.IspIds = []int16{-11, -12}
+	agentFilter.ProvinceIds = []int16{-11, -12}
+	agentFilter.CityIds = []int16{-11, -12}
+	agentFilter.NameTagIds = []int16{-11, -12}
 
 	targetFilter := sampleQuery.Filters.Target
-	targetFilter.IspIds = []int16 { -11, -12 }
-	targetFilter.ProvinceIds = []int16 { -11, -12 }
-	targetFilter.CityIds = []int16 { -11, -12 }
-	targetFilter.NameTagIds = []int16 { -11, -12 }
+	targetFilter.IspIds = []int16{-11, -12}
+	targetFilter.ProvinceIds = []int16{-11, -12}
+	targetFilter.CityIds = []int16{-11, -12}
+	targetFilter.NameTagIds = []int16{-11, -12}
 	// :~)
 
 	testedDetail := ToQueryDetail(sampleQuery)
@@ -223,9 +223,9 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 	type assertFunc func(v interface{}, comment CommentInterface)
 
 	testCases := []*struct {
-		queryJson string
+		queryJson        string
 		assertProperties map[string]interface{}
-	} {
+	}{
 		{ // Fetch viable nodes
 			`{
 				"filters": {
@@ -252,18 +252,18 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 				}
 			}`,
 			map[string]interface{}{
-				"IdsOfAgents": []int32{ 1041 },
-				"IdsOfAgentIsps": []int16 { 10, 20 },
-				"IdsOfAgentProvinces": []int16 { 31, 32 },
-				"IdsOfAgentCities": []int16 { 65, 72 },
-				"IdsOfAgentNameTags": []int16 { 101, 114 },
-				"IdsOfAgentGroupTags": []int32 { 1291, 1309 },
-				"IdsOfTargets": []int32{ 2301 },
-				"IdsOfTargetIsps": []int16 { 10, 20 },
-				"IdsOfTargetProvinces": []int16 { 31, 32 },
-				"IdsOfTargetCities": []int16 { 65, 72 },
-				"IdsOfTargetNameTags": []int16 { 101, 114 },
-				"IdsOfTargetGroupTags": []int32 { 1291, 1309 },
+				"IdsOfAgents":          []int32{1041},
+				"IdsOfAgentIsps":       []int16{10, 20},
+				"IdsOfAgentProvinces":  []int16{31, 32},
+				"IdsOfAgentCities":     []int16{65, 72},
+				"IdsOfAgentNameTags":   []int16{101, 114},
+				"IdsOfAgentGroupTags":  []int32{1291, 1309},
+				"IdsOfTargets":         []int32{2301},
+				"IdsOfTargetIsps":      []int16{10, 20},
+				"IdsOfTargetProvinces": []int16{31, 32},
+				"IdsOfTargetCities":    []int16{65, 72},
+				"IdsOfTargetNameTags":  []int16{101, 114},
+				"IdsOfTargetGroupTags": []int32{1291, 1309},
 			},
 		},
 		{ // Fetch non-viable nodes
@@ -282,22 +282,22 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 				}
 			}`,
 			map[string]interface{}{
-				"IdsOfAgents": []int32{ -2 },
-				"IdsOfAgentIsps": []int16 {},
-				"IdsOfAgentProvinces": []int16 {},
-				"IdsOfAgentCities": []int16 {},
-				"IdsOfAgentNameTags": []int16 {},
-				"IdsOfAgentGroupTags": []int32 {},
-				"IdsOfTargets": []int32{ -2 },
-				"IdsOfTargetIsps": []int16 {},
-				"IdsOfTargetProvinces": []int16 {},
-				"IdsOfTargetCities": []int16 {},
-				"IdsOfTargetNameTags": []int16 {},
-				"IdsOfTargetGroupTags": []int32 {},
-				"IspRelation": model.NoCondition,
-				"ProvinceRelation": model.NoCondition,
-				"CityRelation": model.NoCondition,
-				"NameTagRelation": model.NoCondition,
+				"IdsOfAgents":          []int32{-2},
+				"IdsOfAgentIsps":       []int16{},
+				"IdsOfAgentProvinces":  []int16{},
+				"IdsOfAgentCities":     []int16{},
+				"IdsOfAgentNameTags":   []int16{},
+				"IdsOfAgentGroupTags":  []int32{},
+				"IdsOfTargets":         []int32{-2},
+				"IdsOfTargetIsps":      []int16{},
+				"IdsOfTargetProvinces": []int16{},
+				"IdsOfTargetCities":    []int16{},
+				"IdsOfTargetNameTags":  []int16{},
+				"IdsOfTargetGroupTags": []int32{},
+				"IspRelation":          model.NoCondition,
+				"ProvinceRelation":     model.NoCondition,
+				"CityRelation":         model.NoCondition,
+				"NameTagRelation":      model.NoCondition,
 			},
 		},
 		{ // Same relation(by agent)
@@ -313,10 +313,10 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 				}
 			}`,
 			map[string]interface{}{
-				"IspRelation": model.SameValue,
+				"IspRelation":      model.SameValue,
 				"ProvinceRelation": model.SameValue,
-				"CityRelation": model.SameValue,
-				"NameTagRelation": model.SameValue,
+				"CityRelation":     model.SameValue,
+				"NameTagRelation":  model.SameValue,
 			},
 		},
 		{ // Not same relation(by target)
@@ -332,10 +332,10 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 				}
 			}`,
 			map[string]interface{}{
-				"IspRelation": model.NotSameValue,
+				"IspRelation":      model.NotSameValue,
 				"ProvinceRelation": model.NotSameValue,
-				"CityRelation": model.NotSameValue,
-				"NameTagRelation": model.NotSameValue,
+				"CityRelation":     model.NotSameValue,
+				"NameTagRelation":  model.NotSameValue,
 			},
 		},
 		{ // Fetch absolute time
@@ -344,9 +344,9 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 					"time": { "start_time": 70089020, "end_time": 70389020 }
 				}
 			}`,
-			map[string]interface{} {
+			map[string]interface{}{
 				"StartTime": toPointerOfEpochTime(70089020),
-				"EndTime": toPointerOfEpochTime(70389020),
+				"EndTime":   toPointerOfEpochTime(70389020),
 			},
 		},
 		{ // Fetch relative time
@@ -430,43 +430,43 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *C) {
 	testCases := []*struct {
 		sampleGrouping *model.QueryGrouping
-		expected []string
-	} {
+		expected       []string
+	}{
 		{ // Agent + Target
 			&model.QueryGrouping{
-				Agent: []string { model.AgentGroupingName, model.AgentGroupingHostname, model.AgentGroupingIpAddress },
-				Target: []string { model.TargetGroupingName, model.TargetGroupingHost },
+				Agent:  []string{model.AgentGroupingName, model.AgentGroupingHostname, model.AgentGroupingIpAddress},
+				Target: []string{model.TargetGroupingName, model.TargetGroupingHost},
 			},
-			[]string { "ag_id", "tg_id" },
+			[]string{"ag_id", "tg_id"},
 		},
 		{ // Other properties
 			&model.QueryGrouping{
-				Agent: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
-				Target: []string { model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag, },
+				Agent:  []string{model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag},
+				Target: []string{model.GroupingIsp, model.GroupingProvince, model.GroupingCity, model.GroupingNameTag},
 			},
-			[]string {
+			[]string{
 				"ag_isp_id", "ag_pv_id", "ag_ct_id", "ag_nt_id",
 				"tg_isp_id", "tg_pv_id", "tg_ct_id", "tg_nt_id",
 			},
 		},
 		{ // Agent + other property of target
 			&model.QueryGrouping{
-				Agent: []string { model.AgentGroupingName, model.GroupingIsp },
-				Target: []string { model.GroupingIsp },
+				Agent:  []string{model.AgentGroupingName, model.GroupingIsp},
+				Target: []string{model.GroupingIsp},
 			},
-			[]string { "ag_id", "tg_isp_id" },
+			[]string{"ag_id", "tg_isp_id"},
 		},
 		{ // Other property of agent + target
 			&model.QueryGrouping{
-				Agent: []string { model.GroupingNameTag },
-				Target: []string { model.TargetGroupingName, model.GroupingIsp },
+				Agent:  []string{model.GroupingNameTag},
+				Target: []string{model.TargetGroupingName, model.GroupingIsp},
 			},
-			[]string { "ag_nt_id", "tg_id" },
+			[]string{"ag_nt_id", "tg_id"},
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedGrouping := buildGroupingColumnOfDsl(testCase.sampleGrouping)
 		c.Assert(testedGrouping, DeepEquals, testCase.expected, comment)
@@ -477,38 +477,38 @@ func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *C) {
 func (suite *TestCompoundReportSuite) TestSetupSorting(c *C) {
 	testCases := []*struct {
 		sampleEntities []*commonModel.OrderByEntity
-		outputMetrics []string
+		outputMetrics  []string
 		expectedResult []*commonModel.OrderByEntity
-	} {
+	}{
 		{
-			[]*commonModel.OrderByEntity{ { "agent_isp", commonModel.Descending } },
-			[]string { "max", "min" },
-			[]*commonModel.OrderByEntity{ { "agent_isp", commonModel.Descending }, { "loss", commonModel.Descending } },
+			[]*commonModel.OrderByEntity{{"agent_isp", commonModel.Descending}},
+			[]string{"max", "min"},
+			[]*commonModel.OrderByEntity{{"agent_isp", commonModel.Descending}, {"loss", commonModel.Descending}},
 		},
 		{
 			[]*commonModel.OrderByEntity{},
-			[]string { "max", "min" },
+			[]string{"max", "min"},
 			[]*commonModel.OrderByEntity{
-				{ "max", commonModel.Descending },
-				{ "min", commonModel.Descending },
-				{ "loss", commonModel.Descending },
+				{"max", commonModel.Descending},
+				{"min", commonModel.Descending},
+				{"loss", commonModel.Descending},
 			},
 		},
 		{
 			[]*commonModel.OrderByEntity{},
-			[]string { "max", "avg", "loss" },
+			[]string{"max", "avg", "loss"},
 			[]*commonModel.OrderByEntity{
-				{ "avg", commonModel.Descending },
-				{ "loss", commonModel.Descending },
+				{"avg", commonModel.Descending},
+				{"loss", commonModel.Descending},
 			},
 		},
 		{
 			[]*commonModel.OrderByEntity{},
-			[]string { "num_agent", "num_target" },
+			[]string{"num_agent", "num_target"},
 			[]*commonModel.OrderByEntity{
-				{ "num_agent", commonModel.Descending },
-				{ "num_target", commonModel.Descending },
-				{ "loss", commonModel.Descending },
+				{"num_agent", commonModel.Descending},
+				{"num_target", commonModel.Descending},
+				{"loss", commonModel.Descending},
 			},
 		},
 	}
@@ -535,45 +535,45 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 		agentName []string
 		targetIsp []string
 		metricMax []int16
-		expected bool
-	} {
+		expected  bool
+	}{
 		{
-			[]string{ "AG-1", "AG-2" },
-			[]string{ "ISP-2", "ISP-1" },
-			[]int16{ 10, 15 },
+			[]string{"AG-1", "AG-2"},
+			[]string{"ISP-2", "ISP-1"},
+			[]int16{10, 15},
 			true,
 		},
 		{
-			[]string{ "AG-2", "AG-1" },
-			[]string{ "ISP-2", "ISP-1" },
-			[]int16{ 10, 15 },
+			[]string{"AG-2", "AG-1"},
+			[]string{"ISP-2", "ISP-1"},
+			[]int16{10, 15},
 			false,
 		},
 		{
-			[]string{ "AG-2", "AG-2" },
-			[]string{ "ISP-2", "ISP-1" },
-			[]int16{ 10, 15 },
+			[]string{"AG-2", "AG-2"},
+			[]string{"ISP-2", "ISP-1"},
+			[]int16{10, 15},
 			true,
 		},
 		{
-			[]string{ "AG-2", "AG-2" },
-			[]string{ "ISP-2", "ISP-2" },
-			[]int16{ 15, 10 },
+			[]string{"AG-2", "AG-2"},
+			[]string{"ISP-2", "ISP-2"},
+			[]int16{15, 10},
 			true,
 		},
 		{
-			[]string{ "AG-2", "AG-2" },
-			[]string{ "ISP-2", "ISP-2" },
-			[]int16{ 10, 15 },
+			[]string{"AG-2", "AG-2"},
+			[]string{"ISP-2", "ISP-2"},
+			[]int16{10, 15},
 			false,
 		},
 	}
 
 	sampleLessFunc := lessByOrderByEntities(
 		[]*commonModel.OrderByEntity{
-			{ "agent_name", utils.Ascending },
-			{ "target_isp", utils.Descending },
-			{ "max", utils.Descending },
+			{"agent_name", utils.Ascending},
+			{"target_isp", utils.Descending},
+			{"max", utils.Descending},
 		},
 	)
 	for i, testCase := range testCases {
@@ -581,32 +581,32 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 		ocheck.LogTestCase(c, testCase)
 
 		testedResult := sampleLessFunc.lessImpl(
-			&model.DynamicRecord {
-				Agent: &model.DynamicAgentProps {
+			&model.DynamicRecord{
+				Agent: &model.DynamicAgentProps{
 					Name: &testCase.agentName[0],
 				},
-				Target: &model.DynamicTargetProps {
-					Isp: &owlModel.Isp {
+				Target: &model.DynamicTargetProps{
+					Isp: &owlModel.Isp{
 						Name: testCase.targetIsp[0],
 					},
 				},
-				Metrics: &model.DynamicMetrics {
-					Metrics: &model.Metrics {
+				Metrics: &model.DynamicMetrics{
+					Metrics: &model.Metrics{
 						Max: testCase.metricMax[0],
 					},
 				},
 			},
-			&model.DynamicRecord {
-				Agent: &model.DynamicAgentProps {
+			&model.DynamicRecord{
+				Agent: &model.DynamicAgentProps{
 					Name: &testCase.agentName[1],
 				},
-				Target: &model.DynamicTargetProps {
-					Isp: &owlModel.Isp {
+				Target: &model.DynamicTargetProps{
+					Isp: &owlModel.Isp{
 						Name: testCase.targetIsp[1],
 					},
 				},
-				Metrics: &model.DynamicMetrics {
-					Metrics: &model.Metrics {
+				Metrics: &model.DynamicMetrics{
+					Metrics: &model.Metrics{
 						Max: testCase.metricMax[1],
 					},
 				},
@@ -620,34 +620,34 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 // Tests the filter of records
 func (suite *TestCompoundReportSuite) TestFilterRecords(c *C) {
 	testCases := []*struct {
-		filter string
+		filter         string
 		expectedNumber int
-	} {
-		{ "", 3 },
-		{ "$max >= 70", 3 },
-		{ "$min > 25", 2 },
-		{ "$max == 80 and $avg > 40", 1 },
-		{ "$max == 70 or $avg < 25", 2 },
+	}{
+		{"", 3},
+		{"$max >= 70", 3},
+		{"$min > 25", 2},
+		{"$max == 80 and $avg > 40", 1},
+		{"$max == 70 or $avg < 25", 2},
 	}
 
-	sampleRecords := []*model.DynamicRecord {
+	sampleRecords := []*model.DynamicRecord{
 		{
 			Metrics: &model.DynamicMetrics{
-				Metrics: &model.Metrics {
+				Metrics: &model.Metrics{
 					Max: 80, Min: 30, Avg: 45.59,
 				},
 			},
 		},
 		{
 			Metrics: &model.DynamicMetrics{
-				Metrics: &model.Metrics {
+				Metrics: &model.Metrics{
 					Max: 70, Min: 30, Avg: 30.10,
 				},
 			},
 		},
 		{
 			Metrics: &model.DynamicMetrics{
-				Metrics: &model.Metrics {
+				Metrics: &model.Metrics{
 					Max: 80, Min: 22, Avg: 22.33,
 				},
 			},
@@ -667,19 +667,19 @@ func (suite *TestCompoundReportSuite) TestFilterRecords(c *C) {
 func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
 	sp := func(v string) *string { return &v }
 
-	sampleRecords := []*model.DynamicRecord {
-		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-5") } },
-		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-4") } },
-		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-3") } },
-		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-2") } },
-		{ Agent: &model.DynamicAgentProps{ Name: sp("AG-1") } },
+	sampleRecords := []*model.DynamicRecord{
+		{Agent: &model.DynamicAgentProps{Name: sp("AG-5")}},
+		{Agent: &model.DynamicAgentProps{Name: sp("AG-4")}},
+		{Agent: &model.DynamicAgentProps{Name: sp("AG-3")}},
+		{Agent: &model.DynamicAgentProps{Name: sp("AG-2")}},
+		{Agent: &model.DynamicAgentProps{Name: sp("AG-1")}},
 	}
 
-	samplePaging := &commonModel.Paging {
-		Size: 2,
+	samplePaging := &commonModel.Paging{
+		Size:     2,
 		Position: 2,
-		OrderBy: []*commonModel.OrderByEntity {
-			{ "agent_name", utils.DefaultDirection },
+		OrderBy: []*commonModel.OrderByEntity{
+			{"agent_name", utils.DefaultDirection},
 		},
 	}
 

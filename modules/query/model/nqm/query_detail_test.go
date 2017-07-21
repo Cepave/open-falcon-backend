@@ -2,10 +2,10 @@ package nqm
 
 import (
 	"fmt"
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	t "github.com/Cepave/open-falcon-backend/common/testing"
+	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
 	"time"
 )
@@ -18,22 +18,22 @@ var _ = Suite(&TestQueryDetailSuite{})
 func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
 	sPtr := func(v string) *string { return &v }
 	testCases := []*struct {
-		timeFilter *TimeFilterDetail
+		timeFilter   *TimeFilterDetail
 		expectedJson func(*TimeFilterDetail) string
-	} {
+	}{
 		{ // Absolute time
 			&TimeFilterDetail{
-				StartTime: t.ParseTimeToJsonTime(c, "2014-07-23T10:00:00Z"),
-				EndTime: t.ParseTimeToJsonTime(c, "2014-07-23T15:00:00Z"),
+				StartTime:     t.ParseTimeToJsonTime(c, "2014-07-23T10:00:00Z"),
+				EndTime:       t.ParseTimeToJsonTime(c, "2014-07-23T15:00:00Z"),
 				timeRangeType: TimeRangeAbsolute,
 			},
 			func(d *TimeFilterDetail) string { return `{ "start_time": 1406109600, "end_time": 1406127600 }` },
 		},
 		{ // Relative time(simple)
-			&TimeFilterDetail {
+			&TimeFilterDetail{
 				timeRangeType: TimeRangeRelative,
-				ToNow: &TimeWithUnit {
-					Unit: TimeUnitHour,
+				ToNow: &TimeWithUnit{
+					Unit:  TimeUnitHour,
 					Value: 6,
 				},
 			},
@@ -47,13 +47,13 @@ func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
 			},
 		},
 		{ // Relative time(cross days)
-			&TimeFilterDetail {
+			&TimeFilterDetail{
 				timeRangeType: TimeRangeRelative,
-				ToNow: &TimeWithUnit {
-					Unit: TimeUnitMonth,
-					Value: 1,
+				ToNow: &TimeWithUnit{
+					Unit:           TimeUnitMonth,
+					Value:          1,
 					StartTimeOfDay: sPtr("02:00"),
-					EndTimeOfDay: sPtr("05:00"),
+					EndTimeOfDay:   sPtr("05:00"),
 				},
 			},
 			func(d *TimeFilterDetail) string {
@@ -63,7 +63,7 @@ func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		c.Logf("JSON: %s", ojson.MarshalJSON(testCase.timeFilter))
 		c.Assert(testCase.timeFilter, ocheck.JsonEquals, testCase.expectedJson(testCase.timeFilter), comment)
@@ -72,54 +72,54 @@ func (suite *TestQueryDetailSuite) TestMarshalJSONOfTimeFilter(c *C) {
 
 // Tests the marshalling of detail of query
 func (suite *TestQueryDetailSuite) TestCompoundQueryDetail(c *C) {
-	sampleQuery := &CompoundQueryDetail {
+	sampleQuery := &CompoundQueryDetail{
 		Time: &TimeFilterDetail{
 			timeRangeType: TimeRangeAbsolute,
-			StartTime: ojson.JsonTime(time.Unix(897060500, 0)),
-			EndTime: ojson.JsonTime(time.Unix(897064500, 0)),
+			StartTime:     ojson.JsonTime(time.Unix(897060500, 0)),
+			EndTime:       ojson.JsonTime(time.Unix(897064500, 0)),
 		},
 		Metrics: "$max >= 150",
-		Agent: &AgentOfQueryDetail {
-			Name: []string { "ag-name-1", "ag-name-2" },
-			Hostname: []string{},
-			IpAddress: []string{ "12.10.1", "12.10.2" },
+		Agent: &AgentOfQueryDetail{
+			Name:         []string{"ag-name-1", "ag-name-2"},
+			Hostname:     []string{},
+			IpAddress:    []string{"12.10.1", "12.10.2"},
 			ConnectionId: []string{},
 
-			Isps: []*owlModel.Isp {
-				{ Id: 3, Name: "ag-isp-1" },
-				{ Id: 4, Name: "ag-isp-2" },
+			Isps: []*owlModel.Isp{
+				{Id: 3, Name: "ag-isp-1"},
+				{Id: 4, Name: "ag-isp-2"},
 			},
 			Provinces: []*owlModel.Province{
-				{ Id: 4, Name: "安東省" },
-				{ Id: 5, Name: "天山省" },
+				{Id: 4, Name: "安東省"},
+				{Id: 5, Name: "天山省"},
 			},
 			Cities: []*owlModel.City2{
-				{ Id: 11, Name: "吉林市" },
-				{ Id: 12, Name: "香山市" },
+				{Id: 11, Name: "吉林市"},
+				{Id: 12, Name: "香山市"},
 			},
-			NameTags: []*owlModel.NameTag{},
+			NameTags:  []*owlModel.NameTag{},
 			GroupTags: []*owlModel.GroupTag{},
 		},
-		Target:&TargetOfQueryDetail {
-			Name: []string { "tg-name-1", "tg-name-2" },
-			Host: []string{ "wine-1", "wine-2" },
+		Target: &TargetOfQueryDetail{
+			Name: []string{"tg-name-1", "tg-name-2"},
+			Host: []string{"wine-1", "wine-2"},
 
-			Isps: []*owlModel.Isp {},
+			Isps:      []*owlModel.Isp{},
 			Provinces: []*owlModel.Province{},
-			Cities: []*owlModel.City2{},
+			Cities:    []*owlModel.City2{},
 			NameTags: []*owlModel.NameTag{
-				{ Id: 2861, Value: "nt-3" },
-				{ Id: 2862, Value: "nt-4" },
+				{Id: 2861, Value: "nt-3"},
+				{Id: 2862, Value: "nt-4"},
 			},
 			GroupTags: []*owlModel.GroupTag{
-				{ Id: 30071, Name: "gt-3" },
-				{ Id: 30072, Name: "gt-4" },
+				{Id: 30071, Name: "gt-3"},
+				{Id: 30072, Name: "gt-4"},
 			},
 		},
-		Output: &OutputDetail {
-			Agent: []string { AgentGroupingName },
-			Target: []string { TargetGroupingName },
-			Metrics: []string { MetricAvg, MetricNumTarget },
+		Output: &OutputDetail{
+			Agent:   []string{AgentGroupingName},
+			Target:  []string{TargetGroupingName},
+			Metrics: []string{MetricAvg, MetricNumTarget},
 		},
 	}
 

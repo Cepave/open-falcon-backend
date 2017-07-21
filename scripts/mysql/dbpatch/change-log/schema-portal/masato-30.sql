@@ -1,20 +1,18 @@
 SET NAMES 'utf8';
 
-use falcon_portal
-
 CREATE TABLE `alarm_types` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
   `internal_data` TINYINT DEFAULT 1,
   `description` varchar(255) NOT NULL DEFAULT '',
-  `color` varchar(20) NOT NULL DEFAULT 'black';
+  `color` varchar(20) NOT NULL DEFAULT 'black',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
-INSERT INTO `alarm_types` (id, name, internal_data, description) VALUES (1, 'owl', 1, 'blue', 'default type of owl');
+INSERT INTO `alarm_types` (id, name, internal_data, color, description) VALUES (1, 'owl', 1, 'purple', 'default type of owl');
 
 ALTER TABLE `event_cases`
   ADD COLUMN alarm_type_id int(10) unsigned NOT NULL DEFAULT 1,

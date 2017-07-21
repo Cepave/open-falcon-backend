@@ -12,7 +12,7 @@ const (
 	UNDEFINED_ISP_ID      = int16(UNDEFINED_ID)
 	UNDEFINED_PROVINCE_ID = int16(UNDEFINED_ID)
 	UNDEFINED_CITY_ID     = int16(UNDEFINED_ID)
-	UNDEFINED_NAME_TAG_ID     = int16(UNDEFINED_ID)
+	UNDEFINED_NAME_TAG_ID = int16(UNDEFINED_ID)
 
 	// Value of undefined string
 	UNDEFINED_STRING = "<UNDEFINED>"
@@ -20,7 +20,7 @@ const (
 
 // NqmTaskRequest represents the request for ping task by NQM agent
 type NqmTaskRequest struct {
-	// The connection id of agent(used to identify task configruation)
+	// The connection id of agent(used to identify task configurations)
 	ConnectionId string `valid:"required"`
 	// The hostname of agent
 	Hostname string `valid:"required"`

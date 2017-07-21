@@ -11,10 +11,10 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/graph"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	yaagGin "github.com/masato25/yaag/gin"
 	"github.com/masato25/yaag/yaag"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -73,7 +73,18 @@ func main() {
 		})
 		routes.Use(yaagGin.Document())
 	}
+	// init graph rpc pools
 	initGraph()
+
+	// init redis connection for external alarm Use
+	config.StartRedis(
+		viper.GetBool("redis.enable"),
+		viper.GetString("redis.address"),
+		// if not passwrod set, keep blank
+		viper.GetString("redis.password"),
+		viper.GetString("redis.default_bucket"),
+	)
+
 	//start gin server
 	log.Debugf("will start with port:%v", viper.GetString("web_port"))
 	go controller.StartGin(viper.GetString("web_port"), routes, false)

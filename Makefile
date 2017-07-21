@@ -1,26 +1,52 @@
 SHELL := /bin/bash
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
-CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent nqm-mng f2e-api
+CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent mysqlapi f2e-api
 TARGET = open-falcon
-
 VERSION := $(shell cat VERSION)
+GOFILES := $(shell find . -name "*.go" -type f ! -path "./vendor/*")
+GOFMT ?= gofmt -s
 
 all: install $(CMD) $(TARGET)
 
+.PHONY: fmt
+fmt:
+	$(GOFMT) -w $(GOFILES)
+
+.PHONY: fmt-check
+fmt-check:
+	# get all go files and run go fmt on them
+	@diff=$$($(GOFMT) -d $(GOFILES)); \
+	if [ -n "$$diff" ]; then \
+		echo "Please run 'make fmt' and commit the result:"; \
+		echo "$${diff}"; \
+		exit 1; \
+	fi;
+
+.PHONY: misspell-check
+misspell-check:
+	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get -u github.com/client9/misspell/cmd/misspell; \
+	fi
+	misspell -error $(GOFILES)
+
+.PHONY: misspell
+misspell:
+	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get -u github.com/client9/misspell/cmd/misspell; \
+	fi
+	misspell -w $(GOFILES)
+
 $(CMD):
-	go get ./modules/$@
 	go build -ldflags "-X main.GitCommit=`git log -n1 --pretty=format:%h modules/$@` -X main.Version=${VERSION}" -o bin/$@/falcon-$@ ./modules/$@
 
 $(TARGET): $(TARGET_SOURCE)
-	go get .
-	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o open-falcon
+	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o $@
 
 checkvendor:
 	@hash govendor > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/kardianos/govendor; \
 	fi
-	@if [ -f ~/.bash_profile ]; then source ~/.bash_profile; fi
 
 install: checkvendor
 	govendor sync
@@ -53,7 +79,6 @@ clean:
 	@rm -rf ./bin
 	@rm -rf ./out
 	@rm -rf ./$(TARGET)
-	@rm -rf ./package_cache_tmp
 	@rm -rf open-falcon-v$(VERSION).tar.gz
 
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage

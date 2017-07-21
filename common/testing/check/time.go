@@ -8,16 +8,19 @@ import (
 
 // Checks if the both of time value are equal(only UNIX time).
 var TimeEquals timeEqualsImpl
+
 // Checks if the obtained time is before expected time(only UNIX time).
 var TimeBefore timeBeforeImpl
+
 // Checks if the obtained time is after expected time(only UNIX time).
 var TimeAfter timeAfterImpl
 
 type timeEqualsImpl bool
+
 func (e timeEqualsImpl) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: "TimeEquals",
-		Params: []string { "obtained", "expected" },
+	return &check.CheckerInfo{
+		Name:   "TimeEquals",
+		Params: []string{"obtained", "expected"},
 	}
 }
 func (e timeEqualsImpl) Check(params []interface{}, names []string) (result bool, errorMsg string) {
@@ -34,10 +37,11 @@ func (e timeEqualsImpl) Check(params []interface{}, names []string) (result bool
 }
 
 type timeBeforeImpl bool
+
 func (e timeBeforeImpl) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: "TimeBefore",
-		Params: []string { "obtained", "newer time" },
+	return &check.CheckerInfo{
+		Name:   "TimeBefore",
+		Params: []string{"obtained", "newer time"},
 	}
 }
 func (e timeBeforeImpl) Check(params []interface{}, names []string) (result bool, errorMsg string) {
@@ -54,10 +58,11 @@ func (e timeBeforeImpl) Check(params []interface{}, names []string) (result bool
 }
 
 type timeAfterImpl bool
+
 func (e timeAfterImpl) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: "TimeAfter",
-		Params: []string { "obtained", "older time" },
+	return &check.CheckerInfo{
+		Name:   "TimeAfter",
+		Params: []string{"obtained", "older time"},
 	}
 }
 func (e timeAfterImpl) Check(params []interface{}, names []string) (result bool, errorMsg string) {

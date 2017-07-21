@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"gopkg.in/go-playground/validator.v9"
 	sjson "github.com/bitly/go-simplejson"
+	"gopkg.in/go-playground/validator.v9"
 
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	. "gopkg.in/check.v1"
@@ -21,9 +21,9 @@ var _ = Suite(&TestConfigSuite{})
 // Tests the JSON engine for CORS and exception handler, etc.
 func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *C) {
 	testCases := []*struct {
-		req *http.Request
+		req        *http.Request
 		assertFunc func(*C, *httptest.ResponseRecorder, CommentInterface)
-	} {
+	}{
 		{ // Tests the CORS
 			httptest.NewRequest(http.MethodOptions, "/simple-1", nil),
 			func(c *C, resp *httptest.ResponseRecorder, comment CommentInterface) {
@@ -80,14 +80,14 @@ func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *C) {
 		},
 	}
 
-	engine := NewDefaultJsonEngine(&GinConfig{ Mode: gin.ReleaseMode })
+	engine := NewDefaultJsonEngine(&GinConfig{Mode: gin.ReleaseMode})
 	engine.GET("/sample-1", func(context *gin.Context) {
 		context.String(http.StatusOK, "OK")
 	})
 	engine.POST("/json-error-1", func(context *gin.Context) {
 		type car struct {
 			Name string `json:"name"`
-			Age int `json:"age"`
+			Age  int    `json:"age"`
 		}
 
 		BindJson(context, &car{})
@@ -97,7 +97,7 @@ func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *C) {
 			Name string `validate:"min=10"`
 		}
 
-		ConformAndValidateStruct(&car{ "cc" }, validator.New())
+		ConformAndValidateStruct(&car{"cc"}, validator.New())
 	})
 	engine.GET("/panic-1", func(context *gin.Context) {
 		panic("HERE WE PANIC!!")
@@ -117,12 +117,12 @@ func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *C) {
 }
 
 func ExampleNewDefaultJsonEngine() {
-	engine := NewDefaultJsonEngine(&GinConfig{ Mode: gin.ReleaseMode })
+	engine := NewDefaultJsonEngine(&GinConfig{Mode: gin.ReleaseMode})
 
 	engine.GET(
 		"/car/:car_id",
 		func(c *gin.Context) {
-			c.String(http.StatusOK, "Car Id: " + c.Param("car_id"))
+			c.String(http.StatusOK, "Car Id: "+c.Param("car_id"))
 		},
 	)
 

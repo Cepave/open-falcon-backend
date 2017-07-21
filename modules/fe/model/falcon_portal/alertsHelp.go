@@ -60,6 +60,7 @@ type AlertsResp struct {
 	// add by 201707
 	Activate     int    `json:"active"`
 	AlarmType    string `json:"alarm_type"`
+	AlarmColor   string `json:"alarm_color"`
 	ExtendedBlob string `json:"extended_blob"`
 	InternalData int    `json:"internal_data"`
 }

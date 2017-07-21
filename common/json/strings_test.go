@@ -12,17 +12,17 @@ var _ = Suite(&TestStringsSuite{})
 // Tests the marshalling of JSON
 func (suite *TestStringsSuite) TestMarshalJSONOfJsonString(c *C) {
 	testCases := []*struct {
-		sample []JsonString
+		sample   []JsonString
 		expected string
-	} {
+	}{
 		{
-			[]JsonString{ "A", "", "B" },
+			[]JsonString{"A", "", "B"},
 			`[ "A", null, "B" ]`,
 		},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult := MarshalJSON(testCase.sample)
 		c.Logf("JSON Result: %s", testedResult)

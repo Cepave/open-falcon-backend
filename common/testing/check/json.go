@@ -3,8 +3,8 @@ package check
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/check.v1"
 	sjson "github.com/bitly/go-simplejson"
+	"gopkg.in/check.v1"
 	"io"
 )
 
@@ -24,15 +24,15 @@ import (
 var JsonEquals = &checkJsonEquals{}
 
 type checkJsonEquals struct{}
+
 func (c *checkJsonEquals) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: "JsonEquals",
-		Params: []string{ "obtained", "expected" },
+	return &check.CheckerInfo{
+		Name:   "JsonEquals",
+		Params: []string{"obtained", "expected"},
 	}
 }
 func (c *checkJsonEquals) Check(params []interface{}, names []string) (bool, string) {
-	var obtained, expected =
-		convertToSimpleJson(params[0]),
+	var obtained, expected = convertToSimpleJson(params[0]),
 		convertToSimpleJson(params[1])
 
 	obtainedType := getJsonType(obtained)
@@ -47,7 +47,7 @@ func (c *checkJsonEquals) Check(params []interface{}, names []string) (bool, str
 	}
 
 	result, _ := check.DeepEquals.Check(
-		[]interface{} { obtained.Interface(), expected.Interface() },
+		[]interface{}{obtained.Interface(), expected.Interface()},
 		names,
 	)
 
@@ -60,11 +60,11 @@ func (c *checkJsonEquals) Check(params []interface{}, names []string) (bool, str
 
 const (
 	arrayType = 1
-	mapType = 2
+	mapType   = 2
 	valueType = 3
 )
 
-var typeToString = map[int]string {
+var typeToString = map[int]string{
 	1: "JSON Array",
 	2: "JSON Map",
 	3: "JSON Value",
@@ -72,10 +72,10 @@ var typeToString = map[int]string {
 
 func getJsonType(jsonObject *sjson.Json) int {
 	switch jsonObject.Interface().(type) {
-		case []interface{}:
-			return arrayType
-		case map[string]interface{}:
-			return mapType
+	case []interface{}:
+		return arrayType
+	case map[string]interface{}:
+		return mapType
 	}
 
 	return valueType

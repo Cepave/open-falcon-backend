@@ -3,9 +3,9 @@ package api
 import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
+	log "github.com/sirupsen/logrus"
 	"github.com/toolkits/container/set"
 	"github.com/toolkits/net/httplib"
-	log "github.com/sirupsen/logrus"
 	"strings"
 	"sync"
 	"time"

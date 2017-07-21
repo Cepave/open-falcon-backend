@@ -35,6 +35,7 @@ type EventCases struct {
 type AlarmType struct {
 	Id           int       `json:"id" orm:"pk"`
 	Name         string    `json:"name" orm:"column(name)"`
+	Color        string    `json:"color" orm:"column(color)"`
 	InternalData int       `json:"internal_data" orm:"column(internal_data)"`
 	Description  string    `json:"description" orm:"column(description)"`
 	Created      time.Time `json:"created" orm:"column(created)"`
@@ -57,6 +58,7 @@ type EventsRsp struct {
 	Id         int       `json:"id"`
 	Step       int       `json:"step"`
 	Cond       string    `json:"cond"`
+	Status     int       `json:"status"`
 	Timestamp  time.Time `json:"timestamp"`
 	Eid        string    `json:"event_caseId" orm:"column(eid)"`
 	TplCreator string    `json:"tpl_creator"`

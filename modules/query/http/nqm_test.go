@@ -30,7 +30,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * Normal situation
 		 */
-		processDslTestCase{
+		{
 			sampleDsl: "starttime=2010-05-01 endtime=2010-05-02",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
@@ -44,7 +44,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * DSL is empty
 		 */
-		processDslTestCase{
+		{
 			sampleDsl: "     ",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				now := time.Now()
@@ -62,7 +62,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * DSL only has start time
 		 */
-		processDslTestCase{
+		{
 			sampleDsl: "starttime=2013-11-12",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
@@ -76,7 +76,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * DSL only has end time
 		 */
-		processDslTestCase{
+		{
 			sampleDsl: "endtime=2012-07-15",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
@@ -90,7 +90,7 @@ func (suite *TestNqmSuite) TestProcessDsl(c *C) {
 		/**
 		 * DSL only has same value of start/end time
 		 */
-		processDslTestCase{
+		{
 			sampleDsl: "starttime=2012-03-03 endtime=2012-03-03",
 			assertion: func(testedDsl *dsl.QueryParams, testedError error) {
 				c.Assert(testedError, IsNil)
@@ -155,8 +155,8 @@ func (suite *TestNqmSuite) TestJsonForResultWithDsl(c *C) {
 			EndTime:   sampleEndTime,
 		},
 		resultData: []sampleJsonData{
-			sampleJsonData{20, "Bob"},
-			sampleJsonData{30, "Joe"},
+			{20, "Bob"},
+			{30, "Joe"},
 		},
 	}
 

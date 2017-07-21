@@ -17,7 +17,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne := AlertsResp{}
 		priority := strconv.Itoa(item.Priority)
 		aType := item.AlarmType()
-		contacts := []boss.Contactor{boss.Contactor{Name: "-", Phone: "-", Email: "-"}}
+		contacts := []boss.Contactor{{Name: "-", Phone: "-", Email: "-"}}
 		recordOne.Hash = item.Id
 		recordOne.HostName = item.Endpoint
 		recordOne.Metric = item.Metric
@@ -45,6 +45,7 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne.IP = item.Ip
 		recordOne.IDC = item.Idc
 		recordOne.AlarmType = aType.Name
+		recordOne.AlarmColor = aType.Color
 		recordOne.InternalData = aType.InternalData
 		recordOne.ExtendedBlob = item.ExtendedBlob
 		// ///make compatible for overall , if need it, please uncomment below
@@ -153,8 +154,16 @@ func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bo
 		item.Contact = []boss.Contactor{contactor}
 		if result, ok := hostmap[item.HostName]; ok {
 			item.Activate = result.Activate
+		} else {
+			// 2 means unknown, for not exist hostname & exnternal alarm
+			item.Activate = 2
 		}
-		respCompleteTmp = append(respCompleteTmp, item)
+
+		if item.Activate != 0 {
+			respCompleteTmp = append(respCompleteTmp, item)
+		} else if showAll {
+			respCompleteTmp = append(respCompleteTmp, item)
+		}
 	}
 	respComplete = respCompleteTmp
 	return

@@ -9,8 +9,8 @@ import (
 
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
+	log "github.com/sirupsen/logrus"
 )
 
 const (

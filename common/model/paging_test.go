@@ -13,12 +13,12 @@ var _ = Suite(&TestPagingSuite{})
 func (suite *TestPagingSuite) TestSetTotalCount(c *C) {
 	testCases := []*struct {
 		totalCount int32
-		expected bool
-	} {
-		{ 21, true },
-		{ 20, false },
-		{ 19, false },
-		{ 0, false },
+		expected   bool
+	}{
+		{21, true},
+		{20, false},
+		{19, false},
+		{0, false},
 	}
 
 	for i, testCase := range testCases {
@@ -38,18 +38,18 @@ func (suite *TestPagingSuite) TestSetTotalCount(c *C) {
 // Tests the extracting of a page of data
 func (suite *TestPagingSuite) TestExtractPage(c *C) {
 	testCases := []*struct {
-		size int32
-		position int32
+		size         int32
+		position     int32
 		expectedSize int
-	} {
-		{ 10, 1, 10, },
-		{ 10, 3, 10, },
-		{ 10, 4, 0, },
-		{ 10, 100, 0, },
-		{ 11, 1, 11, },
-		{ 11, 2, 11, },
-		{ 11, 3, 8, },
-		{ 11, 100, 0, },
+	}{
+		{10, 1, 10},
+		{10, 3, 10},
+		{10, 4, 0},
+		{10, 100, 0},
+		{11, 1, 11},
+		{11, 2, 11},
+		{11, 3, 8},
+		{11, 100, 0},
 	}
 
 	sampleArray := make([]int, 30)
@@ -61,9 +61,9 @@ func (suite *TestPagingSuite) TestExtractPage(c *C) {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		paging := &Paging {
+		paging := &Paging{
 			Position: testCase.position,
-			Size: testCase.size,
+			Size:     testCase.size,
 		}
 
 		testedSlice := ExtractPage(sampleArray, paging).([]int)

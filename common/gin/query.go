@@ -7,7 +7,7 @@ import (
 
 // QueryWrapper for gin.Context
 //
-// You may like to use "gin/mvc" framework instead of this utility to convert data by youself.
+// You may like to use "gin/mvc" framework instead of this utility to convert data by yourself.
 type QueryWrapper gin.Context
 
 // NewQueryWrapper converts *gin.Context to *QueryWrapper
@@ -21,6 +21,7 @@ func (wrapper *QueryWrapper) GetInt64(key string) *ViableParamValue {
 		key, valueToInt,
 	)
 }
+
 // GetInt64Default gets query parameter as int64 with default value
 func (wrapper *QueryWrapper) GetInt64Default(key string, defaultValue int64) *ViableParamValue {
 	return wrapper.getValueDefaultWithParseFunc(
@@ -34,6 +35,7 @@ func (wrapper *QueryWrapper) GetUint64(key string) *ViableParamValue {
 		key, valueToUInt,
 	)
 }
+
 // GetUint64Default gets query parameter as uint64 with default value
 func (wrapper *QueryWrapper) GetUint64Default(key string, defaultValue uint64) *ViableParamValue {
 	return wrapper.getValueDefaultWithParseFunc(
@@ -47,6 +49,7 @@ func (wrapper *QueryWrapper) GetFloat64(key string) *ViableParamValue {
 		key, valueToFloat64,
 	)
 }
+
 // GetFloat64Default gets query parameter as uint64 with default value
 func (wrapper *QueryWrapper) GetFloat64Default(key string, defaultValue float64) *ViableParamValue {
 	return wrapper.getValueDefaultWithParseFunc(
@@ -64,6 +67,7 @@ func (wrapper *QueryWrapper) GetBool(key string) *ViableParamValue {
 		key, valueToBool,
 	)
 }
+
 // GetBoolDefault gets query parameter as bool with default value
 func (wrapper *QueryWrapper) GetBoolDefault(key string, defaultValue bool) *ViableParamValue {
 	return wrapper.getValueDefaultWithParseFunc(
@@ -90,10 +94,10 @@ func valueToBool(value string) (interface{}, error) {
 }
 
 func (wrapper *QueryWrapper) getValueWithParseFunc(key string, parseImpl parseFunc) *ViableParamValue {
-	viableParam := &ViableParamValue {
+	viableParam := &ViableParamValue{
 		Viable: true,
-		Value: ((*gin.Context)(wrapper)).Query(key),
-		Error: nil,
+		Value:  ((*gin.Context)(wrapper)).Query(key),
+		Error:  nil,
 	}
 
 	if viableParam.Value.(string) == "" {

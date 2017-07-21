@@ -9,8 +9,9 @@ import (
 
 type boolFilterImpl struct {
 	expectedResult bool
-	matchers []model.MetricFilter
+	matchers       []model.MetricFilter
 }
+
 func (boolFilter *boolFilterImpl) IsMatch(model *model.Metrics) bool {
 	for _, filter := range boolFilter.matchers {
 		if filter.IsMatch(model) == boolFilter.expectedResult {
@@ -28,21 +29,22 @@ func newBoolFilterImpl(checkResult bool, leftTerm interface{}, restTerms interfa
 		matchers = append(matchers, restFilter.(model.MetricFilter))
 	}
 
-	return &boolFilterImpl {
+	return &boolFilterImpl{
 		checkResult, matchers,
 	}
 }
 
 type filterImpl struct {
-	leftFactor interface{}
-	op string
+	leftFactor  interface{}
+	op          string
 	rightFactor interface{}
 }
+
 func newFilterImpl(leftFactor interface{}, op string, rightFactor interface{}) *filterImpl {
 	valueOfLeftFactor := getFactorValue(leftFactor)
 	valueOfRightFactor := getFactorValue(rightFactor)
 
-	return &filterImpl {
+	return &filterImpl{
 		valueOfLeftFactor,
 		op,
 		valueOfRightFactor,

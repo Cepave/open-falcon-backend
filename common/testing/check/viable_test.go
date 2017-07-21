@@ -14,17 +14,17 @@ type car struct{}
 func (suite *TestViableSuite) TestViableValue(c *C) {
 	testCases := []*struct {
 		sampleValue interface{}
-		expected bool
-	} {
-		{ &car{}, true },
-		{ (*car)(nil), false },
+		expected    bool
+	}{
+		{&car{}, true},
+		{(*car)(nil), false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		testedResult, _ := ViableValue.Check(
-			[]interface{} { testCase.sampleValue , true },
+			[]interface{}{testCase.sampleValue, true},
 			[]string{},
 		)
 

@@ -1,0 +1,33 @@
+{
+	"rdb" : {
+		"dsn" : "root:cepave@tcp(127.0.0.1:3306)/falcon_portal?loc=Local&parseTime=true",
+		"maxIdle" : 8
+	},
+	"restful" : {
+		"listen" : {
+			"host": "",
+			"port": 6040
+		}
+	},
+	"logLevel" : {
+		"ROOT" : "INFO"
+	},
+	"nqm" :{
+		"pingList": {
+			"cache": {
+				"size": 8,
+				"lifetime": 20
+			}
+		}
+	},
+	"heartbeat" :{
+		"nqm": {
+			"batchSize": 64,
+			"duration": 2,
+			"targetList": {
+				"size": 8,
+				"duration": 20
+			}
+		}
+	}
+}

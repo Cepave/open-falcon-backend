@@ -3,10 +3,10 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"regexp"
-	"strings"
-	"strconv"
 	csc "github.com/Cepave/open-falcon-backend/common/strconv"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 var ipV4RegExp = regexp.MustCompile("^(?:[0-9]{1,3})(?:\\.[0-9]{1,3})?(?:\\.[0-9]{1,3})?(?:\\.[0-9]{1,3})?$")
@@ -62,35 +62,35 @@ func IpV4ToBytesForLike(ip string) ([]byte, error) {
 // Converts grouped string to array of int64
 //
 // groupedValue - The grouped value retrieved from database, could be null
-// seperator - The seperator
-func GroupedStringToIntArray(groupedValue sql.NullString, seperator string) []int64 {
+// separator - The separator
+func GroupedStringToIntArray(groupedValue sql.NullString, separator string) []int64 {
 	if !groupedValue.Valid {
 		return make([]int64, 0)
 	}
 
-	return csc.SplitStringToIntArray(groupedValue.String, seperator)
+	return csc.SplitStringToIntArray(groupedValue.String, separator)
 }
 
 // Converts grouped string to array of uint64
 //
 // groupedValue - The grouped value retrieved from database, could be null
-// seperator - The seperator
-func GroupedStringToUintArray(groupedValue sql.NullString, seperator string) []uint64 {
+// separator - The separator
+func GroupedStringToUintArray(groupedValue sql.NullString, separator string) []uint64 {
 	if !groupedValue.Valid {
 		return make([]uint64, 0)
 	}
 
-	return csc.SplitStringToUintArray(groupedValue.String, seperator)
+	return csc.SplitStringToUintArray(groupedValue.String, separator)
 }
 
 // Converts grouped string to array of string
 //
 // groupedValue - The grouped value retrieved from database, could be null
-// seperator - The seperator
-func GroupedStringToStringArray(groupedValue sql.NullString, seperator string) []string {
+// separator - The separator
+func GroupedStringToStringArray(groupedValue sql.NullString, separator string) []string {
 	if !groupedValue.Valid {
 		return make([]string, 0)
 	}
 
-	return strings.Split(groupedValue.String, seperator)
+	return strings.Split(groupedValue.String, separator)
 }
