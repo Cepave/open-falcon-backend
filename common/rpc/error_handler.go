@@ -3,8 +3,8 @@ package rpc
 import (
 	"fmt"
 
-	or "github.com/Cepave/open-falcon-backend/common/runtime"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	or "github.com/Cepave/open-falcon-backend/common/runtime"
 
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
