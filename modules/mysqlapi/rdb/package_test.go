@@ -25,6 +25,10 @@ func TestByCheck(t *testing.T) {
 	ch.TestingT(t)
 }
 
+func inTx(sql ...string) {
+	DbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
+}
+
 var ginkgoDb = &tDb.GinkgoDb{}
 var _ = BeforeSuite(func() {
 	DbFacade = ginkgoDb.InitDbFacade()
