@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"errors"
-	"fmt"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -25,18 +24,4 @@ var _ = Describe("Tests handling of panic to error", func() {
 func samplePanic(samplePanic interface{}) (err error) {
 	defer HandleError(&err)()
 	panic(samplePanic)
-}
-
-func ExampleHanleError() {
-	sampleFunc := func() (err error) {
-		defer HandleError(&err)()
-
-		panic("This is panic")
-	}
-
-	err := sampleFunc()
-	fmt.Printf("%v\n", err)
-
-	// Output:
-	// Has error on RPC: This is panic
 }
