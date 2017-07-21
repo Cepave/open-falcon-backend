@@ -31,7 +31,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	 * Validates data
 	 */
 	if err = validatePingTask(&request); err != nil {
-		return
+		return fmt.Errorf("[NQM Heartbeat] Validate request(%v) error: %v", request, err)
 	}
 	// :~)
 
@@ -49,7 +49,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 
 	nqmAgentHeartbeatResp, err := service.NqmAgentHeartbeat(agentHeartbeatReq)
 	if err != nil {
-		return
+		return fmt.Errorf("[NQM Heartbeat] Heartbeat call error: (request=%v) %v", request, err)
 	}
 
 	if !nqmAgentHeartbeatResp.Status {
@@ -58,7 +58,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 
 	nqmAgentHeartbeatTargetList, err := service.NqmAgentHeartbeatTargetList(nqmAgentHeartbeatResp.Id)
 	if err != nil {
-		return
+		return fmt.Errorf("[NQM Heartbeat] Get target list of agent(%v) error: %v", nqmAgentHeartbeatResp, err)
 	}
 
 	response.NeedPing = true
