@@ -322,7 +322,7 @@ func (r HeartbeatRequest) String() string {
 
 type AgentView struct {
 	Id                    int32            `json:"id"`
-	Name                  *string          `json:"name"`
+	Name                  string           `json:"name"`
 	ConnectionId          string           `json:"connection_id"`
 	Hostname              string           `json:"hostname"`
 	IpAddress             net.IP           `json:"ip_address"`

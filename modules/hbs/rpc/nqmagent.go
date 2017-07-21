@@ -95,7 +95,7 @@ func validatePingTask(request *commonModel.NqmTaskRequest) (err error) {
 func toOldAgent(a *nqmModel.AgentView) *commonModel.NqmAgent {
 	return &commonModel.NqmAgent{
 		Id:           int(a.Id),
-		Name:         *a.Name,
+		Name:         a.Name,
 		IspId:        a.ISP.ID,
 		IspName:      a.ISP.Name,
 		ProvinceId:   a.Province.ID,

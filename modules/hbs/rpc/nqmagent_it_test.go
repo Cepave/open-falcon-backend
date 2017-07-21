@@ -107,6 +107,59 @@ var tsRsps = []string{
 	`,
 	`
 	{
+		"id" : 405001,
+		"name": null,
+		"connection_id": "ag-rpc-1",
+		"hostname": "rpc-1.org",
+		"ip_address": "45.65.0.1",
+		"isp" : {
+			"id": 3,
+			"name": "移动"
+		},
+		"province": {
+			"id": 2,
+			"name": "山西"
+		},
+		"city": {
+			"id": -1,
+			"name": "<UNDEFINED>"
+		},
+		"name_tag": {
+			"id": -1,
+			"value": "\u003cUNDEFINED\u003e"
+		},
+		"group_tags": [
+			9081,
+			9082
+		],
+		"status": true,
+		"comment": null,
+		"last_heartbeat_time": 2347726123,
+		"num_of_enabled_pingtasks": 3
+	}
+	`,
+	`
+	[
+	{
+	  "id": 630001,
+	  "host": "1.2.3.4",
+	  "isp_id": 1,
+	  "isp_name": "北京三信时代",
+	  "province_id": 4,
+	  "province_name": "北京",
+	  "ct_id": 1,
+	  "ct_name": "北京市",
+	  "nt_id": -1,
+	  "nt_value": "\u003cUNDEFINED\u003e",
+	  "gt_ids": [
+	     9081,
+	     9082
+	  ]
+	}
+	]
+	`,
+	`
+	{
 		"id" : 405002,
 		"name": "ag-name-1",
 		"connection_id": "ag-rpc-2",
@@ -194,6 +247,14 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 		},
 		{
 			model.NqmTaskRequest{
+				ConnectionId: "ag-rpc-1",
+				Hostname:     "rpc-1.org",
+				IpAddress:    "45.65.0.1",
+			},
+			true, []int32{630001},
+		},
+		{
+			model.NqmTaskRequest{
 				ConnectionId: "ag-rpc-2",
 				Hostname:     "rpc-2.org",
 				IpAddress:    "45.65.0.2",
@@ -218,7 +279,9 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 			}),
 		)
 		l, err := net.Listen("tcp", MOCK_URL)
-		fmt.Println(l, err)
+		if err != nil {
+			panic(err)
+		}
 		ts.Listener = l
 		ts.Start()
 
@@ -251,20 +314,35 @@ func (suite *TestNqmAgentSuite) TestTask(c *C) {
 		// :~)
 
 		c.Assert(resp.NeedPing, Equals, true, comment)
-		c.Assert(
-			resp.Agent, DeepEquals,
-			&model.NqmAgent{
-				Id:    405001,
-				Name:  "ag-name-1",
-				IspId: 3, IspName: "移动",
-				ProvinceId: 2, ProvinceName: "山西",
-				CityId: -1, CityName: "<UNDEFINED>",
-				NameTagId:   -1,
-				GroupTagIds: []int32{9081, 9082},
-			},
-		)
+		if i == 0 { // Name != null
+			c.Assert(
+				resp.Agent, DeepEquals,
+				&model.NqmAgent{
+					Id:    405001,
+					Name:  "ag-name-1",
+					IspId: 3, IspName: "移动",
+					ProvinceId: 2, ProvinceName: "山西",
+					CityId: -1, CityName: "<UNDEFINED>",
+					NameTagId:   -1,
+					GroupTagIds: []int32{9081, 9082},
+				},
+			)
+		} else if i == 1 { // Name == null
+			c.Assert(
+				resp.Agent, DeepEquals,
+				&model.NqmAgent{
+					Id:    405001,
+					Name:  "",
+					IspId: 3, IspName: "移动",
+					ProvinceId: 2, ProvinceName: "山西",
+					CityId: -1, CityName: "<UNDEFINED>",
+					NameTagId:   -1,
+					GroupTagIds: []int32{9081, 9082},
+				},
+			)
+		}
 
-		c.Assert(len(resp.Targets), Equals, 3)
+		c.Assert(len(resp.Targets), Equals, len(testCase.expectedTargetIds))
 		c.Assert(resp.Measurements["fping"].Command[0], Equals, "fping")
 
 		c.Assert(resp.Targets, HasLen, len(testCase.expectedTargetIds), comment)
