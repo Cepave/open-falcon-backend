@@ -4,7 +4,7 @@ import (
 	cModel "github.com/Cepave/open-falcon-backend/common/model"
 	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"

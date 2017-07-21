@@ -4,7 +4,7 @@ import (
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	gormExt "github.com/Cepave/open-falcon-backend/common/gorm"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/jinzhu/gorm"
 	"github.com/juju/errors"
 )
