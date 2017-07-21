@@ -10,16 +10,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Tests ListHosts(...)", ginkgoDb.NeedDb(func() {
-
+var _ = Describe("[Intg] Tests ListHosts(...)", ginkgoDb.NeedDb(func() {
 	BeforeEach(func() {
 		inTx(
 			`INSERT INTO host(id, hostname)
 				VALUES
-					(1, 'listhosts-hostname-1'),
-					(2, 'listhosts-hostname-2'),
-					(3, 'listhosts-hostname-3'),
-					(4, 'listhosts-hostname-4')`,
+					(1, 'listhosts-hostname-a1'),
+					(2, 'listhosts-hostname-b2'),
+					(3, 'listhosts-hostname-a3'),
+					(4, 'listhosts-hostname-b4')`,
 			`INSERT INTO grp(id, grp_name)
 				VALUES
 					(1, 'listhosts-grpname-1'),
@@ -41,9 +40,10 @@ var _ = Describe("Tests ListHosts(...)", ginkgoDb.NeedDb(func() {
 	})
 
 	DescribeTable("ListHosts(<paging>)",
-		func(pageSize int, expectedHostIDs []int, expectedGroupIDs []string, expectedTotalCount int) {
+		func(pageSize int, order string, expectedHostIDs []int, expectedGroupIDs []string, expectedTotalCount int) {
 			page := cModel.Paging{
-				Size: int32(pageSize),
+				Size:    int32(pageSize),
+				OrderBy: []*cModel.OrderByEntity{{order, cModel.Ascending}},
 			}
 			res, paging := ListHosts(page)
 
@@ -66,7 +66,29 @@ var _ = Describe("Tests ListHosts(...)", ginkgoDb.NeedDb(func() {
 			Expect(resGroupIDs).To(Equal(expectedGroupIDs))
 			Expect(paging.TotalCount).To(Equal(int32(expectedTotalCount)))
 		},
-		Entry("All all of the data", 5, []int{1, 2, 3, 4}, []string{"1", "1,2", "2", ""}, 4),
-		Entry("List 1st paging of data", 2, []int{1, 2}, []string{"1", "1,2"}, 4),
+		Entry("List all data", 5, "id", []int{1, 2, 3, 4}, []string{"1", "1,2", "2", ""}, 4),
+		Entry("List all data", 5, "name", []int{1, 3, 2, 4}, []string{"1", "2", "1,2", ""}, 4),
+		Entry("List 1st paging of data", 2, "id", []int{1, 2}, []string{"1", "1,2"}, 4),
 	)
 }))
+
+var _ = Describe("[Unit] Test buildSortingClauseOfHosts(...)", func() {
+	DescribeTable("buildSortingClauseOfHosts(<paging>)",
+		func(paging *cModel.Paging, expectedClause string) {
+			res := buildSortingClauseOfHosts(paging)
+			Expect(res).To(Equal(expectedClause))
+		},
+		Entry("Undefined",
+			&cModel.Paging{},
+			"",
+		),
+		Entry("Sort by id ASC",
+			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"id", cModel.Ascending}}},
+			"id ASC",
+		),
+		Entry("Sort by name ASC",
+			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"name", cModel.Ascending}}},
+			"hostname ASC",
+		),
+	)
+})

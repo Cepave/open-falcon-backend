@@ -6,6 +6,7 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/nqm-mng/model"
 	"github.com/jinzhu/gorm"
+	"github.com/juju/errors"
 )
 
 // ListHosts returns the info of hosts by host ID
@@ -27,7 +28,7 @@ func ListHosts(paging commonModel.Paging) ([]*model.HostsResult, *commonModel.Pa
 				ON gh.grp_id = g.id`).
 			Group(`host.id, host.hostname`).
 			Limit(paging.Size).
-			Order(`host.id ASC`).
+			Order(buildSortingClauseOfHosts(&paging)).
 			Offset(paging.GetOffset())
 
 		selectHost := dbListHosts.Find(&result)
@@ -48,4 +49,20 @@ func ListHosts(paging commonModel.Paging) ([]*model.HostsResult, *commonModel.Pa
 	}
 
 	return result, &paging
+}
+
+var orderByDialectForHosts = commonModel.NewSqlOrderByDialect(
+	map[string]string{
+		"id":   "id",
+		"name": "hostname",
+	},
+)
+
+func buildSortingClauseOfHosts(paging *commonModel.Paging) string {
+	querySyntax, err := orderByDialectForHosts.ToQuerySyntax(paging.OrderBy)
+	gormExt.DefaultGormErrorConverter.PanicIfError(
+		errors.Annotate(err, "Order by to query syntax has error"),
+	)
+
+	return querySyntax
 }
