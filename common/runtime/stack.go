@@ -53,6 +53,9 @@ func (s CallerStack) AsStringStack() []string {
 
 	return callerStackString
 }
+func (s CallerStack) ConcatStringStack(sep string) string {
+	return strings.Join(s.AsStringStack(), sep)
+}
 
 // Gets the file by trimming of $GOPATH
 //
