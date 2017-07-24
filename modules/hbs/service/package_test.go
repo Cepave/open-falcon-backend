@@ -23,7 +23,7 @@ var _ = Describe("[Unit] Test resolveUrl(...)", func() {
 			).To(Panic())
 		},
 		Entry("Empty host url", "", ""),
-		Entry("Invalid scheme", "h@ttp://www.owl.com", "mysqlapi"),
+		Entry("Invalid scheme", "3h@ttp://www.owl.com", "mysqlapi"),
 	)
 
 	DescribeTable("should parse successfully when",
