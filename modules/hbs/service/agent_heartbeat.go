@@ -36,11 +36,11 @@ func NewAgentHeartbeatService(config *cQueue.Config) *AgentHeartbeatService {
 
 func (s *AgentHeartbeatService) Start() {
 	if s.running {
-		logger.Infoln("[AgentHeartbeat][Skipped] Service is already running.")
+		logger.Infoln("[Service] AgentHeartbeat is already running. Ineffectively start.")
 		return
 	}
 	s.running = true
-	logger.Infoln("[AgentHeartbeat] Service is starting.")
+	logger.Infoln("[Service] AgentHeartbeat is starting.")
 
 	s.wg.Add(1)
 	go func() {
@@ -71,19 +71,19 @@ func (s *AgentHeartbeatService) consumeHeartbeatQueue(flushing bool) {
 	s.agentsDroppedCnt += d
 
 	if flushing {
-		logger.Infof("[AgentHeartbeat] Service is flushing. Number of agents: %d ", len(agents))
+		logger.Infoln("[Service] AgentHeartbeat is flushing. Number of agents:", len(agents))
 		s.consumeHeartbeatQueue(flushing)
 	}
 }
 
 func (s *AgentHeartbeatService) Stop() {
 	if !s.running {
-		logger.Infoln("[AgentHeartbeat][Skipped] Service is already stopped.")
+		logger.Infoln("[Service] AgentHeartbeat is already stopped. Ineffectively stop.")
 		return
 	}
 
 	s.running = false
-	logger.Infof("[AgentHeartbeat] Service is stopping. Size of queue: %d", s.CurrentSize())
+	logger.Infof("[Service] AgentHeartbeat is stopping. Size of queue: %d", s.CurrentSize())
 
 	/**
 	 * Waiting for queue to be processed
@@ -93,7 +93,7 @@ func (s *AgentHeartbeatService) Stop() {
 
 func (s *AgentHeartbeatService) Put(req *cModel.AgentReportRequest, updateTime int64) {
 	if !s.running {
-		logger.Infoln("[AgentHeartbeat][Skipped] Put when stopped.")
+		logger.Infoln("[Service] AgentHeartbeat is stopped. Ineffectively put.")
 		return
 	}
 

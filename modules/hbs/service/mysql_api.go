@@ -18,7 +18,7 @@ func agentHeartbeatCall(agents []*model.FalconAgentHeartbeat) (rowsAffectedCnt i
 	res := model.FalconAgentHeartbeatResult{}
 	err := commonSling.ToSlintExt(req).DoReceive(http.StatusOK, &res)
 	if err != nil {
-		logger.Errorln("[AgentHeartbeat]", err)
+		logger.Errorln("[Service] AgentHeartbeat HTTP error:", err)
 		return 0, int64(len(agents))
 	}
 

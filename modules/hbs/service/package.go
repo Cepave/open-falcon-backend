@@ -16,6 +16,7 @@ var mysqlApiSling *sling.Sling
 
 func InitPackage(cfg *config.MysqlApiConfig, hosts string) {
 	mysqlApiUrl := resolveUrl(cfg.Host, cfg.Resource)
+	logger.Infoln("[Config] MySQL_API=", mysqlApiUrl)
 	mysqlApiSling = sling.New().Base(mysqlApiUrl)
 
 	if hosts != "" {
