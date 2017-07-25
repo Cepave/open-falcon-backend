@@ -44,11 +44,11 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 				<-routines
 
 				go func() {
+					defer GinkgoRecover()
+
 					defer func() {
 						routines <- true
 					}()
-					defer GinkgoRecover()
-
 					ginkgoJsonRpc.OpenClient(func(jsonRpcClient *rpc.Client) {
 
 						err := jsonRpcClient.Call(
