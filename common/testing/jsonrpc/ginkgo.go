@@ -15,7 +15,7 @@ func (g *GinkgoJsonRpc) OpenClient(callback FuncJsonRpcClientCallback) {
 	GinkgoT().Logf("JSONRPC Connection: %s", getTargetAddress())
 
 	client, err := tknet.JsonRpcClient("tcp", getTargetAddress(), time.Second*3)
-	Expect(err).To(BeNil())
+	Expect(err).To(Succeed(), "Cannot open json rpc client: %v. Error: %v", client, err)
 
 	defer client.Close()
 
