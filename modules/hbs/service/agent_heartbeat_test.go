@@ -101,6 +101,7 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 	Context("when service is not running", func() {
 		It("should not add data", func() {
 			data := generateRandomRequest()
+			agentHeartbeatService.running = false
 			agentHeartbeatService.Put(data, now)
 			_, ok := cache.Agents.Get(data.Hostname)
 
@@ -143,6 +144,7 @@ var _ = Describe("Test Start() of AgentHeartbeat service", func() {
 
 	Context("when service is stopped", func() {
 		It("Start() should change the running status", func() {
+			agentHeartbeatService.running = false
 			agentHeartbeatService.Start()
 			Expect(agentHeartbeatService.running).To(BeTrue())
 		})
@@ -170,6 +172,7 @@ var _ = Describe("Test Stop() of AgentHeartbeat service", func() {
 
 	Context("when service is stopped", func() {
 		It("Stop() should not change the running status", func() {
+			agentHeartbeatService.running = false
 			agentHeartbeatService.Stop()
 			Expect(agentHeartbeatService.running).To(BeFalse())
 		})

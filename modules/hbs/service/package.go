@@ -16,6 +16,7 @@ var mysqlApiSling *sling.Sling
 
 func InitPackage(cfg *config.MysqlApiConfig, hosts string) {
 	mysqlApiUrl := resolveUrl(cfg.Host, cfg.Resource)
+	logger.Infoln("[Config] MySQL_API=", mysqlApiUrl)
 	mysqlApiSling = sling.New().Base(mysqlApiUrl)
 
 	if hosts != "" {
@@ -28,13 +29,17 @@ func NewSlingBase() *sling.Sling {
 }
 
 func resolveUrl(host string, resource string) string {
+	if host == "" {
+		logger.Panicln("Empty host url of mysql_api.")
+	}
+
 	base, err := url.Parse(host)
 	if err != nil {
-		logger.Errorln(err)
+		logger.Panicf("Cannot parse host of mysql_api: %s. Error: %v\n", host, err)
 	}
 	ref, err := url.Parse(resource)
 	if err != nil {
-		logger.Errorln(err)
+		logger.Panicf("Cannot parse resource of mysql_api: %s. Error: %v\n", resource, err)
 	}
 
 	return base.ResolveReference(ref).String()

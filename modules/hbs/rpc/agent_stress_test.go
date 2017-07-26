@@ -43,21 +43,26 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 
 				<-routines
 
-				go ginkgoJsonRpc.OpenClient(func(jsonRpcClient *rpc.Client) {
+				go func() {
+					defer GinkgoRecover()
+
 					defer func() {
 						routines <- true
 					}()
+					ginkgoJsonRpc.OpenClient(func(jsonRpcClient *rpc.Client) {
 
-					err := jsonRpcClient.Call(
-						"Agent.ReportStatus", request, &resp,
-					)
+						err := jsonRpcClient.Call(
+							"Agent.ReportStatus", request, &resp,
+						)
 
-					if err != nil || resp.Code == 1 {
-						GinkgoT().Errorf("[%s] Has error: %v", request.AgentVersion, err)
-					} else {
-						GinkgoT().Logf("[%s/%d] Success.", request.PluginVersion, numberOfFakeAgents)
-					}
-				})
+						if err != nil || resp.Code == 1 {
+							GinkgoT().Errorf("[%s] Has error: %v", request.AgentVersion, err)
+						} else {
+							GinkgoT().Logf("[%s/%d] Success.", request.PluginVersion, numberOfFakeAgents)
+						}
+					})
+				}()
+
 			}
 
 			for i := 0; i < numberOfGoRoutines; i++ {
