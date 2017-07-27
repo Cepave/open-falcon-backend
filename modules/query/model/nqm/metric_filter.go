@@ -1,8 +1,8 @@
 package nqm
 
 import (
-	sjson "github.com/bitly/go-simplejson"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	sjson "github.com/bitly/go-simplejson"
 )
 
 // Defines the interface for process a instance of metrics
@@ -27,6 +27,7 @@ type Metrics struct {
 	NumberOfAgents          int32   `json:"number_of_agents"`
 	NumberOfTargets         int32   `json:"number_of_targets"`
 }
+
 func (m *Metrics) UnmarshalSimpleJson(jsonObject *sjson.Json) {
 	jsonExt := ojson.ToJsonExt(jsonObject)
 

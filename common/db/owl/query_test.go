@@ -1,16 +1,16 @@
 package owl
 
 import (
-	"time"
-	"encoding/hex"
 	"crypto/md5"
+	"encoding/hex"
 	"github.com/Cepave/open-falcon-backend/common/db"
-	"github.com/satori/go.uuid"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	t "github.com/Cepave/open-falcon-backend/common/testing"
 	owlCheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	t "github.com/Cepave/open-falcon-backend/common/testing"
+	"github.com/satori/go.uuid"
 	. "gopkg.in/check.v1"
+	"time"
 )
 
 type TestQuerySuite struct{}
@@ -20,15 +20,15 @@ var _ = Suite(&TestQuerySuite{})
 // Tests the refreshing of query object
 func (suite *TestQuerySuite) TestAddOrRefreshQuery(c *C) {
 	query1 := &owlModel.Query{
-		NamedId: "test.query.g1",
-		Content: []byte { 29, 87, 61, 4, 5, 78, 91, 11, 91 },
+		NamedId:    "test.query.g1",
+		Content:    []byte{29, 87, 61, 4, 5, 78, 91, 11, 91},
 		Md5Content: md5.Sum([]byte("This is test - 1")),
 	}
 
 	testCases := []*struct {
 		sampleQuery *owlModel.Query
-		sampleTime string
-	} {
+		sampleTime  string
+	}{
 		{ // Adds a new onw
 			query1, "2015-07-01T07:36:55+08:00",
 		},
@@ -38,7 +38,7 @@ func (suite *TestQuerySuite) TestAddOrRefreshQuery(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		sampleQuery := testCase.sampleQuery
 		sampleTime := t.ParseTime(c, testCase.sampleTime)
@@ -58,18 +58,18 @@ func (suite *TestQuerySuite) TestUpdateAccessTimeOrAddNewOne(c *C) {
 	testCases := []*struct {
 		sampleUuid string
 		sampleTime string
-	} {
-		{ "890858a7-d458-435b-b798-1ac0abf1eae2", "2014-03-23T10:32:45Z" },
-		{ "e2f23847-48f1-4c9c-8dbd-8f276d2222eb", "2014-04-17T22:40:47Z" },
+	}{
+		{"890858a7-d458-435b-b798-1ac0abf1eae2", "2014-03-23T10:32:45Z"},
+		{"e2f23847-48f1-4c9c-8dbd-8f276d2222eb", "2014-04-17T22:40:47Z"},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		sampleQuery := &owlModel.Query{
-			Uuid: db.DbUuid(t.ParseUuid(c, testCase.sampleUuid)),
-			NamedId: "test.query.uu1",
-			Content: []byte { },
+			Uuid:       db.DbUuid(t.ParseUuid(c, testCase.sampleUuid)),
+			NamedId:    "test.query.uu1",
+			Content:    []byte{},
 			Md5Content: md5.Sum([]byte(testCase.sampleUuid)),
 		}
 		sampleTime := t.ParseTime(c, testCase.sampleTime)
@@ -85,10 +85,10 @@ func (suite *TestQuerySuite) TestUpdateAccessTimeOrAddNewOne(c *C) {
 // Tests the load ing query by UUID
 func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
 	testCases := []*struct {
-		sampleUuid string
+		sampleUuid         string
 		expectedMd5Content string
-		expectedContent string
-	} {
+		expectedContent    string
+	}{
 		{
 			"209f18f4f89b42568e1e5270987c057d",
 			"7011e902d4a848c184e242e8d71aa961",
@@ -102,7 +102,7 @@ func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
 
 	sampleTime := t.ParseTime(c, "2013-07-08T10:20:36+08:00")
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		uuidValue := t.ParseUuid(c, testCase.sampleUuid)
 		testedQuery := LoadQueryByUuidAndUpdateAccessTime(
@@ -113,7 +113,6 @@ func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
 			c.Assert(testedQuery, IsNil, comment)
 			continue
 		}
-
 
 		c.Assert(testedQuery.NamedId, Equals, "test.load.uu2", comment)
 		c.Assert(uuid.UUID(testedQuery.Uuid), DeepEquals, uuidValue, comment)
@@ -137,7 +136,7 @@ func getAccessTimeByUuid(uuid db.DbUuid) time.Time {
 		FROM owl_query
 		WHERE qr_uuid = ?
 		`,
-		[]interface{} { uuid },
+		[]interface{}{uuid},
 		&timeValue,
 	)
 

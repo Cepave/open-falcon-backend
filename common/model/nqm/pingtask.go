@@ -6,8 +6,8 @@ import (
 
 	owlGin "github.com/Cepave/open-falcon-backend/common/gin"
 	commonOwlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	"github.com/spf13/cast"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 )
 
 type AgentPingtask struct {
@@ -158,9 +158,9 @@ func (p *PingtaskView) AfterLoad() {
 }
 
 type PingtaskModify struct {
-	Period  int16                `json:"period"`
+	Period  int16                 `json:"period"`
 	Name    *string               `json:"name" conform:"trimToNil"`
-	Enable  bool                 `json:"enable"`
+	Enable  bool                  `json:"enable"`
 	Comment *string               `json:"comment" conform:"trimToNil"`
 	Filter  *PingtaskModifyFilter `json:"filter"`
 }

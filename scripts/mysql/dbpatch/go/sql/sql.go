@@ -3,19 +3,19 @@ package sql
 
 import (
 	dbsql "database/sql"
-	"github.com/jmoiron/sqlx"
-	osqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"fmt"
+	osqlx "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	"github.com/jmoiron/sqlx"
 )
 
 // Represents the connection information to database
 type DatabaseConfig struct {
-	SqlxDb *sqlx.DB
+	SqlxDb     *sqlx.DB
 	SqlxDbCtrl *osqlx.DbController
 
 	driverName string
-	dsn string
-	db *dbsql.DB
+	dsn        string
+	db         *dbsql.DB
 }
 
 // Initialize a new configuration to database
@@ -25,24 +25,22 @@ func NewDatabaseConfig(driverName string, dsn string) (dbConfig *DatabaseConfig,
 	 * Opens the connection to database
 	 */
 	var openedDb *dbsql.DB
-	if openedDb, err = dbsql.Open(driverName, dsn)
-		err != nil {
+	if openedDb, err = dbsql.Open(driverName, dsn); err != nil {
 		return
 	}
 
-	if err = openedDb.Ping()
-		err != nil {
+	if err = openedDb.Ping(); err != nil {
 		return
 	}
 	// :~)
 
 	sqlxDb := sqlx.NewDb(openedDb, driverName)
 	dbConfig = &DatabaseConfig{
-		SqlxDb: sqlxDb,
+		SqlxDb:     sqlxDb,
 		SqlxDbCtrl: osqlx.NewDbController(sqlxDb),
 		driverName: driverName,
-		dsn: dsn,
-		db: openedDb,
+		dsn:        dsn,
+		db:         openedDb,
 	}
 	return
 }

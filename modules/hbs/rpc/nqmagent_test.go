@@ -20,7 +20,7 @@ func (suite *TestRpcNqmAgentSuite) TestValidatePingTask(c *C) {
 		hostname     string
 		ipAddress    string
 		checker      Checker
-	} {
+	}{
 		{"120.49.58.19", "localhost.localdomain", "120.49.58.19", IsNil},
 		{"", "localhost.localdomain", "120.49.58.19", NotNil},
 		{"120.49.58.19", "", "120.49.58.19", NotNil},

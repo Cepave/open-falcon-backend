@@ -1,8 +1,8 @@
 package owl
 
 import (
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/Cepave/open-falcon-backend/common/model"
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
 
 	"github.com/Cepave/open-falcon-backend/common/utils"
@@ -21,13 +21,13 @@ func (suite *TestGroupTagSuite) TestGetGroupTagById(c *C) {
 	testCases := []*struct {
 		sampleId int32
 		hasFound bool
-	} {
-		{ 33061, true },
-		{ -10, false },
+	}{
+		{33061, true},
+		{-10, false},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		c.Assert(
 			GetGroupTagById(testCase.sampleId), ocheck.ViableValue, testCase.hasFound,
@@ -39,21 +39,21 @@ func (suite *TestGroupTagSuite) TestGetGroupTagById(c *C) {
 // Tests the listing of group tags
 func (suite *TestGroupTagSuite) TestListGroupTags(c *C) {
 	testCases := []*struct {
-		name string
-		pageSize int32
-		expectedIds []int32
+		name               string
+		pageSize           int32
+		expectedIds        []int32
 		expectedTotalCount int32
-	} {
-		{ "", 5, []int32{ 23041, 23042, 23043, 23044 }, 4 },
-		{ "", 2, []int32{ 23041, 23042 }, 4 },
-		{ "ls-gt-gin", 5, []int32{ 23043, 23044 }, 2 },
+	}{
+		{"", 5, []int32{23041, 23042, 23043, 23044}, 4},
+		{"", 2, []int32{23041, 23042}, 4},
+		{"ls-gt-gin", 5, []int32{23043, 23044}, 2},
 	}
 
 	for i, testCase := range testCases {
 		comment := ocheck.TestCaseComment(i)
 		ocheck.LogTestCase(c, testCase)
 
-		paging := &model.Paging {
+		paging := &model.Paging{
 			Size: testCase.pageSize,
 		}
 		testedResult := ListGroupTags(

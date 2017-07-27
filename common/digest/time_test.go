@@ -1,9 +1,9 @@
 package digest
 
 import (
-	"time"
 	"encoding/hex"
 	. "gopkg.in/check.v1"
+	"time"
 )
 
 type TestTimeSuite struct{}
@@ -13,15 +13,15 @@ var _ = Suite(&TestTimeSuite{})
 // Tests the getting of digest for time object
 func (suite *TestTimeSuite) TestGetDigest(c *C) {
 	testCases := []*struct {
-		sampleTime time.Time
+		sampleTime     time.Time
 		expectedDigest string
-	} {
-		{ time.Unix(323432, 0), "000000000004ef68" },
-		{ time.Time{}, "" },
+	}{
+		{time.Unix(323432, 0), "000000000004ef68"},
+		{time.Time{}, ""},
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		hexValue := hex.EncodeToString(
 			DigestableTime(testCase.sampleTime).GetDigest(),

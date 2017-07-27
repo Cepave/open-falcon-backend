@@ -21,7 +21,7 @@ func HoldingAndWaitSignal(exitCallback ExitCallback, signals ...os.Signal) {
 		exitCallback(signal)
 
 		os.Exit(0)
-	} ()
+	}()
 
 	select {}
 }

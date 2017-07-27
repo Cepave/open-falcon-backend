@@ -1,7 +1,0 @@
-import:
-- package: github.com/astaxie/beego
-  version: v1.6.1
-
-- package: github.com/gin-contrib/cors
-  version: v1.1
-  repo: https://github.com/gin-contrib/cors

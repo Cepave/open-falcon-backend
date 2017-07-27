@@ -2,20 +2,20 @@ package owl
 
 import (
 	"fmt"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
 type NameTagService struct {
-	cache *cache.CacheCtrl
+	cache       *cache.CacheCtrl
 	cacheConfig *cache.DataCacheConfig
 }
 
 func NewNameTagService(cacheConfig cache.DataCacheConfig) *NameTagService {
-	return &NameTagService {
+	return &NameTagService{
 		cacheConfig: &cacheConfig,
-		cache: cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
+		cache:       cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
 	}
 }
 
@@ -23,7 +23,7 @@ func (s *NameTagService) GetNameTagById(nameTagId int16) *owlModel.NameTag {
 	v := s.cache.MustFetchNativeAndDoNotCacheEmpty(
 		nameTagKeyById(nameTagId),
 		s.cacheConfig.Duration,
-		func () interface{} {
+		func() interface{} {
 			return owlDb.GetNameTagById(nameTagId)
 		},
 	)

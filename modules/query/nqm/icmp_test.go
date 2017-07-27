@@ -2,12 +2,12 @@ package nqm
 
 import (
 	"encoding/json"
-	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	testHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	sjson "github.com/bitly/go-simplejson"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	. "gopkg.in/check.v1"
+	"net/http"
 )
 
 type TestNqmLogSuite struct{}
@@ -19,14 +19,14 @@ func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 	testCases := []*struct {
 		sampleIdOfAgentProvince int16
 		expectedNumberOfResult  int
-	} {
+	}{
 		{15, 1},
 		{20, 2},
 		{23, 0}, // No data
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i + 1)
+		comment := Commentf("Test Case: %d", i+1)
 
 		icmpParams := &NqmDsl{
 			GroupingColumns:      []string{"ag_pv_id"},

@@ -2,9 +2,9 @@ package nqm
 
 import (
 	"fmt"
-	"github.com/icrowley/fake"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	"github.com/icrowley/fake"
 	"sync"
 	"time"
 
@@ -57,6 +57,7 @@ func (suite *TestNqmStressSuite) TestGpa(c *C) {
 }
 
 var lockForTaskRequest = &sync.Mutex{}
+
 func generateTaskRequest() *model.NqmTaskRequest {
 	lockForTaskRequest.Lock()
 	defer lockForTaskRequest.Unlock()
@@ -64,10 +65,10 @@ func generateTaskRequest() *model.NqmTaskRequest {
 	hostname := fake.DomainName()
 	ipAddress := fake.IPv4()
 
-	return &model.NqmTaskRequest {
+	return &model.NqmTaskRequest{
 		ConnectionId: fmt.Sprintf("%s@%s", ipAddress, hostname),
-		Hostname: hostname,
-		IpAddress: ipAddress,
+		Hostname:     hostname,
+		IpAddress:    ipAddress,
 	}
 }
 

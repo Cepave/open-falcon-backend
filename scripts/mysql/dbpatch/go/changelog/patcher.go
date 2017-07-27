@@ -2,35 +2,35 @@ package changelog
 
 import (
 	dbsql "database/sql"
-	psql "github.com/Cepave/open-falcon-backend/scripts/mysql/dbpatch/go/sql"
 	"fmt"
+	psql "github.com/Cepave/open-falcon-backend/scripts/mysql/dbpatch/go/sql"
 	"log"
 )
 
 // The constants of result of applying patch
 const (
-	failed = 0
+	failed   = 0
 	applying = 1 // The initial status of change log
-	success = 2
+	success  = 2
 )
 
 /**
  * The full configuration for running patches
  */
 type ChangeLogConfig struct {
-	DriverName string
-	Dsn string
-	ChangeLog string
+	DriverName    string
+	Dsn           string
+	ChangeLog     string
 	PatchFileBase string
-	Delimiter string
+	Delimiter     string
 }
 
 // Represents the result of log for patching
 type patchResult struct {
 	patchConfig *PatchConfig
-	id int
-	result int
-	message string
+	id          int
+	result      int
+	message     string
 }
 
 // The string representation of ChangeLogConfig
@@ -49,8 +49,7 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 	 * Loads configuration of patches
 	 */
 	var loadedPatches []PatchConfig
-	if loadedPatches, err = LoadChangeLogFromFile(changeLogConfig.ChangeLog)
-		err != nil {
+	if loadedPatches, err = LoadChangeLogFromFile(changeLogConfig.ChangeLog); err != nil {
 		return
 	}
 	// :~)
@@ -62,8 +61,7 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 	if dbConfig, err = psql.NewDatabaseConfig(
 		changeLogConfig.DriverName,
 		changeLogConfig.Dsn,
-	)
-		err != nil {
+	); err != nil {
 		return
 	}
 
@@ -89,21 +87,19 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 		/**
 		 * Checks if the patch has been applied
 		 */
-		if patchApplied, _ := hasPatchApplied(dbConfig, &p)
-			patchApplied {
+		if patchApplied, _ := hasPatchApplied(dbConfig, &p); patchApplied {
 			continue
 		}
 		// :~)
 
-		log.Printf("Applying patch: [%v](%v)...", p.Id, p.Filename);
+		log.Printf("Applying patch: [%v](%v)...", p.Id, p.Filename)
 
 		var scripts []string
 
 		/**
 		 * Loads scripts from file
 		 */
-		if scripts, err = p.loadScripts(changeLogConfig.PatchFileBase, changeLogConfig.Delimiter)
-			err != nil {
+		if scripts, err = p.loadScripts(changeLogConfig.PatchFileBase, changeLogConfig.Delimiter); err != nil {
 			return fmt.Errorf("Load script file[%v/%v] error: %v", changeLogConfig.PatchFileBase, p.Filename, err)
 		}
 		// :~)
@@ -111,13 +107,12 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 		/**
 		 * Applies patch to database
 		 */
-		if err = applyPatch(dbConfig, &p, scripts)
-			err != nil {
+		if err = applyPatch(dbConfig, &p, scripts); err != nil {
 
 			var patchErr = fmt.Errorf("Patch [%v](%v) has error: %v", p.Id, p.Filename, err)
 			log.Println(patchErr)
 
-			return patchErr;
+			return patchErr
 		}
 		// :~)
 
@@ -126,7 +121,7 @@ func ExecutePatches(changeLogConfig *ChangeLogConfig) (err error) {
 	}
 	// :~)
 
-	log.Printf("Number of applied patches: %v", numberOfApplied);
+	log.Printf("Number of applied patches: %v", numberOfApplied)
 	return
 }
 
@@ -138,15 +133,14 @@ func applyPatch(
 	patchConfig *PatchConfig,
 	scripts []string,
 ) (err error) {
-	var patchContent = patchResult {
+	var patchContent = patchResult{
 		patchConfig: patchConfig,
 	}
 
 	/**
 	 * Add log to dtaabase
 	 */
-	if err = dbConfig.Execute(newChangeLogFunc(&patchContent))
-		err != nil {
+	if err = dbConfig.Execute(newChangeLogFunc(&patchContent)); err != nil {
 		return
 	}
 	// :~)
@@ -162,16 +156,14 @@ func applyPatch(
 				_, err = db.Exec(script)
 				return
 			},
-		)
-			err != nil {
+		); err != nil {
 
 			/**
 			 * Logs the failed result to database
 			 */
 			patchContent.result = failed
 			patchContent.message = fmt.Sprintf("Error: [%v]\nScript:\n%v\n", err, script)
-			if logErr := dbConfig.Execute(updateChangeLogFunc(&patchContent))
-				logErr != nil {
+			if logErr := dbConfig.Execute(updateChangeLogFunc(&patchContent)); logErr != nil {
 				panic(fmt.Errorf("Cannot log failed patching: [%v]. Error: %f.\nScript:\n%v\n", patchConfig.Id, err, script))
 			}
 			// :~)
@@ -185,8 +177,7 @@ func applyPatch(
 	 * Update result patching on log in database
 	 */
 	patchContent.result = success
-	if err = dbConfig.Execute(updateChangeLogFunc(&patchContent))
-		err != nil {
+	if err = dbConfig.Execute(updateChangeLogFunc(&patchContent)); err != nil {
 		return
 	}
 	// :~)
@@ -216,8 +207,7 @@ func hasPatchApplied(dbConfig *psql.DatabaseConfig, patchConfig *PatchConfig) (r
 				ORDER BY dcl_time_update DESC
 				`,
 				patchConfig.Id,
-			).Scan(&successRow)
-				err != nil {
+			).Scan(&successRow); err != nil {
 				return
 			}
 
@@ -242,8 +232,7 @@ func newChangeLogFunc(patchContent *patchResult) func(*dbsql.DB) error {
 			patchContent.patchConfig.Id,
 			patchContent.patchConfig.Comment,
 			patchContent.patchConfig.Filename,
-		)
-			err != nil {
+		); err != nil {
 			return
 		}
 
@@ -289,8 +278,7 @@ func checkChangeLogSchema(db *dbsql.DB) (err error) {
 			`,
 			"sysdb_change_log",
 		).
-			Scan(&result)
-		err != nil {
+		Scan(&result); err != nil {
 		return
 	}
 
@@ -320,8 +308,7 @@ func checkChangeLogSchema(db *dbsql.DB) (err error) {
 			dcl_comment VARCHAR(1024)
 		) DEFAULT CHARSET=UTF8
 		`,
-	)
-		err != nil {
+	); err != nil {
 		return
 	}
 
@@ -362,7 +349,7 @@ func fixCharset(dbConfig *psql.DatabaseConfig) (err error) {
 			AND CHARACTER_SET_NAME != 'utf8'
 			AND (COLUMN_TYPE LIKE 'CHAR%' OR COLUMN_TYPE LIKE 'VARCHAR%')
 		`,
-		[]interface{} { dbName },
+		[]interface{}{dbName},
 		&nonUtf8Count,
 	)
 

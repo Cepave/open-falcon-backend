@@ -7,6 +7,7 @@ import (
 )
 
 type Zoo string
+
 func (z Zoo) MarshalJSON() ([]byte, error) {
 	return []byte("[8, 11, 2]"), nil
 }

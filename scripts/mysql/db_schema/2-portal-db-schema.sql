@@ -223,6 +223,21 @@ CREATE TABLE cluster
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
+DROP TABLE IF EXISTS alarm_types;
+CREATE TABLE `alarm_types` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `internal_data` TINYINT DEFAULT 1,
+  `description` varchar(255) NOT NULL DEFAULT '',
+  `color` varchar(20) NOT NULL DEFAULT 'black',
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+)
+  ENGINE =InnoDB
+  DEFAULT CHARSET =utf8;
+
+INSERT INTO `alarm_types` (id, name, internal_data, color, description) VALUES (1, 'owl', 1, 'purple', 'default type of owl');
+
 DROP TABLE IF EXISTS event_cases;
 CREATE TABLE event_cases (
   id VARCHAR(50),
@@ -246,12 +261,24 @@ CREATE TABLE event_cases (
   expression_id int(10) unsigned,
   strategy_id int(10) unsigned,
   template_id int(10) unsigned,
+  alarm_type_id int(10) unsigned NOT NULL DEFAULT 1,
+  ip VARCHAR(50),
+  idc VARCHAR(50),
+  platform VARCHAR(50),
+  contact VARCHAR(20),
+  extended_blob VARCHAR(255),
   PRIMARY KEY (id),
   INDEX (endpoint, strategy_id, template_id)
 )
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
+ALTER TABLE `event_cases`
+  ADD INDEX alarm_id_index(`alarm_type_id`),
+  ADD CONSTRAINT FK_alarm_types
+  FOREIGN KEY (alarm_type_id) REFERENCES alarm_types(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE;
 
 DROP TABLE IF EXISTS event_note;
 CREATE TABLE IF NOT EXISTS event_note (

@@ -2,20 +2,20 @@ package nqm
 
 import (
 	"fmt"
-	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
+	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 )
 
 type AgentService struct {
-	cache *cache.CacheCtrl
+	cache       *cache.CacheCtrl
 	cacheConfig *cache.DataCacheConfig
 }
 
 func NewAgentService(cacheConfig cache.DataCacheConfig) *AgentService {
-	return &AgentService {
+	return &AgentService{
 		cacheConfig: &cacheConfig,
-		cache: cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
+		cache:       cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
 	}
 }
 

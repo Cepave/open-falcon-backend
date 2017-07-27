@@ -27,6 +27,6 @@ func (suite *TestNqmAgentSuite) TestIpAddress(c *C) {
 			IpAddress: v.sampleIpAddress,
 		})
 
-		c.Assert(len(testedAgent.IpAddress), Equals, v.expectedLength, Commentf("Test Case: %d", i + 1))
+		c.Assert(len(testedAgent.IpAddress), Equals, v.expectedLength, Commentf("Test Case: %d", i+1))
 	}
 }

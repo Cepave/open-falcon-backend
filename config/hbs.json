@@ -17,5 +17,15 @@
         "cache_minutes": {
             "agent_ping_list": 20
         }
-    }
+    },
+    "mysql_api": {
+        "host": "http://%%MYSQL_SERVICE%%",
+        "resource": ""
+    },
+    "heartbeat" :{
+		"falcon": {
+			"batchSize": 16,
+			"duration": 1
+		}
+	}
 }

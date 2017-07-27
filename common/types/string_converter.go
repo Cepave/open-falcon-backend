@@ -12,10 +12,12 @@ import (
 type Parser interface {
 	Scan(stringValue string, locale *time.Location) interface{}
 }
+
 // Defines the string-representation of a value to string value(with locale)
 type Printer interface {
 	Print(object interface{}, locale *time.Location) string
 }
+
 // Combines Parser and Printer interface
 type Formatter interface {
 	Parser
@@ -79,16 +81,16 @@ func convertStringToInt(object interface{}, targetType reflect.Type) interface{}
 	}
 
 	switch targetType.Kind() {
-		case reflect.Int:
-			return int(intValue)
-		case reflect.Int8:
-			return int8(intValue)
-		case reflect.Int16:
-			return int16(intValue)
-		case reflect.Int32:
-			return int32(intValue)
-		case reflect.Int64:
-			return intValue
+	case reflect.Int:
+		return int(intValue)
+	case reflect.Int8:
+		return int8(intValue)
+	case reflect.Int16:
+		return int16(intValue)
+	case reflect.Int32:
+		return int32(intValue)
+	case reflect.Int64:
+		return intValue
 	}
 
 	panic(fmt.Sprintf("Unknown kind[%v] for int value", targetType.Kind()))
@@ -105,16 +107,16 @@ func convertStringToUint(object interface{}, targetType reflect.Type) interface{
 	}
 
 	switch targetType.Kind() {
-		case reflect.Uint:
-			return uint(uintValue)
-		case reflect.Uint8:
-			return uint8(uintValue)
-		case reflect.Uint16:
-			return uint16(uintValue)
-		case reflect.Uint32:
-			return uint32(uintValue)
-		case reflect.Uint64:
-			return uintValue
+	case reflect.Uint:
+		return uint(uintValue)
+	case reflect.Uint8:
+		return uint8(uintValue)
+	case reflect.Uint16:
+		return uint16(uintValue)
+	case reflect.Uint32:
+		return uint32(uintValue)
+	case reflect.Uint64:
+		return uintValue
 	}
 
 	panic(fmt.Sprintf("Unknown kind[%v] for int value", targetType.Kind()))
@@ -124,7 +126,7 @@ func convertStringToBool(object interface{}, targetType reflect.Type) interface{
 
 	switch strings.ToLower(s) {
 	case "y", "yes", "t", "true":
-		return true;
+		return true
 	default:
 		intValue, err := strconv.ParseInt(s, 10, 64)
 		if err == nil {

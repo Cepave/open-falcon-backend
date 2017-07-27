@@ -1,11 +1,12 @@
 package nqm
 
 import (
-	"regexp"
 	"gopkg.in/go-playground/validator.v9"
+	"regexp"
 )
 
 var regexpTimeInDay = regexp.MustCompile("^(\\d\\d):(\\d\\d)$")
+
 func ValidateTimeWithUnit(sl validator.StructLevel) {
 	timeUnit := sl.Current().Interface().(TimeWithUnit)
 

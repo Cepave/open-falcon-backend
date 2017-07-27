@@ -2,50 +2,26 @@ package rpc
 
 import (
 	"errors"
-	"fmt"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	. "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestErrorSuite struct{}
+var _ = Describe("Tests handling of panic to error", func() {
+	DescribeTable("Error Message",
+		func(errorObj interface{}, expectedContent string) {
+			testedError := samplePanic(errorObj)
 
-var _ = Suite(&TestErrorSuite{})
-
-// Tests the capture of error object
-func (suite *TestErrorSuite) TestHandleError(c *C) {
-	testCases := []*struct {
-		sampleError interface{}
-		expectedError string
-	} {
-		{ "P1", "P1" },
-		{ errors.New("E1"), "E1" },
-	}
-
-	for i, testCase := range testCases {
-		comment := ocheck.TestCaseComment(i)
-		ocheck.LogTestCase(c, testCase)
-
-		testedError := samplePanic(testCase.sampleError)
-
-		c.Assert(testedError.Error(), Matches, ".*" + testCase.expectedError + ".*", comment)
-	}
-}
+			Expect(testedError).To(HaveOccurred())
+			Expect(testedError.Error()).To(ContainSubstring(expectedContent))
+		},
+		Entry("String value as error", "P1-err-C1", "P1-err-C1"),
+		Entry("Error object", errors.New("E1-err-G5"), "E1-err-G5"),
+	)
+})
 
 func samplePanic(samplePanic interface{}) (err error) {
 	defer HandleError(&err)()
 	panic(samplePanic)
-}
-
-func ExampleHanleError() {
-	sampleFunc := func() (err error) {
-		defer HandleError(&err)()
-
-		panic("This is panic")
-	}
-
-	err := sampleFunc()
-	fmt.Printf("%v\n", err)
-
-	// Output:
-	// Has error on RPC: This is panic
 }

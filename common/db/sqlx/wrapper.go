@@ -6,9 +6,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"github.com/Cepave/open-falcon-backend/common/db"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	or "github.com/Cepave/open-falcon-backend/common/runtime"
-	"github.com/Cepave/open-falcon-backend/common/db"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
@@ -21,6 +21,7 @@ type TxCallback interface {
 
 // The function object delegates the TxCallback interface
 type TxCallbackFunc func(*sqlx.Tx) db.TxFinale
+
 func (callbackFunc TxCallbackFunc) InTx(tx *sqlx.Tx) db.TxFinale {
 	return callbackFunc(tx)
 }
@@ -288,6 +289,7 @@ func (ctrl *DbController) PreparexExt(query string) *StmtExt {
 }
 
 type RowExt sqlx.Row
+
 func ToRowExt(row *sqlx.Row) *RowExt {
 	return (*RowExt)(row)
 }

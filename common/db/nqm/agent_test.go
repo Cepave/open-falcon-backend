@@ -137,7 +137,7 @@ func (suite *TestAgentSuite) TestAddAgent(c *C) {
 		newAgent, err := AddAgent(currentAddedAgent)
 
 		/**
-		 * Asserts the occuring error
+		 * Asserts the occurring error
 		 */
 		if testCase.hasError {
 			c.Assert(newAgent, IsNil)
@@ -182,7 +182,7 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
+		{ // Match nothing for further page
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},
@@ -220,15 +220,15 @@ func (suite *TestAgentSuite) TestListAgents(c *C) {
 			Size:     testCase.pageSize,
 			Position: testCase.pagePosition,
 			OrderBy: []*commonModel.OrderByEntity{
-				&commonModel.OrderByEntity{"status", commonModel.Ascending},
-				&commonModel.OrderByEntity{"name", commonModel.Ascending},
-				&commonModel.OrderByEntity{"connection_id", commonModel.Ascending},
-				&commonModel.OrderByEntity{"comment", commonModel.Ascending},
-				&commonModel.OrderByEntity{"province", commonModel.Ascending},
-				&commonModel.OrderByEntity{"city", commonModel.Ascending},
-				&commonModel.OrderByEntity{"last_heartbeat_time", commonModel.Ascending},
-				&commonModel.OrderByEntity{"name_tag", commonModel.Ascending},
-				&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
+				{"status", commonModel.Ascending},
+				{"name", commonModel.Ascending},
+				{"connection_id", commonModel.Ascending},
+				{"comment", commonModel.Ascending},
+				{"province", commonModel.Ascending},
+				{"city", commonModel.Ascending},
+				{"last_heartbeat_time", commonModel.Ascending},
+				{"name_tag", commonModel.Ascending},
+				{"group_tag", commonModel.Descending},
 			},
 		}
 
@@ -267,7 +267,7 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
+		{ // Match nothing for further page
 			&nqmModel.AgentQuery{IspId: -2, HasStatusParam: false},
 			10, 10, 0, 3,
 		},
@@ -320,17 +320,17 @@ func (suite *TestAgentSuite) TestListAgentsWithPingTask(c *C) {
 				Size:     testCase.pageSize,
 				Position: testCase.pagePosition,
 				OrderBy: []*commonModel.OrderByEntity{
-					&commonModel.OrderByEntity{"id", commonModel.Descending},
-					&commonModel.OrderByEntity{"applied", commonModel.Descending},
-					&commonModel.OrderByEntity{"status", commonModel.Ascending},
-					&commonModel.OrderByEntity{"name", commonModel.Ascending},
-					&commonModel.OrderByEntity{"connection_id", commonModel.Ascending},
-					&commonModel.OrderByEntity{"comment", commonModel.Ascending},
-					&commonModel.OrderByEntity{"province", commonModel.Ascending},
-					&commonModel.OrderByEntity{"city", commonModel.Ascending},
-					&commonModel.OrderByEntity{"last_heartbeat_time", commonModel.Ascending},
-					&commonModel.OrderByEntity{"name_tag", commonModel.Ascending},
-					&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
+					{"id", commonModel.Descending},
+					{"applied", commonModel.Descending},
+					{"status", commonModel.Ascending},
+					{"name", commonModel.Ascending},
+					{"connection_id", commonModel.Ascending},
+					{"comment", commonModel.Ascending},
+					{"province", commonModel.Ascending},
+					{"city", commonModel.Ascending},
+					{"last_heartbeat_time", commonModel.Ascending},
+					{"name_tag", commonModel.Ascending},
+					{"group_tag", commonModel.Descending},
 				},
 			}
 
@@ -384,7 +384,7 @@ func (suite *TestAgentSuite) TestListTargetsOfAgentById(c *C) {
 			},
 			2, 2, 1, 3,
 		},
-		{ // Match nothing for futher page
+		{ // Match nothing for further page
 			&nqmModel.TargetsOfAgentQuery{
 				AgentID: 24021,
 				TargetQuery: &nqmModel.TargetQuery{
@@ -451,18 +451,18 @@ func (suite *TestAgentSuite) TestListTargetsOfAgentById(c *C) {
 			Size:     testCase.pageSize,
 			Position: testCase.pagePosition,
 			OrderBy: []*commonModel.OrderByEntity{
-				&commonModel.OrderByEntity{"id", commonModel.Descending},
-				&commonModel.OrderByEntity{"name", commonModel.Ascending},
-				&commonModel.OrderByEntity{"status", commonModel.Ascending},
-				&commonModel.OrderByEntity{"host", commonModel.Ascending},
-				&commonModel.OrderByEntity{"comment", commonModel.Ascending},
-				&commonModel.OrderByEntity{"isp", commonModel.Ascending},
-				&commonModel.OrderByEntity{"province", commonModel.Ascending},
-				&commonModel.OrderByEntity{"city", commonModel.Ascending},
-				&commonModel.OrderByEntity{"creation_time", commonModel.Ascending},
-				&commonModel.OrderByEntity{"name_tag", commonModel.Ascending},
-				&commonModel.OrderByEntity{"group_tag", commonModel.Descending},
-				&commonModel.OrderByEntity{"probed_time", commonModel.Descending},
+				{"id", commonModel.Descending},
+				{"name", commonModel.Ascending},
+				{"status", commonModel.Ascending},
+				{"host", commonModel.Ascending},
+				{"comment", commonModel.Ascending},
+				{"isp", commonModel.Ascending},
+				{"province", commonModel.Ascending},
+				{"city", commonModel.Ascending},
+				{"creation_time", commonModel.Ascending},
+				{"name_tag", commonModel.Ascending},
+				{"group_tag", commonModel.Descending},
+				{"probed_time", commonModel.Descending},
 			},
 		}
 

@@ -10,7 +10,7 @@ func ParseToMetricFilter(dsl string) (model.MetricFilter, error) {
 	}
 
 	filter, err := Parse("Metric", []byte(dsl))
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
+	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 )
 
 func GetNoDataList(c *gin.Context) {

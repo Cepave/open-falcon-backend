@@ -2,10 +2,10 @@ package gin
 
 import (
 	"fmt"
-	"net/http"
-	"github.com/gin-gonic/gin"
-	json "github.com/bitly/go-simplejson"
 	or "github.com/Cepave/open-falcon-backend/common/runtime"
+	json "github.com/bitly/go-simplejson"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // Defines the error used to represent the "409 Conflict" error
@@ -40,13 +40,15 @@ import (
 //
 // See: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
 type DataConflictError struct {
-	ErrorCode int32
+	ErrorCode    int32
 	ErrorMessage string
 }
+
 // Implements the error interface
 func (e DataConflictError) Error() string {
 	return fmt.Sprintf("[%d] %s", e.ErrorCode, e.ErrorMessage)
 }
+
 // Marshal this type of error to:
 //
 // 	{
@@ -102,38 +104,38 @@ func DefaultPanicProcessor(c *gin.Context, panicObject interface{}) {
 	case ValidationError:
 		c.JSON(
 			http.StatusBadRequest,
-			map[string]interface{} {
-				"http_status": http.StatusBadRequest,
-				"error_code": -1,
+			map[string]interface{}{
+				"http_status":   http.StatusBadRequest,
+				"error_code":    -1,
 				"error_message": errObject.Error(),
 			},
 		)
 	case BindJsonError:
 		c.JSON(
 			http.StatusBadRequest,
-			map[string]interface{} {
-				"http_status": http.StatusBadRequest,
-				"error_code": -101,
+			map[string]interface{}{
+				"http_status":   http.StatusBadRequest,
+				"error_code":    -101,
 				"error_message": errObject.Error(),
 			},
 		)
 	case DataConflictError:
 		c.JSON(
 			http.StatusConflict,
-			map[string]interface{} {
-				"http_status": http.StatusConflict,
-				"error_code": errObject.ErrorCode,
+			map[string]interface{}{
+				"http_status":   http.StatusConflict,
+				"error_code":    errObject.ErrorCode,
 				"error_message": errObject.ErrorMessage,
 			},
 		)
 	default:
 		c.JSON(
 			http.StatusInternalServerError,
-			map[string]interface{} {
-				"http_status": http.StatusInternalServerError,
-				"error_code": -1,
+			map[string]interface{}{
+				"http_status":   http.StatusInternalServerError,
+				"error_code":    -1,
 				"error_message": fmt.Sprintf("%v", panicObject),
-				"error_stack": stack,
+				"error_stack":   stack,
 			},
 		)
 	}
@@ -158,11 +160,11 @@ func JsonConflictHandler(c *gin.Context, body interface{}) {
 func JsonNoMethodHandler(c *gin.Context) {
 	c.JSON(
 		http.StatusNotFound,
-		map[string]interface{} {
+		map[string]interface{}{
 			"http_status": http.StatusMethodNotAllowed,
-			"error_code": -1,
-			"method": c.Request.Method,
-			"uri": c.Request.RequestURI,
+			"error_code":  -1,
+			"method":      c.Request.Method,
+			"uri":         c.Request.RequestURI,
 		},
 	)
 }
@@ -177,10 +179,10 @@ func JsonNoMethodHandler(c *gin.Context) {
 func JsonNoRouteHandler(c *gin.Context) {
 	c.JSON(
 		http.StatusNotFound,
-		map[string]interface{} {
+		map[string]interface{}{
 			"http_status": http.StatusNotFound,
-			"error_code": -1,
-			"uri": c.Request.RequestURI,
+			"error_code":  -1,
+			"uri":         c.Request.RequestURI,
 		},
 	)
 }

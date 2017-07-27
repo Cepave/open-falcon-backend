@@ -2,10 +2,10 @@ package cron
 
 import (
 	"encoding/json"
+	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/api"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/redis"
-	"github.com/Cepave/open-falcon-backend/common/model"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,7 +42,7 @@ func consumeHighEvents(event *model.Event, action *api.Action) {
 
 	smsContent := GenerateSmsContent(event)
 	mailContent := GenerateMailContent(event)
-	QQContent  := GenerateQQContent(event)
+	QQContent := GenerateQQContent(event)
 
 	if event.Priority() < 3 {
 		redis.WriteSms(phones, smsContent)

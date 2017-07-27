@@ -33,7 +33,7 @@ func (this *AuthApiController) AuthSession() {
 			baseResp.Data["message"] = "session passed!"
 		}
 	default:
-		baseResp.Error["message"] = "sesion checking failed for a unknow reason, please ask administor for help"
+		baseResp.Error["message"] = "sesion checking failed for a unknow reason, please ask administer for help"
 	}
 	this.ServeApiJson(baseResp)
 	return

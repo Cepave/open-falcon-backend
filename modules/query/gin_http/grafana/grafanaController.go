@@ -11,11 +11,11 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/gin_http/openFalcon"
 	"github.com/Cepave/open-falcon-backend/modules/query/model"
 	"github.com/Jeffail/gabs"
-	log "github.com/sirupsen/logrus"
 	"github.com/emirpasic/gods/sets/hashset"
 	"github.com/gin-gonic/gin"
 	"github.com/robertkrimen/otto"
 	_ "github.com/robertkrimen/otto/underscore"
+	log "github.com/sirupsen/logrus"
 )
 
 type GrafanaResp struct {
@@ -87,7 +87,7 @@ func GrafanaMain(c *gin.Context) {
 				}
 			}
 		} else if catchAll {
-			result = []GrafanaResp{GrafanaResp{false, "renderAll"}}
+			result = []GrafanaResp{{false, "renderAll"}}
 		} else {
 			for _, c := range counters {
 				skey := strings.Replace(c, perfix, "", 1)

@@ -10,9 +10,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/portal"
 	"github.com/Cepave/open-falcon-backend/modules/fe/http/uic"
 	uic_model "github.com/Cepave/open-falcon-backend/modules/fe/model/uic"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
+	log "github.com/sirupsen/logrus"
 )
 
 func Start() {

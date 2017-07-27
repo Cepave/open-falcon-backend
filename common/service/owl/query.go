@@ -1,22 +1,22 @@
 package owl
 
 import (
-	"github.com/satori/go.uuid"
-	c "github.com/karlseguin/ccache"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	db "github.com/Cepave/open-falcon-backend/common/db"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	model "github.com/Cepave/open-falcon-backend/common/model/owl"
+	c "github.com/karlseguin/ccache"
+	"github.com/satori/go.uuid"
 	"time"
 )
 
 type QueryServiceConfig struct {
-	Name string
-	CacheSize int64
+	Name          string
+	CacheSize     int64
 	CacheDuration time.Duration
 }
 type QueryService struct {
 	config *QueryServiceConfig
-	cache *c.Cache
+	cache  *c.Cache
 }
 
 func KeyByUuid(uuid uuid.UUID) string {
@@ -53,7 +53,7 @@ func NewQueryService(config QueryServiceConfig) *QueryService {
 			ItemsToPrune(uint32(config.CacheSize / 8)),
 	)
 
-	return &QueryService {
+	return &QueryService{
 		&config, cacheObject,
 	}
 }

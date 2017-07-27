@@ -6,16 +6,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Cepave/open-falcon-backend/common/json"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
-	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
-	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
 	"github.com/Cepave/open-falcon-backend/common/rpc"
+	nqmService "github.com/Cepave/open-falcon-backend/common/service/nqm"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/service"
 	"github.com/asaskevich/govalidator"
+	"github.com/dghubble/sling"
 )
 
 var nqmAgentHbsService *nqmService.AgentHbsService = nil
 
+var mysqlApiSling *sling.Sling
 
 // Task retrieves the configuration of measurement tasks for certain client
 //
@@ -28,7 +31,7 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	 * Validates data
 	 */
 	if err = validatePingTask(&request); err != nil {
-		return
+		return fmt.Errorf("[NQM Heartbeat] Validate request(%v) error: %v", request, err)
 	}
 	// :~)
 
@@ -37,32 +40,35 @@ func (t *NqmAgent) Task(request commonModel.NqmTaskRequest, response *commonMode
 	response.Targets = nil
 	response.Measurements = nil
 
-	now := time.Now()
+	agentHeartbeatReq := &nqmModel.HeartbeatRequest{
+		ConnectionId: request.ConnectionId,
+		Hostname:     request.Hostname,
+		IpAddress:    json.NewIP(request.IpAddress),
+		Timestamp:    json.JsonTime(time.Now()),
+	}
 
-	/**
-	 * Refresh the information of agent
-	 */
-	var currentAgent = nqmModel.NewNqmAgent(&request)
-	var agentDetail = dbNqm.RefreshAgentInfo(currentAgent, now)
-	if agentDetail == nil {
+	nqmAgentHeartbeatResp, err := service.NqmAgentHeartbeat(agentHeartbeatReq)
+	if err != nil {
+		return fmt.Errorf("[NQM Heartbeat] Heartbeat call error: (request=%v) %v", request, err)
+	}
+
+	if !nqmAgentHeartbeatResp.Status {
 		return
 	}
-	// :~)
 
-	targets := nqmAgentHbsService.LoadPingList(currentAgent, now)
-	if len(targets) == 0 {
-		return
+	nqmAgentHeartbeatTargetList, err := service.NqmAgentHeartbeatTargetList(nqmAgentHeartbeatResp.Id)
+	if err != nil {
+		return fmt.Errorf("[NQM Heartbeat] Get target list of agent(%v) error: %v", nqmAgentHeartbeatResp, err)
 	}
 
 	response.NeedPing = true
-	response.Agent = agentDetail
-	response.Targets = targets
+	response.Agent = toOldAgent(nqmAgentHeartbeatResp)
+	response.Targets = toOldTargets(nqmAgentHeartbeatTargetList)
 	response.Measurements = map[string]commonModel.MeasurementsProperty{
 		"fping":   {true, []string{"fping", "-p", "20", "-i", "10", "-C", "4", "-q", "-a"}, 300},
 		"tcpping": {false, []string{"tcpping", "-i", "0.01", "-c", "4"}, 300},
 		"tcpconn": {false, []string{"tcpconn"}, 300},
 	}
-
 	return
 }
 
@@ -77,12 +83,50 @@ func validatePingTask(request *commonModel.NqmTaskRequest) (err error) {
 	 * Checks the validation of IP address
 	 */
 	if err == nil {
-		if ipAddress := net.ParseIP(request.IpAddress)
-			ipAddress == nil {
+		if ipAddress := net.ParseIP(request.IpAddress); ipAddress == nil {
 			err = fmt.Errorf("Cannot parse IP address: [%v]", request.IpAddress)
 		}
 	}
 	// :~)
 
 	return
+}
+
+func toOldAgent(a *nqmModel.AgentView) *commonModel.NqmAgent {
+	return &commonModel.NqmAgent{
+		Id:           int(a.Id),
+		Name:         a.Name,
+		IspId:        a.ISP.ID,
+		IspName:      a.ISP.Name,
+		ProvinceId:   a.Province.ID,
+		ProvinceName: a.Province.Name,
+		CityId:       a.City.ID,
+		CityName:     a.City.Name,
+		NameTagId:    a.NameTag.ID,
+		GroupTagIds:  a.GroupTags,
+	}
+}
+
+func toOldTargets(l []*nqmModel.HeartbeatTarget) []commonModel.NqmTarget {
+	var r []commonModel.NqmTarget
+	for _, t := range l {
+		var groupTagIDs []int32
+		for _, id := range t.GroupTagIDs {
+			groupTagIDs = append(groupTagIDs, int32(id))
+		}
+		r = append(r, commonModel.NqmTarget{
+			Id:           int(t.ID),
+			Host:         t.Host,
+			IspId:        t.IspID,
+			IspName:      t.IspName,
+			ProvinceId:   t.ProvinceID,
+			ProvinceName: t.ProvinceName,
+			CityId:       t.CityID,
+			CityName:     t.CityName,
+			NameTagId:    t.NameTagID,
+			NameTag:      t.NameTag,
+			GroupTagIds:  groupTagIDs,
+		})
+	}
+	return r
 }

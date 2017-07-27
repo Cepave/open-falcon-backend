@@ -1,19 +1,20 @@
 package check
 
 import (
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"gopkg.in/check.v1"
 	"reflect"
-	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 // See "utils.ValueExt.IsViable()" function
 var ViableValue = viableValue(true)
 
 type viableValue bool
+
 func (v viableValue) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: "ViableValue",
-		Params: []string{ "obtained", "Need viable" },
+	return &check.CheckerInfo{
+		Name:   "ViableValue",
+		Params: []string{"obtained", "Need viable"},
 	}
 }
 func (v viableValue) Check(params []interface{}, names []string) (bool, string) {

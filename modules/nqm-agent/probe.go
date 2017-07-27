@@ -23,7 +23,7 @@ func Probe(probingCmd []string, util string) []string {
 	if err != nil {
 		// fping output 'exit status 1' when there is at least
 		// one target with 100% packet loss.
-		log.Println("[", util, "] An error occured:", err)
+		log.Println("[", util, "] An error occurred:", err)
 	}
 	results := strings.Split(string(cmdOutput), "\n")
 	results = results[:len(results)-1]

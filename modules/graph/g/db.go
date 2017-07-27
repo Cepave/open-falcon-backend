@@ -2,8 +2,8 @@ package g
 
 import (
 	"database/sql"
-	log "github.com/sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 

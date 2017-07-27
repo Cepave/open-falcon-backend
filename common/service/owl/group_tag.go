@@ -2,20 +2,20 @@ package owl
 
 import (
 	"fmt"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
 type GroupTagService struct {
-	cache *cache.CacheCtrl
+	cache       *cache.CacheCtrl
 	cacheConfig *cache.DataCacheConfig
 }
 
 func NewGroupTagService(cacheConfig cache.DataCacheConfig) *GroupTagService {
-	return &GroupTagService {
+	return &GroupTagService{
 		cacheConfig: &cacheConfig,
-		cache: cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
+		cache:       cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
 	}
 }
 
@@ -23,7 +23,7 @@ func (s *GroupTagService) GetGroupTagById(groupTagId int32) *owlModel.GroupTag {
 	v := s.cache.MustFetchNativeAndDoNotCacheEmpty(
 		groupTagKeyById(groupTagId),
 		s.cacheConfig.Duration,
-		func () interface{} {
+		func() interface{} {
 			return owlDb.GetGroupTagById(groupTagId)
 		},
 	)

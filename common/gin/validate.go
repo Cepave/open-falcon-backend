@@ -36,5 +36,5 @@ func ConformAndValidateStruct(object interface{}, v *validator.Validate) {
 		panic(fmt.Errorf("Unknown validation error: %v", err))
 	}
 
-	panic(ValidationError{ validatorErrors })
+	panic(ValidationError{validatorErrors})
 }

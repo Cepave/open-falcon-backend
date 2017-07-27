@@ -8,10 +8,11 @@ import (
 var StringContains = stringContains(true)
 
 type stringContains bool
+
 func (s stringContains) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: "String contains",
-		Params: []string{ "obtained", "checked" },
+	return &check.CheckerInfo{
+		Name:   "String contains",
+		Params: []string{"obtained", "checked"},
 	}
 }
 func (c stringContains) Check(params []interface{}, names []string) (bool, string) {

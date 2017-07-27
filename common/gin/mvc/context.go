@@ -1,19 +1,19 @@
 package mvc
 
 import (
-	"mime/multipart"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"reflect"
 
-	"gopkg.in/go-playground/validator.v9"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
+	"gopkg.in/go-playground/validator.v9"
 
-	"github.com/gin-gonic/gin"
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
+	"github.com/gin-gonic/gin"
 )
 
 // Defines configuration of MVC framework
@@ -28,7 +28,7 @@ type MvcConfig struct {
 func NewDefaultMvcConfig() *MvcConfig {
 	return &MvcConfig{
 		ConvertService: ot.NewDefaultConversionService(),
-		Validator: validator.New(),
+		Validator:      validator.New(),
 	}
 }
 
@@ -39,13 +39,14 @@ type MvcBuilder struct {
 
 // Constructs a new builder with configuration
 func NewMvcBuilder(newConfig *MvcConfig) *MvcBuilder {
-	return &MvcBuilder {
+	return &MvcBuilder{
 		config: newConfig,
 	}
 }
 
 // Builds gin.HandlerFunc by MVC handler
 var _t_IoCloser = oreflect.TypeOfInterface((*io.Closer)(nil))
+
 func (b *MvcBuilder) BuildHandler(handlerFunc MvcHandler) gin.HandlerFunc {
 	funcValue := reflect.ValueOf(handlerFunc)
 	funcType := funcValue.Type()
@@ -100,7 +101,7 @@ func (b *MvcBuilder) buildInputFunc(targetTypes []reflect.Type) func(c *gin.Cont
 	}
 }
 
-var webObjectFuncs = map[string]inputParamLoader {
+var webObjectFuncs = map[string]inputParamLoader{
 	"*gin.Context": func(c *gin.Context) interface{} {
 		return c
 	},
@@ -132,7 +133,7 @@ var webObjectFuncs = map[string]inputParamLoader {
 
 const (
 	_MultipartReader = "_mp_reader_"
-	_MultipartForm = "_mp_form_"
+	_MultipartForm   = "_mp_form_"
 )
 
 func getMultipartReader(c *gin.Context) *multipart.Reader {
@@ -166,6 +167,7 @@ func getMultipartForm(c *gin.Context) *multipart.Form {
 }
 
 var _t_JsonUnmarshaler = oreflect.TypeOfInterface((*json.Unmarshaler)(nil))
+
 func (b *MvcBuilder) buildInputLoader(targetType reflect.Type) inputParamLoader {
 	typedFunc, ok := webObjectFuncs[targetType.String()]
 	if ok {
@@ -300,6 +302,7 @@ func (b *MvcBuilder) getConversionServiceFunc(c *gin.Context) interface{} {
 var _t_OutputBody = oreflect.TypeOfInterface((*OutputBody)(nil))
 var _t_JsonMarshaler = oreflect.TypeOfInterface((*json.Marshaler)(nil))
 var _t_Stringer = oreflect.TypeOfInterface((*fmt.Stringer)(nil))
+
 func (b *MvcBuilder) buildOutputFunc(targetTypes []reflect.Type) func(c *gin.Context, returnedValue []reflect.Value) {
 	if len(targetTypes) == 0 {
 		return nil

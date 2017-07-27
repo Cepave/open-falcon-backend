@@ -3,8 +3,8 @@ package db
 import (
 	"database/sql"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
-	log "github.com/sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
+	log "github.com/sirupsen/logrus"
 )
 
 var DB *sql.DB

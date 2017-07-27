@@ -1,13 +1,12 @@
 package falconPortal
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/Cepave/open-falcon-backend/modules/fe/model/boss"
-	log "github.com/sirupsen/logrus"
 	"github.com/emirpasic/gods/sets/hashset"
+	log "github.com/sirupsen/logrus"
 )
 
 func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset.Set, err error) {
@@ -17,9 +16,8 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 	for _, item := range result {
 		recordOne := AlertsResp{}
 		priority := strconv.Itoa(item.Priority)
-		tlayout := "2006-01-02 15:04"
-		sTime := item.Timestamp.Format(tlayout)
-		eTime := item.UpdateAt.Format(tlayout)
+		aType := item.AlarmType()
+		contacts := []boss.Contactor{{Name: "-", Phone: "-", Email: "-"}}
 		recordOne.Hash = item.Id
 		recordOne.HostName = item.Endpoint
 		recordOne.Metric = item.Metric
@@ -31,9 +29,8 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne.StatusRaw = item.Status
 		recordOne.Type = strings.Split(item.Metric, ".")[0]
 		recordOne.Content = item.Note
-		recordOne.TimeStart = sTime
-		recordOne.TimeUpdate = eTime
-		recordOne.Duration = getDuration(eTime)
+		recordOne.TimeStart = item.Timestamp.Unix()
+		recordOne.TimeUpdate = item.UpdateAt.Unix()
 		// recordOne.Notes = getNote(item.Id, sTime)
 		recordOne.Notes = []map[string]string{}
 		recordOne.Events = item.Events
@@ -42,10 +39,15 @@ func AlertsConvert(result []EventCases) (resp []AlertsResp, endpointSet *hashset
 		recordOne.Condition = item.Cond
 		recordOne.StepLimit = item.MaxStep
 		recordOne.Step = item.CurrentStep
-		recordOne.Contact = []boss.Contactor{boss.Contactor{"-", "-", "-"}}
-		recordOne.Platform = notFound
-		recordOne.IP = notFound
-		recordOne.IDC = notFound
+		recordOne.Contact = contacts
+		recordOne.CTmpName = item.Contact
+		recordOne.Platform = item.Platform
+		recordOne.IP = item.Ip
+		recordOne.IDC = item.Idc
+		recordOne.AlarmType = aType.Name
+		recordOne.AlarmColor = aType.Color
+		recordOne.InternalData = aType.InternalData
+		recordOne.ExtendedBlob = item.ExtendedBlob
 		// ///make compatible for overall , if need it, please uncomment below
 		// recordOne.ID = item.Id
 		// recordOne.Endpoint = item.Endpoint
@@ -145,22 +147,23 @@ func GetAlertInfoFromDB(resp []AlertsResp, endpointList *hashset.Set, showAll bo
 	contactmap := boss.GenContactMap()
 	respCompleteTmp := []AlertsResp{}
 	for _, item := range resp {
-		if result, ok := hostmap[item.HostName]; ok {
-			item.IDC = result.Idc
-			item.Platform = result.Platform
-			item.IP = result.Ip
-			if contacts, ok := contactmap[item.Platform]; ok {
-				item.Contact = contacts
-			}
-		} else if showAll {
-			// will append this reocrd into output without boss info
-		} else if ok, _ := regexp.MatchString("virtual-.+", item.HostName); ok {
-			// work around for display vip alarm
-			// vip's endpoint name are always contains "virtual-"
-		} else {
-			continue
+		contactor := boss.Contactor{Name: item.CTmpName}
+		if c, ok := contactmap[item.CTmpName]; ok {
+			contactor = c
 		}
-		respCompleteTmp = append(respCompleteTmp, item)
+		item.Contact = []boss.Contactor{contactor}
+		if result, ok := hostmap[item.HostName]; ok {
+			item.Activate = result.Activate
+		} else {
+			// 2 means unknown, for not exist hostname & exnternal alarm
+			item.Activate = 2
+		}
+
+		if item.Activate != 0 {
+			respCompleteTmp = append(respCompleteTmp, item)
+		} else if showAll {
+			respCompleteTmp = append(respCompleteTmp, item)
+		}
 	}
 	respComplete = respCompleteTmp
 	return

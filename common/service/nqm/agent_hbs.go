@@ -6,8 +6,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	utils "github.com/Cepave/open-falcon-backend/common/utils"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
+	utils "github.com/Cepave/open-falcon-backend/common/utils"
 
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
@@ -24,13 +24,13 @@ type AgentHbsServiceConfig struct {
 func NewAgentHbsService(config AgentHbsServiceConfig) *AgentHbsService {
 	return &AgentHbsService{
 		agentIdQueueForRefreshCache: make(chan int32, config.QueueSizeOfRefreshCacheOfPingList),
-		cacheTimeout: time.Duration(config.CacheTimeoutMinutes) * time.Minute,
+		cacheTimeout:                time.Duration(config.CacheTimeoutMinutes) * time.Minute,
 	}
 }
 
 // Main service of HBS for NQM agent
 type AgentHbsService struct {
-	cacheTimeout time.Duration
+	cacheTimeout                time.Duration
 	agentIdQueueForRefreshCache chan int32
 }
 
@@ -95,7 +95,7 @@ func (s *AgentHbsService) addRefreshCache(agentId int32, cacheLog *nqmModel.Ping
 		logger.Debugf(
 			"Queue Size(refreshing cache of ping list): [%d]. Minutes: [%d]",
 			len(s.agentIdQueueForRefreshCache),
-			diffDuration / time.Minute,
+			diffDuration/time.Minute,
 		)
 	}
 	if now.Sub(cacheLog.RefreshTime) >= s.cacheTimeout {

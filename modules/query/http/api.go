@@ -16,9 +16,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
 	"github.com/Cepave/open-falcon-backend/modules/query/graph"
 	"github.com/Cepave/open-falcon-backend/modules/query/proc"
-	log "github.com/sirupsen/logrus"
 	"github.com/astaxie/beego/orm"
 	"github.com/bitly/go-simplejson"
+	log "github.com/sirupsen/logrus"
 )
 
 type Tag struct {
@@ -1450,7 +1450,7 @@ func getApolloCharts(rw http.ResponseWriter, req *http.Request) {
 					}
 				}
 				limit *= 1000 * 1000 * 0.8
-				for key, _ := range series.Values {
+				for key := range series.Values {
 					series.Values[key].Value = limit
 				}
 			} else {

@@ -2,8 +2,8 @@ package http
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
 )

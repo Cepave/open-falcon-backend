@@ -3,14 +3,25 @@ package rpc
 import (
 	"flag"
 	"testing"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
-	f "github.com/Cepave/open-falcon-backend/common/db/facade"
-	. "gopkg.in/check.v1"
+
+	tJsonRpc "github.com/Cepave/open-falcon-backend/common/testing/jsonrpc"
+	ch "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestByGinkgo(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Base Suite")
+}
 
-var DbFacade *f.DbFacade = db.DbFacade
+func TestByCheck(t *testing.T) {
+	ch.TestingT(t)
+}
+
+var ginkgoJsonRpc = &tJsonRpc.GinkgoJsonRpc{}
+var MOCK_URL = "localhost:5566"
 
 func init() {
 	flag.Parse()

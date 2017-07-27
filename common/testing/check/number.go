@@ -2,19 +2,22 @@ package check
 
 import (
 	"fmt"
-	"reflect"
-	"gopkg.in/check.v1"
 	ot "github.com/Cepave/open-falcon-backend/common/reflect/types"
+	"gopkg.in/check.v1"
+	"reflect"
 )
 
 // Checks if obtained > expected
-var LargerThan = &checkForCompare{ largerThan, "LargerThan", "The left value **is not** larger than right value" }
+var LargerThan = &checkForCompare{largerThan, "LargerThan", "The left value **is not** larger than right value"}
+
 // Checks if obtained >= expected
-var LargerThanOrEqualTo = &checkForCompare{ largerThanOrEqualTo, "LargerThanOrEqual", "The left value **is not** larger than or equal to right value" }
+var LargerThanOrEqualTo = &checkForCompare{largerThanOrEqualTo, "LargerThanOrEqual", "The left value **is not** larger than or equal to right value"}
+
 // Checks if obtained < expected
-var SmallerThan = &checkForCompare{ smallerThan, "SmallerThan", "The left value **is not** larger than right value" }
+var SmallerThan = &checkForCompare{smallerThan, "SmallerThan", "The left value **is not** larger than right value"}
+
 // Checks if obtained <= expected
-var SmallerThanOrEqualTo = &checkForCompare{ smallerThanOrEqualTo, "SmallerThanOrEqual", "The left value **is not** larger than or equal to right value" }
+var SmallerThanOrEqualTo = &checkForCompare{smallerThanOrEqualTo, "SmallerThanOrEqual", "The left value **is not** larger than or equal to right value"}
 
 const (
 	_ = iota
@@ -26,13 +29,14 @@ const (
 
 type checkForCompare struct {
 	operator int
-	name string
-	message string
+	name     string
+	message  string
 }
+
 func (c *checkForCompare) Info() *check.CheckerInfo {
-	return &check.CheckerInfo {
-		Name: c.name,
-		Params: []string{ "left", "right" },
+	return &check.CheckerInfo{
+		Name:   c.name,
+		Params: []string{"left", "right"},
 	}
 }
 func (c *checkForCompare) Check(params []interface{}, names []string) (bool, string) {

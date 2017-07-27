@@ -32,6 +32,14 @@
         "lowQueues": [
             "event:p6"
         ],
+        "externalQueues":{
+          "enable": false,
+          "queues": [ "extnal_event:all"]
+        },
+        "errorQueues": {
+          "enable": false,
+          "queue": "error_event:all"
+        },
         "userSmsQueue": "/queue/user/sms",
         "userMailQueue": "/queue/user/mail",
         "userQQQueue": "/queue/user/qq",
@@ -51,6 +59,11 @@
     },
     "uic": {
         "addr": "root:@tcp(127.0.0.1:3306)/uic?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
+    "boss": {
+        "addr": "root:@tcp(127.0.0.1:3306)/boss?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,
         "max": 100
     },

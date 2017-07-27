@@ -2,20 +2,20 @@ package owl
 
 import (
 	"fmt"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	cache "github.com/Cepave/open-falcon-backend/common/ccache"
+	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
 type ProvinceService struct {
-	cache *cache.CacheCtrl
+	cache       *cache.CacheCtrl
 	cacheConfig *cache.DataCacheConfig
 }
 
 func NewProvinceService(cacheConfig cache.DataCacheConfig) *ProvinceService {
-	return &ProvinceService {
+	return &ProvinceService{
 		cacheConfig: &cacheConfig,
-		cache: cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
+		cache:       cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
 	}
 }
 
@@ -88,14 +88,14 @@ func provinceKeyById(id int16) string {
 }
 
 type CityService struct {
-	cache *cache.CacheCtrl
+	cache       *cache.CacheCtrl
 	cacheConfig *cache.DataCacheConfig
 }
 
 func NewCityService(cacheConfig cache.DataCacheConfig) *CityService {
-	return &CityService {
+	return &CityService{
 		cacheConfig: &cacheConfig,
-		cache: cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
+		cache:       cache.NewCacheCtrl(cache.NewDataCache(cacheConfig)),
 	}
 }
 

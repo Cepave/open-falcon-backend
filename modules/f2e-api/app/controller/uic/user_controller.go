@@ -9,9 +9,9 @@ import (
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
-	log "github.com/sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -161,7 +161,7 @@ func ChangePassword(c *gin.Context) {
 		h.JSONR(c, http.StatusBadRequest, "oldPassword is not match current one")
 		return
 	case user.IsThirdPartyUser():
-		h.JSONR(c, http.StatusBadRequest, "can not change password for thrid party login account")
+		h.JSONR(c, http.StatusBadRequest, "can not change password for third party login account")
 		return
 	case user.Passwd != "":
 		h.JSONR(c, http.StatusBadRequest, "Password can not be blank")
