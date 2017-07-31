@@ -66,3 +66,60 @@ func buildSortingClauseOfHosts(paging *commonModel.Paging) string {
 
 	return querySyntax
 }
+
+// ListHostgroups returns the info of hostgroups by group ID
+func ListHostgroups(paging commonModel.Paging) ([]*model.HostgroupsResult, *commonModel.Paging) {
+	var result []*model.HostgroupsResult
+
+	var funcTxLoader gormExt.TxCallbackFunc = func(txGormDb *gorm.DB) commonDb.TxFinale {
+		var dbListHosts = txGormDb.Model(&model.HostgroupsResult{}).
+			Select(`SQL_CALC_FOUND_ROWS
+				grp.id,
+				grp.grp_name,
+				GROUP_CONCAT(pd.id ORDER BY pd.id ASC SEPARATOR ',') AS gt_ids,
+				GROUP_CONCAT(pd.dir ORDER BY pd.id ASC SEPARATOR '\0') AS gt_names
+			`).
+			Joins(`
+				LEFT JOIN plugin_dir pd
+				ON grp.id = pd.grp_id
+			`).
+			Group(`grp.id, grp.grp_name`).
+			Limit(paging.Size).
+			Order(buildSortingClauseOfHostgroups(&paging)).
+			Offset(paging.GetOffset())
+
+		selectHost := dbListHosts.Find(&result)
+		gormExt.ToDefaultGormDbExt(selectHost).PanicIfError()
+
+		return commonDb.TxCommit
+	}
+
+	gormExt.ToDefaultGormDbExt(DbFacade.GormDb).SelectWithFoundRows(
+		funcTxLoader, &paging,
+	)
+
+	/**
+	 * Loads group tags
+	 */
+	for _, hostgroup := range result {
+		hostgroup.AfterLoad()
+	}
+
+	return result, &paging
+}
+
+var orderByDialectForHostgroups = commonModel.NewSqlOrderByDialect(
+	map[string]string{
+		"id":  "id",
+		"dir": "dir",
+	},
+)
+
+func buildSortingClauseOfHostgroups(paging *commonModel.Paging) string {
+	querySyntax, err := orderByDialectForHostgroups.ToQuerySyntax(paging.OrderBy)
+	gormExt.DefaultGormErrorConverter.PanicIfError(
+		errors.Annotate(err, "Order by to query syntax has error"),
+	)
+
+	return querySyntax
+}
