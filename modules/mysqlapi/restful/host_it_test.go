@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Intg] Test Listhosts", ginkgoDb.NeedDb(func() {
+var _ = Describe("[Intg] Test listhosts", ginkgoDb.NeedDb(func() {
 	const NumOfTestHost = 4
 
 	BeforeEach(func() {
@@ -57,5 +57,46 @@ var _ = Describe("[Intg] Test Listhosts", ginkgoDb.NeedDb(func() {
 		Entry("Zero", 0, 0),
 		Entry("Two", 2, 2),
 		Entry("Max", math.MaxInt32, NumOfTestHost),
+	)
+}))
+
+var _ = Describe("[Intg] Test listHostgroups", ginkgoDb.NeedDb(func() {
+	const NumOfTestHostgroup = 3
+
+	BeforeEach(func() {
+		inTx(
+			`INSERT INTO grp(id, grp_name)
+				VALUES
+					(1, 'listhostgroups-grpname-c1'),
+					(2, 'listhostgroups-grpname-b2'),
+					(3, 'listhostgroups-grpname-a3')`,
+			`INSERT INTO plugin_dir(id, grp_id, dir)
+				VALUES
+					(1, 1, 'listhostgroups/plugin-1'),
+					(2, 2, 'listhostgroups/plugin-2'),
+					(3, 1, 'listhostgroups/plugin-3'),
+					(4, 1, 'listhostgroups/plugin-4')`,
+		)
+	})
+	AfterEach(func() {
+		inTx(
+			`DELETE FROM grp WHERE grp_name LIKE 'listhostgroups-grpname-%'`,
+			`DELETE FROM plugin_dir WHERE dir LIKE 'listhostgroups/plugin-%'`,
+		)
+	})
+
+	DescribeTable("when page size is",
+		func(pageSize int, expectedHostsNums int) {
+			result := tHttp.NewResponseResultBySling(
+				httpClientConfig.NewSlingByBase().Get("api/v1/hostgroups").Set("page-size", strconv.Itoa(pageSize)),
+			)
+			Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
+
+			jsonBody := result.GetBodyAsJson()
+			Expect(jsonBody.MustArray()).To(HaveLen(expectedHostsNums))
+		},
+		Entry("Zero", 0, 0),
+		Entry("Two", 2, 2),
+		Entry("Max", math.MaxInt32, NumOfTestHostgroup),
 	)
 }))
