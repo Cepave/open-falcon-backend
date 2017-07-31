@@ -92,3 +92,24 @@ var _ = Describe("[Unit] Test buildSortingClauseOfHosts(...)", func() {
 		),
 	)
 })
+
+var _ = Describe("[Unit] Test buildSortingClauseOfHostgroups", func() {
+	DescribeTable("when the order sorted by",
+		func(paging *cModel.Paging, expectedClause string) {
+			res := buildSortingClauseOfHostgroups(paging)
+			Expect(res).To(Equal(expectedClause))
+		},
+		Entry("Undefined",
+			&cModel.Paging{},
+			"",
+		),
+		Entry("id ASC",
+			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"id", cModel.Ascending}}},
+			"id ASC",
+		),
+		Entry("dir ASC",
+			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"dir", cModel.Ascending}}},
+			"dir ASC",
+		),
+	)
+})
