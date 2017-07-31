@@ -110,8 +110,8 @@ func ListHostgroups(paging commonModel.Paging) ([]*model.HostgroupsResult, *comm
 
 var orderByDialectForHostgroups = commonModel.NewSqlOrderByDialect(
 	map[string]string{
-		"id":  "id",
-		"dir": "dir",
+		"id":   "id",
+		"name": "grp_name",
 	},
 )
 

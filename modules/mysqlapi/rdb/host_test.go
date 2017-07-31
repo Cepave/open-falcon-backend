@@ -107,9 +107,9 @@ var _ = Describe("[Unit] Test buildSortingClauseOfHostgroups", func() {
 			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"id", cModel.Ascending}}},
 			"id ASC",
 		),
-		Entry("dir ASC",
-			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"dir", cModel.Ascending}}},
-			"dir ASC",
+		Entry("name ASC",
+			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"name", cModel.Ascending}}},
+			"grp_name ASC",
 		),
 	)
 })
