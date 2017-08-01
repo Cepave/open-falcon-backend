@@ -224,7 +224,7 @@ func getAgentAliveData(hostnames []string, versions map[string]string, result ma
 	var hosts []*Host
 	_, err := o.Raw("SELECT hostname, agent_version FROM falcon_portal.host ORDER BY hostname ASC").QueryRows(&hosts)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		for _, host := range hosts {
 			var query cmodel.GraphLastParam
@@ -239,26 +239,26 @@ func getAgentAliveData(hostnames []string, versions map[string]string, result ma
 	}
 	s, err := json.Marshal(queries)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	url := g.Config().Api.Query + "/graph/last"
 	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	reqPost.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqPost)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	data := []cmodel.GraphLastResp{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	return data
 }
@@ -347,7 +347,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 	buf.ReadFrom(req.Body)
 	json, err := simplejson.NewJson(buf.Bytes())
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 
 	var nodes = make(map[string]interface{})
@@ -371,7 +371,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 	if len(strategyID) > 0 && len(tagName) > 0 && len(tagValue) > 0 {
 		strategyIDint, err := strconv.Atoi(strategyID)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			o := orm.NewOrm()
 			var tag Tag
@@ -381,7 +381,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 				sql := "INSERT INTO tags(strategy_id, name, value, create_at) VALUES(?, ?, ?, ?)"
 				res, err := o.Raw(sql, strategyIDint, tagName, tagValue, getNow()).Exec()
 				if err != nil {
-					setError(err.Error(), result)
+					setError(err, result)
 				} else {
 					num, _ := res.RowsAffected()
 					log.Debugf("mysql row affected nums = %v", num)
@@ -389,12 +389,12 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 					result["action"] = "create"
 				}
 			} else if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				sql := "UPDATE tags SET name = ?, value = ? WHERE strategy_id = ?"
 				res, err := o.Raw(sql, tagName, tagValue, strategyIDint).Exec()
 				if err != nil {
-					setError(err.Error(), result)
+					setError(err, result)
 				} else {
 					num, _ := res.RowsAffected()
 					log.Debugf("mysql row affected nums = %v", num)
@@ -404,7 +404,7 @@ func setStrategyTags(rw http.ResponseWriter, req *http.Request) {
 			}
 		}
 	} else {
-		setError("Input value errors.", result)
+		setErrorMessage("Input value errors.", result)
 	}
 	nodes["result"] = result
 	setResponse(rw, nodes)
@@ -420,13 +420,13 @@ func getTemplateStrategies(rw http.ResponseWriter, req *http.Request) {
 	if arguments[len(arguments)-1] == "strategies" {
 		templateID, err := strconv.Atoi(arguments[len(arguments)-2])
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		}
 		o := orm.NewOrm()
 		var strategyIDs []int64
 		num, err := o.Raw("SELECT id FROM falcon_portal.strategy WHERE tpl_id = ? ORDER BY id ASC", templateID).QueryRows(&strategyIDs)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else if num > 0 {
 			countOfStrategies = int(num)
 			var strategies = make(map[string]interface{})
@@ -449,7 +449,7 @@ func getTemplateStrategies(rw http.ResponseWriter, req *http.Request) {
 			var tags []*Tag
 			_, err = o.Raw(sqlcmd).QueryRows(&tags)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				for _, tag := range tags {
 					strategyID := strconv.Itoa(int(tag.StrategyId))
@@ -478,21 +478,21 @@ func getPlatformJSON(nodes map[string]interface{}, result map[string]interface{}
 	url += "/show_active/yes/hostname/yes/pop_id/yes/ip/yes/show_ip_type/yes.json"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 		return
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 		return
 	}
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	if err := json.Unmarshal(body, &nodes); err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 }
 
@@ -505,7 +505,7 @@ func queryHostsData(result map[string]interface{}) []map[string]string {
 	sql += " WHERE exist = 1 AND platform != '' ORDER BY hostname ASC"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 		return hosts
 	} else if num > 0 {
 		for _, row := range rows {
@@ -534,7 +534,7 @@ func queryIPsData(result map[string]interface{}) []map[string]string {
 	sql += " WHERE exist = 1 AND hostname != '' AND platform != ''"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 		return IPs
 	} else if num > 0 {
 		for _, row := range rows {
@@ -581,7 +581,7 @@ func mergeIPsOfHost(data []map[string]string, result map[string]interface{}) (ma
 	sql += "') AND exist = 1"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			hostname := row["hostname"].(string)
@@ -636,7 +636,7 @@ func setGraphQueries(hostnames []string, hostnamesExisted []string, result map[s
 	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
 	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		for _, host := range hosts {
 			var query cmodel.GraphLastParam
@@ -667,7 +667,7 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 				}
 				last, err := graph.Last(*param)
 				if err != nil {
-					setError("graph.last fail, err: "+err.Error(), result)
+					setErrorMessage("graph.last fail, err: "+err.Error(), result)
 					return data
 				}
 				if last == nil {
@@ -679,19 +679,19 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 		} else {
 			s, err := json.Marshal(queries)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 			url := g.Config().Api.Query + "/graph/last"
 			reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 			reqPost.Header.Set("Content-Type", "application/json")
 
 			client := &http.Client{}
 			resp, err := client.Do(reqPost)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 			defer resp.Body.Close()
 
@@ -699,7 +699,7 @@ func queryAgentAlive(queries []*cmodel.GraphLastParam, reqHost string, result ma
 
 			err = json.Unmarshal(body, &data)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 		}
 	}
@@ -844,7 +844,7 @@ func completeAgentAliveData(groups map[string][]map[string]string, groupNames []
 			if host["status"] == "error" {
 				num, err := o.Raw(sql, hostname).Values(&rows)
 				if err != nil {
-					setError(err.Error(), result)
+					setError(err, result)
 				} else if num > 0 {
 					row := rows[0]
 					host["idc"] = row["idc"].(string)
@@ -1017,7 +1017,7 @@ func getTimestampFromString(timeString string, result map[string]interface{}) in
 		timeFormat := "2006-01-02 15:04:05"
 		date, err := time.ParseInLocation(timeFormat, timeString, location)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			timestamp = date.Unix()
 		}
@@ -1037,7 +1037,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (int
 			log.Debugf("duration = %v", duration)
 			log.Debugf("timestampFrom = %v", timestampFrom)
 			log.Debugf("timestampTo = %v", timestampTo)
-			setError("Value of timestampFrom should be less than value of timestampTo.", result)
+			setErrorMessage("Value of timestampFrom should be less than value of timestampTo.", result)
 		}
 		return timestampFrom, timestampTo
 	} else if strings.Index(duration, "d") > -1 || strings.Index(duration, "min") > -1 {
@@ -1052,7 +1052,7 @@ func convertDurationToPoint(duration string, result map[string]interface{}) (int
 		}
 		multiplier, err := strconv.Atoi(strings.Split(duration, unit)[0])
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		}
 		offset := int64(multiplier) * seconds
 		now := time.Now().Unix()
@@ -1082,7 +1082,7 @@ func getGraphQueryResponse(hostnames []string, metrics []string, duration string
 				log.Debugf("request = %v", request)
 				log.Debugf("response = %v", response)
 				log.Debugf("graph.queryOne fail, %v", request)
-				setError("graph.queryOne fail, "+err.Error(), result)
+				setErrorMessage("graph.queryOne fail, "+err.Error(), result)
 				return data
 			}
 			data = append(data, response)
@@ -1146,7 +1146,7 @@ func getExistedHostnames(hostnames []string, result map[string]interface{}) []st
 	sqlcommand += hostnamesStr + "') ORDER BY hostname ASC"
 	_, err := o.Raw(sqlcommand).QueryRows(&hosts)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		for _, host := range hosts {
 			if !strings.Contains(host.Hostname, ".") && strings.Contains(host.Hostname, "-") {
@@ -1226,7 +1226,7 @@ func getHostsLocations(hosts []map[string]string, hostnamesInput []string, resul
 	sqlcmd += " ORDER BY hostname ASC"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			hostname := row["hostname"].(string)
@@ -1326,7 +1326,7 @@ func addNetworkSpeedAndBondMode(metrics []string, hostnames []string, result map
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	endpointIDs := []string{}
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			endpointIDs = append(endpointIDs, row["id"].(string))
@@ -1338,7 +1338,7 @@ func addNetworkSpeedAndBondMode(metrics []string, hostnames []string, result map
 		sqlcmd += strings.Join(endpointIDs, "','") + "') AND tag LIKE 'device=%'"
 		num, err := o.Raw(sqlcmd).Values(&rows)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else if num > 0 {
 			for _, row := range rows {
 				tag := row["tag"].(string)
@@ -1496,7 +1496,7 @@ func getApolloRemark(rw http.ResponseWriter, req *http.Request) {
 	for _, hostname := range hostnames {
 		num, err := o.Raw(sql, hostname).Values(&rows)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else if num > 0 {
 			row := rows[0]
 			remark := map[string]string{
@@ -1526,7 +1526,7 @@ func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
 	var remark Remark
 	err := decoder.Decode(&remark)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	defer req.Body.Close()
 	user := map[string]string{
@@ -1543,7 +1543,7 @@ func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
 	sql := "SELECT id, cnname, email FROM `uic`.`user` WHERE name = ? LIMIT 1"
 	num, err := o.Raw(sql, remark.User).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		user["userID"] = rows[0]["id"].(string)
 		user["name"] = rows[0]["cnname"].(string)
@@ -1552,12 +1552,12 @@ func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
 	sql = "SELECT expired FROM `uic`.`session` WHERE sig = ? ORDER BY expired DESC LIMIT 1"
 	num, err = o.Raw(sql, remark.Sig).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		expired := rows[0]["expired"].(string)
 		expiredTimestamp, err := strconv.Atoi(expired)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			if int64(expiredTimestamp) > time.Now().Unix() {
 				login = true
@@ -1581,14 +1581,14 @@ func addApolloRemark(rw http.ResponseWriter, req *http.Request) {
 		_, err := o.Raw(sql, remark.Host, text, user["userID"], remark.User,
 			user["name"], user["email"], getNow()).Exec()
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			sql = "SELECT remark, account, name, email, updated "
 			sql += "FROM `apollo`.`remarks` WHERE hostname = ? "
 			sql += "ORDER BY updated DESC LIMIT 1"
 			num, err := o.Raw(sql, remark.Host).Values(&rows)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else if num > 0 {
 				item := map[string]string{}
 				item["hostname"] = remark.Host
@@ -1619,7 +1619,7 @@ func getIPFromHostname(hostname string, result map[string]interface{}) string {
 		for _, fragment := range fragments {
 			num, err := strconv.Atoi(fragment)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				slice = append(slice, strconv.Itoa(num))
 			}
@@ -1745,24 +1745,24 @@ func getPlatformContact(platformName string, nodes map[string]interface{}) {
 	}
 	s, err := json.Marshal(params)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	reqPost.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqPost)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
 		err = json.Unmarshal(body, &nodes)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			roles := []string{
 				"principal",
@@ -1817,7 +1817,7 @@ func getPlatforms(rw http.ResponseWriter, req *http.Request) {
 	sql += " ORDER BY platform ASC"
 	num, err := o.Raw(sql).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			item := map[string]string{
@@ -1856,7 +1856,7 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 	sql += " WHERE platform = ? AND exist = 1 ORDER BY hostname ASC"
 	num, err := o.Raw(sql, platformName).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			hostnames = append(hostnames, row["hostname"].(string))
@@ -1867,7 +1867,7 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 	sql += "') AND exist = 1 ORDER BY isp ASC"
 	num, err = o.Raw(sql).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			hostname := row["hostname"].(string)
@@ -2016,21 +2016,21 @@ func getPlatformBandwidthsByISP(platformName string, duration string, nodes map[
 	sql += " WHERE platform = ? AND metric = 1 AND date LIKE ? ORDER BY date ASC"
 	num, err = o.Raw(sql, platformName, today).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if (num > 0) && (diff > 600) {
 		for _, row := range rows {
 			ticker := row["DATE_FORMAT(date, '%Y-%m-%d %H:%i')"].(string)
 			mean := 0
 			value, err := strconv.Atoi(row["mean"].(string))
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				mean = value
 			}
 			deviation := 0
 			value, err = strconv.Atoi(row["deviation"].(string))
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				deviation = value
 			}
@@ -2132,7 +2132,7 @@ func parsePlatformArguments(rw http.ResponseWriter, req *http.Request) {
 		} else if strings.Index(req.URL.Path, "/isp") > -1 {
 			errorMessage += " Example: /api/platforms/{platformName}/isp"
 		}
-		setError(errorMessage, result)
+		setErrorMessage(errorMessage, result)
 		nodes["result"] = result
 	}
 	setResponse(rw, nodes)
@@ -2357,7 +2357,7 @@ func getNICOutSpeed(hostname string, result map[string]interface{}) int {
 	for _, param := range params {
 		last, err := graph.Last(param)
 		if err != nil {
-			setError("graph.last fail, err: "+err.Error(), result)
+			setErrorMessage("graph.last fail, err: "+err.Error(), result)
 			return NICOutSpeed
 		}
 		if last == nil {
@@ -2479,7 +2479,7 @@ func getIDCsHosts(rw http.ResponseWriter, req *http.Request) {
 		sqlcommand := "SELECT pop_id, name FROM `grafana`.`idc` ORDER BY pop_id ASC"
 		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			for _, idc := range idcs {
 				IDCNamesMap[idc.Name] = strconv.Itoa(idc.Pop_id)
@@ -2522,29 +2522,29 @@ func queryIDCsBandwidths(IDCName string, result map[string]interface{}) {
 	}
 	s, err := json.Marshal(params)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	reqPost, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(s)))
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	reqPost.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(reqPost)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
 		err = json.Unmarshal(body, &nodes)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		}
 		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			if len(nodes["result"].([]interface{})) == 0 {
 				errorMessage := "IDC name not found: " + IDCName
-				setError(errorMessage, result)
+				setErrorMessage(errorMessage, result)
 			} else {
 				for _, uplink := range nodes["result"].([]interface{}) {
 					if upperLimit, ok := uplink.(map[string]interface{})["all_uplink_top"].(float64); ok {
@@ -2553,7 +2553,7 @@ func queryIDCsBandwidths(IDCName string, result map[string]interface{}) {
 				}
 			}
 		} else {
-			setError("Error occurs", result)
+			setErrorMessage("Error occurs", result)
 		}
 	}
 	items := map[string]interface{}{
@@ -2582,7 +2582,7 @@ func getIDCsBandwidthsUpperLimit(rw http.ResponseWriter, req *http.Request) {
 	} else {
 		errorMessage := "Error: wrong API path."
 		errorMessage += " Example: /api/idcs/{IDCName}/bandwidths/limit"
-		setError(errorMessage, result)
+		setErrorMessage(errorMessage, result)
 	}
 	nodes["result"] = result
 	setResponse(rw, nodes)
@@ -2642,7 +2642,7 @@ func getHostsList(rw http.ResponseWriter, req *http.Request) {
 		sqlcommand := "SELECT pop_id, province, city, name FROM `grafana`.`idc` ORDER BY pop_id ASC"
 		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			for _, idc := range idcs {
 				item := map[string]string{

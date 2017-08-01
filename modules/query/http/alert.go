@@ -57,7 +57,7 @@ func parsePlatformJSON(result map[string]interface{}) map[string]interface{} {
 		sqlcommand := "SELECT pop_id, name FROM grafana.idc ORDER BY pop_id ASC"
 		_, err := o.Raw(sqlcommand).QueryRows(&idcs)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			for _, idc := range idcs {
 				idcIDsMap[strconv.Itoa(idc.Pop_id)] = idc.Name
@@ -119,7 +119,7 @@ func getProcess(status string) string {
 func getDuration(timeTriggered string, result map[string]interface{}) string {
 	date, err := time.Parse("2006-01-02 15:04", timeTriggered)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	now := time.Now().Unix()
 	diff := now - date.Unix()
@@ -152,7 +152,7 @@ func getUserID(username string, result map[string]interface{}) (string, string) 
 	sqlcmd := "SELECT id, role FROM uic.user WHERE name = ? LIMIT 1"
 	num, err := o.Raw(sqlcmd, username).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			userID = row["id"].(string)
@@ -170,7 +170,7 @@ func checkLoggedIn(userID string, sig string, result map[string]interface{}) boo
 	sqlcmd := "SELECT expired FROM uic.session WHERE uid = ? AND sig = ? LIMIT 1"
 	num, err := o.Raw(sqlcmd, userID, sig).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			expired = row["expired"].(string)
@@ -178,7 +178,7 @@ func checkLoggedIn(userID string, sig string, result map[string]interface{}) boo
 	}
 	expiredInt, err := strconv.Atoi(expired)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		now := time.Now().Unix()
 		isLoggedIn = int64(expiredInt) > now
@@ -193,7 +193,7 @@ func getReceiverTeamIDs(userID string, result map[string]interface{}) []string {
 	sqlcmd := "SELECT tid FROM uic.rel_team_user WHERE uid = ?"
 	num, err := o.Raw(sqlcmd, userID).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			receiverTeamID := row["tid"].(string)
@@ -211,7 +211,7 @@ func getReceiverTeamNames(receiverTeamIDs []string, result map[string]interface{
 	sqlcmd += strings.Join(receiverTeamIDs, ",") + ")"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			receiverTeamName := row["name"].(string)
@@ -229,7 +229,7 @@ func getActionIDs(receiverTeamNames []string, result map[string]interface{}) []s
 	sqlcmd += strings.Join(receiverTeamNames, "','") + "')"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			actionID := row["id"].(string)
@@ -243,12 +243,12 @@ func getTemplateIDs(username string, sig string, result map[string]interface{}) 
 	templateIDs := []string{}
 	userID, userRole := getUserID(username, result)
 	if userID == "" {
-		setError("User not found", result)
+		setErrorMessage("User not found", result)
 		return ""
 	}
 	isLoggedIn := checkLoggedIn(userID, sig, result)
 	if !isLoggedIn {
-		setError("Please log in first", result)
+		setErrorMessage("Please log in first", result)
 		return ""
 	}
 	if userRole == "1" || userRole == "2" { // admin user
@@ -256,17 +256,17 @@ func getTemplateIDs(username string, sig string, result map[string]interface{}) 
 	}
 	receiverTeamIDs := getReceiverTeamIDs(userID, result)
 	if len(receiverTeamIDs) == 0 {
-		setError("User not subscribe any alerts", result)
+		setErrorMessage("User not subscribe any alerts", result)
 		return ""
 	}
 	receiverTeamNames := getReceiverTeamNames(receiverTeamIDs, result)
 	if len(receiverTeamNames) == 0 {
-		setError("User not subscribe any alerts", result)
+		setErrorMessage("User not subscribe any alerts", result)
 		return ""
 	}
 	actionIDs := getActionIDs(receiverTeamNames, result)
 	if len(actionIDs) == 0 {
-		setError("User not subscribe any alerts", result)
+		setErrorMessage("User not subscribe any alerts", result)
 		return ""
 	}
 	o := orm.NewOrm()
@@ -275,7 +275,7 @@ func getTemplateIDs(username string, sig string, result map[string]interface{}) 
 	sqlcmd += strings.Join(actionIDs, ",") + ")"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			templateID := row["id"].(string)
@@ -292,7 +292,7 @@ func getUsers(result map[string]interface{}) map[string]string {
 	sqlcmd := "SELECT id, name FROM uic.user"
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			userID := row["id"].(string)
@@ -403,7 +403,7 @@ func getEvents(hash string, eventsLimit string, result map[string]interface{}) [
 	sqlcmd += "WHERE event_caseId = '" + hash + "' ORDER BY timestamp DESC LIMIT " + eventsLimit
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			event := map[string]interface{}{
@@ -435,7 +435,7 @@ func queryAlerts(sqlcmd string, req *http.Request, result map[string]interface{}
 	var rows []orm.Params
 	num, err := o.Raw(sqlcmd).Values(&rows)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else if num > 0 {
 		for _, row := range rows {
 			hash := row["id"].(string)
