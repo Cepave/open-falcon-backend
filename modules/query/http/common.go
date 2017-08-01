@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/toolkits/file"
-
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
+	"github.com/juju/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/toolkits/file"
 )
 
 func configCommonRoutes() {
@@ -26,4 +27,24 @@ func configCommonRoutes() {
 		RenderDataJson(w, g.Config())
 	})
 
+}
+
+func setErrorMessage(message string, result map[string]interface{}) {
+	jujuErr := errors.NewErr(message)
+	jujuErr.SetLocation(1)
+
+	putError(result, &jujuErr)
+}
+
+func setError(err error, result map[string]interface{}) {
+	jujuErr := errors.NewErr("%v", err)
+	jujuErr.SetLocation(1)
+
+	putError(result, &jujuErr)
+}
+
+func putError(container map[string]interface{}, err error) {
+	log.Errorf("Error has occurred: %s", errors.ErrorStack(err))
+
+	container["error"] = append(container["error"].([]string), err.Error())
 }

@@ -351,7 +351,7 @@ func getPlatformsType(nodes map[string]interface{}, result map[string]interface{
 		if nodes["status"] != nil && int(nodes["status"].(float64)) == 1 {
 			if len(nodes["result"].([]interface{})) == 0 {
 				errorMessage := "No platforms returned"
-				setError(errorMessage, result)
+				setErrorMessage(errorMessage, result)
 				return platformsMap
 			} else {
 				re_inside_whiteSpaces := regexp.MustCompile(`[\s\p{Zs}]{2,}`)
@@ -398,7 +398,7 @@ func getPlatformsType(nodes map[string]interface{}, result map[string]interface{
 				}
 			}
 		} else {
-			setError("Error occurs", result)
+			setErrorMessage("Error occurs", result)
 		}
 	}
 	return platformsMap
