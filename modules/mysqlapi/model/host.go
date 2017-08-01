@@ -5,8 +5,8 @@ import (
 )
 
 type HostsResult struct {
-	Hostname string               `gorm:"column:hostname" json:"hostname" conform:"trim"`
 	ID       int                  `gorm:"primary_key:true;column:id" json:"id"`
+	Hostname string               `gorm:"column:hostname" json:"hostname" conform:"trim"`
 	Groups   []*owlModel.GroupTag `json:"groups"`
 
 	IdsOfGroups   string `gorm:"column:gt_ids"`
@@ -24,10 +24,15 @@ func (host *HostsResult) AfterLoad() {
 	)
 }
 
+type PluginTag struct {
+	ID  int32  `json:"id"`
+	Dir string `json:"dir"`
+}
+
 type HostgroupsResult struct {
-	Name   string               `gorm:"column:grp_name" json:"name" conform:"trim"`
-	ID     int                  `gorm:"primary_key:true;column:id" json:"id"`
-	Groups []*owlModel.GroupTag `json:"plugins"`
+	ID      int          `gorm:"primary_key:true;column:id" json:"id"`
+	Name    string       `gorm:"column:grp_name" json:"name" conform:"trim"`
+	Plugins []*PluginTag `json:"plugins"`
 
 	IdsOfGroups   string `gorm:"column:gt_ids"`
 	NamesOfGroups string `gorm:"column:gt_names"`
@@ -38,8 +43,15 @@ func (HostgroupsResult) TableName() string {
 }
 
 func (hg *HostgroupsResult) AfterLoad() {
-	hg.Groups = owlModel.SplitToArrayOfGroupTags(
+	groups := owlModel.SplitToArrayOfGroupTags(
 		hg.IdsOfGroups, ",",
 		hg.NamesOfGroups, "\000",
 	)
+	hg.Plugins = make([]*PluginTag, len(groups))
+	for idx, val := range groups {
+		hg.Plugins[idx] = &PluginTag{
+			ID:  val.Id,
+			Dir: val.Name,
+		}
+	}
 }
