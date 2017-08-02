@@ -18,6 +18,21 @@ func (HostsResult) TableName() string {
 	return "host"
 }
 
+func (host *HostsResult) ToSimpleJson() *json.Json {
+	jsonObject := json.New()
+	jsonObject.Set("id", host.ID)
+	jsonObject.Set("hostname", host.Hostname)
+
+	jsonGroupTags := owlModel.GroupTags(host.Groups).ToJson()
+	jsonObject.Set("groups", jsonGroupTags)
+
+	return jsonObject
+}
+
+func (host *HostsResult) MarshalJSON() ([]byte, error) {
+	return host.ToSimpleJson().MarshalJSON()
+}
+
 func (host *HostsResult) AfterLoad() {
 	host.Groups = owlModel.SplitToArrayOfGroupTags(
 		host.IdsOfGroups, ",",
