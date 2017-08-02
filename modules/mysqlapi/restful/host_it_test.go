@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	json "github.com/Cepave/open-falcon-backend/common/json"
 	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 
@@ -52,6 +53,7 @@ var _ = Describe("[Intg] Test listhosts", ginkgoDb.NeedDb(func() {
 			Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
 
 			jsonBody := result.GetBodyAsJson()
+			GinkgoT().Logf("[/hosts] JSON Body: %s", json.MarshalPrettyJSON(jsonBody))
 			Expect(jsonBody.MustArray()).To(HaveLen(expectedHostsNums))
 		},
 		Entry("Zero", 0, 0),
@@ -93,6 +95,7 @@ var _ = Describe("[Intg] Test listHostgroups", ginkgoDb.NeedDb(func() {
 			Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
 
 			jsonBody := result.GetBodyAsJson()
+			GinkgoT().Logf("[/hostgroups] JSON Body: %s", json.MarshalPrettyJSON(jsonBody))
 			Expect(jsonBody.MustArray()).To(HaveLen(expectedHostsNums))
 		},
 		Entry("Zero", 0, 0),
