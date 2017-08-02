@@ -43,6 +43,10 @@ func initApi() {
 
 	v1 := router.Group("/api/v1")
 
+	v1.GET("/metrics/builtin", mvcBuilder.BuildHandler(getBuiltinMetrics))
+	v1.GET("/strategies", mvcBuilder.BuildHandler(getStrategies))
+	v1.GET("/expressions", mvcBuilder.BuildHandler(getExpressions))
+
 	v1.GET("/nqm/agents", mvcBuilder.BuildHandler(listAgents))
 	v1.GET("/nqm/agent/:agent_id", getAgentById)
 	v1.POST("/heartbeat/nqm/agent", mvcBuilder.BuildHandler(nqmAgentHeartbeat))

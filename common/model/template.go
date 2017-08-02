@@ -22,3 +22,22 @@ func (this *Template) String() string {
 		this.Creator,
 	)
 }
+
+type NewTemplate struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	ParentID int    `json:"parent_id"`
+	ActionID int    `json:"action_id"`
+	Creator  string `json:"creator"`
+}
+
+func (this *NewTemplate) String() string {
+	return fmt.Sprintf(
+		"<ID:%d, Name:%s, ParentID:%d, ActionID:%d, Creator:%s>",
+		this.ID,
+		this.Name,
+		this.ParentID,
+		this.ActionID,
+		this.Creator,
+	)
+}
