@@ -8,7 +8,7 @@ import (
 func GetAgentConfig(key string) *model.AgentConfigResult {
 	var result model.AgentConfigResult
 	gormDbExt := gormExt.ToDefaultGormDbExt(
-		DbFacade.GormDb.First(&result, "key = ?", key),
+		DbFacade.GormDb.First(&result, "common_config.key = ?", key),
 	)
 
 	if gormDbExt.IsRecordNotFound() {
