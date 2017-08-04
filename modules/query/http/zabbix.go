@@ -157,12 +157,12 @@ func checkHostExist(params map[string]interface{}, result map[string]interface{}
 	if hostId != "" {
 		hostIdint, err := strconv.Atoi(hostId)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			host := Host{Id: hostIdint}
 			err := o.Read(&host)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 		}
 	} else {
@@ -175,26 +175,6 @@ func checkHostExist(params map[string]interface{}, result map[string]interface{}
 		}
 	}
 	return host
-}
-
-/**
- * @function name:   func setError(error string, result map[string]interface{})
- * @description:     This function sets error message.
- * @related issues:  OWL-257
- * @param:           error string
- * @param:           result map[string]interface{}
- * @return:          void
- * @author:          Don Hsieh
- * @since:           01/01/2016
- * @last modified:   01/01/2016
- * @called by:       func bindGroup(hostId int64, params map[string]interface{}, args map[string]string, result map[string]interface{})
- *                   func bindTemplate(params map[string]interface{}, args map[string]string, result map[string]interface{})
- *                   func addHost(hostName string, params map[string]interface{}, args map[string]string, result map[string]interface{})
- *                   func hostCreate(nodes map[string]interface{})
- */
-func setError(error string, result map[string]interface{}) {
-	log.Errorf("Error = %v", error)
-	result["error"] = append(result["error"].([]string), error)
 }
 
 /**
@@ -234,10 +214,10 @@ func bindGroup(hostId int, params map[string]interface{}, args map[string]string
 				log.Debugf("grp_host = %v", grp_host)
 				_, err = o.Insert(&grp_host)
 				if err != nil {
-					setError(err.Error(), result)
+					setError(err, result)
 				}
 			} else if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				log.Debugf("grp_host existed = %v", grp_host)
 			}
@@ -282,10 +262,10 @@ func bindTemplate(params map[string]interface{}, args map[string]string, result 
 				log.Debugf("grp_tpl = %v", grp_tpl)
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
-					setError(err.Error(), result)
+					setError(err, result)
 				}
 			} else if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				log.Debugf("grp_tpl existed = %v", grp_tpl)
 			}
@@ -310,19 +290,19 @@ func checkInputFormat(params map[string]interface{}, result map[string]interface
 	valid := true
 	if val, ok := params["interfaces"]; ok {
 		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
-			setError("interfaces shall be an array of objects [{}]", result)
+			setErrorMessage("interfaces shall be an array of objects [{}]", result)
 			valid = false
 		}
 	}
 	if val, ok := params["groups"]; ok {
 		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
-			setError("groups shall be an array of objects [{}]", result)
+			setErrorMessage("groups shall be an array of objects [{}]", result)
 			valid = false
 		}
 	}
 	if val, ok := params["templates"]; ok {
 		if reflect.TypeOf(val) != reflect.TypeOf([]interface{}{}) {
-			setError("templates shall be an array of objects [{}]", result)
+			setErrorMessage("templates shall be an array of objects [{}]", result)
 			valid = false
 		}
 	}
@@ -346,7 +326,7 @@ func checkInputFormat(params map[string]interface{}, result map[string]interface
 func addHost(params map[string]interface{}, args map[string]string, result map[string]interface{}) {
 	hostName := getHostName(params)
 	if len(hostName) == 0 {
-		setError("host name can not be null.", result)
+		setErrorMessage("host name can not be null.", result)
 	} else {
 		valid := checkInputFormat(params, result)
 		if valid {
@@ -373,7 +353,7 @@ func addHost(params map[string]interface{}, args map[string]string, result map[s
 			o := orm.NewOrm()
 			hostId, err := o.Insert(&host)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				bindGroup(int(hostId), params, args, result)
 				hostid := strconv.Itoa(int(hostId))
@@ -406,7 +386,7 @@ func hostCreate(nodes map[string]interface{}) {
 
 	host := checkHostExist(params, result)
 	if host.Id > 0 {
-		setError("host name existed: "+host.Hostname, result)
+		setErrorMessage("host name existed: "+host.Hostname, result)
 	} else {
 		args := map[string]string{}
 		addHost(params, args, result)
@@ -437,7 +417,7 @@ func unbindGroup(hostId string, result map[string]interface{}) {
 	sql := "DELETE FROM grp_host WHERE host_id = ?"
 	res, err := o.Raw(sql, hostId).Exec()
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	num, _ := res.RowsAffected()
 	log.Debugf("mysql row affected nums = %v", num)
@@ -462,7 +442,7 @@ func removeHost(hostIds []string, result map[string]interface{}) {
 		if id, err := strconv.Atoi(hostId); err == nil {
 			num, err := o.Delete(&Host{Id: id})
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				if num > 0 {
 					log.Debugf("RowsDeleted = %v", num)
@@ -572,7 +552,7 @@ func hostGet(nodes map[string]interface{}) {
 		var hosts []*Host
 		num, err := o.Raw("SELECT * FROM falcon_portal.host").QueryRows(&hosts)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			countOfRows = int(num)
 			log.Debugf("countOfRows = %v", countOfRows)
@@ -594,7 +574,7 @@ func hostGet(nodes map[string]interface{}) {
 			hostId = ""
 			err := o.QueryTable("host").Filter("hostname", hostName).One(&host)
 			if err == orm.ErrMultiRows {
-				setError("returned multiple rows", result)
+				setErrorMessage("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
 				log.Debug("host not found")
 			} else if host.Id > 0 {
@@ -617,7 +597,7 @@ func hostGet(nodes map[string]interface{}) {
 func muteAlertsOfHost(host Host, params map[string]interface{}, result map[string]interface{}) Host {
 	if val, ok := params["mute"]; ok {
 		if reflect.TypeOf(val) != reflect.TypeOf("") {
-			setError("value of mute shall be a string of 1 or 0", result)
+			setErrorMessage("value of mute shall be a string of 1 or 0", result)
 		} else {
 			if val == "1" {
 				host.Maintain_begin = int64(946684800) // Sat, 01 Jan 2000 00:00:00 GMT
@@ -683,7 +663,7 @@ func hostUpdate(nodes map[string]interface{}) {
 			o := orm.NewOrm()
 			num, err := o.Update(&host)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				log.Debugf("update hostId = %v", host.Id)
 				log.Debugf("mysql row affected nums = %v", num)
@@ -738,7 +718,7 @@ func hostgroupCreate(nodes map[string]interface{}) {
 	result["error"] = errors
 	id, err := o.Insert(&grp)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		groupid := strconv.Itoa(int(id))
 		groupids := [1]string{string(groupid)}
@@ -778,7 +758,7 @@ func hostgroupDelete(nodes map[string]interface{}) {
 		for _, hostgroupId := range params {
 			res, err := o.Raw(sqlcmd.(string), hostgroupId).Exec()
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.grp WHERE id=?" {
@@ -802,7 +782,7 @@ func getTemplateIdsByGroupId(groupId int, result map[string]interface{}) []strin
 	if err == orm.ErrNoRows {
 		log.Errorf("No templates for groupId: %v", groupId)
 	} else if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		for _, tpl_id := range tpl_ids {
 			templateId := strconv.Itoa(tpl_id)
@@ -820,7 +800,7 @@ func getPluginDirsByGroupId(groupId int, result map[string]interface{}) []string
 	if err == orm.ErrNoRows {
 		log.Errorf("No plugin dirs for groupId: %v", groupId)
 	} else if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	return pluginDirs
 }
@@ -864,7 +844,7 @@ func hostgroupGet(nodes map[string]interface{}) {
 		var grps []*Grp
 		num, err := o.QueryTable("grp").All(&grps)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			countOfRows = int(num)
 			for _, grp := range grps {
@@ -883,7 +863,7 @@ func hostgroupGet(nodes map[string]interface{}) {
 			groupId = ""
 			err := o.QueryTable("grp").Filter("grp_name", groupName).One(&grp)
 			if err == orm.ErrMultiRows {
-				setError("returned multiple rows", result)
+				setErrorMessage("returned multiple rows", result)
 			} else if err == orm.ErrNoRows {
 				log.Error("host group not found")
 			} else if grp.Id > 0 {
@@ -907,7 +887,7 @@ func unbindGroupAndTemplates(groupId string, result map[string]interface{}) {
 	sql := "DELETE FROM grp_tpl WHERE grp_id = ?"
 	res, err := o.Raw(sql, groupId).Exec()
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	num, _ := res.RowsAffected()
 	log.Debugf("mysql row affected nums = %v", num)
@@ -918,7 +898,7 @@ func unbindGroupAndPlugins(groupId int, result map[string]interface{}) {
 	sql := "DELETE FROM plugin_dir WHERE grp_id = ?"
 	res, err := o.Raw(sql, groupId).Exec()
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	num, _ := res.RowsAffected()
 	log.Debugf("unbindGroupAndPlugins row affected nums = %v", num)
@@ -939,10 +919,10 @@ func bindGroupAndPlugins(groupId int, pluginDirs []string, result map[string]int
 			log.Debugf("plugin_dir = %v", plugin_dir)
 			_, err = o.Insert(&plugin_dir)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 		} else if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			log.Debugf("plugin_dir existed = %v", plugin_dir)
 		}
@@ -970,13 +950,13 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 	if _, ok := params["groupid"]; ok {
 		hostgroupId, err := strconv.Atoi(params["groupid"].(string))
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			o := orm.NewOrm()
 			grp := Grp{Id: hostgroupId}
 			err := o.Read(&grp)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 
 			if _, ok := params["name"]; ok {
@@ -985,7 +965,7 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					grp.Grp_name = hostgroupName
 					num, err := o.Update(&grp)
 					if err != nil {
-						setError(err.Error(), result)
+						setError(err, result)
 					} else if num > 0 {
 						groupids := [1]string{strconv.Itoa(hostgroupId)}
 						result["groupids"] = groupids
@@ -1004,7 +984,7 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 					templateId := template.(map[string]interface{})["templateid"].(string)
 					templateIdInt, err := strconv.Atoi(templateId)
 					if err != nil {
-						setError(err.Error(), result)
+						setError(err, result)
 					}
 					templateIds = append(templateIds, templateIdInt)
 				}
@@ -1028,7 +1008,7 @@ func hostgroupUpdate(nodes map[string]interface{}) {
 			}
 		}
 	} else {
-		setError("params['groupid'] must not be empty", result)
+		setErrorMessage("params['groupid'] must not be empty", result)
 	}
 	nodes["result"] = result
 }
@@ -1067,7 +1047,7 @@ func templateCreate(nodes map[string]interface{}) {
 	result["error"] = errors
 	id, err := o.Insert(&tpl)
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	} else {
 		templateId := strconv.Itoa(int(id))
 		templateids := [1]string{string(templateId)}
@@ -1075,7 +1055,7 @@ func templateCreate(nodes map[string]interface{}) {
 
 		groupId, err := strconv.Atoi(hostgroupId)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		}
 		grp_tpl := Grp_tpl{
 			Grp_id:    groupId,
@@ -1086,7 +1066,7 @@ func templateCreate(nodes map[string]interface{}) {
 
 		_, err = o.Insert(&grp_tpl)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		}
 	}
 	nodes["result"] = result
@@ -1122,7 +1102,7 @@ func templateDelete(nodes map[string]interface{}) {
 			log.Debugf("templateId = %v", templateId)
 			res, err := o.Raw(sqlcmd.(string), templateId).Exec()
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				num, _ := res.RowsAffected()
 				if num > 0 && sqlcmd == "DELETE FROM falcon_portal.tpl WHERE id=?" {
@@ -1160,7 +1140,7 @@ func templateGet(nodes map[string]interface{}) {
 		var templates []*Tpl
 		num, err := o.Raw("SELECT id, tpl_name FROM falcon_portal.tpl").QueryRows(&templates)
 		if err != nil {
-			setError(err.Error(), result)
+			setError(err, result)
 		} else {
 			countOfRows = int(num)
 			for _, template := range templates {
@@ -1197,7 +1177,7 @@ func checkTemplateExist(params map[string]interface{}, result map[string]interfa
 			templateId := val.(string)
 			templateIdInt, err := strconv.Atoi(templateId)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 			err = o.QueryTable("tpl").Filter("id", templateIdInt).One(&template)
 			if err == orm.ErrMultiRows {
@@ -1253,10 +1233,10 @@ func bindTemplatesAndGroups(groupIds []int, templateIds []int, result map[string
 				log.Debugf("grp_tpl = %v", grp_tpl)
 				_, err = o.Insert(&grp_tpl)
 				if err != nil {
-					setError(err.Error(), result)
+					setError(err, result)
 				}
 			} else if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			} else {
 				log.Debugf("grp_tpl existed = %v", grp_tpl)
 			}
@@ -1269,7 +1249,7 @@ func unbindTemplateAndGroups(templateId string, result map[string]interface{}) {
 	sql := "DELETE FROM grp_tpl WHERE tpl_id = ?"
 	res, err := o.Raw(sql, templateId).Exec()
 	if err != nil {
-		setError(err.Error(), result)
+		setError(err, result)
 	}
 	num, _ := res.RowsAffected()
 	log.Debugf("mysql row affected nums = %v", num)
@@ -1301,7 +1281,7 @@ func templateUpdate(nodes map[string]interface{}) {
 			groupIdInt, err := strconv.Atoi(groupId)
 			log.Debugf("groupIdInt = %v", groupIdInt)
 			if err != nil {
-				setError(err.Error(), result)
+				setError(err, result)
 			}
 			groupIds = append(groupIds, groupIdInt)
 		}
