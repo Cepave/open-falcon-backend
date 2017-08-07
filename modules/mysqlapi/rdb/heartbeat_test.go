@@ -87,8 +87,6 @@ func (suite *TestHeartbeatSuite) TestFalconAgentHeartbeat(c *ch.C) {
 }
 
 func (suite *TestHeartbeatSuite) TearDownTest(c *ch.C) {
-	var inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
-
 	switch c.TestName() {
 	case "TestHeartbeatSuite.TestFalconAgentHeartbeat":
 		inTx(

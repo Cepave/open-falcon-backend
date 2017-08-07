@@ -92,3 +92,84 @@ var _ = Describe("[Unit] Test buildSortingClauseOfHosts(...)", func() {
 		),
 	)
 })
+
+var _ = Describe("[Intg] Tests ListHostgroups", ginkgoDb.NeedDb(func() {
+	const (
+		NumOfTestHostgroup = 3
+	)
+
+	BeforeEach(func() {
+		inTx(
+			`INSERT INTO grp(id, grp_name)
+				VALUES
+					(1, 'listhostgroups-grpname-c1'),
+					(2, 'listhostgroups-grpname-b2'),
+					(3, 'listhostgroups-grpname-a3')`,
+			`INSERT INTO plugin_dir(id, grp_id, dir)
+				VALUES
+					(1, 1, 'listhostgroups/plugin-1'),
+					(2, 2, 'listhostgroups/plugin-2'),
+					(3, 1, 'listhostgroups/plugin-3'),
+					(4, 1, 'listhostgroups/plugin-4')`,
+		)
+	})
+	AfterEach(func() {
+		inTx(
+			`DELETE FROM grp WHERE grp_name LIKE 'listhostgroups-grpname-%'`,
+			`DELETE FROM plugin_dir WHERE dir LIKE 'listhostgroups/plugin-%'`,
+		)
+	})
+
+	DescribeTable("when set paging to",
+		func(pageSize int, order string, expectedHostIDs []int, expectedGroupIDs []string, expectedTotalCount int) {
+			page := cModel.Paging{
+				Size:    int32(pageSize),
+				OrderBy: []*cModel.OrderByEntity{{order, cModel.Ascending}},
+			}
+			res, paging := ListHostgroups(page)
+
+			resHostIDs := utils.MakeAbstractArray(res).
+				MapTo(
+					func(elem interface{}) interface{} {
+						return elem.(*model.HostgroupsResult).ID
+					},
+					rt.TypeOfInt,
+				).GetArray()
+			resGroupIDs := utils.MakeAbstractArray(res).
+				MapTo(
+					func(elem interface{}) interface{} {
+						return elem.(*model.HostgroupsResult).IdsOfGroups
+					},
+					rt.TypeOfString,
+				).GetArray()
+
+			Expect(resHostIDs).To(Equal(expectedHostIDs))
+			Expect(resGroupIDs).To(Equal(expectedGroupIDs))
+			Expect(paging.TotalCount).To(Equal(int32(expectedTotalCount)))
+		},
+		Entry("List all data, sort by id", 5, "id", []int{1, 2, 3}, []string{"1,3,4", "2", ""}, NumOfTestHostgroup),
+		Entry("List all data, sort by name", 5, "name", []int{3, 2, 1}, []string{"", "2", "1,3,4"}, NumOfTestHostgroup),
+		Entry("List 1st paging of data", 2, "id", []int{1, 2}, []string{"1,3,4", "2"}, NumOfTestHostgroup),
+	)
+}))
+
+var _ = Describe("[Unit] Test buildSortingClauseOfHostgroups", func() {
+	DescribeTable("when the order sorted by",
+		func(paging *cModel.Paging, expectedClause string) {
+			res := buildSortingClauseOfHostgroups(paging)
+			Expect(res).To(Equal(expectedClause))
+		},
+		Entry("Undefined",
+			&cModel.Paging{},
+			"",
+		),
+		Entry("id ASC",
+			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"id", cModel.Ascending}}},
+			"id ASC",
+		),
+		Entry("name ASC",
+			&cModel.Paging{OrderBy: []*cModel.OrderByEntity{{"name", cModel.Ascending}}},
+			"grp_name ASC",
+		),
+	)
+})
