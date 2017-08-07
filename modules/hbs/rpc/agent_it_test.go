@@ -7,7 +7,7 @@ import (
 	"net/rpc"
 	"time"
 
-	coModel "github.com/open-falcon/common/model"
+	coModel "github.com/Cepave/open-falcon-backend/common/model"
 
 	sjson "github.com/bitly/go-simplejson"
 	. "github.com/onsi/ginkgo"
@@ -67,5 +67,54 @@ var _ = Describe("Test rpc call: Agent.ReportStatus", ginkgoJsonRpc.NeedJsonRpc(
 		Eventually(func() int64 {
 			return receiveCnt
 		}, time.Second*4, time.Second/2).Should(Equal(int64(1)))
+	})
+}))
+
+var _ = Describe("Test rpc call [Agent.BuiltinMetrics]", ginkgoJsonRpc.NeedJsonRpc(func() {
+	request := coModel.AgentHeartbeatRequest{
+		Hostname: "cnc-he-060-008-151-208",
+		Checksum: "d94ad826797905118ca30ba11a0273ad4303a8ca",
+	}
+	response := coModel.BuiltinMetricResponse{}
+	var ts *httptest.Server
+	tsResp := `
+	{
+	   "metrics":[
+	      {
+	         "metric":"net.if.in.bits",
+	         "tags":"iface=eth0"
+	      }
+	   ],
+	   "checksum":"e2c569be17396eca2a2e3c11578123ed",
+	   "timestamp":1501491450
+	}
+  `
+
+	BeforeEach(func() {
+		ts = httptest.NewUnstartedServer(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte(tsResp))
+			}))
+		l, err := net.Listen("tcp", MOCK_URL)
+		Expect(err).To(BeNil())
+		ts.Listener = l
+		ts.Start()
+
+		GinkgoT().Logf("Mock server at: %s", ts.URL)
+	})
+
+	AfterEach(func() {
+		ts.Close()
+	})
+
+	It("should get correct value", func() {
+		ginkgoJsonRpc.OpenClient(func(client *rpc.Client) {
+			err := client.Call("Agent.BuiltinMetrics", request, &response)
+			GinkgoT().Logf("RPC Response(%v)", response)
+			Expect(err).To(BeNil())
+			Expect(response.Checksum).To(Equal("e2c569be17396eca2a2e3c11578123ed"))
+			Expect(response.Timestamp).To(Equal(int64(1501491450)))
+			Expect(response.Metrics).To(HaveLen(1))
+		})
 	})
 }))

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
@@ -40,21 +41,41 @@ type HostStrategy struct {
 	Strategies []Strategy `json:"strategies"`
 }
 
+func (this *HostStrategy) String() string {
+	return fmt.Sprintf(
+		"<Hostname:%v, Strategies:%v>",
+		this.Hostname,
+		this.Strategies,
+	)
+}
+
 type StrategiesResponse struct {
 	HostStrategies []*HostStrategy `json:"hostStrategies"`
 }
 
 type NewStrategy struct {
-	ID         int               `json:"id"`
-	Metric     string            `json:"metric"`
-	Tags       map[string]string `json:"tags"`
-	Func       string            `json:"func"`        // e.g. max(#3) all(#3)
-	Operator   string            `json:"operator"`    // e.g. < !=
-	RightValue float64           `json:"right_value"` // critical value
-	MaxStep    int               `json:"max_step"`
-	Priority   int               `json:"priority"`
-	Note       string            `json:"note"`
-	Tpl        *NewTemplate      `json:"tpl"`
+	ID         int    `json:"id"`
+	Metric     string `json:"metric"`
+	Tags       map[string]string
+	TagsStr    string       `json:"tags"`
+	Func       string       `json:"func"`               // e.g. max(#3) all(#3)
+	Operator   string       `json:"operator"`           // e.g. < !=
+	RightValue float64      `json:"right_value,string"` // critical value
+	MaxStep    int          `json:"max_step"`
+	Priority   int          `json:"priority"`
+	Note       string       `json:"note"`
+	Tpl        *NewTemplate `json:"tpl"`
+}
+
+func (s *NewStrategy) AfterLoad() {
+	if s.Tags == nil {
+		s.Tags = make(map[string]string)
+	}
+	kvStrs := strings.Split(s.TagsStr, ",")
+	for _, kv := range kvStrs {
+		kvArr := strings.Split(kv, "=")
+		s.Tags[kvArr[0]] = kvArr[1]
+	}
 }
 
 func (this *NewStrategy) String() string {
