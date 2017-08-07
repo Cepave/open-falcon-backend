@@ -74,6 +74,6 @@ func (this *NewStrategy) String() string {
 }
 
 type NewHostStrategy struct {
-	Hostname   string        `json:"hostname"`
-	Strategies []NewStrategy `json:"strategies"`
+	Hostname   string         `json:"hostname"`
+	Strategies []*NewStrategy `json:"strategies"`
 }

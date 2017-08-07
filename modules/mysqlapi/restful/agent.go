@@ -241,7 +241,7 @@ func tpl2Strategies(strategies map[int]*commonModel.NewStrategy) map[int][]*comm
 	return ret
 }
 
-func calcInheritStrategies(allTpls map[int]*commonModel.NewTemplate, tids []int, tpl2Strategies map[int][]*commonModel.NewStrategy) []commonModel.NewStrategy {
+func calcInheritStrategies(allTpls map[int]*commonModel.NewTemplate, tids []int, tpl2Strategies map[int][]*commonModel.NewStrategy) []*commonModel.NewStrategy {
 	// 根据模板的继承关系，找到每个机器对应的模板全量
 	/**
 	 * host_id =>
@@ -288,7 +288,7 @@ func calcInheritStrategies(allTpls map[int]*commonModel.NewTemplate, tids []int,
 	}
 
 	// 继承覆盖父模板策略，得到每个模板聚合后的策略列表
-	strategies := []commonModel.NewStrategy{}
+	strategies := []*commonModel.NewStrategy{}
 
 	exists_by_id := make(map[int]struct{})
 	for _, bucket := range uniq_tpl_buckets {
@@ -323,7 +323,7 @@ func calcInheritStrategies(allTpls map[int]*commonModel.NewTemplate, tids []int,
 		// 替换所有策略的模板为最年轻的模板
 		for _, ss := range bucket_stras_map {
 			for _, s := range ss {
-				valStrategy := *s
+				valStrategy := s
 				// exists_by_id[s.Id] 是根据策略ID去重，不太确定是否真的需要，不过加上肯定没问题
 				if _, exist := exists_by_id[valStrategy.ID]; !exist {
 					if valStrategy.Tpl.ID != last_tid {
