@@ -121,7 +121,10 @@ func BindHostToHostGroup(c *gin.Context) {
 		}
 	}
 	tx.Commit()
-	h.JSONR(c, fmt.Sprintf("%v bind to hostgroup: %v", ids, hostgroup.ID))
+	h.JSONR(c, map[string]interface{}{
+		"hosts":   ids,
+		"message": fmt.Sprintf("%v bind to hostgroup: %v", ids, hostgroup.ID),
+	})
 	return
 }
 
@@ -156,7 +159,10 @@ func UnBindAHostToHostGroup(c *gin.Context) {
 		h.JSONR(c, expecstatus, dt.Error)
 		return
 	}
-	h.JSONR(c, fmt.Sprintf("unbind host:%v of hostgroup: %v", inputs.HostID, inputs.HostGroupID))
+	h.JSONR(c, map[string]interface{}{
+		"hosts":   inputs.HostID,
+		"message": fmt.Sprintf("unbind host:%v of hostgroup: %v", inputs.HostID, inputs.HostGroupID),
+	})
 	return
 }
 

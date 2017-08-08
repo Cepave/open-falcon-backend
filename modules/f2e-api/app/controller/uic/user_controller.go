@@ -71,6 +71,11 @@ func CreateUser(c *gin.Context) {
 		QQ:     inputs.QQ,
 	}
 
+	//for create a root user during the first time
+	if inputs.Name == "root" {
+		user.Role = 2
+	}
+
 	dt := db.Uic.Table("user").Create(&user)
 	if dt.Error != nil {
 		h.JSONR(c, http.StatusBadRequest, dt.Error)
@@ -81,9 +86,11 @@ func CreateUser(c *gin.Context) {
 		Uid: user.ID,
 	}
 	session = session.FindVaildSession()
-	response := map[string]string{}
-	response["sig"] = session.Sig
-	response["name"] = user.Name
+	response := map[string]interface{}{
+		"id": user.ID,
+		"sig": session.Sig,
+		"name":  user.Name,
+	}
 	h.JSONR(c, http.StatusOK, response)
 	return
 }
@@ -163,7 +170,7 @@ func ChangePassword(c *gin.Context) {
 	case user.IsThirdPartyUser():
 		h.JSONR(c, http.StatusBadRequest, "can not change password for third party login account")
 		return
-	case user.Passwd != "":
+	case user.Passwd == "":
 		h.JSONR(c, http.StatusBadRequest, "Password can not be blank")
 		return
 	}
