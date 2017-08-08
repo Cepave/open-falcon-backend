@@ -69,7 +69,7 @@ func Strategies() ([]*model.NewHostStrategy, error) {
 	var resp []*model.NewHostStrategy
 	err := commonSling.ToSlintExt(
 		NewSlingBase().
-			Get("api/v1/heartbeat/strategies"),
+			Get("api/v1/strategies"),
 	).DoReceive(http.StatusOK, &resp)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func Expressions() ([]*model.NewExpression, error) {
 	var resp []*model.NewExpression
 	err := commonSling.ToSlintExt(
 		NewSlingBase().
-			Get("api/v1/heartbeat/expressions"),
+			Get("api/v1/expressions"),
 	).DoReceive(http.StatusOK, &resp)
 	if err != nil {
 		return nil, err
