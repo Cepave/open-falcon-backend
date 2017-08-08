@@ -125,22 +125,27 @@ var _ = Describe("Test rpc call [Agent.BuiltinMetrics]", ginkgoJsonRpc.NeedJsonR
 var _ = Describe("[Intg] Test rpc call: Agent.MinePlugins", ginkgoJsonRpc.NeedJsonRpc(func() {
 
 	DescribeTable("when parameter is",
-		func(request coModel.AgentHeartbeatRequest, expectedPlugins []string) {
+		func(request coModel.AgentHeartbeatRequest, expectedPluginNum int) {
 			response := &coModel.AgentPluginsResponse{}
 			ginkgoJsonRpc.OpenClient(func(client *rpc.Client) {
 				err := client.Call("Agent.MinePlugins", request, &response)
 				GinkgoT().Logf("RPC Response(%v)", response)
 				Expect(err).To(BeNil())
-				Expect(response.Plugins).To(Equal(expectedPlugins))
+				Expect(response.Plugins).To(HaveLen(expectedPluginNum))
 			})
 		},
-		Entry("Nil, should get nil plugins", nil, nil),
+		Entry("Nil, should get nil plugins", nil, 0),
 		Entry("Not found but valide value, shold get empty plugins",
 			coModel.AgentHeartbeatRequest{
 				"test-agent-mineplugins",
-				"abcd0123456789abcd0123456789abcd01234567",
-			},
-			make([]string, 0),
+				"Not-checked-value",
+			}, 0,
+		),
+		Entry("Found and valid value, should get its plugins",
+			coModel.AgentHeartbeatRequest{
+				"cnc-he-060-008-151-208",
+				"Not-checked-value",
+			}, 8,
 		),
 	)
 }))
