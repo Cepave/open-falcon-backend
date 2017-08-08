@@ -12,6 +12,7 @@ import (
 
 	sjson "github.com/bitly/go-simplejson"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -119,4 +120,27 @@ var _ = Describe("Test rpc call [Agent.BuiltinMetrics]", ginkgoJsonRpc.NeedJsonR
 			Expect(response.Metrics).To(HaveLen(1))
 		})
 	})
+}))
+
+var _ = Describe("[Intg] Test rpc call: Agent.MinePlugins", ginkgoJsonRpc.NeedJsonRpc(func() {
+
+	DescribeTable("when parameter is",
+		func(request coModel.AgentHeartbeatRequest, expectedPlugins []string) {
+			response := &coModel.AgentPluginsResponse{}
+			ginkgoJsonRpc.OpenClient(func(client *rpc.Client) {
+				err := client.Call("Agent.MinePlugins", request, &response)
+				GinkgoT().Logf("RPC Response(%v)", response)
+				Expect(err).To(BeNil())
+				Expect(response.Plugins).To(Equal(expectedPlugins))
+			})
+		},
+		Entry("Nil, should get nil plugins", nil, nil),
+		Entry("Not found but valide value, shold get empty plugins",
+			coModel.AgentHeartbeatRequest{
+				"test-agent-mineplugins",
+				"abcd0123456789abcd0123456789abcd01234567",
+			},
+			make([]string, 0),
+		),
+	)
 }))
