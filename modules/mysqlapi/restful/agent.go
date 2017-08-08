@@ -10,12 +10,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/Cepave/common/utils"
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	mvc "github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/hbscache"
 )
 
