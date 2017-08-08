@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -55,7 +56,8 @@ var _ = Describe("Test rpc call [Hbs.GetExpressions]", ginkgoJsonRpc.NeedJsonRpc
 	It("should get correct value", func() {
 		ginkgoJsonRpc.OpenClient(func(client *rpc.Client) {
 			err := client.Call("Hbs.GetExpressions", request, &response)
-			GinkgoT().Logf("RPC Response(%v)", response)
+			respStr := fmt.Sprintf("%v", response)
+			GinkgoT().Logf("RPC Response(%.5000s)", respStr)
 			Expect(err).To(BeNil())
 			Expect(response.Expressions).To(HaveLen(1))
 		})
@@ -114,7 +116,8 @@ var _ = Describe("Test rpc call [Hbs.GetStrategies]", ginkgoJsonRpc.NeedJsonRpc(
 	It("should get correct value", func() {
 		ginkgoJsonRpc.OpenClient(func(client *rpc.Client) {
 			err := client.Call("Hbs.GetStrategies", request, &response)
-			GinkgoT().Logf("RPC Response(%v)", response)
+			respStr := fmt.Sprintf("%v", response)
+			GinkgoT().Logf("RPC Response(%.5000s)", respStr)
 			Expect(err).To(BeNil())
 			Expect(response.HostStrategies).To(HaveLen(1))
 		})

@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -110,7 +111,8 @@ var _ = Describe("Test rpc call [Agent.BuiltinMetrics]", ginkgoJsonRpc.NeedJsonR
 	It("should get correct value", func() {
 		ginkgoJsonRpc.OpenClient(func(client *rpc.Client) {
 			err := client.Call("Agent.BuiltinMetrics", request, &response)
-			GinkgoT().Logf("RPC Response(%v)", response)
+			respStr := fmt.Sprintf("%v", response)
+			GinkgoT().Logf("RPC Response(%.5000s)", respStr)
 			Expect(err).To(BeNil())
 			Expect(response.Checksum).To(Equal("e2c569be17396eca2a2e3c11578123ed"))
 			Expect(response.Timestamp).To(Equal(int64(1501491450)))
