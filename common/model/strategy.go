@@ -71,9 +71,15 @@ func (s *NewStrategy) AfterLoad() {
 	if s.Tags == nil {
 		s.Tags = make(map[string]string)
 	}
+	if s.TagsStr == "" {
+		return
+	}
 	kvStrs := strings.Split(s.TagsStr, ",")
 	for _, kv := range kvStrs {
 		kvArr := strings.Split(kv, "=")
+		if len(kvArr) != 2 {
+			continue
+		}
 		s.Tags[kvArr[0]] = kvArr[1]
 	}
 }
