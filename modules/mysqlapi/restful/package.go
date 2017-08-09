@@ -90,6 +90,7 @@ func initApi() {
 	v1.GET("/hostgroups", mvcBuilder.BuildHandler(listHostgroups))
 	v1.GET("/agent/config", mvcBuilder.BuildHandler(getAgentConfig))
 	v1.GET("/agent/mineplugins", mvcBuilder.BuildHandler(getMinePlugins))
+	v1.GET("/agent/plugins/:agent_hostname", mvcBuilder.BuildHandler(getPlugins))
 	v1.POST("/agent/heartbeat", mvcBuilder.BuildHandler(falconAgentHeartbeat))
 
 	router.GET("/health", mvcBuilder.BuildHandler(health))

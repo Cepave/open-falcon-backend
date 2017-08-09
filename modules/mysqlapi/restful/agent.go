@@ -145,6 +145,15 @@ func getMinePlugins(
 	return mvc.JsonOutputBody(reply)
 }
 
+func getPlugins(
+	p *struct {
+		Hostname string `mvc:"param[agent_hostname]" validate:"required"`
+	},
+) mvc.OutputBody {
+	plugins := hbscache.GetPlugins(p.Hostname)
+	return mvc.JsonOutputBody(plugins)
+}
+
 func getBuiltinMetrics(
 	p *struct {
 		Hostname string `mvc:"query[hostname]" validate:"required"`
