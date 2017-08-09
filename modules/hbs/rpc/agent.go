@@ -8,29 +8,25 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/rpc"
 
-	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/service"
 )
 
 var agentHeartbeatService *service.AgentHeartbeatService
 
 func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.AgentPluginsResponse) (err error) {
-	defer rpc.HandleError(&err)()
-
 	if args.Hostname == "" {
 		return nil
 	}
 
-	reply.Plugins = cache.GetPlugins(args.Hostname)
-	reply.Timestamp = time.Now().Unix()
-	reply.GitRepo = cache.GitRepo.Get()
-	// deprecate the attributes: reply.GitUpdate, reply.GitRepoUpdate
-	// git repo updating will be invoked only by reply.GitRepo
-	reply.GitUpdate = false
-	reply.GitRepoUpdate = false
+	resp, err := service.MinePlugins(args.Hostname, args.Checksum)
+	reply.Plugins = resp.Plugins
+	reply.Timestamp = resp.Timestamp
+	reply.GitRepo = resp.GitRepo
+	reply.GitUpdate = resp.GitUpdate
+	reply.GitRepoUpdate = resp.GitRepoUpdate
 	log.Debugln("show reply of MinePlugins: ", reply)
 
-	return nil
+	return err
 }
 
 func (t *Agent) ReportStatus(args *model.AgentReportRequest, reply *model.SimpleRpcResponse) (err error) {
