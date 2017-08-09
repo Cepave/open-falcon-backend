@@ -1,12 +1,13 @@
 package owl
 
 import (
+	"time"
+
 	db "github.com/Cepave/open-falcon-backend/common/db"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	model "github.com/Cepave/open-falcon-backend/common/model/owl"
 	c "github.com/karlseguin/ccache"
 	"github.com/satori/go.uuid"
-	"time"
 )
 
 type QueryServiceConfig struct {
