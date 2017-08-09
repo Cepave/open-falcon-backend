@@ -2,6 +2,8 @@ package owl
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/db"
 	"github.com/satori/go.uuid"
 )
@@ -10,9 +12,11 @@ import (
 type Query struct {
 	Uuid db.DbUuid `db:"qr_uuid"`
 
-	NamedId    string     `db:"qr_named_id"`
-	Content    []byte     `db:"qr_content"`
-	Md5Content db.Bytes16 `db:"qr_md5_content"`
+	NamedId      string     `db:"qr_named_id"`
+	Content      []byte     `db:"qr_content"`
+	Md5Content   db.Bytes16 `db:"qr_md5_content"`
+	CreationTime time.Time  `db:"qr_time_creation"`
+	AccessTime   time.Time  `db:"qr_time_access"`
 }
 
 // Generate UUID v4 for this object

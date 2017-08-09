@@ -79,7 +79,7 @@ func (s *QueryService) LoadQueryByUuid(uuid uuid.UUID) *model.Query {
 	 * Loads query from database
 	 */
 	queryFromDatabase := owlDb.LoadQueryByUuidAndUpdateAccessTime(
-		s.config.Name, uuid, now,
+		uuid, now,
 	)
 	if queryFromDatabase == nil {
 		return nil

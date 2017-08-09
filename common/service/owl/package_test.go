@@ -1,8 +1,9 @@
 package owl
 
 import (
-	. "gopkg.in/check.v1"
 	"testing"
+
+	. "gopkg.in/check.v1"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestByCheck(t *testing.T) { TestingT(t) }

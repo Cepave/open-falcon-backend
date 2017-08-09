@@ -3,6 +3,8 @@ package owl
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/db"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	t "github.com/Cepave/open-falcon-backend/common/testing"
@@ -10,7 +12,6 @@ import (
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	"github.com/satori/go.uuid"
 	. "gopkg.in/check.v1"
-	"time"
 )
 
 type TestQuerySuite struct{}
@@ -106,7 +107,7 @@ func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
 
 		uuidValue := t.ParseUuid(c, testCase.sampleUuid)
 		testedQuery := LoadQueryByUuidAndUpdateAccessTime(
-			"test.load.uu2", uuidValue, sampleTime,
+			uuidValue, sampleTime,
 		)
 
 		if testCase.expectedMd5Content == "" {

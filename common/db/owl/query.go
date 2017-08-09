@@ -1,12 +1,13 @@
 package owl
 
 import (
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	model "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
-	"time"
 )
 
 // Adds a query or refresh an existing one
@@ -27,7 +28,7 @@ func UpdateAccessTimeOrAddNewOne(query *model.Query, accessTime time.Time) {
 }
 
 // It is possible that the access times of two requests are very closed(less than 1 second)
-func LoadQueryByUuidAndUpdateAccessTime(name string, uuid uuid.UUID, accessTime time.Time) *model.Query {
+func LoadQueryByUuidAndUpdateAccessTime(uuid uuid.UUID, accessTime time.Time) *model.Query {
 	updateAccessTimeByUuid(
 		db.DbUuid(uuid), accessTime,
 	)
@@ -37,7 +38,7 @@ func LoadQueryByUuidAndUpdateAccessTime(name string, uuid uuid.UUID, accessTime 
 	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
 		&queryData,
 		`
-		SELECT qr_uuid, qr_named_id, qr_content, qr_md5_content
+		SELECT qr_uuid, qr_named_id, qr_content, qr_md5_content, qr_time_access, qr_time_creation
 		FROM owl_query
 		WHERE qr_uuid = ?
 		`,
@@ -114,6 +115,7 @@ func updateAccessTimeByUuid(uuid db.DbUuid, accessTime time.Time) {
 		UPDATE owl_query
 		SET qr_time_access = :access_time
 		WHERE qr_uuid = :uuid
+			AND qr_time_access < :access_time
 		`,
 		map[string]interface{}{
 			"access_time": accessTime,
