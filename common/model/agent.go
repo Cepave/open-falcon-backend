@@ -113,6 +113,25 @@ type FalconAgentHeartbeatResult struct {
 	RowsAffected int64 `json:"rows_affected"`
 }
 
+type NewAgentPluginsResponse struct {
+	Plugins       []string `json:"plugins"`
+	Timestamp     int64    `json:"timestamp"`
+	GitRepo       string   `json:"git_repo" conform:"trim"`
+	GitUpdate     bool     `json:"git_update"`
+	GitRepoUpdate bool     `json:"git_repo_update"`
+}
+
+func (this *NewAgentPluginsResponse) String() string {
+	return fmt.Sprintf(
+		"<Plugins:%v, Timestamp:%v, GitRepo:%v, GitUpdate:%v, GitRepoUpdate:%v>",
+		this.Plugins,
+		this.Timestamp,
+		this.GitRepo,
+		this.GitUpdate,
+		this.GitRepoUpdate,
+	)
+}
+
 // e.g. net.port.listen or proc.num
 type NewBuiltinMetric struct {
 	Metric string `json:"metric"`
