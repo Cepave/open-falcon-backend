@@ -18,12 +18,14 @@ func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.Agent
 		return nil
 	}
 
-	resp, err := service.MinePlugins(args.Hostname, args.Checksum)
+	resp, err := service.MinePlugins(args.Hostname)
 	reply.Plugins = resp.Plugins
 	reply.Timestamp = resp.Timestamp
 	reply.GitRepo = resp.GitRepo
-	reply.GitUpdate = resp.GitUpdate
-	reply.GitRepoUpdate = resp.GitRepoUpdate
+	// deprecate the attributes: reply.GitUpdate, reply.GitRepoUpdate
+	// git repo updating will be invoked only by reply.GitRepo
+	reply.GitUpdate = false
+	reply.GitRepoUpdate = false
 	log.Debugln("show reply of MinePlugins: ", reply)
 
 	return err

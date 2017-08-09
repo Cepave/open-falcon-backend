@@ -50,13 +50,12 @@ func NqmAgentHeartbeatTargetList(agentID int32) ([]*nqmModel.HeartbeatTarget, er
 	return resp, nil
 }
 
-func MinePlugins(hostname string, checksum string) (*model.NewAgentPluginsResponse, error) {
+func MinePlugins(hostname string) (*model.NewAgentPluginsResponse, error) {
 	var resp *model.NewAgentPluginsResponse
 	err := commonSling.ToSlintExt(
-		NewSlingBase().Get("api/v1/agent/plugins").QueryStruct(struct {
+		NewSlingBase().Get("api/v1/agent/mineplugins").QueryStruct(struct {
 			Hostname string `url:"hostname"`
-			Checksum string `url:"checksum,omitempty"`
-		}{hostname, checksum}),
+		}{hostname}),
 	).DoReceive(http.StatusOK, &resp)
 	if err != nil {
 		return nil, err

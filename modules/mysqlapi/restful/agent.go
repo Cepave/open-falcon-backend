@@ -16,7 +16,6 @@ import (
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	commonNqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/hbscache"
 )
 
@@ -135,18 +134,13 @@ func clearCachedTargetsOfAgentById(
 func getMinePlugins(
 	p *struct {
 		Hostname string `mvc:"query[hostname]" validate:"required"`
-		Checksum string `mvc:"query[checksum]"`
 	},
 ) mvc.OutputBody {
 	reply := &commonModel.NewAgentPluginsResponse{}
 
 	reply.Plugins = hbscache.GetPlugins(p.Hostname)
 	reply.Timestamp = time.Now().Unix()
-	reply.GitRepo = cache.GitRepo.Get()
-	// deprecate the attributes: reply.GitUpdate, reply.GitRepoUpdate
-	// git repo updating will be invoked only by reply.GitRepo
-	reply.GitUpdate = false
-	reply.GitRepoUpdate = false
+	reply.GitRepo = hbscache.GitRepo.Get()
 
 	return mvc.JsonOutputBody(reply)
 }
