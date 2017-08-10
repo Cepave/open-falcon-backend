@@ -123,6 +123,51 @@ var _ = Describe("Test rpc call [Agent.BuiltinMetrics]", ginkgoJsonRpc.NeedJsonR
 }))
 
 var _ = Describe("[Intg] Test rpc call: Agent.MinePlugins", ginkgoJsonRpc.NeedJsonRpc(func() {
+	tsResp := []string{
+		`
+		{
+		   "plugins":[
+
+		   ],
+		   "timestamp":1502355463,
+		   "git_repo":""
+		}
+		`,
+		`
+		{
+		   "plugins":[
+		      "FastCache",
+		      "basic/chk",
+		      "basic/cpu",
+		      "basic/dev",
+		      "basic/file",
+		      "basic/gd",
+		      "basic/net",
+		      "basic/sys"
+		   ],
+		   "timestamp":1502271611,
+		   "git_repo":"http://gitlab.owl.fastweb.com.cn/Cepave/OwlPlugin.git"
+		}
+		`,
+	}
+	cnt := 0
+	BeforeEach(func() {
+		ts = httptest.NewUnstartedServer(
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte(tsResp[cnt]))
+				cnt++
+			}))
+		l, err := net.Listen("tcp", MOCK_URL)
+		Expect(err).To(BeNil())
+		ts.Listener = l
+		ts.Start()
+
+		GinkgoT().Logf("Mock server at: %s", ts.URL)
+	})
+
+	AfterEach(func() {
+		ts.Close()
+	})
 
 	DescribeTable("when parameter is",
 		func(request coModel.AgentHeartbeatRequest) {
