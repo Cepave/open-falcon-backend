@@ -10,6 +10,10 @@ func (t *Hbs) GetExpressions(req model.NullRpcRequest, reply *model.ExpressionRe
 	defer rpc.HandleError(&err)()
 
 	exps, err := service.Expressions()
+	if err != nil {
+		return err
+	}
+
 	for _, ne := range exps {
 		oe := &model.Expression{
 			Id:         ne.ID,
@@ -25,13 +29,17 @@ func (t *Hbs) GetExpressions(req model.NullRpcRequest, reply *model.ExpressionRe
 		}
 		reply.Expressions = append(reply.Expressions, oe)
 	}
-	return err
+	return nil
 }
 
 func (t *Hbs) GetStrategies(req model.NullRpcRequest, reply *model.StrategiesResponse) (err error) {
 	defer rpc.HandleError(&err)()
 
 	hostStrategies, err := service.Strategies()
+	if err != nil {
+		return err
+	}
+
 	for _, nhs := range hostStrategies {
 		ohs := &model.HostStrategy{
 			Hostname: nhs.Hostname,
@@ -59,5 +67,5 @@ func (t *Hbs) GetStrategies(req model.NullRpcRequest, reply *model.StrategiesRes
 		}
 		reply.HostStrategies = append(reply.HostStrategies, ohs)
 	}
-	return err
+	return nil
 }

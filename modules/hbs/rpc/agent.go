@@ -20,6 +20,10 @@ func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.Agent
 	}
 
 	resp, err := service.MinePlugins(args.Hostname)
+	if err != nil {
+		return err
+	}
+
 	reply.Plugins = resp.Plugins
 	reply.Timestamp = resp.Timestamp
 	reply.GitRepo = resp.GitRepo
@@ -29,7 +33,7 @@ func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.Agent
 	reply.GitRepoUpdate = false
 	log.Debugln("show reply of MinePlugins: ", reply)
 
-	return err
+	return nil
 }
 
 func (t *Agent) ReportStatus(args *model.AgentReportRequest, reply *model.SimpleRpcResponse) (err error) {
@@ -50,6 +54,9 @@ func (t *Agent) ReportStatus(args *model.AgentReportRequest, reply *model.Simple
 func (t *Agent) BuiltinMetrics(args *model.AgentHeartbeatRequest, reply *model.BuiltinMetricResponse) (err error) {
 	defer rpc.HandleError(&err)()
 	resp, err := service.BuiltinMetrics(args.Hostname, args.Checksum)
+	if err != nil {
+		return err
+	}
 
 	reply.Checksum = resp.Checksum
 	reply.Timestamp = resp.Timestamp
