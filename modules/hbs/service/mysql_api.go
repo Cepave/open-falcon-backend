@@ -63,6 +63,17 @@ func MinePlugins(hostname string) (*model.NewAgentPluginsResponse, error) {
 	return resp, nil
 }
 
+func Plugins(hostname string) ([]string, error) {
+	var resp []string
+	err := commonSling.ToSlintExt(
+		NewSlingBase().Get("api/v1/agent/plugins/"+hostname),
+	).DoReceive(http.StatusOK, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func BuiltinMetrics(hostname string, checksum string) (*model.NewBuiltinMetricResponse, error) {
 	var resp *model.NewBuiltinMetricResponse
 	err := commonSling.ToSlintExt(
