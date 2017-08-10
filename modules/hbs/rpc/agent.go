@@ -14,6 +14,7 @@ import (
 var agentHeartbeatService *service.AgentHeartbeatService
 
 func (t *Agent) MinePlugins(args model.AgentHeartbeatRequest, reply *model.AgentPluginsResponse) (err error) {
+	defer rpc.HandleError(&err)()
 	if args.Hostname == "" {
 		return nil
 	}
