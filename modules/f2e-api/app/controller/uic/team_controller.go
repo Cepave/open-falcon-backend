@@ -48,7 +48,11 @@ func Teams(c *gin.Context) {
 			dt = db.Uic.Table("team").Raw(
 				fmt.Sprintf("select * from team where name regexp '%s' limit %d,%d", query, page, limit)).Scan(&teams)
 		} else {
-			dt = db.Uic.Table("team").Where("name regexp ?", query).Scan(&teams)
+			dt = db.Uic.Table("team")
+			if query != "" {
+				dt = dt.Where("name regexp ?", query)
+			}
+			dt.Scan(&teams)
 		}
 		err = dt.Error
 	} else {
