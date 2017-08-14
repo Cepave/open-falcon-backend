@@ -7,8 +7,8 @@ import (
 )
 
 type GrpHosts struct {
-	GrpName  string `json:"grp_name";orm:"grp_name"`
-	Hostname string `json:"hostname";orm:"hostname"`
+	GrpName  string `json:"grp_name" orm:"grp_name"`
+	Hostname string `json:"hostname" orm:"hostname"`
 }
 
 func HostGroupFilter(filterTxt string, limit int) []GrpHosts {
