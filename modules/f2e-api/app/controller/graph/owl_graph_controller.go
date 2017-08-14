@@ -35,7 +35,10 @@ func HostsSearching(c *gin.Context) {
 		h.JSONR(c, badstatus, fmt.Sprintf("filter_type got error type, please check it!, only support: %v", AccpectTypes))
 		return
 	}
-	bossList := boss.GetBossObjs()
+	bossList := []boss.BossHost{}
+	if ftype != "hostname" && ftype != "hostgroup" {
+		bossList = boss.GetBossObjs()
+	}
 	res := map[string]interface{}{}
 	switch ftype {
 	case "platform":
@@ -56,7 +59,7 @@ func HostsSearching(c *gin.Context) {
 		}
 	case "hostname":
 		res = map[string]interface{}{
-			"hostname": filter.HostNameFilter(bossList, q, limit),
+			"hostname": filter.HostFilter(q, limit),
 		}
 	case "hostgroup":
 		res = map[string]interface{}{
@@ -68,7 +71,7 @@ func HostsSearching(c *gin.Context) {
 			"idc":       filter.IdcFilter(bossList, q, limit),
 			"isp":       filter.IspFilter(bossList, q, limit),
 			"province":  filter.ProvinceFilter(bossList, q, limit),
-			"hostname":  filter.HostNameFilter(bossList, q, limit),
+			"hostname":  filter.HostFilter(q, limit),
 			"hostgroup": filter.HostGroupFilter(q, limit),
 		}
 	}
@@ -83,15 +86,13 @@ type APIEndpointsQuerySubMetricInputs struct {
 }
 
 func EndpointsQuerySubMetric(c *gin.Context) {
-	inputs := APIEndpointsQuerySubMetricInputs{}
-	inputs.MetricQuery = ".+"
-	inputs.RawKeys = true
+	inputs := APIEndpointsQuerySubMetricInputs{
+		MetricQuery: ".+",
+		RawKeys:     true,
+	}
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, http.StatusBadRequest, err.Error())
 		return
-	}
-	if inputs.MetricQuery == "" {
-		inputs.MetricQuery = ".+"
 	}
 	enps := inputs.Endpoints
 	enpids := []int64{}
@@ -113,7 +114,8 @@ func EndpointsQuerySubMetric(c *gin.Context) {
 			}
 			h.JSONR(c, metricSlist)
 		}
-		return
+	} else {
+		h.JSONR(c, badstatus, "no metrice found")
 	}
 	return
 }
