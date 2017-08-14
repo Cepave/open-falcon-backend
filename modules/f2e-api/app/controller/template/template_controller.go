@@ -337,6 +337,11 @@ func UpdateActionToTmplate(c *gin.Context) {
 		return
 	}
 
+	// automatic disable callback when url is empty
+	if inputs.URL == "" {
+		inputs.Callback = 0
+	}
+
 	uaction := map[string]interface{}{
 		"UIC":                inputs.UIC,
 		"URL":                inputs.URL,
