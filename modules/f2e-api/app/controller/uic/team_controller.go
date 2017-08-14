@@ -132,14 +132,14 @@ func CreateTeam(c *gin.Context) {
 	}
 	h.JSONR(c, map[string]interface{}{
 		"team": team,
-		"msg": fmt.Sprintf("team created! Afftect row: %d, Affect refer: %d", dt.RowsAffected, len(cteam.UserIDs)),
+		"msg":  fmt.Sprintf("team created! Afftect row: %d, Affect refer: %d", dt.RowsAffected, len(cteam.UserIDs)),
 	})
 	return
 }
 
 type APIUpdateTeamInput struct {
 	ID      int    `json:"team_id" binding:"required"`
-	Name 		string `json:"team_name"`
+	Name    string `json:"team_name"`
 	Resume  string `json:"resume"`
 	UserIDs []int  `json:"users"`
 }
@@ -178,7 +178,7 @@ func UpdateTeam(c *gin.Context) {
 		db.Uic.Model(&team).Update(team)
 		err = bindUsers(db, cteam.ID, cteam.UserIDs)
 		if err != nil {
-			h.JSONR(c, badstatus, "bind users got error: " + err.Error())
+			h.JSONR(c, badstatus, "bind users got error: "+err.Error())
 			return
 		}
 	}
@@ -199,7 +199,7 @@ func bindUsers(db config.DBPool, tid int, users []int) (err error) {
 	var uids string
 	//delete unbind users
 	var needDeleteMan []uic.RelTeamUser
-	if(len(users) != 0){
+	if len(users) != 0 {
 		uids, err = utils.ArrIntToString(users)
 		if err != nil {
 			return
@@ -220,7 +220,7 @@ func bindUsers(db config.DBPool, tid int, users []int) (err error) {
 				return
 			}
 		}
-	}else if len(users) == 0  && tid != 0{
+	} else if len(users) == 0 && tid != 0 {
 		rtmp := []uic.RelTeamUser{}
 		dt = db.Uic.Model(&rtmp).Where("tid = ?", tid).Find(&rtmp)
 		if dt.Error != nil {
@@ -330,7 +330,7 @@ func GetTeam(c *gin.Context) {
 	var resp APIGetTeamOutput
 	resp.Team = team
 	resp.Users, err = resp.Members()
-	if(err != nil){
+	if err != nil {
 		h.JSONR(c, badstatus, err.Error())
 		return
 	}
