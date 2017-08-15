@@ -87,9 +87,9 @@ func CreateUser(c *gin.Context) {
 	}
 	session = session.FindVaildSession()
 	response := map[string]interface{}{
-		"id": user.ID,
-		"sig": session.Sig,
-		"name":  user.Name,
+		"id":   user.ID,
+		"sig":  session.Sig,
+		"name": user.Name,
 	}
 	h.JSONR(c, http.StatusOK, response)
 	return

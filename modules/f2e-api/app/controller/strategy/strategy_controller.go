@@ -95,7 +95,7 @@ func CreateStrategy(c *gin.Context) {
 	}
 	h.JSONR(c, map[string]interface{}{
 		"strategy": strategy,
-		"msg": "stragtegy created",
+		"msg":      "stragtegy created",
 	})
 	return
 }
@@ -185,7 +185,7 @@ func UpdateStrategy(c *gin.Context) {
 	}
 	h.JSONR(c, map[string]interface{}{
 		"strategy": ustrategy,
-		"msg": fmt.Sprintf("stragtegy:%d has been updated", strategy.ID),
+		"msg":      fmt.Sprintf("stragtegy:%d has been updated", strategy.ID),
 	})
 	return
 }
