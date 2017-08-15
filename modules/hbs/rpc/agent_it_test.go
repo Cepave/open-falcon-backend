@@ -123,12 +123,11 @@ var _ = Describe("Test rpc call [Agent.BuiltinMetrics]", ginkgoJsonRpc.NeedJsonR
 }))
 
 var _ = Describe("[Intg] Test rpc call: Agent.MinePlugins", ginkgoJsonRpc.NeedJsonRpc(func() {
+	var ts *httptest.Server
 	tsResp := []string{
 		`
 		{
-		   "plugins":[
-
-		   ],
+		   "plugins":[],
 		   "timestamp":1502355463,
 		   "git_repo":""
 		}
