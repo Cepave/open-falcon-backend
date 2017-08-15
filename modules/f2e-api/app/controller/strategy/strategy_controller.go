@@ -12,6 +12,8 @@ import (
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	"github.com/gin-gonic/gin"
+	"os"
+	"path/filepath"
 )
 
 type APIGetStrategysInput struct {
@@ -211,7 +213,13 @@ func DeleteStrategy(c *gin.Context) {
 }
 
 func MetricQuery(c *gin.Context) {
-	data, err := ioutil.ReadFile("data/metric")
+	// get current running path
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
+	data, err := ioutil.ReadFile(fmt.Sprintf("%v/data/metric", dir))
 	if err != nil {
 		h.JSONR(c, badstatus, err)
 		return
