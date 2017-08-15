@@ -150,7 +150,10 @@ func CreateTemplate(c *gin.Context) {
 		h.JSONR(c, badstatus, dt.Error)
 		return
 	}
-	h.JSONR(c, "template created")
+	h.JSONR(c, map[string]interface{}{
+		"template": template,
+		"msg":      "template created",
+	})
 	return
 }
 
@@ -240,7 +243,9 @@ func DeleteTemplate(c *gin.Context) {
 		return
 	}
 	tx.Commit()
-	h.JSONR(c, fmt.Sprintf("template %d has been deleted", tplId))
+	h.JSONR(c, map[string]interface{}{
+		"msg": fmt.Sprintf("template %d has been deleted", tplId),
+	})
 	return
 }
 
@@ -272,6 +277,16 @@ func CreateActionToTmplate(c *gin.Context) {
 		AfterCallbackSMS:   inputs.AfterCallbackSMS,
 	}
 	tx := db.Falcon.Begin()
+	var tpl f.Template
+	if dt := tx.Find(&tpl, inputs.TplId); dt.Error != nil {
+		h.JSONR(c, badstatus, fmt.Sprintf("template: %d ; %s", inputs.TplId, dt.Error.Error()))
+		tx.Rollback()
+		return
+	}
+	if tpl.ActionID != 0 {
+		h.JSONR(c, badstatus, fmt.Sprintf("template: %d, already existing action setting. so skip this action!", tpl.ID))
+		return
+	}
 	if dt := tx.Table("action").Save(&action); dt.Error != nil {
 		h.JSONR(c, badstatus, dt.Error)
 		tx.Rollback()
@@ -280,12 +295,6 @@ func CreateActionToTmplate(c *gin.Context) {
 	var lid []int
 	tx.Raw("select LAST_INSERT_ID() as id").Pluck("id", &lid)
 	aid := lid[0]
-	var tpl f.Template
-	if dt := tx.Find(&tpl, inputs.TplId); dt.Error != nil {
-		h.JSONR(c, badstatus, fmt.Sprintf("template: %d ; %s", inputs.TplId, dt.Error.Error()))
-		tx.Rollback()
-		return
-	}
 
 	dt := tx.Model(&tpl).UpdateColumns(f.Template{ActionID: int64(aid)})
 	if dt.Error != nil {
@@ -295,7 +304,10 @@ func CreateActionToTmplate(c *gin.Context) {
 	}
 	tx.Commit()
 	// db.Falcon.Commit()
-	h.JSONR(c, fmt.Sprintf("action is created and bind to template: %d", inputs.TplId))
+	h.JSONR(c, map[string]interface{}{
+		"action": action,
+		"msg":    fmt.Sprintf("action is created and bind to template: %d", inputs.TplId),
+	})
 	return
 }
 
@@ -325,6 +337,11 @@ func UpdateActionToTmplate(c *gin.Context) {
 		return
 	}
 
+	// automatic disable callback when url is empty
+	if inputs.URL == "" {
+		inputs.Callback = 0
+	}
+
 	uaction := map[string]interface{}{
 		"UIC":                inputs.UIC,
 		"URL":                inputs.URL,
@@ -341,7 +358,10 @@ func UpdateActionToTmplate(c *gin.Context) {
 		return
 	}
 	tx.Commit()
-	h.JSONR(c, fmt.Sprintf("action is updated, row affected: %d", dt.RowsAffected))
+	h.JSONR(c, map[string]interface{}{
+		"msg":    fmt.Sprintf("action is updated, row affected: %d", dt.RowsAffected),
+		"action": uaction,
+	})
 	return
 }
 
