@@ -16,6 +16,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/graph"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/host"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/mockcfg"
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/nqmDemo"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/strategy"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/template"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/uic"
@@ -106,6 +107,7 @@ func StartGin(port string, r *gin.Engine, testMode bool) *gin.Engine {
 	dashboard_graph.Routes(r)
 	dashboard_screen.Routes(r)
 	alarm.Routes(r)
+	nqmDemo.Routes(r)
 	if !testMode {
 		r.Run(port)
 	}
