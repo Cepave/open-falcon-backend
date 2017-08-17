@@ -236,7 +236,7 @@ CREATE TABLE `alarm_types` (
   ENGINE =InnoDB
   DEFAULT CHARSET =utf8;
 
-INSERT INTO `alarm_types` (id, name, internal_data, description) VALUES (1, 'owl', 1, 'purple', 'default type of owl');
+INSERT INTO `alarm_types` (id, name, internal_data, color, description) VALUES (1, 'owl', 1, 'purple', 'default type of owl');
 
 DROP TABLE IF EXISTS event_cases;
 CREATE TABLE event_cases (
@@ -250,8 +250,8 @@ CREATE TABLE event_cases (
   current_step int(10) unsigned,
   priority INT(6) NOT NULL,
   status VARCHAR(20) NOT NULL,
-  timestamp Timestamp NOT NULL,
-  update_at Timestamp NULL DEFAULT NULL,
+  timestamp Timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  update_at Timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   process_note mediumint(9),
   process_status  varchar(20) DEFAULT 'unresolved',
   closed_at Timestamp NULL DEFAULT NULL,
@@ -287,7 +287,7 @@ CREATE TABLE IF NOT EXISTS event_note (
   note    VARCHAR(300),
   case_id VARCHAR(20),
   status VARCHAR(15),
-  timestamp Timestamp,
+  timestamp Timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   user_id int(10) unsigned,
   PRIMARY KEY (id),
   INDEX (event_caseId),
@@ -307,7 +307,7 @@ CREATE TABLE events (
   event_caseId VARCHAR(50),
   step int(10) unsigned,
   cond VARCHAR(200) NOT NULL,
-  timestamp Timestamp,
+  timestamp Timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   status int(3) unsigned DEFAULT 0,
   PRIMARY KEY (id),
   INDEX(event_caseId),
