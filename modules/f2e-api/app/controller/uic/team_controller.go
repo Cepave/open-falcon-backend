@@ -21,42 +21,45 @@ type CTeam struct {
 	Useres      []uic.User
 }
 
+type APITeamInputs struct {
+	Limit       int    `json:"limit" form:"limit"`
+	Page        int    `json:"page" form:"page"`
+	SkipMembers bool   `json:"skip_members" form:"skip_members"`
+	Q           string `json:"q" form:"q"`
+}
+
 //support root as admin
 func Teams(c *gin.Context) {
-	var (
-		limit int
-		page  int
-		err   error
-	)
-	pageTmp := c.DefaultQuery("page", "")
-	limitTmp := c.DefaultQuery("limit", "")
-	page, limit, err = h.PageParser(pageTmp, limitTmp)
-	if err != nil {
+	inputs := APITeamInputs{
+		Q:           ".+",
+		Limit:       -1,
+		Page:        -1,
+		SkipMembers: false,
+	}
+	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err.Error())
 		return
 	}
-	query := c.DefaultQuery("q", ".+")
 	user, err := h.GetUser(c)
 	if err != nil {
 		h.JSONR(c, badstatus, err)
 		return
 	}
 	var dt *gorm.DB
+	var offset = 0
 	teams := []uic.Team{}
 	if user.IsAdmin() {
-		if limit != -1 && page != -1 {
-			dt = db.Uic.Table("team").Raw(
-				fmt.Sprintf("select * from team where name regexp '%s' limit %d,%d", query, page, limit)).Scan(&teams)
-		} else {
-			dt = db.Uic.Table("team")
-			if query != "" {
-				dt = dt.Where("name regexp ?", query)
+		dt = db.Uic
+		if inputs.Limit != -1 && inputs.Page > 0 {
+			if inputs.Page != 1 {
+				offset = (inputs.Page - 1) * inputs.Limit
 			}
-			dt.Scan(&teams)
+			dt.Model(&teams).Where("name regexp ?", inputs.Q).Limit(inputs.Limit).Offset(offset).Scan(&teams)
+		} else {
+			dt = dt.Model(&teams).Where("name regexp ?", inputs.Q).Scan(&teams)
 		}
-		err = dt.Error
 	} else {
-		dt = db.Uic.Table("team").Where("name regexp ? AND creator = ?", query, user.ID).Scan(&teams)
+		dt = db.Uic.Model(&teams).Where("name regexp ? AND creator = ?", inputs.Q, user.ID).Scan(&teams)
 		err = dt.Error
 	}
 	if err != nil {
@@ -66,17 +69,19 @@ func Teams(c *gin.Context) {
 	outputs := []CTeam{}
 	for _, t := range teams {
 		cteam := CTeam{Team: t}
-		user, err := t.Members()
-		if err != nil {
-			h.JSONR(c, badstatus, err)
-			return
+		if !inputs.SkipMembers {
+			user, err := t.Members()
+			if err != nil {
+				h.JSONR(c, badstatus, err)
+				return
+			}
+			cteam.Useres = user
+			creatorName, err := t.GetCreatorName()
+			if err != nil {
+				log.Debug(err.Error())
+			}
+			cteam.TeamCreator = creatorName
 		}
-		cteam.Useres = user
-		creatorName, err := t.GetCreatorName()
-		if err != nil {
-			log.Debug(err.Error())
-		}
-		cteam.TeamCreator = creatorName
 		outputs = append(outputs, cteam)
 	}
 	h.JSONR(c, outputs)
