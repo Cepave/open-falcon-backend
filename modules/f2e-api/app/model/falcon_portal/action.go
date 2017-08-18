@@ -1,5 +1,14 @@
 package falcon_portal
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/uic"
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
+	con "github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+)
+
 ////////////////////////////////////////////////////////////////////////////////////
 // |id                    | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
 // | uic                  | varchar(255)     | NO   |     |         |                |
@@ -23,4 +32,15 @@ type Action struct {
 
 func (this Action) TableName() string {
 	return "action"
+}
+
+func (self Action) FindUics() (teams []uic.Team) {
+	teams = []uic.Team{}
+	db := con.Con()
+	if self.UIC != "" {
+		teamst := strings.Split(self.UIC, ",")
+		teamstCt, _ := utils.ArrStringsToString(teamst)
+		db.Uic.Model(teams).Where(fmt.Sprintf("name IN (%v)", teamstCt)).Scan(&teams)
+	}
+	return teams
 }

@@ -51,5 +51,12 @@
     "address": "127.0.0.1:6397",
     "password": "",
     "default_bucket": "extnal_event:all"
+  },
+  "email_conf": {
+    "smtp_server": "smtp.testme.com",
+    "smtp_port": 587,
+    "from_email": "pr@testme.come",
+    "account": "pr@testme.come"",
+    "password": "mypassword"
   }
 }

@@ -67,5 +67,10 @@
         "idle": 10,
         "max": 100
     },
-    "redirectUrl": "http://11.11.11.11:1234/auth/login?callback=http%3A//11.11.11.11%3A9912/"
+    "redirectUrl": "http://11.11.11.11:1234/auth/login?callback=http%3A//11.11.11.11%3A9912/",
+    "f2e-api_email_helper": {
+      "url": "http://localhost:10080/api/v1/nqm_demo/email",
+      "token_name": "myname",
+      "token_key": "mykey
+    }
 }

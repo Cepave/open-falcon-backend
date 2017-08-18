@@ -78,18 +78,26 @@ type ShortcutConfig struct {
 	FalconAlarm      string `json:"falconAlarm"`
 	FalconUIC        string `json:"falconUIC"`
 }
+
+type F2eApiEmailHelperConf struct {
+	URL       string `json:"url"`
+	TokenName string `json:"token_name"`
+	TokenKey  string `json:"token_key"`
+}
+
 type GlobalConfig struct {
-	Debug        bool                `json:"debug"`
-	UicToken     string              `json:"uicToken"`
-	Http         *HttpConfig         `json:"http"`
-	FalconPortal *FalconPortalConfig `json:"falcon_portal"`
-	BossConfig   *BossConfig         `json:"boss"`
-	Queue        *QueueConfig        `json:"queue"`
-	Redis        *RedisConfig        `json:"redis"`
-	Api          *ApiConfig          `json:"api"`
-	Shortcut     *ShortcutConfig     `json:"shortcut"`
-	Uic          *UicConfig          `json:"uic"`
-	RedirectUrl  string              `json:"redirectUrl"`
+	Debug             bool                   `json:"debug"`
+	UicToken          string                 `json:"uicToken"`
+	Http              *HttpConfig            `json:"http"`
+	FalconPortal      *FalconPortalConfig    `json:"falcon_portal"`
+	BossConfig        *BossConfig            `json:"boss"`
+	Queue             *QueueConfig           `json:"queue"`
+	Redis             *RedisConfig           `json:"redis"`
+	Api               *ApiConfig             `json:"api"`
+	Shortcut          *ShortcutConfig        `json:"shortcut"`
+	Uic               *UicConfig             `json:"uic"`
+	RedirectUrl       string                 `json:"redirectUrl"`
+	F2eApiEmailHelper *F2eApiEmailHelperConf `json:"f2e-api_email_helper"`
 }
 
 var (
