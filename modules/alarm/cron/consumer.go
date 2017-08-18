@@ -29,11 +29,11 @@ func consume(event *model.Event, isHigh bool) {
 		Callback(event, action)
 	}
 
-	// if isHigh {
-	// 	consumeHighEvents(event, action)
-	// } else {
-	// 	consumeLowEvents(event, action)
-	// }
+	if isHigh {
+		consumeHighEvents(event, action)
+	} else {
+		consumeLowEvents(event, action)
+	}
 }
 
 type PostMailDemo struct {
@@ -52,7 +52,6 @@ func forDemoSendEmail(event *model.Event) {
 		Subject: smsContent,
 		Content: mailContent,
 	}
-	postbodyb, _ := json.Marshal(postTmp)
 	Apitoken := fmt.Sprintf(`{"name": "%s", "sig": "%s"}`, f2econf.TokenName, f2econf.TokenKey)
 	rt := resty.New()
 	rt.SetHeader("Apitoken", Apitoken)
@@ -62,7 +61,7 @@ func forDemoSendEmail(event *model.Event) {
 	if err != nil {
 		log.Errorf("send mail got error with: %v", err.Error())
 	}
-	log.Infof("send email got response: %v, postbody: %v", resp.String(), string(postbodyb))
+	log.Debugf("send email got response: %v, postbody: %v", resp.String())
 }
 
 // 高优先级的不做报警合并

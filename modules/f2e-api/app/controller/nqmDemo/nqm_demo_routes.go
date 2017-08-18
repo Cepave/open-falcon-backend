@@ -3,6 +3,7 @@ package nqmDemo
 import (
 	"net/http"
 
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
 	"github.com/gin-gonic/gin"
 )
@@ -23,5 +24,7 @@ func Routes(r *gin.Engine) {
 	nqmd.GET("/cities", Cities)
 	nqmd.GET("/nametags", NameTags)
 	nqmd.GET("/grouptags", GroupTags)
-	nqmd.POST("/email", EmailDemo)
+	nqmd2 := r.Group("/api/v1/nqm_demo/email")
+	nqmd2.Use(utils.AuthSessionMidd)
+	nqmd2.POST("", EmailDemo)
 }
