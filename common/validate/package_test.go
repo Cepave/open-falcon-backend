@@ -1,8 +1,9 @@
-package mvc
+package validate
 
 import (
 	"testing"
-	ch "gopkg.in/check.v1"
+
+	v "gopkg.in/go-playground/validator.v9"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,6 +14,8 @@ func TestByGinkgo(t *testing.T) {
 	RunSpecs(t, "Base Suite")
 }
 
-func TestByCheck(t *testing.T) {
-	ch.TestingT(t)
+func newValidator() *v.Validate {
+	validator := v.New()
+	RegisterDefaultValidators(validator)
+	return validator
 }

@@ -8,10 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
+
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/model"
+	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
-	"github.com/gin-gonic/gin"
 )
 
 const mvcTag = "mvc"
@@ -70,53 +72,40 @@ type tagContext struct {
 	defaultValue string
 }
 
-func (t *tagContext) getDefaultValueAsSlice() []string {
-	return strings.Split(t.defaultValue, ",")
-}
 func (t *tagContext) getLoader(targetType reflect.Type, convSrv ot.ConversionService) inputParamLoader {
+	paramName := t.paramName
+	defaultValue := t.defaultValue
+	defaultValueAsSlice := t.getDefaultValueAsSlice()
+
 	switch t.getterType {
 	case paramGetterType:
 		paramGetter := paramGetters[t.getterName]
 
-		switch targetType.Kind() {
-		case reflect.Array, reflect.Slice:
-			return func(c *gin.Context) interface{} {
-				return convSrv.ConvertTo(
-					paramGetter.getParamAsArray(c, t.paramName, t.getDefaultValueAsSlice()),
-					targetType,
-				)
-			}
-		default:
-			return func(c *gin.Context) interface{} {
-				return convSrv.ConvertTo(
-					paramGetter.getParam(c, t.paramName, t.defaultValue),
-					targetType,
-				)
-			}
-		}
+		return chooseValueGetter(
+			convSrv, targetType,
+			func(c *gin.Context) interface{} { return paramGetter.getParam(c, paramName, defaultValue) },
+			func(c *gin.Context) interface{} {
+				return paramGetter.getParamAsArray(c, paramName, defaultValueAsSlice)
+			},
+		)
 	case paramCheckerType:
 		checker := paramCheckers[t.getterName]
 		return func(c *gin.Context) interface{} {
-			return checker(c, t.paramName)
+			return checker(c, paramName)
 		}
 	case keyGetterType:
-		return func(c *gin.Context) interface{} {
-			var finalDefaultValue interface{} = t.defaultValue
-			switch targetType.Kind() {
-			case reflect.Array, reflect.Slice:
-				finalDefaultValue = t.getDefaultValueAsSlice()
-			}
-
-			return convSrv.ConvertTo(
-				keyGetter.getValue(c, t.paramName, finalDefaultValue),
-				targetType,
-			)
-		}
+		return chooseValueGetter(
+			convSrv, targetType,
+			func(c *gin.Context) interface{} { return keyGetter.getValue(c, paramName, defaultValue) },
+			func(c *gin.Context) interface{} {
+				return keyGetter.getValue(c, paramName, defaultValueAsSlice)
+			},
+		)
 	case fileGetterType:
 		switch t.getterName {
 		case "file":
 			return func(c *gin.Context) interface{} {
-				headers := getFileHeaders(c, t.paramName)
+				headers := getFileHeaders(c, paramName)
 				if len(headers) == 0 {
 					return []multipart.File(nil)
 				}
@@ -134,7 +123,7 @@ func (t *tagContext) getLoader(targetType reflect.Type, convSrv ot.ConversionSer
 			}
 		case "fileHeader":
 			return func(c *gin.Context) interface{} {
-				headers := getFileHeaders(c, t.paramName)
+				headers := getFileHeaders(c, paramName)
 				if len(headers) == 0 {
 					return []multipart.File(nil)
 				}
@@ -150,6 +139,60 @@ func (t *tagContext) getLoader(targetType reflect.Type, convSrv ot.ConversionSer
 	}
 
 	panic(fmt.Sprintf("Unknown type of getter: [%d]", t.getterType))
+}
+
+func chooseValueGetter(
+	convSrv ot.ConversionService,
+	targetType reflect.Type,
+	valueGetter inputParamLoader,
+	sliceGetter inputParamLoader,
+) inputParamLoader {
+	getterByValue := func(c *gin.Context) interface{} {
+		return convSrv.ConvertTo(valueGetter(c), targetType)
+	}
+	getterBySlice := func(c *gin.Context) interface{} {
+		return convSrv.ConvertTo(sliceGetter(c), targetType)
+	}
+
+	if convSrv.CanConvert(rt.TypeOfString, targetType) {
+		return getterByValue
+	}
+
+	if convSrv.CanConvert(rt.STypeOfString, targetType) {
+		return getterBySlice
+	}
+
+	switch targetType.Kind() {
+	case reflect.Array, reflect.Slice:
+		return getterBySlice
+	default:
+		return getterByValue
+	}
+}
+
+func chooseValueGetter2(
+	convSrv ot.ConversionService,
+	targetType reflect.Type,
+	valueGetter inputParamLoader,
+	sliceGetter inputParamLoader,
+) inputParamLoader {
+	if convSrv.CanConvert(rt.TypeOfString, targetType) {
+		return valueGetter
+	}
+
+	if convSrv.CanConvert(rt.STypeOfString, targetType) {
+		return sliceGetter
+	}
+
+	switch targetType.Kind() {
+	case reflect.Array, reflect.Slice:
+		return sliceGetter
+	default:
+		return valueGetter
+	}
+}
+func (t *tagContext) getDefaultValueAsSlice() []string {
+	return strings.Split(t.defaultValue, ",")
 }
 
 var propRegExp, _ = regexp.Compile(`^(\w+)\[([^]]+)\]$`)
