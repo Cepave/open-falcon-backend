@@ -85,7 +85,7 @@ func buildQueryOfIcmp(
 	ogin.ConformAndValidateStruct(compoundQuery, validator)
 
 	query := nqm.BuildQuery(compoundQuery)
-	context.JSON(http.StatusOK, query.ToJson())
+	context.JSON(http.StatusOK, query.ToJsonOfQueryId())
 }
 
 func getQueryContentOfIcmp(context *gin.Context) {

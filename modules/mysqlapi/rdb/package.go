@@ -6,6 +6,7 @@ import (
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	localOwlDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -23,6 +24,7 @@ func InitRdb(dbConfig *commonDb.DbConfig) {
 
 	nqmDb.DbFacade = DbFacade
 	owlDb.DbFacade = DbFacade
+	localOwlDb.DbFacade = DbFacade
 
 	*DbConfig = *dbConfig
 
@@ -35,6 +37,7 @@ func ReleaseRdb() {
 
 	nqmDb.DbFacade = nil
 	owlDb.DbFacade = nil
+	localOwlDb.DbFacade = nil
 
 	logger.Info("[FINISH] Release RDB resources.")
 }

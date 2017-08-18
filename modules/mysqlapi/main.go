@@ -18,6 +18,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
+	owlSrv "github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/owl"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -37,8 +38,10 @@ func main() {
 	rdb.InitRdb(toRdbConfig(config))
 	restful.InitGin(toGinConfig(config))
 	restful.InitCache(toCacheConfig(config))
+
 	service.InitNqmHeartbeat(toNqmHeartbeatConfig(config))
 	service.InitCachedTargetList(toTargetListConfig(config))
+	owlSrv.InitQueryObjectService(*toQueryObjectServiceConfig(config))
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
 }
@@ -61,6 +64,13 @@ func toRdbConfig(config *viper.Viper) *commonDb.DbConfig {
 	return &commonDb.DbConfig{
 		Dsn:     config.GetString("rdb.dsn"),
 		MaxIdle: config.GetInt("rdb.maxIdle"),
+	}
+}
+
+func toQueryObjectServiceConfig(config *viper.Viper) *owlSrv.QueryObjectServiceConfig {
+	return &owlSrv.QueryObjectServiceConfig {
+		CacheSize: config.GetInt64("queryObject.cache.size"),
+		CacheDuration: time.Duration(config.GetInt64("queryObject.cache.hourDuration")) * time.Hour,
 	}
 }
 

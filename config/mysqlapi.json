@@ -29,5 +29,11 @@
 				"duration": 20
 			}
 		}
+	},
+	"queryObject": {
+		"cache": {
+			"size": 32,
+			"hourDuration": 16
+		}
 	}
 }
