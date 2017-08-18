@@ -14,6 +14,7 @@ import (
 type APIGetTemplatesOutput struct {
 	Templates []CTemplate `json:"templates"`
 }
+
 type CTemplate struct {
 	Template   f.Template `json:"template"`
 	ParentName string     `json:"parent_name"`
@@ -64,11 +65,23 @@ func GetTemplates(c *gin.Context) {
 	return
 }
 
+type APIGetTemplatesSimpleInputs struct {
+	Q     string `json:"q" form:"q"`
+	Limit int    `json:"limit" form:"limit"`
+}
+
 func GetTemplatesSimple(c *gin.Context) {
+	inputs := APIGetTemplatesSimpleInputs{
+		Q:     ".+",
+		Limit: 500,
+	}
+	if err := c.Bind(&inputs); err != nil {
+		h.JSONR(c, badstatus, err.Error())
+		return
+	}
 	var dt *gorm.DB
 	templates := []f.Template{}
-	q := c.DefaultQuery("q", ".+")
-	dt = db.Falcon.Select("id, tpl_name").Where("tpl_name regexp ?", q).Find(&templates)
+	dt = db.Falcon.Select("id, tpl_name").Where("tpl_name regexp ?", inputs.Q).Limit(inputs.Limit).Find(&templates)
 	if dt.Error != nil {
 		log.Infof(dt.Error.Error())
 		h.JSONR(c, badstatus, dt.Error)
