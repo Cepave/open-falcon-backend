@@ -4,9 +4,11 @@ import (
 	"database/sql/driver"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/Cepave/open-falcon-backend/common/types"
 )
 
-type Bytes16 [16]byte
+type Bytes16 types.Bytes16
 
 // Supports hex string or bytes
 func (b *Bytes16) Scan(src interface{}) error {
