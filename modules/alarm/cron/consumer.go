@@ -2,34 +2,67 @@ package cron
 
 import (
 	"encoding/json"
+	"fmt"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/api"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/redis"
+	"github.com/go-resty/resty"
 	log "github.com/sirupsen/logrus"
 )
 
 func consume(event *model.Event, isHigh bool) {
+	log.Info("consume")
 	actionId := event.ActionId()
 	if actionId <= 0 {
 		return
 	}
 
+	forDemoSendEmail(event)
 	action := api.GetAction(actionId)
 	if action == nil {
 		return
 	}
 
 	if action.Callback == 1 {
-		HandleCallback(event, action)
-		return
+		Callback(event, action)
 	}
 
-	if isHigh {
-		consumeHighEvents(event, action)
-	} else {
-		consumeLowEvents(event, action)
+	// if isHigh {
+	// 	consumeHighEvents(event, action)
+	// } else {
+	// 	consumeLowEvents(event, action)
+	// }
+}
+
+type PostMailDemo struct {
+	Subject string `json:"subject"`
+	Content string `json:"content"`
+	TplId   int    `json:"tpl_id"`
+}
+
+func forDemoSendEmail(event *model.Event) {
+	log.Info("forDemoSendEmail")
+	f2econf := g.Config().F2eApiEmailHelper
+	smsContent := GenerateSmsContent(event)
+	mailContent := GenerateMailContent(event)
+	postTmp := PostMailDemo{
+		TplId:   event.TplId(),
+		Subject: smsContent,
+		Content: mailContent,
 	}
+	postbodyb, _ := json.Marshal(postTmp)
+	Apitoken := fmt.Sprintf(`{"name": "%s", "sig": "%s"}`, f2econf.TokenName, f2econf.TokenKey)
+	rt := resty.New()
+	rt.SetHeader("Apitoken", Apitoken)
+	resp, err := rt.R().
+		SetBody(postTmp).
+		Post(f2econf.URL)
+	if err != nil {
+		log.Errorf("send mail got error with: %v", err.Error())
+	}
+	log.Infof("send email got response: %v, postbody: %v", resp.String(), string(postbodyb))
 }
 
 // 高优先级的不做报警合并

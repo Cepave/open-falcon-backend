@@ -39,7 +39,7 @@ func (this Team) Members() (users []User, err error) {
 		return
 	}
 
-	if dt := db.Uic.Select("name, id, cnname").Where(fmt.Sprintf("id in (%s)", uidstr)).Find(&users); dt.Error != nil {
+	if dt := db.Uic.Select("name, id, cnname, email").Where(fmt.Sprintf("id in (%s)", uidstr)).Find(&users); dt.Error != nil {
 		err = dt.Error
 		return
 	}
