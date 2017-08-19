@@ -1,3 +1,5 @@
+agent.alive
+agent.alive.30sec
 cpu.busy
 cpu.cnt
 cpu.guest
@@ -37,6 +39,8 @@ disk.io.write_bytes
 disk.io.write_merged
 disk.io.write_requests
 disk.io.write_sectors
+kernel.files.allocated
+kernel.files.left
 kernel.maxfiles
 kernel.maxproc
 load.15min
