@@ -25,7 +25,7 @@ func (b *Bytes16) UnmarshalJSON(v []byte) error {
 	}
 
 	if jsonString == "" {
-		for i, _ := range b {
+		for i := range b {
 			b[i] = 0
 		}
 		return nil

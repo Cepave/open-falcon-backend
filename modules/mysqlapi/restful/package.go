@@ -1,12 +1,14 @@
 package restful
 
 import (
-	ov "github.com/Cepave/open-falcon-backend/common/validate"
+	"github.com/gin-gonic/gin"
+
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	ov "github.com/Cepave/open-falcon-backend/common/validate"
+
 	owlRest "github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful/owl"
-	"github.com/gin-gonic/gin"
 )
 
 var logger = log.NewDefaultLogger("INFO")

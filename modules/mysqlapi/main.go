@@ -19,8 +19,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
-	owlSrv "github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/owl"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/hbscache"
+	owlSrv "github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/owl"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -73,8 +73,8 @@ func toRdbConfig(config *viper.Viper) *commonDb.DbConfig {
 }
 
 func toQueryObjectServiceConfig(config *viper.Viper) *owlSrv.QueryObjectServiceConfig {
-	return &owlSrv.QueryObjectServiceConfig {
-		CacheSize: config.GetInt64("queryObject.cache.size"),
+	return &owlSrv.QueryObjectServiceConfig{
+		CacheSize:     config.GetInt64("queryObject.cache.size"),
 		CacheDuration: time.Duration(config.GetInt64("queryObject.cache.hourDuration")) * time.Hour,
 	}
 }
