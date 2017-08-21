@@ -47,6 +47,10 @@ func initApi() {
 
 	v1 := router.Group("/api/v1")
 
+	v1.GET("/metrics/builtin", h(getBuiltinMetrics))
+	v1.GET("/strategies", h(getStrategies))
+	v1.GET("/expressions", h(getExpressions))
+
 	v1.GET("/nqm/agents", h(listAgents))
 	v1.GET("/nqm/agent/:agent_id", getAgentById)
 	v1.POST("/heartbeat/nqm/agent", h(nqmAgentHeartbeat))
@@ -89,6 +93,8 @@ func initApi() {
 	v1.GET("/hosts", h(listHosts))
 	v1.GET("/hostgroups", h(listHostgroups))
 	v1.GET("/agent/config", h(getAgentConfig))
+	v1.GET("/agent/plugins/:agent_hostname", h(getPlugins))
+	v1.GET("/agent/mineplugins", h(getMinePlugins))
 	v1.POST("/agent/heartbeat", h(falconAgentHeartbeat))
 
 	v1.GET("/owl/query-object/:uuid", h(owlRest.GetQueryObjectByUuid))

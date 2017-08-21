@@ -1,9 +1,9 @@
-package cache
+package hbscache
 
 import (
 	"sync"
 
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
+	db "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 	log "github.com/sirupsen/logrus"
 )
 

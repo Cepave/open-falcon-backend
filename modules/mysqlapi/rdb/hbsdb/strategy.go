@@ -1,17 +1,18 @@
-package db
+package hbsdb
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	log "github.com/sirupsen/logrus"
 	"github.com/toolkits/container/set"
-	"strings"
-	"time"
 )
 
 // 获取所有的Strategy列表
-func QueryStrategies(tpls map[int]*model.Template) (map[int]*model.Strategy, error) {
-	ret := make(map[int]*model.Strategy)
+func QueryStrategies(tpls map[int]*model.NewTemplate) (map[int]*model.NewStrategy, error) {
+	ret := make(map[int]*model.NewStrategy)
 
 	if tpls == nil || len(tpls) == 0 {
 		return ret, fmt.Errorf("illegal argument")
@@ -33,10 +34,10 @@ func QueryStrategies(tpls map[int]*model.Template) (map[int]*model.Strategy, err
 
 	defer rows.Close()
 	for rows.Next() {
-		s := model.Strategy{}
+		s := model.NewStrategy{}
 		var tags string
 		var tid int
-		err = rows.Scan(&s.Id, &s.Metric, &tags, &s.Func, &s.Operator, &s.RightValue, &s.MaxStep, &s.Priority, &s.Note, &tid)
+		err = rows.Scan(&s.ID, &s.Metric, &tags, &s.Func, &s.Operator, &s.RightValue, &s.MaxStep, &s.Priority, &s.Note, &tid)
 		if err != nil {
 			log.Println("ERROR:", err)
 			continue
@@ -52,7 +53,7 @@ func QueryStrategies(tpls map[int]*model.Template) (map[int]*model.Strategy, err
 					continue
 				}
 				if strings.Contains(kv[1], "$") {
-					strategyId := s.Id
+					strategyId := s.ID
 					tagName := kv[1]
 					sql = fmt.Sprintf(
 						"select %s from tags where strategy_id = %d and name = '%s'",
@@ -83,24 +84,24 @@ func QueryStrategies(tpls map[int]*model.Template) (map[int]*model.Strategy, err
 		s.Tags = tt
 		s.Tpl = tpls[tid]
 		if s.Tpl == nil {
-			log.Printf("WARN: tpl is nil. strategy id=%d, tpl id=%d", s.Id, tid)
+			log.Printf("WARN: tpl is nil. strategy id=%d, tpl id=%d", s.ID, tid)
 			// 如果Strategy没有对应的Tpl，那就没有action，就没法报警，无需往后传递了
 			continue
 		}
 
-		ret[s.Id] = &s
+		ret[s.ID] = &s
 	}
 
 	return ret, nil
 }
 
-func QueryBuiltinMetrics(tids string) ([]*model.BuiltinMetric, error) {
+func QueryBuiltinMetrics(tids string) ([]*model.NewBuiltinMetric, error) {
 	sql := fmt.Sprintf(
 		"select metric, tags from strategy where tpl_id in (%s) and metric in ('net.port.listen', 'proc.num', 'du.bs', 'url.check.health')",
 		tids,
 	)
 
-	ret := []*model.BuiltinMetric{}
+	ret := []*model.NewBuiltinMetric{}
 
 	rows, err := DB.Query(sql)
 	if err != nil {
@@ -112,7 +113,7 @@ func QueryBuiltinMetrics(tids string) ([]*model.BuiltinMetric, error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		builtinMetric := model.BuiltinMetric{}
+		builtinMetric := model.NewBuiltinMetric{}
 		err = rows.Scan(&builtinMetric.Metric, &builtinMetric.Tags)
 		if err != nil {
 			log.Println("WARN:", err)

@@ -1,4 +1,4 @@
-package db
+package hbsdb
 
 import (
 	log "github.com/sirupsen/logrus"

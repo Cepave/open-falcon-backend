@@ -1,10 +1,11 @@
-package db
+package hbsdb
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/model"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 func QueryHosts() (map[string]int, error) {

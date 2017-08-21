@@ -1,4 +1,4 @@
-package db
+package hbsdb
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func QueryExpressions() (ret []*model.Expression, err error) {
+func QueryExpressions() (ret []*model.NewExpression, err error) {
 	sql := "select id, expression, func, op, right_value, max_step, priority, note, action_id from expression where action_id>0 and pause=0"
 	rows, err := DB.Query(sql)
 	if err != nil {
@@ -18,10 +18,10 @@ func QueryExpressions() (ret []*model.Expression, err error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		e := model.Expression{}
+		e := model.NewExpression{}
 		var exp string
 		err = rows.Scan(
-			&e.Id,
+			&e.ID,
 			&exp,
 			&e.Func,
 			&e.Operator,
@@ -29,7 +29,7 @@ func QueryExpressions() (ret []*model.Expression, err error) {
 			&e.MaxStep,
 			&e.Priority,
 			&e.Note,
-			&e.ActionId,
+			&e.ActionID,
 		)
 
 		if err != nil {

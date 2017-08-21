@@ -1,11 +1,11 @@
-package db
+package hbsdb
 
 import (
 	"database/sql"
+
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	dbNqm "github.com/Cepave/open-falcon-backend/common/db/nqm"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,13 +14,8 @@ var DB *sql.DB
 var DbFacade = &f.DbFacade{}
 
 // Initialize the resource for RDB
-func Init() {
-	err := DbInit(
-		&commonDb.DbConfig{
-			Dsn:     g.Config().Database,
-			MaxIdle: g.Config().MaxIdle,
-		},
-	)
+func Init(c *commonDb.DbConfig) {
+	err := DbInit(c)
 
 	if err != nil {
 		log.Fatalln(err)

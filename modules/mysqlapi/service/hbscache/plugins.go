@@ -1,9 +1,10 @@
-package cache
+package hbscache
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	"sort"
 	"sync"
+
+	db "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 )
 
 // 一个HostGroup可以绑定多个Plugin

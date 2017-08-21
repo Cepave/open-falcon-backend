@@ -1,4 +1,4 @@
-package db
+package hbsdb
 
 import (
 	"github.com/Cepave/open-falcon-backend/common/model"
@@ -35,9 +35,9 @@ func QueryGroupTemplates() (map[int][]int, error) {
 }
 
 // 获取所有的策略模板列表
-func QueryTemplates() (map[int]*model.Template, error) {
+func QueryTemplates() (map[int]*model.NewTemplate, error) {
 
-	templates := make(map[int]*model.Template)
+	templates := make(map[int]*model.NewTemplate)
 
 	sql := "select id, tpl_name, parent_id, action_id, create_user from tpl"
 	rows, err := DB.Query(sql)
@@ -48,13 +48,13 @@ func QueryTemplates() (map[int]*model.Template, error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		t := model.Template{}
-		err = rows.Scan(&t.Id, &t.Name, &t.ParentId, &t.ActionId, &t.Creator)
+		t := model.NewTemplate{}
+		err = rows.Scan(&t.ID, &t.Name, &t.ParentID, &t.ActionID, &t.Creator)
 		if err != nil {
 			log.Println("ERROR:", err)
 			continue
 		}
-		templates[t.Id] = &t
+		templates[t.ID] = &t
 	}
 
 	return templates, nil

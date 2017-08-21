@@ -16,9 +16,11 @@ import (
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
 	owlSrv "github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/owl"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/hbscache"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -42,6 +44,8 @@ func main() {
 	service.InitNqmHeartbeat(toNqmHeartbeatConfig(config))
 	service.InitCachedTargetList(toTargetListConfig(config))
 	owlSrv.InitQueryObjectService(*toQueryObjectServiceConfig(config))
+	hbsdb.Init(toRdbConfig(config))
+	hbscache.Init()
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
 }
@@ -49,6 +53,7 @@ func main() {
 func exitApp(signal os.Signal) {
 	service.CloseNqmHeartbeat()
 	service.CloseCachedTargetList()
+	hbsdb.Release()
 	rdb.ReleaseRdb()
 }
 
