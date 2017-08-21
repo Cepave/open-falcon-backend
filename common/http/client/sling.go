@@ -1,4 +1,4 @@
-package sling
+package client
 
 import (
 	"fmt"
