@@ -27,7 +27,7 @@ var _ = Describe("[POST] on /owl/query-object", ginkgoDb.NeedDb(func() {
 		now := time.Now().Unix()
 
 		resp := tHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Post("api/v1/owl/query-object").
 				BodyJSON(
 					map[string]interface{}{
@@ -77,7 +77,7 @@ var _ = Describe("[GET] on /owl/query-object/:uuid", func() {
 	Context("Fetch existing query object", func() {
 		It("Checks the named id", func() {
 			resp := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewSlingByBase().
+				httpClientConfig.NewClient().
 					Get("api/v1/owl/query-object/9ed424fb-656b-a682-9613-2c2b5458f4ac"),
 			)
 			jsonBody := resp.GetBodyAsJson()
@@ -91,7 +91,7 @@ var _ = Describe("[GET] on /owl/query-object/:uuid", func() {
 	Context("Fetch non-existing query object", func() {
 		It("Checks the 404 status", func() {
 			resp := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewSlingByBase().
+				httpClientConfig.NewClient().
 					Get("api/v1/owl/query-object/70d420fb-6a6b-a682-9613-2c2b5458f4ac"),
 			)
 			jsonBody := resp.GetBodyAsJson()
@@ -142,7 +142,7 @@ var _ = Describe("[POST] on /owl/query-object/vacuum", func() {
 		DescribeTable("Check number of affected rows",
 			func(forDays int, expectedAffectedRows int) {
 				resp := tHttp.NewResponseResultBySling(
-					httpClientConfig.NewSlingByBase().
+					httpClientConfig.NewClient().
 						Post("api/v1/owl/query-object/vacuum").
 						QueryStruct(
 							&struct {

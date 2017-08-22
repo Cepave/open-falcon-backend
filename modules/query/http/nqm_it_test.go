@@ -15,7 +15,7 @@ type TestNqmItSuite struct{}
 
 var _ = Suite(&TestNqmItSuite{})
 
-var httpClientConfig = httpT.NewHttpClientConfigByFlag()
+var httpClientConfig = httpT.SlingClientConf{httpT.NewHttpClientConfigByFlag()}
 
 // Tests the building of ICMP query
 func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
@@ -45,7 +45,7 @@ func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
 
 		return httpT.NewCheckSlint(
 			c,
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Post("nqm/icmp/compound-report").
 				BodyJSON(jsonBody),
 		).
@@ -89,7 +89,7 @@ func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
 		/**
 		 * Calls RESTful service and retrieve data
 		 */
-		slingObject := httpClientConfig.NewSlingByBase().
+		slingObject := httpClientConfig.NewClient().
 			Get("nqm/icmp/compound-report/query/" + testCase.sampleUuid)
 
 		clientChecker := httpT.NewCheckSlint(c, slingObject)

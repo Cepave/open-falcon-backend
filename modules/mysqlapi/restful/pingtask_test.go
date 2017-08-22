@@ -74,7 +74,7 @@ func (suite *TestPingtaskItSuite) TestGetPingtaskById(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Get("api/v1/nqm/pingtask/" + strconv.Itoa(v.inputID))
 
 		slintChecker := testingHttp.NewCheckSlint(c, client)
@@ -99,7 +99,7 @@ func (suite *TestPingtaskItSuite) TestAddNewPingtask(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Post("api/v1/nqm/pingtask").
 			BodyJSON(json.UnmarshalToJson([]byte(`
 			{
@@ -123,7 +123,7 @@ func (suite *TestPingtaskItSuite) TestAddNewPingtask(c *C) {
 }
 
 func (suite *TestPingtaskItSuite) TestListPingtasks(c *C) {
-	client := httpClientConfig.NewSlingByBase().
+	client := httpClientConfig.NewClient().
 		Get("api/v1/nqm/pingtasks")
 	slintChecker := testingHttp.NewCheckSlint(c, client)
 
@@ -145,7 +145,7 @@ func (suite *TestPingtaskItSuite) TestModifyPingtask(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Put("api/v1/nqm/pingtask/" + strconv.Itoa(v.inputID)).
 			BodyJSON(json.UnmarshalToJson([]byte(`
 			{
@@ -192,7 +192,7 @@ func (suite *TestPingtaskItSuite) TestAddPingtaskToAgentForAgent(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Post("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask?pingtask_id=" + strconv.Itoa(v.inputPID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
@@ -216,7 +216,7 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForAgent(c *C) {
 		{24026, 10121, http.StatusOK},
 	}
 	for _, v := range testCases {
-		req, _ := httpClientConfig.NewSlingByBase().
+		req, _ := httpClientConfig.NewClient().
 			Post("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask?pingtask_id=" + strconv.Itoa(v.inputPID)).
 			Request()
 		client := &http.Client{}
@@ -224,7 +224,7 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForAgent(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Delete("api/v1/nqm/agent/" + strconv.Itoa((v.inputAID)) + "/pingtask/=" + strconv.Itoa(v.inputPID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
@@ -249,7 +249,7 @@ func (suite *TestPingtaskItSuite) TestAddPingtaskToAgentForPingtask(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Post("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent?agent_id=" + strconv.Itoa(v.inputAID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)
@@ -273,7 +273,7 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForPingtask(c *C) {
 		{10121, 24026, http.StatusOK},
 	}
 	for _, v := range testCases {
-		req, _ := httpClientConfig.NewSlingByBase().
+		req, _ := httpClientConfig.NewClient().
 			Post("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent?agent_id=" + strconv.Itoa(v.inputAID)).
 			Request()
 		client := &http.Client{}
@@ -281,7 +281,7 @@ func (suite *TestPingtaskItSuite) TestRemovePingtaskToAgentForPingtask(c *C) {
 	}
 	for i, v := range testCases {
 		c.Logf("case[%d]:", i)
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Delete("api/v1/nqm/pingtask/" + strconv.Itoa((v.inputPID)) + "/agent/=" + strconv.Itoa(v.inputAID))
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResult := slintChecker.GetJsonBody(v.expectedStatus)

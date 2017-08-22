@@ -60,7 +60,7 @@ func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *ch.C) {
 			}
 		}
 
-		client := httpClientConfig.NewSlingByBase().Post("api/v1/agent/heartbeat?update_only=" + strconv.FormatBool(testCase.updateOnly)).
+		client := httpClientConfig.NewClient().Post("api/v1/agent/heartbeat?update_only=" + strconv.FormatBool(testCase.updateOnly)).
 			BodyJSON(sampleHosts)
 		slintChecker := testingHttp.NewCheckSlint(c, client)
 		jsonResp := slintChecker.GetJsonBody(http.StatusOK)
@@ -115,7 +115,7 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 			Timestamp:    json.JsonTime(time.Now()),
 		}
 		resp := testingHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Post("api/v1/heartbeat/nqm/agent").
 				BodyJSON(inputReq),
 		)
@@ -169,7 +169,7 @@ var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", ginkgoDb.NeedDb(func(
 
 	It("gets an empyt target list of an existent agent[24021]", func() {
 		resp := testingHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Get("api/v1/heartbeat/nqm/agent/24021/targets"),
 		)
 		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
@@ -177,7 +177,7 @@ var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", ginkgoDb.NeedDb(func(
 
 	It("gets the target list of 3 targets from an existent agent[24022]", func() {
 		resp := testingHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Get("api/v1/heartbeat/nqm/agent/24022/targets"),
 		)
 		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
@@ -189,7 +189,7 @@ var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", ginkgoDb.NeedDb(func(
 
 	It("gets error code 500 for an nonexistent agent[24020]", func() {
 		resp := testingHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Get("api/v1/heartbeat/nqm/agent/24020/targets"),
 		)
 		Expect(resp).To(ogko.MatchHttpStatus(http.StatusInternalServerError))
