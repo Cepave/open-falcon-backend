@@ -68,6 +68,7 @@ func (self *HttpClientConfig) hostAndPort() string {
 	return fmt.Sprintf("%s://%s:%d", schema, self.Host, self.Port)
 }
 
+// Supporting configuration of testing by Gentleman library
 type GentlemanClientConf struct {
 	*HttpClientConfig
 }
@@ -91,6 +92,7 @@ func (c *GentlemanClientConf) NewRequest() *gt.Request {
 	return c.NewClient().Request()
 }
 
+// Supporting configuration of testing by Sling(deprecated) library
 type SlingClientConf struct {
 	*HttpClientConfig
 }

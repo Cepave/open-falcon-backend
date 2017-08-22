@@ -2,33 +2,28 @@ package http
 
 import (
 	"net/http"
-	"net/http/httptest"
-
-	sjson "github.com/bitly/go-simplejson"
-	"github.com/dghubble/sling"
-	"gopkg.in/h2non/gock.v1"
+	"strings"
 
 	ogt "./gentleman"
+	"github.com/dghubble/sling"
+	"gopkg.in/h2non/gock.v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ResponseResult and sling", func() {
-	var sampleServer *httptest.Server
 	var slingClient *sling.Sling
 
 	BeforeEach(func() {
-		sampleServer = httptest.NewServer(
-			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte("[3, 55, 17]"))
-			}),
-		)
-		slingClient = sling.New().Base(sampleServer.URL).Get("")
+		gock.New("http://mock.testing.gt:13770/res-2").
+			Reply(http.StatusOK).
+			JSON([]int{3, 55, 17})
+
+		slingClient = sling.New().Base("http://mock.testing.gt:13770").Get("res-2")
 	})
 	AfterEach(func() {
-		sampleServer.Close()
+		ogt.DisableMock()
 	})
 
 	Context("200 status", func() {
@@ -36,19 +31,21 @@ var _ = Describe("ResponseResult and sling", func() {
 			testedResult := NewResponseResultBySling(slingClient)
 			Expect(testedResult.Response.StatusCode).To(Equal(200))
 
-			Expect(testedResult.GetBodyAsString()).To(Equal("[3, 55, 17]"))
-			By("Get body again")
-			Expect(testedResult.GetBodyAsString()).To(Equal("[3, 55, 17]"))
-		})
+			GinkgoT().Logf("String body: %v", testedResult.GetBodyAsString())
 
-		It("Match Json(string)", func() {
+			Expect(strings.TrimSpace(testedResult.GetBodyAsString())).To(Equal("[3,55,17]"))
+			By("Get body again")
+			Expect(strings.TrimSpace(testedResult.GetBodyAsString())).To(Equal("[3,55,17]"))
+		})
+		It("Match body(JSON)", func() {
 			testedResult := NewResponseResultBySling(slingClient)
 			Expect(testedResult.Response.StatusCode).To(Equal(200))
 
-			expectedJson, _ := sjson.NewJson([]byte(`[3, 55, 17]`))
-			Expect(testedResult.GetBodyAsJson()).To(Equal(expectedJson))
+			Expect(testedResult.GetBodyAsJson().MustArray()).To(HaveLen(3))
 			By("Get body again")
-			Expect(testedResult.GetBodyAsJson()).To(Equal(expectedJson))
+			testedJson := testedResult.GetBodyAsJson()
+			Expect(testedJson.GetIndex(0).MustInt()).To(BeEquivalentTo(3))
+			Expect(testedJson.GetIndex(2).MustInt()).To(BeEquivalentTo(17))
 		})
 	})
 })

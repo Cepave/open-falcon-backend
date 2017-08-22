@@ -1,17 +1,20 @@
 package owl
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
+	client "github.com/Cepave/open-falcon-backend/common/http/client"
 	json "github.com/Cepave/open-falcon-backend/common/json"
 	ogko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
-	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
+
+var gtResp = client.ToGentlemanResp
 
 var _ = Describe("[POST] on /owl/query-object", ginkgoDb.NeedDb(func() {
 	AfterEach(func() {
@@ -26,18 +29,21 @@ var _ = Describe("[POST] on /owl/query-object", ginkgoDb.NeedDb(func() {
 	It("Check generated uuid and content. And the access/creation time must be after a certain time of boundary", func() {
 		now := time.Now().Unix()
 
-		resp := tHttp.NewResponseResultBySling(
-			httpClientConfig.NewClient().
-				Post("api/v1/owl/query-object").
-				BodyJSON(
-					map[string]interface{}{
-						"feature_name": "query.object.it",
-						"content":      "O9Hlrlg4LWGjDfs9/VgjEbuCMPu99xJc3V3btld4TVw=",
-						"md5_content":  "HheztFtq6WHjMgYKOjqB4g==",
-					},
-				),
-		)
-		jsonBody := resp.GetBodyAsJson()
+		resp, err := httpClient.NewClient().
+			Post().AddPath("/api/v1/owl/query-object").
+			JSON(
+				map[string]interface{}{
+					"feature_name": "query.object.it",
+					"content":      "O9Hlrlg4LWGjDfs9/VgjEbuCMPu99xJc3V3btld4TVw=",
+					"md5_content":  "HheztFtq6WHjMgYKOjqB4g==",
+				},
+			).
+			Send()
+
+		Expect(err).To(Succeed())
+
+		jsonBody := gtResp(resp).MustGetJson()
+
 		GinkgoT().Logf("[/owl/query-object] JSON Result:\n%s", json.MarshalPrettyJSON(jsonBody))
 
 		Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
@@ -76,11 +82,20 @@ var _ = Describe("[GET] on /owl/query-object/:uuid", func() {
 
 	Context("Fetch existing query object", func() {
 		It("Checks the named id", func() {
-			resp := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewClient().
-					Get("api/v1/owl/query-object/9ed424fb-656b-a682-9613-2c2b5458f4ac"),
-			)
-			jsonBody := resp.GetBodyAsJson()
+			resp, err := httpClient.NewClient().
+				Get().AddPath("/api/v1/owl/query-object/9ed424fb-656b-a682-9613-2c2b5458f4ac").
+				JSON(
+					map[string]interface{}{
+						"feature_name": "query.object.it",
+						"content":      "O9Hlrlg4LWGjDfs9/VgjEbuCMPu99xJc3V3btld4TVw=",
+						"md5_content":  "HheztFtq6WHjMgYKOjqB4g==",
+					},
+				).
+				Send()
+
+			Expect(err).To(Succeed())
+
+			jsonBody := gtResp(resp).MustGetJson()
 			GinkgoT().Logf("[/owl/query-object/:uuid] JSON Result:\n%s", json.MarshalPrettyJSON(jsonBody))
 
 			Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))
@@ -90,11 +105,20 @@ var _ = Describe("[GET] on /owl/query-object/:uuid", func() {
 
 	Context("Fetch non-existing query object", func() {
 		It("Checks the 404 status", func() {
-			resp := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewClient().
-					Get("api/v1/owl/query-object/70d420fb-6a6b-a682-9613-2c2b5458f4ac"),
-			)
-			jsonBody := resp.GetBodyAsJson()
+			resp, err := httpClient.NewClient().
+				Get().AddPath("/api/v1/owl/query-object/70d420fb-6a6b-a682-9613-2c2b5458f4ac").
+				JSON(
+					map[string]interface{}{
+						"feature_name": "query.object.it",
+						"content":      "O9Hlrlg4LWGjDfs9/VgjEbuCMPu99xJc3V3btld4TVw=",
+						"md5_content":  "HheztFtq6WHjMgYKOjqB4g==",
+					},
+				).
+				Send()
+
+			Expect(err).To(Succeed())
+
+			jsonBody := gtResp(resp).MustGetJson()
 			GinkgoT().Logf("[/owl/query-object/:uuid] JSON Result:\n%s", json.MarshalPrettyJSON(jsonBody))
 
 			Expect(resp).To(ogko.MatchHttpStatus(http.StatusNotFound))
@@ -141,18 +165,14 @@ var _ = Describe("[POST] on /owl/query-object/vacuum", func() {
 
 		DescribeTable("Check number of affected rows",
 			func(forDays int, expectedAffectedRows int) {
-				resp := tHttp.NewResponseResultBySling(
-					httpClientConfig.NewClient().
-						Post("api/v1/owl/query-object/vacuum").
-						QueryStruct(
-							&struct {
-								ForDays int `url:"for_days"`
-							}{
-								ForDays: forDays,
-							},
-						),
-				)
-				jsonBody := resp.GetBodyAsJson()
+				resp, err := httpClient.NewClient().
+					Post().AddPath("/api/v1/owl/query-object/vacuum").
+					AddQuery("for_days", fmt.Sprintf("%d", forDays)).
+					Send()
+
+				Expect(err).To(Succeed())
+
+				jsonBody := gtResp(resp).MustGetJson()
 				GinkgoT().Logf("[/owl/query-object/vacuum] JSON Result:\n%s", json.MarshalPrettyJSON(jsonBody))
 
 				Expect(resp).To(ogko.MatchHttpStatus(http.StatusOK))

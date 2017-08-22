@@ -16,7 +16,7 @@ func TestByGinkgo(t *testing.T) {
 	RunSpecs(t, "Base Suite")
 }
 
-var httpClientConfig = tHttp.SlingClientConf{tHttp.NewHttpClientConfigByFlag()}
+var httpClient = tHttp.GentlemanClientConf{tHttp.NewHttpClientConfigByFlag()}
 
 var ginkgoDb = &tDb.GinkgoDb{}
 
