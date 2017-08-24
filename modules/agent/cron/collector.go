@@ -54,10 +54,12 @@ func collect(sec int64, fns []func() []*model.MetricValue) {
 			}
 
 			for _, mv := range items {
-				if b, ok := ignoreMetrics[mv.Metric]; ok && b {
-					continue
-				} else {
-					mvs = append(mvs, mv)
+				if ignoreMetrics != nil && mv != nil {
+					if b, ok := ignoreMetrics[mv.Metric]; ok && b {
+						continue
+					} else {
+						mvs = append(mvs, mv)
+					}
 				}
 			}
 		}
