@@ -58,7 +58,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = config.InitDB(viper.GetBool("db.db_bug"))
+	err = config.InitDB(viper.GetBool("db.db_debug"))
 	if err != nil {
 		log.Fatalf("db conn failed with error %s", err.Error())
 	}

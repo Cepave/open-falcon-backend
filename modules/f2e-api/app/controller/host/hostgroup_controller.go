@@ -3,7 +3,6 @@ package host
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strconv"
 
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
@@ -121,7 +120,10 @@ func BindHostToHostGroup(c *gin.Context) {
 		}
 	}
 	tx.Commit()
-	h.JSONR(c, fmt.Sprintf("%v bind to hostgroup: %v", ids, hostgroup.ID))
+	h.JSONR(c, map[string]interface{}{
+		"hosts":   ids,
+		"message": fmt.Sprintf("%v bind to hostgroup: %v", ids, hostgroup.ID),
+	})
 	return
 }
 
@@ -156,7 +158,10 @@ func UnBindAHostToHostGroup(c *gin.Context) {
 		h.JSONR(c, expecstatus, dt.Error)
 		return
 	}
-	h.JSONR(c, fmt.Sprintf("unbind host:%v of hostgroup: %v", inputs.HostID, inputs.HostGroupID))
+	h.JSONR(c, map[string]interface{}{
+		"hosts":   inputs.HostID,
+		"message": fmt.Sprintf("unbind host:%v of hostgroup: %v", inputs.HostID, inputs.HostGroupID),
+	})
 	return
 }
 
@@ -236,19 +241,14 @@ func GetHostGroup(c *gin.Context) {
 		return
 	}
 	hosts := []f.Host{}
-	grpHosts := []f.GrpHost{}
-	if dt := db.Falcon.Where("grp_id = ?", grpID).Find(&grpHosts); dt.Error != nil {
+	dt := db.Falcon.Raw(fmt.Sprintf(`
+		select ht.id, ht.hostname, ht.ip
+		from %s as gh INNER JOIN %s as ht ON gh.host_id = ht.id
+		where gh.grp_id = %d and ht.hostname regexp '%s'
+	`, f.GrpHost{}.TableName(), f.Host{}.TableName(), grpID, q)).Scan(&hosts)
+	if dt.Error != nil {
 		h.JSONR(c, expecstatus, dt.Error)
 		return
-	}
-	for _, grph := range grpHosts {
-		var host f.Host
-		db.Falcon.Find(&host, grph.HostID)
-		if host.ID != 0 {
-			if ok, err := regexp.MatchString(q, host.Hostname); ok == true && err == nil {
-				hosts = append(hosts, host)
-			}
-		}
 	}
 	h.JSONR(c, map[string]interface{}{
 		"hostgroup": hostgroup,
