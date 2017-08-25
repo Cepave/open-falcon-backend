@@ -105,6 +105,33 @@ func ScreenGetsByPid(c *gin.Context) {
 	h.JSONR(c, screens)
 }
 
+func GetScreenListSimple(c *gin.Context) {
+	inputs := APIScreenGetsAllInputs{Limit: 500, Page: -1, Order: false}
+	if err := c.Bind(&inputs); err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
+	screens := []m.DashboardScreen{}
+	dt := db.Dashboard.Model(&screens)
+	if inputs.KeyWord != "" {
+		filterKeyForSql := "%" + inputs.KeyWord + "%"
+		dt = dt.Where("name like ? OR creator like ?", filterKeyForSql, filterKeyForSql)
+	}
+	var offset = 0
+	if inputs.Page > 1 {
+		offset = (inputs.Page - 1) * inputs.Limit
+	}
+	if inputs.Page > 0 {
+		dt.Offset(offset)
+	}
+	dt = dt.Limit(inputs.Limit).Find(&screens)
+	if dt.Error != nil {
+		h.JSONR(c, badstatus, dt.Error)
+		return
+	}
+	h.JSONR(c, screens)
+}
+
 type APIScreenGetsAllInputs struct {
 	Limit   int    `json:"limit" form:"limit"`
 	Page    int    `json:"page" form:"page"`

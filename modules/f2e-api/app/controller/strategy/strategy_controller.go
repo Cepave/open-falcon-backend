@@ -12,21 +12,22 @@ import (
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	"github.com/gin-gonic/gin"
+	"os"
+	"path/filepath"
 )
+
+type APIGetStrategysInput struct {
+	Tip int `json:"tid" form:"tid" binding:"required"`
+}
 
 func GetStrategys(c *gin.Context) {
 	var strategys []f.Strategy
-	tidtmp := c.DefaultQuery("tid", "")
-	if tidtmp == "" {
-		h.JSONR(c, badstatus, "tid is missing")
+	inputs := APIGetStrategysInput{}
+	if err := c.Bind(&inputs); err != nil {
+		h.JSONR(c, badstatus, err.Error())
 		return
 	}
-	tid, err := strconv.Atoi(tidtmp)
-	if err != nil {
-		h.JSONR(c, badstatus, err)
-		return
-	}
-	dt := db.Falcon.Where("tpl_id = ?", tid).Find(&strategys)
+	dt := db.Falcon.Where("tpl_id = ?", inputs.Tip).Find(&strategys)
 	if dt.Error != nil {
 		h.JSONR(c, badstatus, dt.Error)
 		return
@@ -94,7 +95,10 @@ func CreateStrategy(c *gin.Context) {
 		h.JSONR(c, expecstatus, dt.Error)
 		return
 	}
-	h.JSONR(c, "stragtegy created")
+	h.JSONR(c, map[string]interface{}{
+		"strategy": strategy,
+		"msg":      "stragtegy created",
+	})
 	return
 }
 
@@ -181,7 +185,10 @@ func UpdateStrategy(c *gin.Context) {
 		h.JSONR(c, expecstatus, dt.Error)
 		return
 	}
-	h.JSONR(c, fmt.Sprintf("stragtegy:%d has been updated", strategy.ID))
+	h.JSONR(c, map[string]interface{}{
+		"strategy": ustrategy,
+		"msg":      fmt.Sprintf("stragtegy:%d has been updated", strategy.ID),
+	})
 	return
 }
 
@@ -206,7 +213,13 @@ func DeleteStrategy(c *gin.Context) {
 }
 
 func MetricQuery(c *gin.Context) {
-	data, err := ioutil.ReadFile("data/metric")
+	// get current running path
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		h.JSONR(c, badstatus, err)
+		return
+	}
+	data, err := ioutil.ReadFile(fmt.Sprintf("%v/data/metric", dir))
 	if err != nil {
 		h.JSONR(c, badstatus, err)
 		return

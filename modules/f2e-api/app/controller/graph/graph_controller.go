@@ -2,7 +2,6 @@ package graph
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"net/http"
@@ -29,11 +28,13 @@ func EndpointRegexpQuery(c *gin.Context) {
 		//set default is 500
 		Limit: 500,
 		Page:  1,
+		Q:     ".+",
 	}
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
 	}
+
 	if inputs.Q == "" && inputs.Label == "" {
 		h.JSONR(c, http.StatusBadRequest, "q and labels are all missing")
 		return
@@ -48,28 +49,34 @@ func EndpointRegexpQuery(c *gin.Context) {
 		qs = strings.Split(inputs.Q, " ")
 	}
 
-	var offset int = 0
-	if inputs.Page > 1 {
+	offset := 0
+	if inputs.Page != 1 {
 		offset = (inputs.Page - 1) * inputs.Limit
 	}
 
 	var endpoint []m.Endpoint
 	var endpoint_id []int
 	var dt *gorm.DB
+	// query by labels , this is for support falcon-plus dashboard ui page
 	if len(labels) != 0 {
 		dt = db.Graph.Table("endpoint_counter").Select("distinct endpoint_id")
 		for _, trem := range labels {
 			dt = dt.Where(" counter like ? ", "%"+strings.TrimSpace(trem)+"%")
 		}
-		dt = dt.Limit(inputs.Limit).Offset(offset).Pluck("distinct endpoint_id", &endpoint_id)
+		if inputs.Page > 0 {
+			dt = dt.Offset(offset)
+		}
+		dt = dt.Limit(inputs.Limit).Pluck("distinct endpoint_id", &endpoint_id)
 		if dt.Error != nil {
 			h.JSONR(c, http.StatusBadRequest, dt.Error)
 			return
 		}
 	}
+	// query by endpoint regexp match directly
 	if len(qs) != 0 {
 		dt = db.Graph.Table("endpoint").
 			Select("endpoint, id")
+		// combine query result from labels
 		if len(endpoint_id) != 0 {
 			dt = dt.Where("id in (?)", endpoint_id)
 		}
@@ -77,12 +84,18 @@ func EndpointRegexpQuery(c *gin.Context) {
 		for _, trem := range qs {
 			dt = dt.Where(" endpoint regexp ? ", strings.TrimSpace(trem))
 		}
-		dt.Limit(inputs.Limit).Offset(offset).Scan(&endpoint)
+		if inputs.Page > 0 {
+			dt = dt.Offset(offset)
+		}
+		dt.Limit(inputs.Limit).Scan(&endpoint)
 	} else if len(endpoint_id) != 0 {
 		dt = db.Graph.Table("endpoint").
 			Select("endpoint, id").
-			Where("id in (?)", endpoint_id).
-			Scan(&endpoint)
+			Where("id in (?)", endpoint_id)
+		if inputs.Page > 0 {
+			dt = dt.Offset(offset)
+		}
+		dt.Limit(inputs.Limit).Scan(&endpoint)
 	}
 	if dt.Error != nil {
 		h.JSONR(c, http.StatusBadRequest, dt.Error)
@@ -153,77 +166,93 @@ func fetchData(hostname string, counter string, consolFun string, startTime int6
 	return
 }
 
+type APIEndpointCounterRegexpQueryInputs struct {
+	Q     string `json:"metricQuery" form:"metricQuery"`
+	Eid   string `json:"eid" form:"eid"`
+	Limit int    `json:"limit" form:"limit"`
+	Page  int    `json:"page" form:"page"`
+}
+
 // fastweb only
 func EndpointCounterRegexpQuery(c *gin.Context) {
-	eid := c.DefaultQuery("eid", "")
-	metricQuery := c.DefaultQuery("metricQuery", ".+")
-	limitTmp := c.DefaultQuery("limit", "500")
-	limit, err := strconv.Atoi(limitTmp)
-	if err != nil {
-		h.JSONR(c, http.StatusBadRequest, err)
+	inputs := APIEndpointCounterRegexpQueryInputs{
+		Limit: 500,
+		Q:     ".+",
+		Page:  -1,
+	}
+	if err := c.Bind(&inputs); err != nil {
+		h.JSONR(c, badstatus, err)
 		return
 	}
-	if eid == "" {
+	if inputs.Eid == "" {
 		h.JSONR(c, http.StatusBadRequest, "eid is missing")
 	} else {
-		eids := utils.ConverIntStringToList(eid)
+		eids := utils.ConverIntStringToList(inputs.Eid)
 		if eids == "" {
 			h.JSONR(c, http.StatusBadRequest, "input error, please check your input info.")
 			return
 		} else {
 			eids = fmt.Sprintf("(%s)", eids)
+			dt := db.Graph.Table("endpoint_counter").Select("DISTINCT(counter) as counter").
+				Where(fmt.Sprintf("endpoint_id IN %s AND counter regexp '%s' ", eids, inputs.Q)).
+				Limit(inputs.Limit)
+			var offset int = 0
+			if inputs.Page > 1 {
+				offset = (inputs.Page - 1) * inputs.Limit
+				dt = dt.Offset(offset)
+			}
+			countersResp := []string{}
+			dt.Pluck("distinct counter", &countersResp)
+			h.JSONR(c, countersResp)
+			return
 		}
-		var counters []m.EndpointCounter
-		db.Graph.Table("endpoint_counter").Select("counter").Where(fmt.Sprintf("endpoint_id IN %s AND counter regexp '%s' ", eids, metricQuery)).Scan(&counters)
-		countersResp := []interface{}{}
-		for _, c := range counters {
-			countersResp = append(countersResp, c.Counter)
-		}
-		result := utils.UniqSet(countersResp)
-		result = utils.MapTake(result, limit)
-		h.JSONR(c, result)
 	}
-	return
+}
+
+type APIEndpointStrCounterRegexpQueryInputs struct {
+	Q         string `json:"metricQuery" form:"metricQuery"`
+	Endpoints string `json:"endpoints" form:"endpoints"`
+	Limit     int    `json:"limit" form:"limit"`
+	Page      int    `json:"page" form:"page"`
 }
 
 func EndpointStrCounterRegexpQuery(c *gin.Context) {
-	endpoints := c.DefaultQuery("endpoints", "")
-	metricQuery := c.DefaultQuery("metricQuery", ".+")
-	limitTmp := c.DefaultQuery("limit", "500")
-	limit, err := strconv.Atoi(limitTmp)
-	if err != nil {
-		h.JSONR(c, http.StatusBadRequest, err)
+	inputs := APIEndpointStrCounterRegexpQueryInputs{
+		Limit: 500,
+		Q:     ".+",
+		Page:  -1,
+	}
+	if err := c.Bind(&inputs); err != nil {
+		h.JSONR(c, badstatus, err)
 		return
 	}
-	if endpoints == "" {
+	if inputs.Endpoints == "" {
 		h.JSONR(c, http.StatusBadRequest, "endpoints is missing")
 	} else {
-		enps := strings.Split(endpoints, ",")
-		enpids := []int{}
-		rows, _ := db.Graph.Table("endpoint").Select("id").Where("endpoint IN (?)", enps).Rows()
-		for rows.Next() {
-			id := struct {
-				Id int
-			}{}
-			db.Falcon.ScanRows(rows, &id)
-			enpids = append(enpids, id.Id)
-		}
-		eids, _ := utils.ArrIntToString(enpids)
+		enps := strings.Split(inputs.Endpoints, ",")
+		enpids := []int64{}
+		db.Graph.Table("endpoint").Select("id").Where("endpoint IN (?)", enps).Pluck("id", &enpids)
+		eids, _ := utils.ArrInt64ToString(enpids)
 		if eids == "" {
 			h.JSONR(c, http.StatusBadRequest, "input error, please check your input info.")
 			return
 		} else {
 			eids = fmt.Sprintf("(%s)", eids)
 		}
-		var counters []m.EndpointCounter
-		db.Graph.Table("endpoint_counter").Select("counter").Where(fmt.Sprintf("endpoint_id IN %s AND counter regexp '%s' ", eids, metricQuery)).Scan(&counters)
-		countersResp := []interface{}{}
-		for _, c := range counters {
-			countersResp = append(countersResp, c.Counter)
+		dt := db.Graph.Table("endpoint_counter").
+			Select("counter").
+			Where(fmt.Sprintf("endpoint_id IN %s AND counter regexp '%s' ", eids, inputs.Q)).
+			Limit(inputs.Limit)
+
+		var offset int = 0
+		if inputs.Page > 1 {
+			offset = (inputs.Page - 1) * inputs.Limit
+			dt = dt.Offset(offset)
 		}
-		result := utils.UniqSet(countersResp)
-		result = utils.MapTake(result, limit)
-		h.JSONR(c, result)
+
+		countersResp := []string{}
+		dt.Pluck("distinct counter", &countersResp)
+		h.JSONR(c, countersResp)
+		return
 	}
-	return
 }
