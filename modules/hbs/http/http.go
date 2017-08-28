@@ -5,6 +5,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
+
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
@@ -31,7 +33,25 @@ func init() {
 }
 
 func getHealth(c *gin.Context) {
-	c.JSON(http.StatusOK, "An example getHealth message.")
+	rpcInfo := g.Config().Listen
+	httpInfo := g.Config().Http
+	healthInfo := struct {
+		Http        *g.HttpConfig      `json:"http"`
+		Rpc         *g.RpcView         `json:"rpc"`
+		FalconAgent *g.FalconAgentView `json:"falcon_agent"`
+	}{
+		httpInfo,
+		&g.RpcView{rpcInfo},
+		&g.FalconAgentView{
+			&g.HeartbeatView{
+				CurrentSize:         rpc.AgentHeartbeatService.CurrentSize(),
+				CumulativeReceived:  rpc.AgentHeartbeatService.CumulativeAgentsPut(),
+				CumulativeDropped:   rpc.AgentHeartbeatService.CumulativeAgentsDropped(),
+				CumulativeProcessed: rpc.AgentHeartbeatService.CumulativeRowsAffected(),
+			},
+		},
+	}
+	c.JSON(http.StatusOK, healthInfo)
 }
 
 func RenderJson(w http.ResponseWriter, v interface{}) {

@@ -1,12 +1,9 @@
 package http
 
 import (
-	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/service"
 	"github.com/gin-gonic/gin"
 )
-
-var logger = log.NewDefaultLogger("INFO")
 
 func configProcRoutes(router *gin.Engine) {
 	router.GET("/expressions", expressions)
