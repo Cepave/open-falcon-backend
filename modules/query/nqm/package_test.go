@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
+	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,3 +29,5 @@ func (s *dbTestSuite) SetUpSuite(c *ch.C) {
 func (s *dbTestSuite) TearDownSuite(c *ch.C) {
 	qtest.ReleaseDb(c)
 }
+
+var ginTestServer = tHttp.GinTestServer

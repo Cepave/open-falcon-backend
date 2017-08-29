@@ -11,22 +11,33 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 	mysql "github.com/Cepave/open-falcon-backend/common/service/mysqlapi"
+
+	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 )
 
 // Constructs configuration of gock, which
 func NewGockConfig() *GockConfig {
 	port := rand.Int31n(1000) + 30000
 	host := fmt.Sprintf("test-pc%03d.gock.com", rand.Int31n(999)+1)
-	url := fmt.Sprintf("http://%s:%d", host, port)
 
-	return &GockConfig{
+	return newGockConfig(host, uint16(port))
+}
+
+func NewGockConfigByTestServer() *GockConfig {
+	return newGockConfig(tHttp.WebTestServer.GetHost(), tHttp.WebTestServer.GetPort())
+}
+
+func newGockConfig(host string, port uint16) *GockConfig {
+	newConfig := &GockConfig{
 		Host: host,
-		Port: uint16(port),
-		Url:  url,
-		GentlemanT: &implGentlemanT{
-			url: url,
-		},
+		Port: port,
 	}
+
+	newConfig.GentlemanT = &implGentlemanT{
+		url: newConfig.GetUrl(),
+	}
+
+	return newConfig
 }
 
 // Defines the interface used to ease testing by Gentleman library.
@@ -39,13 +50,12 @@ type GentlemanT interface {
 type GockConfig struct {
 	Host       string
 	Port       uint16
-	Url        string
 	GentlemanT GentlemanT
 }
 
 func (c *GockConfig) NewHttpConfig() *client.HttpClientConfig {
 	config := client.NewDefaultConfig()
-	config.Url = c.Url
+	config.Url = c.GetUrl()
 	return config
 }
 
@@ -58,9 +68,15 @@ func (c *GockConfig) NewMySqlApiConfig() *mysql.ApiConfig {
 	}
 }
 
+func (c *GockConfig) GetUrl() string {
+	return fmt.Sprintf("http://%s:%d", c.Host, c.Port)
+}
+
 func (c *GockConfig) New() *gock.Request {
-	logger.Infof("New Gock request: %s", c.Url)
-	return gock.New(c.Url)
+	url := c.GetUrl()
+
+	logger.Infof("New Gock request: %s", url)
+	return gock.New(url)
 }
 
 // Calls gock.Off()

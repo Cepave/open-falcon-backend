@@ -1,16 +1,23 @@
-package http
+package http_test
 
 import (
+	"testing"
 	"net/http"
 	"strings"
 
 	"github.com/dghubble/sling"
 
+	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+func TestByGinkgo(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Client Test Suite")
+}
 
 var gockConfig = mock.NewGockConfig()
 
@@ -22,7 +29,7 @@ var _ = Describe("ResponseResult and sling", func() {
 			Reply(http.StatusOK).
 			JSON([]int{3, 55, 17})
 
-		slingClient = sling.New().Base(gockConfig.Url).Get("res-2")
+		slingClient = sling.New().Base(gockConfig.GetUrl()).Get("res-2")
 	})
 	AfterEach(func() {
 		gockConfig.Off()
@@ -30,7 +37,7 @@ var _ = Describe("ResponseResult and sling", func() {
 
 	Context("200 status", func() {
 		It("Match body(string)", func() {
-			testedResult := NewResponseResultBySling(slingClient)
+			testedResult := tHttp.NewResponseResultBySling(slingClient)
 			Expect(testedResult.Response.StatusCode).To(Equal(200))
 
 			GinkgoT().Logf("String body: %v", testedResult.GetBodyAsString())
@@ -40,7 +47,7 @@ var _ = Describe("ResponseResult and sling", func() {
 			Expect(strings.TrimSpace(testedResult.GetBodyAsString())).To(Equal("[3,55,17]"))
 		})
 		It("Match body(JSON)", func() {
-			testedResult := NewResponseResultBySling(slingClient)
+			testedResult := tHttp.NewResponseResultBySling(slingClient)
 			Expect(testedResult.Response.StatusCode).To(Equal(200))
 
 			Expect(testedResult.GetBodyAsJson().MustArray()).To(HaveLen(3))
@@ -69,8 +76,8 @@ var _ = Describe("Library of Gentleman HTTP client(h2non/gentleman)", func() {
 		})
 
 		It("Match status and body", func() {
-			clientConf := &GentlemanClientConf{
-				&HttpClientConfig{
+			clientConf := &tHttp.GentlemanClientConf{
+				&tHttp.HttpClientConfig{
 					Ssl:      false,
 					Host:     gockConfig.Host,
 					Port:     gockConfig.Port,
