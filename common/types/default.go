@@ -28,12 +28,8 @@ func stringToUuid(source interface{}) interface{} {
 		))
 	}
 
-	uuidValue, err := uuid.FromString(sourceAsString)
-	if err != nil {
-		panic(errors.Details(
-			errors.Annotatef(err, "Value of \"%s\" cannot be parsed to uuid.UUID", sourceAsString),
-		))
-	}
+	var targetUuid Uuid
+	targetUuid.MustFromString(sourceAsString)
 
-	return uuidValue
+	return uuid.UUID(targetUuid)
 }
