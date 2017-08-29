@@ -1,105 +1,109 @@
 package owl
 
 import (
+	"net/http"
 	"time"
 
-	db "github.com/Cepave/open-falcon-backend/common/db"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
-	model "github.com/Cepave/open-falcon-backend/common/model/owl"
-	c "github.com/karlseguin/ccache"
+	"github.com/juju/errors"
 	"github.com/satori/go.uuid"
+	gt "gopkg.in/h2non/gentleman.v2"
+
+	"github.com/Cepave/open-falcon-backend/common/db"
+	"github.com/Cepave/open-falcon-backend/common/http/client"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	model "github.com/Cepave/open-falcon-backend/common/model/owl"
+	mysqlapi "github.com/Cepave/open-falcon-backend/common/service/mysqlapi"
 )
 
 type QueryServiceConfig struct {
-	Name          string
-	CacheSize     int64
-	CacheDuration time.Duration
-}
-type QueryService struct {
-	config *QueryServiceConfig
-	cache  *c.Cache
+	*mysqlapi.ApiConfig
 }
 
-func KeyByUuid(uuid uuid.UUID) string {
-	return uuid.String()
-}
-func KeyByDbUuid(dbUuid db.DbUuid) string {
-	return KeyByUuid(uuid.UUID(dbUuid))
+type QueryService interface {
+	LoadQueryByUuid(uuid uuid.UUID) *model.Query
+	CreateOrLoadQuery(query *model.Query)
 }
 
-// The max size of cache and size of bucket
-//
-// 	<= 100 - 2
-// 	<= 1000 - 4
-// 	<= 5000 - 8
-// 	> 10000 - 16
-//
-// 	The prune size is size of cache / 8
-func NewQueryService(config QueryServiceConfig) *QueryService {
-	var bucketSize uint32 = 16
+func NewQueryService(config QueryServiceConfig) QueryService {
+	newClient := mysqlapi.NewApiService(*config.ApiConfig).NewClient()
 
-	switch {
-	case config.CacheSize <= 100:
-		bucketSize = 2
-	case config.CacheSize <= 1000:
-		bucketSize = 4
-	case config.CacheSize <= 5000:
-		bucketSize = 8
+	return &queryServiceImpl{
+		loadQueryByUuid:   newClient.Get().AddPath("/api/v1/owl/query-object"),
+		createOrLoadQuery: newClient.Post().AddPath("/api/v1/owl/query-object"),
 	}
+}
 
-	cacheObject := c.New(
-		c.Configure().
-			MaxSize(config.CacheSize).
-			Buckets(bucketSize).
-			ItemsToPrune(uint32(config.CacheSize / 8)),
+type queryServiceImpl struct {
+	loadQueryByUuid   *gt.Request
+	createOrLoadQuery *gt.Request
+}
+
+func (s *queryServiceImpl) LoadQueryByUuid(uuid uuid.UUID) *model.Query {
+	req := s.loadQueryByUuid.Clone().
+		AddPath("/" + uuid.String())
+
+	resp := client.ToGentlemanReq(req).SendAndMustMatch(
+		func(resp *gt.Response) error {
+			switch resp.StatusCode {
+			case http.StatusOK, http.StatusNotFound:
+				return nil
+			}
+
+			return errors.Errorf(client.ToGentlemanResp(resp).ToDetailString())
+		},
 	)
 
-	return &QueryService{
-		&config, cacheObject,
-	}
-}
-
-func (s *QueryService) LoadQueryByUuid(uuid uuid.UUID) *model.Query {
-	now := time.Now()
-	key := KeyByUuid(uuid)
-
-	/**
-	 * Updates access time to database if cache has this query
-	 */
-	itemInCache := s.cache.Get(key)
-	if itemInCache != nil {
-		query := itemInCache.Value().(*model.Query)
-		owlDb.UpdateAccessTimeOrAddNewOne(query, now)
-
-		return query
-	}
-	// :~)
-
-	/**
-	 * Loads query from database
-	 */
-	queryFromDatabase := owlDb.LoadQueryByUuidAndUpdateAccessTime(
-		uuid, now,
-	)
-	if queryFromDatabase == nil {
+	if resp.StatusCode == http.StatusNotFound {
 		return nil
 	}
-	// :~)
 
-	s.cache.Set(key, queryFromDatabase, s.config.CacheDuration)
-	return s.cache.Get(key).Value().(*model.Query)
+	jsonQuery := &struct {
+		Uuid    ojson.Uuid `json:"uuid"`
+		NamedId string     `json:"feature_name"`
+
+		Content    ojson.VarBytes `json:"content"`
+		Md5Content ojson.Bytes16  `json:"md5_content"`
+
+		CreationTime ojson.JsonTime `json:"creation_time"`
+		AccessTime   ojson.JsonTime `json:"access_time"`
+	}{}
+
+	client.ToGentlemanResp(resp).MustBindJson(jsonQuery)
+
+	return &model.Query{
+		Uuid:    db.DbUuid(jsonQuery.Uuid),
+		NamedId: jsonQuery.NamedId,
+
+		Content:    []byte(jsonQuery.Content),
+		Md5Content: db.Bytes16(jsonQuery.Md5Content),
+
+		CreationTime: time.Time(jsonQuery.CreationTime),
+		AccessTime:   time.Time(jsonQuery.AccessTime),
+	}
 }
 
-// Loads object of query or creating one
-func (s *QueryService) CreateOrLoadQuery(query *model.Query) {
-	now := time.Now()
+// Loads object of query or creating one.
+//
+// Any error would be expressed by panic.
+func (s *queryServiceImpl) CreateOrLoadQuery(query *model.Query) {
+	req := s.createOrLoadQuery.Clone().
+		JSON(map[string]interface{}{
+			"feature_name": query.NamedId,
+			"content":      ojson.VarBytes(query.Content),
+			"md5_content":  ojson.Bytes16(query.Md5Content),
+		})
 
-	query.NamedId = s.config.Name
-	owlDb.AddOrRefreshQuery(query, now)
+	resp := client.ToGentlemanReq(req).SendAndStatusMustMatch(http.StatusOK)
 
-	s.cache.Set(
-		KeyByDbUuid(query.Uuid),
-		query,
-		s.config.CacheDuration,
-	)
+	jsonBody := &struct {
+		Uuid         ojson.Uuid     `json:"uuid"`
+		CreationTime ojson.JsonTime `json:"creation_time"`
+		AccessTime   ojson.JsonTime `json:"access_time"`
+	}{}
+
+	client.ToGentlemanResp(resp).MustBindJson(jsonBody)
+
+	query.Uuid = db.DbUuid(jsonBody.Uuid)
+	query.CreationTime = time.Time(jsonBody.CreationTime)
+	query.AccessTime = time.Time(jsonBody.AccessTime)
 }

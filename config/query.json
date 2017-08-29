@@ -30,6 +30,10 @@
       "enabled":  false,
       "port": 1235
     },
+    "mysql_api": {
+        "host": "http://%%MYSQL_SERVICE%%",
+        "resource": ""
+    },
     "api": {
         "name": "api_owl",
         "token": "fastweb_owl",

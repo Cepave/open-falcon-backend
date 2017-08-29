@@ -1,17 +1,17 @@
 package http
 
 import (
-	"encoding/json"
-	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
-	"github.com/bitly/go-simplejson"
-	. "gopkg.in/check.v1"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"time"
-)
 
-func Test(t *testing.T) { TestingT(t) }
+	"encoding/json"
+	"github.com/bitly/go-simplejson"
+
+	dsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/nqm_parser"
+
+	. "gopkg.in/check.v1"
+)
 
 type TestNqmSuite struct{}
 

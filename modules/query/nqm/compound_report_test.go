@@ -1,21 +1,106 @@
 package nqm
 
 import (
-	"fmt"
 	"reflect"
 	"time"
-
-	"github.com/satori/go.uuid"
 
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
+	"github.com/Cepave/open-falcon-backend/common/types"
 	"github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/satori/go.uuid"
+
+	db "github.com/Cepave/open-falcon-backend/modules/query/database"
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
+	ch "gopkg.in/check.v1"
 )
+
+type mockQueryService struct {
+	sampleQuery *owlModel.Query
+}
+
+func (s *mockQueryService) LoadQueryByUuid(targetUuid uuid.UUID) *owlModel.Query {
+	return s.sampleQuery
+}
+func (s *mockQueryService) CreateOrLoadQuery(query *owlModel.Query) {
+	s.sampleQuery = query
+}
+
+var _ = Describe("Query object", func() {
+	mockQueryService := &mockQueryService{}
+
+	BeforeEach(func() {
+		db.QueryObjectService = mockQueryService
+	})
+	AfterEach(func() {
+		db.QueryObjectService = nil
+	})
+
+	Context("Build a new one", func() {
+		sampleNqmQuery := buildSampleNqmQuery(
+			"ab01", "ab02", "cd99",
+		)
+
+		It("The named id, content, and md5 digest should be set to exepcted one", func() {
+			testedQuery := BuildQuery(sampleNqmQuery)
+			expectedMd5Content := new(types.Bytes16)
+			expectedMd5Content.FromVarBytes(sampleNqmQuery.GetDigestValue())
+
+			Expect(testedQuery).To(PointTo(
+				MatchFields(IgnoreExtras, Fields{
+					"NamedId":    Equal(queryNamedId),
+					"Content":    BeEquivalentTo(sampleNqmQuery.GetCompressedQuery()),
+					"Md5Content": BeEquivalentTo(*expectedMd5Content),
+				}),
+			))
+		})
+	})
+
+	Context("Load by UUID", func() {
+		Context("Load viable query", func() {
+			sampleNqmQuery := buildSampleNqmQuery(
+				"pc01-com", "pc02-com", "srv-01-com",
+			)
+
+			BeforeEach(func() {
+				mockQueryService.sampleQuery = &owlModel.Query{
+					Content: sampleNqmQuery.GetCompressedQuery(),
+				}
+			})
+
+			It("Hostname should be matched", func() {
+				testedQuery := GetCompoundQueryByUuid(uuid.NewV4())
+				Expect(testedQuery.Filters.Agent.Hostname).To(
+					Equal(sampleNqmQuery.Filters.Agent.Hostname),
+				)
+			})
+		})
+
+		Context("Load nil value", func() {
+			BeforeEach(func() {
+				mockQueryService.sampleQuery = nil
+			})
+
+			It("Object should be nil", func() {
+				testedQuery := GetCompoundQueryByUuid(uuid.NewV4())
+				Expect(testedQuery).To(BeNil())
+			})
+		})
+	})
+})
+
+func buildSampleNqmQuery(hostname ...string) *model.CompoundQuery {
+	sampleNqmQuery := model.NewCompoundQuery()
+	sampleNqmQuery.Filters.Agent.Hostname = hostname
+	sampleNqmQuery.SetupDefault()
+	return sampleNqmQuery
+}
 
 type TestCompoundReportSuite struct{}
 type TestCompoundReportSuiteOnDb struct {
@@ -23,12 +108,12 @@ type TestCompoundReportSuiteOnDb struct {
 }
 
 var (
-	_ = Suite(&TestCompoundReportSuite{})
-	_ = Suite(&TestCompoundReportSuiteOnDb{&dbTestSuite{}})
+	_ = ch.Suite(&TestCompoundReportSuite{})
+	_ = ch.Suite(&TestCompoundReportSuiteOnDb{&dbTestSuite{}})
 )
 
 // Tests the conversion of query to detail information
-func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
+func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *ch.C) {
 	/**
 	 * Sets-up sample query
 	 */
@@ -64,43 +149,43 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 
 	testedDetail := ToQueryDetail(sampleQuery)
 
-	c.Assert(string(testedDetail.Metrics), Equals, sampleQuery.Filters.Metrics)
+	c.Assert(string(testedDetail.Metrics), ch.Equals, sampleQuery.Filters.Metrics)
 
 	/**
 	 * Asserts the query detail on agent conditions
 	 */
 	testedAgentDetail := testedDetail.Agent
-	c.Assert(testedAgentDetail.Name, DeepEquals, agentFilter.Name)
-	c.Assert(testedAgentDetail.Hostname, DeepEquals, agentFilter.Hostname)
-	c.Assert(testedAgentDetail.IpAddress, DeepEquals, agentFilter.IpAddress)
-	c.Assert(testedAgentDetail.ConnectionId, DeepEquals, agentFilter.ConnectionId)
-	c.Assert(testedAgentDetail.Isps, HasLen, 6)
-	c.Assert(testedAgentDetail.Provinces, HasLen, 4)
-	c.Assert(testedAgentDetail.Cities, HasLen, 2)
-	c.Assert(testedAgentDetail.NameTags, HasLen, 2)
-	c.Assert(testedAgentDetail.GroupTags, HasLen, 3)
+	c.Assert(testedAgentDetail.Name, ch.DeepEquals, agentFilter.Name)
+	c.Assert(testedAgentDetail.Hostname, ch.DeepEquals, agentFilter.Hostname)
+	c.Assert(testedAgentDetail.IpAddress, ch.DeepEquals, agentFilter.IpAddress)
+	c.Assert(testedAgentDetail.ConnectionId, ch.DeepEquals, agentFilter.ConnectionId)
+	c.Assert(testedAgentDetail.Isps, ch.HasLen, 6)
+	c.Assert(testedAgentDetail.Provinces, ch.HasLen, 4)
+	c.Assert(testedAgentDetail.Cities, ch.HasLen, 2)
+	c.Assert(testedAgentDetail.NameTags, ch.HasLen, 2)
+	c.Assert(testedAgentDetail.GroupTags, ch.HasLen, 3)
 	// :~)
 
 	/**
 	 * Asserts the query detail on target conditions
 	 */
 	testedTargetDetail := testedDetail.Target
-	c.Assert(testedTargetDetail.Name, DeepEquals, targetFilter.Name)
-	c.Assert(testedTargetDetail.Host, DeepEquals, targetFilter.Host)
-	c.Assert(testedTargetDetail.Isps, HasLen, 2)
-	c.Assert(testedTargetDetail.Provinces, HasLen, 3)
-	c.Assert(testedTargetDetail.Cities, HasLen, 2)
-	c.Assert(testedTargetDetail.NameTags, HasLen, 2)
-	c.Assert(testedTargetDetail.GroupTags, HasLen, 3)
+	c.Assert(testedTargetDetail.Name, ch.DeepEquals, targetFilter.Name)
+	c.Assert(testedTargetDetail.Host, ch.DeepEquals, targetFilter.Host)
+	c.Assert(testedTargetDetail.Isps, ch.HasLen, 2)
+	c.Assert(testedTargetDetail.Provinces, ch.HasLen, 3)
+	c.Assert(testedTargetDetail.Cities, ch.HasLen, 2)
+	c.Assert(testedTargetDetail.NameTags, ch.HasLen, 2)
+	c.Assert(testedTargetDetail.GroupTags, ch.HasLen, 3)
 	// :~)
 
 	/**
 	 * Asserts the output detail
 	 */
 	testedOutputDetail := testedDetail.Output
-	c.Assert(testedOutputDetail.Agent, HasLen, 2)
-	c.Assert(testedOutputDetail.Target, HasLen, 3)
-	c.Assert(testedOutputDetail.Metrics, HasLen, 3)
+	c.Assert(testedOutputDetail.Agent, ch.HasLen, 2)
+	c.Assert(testedOutputDetail.Target, ch.HasLen, 3)
+	c.Assert(testedOutputDetail.Metrics, ch.HasLen, 3)
 	// :~)
 }
 
@@ -110,7 +195,7 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetail(c *C) {
 //
 // -11 - The property(ISP, location, etc.) should be same with another side
 // -12 - The property(ISP, location, etc.) should not be same with another side
-func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetailOnSpecialValue(c *C) {
+func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetailOnSpecialValue(c *ch.C) {
 	/**
 	 * Sets-up sample query
 	 */
@@ -135,92 +220,28 @@ func (suite *TestCompoundReportSuiteOnDb) TestToQueryDetailOnSpecialValue(c *C) 
 	c.Logf("%#v", testedDetail.Agent)
 	c.Logf("%#v", testedDetail.Target)
 
-	c.Assert(testedDetail.Agent.Isps[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Agent.Isps[1].Id, Equals, int16(-12))
-	c.Assert(testedDetail.Agent.Provinces[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Agent.Provinces[1].Id, Equals, int16(-12))
-	c.Assert(testedDetail.Agent.Cities[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Agent.Cities[1].Id, Equals, int16(-12))
-	c.Assert(testedDetail.Agent.NameTags[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Agent.NameTags[1].Id, Equals, int16(-12))
+	c.Assert(testedDetail.Agent.Isps[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Isps[1].Id, ch.Equals, int16(-12))
+	c.Assert(testedDetail.Agent.Provinces[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Provinces[1].Id, ch.Equals, int16(-12))
+	c.Assert(testedDetail.Agent.Cities[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Agent.Cities[1].Id, ch.Equals, int16(-12))
+	c.Assert(testedDetail.Agent.NameTags[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Agent.NameTags[1].Id, ch.Equals, int16(-12))
 
-	c.Assert(testedDetail.Target.Isps[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Target.Isps[1].Id, Equals, int16(-12))
-	c.Assert(testedDetail.Target.Provinces[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Target.Provinces[1].Id, Equals, int16(-12))
-	c.Assert(testedDetail.Target.Cities[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Target.Cities[1].Id, Equals, int16(-12))
-	c.Assert(testedDetail.Target.NameTags[0].Id, Equals, int16(-11))
-	c.Assert(testedDetail.Target.NameTags[1].Id, Equals, int16(-12))
-}
-
-// Tests the building of query object
-func (suite *TestCompoundReportSuiteOnDb) TestBuildQuery(c *C) {
-	sampleQuery := model.NewCompoundQuery()
-
-	sampleJson := []byte(`
-	{
-		"filters": {
-			"time": {
-				"start_time": 1336608000,
-				"end_time": 1336622400
-			},
-			"agent": {
-				"name": [ "GD-1", "GD-2" ]
-			},
-			"target": {
-				"host": [ "18.98.7.61", "google.com" ]
-			}
-		}
-	}`)
-	c.Assert(sampleQuery.UnmarshalJSON(sampleJson), IsNil)
-
-	testedResult1 := BuildQuery(sampleQuery)
-
-	c.Logf("[T-1] Query object: %s", testedResult1)
-	c.Assert(testedResult1.NamedId, Equals, queryNamedId)
-
-	/**
-	 * Asserts sample query with same conditions
-	 */
-	testedResult2 := BuildQuery(sampleQuery)
-	c.Logf("[T-2] Query object: %s", testedResult2)
-	c.Assert(testedResult1, DeepEquals, testedResult2)
-	// :~)
-}
-
-// Tests the loading of compound query by UUID
-func (suite *TestCompoundReportSuiteOnDb) TestGetCompoundQueryByUuid(c *C) {
-	sampleQuery := model.NewCompoundQuery()
-	err := sampleQuery.UnmarshalJSON([]byte(`
-	{
-		"filters": {
-			"time": {
-				"start_time": 190807000,
-				"end_time": 190827000
-			}
-		},
-		"output": {
-			"metrics": [ "max", "min", "avg", "loss" ]
-		}
-	}
-	`))
-	c.Assert(err, IsNil)
-
-	/**
-	 * Builds query object(persist the query) and load it with generated UUID
-	 */
-	queryObject := BuildQuery(sampleQuery)
-	testedQuery := GetCompoundQueryByUuid(uuid.UUID(queryObject.Uuid))
-	// :~)
-
-	c.Assert(testedQuery.Filters.Time, DeepEquals, sampleQuery.Filters.Time)
-	c.Assert(testedQuery.Output, DeepEquals, sampleQuery.Output)
+	c.Assert(testedDetail.Target.Isps[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Target.Isps[1].Id, ch.Equals, int16(-12))
+	c.Assert(testedDetail.Target.Provinces[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Target.Provinces[1].Id, ch.Equals, int16(-12))
+	c.Assert(testedDetail.Target.Cities[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Target.Cities[1].Id, ch.Equals, int16(-12))
+	c.Assert(testedDetail.Target.NameTags[0].Id, ch.Equals, int16(-11))
+	c.Assert(testedDetail.Target.NameTags[1].Id, ch.Equals, int16(-12))
 }
 
 // Tests the building of NQM dsl by compound query
-func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
-	type assertFunc func(v interface{}, comment CommentInterface)
+func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *ch.C) {
+	type assertFunc func(v interface{}, comment ch.CommentInterface)
 
 	testCases := []*struct {
 		queryJson        string
@@ -360,14 +381,14 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 			}
 			`,
 			map[string]interface{}{
-				"StartTime": assertFunc(func(v interface{}, comment CommentInterface) {
+				"StartTime": assertFunc(func(v interface{}, comment ch.CommentInterface) {
 					timeValue := time.Unix(int64(*(v.(*EpochTime))), 0)
 					c.Logf("Start Time(Relative): %s", timeValue.Format(time.RFC3339))
 
 					c.Assert(timeValue, ocheck.TimeBefore, time.Now().AddDate(0, 0, -4), comment)
 					c.Assert(timeValue, ocheck.TimeAfter, time.Now().AddDate(0, 0, -6), comment)
 				}),
-				"EndTime": assertFunc(func(v interface{}, comment CommentInterface) {
+				"EndTime": assertFunc(func(v interface{}, comment ch.CommentInterface) {
 					timeValue := time.Unix(int64(*(v.(*EpochTime))), 0)
 					c.Logf("End Time(Relative): %s", timeValue.Format(time.RFC3339))
 
@@ -387,9 +408,9 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 			}
 			`,
 			map[string]interface{}{
-				"TimeRanges": assertFunc(func(v interface{}, comment CommentInterface) {
+				"TimeRanges": assertFunc(func(v interface{}, comment ch.CommentInterface) {
 					timeRanges := v.([]*TimeRangeOfDsl)
-					c.Assert(timeRanges, HasLen, 3, comment)
+					c.Assert(timeRanges, ch.HasLen, 3, comment)
 				}),
 			},
 		},
@@ -397,7 +418,7 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 
 	var newSampleQuery = func(jsonQuery string) *model.CompoundQuery {
 		query := model.NewCompoundQuery()
-		c.Assert(query.UnmarshalJSON([]byte(jsonQuery)), IsNil)
+		c.Assert(query.UnmarshalJSON([]byte(jsonQuery)), ch.IsNil)
 		query.SetupDefault()
 		return query
 	}
@@ -414,20 +435,20 @@ func (suite *TestCompoundReportSuiteOnDb) TestBuildNqmDslByCompoundQuery(c *C) {
 			testedProperty := reflect.ValueOf(testedDsl).Elem().
 				FieldByName(name)
 
-			comment := Commentf("[Case: %s] Check Property: %s.", comment.CheckCommentString(), name)
+			comment := ch.Commentf("[Case: %s] Check Property: %s.", comment.CheckCommentString(), name)
 
 			if assertImpl, ok := value.(assertFunc); ok {
 				assertImpl(testedProperty.Interface(), comment)
 				continue
 			}
 
-			c.Assert(testedProperty.Interface(), DeepEquals, value, comment)
+			c.Assert(testedProperty.Interface(), ch.DeepEquals, value, comment)
 		}
 	}
 }
 
 // Tests the building of group columns for DSL
-func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *C) {
+func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *ch.C) {
 	testCases := []*struct {
 		sampleGrouping *model.QueryGrouping
 		expected       []string
@@ -466,15 +487,15 @@ func (suite *TestCompoundReportSuite) TestBuildGroupingColumnOfDsl(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
+		comment := ch.Commentf("Test Case: %d", i+1)
 
 		testedGrouping := buildGroupingColumnOfDsl(testCase.sampleGrouping)
-		c.Assert(testedGrouping, DeepEquals, testCase.expected, comment)
+		c.Assert(testedGrouping, ch.DeepEquals, testCase.expected, comment)
 	}
 }
 
 // Tests the setup of sorting properties
-func (suite *TestCompoundReportSuite) TestSetupSorting(c *C) {
+func (suite *TestCompoundReportSuite) TestSetupSorting(c *ch.C) {
 	testCases := []*struct {
 		sampleEntities []*commonModel.OrderByEntity
 		outputMetrics  []string
@@ -525,12 +546,12 @@ func (suite *TestCompoundReportSuite) TestSetupSorting(c *C) {
 
 		setupSorting(samplePaging, sampleOutput)
 
-		c.Assert(samplePaging.OrderBy, DeepEquals, testCase.expectedResult, comment)
+		c.Assert(samplePaging.OrderBy, ch.DeepEquals, testCase.expectedResult, comment)
 	}
 }
 
 // Tests the less funcion on list of OrderByEntities
-func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
+func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *ch.C) {
 	testCases := []*struct {
 		agentName []string
 		targetIsp []string
@@ -613,12 +634,12 @@ func (suite *TestCompoundReportSuite) TestLessByOrderByEntities(c *C) {
 			},
 		)
 
-		c.Assert(testedResult, Equals, testCase.expected, comment)
+		c.Assert(testedResult, ch.Equals, testCase.expected, comment)
 	}
 }
 
 // Tests the filter of records
-func (suite *TestCompoundReportSuite) TestFilterRecords(c *C) {
+func (suite *TestCompoundReportSuite) TestFilterRecords(c *ch.C) {
 	testCases := []*struct {
 		filter         string
 		expectedNumber int
@@ -659,12 +680,12 @@ func (suite *TestCompoundReportSuite) TestFilterRecords(c *C) {
 		ocheck.LogTestCase(c, testCase)
 
 		testedResult := filterRecords(sampleRecords, testCase.filter)
-		c.Assert(testedResult, HasLen, testCase.expectedNumber, comment)
+		c.Assert(testedResult, ch.HasLen, testCase.expectedNumber, comment)
 	}
 }
 
 // Tests the retrieving of page(with sorted result)
-func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
+func (suite *TestCompoundReportSuite) TestRetrievePage(c *ch.C) {
 	sp := func(v string) *string { return &v }
 
 	sampleRecords := []*model.DynamicRecord{
@@ -684,11 +705,11 @@ func (suite *TestCompoundReportSuite) TestRetrievePage(c *C) {
 	}
 
 	testedResult := retrievePage(sampleRecords, samplePaging)
-	c.Assert(*testedResult[0].Agent.Name, Equals, "AG-3")
-	c.Assert(*testedResult[1].Agent.Name, Equals, "AG-4")
+	c.Assert(*testedResult[0].Agent.Name, ch.Equals, "AG-3")
+	c.Assert(*testedResult[1].Agent.Name, ch.Equals, "AG-4")
 }
 
-func (s *TestCompoundReportSuiteOnDb) SetUpTest(c *C) {
+func (s *TestCompoundReportSuiteOnDb) SetUpTest(c *ch.C) {
 	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
@@ -720,7 +741,7 @@ func (s *TestCompoundReportSuiteOnDb) SetUpTest(c *C) {
 		)
 	}
 }
-func (s *TestCompoundReportSuiteOnDb) TearDownTest(c *C) {
+func (s *TestCompoundReportSuiteOnDb) TearDownTest(c *ch.C) {
 	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
@@ -735,20 +756,12 @@ func (s *TestCompoundReportSuiteOnDb) TearDownTest(c *C) {
 			`DELETE FROM owl_group_tag WHERE gt_id >= 90801 AND gt_id <= 90803`,
 			`DELETE FROM owl_name_tag WHERE nt_id >= 3375 AND nt_id <= 3376`,
 		)
-	case "TestCompoundReportSuiteOnDb.TestGetCompoundQueryByUuid":
-		inTx(
-			fmt.Sprintf(`DELETE FROM owl_query WHERE qr_named_id = '%s'`, queryNamedId),
-		)
-	case "TestCompoundReportSuiteOnDb.TestBuildQuery":
-		inTx(
-			fmt.Sprintf(`DELETE FROM owl_query WHERE qr_named_id = '%s'`, queryNamedId),
-		)
 	}
 }
 
-func (s *TestCompoundReportSuiteOnDb) SetUpSuite(c *C) {
+func (s *TestCompoundReportSuiteOnDb) SetUpSuite(c *ch.C) {
 	s.dbTestSuite.SetUpSuite(c)
 }
-func (s *TestCompoundReportSuiteOnDb) TearDownSuite(c *C) {
+func (s *TestCompoundReportSuiteOnDb) TearDownSuite(c *ch.C) {
 	s.dbTestSuite.TearDownSuite(c)
 }
