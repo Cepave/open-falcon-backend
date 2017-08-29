@@ -4,26 +4,28 @@ import (
 	"net/http"
 	"strings"
 
-	ogt "./gentleman"
 	"github.com/dghubble/sling"
-	"gopkg.in/h2non/gock.v1"
+
+	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
+var gockConfig = mock.NewGockConfig()
+
 var _ = Describe("ResponseResult and sling", func() {
 	var slingClient *sling.Sling
 
 	BeforeEach(func() {
-		gock.New("http://mock.testing.gt:13770/res-2").
+		gockConfig.New().
 			Reply(http.StatusOK).
 			JSON([]int{3, 55, 17})
 
-		slingClient = sling.New().Base("http://mock.testing.gt:13770").Get("res-2")
+		slingClient = sling.New().Base(gockConfig.Url).Get("res-2")
 	})
 	AfterEach(func() {
-		ogt.DisableMock()
+		gockConfig.Off()
 	})
 
 	Context("200 status", func() {
@@ -53,7 +55,7 @@ var _ = Describe("ResponseResult and sling", func() {
 var _ = Describe("Library of Gentleman HTTP client(h2non/gentleman)", func() {
 	Context("200 Response(JSON)", func() {
 		BeforeEach(func() {
-			gock.New("http://mock.testing.gt:10770/res-1").
+			gockConfig.New().
 				Get("/key").
 				Reply(http.StatusOK).
 				JSON(map[string]interface{}{
@@ -63,21 +65,21 @@ var _ = Describe("Library of Gentleman HTTP client(h2non/gentleman)", func() {
 		})
 
 		AfterEach(func() {
-			ogt.DisableMock()
+			gockConfig.Off()
 		})
 
 		It("Match status and body", func() {
 			clientConf := &GentlemanClientConf{
 				&HttpClientConfig{
 					Ssl:      false,
-					Host:     "mock.testing.gt",
-					Port:     10770,
+					Host:     gockConfig.Host,
+					Port:     gockConfig.Port,
 					Resource: "res-1",
 				},
 			}
 
 			resp, err := clientConf.NewClient().
-				Use(ogt.MockPlugin).
+				Use(gockConfig.GentlemanT.Plugin()).
 				Get().
 				Path("/key").
 				Send()

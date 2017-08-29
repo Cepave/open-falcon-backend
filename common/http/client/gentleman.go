@@ -1,12 +1,15 @@
 package client
 
 import (
+	"fmt"
 	"time"
 
 	sjson "github.com/bitly/go-simplejson"
 	"github.com/h2non/gentleman/plugins/timeout"
 	"github.com/juju/errors"
 	gt "gopkg.in/h2non/gentleman.v2"
+
+	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 func ToGentlemanResp(resp *gt.Response) *GentlemanResponse {
@@ -15,50 +18,118 @@ func ToGentlemanResp(resp *gt.Response) *GentlemanResponse {
 
 type GentlemanResponse gt.Response
 
+// This function would **close the response** because of the implementation of Gentleman library.
 func (r *GentlemanResponse) GetJson() (*sjson.Json, error) {
 	json := sjson.New()
 
-	err := (*gt.Response)(r).JSON(json)
-	if err != nil {
-		return nil, errors.Annotate(err, "Binding JSON of response has error")
+	if err := r.BindJson(json); err != nil {
+		return nil, errors.Annotate(err, "Building of JSON object is failed")
 	}
 
 	return json, nil
 }
+
+// This function would **close the response** because of the implementation of Gentleman library.
 func (r *GentlemanResponse) MustGetJson() *sjson.Json {
 	json, err := r.GetJson()
 	if err != nil {
-		panic(err)
+		panic(errors.Details(err))
 	}
 
 	return json
+}
+
+// This function would **close the response** because of the implementation of Gentleman library.
+func (r *GentlemanResponse) BindJson(v interface{}) error {
+	resp := (*gt.Response)(r)
+	contentType := resp.Header.Get("Content-Type")
+
+	return errors.Annotatef(
+		resp.JSON(v),
+		"Binding response body to JSON has error.\n\tStatus[%d] Content-Type: %s",
+		resp.StatusCode, contentType,
+	)
+}
+
+// This function would **close the response** because of the implementation of Gentleman library.
+func (r *GentlemanResponse) MustBindJson(v interface{}) {
+	if err := r.BindJson(v); err != nil {
+		panic(errors.Details(err))
+	}
+}
+
+// !!Be Caution!! This function would change the body to "closed".
+func (r *GentlemanResponse) ToDetailString() string {
+	resp := (*gt.Response)(r)
+
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = "!UNKNOWN!"
+	}
+
+	bodyString := resp.String()
+	defer resp.ClearInternalBuffer()
+
+	if bodyString == "" {
+		return fmt.Sprintf("Response[%d](%s)", resp.StatusCode, contentType)
+	}
+
+	bodyString = utils.ShortenStringToSize(bodyString, " ... ", 128)
+	return fmt.Sprintf("Response[%d](%s). Body: << %s >>", resp.StatusCode, contentType, bodyString)
 }
 
 func ToGentlemanReq(req *gt.Request) *GentlemanRequest {
 	return (*GentlemanRequest)(req)
 }
 
+type RespMatcher func(*gt.Response) error
+
+func StatusMatcher(status int) RespMatcher {
+	return func(resp *gt.Response) error {
+		if resp.StatusCode == 0 {
+			return errors.Errorf("HTTP status(0, may be timeout) of response is not matched to [%d].", status)
+		}
+
+		if resp.StatusCode != status {
+			return errors.Errorf("HTTP status[%d] of response is not matched to [%d].", resp.StatusCode, status)
+		}
+
+		return nil
+	}
+}
+
 type GentlemanRequest gt.Request
 
 func (r *GentlemanRequest) SendAndStatusMatch(status int) (*gt.Response, error) {
+	return r.SendAndMatch(StatusMatcher(status))
+}
+func (r *GentlemanRequest) SendAndStatusMustMatch(status int) *gt.Response {
+	return r.SendAndMustMatch(StatusMatcher(status))
+}
+func (r *GentlemanRequest) SendAndMatch(matcher RespMatcher) (*gt.Response, error) {
 	request := (*gt.Request)(r)
 
 	resp, err := request.Send()
 
 	if err != nil {
+		if resp != nil {
+			defer resp.Close()
+		}
 		return nil, errors.Annotate(err, "Send() of gentleman request has error")
 	}
 
-	if resp.StatusCode != status {
-		return nil, errors.Annotatef(err, "HTTP status of response is not match[%d]. Current: [%d]", status, resp.StatusCode)
+	if matcherErr := matcher(resp); matcherErr != nil {
+		defer resp.Close()
+
+		return nil, errors.Errorf("HTTP response has error: %v", errors.Details(matcherErr))
 	}
 
 	return resp, nil
 }
-func (r *GentlemanRequest) SendAndStatusMustMatch(status int) *gt.Response {
-	resp, err := r.SendAndStatusMatch(status)
+func (r *GentlemanRequest) SendAndMustMatch(matcher RespMatcher) *gt.Response {
+	resp, err := r.SendAndMatch(matcher)
 	if err != nil {
-		panic(err)
+		panic(errors.Details(err))
 	}
 
 	return resp
@@ -69,40 +140,32 @@ type GentlemanConfig struct {
 	RequestTimeout time.Duration
 }
 
-// Namespace of common functions for h2non/gentleman library
-type GentlemanFuncs interface {
-	// Default values:
-	// 	Timeout(whole request) - 10 seconds
-	NewDefaultClient() *gt.Client
-	NewClientByConfig(config *GentlemanConfig) *gt.Client
-
-	// Constructs a request by default values
-	//
-	// See NewDefaultClient() for default values of configuration.
-	NewDefaultRequest() *gt.Request
-	NewRequestByConfig(config *GentlemanConfig) *gt.Request
+var CommonGentleman = &struct {
+	NewDefaultClient   func() *gt.Client
+	NewClientByConfig  func(config *GentlemanConfig) *gt.Client
+	NewDefaultRequest  func() *gt.Request
+	NewRequestByConfig func(config *GentlemanConfig) *gt.Request
+}{
+	NewDefaultClient:   gtNewDefaultClient,
+	NewClientByConfig:  gtNewClientByConfig,
+	NewDefaultRequest:  gtNewDefaultRequest,
+	NewRequestByConfig: gtNewRequestByConfig,
 }
 
-var CommonGentleman GentlemanFuncs = &gentlemanImpl{}
-
-// This type is used for functions-aggregation only,
-// MUST NOT HAS STATUS
-type gentlemanImpl struct{}
-
-func (g *gentlemanImpl) NewDefaultClient() *gt.Client {
-	return g.NewClientByConfig(&GentlemanConfig{
+func gtNewDefaultClient() *gt.Client {
+	return gtNewClientByConfig(&GentlemanConfig{
 		RequestTimeout: time.Second * 10,
 	})
 }
 
-func (g *gentlemanImpl) NewClientByConfig(config *GentlemanConfig) *gt.Client {
+func gtNewClientByConfig(config *GentlemanConfig) *gt.Client {
 	return gt.New().Use(timeout.Request(config.RequestTimeout))
 }
 
-func (g *gentlemanImpl) NewDefaultRequest() *gt.Request {
-	return g.NewDefaultClient().Request()
+func gtNewDefaultRequest() *gt.Request {
+	return gtNewDefaultClient().Request()
 }
 
-func (g *gentlemanImpl) NewRequestByConfig(config *GentlemanConfig) *gt.Request {
-	return g.NewClientByConfig(config).Request()
+func gtNewRequestByConfig(config *GentlemanConfig) *gt.Request {
+	return gtNewClientByConfig(config).Request()
 }
