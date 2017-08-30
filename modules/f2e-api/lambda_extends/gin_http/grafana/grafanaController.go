@@ -87,7 +87,7 @@ func GrafanaMain(c *gin.Context) {
 				}
 			}
 		} else if catchAll {
-			result = []GrafanaResp{GrafanaResp{false, "renderAll"}}
+			result = []GrafanaResp{{false, "renderAll"}}
 		} else {
 			for _, c := range counters {
 				skey := strings.Replace(c, perfix, "", 1)
