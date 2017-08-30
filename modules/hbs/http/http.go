@@ -6,11 +6,13 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/service"
 
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/gin-gonic/gin"
+	"gopkg.in/h2non/gentleman.v2"
 )
 
 type Dto struct {
@@ -32,22 +34,41 @@ func init() {
 	configProcRoutes(ginRouter)
 }
 
+func Btoi(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+func Etos(e error) string {
+	if e != nil {
+		return e.Error()
+	}
+	return ""
+}
+
 func getHealth(c *gin.Context) {
+	apiUrl := service.MysqlApiUrl
+	heartbeatService := rpc.AgentHeartbeatService
+	req := gentleman.New().BaseURL(apiUrl).Path("/health").Head()
+	res, err := req.Do()
 	rpcInfo := g.Config().Listen
 	httpInfo := g.Config().Http
-	healthInfo := struct {
-		Http        *g.HttpConfig      `json:"http"`
-		Rpc         *g.RpcView         `json:"rpc"`
-		FalconAgent *g.FalconAgentView `json:"falcon_agent"`
-	}{
+	healthInfo := g.HealthView{
+		&g.MysqlApiView{
+			Address:     apiUrl,
+			PingResult:  Btoi(res.Ok),
+			PingMessage: Etos(err),
+		},
 		httpInfo,
 		&g.RpcView{rpcInfo},
 		&g.FalconAgentView{
 			&g.HeartbeatView{
-				CurrentSize:         rpc.AgentHeartbeatService.CurrentSize(),
-				CumulativeReceived:  rpc.AgentHeartbeatService.CumulativeAgentsPut(),
-				CumulativeDropped:   rpc.AgentHeartbeatService.CumulativeAgentsDropped(),
-				CumulativeProcessed: rpc.AgentHeartbeatService.CumulativeRowsAffected(),
+				CurrentSize:         heartbeatService.CurrentSize(),
+				CumulativeReceived:  heartbeatService.CumulativeAgentsPut(),
+				CumulativeDropped:   heartbeatService.CumulativeAgentsDropped(),
+				CumulativeProcessed: heartbeatService.CumulativeRowsAffected(),
 			},
 		},
 	}

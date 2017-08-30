@@ -12,12 +12,11 @@ import (
 var logger = log.NewDefaultLogger("INFO")
 
 var updateOnlyFlag bool
-var mysqlApiSling *sling.Sling
+var MysqlApiUrl string
 
 func InitPackage(cfg *config.MysqlApiConfig, hosts string) {
-	mysqlApiUrl := resolveUrl(cfg.Host, cfg.Resource)
-	logger.Infoln("[Config] MySQL_API=", mysqlApiUrl)
-	mysqlApiSling = sling.New().Base(mysqlApiUrl)
+	MysqlApiUrl = resolveUrl(cfg.Host, cfg.Resource)
+	logger.Infoln("[Config] MySQL_API=", MysqlApiUrl)
 
 	if hosts != "" {
 		updateOnlyFlag = true
@@ -25,7 +24,7 @@ func InitPackage(cfg *config.MysqlApiConfig, hosts string) {
 }
 
 func NewSlingBase() *sling.Sling {
-	return mysqlApiSling.New()
+	return sling.New().Base(MysqlApiUrl)
 }
 
 func resolveUrl(host string, resource string) string {

@@ -28,6 +28,12 @@ type GlobalConfig struct {
 	MysqlApi  *MysqlApiConfig `json:"mysql_api"`
 }
 
+type MysqlApiView struct {
+	Address     string `json:"address"`
+	PingResult  int    `json:"ping_result"`
+	PingMessage string `json:"ping_message"`
+}
+
 type RpcView struct {
 	Listen string `json:"listen"`
 }
@@ -41,6 +47,13 @@ type HeartbeatView struct {
 	CumulativeDropped   int64 `json:"cumulative_dropped"`
 	CumulativeReceived  int64 `json:"cumulative_received"`
 	CumulativeProcessed int64 `json:"cumulative_processed"`
+}
+
+type HealthView struct {
+	MysqlApi    *MysqlApiView    `json:"mysql_api"`
+	Http        *HttpConfig      `json:"http"`
+	Rpc         *RpcView         `json:"rpc"`
+	FalconAgent *FalconAgentView `json:"falcon_agent"`
 }
 
 var (
