@@ -1,6 +1,5 @@
 {
     "debug": true,
-    "database": "%%MYSQL%%/falcon_portal?loc=Local&parseTime=true",
     "hosts": "",
     "maxIdle": 100,
     "listen": ":6030",

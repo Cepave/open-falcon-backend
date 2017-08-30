@@ -1,19 +1,20 @@
-package cache
+package hbscache
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	"sync"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	db "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 )
 
 type SafeExpressionCache struct {
 	sync.RWMutex
-	L []*model.Expression
+	L []*model.NewExpression
 }
 
 var ExpressionCache = &SafeExpressionCache{}
 
-func (this *SafeExpressionCache) Get() []*model.Expression {
+func (this *SafeExpressionCache) Get() []*model.NewExpression {
 	this.RLock()
 	defer this.RUnlock()
 	return this.L

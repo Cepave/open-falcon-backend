@@ -21,7 +21,6 @@ type MysqlApiConfig struct {
 type GlobalConfig struct {
 	Debug     bool            `json:"debug"`
 	Hosts     string          `json:"hosts"`
-	Database  string          `json:"database"`
 	MaxIdle   int             `json:"maxIdle"`
 	Listen    string          `json:"listen"`
 	Trustable []string        `json:"trustable"`

@@ -1,8 +1,9 @@
-package cache
+package hbscache
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	"sync"
+
+	db "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 )
 
 // 一个机器可能在多个group下，做一个map缓存hostid与groupid的对应关系

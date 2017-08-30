@@ -1,29 +1,30 @@
-package cache
+package hbscache
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
-	log "github.com/sirupsen/logrus"
-	"github.com/toolkits/container/set"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	db "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
+	log "github.com/sirupsen/logrus"
+	"github.com/toolkits/container/set"
 )
 
 type SafeStrategies struct {
 	sync.RWMutex
-	M map[int]*model.Strategy
+	M map[int]*model.NewStrategy
 }
 
-var Strategies = &SafeStrategies{M: make(map[int]*model.Strategy)}
+var Strategies = &SafeStrategies{M: make(map[int]*model.NewStrategy)}
 
-func (this *SafeStrategies) GetMap() map[int]*model.Strategy {
+func (this *SafeStrategies) GetMap() map[int]*model.NewStrategy {
 	this.RLock()
 	defer this.RUnlock()
 	return this.M
 }
 
-func (this *SafeStrategies) Init(tpls map[int]*model.Template) {
+func (this *SafeStrategies) Init(tpls map[int]*model.NewTemplate) {
 	m, err := db.QueryStrategies(tpls)
 	if err != nil {
 		return
@@ -34,8 +35,8 @@ func (this *SafeStrategies) Init(tpls map[int]*model.Template) {
 	this.M = m
 }
 
-func GetBuiltinMetrics(hostname string) ([]*model.BuiltinMetric, error) {
-	ret := []*model.BuiltinMetric{}
+func GetBuiltinMetrics(hostname string) ([]*model.NewBuiltinMetric, error) {
+	ret := []*model.NewBuiltinMetric{}
 	hid, exists := HostMap.GetID(hostname)
 	if !exists {
 		return ret, nil
@@ -86,7 +87,7 @@ func GetBuiltinMetrics(hostname string) ([]*model.BuiltinMetric, error) {
 	return db.QueryBuiltinMetrics(strings.Join(tidStrArr, ","))
 }
 
-func ParentIds(allTpls map[int]*model.Template, tid int) (ret []int) {
+func ParentIds(allTpls map[int]*model.NewTemplate, tid int) (ret []int) {
 	depth := 0
 	for {
 		if tid <= 0 {
@@ -95,7 +96,7 @@ func ParentIds(allTpls map[int]*model.Template, tid int) (ret []int) {
 
 		if t, exists := allTpls[tid]; exists {
 			ret = append(ret, tid)
-			tid = t.ParentId
+			tid = t.ParentID
 		} else {
 			break
 		}

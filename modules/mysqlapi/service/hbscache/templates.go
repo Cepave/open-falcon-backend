@@ -1,9 +1,10 @@
-package cache
+package hbscache
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	"sync"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	db "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 )
 
 // 一个HostGroup对应多个Template
@@ -34,12 +35,12 @@ func (this *SafeGroupTemplates) Init() {
 
 type SafeTemplateCache struct {
 	sync.RWMutex
-	M map[int]*model.Template
+	M map[int]*model.NewTemplate
 }
 
-var TemplateCache = &SafeTemplateCache{M: make(map[int]*model.Template)}
+var TemplateCache = &SafeTemplateCache{M: make(map[int]*model.NewTemplate)}
 
-func (this *SafeTemplateCache) GetMap() map[int]*model.Template {
+func (this *SafeTemplateCache) GetMap() map[int]*model.NewTemplate {
 	this.RLock()
 	defer this.RUnlock()
 	return this.M

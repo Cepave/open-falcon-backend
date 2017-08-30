@@ -1,9 +1,10 @@
-package cache
+package hbscache
 
 import (
-	"github.com/Cepave/open-falcon-backend/common/model"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/db"
 	"sync"
+
+	"github.com/Cepave/open-falcon-backend/common/model"
+	db "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 )
 
 // 每次心跳的时候agent把hostname汇报上来，经常要知道这个机器的hostid，把此信息缓存
