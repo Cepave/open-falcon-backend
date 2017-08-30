@@ -1,12 +1,12 @@
 SET NAMES 'utf8';
 
-ALTER TABLE falcon_portal.event
+ALTER TABLE event
     ADD COLUMN closed_note VARCHAR(250),
     ADD COLUMN tpl_creator VARCHAR(64),
     DROP FOREIGN KEY event_ibfk_1,
     DROP FOREIGN KEY event_ibfk_2,
     ADD INDEX (strategy_id, template_id);
-RENAME TABLE falcon_portal.event TO falcon_portal.event_cases;
+RENAME TABLE event TO event_cases;
 
 CREATE TABLE IF NOT EXISTS event_cases(
 		id VARCHAR(50),
