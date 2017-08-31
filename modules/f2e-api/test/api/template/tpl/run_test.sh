@@ -1,4 +1,4 @@
-if [ "$1" == "init" ]; then
+if [ "$1" == "create" ]; then
   echo "template_create_test.go"
   go test -v template_create_test.go -test.run TestTplCreate
 fi

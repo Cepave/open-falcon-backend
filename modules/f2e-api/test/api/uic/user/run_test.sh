@@ -1,4 +1,4 @@
-if [ "$1" == "init" ]; then
+if [ "$1" == "create" ]; then
   echo "user_create_test.go"
   go test -v user_create_test.go -test.run TestUserCreate
   go test -v user_create_test.go -test.run TestSingUpDisableCreateUser

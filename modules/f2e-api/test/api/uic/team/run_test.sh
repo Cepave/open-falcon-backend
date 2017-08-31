@@ -1,4 +1,4 @@
-if [ "$1" == "init" ]; then
+if [ "$1" == "create" ]; then
   echo "team_create_test.go"
   go test -v team_create_test.go -test.run TestTeamCreate
 fi
