@@ -31,7 +31,7 @@ func TestFuncTopDiff(t *testing.T) {
 			"endpoints": []string{
 				"hostA", "hostB", "hostC", "hostD", "hostE",
 			},
-			"metrices": []string{
+			"metrics": []string{
 				"cpu.idle",
 			},
 		}

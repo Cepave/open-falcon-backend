@@ -25,7 +25,7 @@
     "hostA",
     "hostB",
   },
-  "metrices": []string{
+  "metrics": []string{
     "net.if.in.bin/iface=eth_all",
   },
   "func": {

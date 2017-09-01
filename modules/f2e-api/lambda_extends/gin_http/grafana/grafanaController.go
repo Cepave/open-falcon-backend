@@ -81,7 +81,7 @@ func GrafanaMain(c *gin.Context) {
 		// find matched counters
 		counters := model.FindMatchedCounters(endpid, counter)
 		result := []GrafanaResp{}
-		// set prefix to generate reponse tags
+		// set prefix to generate response tags
 		perfix := strings.Replace(counter, "%", "", 1)
 		tset := hashset.New()
 		if perfix == "" {
@@ -100,7 +100,7 @@ func GrafanaMain(c *gin.Context) {
 				}
 			}
 		} else if catchAll {
-			// for reponse matched endpoints?
+			// for response matched endpoints?
 			result = []GrafanaResp{{false, "renderAll"}}
 		} else {
 			// response all tags with first words
@@ -231,7 +231,7 @@ type LambdaQueryPrams struct {
 	From       int64                  `form:"from" json:"from" binding:"required"`
 	Until      int64                  `form:"until" json:"until" binding:"required"`
 	Endpoints  []string               `form:"endpoints" json:"endpoints" binding:"required"`
-	Metrices   []string               `form:"metrices" json:"metrices" binding:"required"`
+	Metrics    []string               `form:"metrics" json:"metrics" binding:"required"`
 	LdFunction map[string]interface{} `form:"func" json:"func"`
 }
 
@@ -245,7 +245,7 @@ func LambdaQueryQ(c *gin.Context) {
 	log.Debugf("got params: %v", inputs)
 	startTs := inputs.From
 	endTs := inputs.Until
-	counters := inputs.Metrices
+	counters := inputs.Metrics
 
 	var resResp []cmodel.GraphQueryResponse
 	result := []cmodel.GraphQueryResponse{}

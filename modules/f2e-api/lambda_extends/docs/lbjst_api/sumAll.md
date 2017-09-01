@@ -15,7 +15,7 @@ sample request:
   "endpoints": []string{
     "hostA", "hostB", "hostC", "hostD", "hostE"
   },
-  "metrices": []string{
+  "metrics": []string{
     "cpu.idle",
   },
   "func": {
@@ -24,7 +24,7 @@ sample request:
   }
 }
 ```
-sample reponse:
+sample response:
 ```
 [
   {
