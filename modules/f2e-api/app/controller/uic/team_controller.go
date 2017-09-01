@@ -21,38 +21,45 @@ type CTeam struct {
 	Useres      []uic.User
 }
 
+type APITeamInputs struct {
+	Limit       int    `json:"limit" form:"limit"`
+	Page        int    `json:"page" form:"page"`
+	SkipMembers bool   `json:"skip_members" form:"skip_members"`
+	Q           string `json:"q" form:"q"`
+}
+
 //support root as admin
 func Teams(c *gin.Context) {
-	var (
-		limit int
-		page  int
-		err   error
-	)
-	pageTmp := c.DefaultQuery("page", "")
-	limitTmp := c.DefaultQuery("limit", "")
-	page, limit, err = h.PageParser(pageTmp, limitTmp)
-	if err != nil {
+	inputs := APITeamInputs{
+		Q:           ".+",
+		Limit:       -1,
+		Page:        -1,
+		SkipMembers: false,
+	}
+	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err.Error())
 		return
 	}
-	query := c.DefaultQuery("q", ".+")
 	user, err := h.GetUser(c)
 	if err != nil {
 		h.JSONR(c, badstatus, err)
 		return
 	}
 	var dt *gorm.DB
+	var offset = 0
 	teams := []uic.Team{}
 	if user.IsAdmin() {
-		if limit != -1 && page != -1 {
-			dt = db.Uic.Table("team").Raw(
-				fmt.Sprintf("select * from team where name regexp '%s' limit %d,%d", query, page, limit)).Scan(&teams)
+		dt = db.Uic
+		if inputs.Limit != -1 && inputs.Page > 0 {
+			if inputs.Page != 1 {
+				offset = (inputs.Page - 1) * inputs.Limit
+			}
+			dt.Model(&teams).Where("name regexp ?", inputs.Q).Limit(inputs.Limit).Offset(offset).Scan(&teams)
 		} else {
-			dt = db.Uic.Table("team").Where("name regexp ?", query).Scan(&teams)
+			dt = dt.Model(&teams).Where("name regexp ?", inputs.Q).Scan(&teams)
 		}
-		err = dt.Error
 	} else {
-		dt = db.Uic.Table("team").Where("name regexp ? AND creator = ?", query, user.ID).Scan(&teams)
+		dt = db.Uic.Model(&teams).Where("name regexp ? AND creator = ?", inputs.Q, user.ID).Scan(&teams)
 		err = dt.Error
 	}
 	if err != nil {
@@ -62,17 +69,19 @@ func Teams(c *gin.Context) {
 	outputs := []CTeam{}
 	for _, t := range teams {
 		cteam := CTeam{Team: t}
-		user, err := t.Members()
-		if err != nil {
-			h.JSONR(c, badstatus, err)
-			return
+		if !inputs.SkipMembers {
+			user, err := t.Members()
+			if err != nil {
+				h.JSONR(c, badstatus, err)
+				return
+			}
+			cteam.Useres = user
+			creatorName, err := t.GetCreatorName()
+			if err != nil {
+				log.Debug(err.Error())
+			}
+			cteam.TeamCreator = creatorName
 		}
-		cteam.Useres = user
-		creatorName, err := t.GetCreatorName()
-		if err != nil {
-			log.Debug(err.Error())
-		}
-		cteam.TeamCreator = creatorName
 		outputs = append(outputs, cteam)
 	}
 	h.JSONR(c, outputs)
@@ -126,18 +135,22 @@ func CreateTeam(c *gin.Context) {
 			return
 		}
 	}
-	h.JSONR(c, fmt.Sprintf("team created! Afftect row: %d, Affect refer: %d", dt.RowsAffected, len(cteam.UserIDs)))
+	h.JSONR(c, map[string]interface{}{
+		"team": team,
+		"msg":  fmt.Sprintf("team created! Afftect row: %d, Affect refer: %d", dt.RowsAffected, len(cteam.UserIDs)),
+	})
 	return
 }
 
 type APIUpdateTeamInput struct {
 	ID      int    `json:"team_id" binding:"required"`
+	Name    string `json:"team_name"`
 	Resume  string `json:"resume"`
 	UserIDs []int  `json:"users"`
 }
 
 func UpdateTeam(c *gin.Context) {
-	var cteam APIUpdateTeamInput
+	cteam := APIUpdateTeamInput{Name: "-", Resume: "-"}
 	err := c.Bind(&cteam)
 	if err != nil {
 		h.JSONR(c, badstatus, err)
@@ -161,29 +174,48 @@ func UpdateTeam(c *gin.Context) {
 		return
 	}
 	if team.ID != 0 {
-		err := bindUsers(db, cteam.ID, cteam.UserIDs)
+		if cteam.Name != "-" {
+			team.Name = cteam.Name
+		}
+		if cteam.Resume != "-" {
+			team.Resume = cteam.Resume
+		}
+		db.Uic.Model(&team).Update(team)
+		err = bindUsers(db, cteam.ID, cteam.UserIDs)
 		if err != nil {
-			h.JSONR(c, badstatus, err)
+			h.JSONR(c, badstatus, "bind users got error: "+err.Error())
+			return
 		}
 	}
-	h.JSONR(c, "team updated!")
+	respOutput := APIGetTeamOutput{
+		Team: team,
+	}
+	respOutput.Users, err = team.Members()
+	if err != nil {
+		h.JSONR(c, badstatus, err.Error())
+		return
+	}
+	h.JSONR(c, respOutput)
 	return
 }
 
 func bindUsers(db config.DBPool, tid int, users []int) (err error) {
 	var dt *gorm.DB
-	uids, err := utils.ArrIntToString(users)
-	if err != nil {
-		return
-	}
+	var uids string
 	//delete unbind users
 	var needDeleteMan []uic.RelTeamUser
-	qPared := fmt.Sprintf("tid = %d AND NOT (uid IN (%v))", tid, uids)
-	log.Debug(qPared)
-	dt = db.Uic.Table("rel_team_user").Where(qPared).Find(&needDeleteMan)
-	if dt.Error != nil {
-		err = dt.Error
-		return
+	if len(users) != 0 {
+		uids, err = utils.ArrIntToString(users)
+		if err != nil {
+			return
+		}
+		qPared := fmt.Sprintf("tid = %d AND NOT (uid IN (%v))", tid, uids)
+		log.Debug(qPared)
+		dt = db.Uic.Table("rel_team_user").Where(qPared).Find(&needDeleteMan)
+		if dt.Error != nil {
+			err = dt.Error
+			return
+		}
 	}
 	if len(needDeleteMan) != 0 {
 		for _, man := range needDeleteMan {
@@ -193,6 +225,14 @@ func bindUsers(db config.DBPool, tid int, users []int) (err error) {
 				return
 			}
 		}
+	} else if len(users) == 0 && tid != 0 {
+		rtmp := []uic.RelTeamUser{}
+		dt = db.Uic.Model(&rtmp).Where("tid = ?", tid).Find(&rtmp)
+		if dt.Error != nil {
+			return dt.Error
+		}
+		db.Uic.Delete(&rtmp)
+		return
 	}
 	//insert bind users
 	for _, i := range users {
@@ -294,20 +334,10 @@ func GetTeam(c *gin.Context) {
 	}
 	var resp APIGetTeamOutput
 	resp.Team = team
-	resp.Users = []uic.User{}
-	if len(uidarr) != 0 {
-		uids := ""
-		for indx, v := range uidarr {
-			if indx == 0 {
-				uids = fmt.Sprintf("%v", v.Uid)
-			} else {
-				uids = fmt.Sprintf("%v,%v", uids, v.Uid)
-			}
-		}
-		log.Debugf("uids:%s", uids)
-		var users []uic.User
-		db.Uic.Table("user").Where(fmt.Sprintf("id IN (%s)", uids)).Find(&users)
-		resp.Users = users
+	resp.Users, err = resp.Members()
+	if err != nil {
+		h.JSONR(c, badstatus, err.Error())
+		return
 	}
 	h.JSONR(c, resp)
 	return

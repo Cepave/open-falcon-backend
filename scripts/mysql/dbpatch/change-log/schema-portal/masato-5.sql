@@ -1,6 +1,5 @@
 SET NAMES 'utf8';
 
-DROP TABLE IF EXISTS event;
 CREATE TABLE IF NOT EXISTS event
 (
     id VARCHAR(50),

@@ -5,6 +5,6 @@ cfg.json.dev
 debug
 gin-bin
 cfg_cepave.json
-api
+./api
 owlight
 docs

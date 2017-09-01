@@ -158,3 +158,8 @@
     filename: "masato-30.sql",
     comment: "add alarm_type & boss info fields into eventCase table"
 }
+- {
+    id: "masato-31",
+    filename: "masato-31.sql",
+    comment: "fix time fields schmea issue for alarms"
+}

@@ -21,6 +21,7 @@ func Routes(r *gin.Engine) {
 	authapi.POST("/screen", ScreenCreate)
 	authapi.POST("/screen_clone", ScreenClone)
 	authapi.PUT("/screen", ScreenUpdate)
+	authapi.GET("/screen_list_simple", GetScreenListSimple)
 	authapi.GET("/screen/:screen_id", ScreenGet)
 	authapi.GET("/screens/pid/:pid", ScreenGetsByPid)
 	authapi.GET("/screens", ScreenGetsAll)
