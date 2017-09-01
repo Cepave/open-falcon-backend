@@ -15,9 +15,9 @@ import (
 	"gopkg.in/h2non/gentleman.v2/plugin"
 	"gopkg.in/h2non/gock.v1"
 
+	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
-	mysql "github.com/Cepave/open-falcon-backend/common/service/mysqlapi"
 	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 )
 
@@ -74,8 +74,8 @@ func (c *GockConfig) NewHttpConfig() *client.HttpClientConfig {
 	return config
 }
 
-func (c *GockConfig) NewMySqlApiConfig() *mysql.ApiConfig {
-	return &mysql.ApiConfig{
+func (c *GockConfig) NewRestfulClientConfig() *oHttp.RestfulClientConfig {
+	return &oHttp.RestfulClientConfig{
 		HttpClientConfig: c.NewHttpConfig(),
 		Plugins: []plugin.Plugin{
 			_gentlemanMockPlugin,
@@ -168,7 +168,7 @@ func (self *implHttptest) ServeHTTP(finalResp http.ResponseWriter, sourceRequest
 		logger.Errorf("httptest over Gock has error: %s", errorMessage)
 
 		/**
-		 * Ouput error content to JSON
+		 * Output error content to JSON
 		 */
 		jsonBody := ojson.MarshalJSON(
 			map[string]interface{}{

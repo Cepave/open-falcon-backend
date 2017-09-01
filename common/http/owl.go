@@ -1,4 +1,4 @@
-package msyqlapi
+package http
 
 import (
 	gt "gopkg.in/h2non/gentleman.v2"
@@ -8,20 +8,20 @@ import (
 )
 
 // General configuration to MySqlApi
-type ApiConfig struct {
+type RestfulClientConfig struct {
 	*client.HttpClientConfig
 	// If this value is non-empty, this service would add header "from-module: <FromModule>" in HTTP request.
 	FromModule string
 	Plugins    []plugin.Plugin
 }
 
-func NewApiService(config ApiConfig) *ApiService {
+func NewApiService(config RestfulClientConfig) *ApiService {
 	return &ApiService{&config}
 }
 
 // Defines general operation for MysqlApiService
 type ApiService struct {
-	config *ApiConfig
+	config *RestfulClientConfig
 }
 
 func (s *ApiService) NewClient() *gt.Client {

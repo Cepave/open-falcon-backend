@@ -9,14 +9,14 @@ import (
 	gt "gopkg.in/h2non/gentleman.v2"
 
 	"github.com/Cepave/open-falcon-backend/common/db"
+	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	model "github.com/Cepave/open-falcon-backend/common/model/owl"
-	mysqlapi "github.com/Cepave/open-falcon-backend/common/service/mysqlapi"
 )
 
 type QueryServiceConfig struct {
-	*mysqlapi.ApiConfig
+	*oHttp.RestfulClientConfig
 }
 
 type QueryService interface {
@@ -25,7 +25,7 @@ type QueryService interface {
 }
 
 func NewQueryService(config QueryServiceConfig) QueryService {
-	newClient := mysqlapi.NewApiService(*config.ApiConfig).NewClient()
+	newClient := oHttp.NewApiService(*config.RestfulClientConfig).NewClient()
 
 	return &queryServiceImpl{
 		loadQueryByUuid:   newClient.Path("/api/v1/owl/query-object").Get(),

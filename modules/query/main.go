@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/viper"
 
+	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
-	mysqlapi "github.com/Cepave/open-falcon-backend/common/service/mysqlapi"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/conf"
@@ -73,7 +73,7 @@ func main() {
 	}
 }
 
-func loadMySqlApiConfig(viper *viper.Viper) *mysqlapi.ApiConfig {
+func loadMySqlApiConfig(viper *viper.Viper) *oHttp.RestfulClientConfig {
 	httpConfig := client.NewDefaultConfig()
 	httpConfig.Url = viper.GetString("mysql_api.host")
 
@@ -82,7 +82,7 @@ func loadMySqlApiConfig(viper *viper.Viper) *mysqlapi.ApiConfig {
 		httpConfig.Url += "/" + resource
 	}
 
-	return &mysqlapi.ApiConfig{
+	return &oHttp.RestfulClientConfig{
 		HttpClientConfig: httpConfig,
 		FromModule:       "query",
 	}

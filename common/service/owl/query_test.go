@@ -19,7 +19,7 @@ import (
 var gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
 
 var _ = Describe("[RESTful client] Query Object", func() {
-	mysqlApiConfig := gockConfig.NewMySqlApiConfig()
+	mysqlApiConfig := gockConfig.NewRestfulClientConfig()
 
 	testedSrv := NewQueryService(
 		QueryServiceConfig{mysqlApiConfig},

@@ -8,7 +8,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/db/facade"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
-	mysqlapi "github.com/Cepave/open-falcon-backend/common/service/mysqlapi"
+	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	owlSrv "github.com/Cepave/open-falcon-backend/common/service/owl"
 
 	"github.com/Cepave/open-falcon-backend/modules/query/g"
@@ -56,7 +56,7 @@ var (
 	QueryObjectService owlSrv.QueryService
 )
 
-func InitMySqlApi(config *mysqlapi.ApiConfig) {
+func InitMySqlApi(config *oHttp.RestfulClientConfig) {
 	QueryObjectService = owlSrv.NewQueryService(
 		owlSrv.QueryServiceConfig{
 			config,
