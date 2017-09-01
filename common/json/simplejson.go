@@ -1,8 +1,12 @@
 package json
 
 import (
+	"io"
+
 	gjson "encoding/json"
 	sjson "github.com/bitly/go-simplejson"
+
+	"github.com/juju/errors"
 )
 
 type SimpleJsonMarshaler interface {
@@ -17,41 +21,49 @@ type JsonExt struct {
 }
 
 func UnmarshalToJson(v interface{}) *sjson.Json {
-	var jsonString []byte
-
 	switch typedJson := v.(type) {
-	case []byte:
-		jsonString = typedJson
-	case string:
-		jsonString = []byte(typedJson)
+	case *sjson.Json:
+		return typedJson
+	case SimpleJsonMarshaler:
+		newJson, err := typedJson.MarshalSimpleJSON()
+		if err != nil {
+			err = errors.Annotate(err, "SimpleJsonMarshaler.MarshalSimpleJSON() has error")
+			panic(errors.Details(err))
+		}
+		return newJson
 	case gjson.Marshaler:
 		marshalerJson, err := typedJson.MarshalJSON()
 		if err != nil {
-			panic(err)
+			err = errors.Annotate(err, "encoding/json.MarshalJSON() has error")
+			panic(errors.Details(err))
 		}
 
-		jsonString = marshalerJson
-	default:
-		anyJson, err := gjson.Marshal(typedJson)
+		return UnmarshalToJson(marshalerJson)
+	case string:
+		return UnmarshalToJson([]byte(typedJson))
+	case []byte:
+		jsonObject, err := sjson.NewJson(typedJson)
 		if err != nil {
-			panic(err)
+			err = errors.Annotate(err, "go-simplejson.NewJson([]byte) has error")
+			panic(errors.Details(err))
 		}
-
-		jsonString = anyJson
+		return jsonObject
+	case io.Reader:
+		jsonObject, err := sjson.NewFromReader(typedJson)
+		if err != nil {
+			err = errors.Annotate(err, "go-simplejson.NewFromReader(io.Reader) has error")
+			panic(errors.Details(err))
+		}
+		return jsonObject
 	}
 
-	jsonObject := sjson.New()
-
-	if len(jsonString) == 0 {
-		return nil
-	}
-
-	err := jsonObject.UnmarshalJSON(jsonString)
+	anyJson, err := gjson.Marshal(v)
 	if err != nil {
-		panic(err)
+		err = errors.Annotate(err, "encoding/json.Marshal() has error")
+		panic(errors.Details(err))
 	}
 
-	return jsonObject
+	return UnmarshalToJson(anyJson)
 }
 
 func UnmarshalToJsonExt(v interface{}) *JsonExt {
@@ -120,7 +132,8 @@ func (j *JsonExt) CheckGetExt(key string) (*JsonExt, bool) {
 func MarshalJSON(anyObject interface{}) string {
 	jsonString, err := gjson.Marshal(anyObject)
 	if err != nil {
-		panic(err)
+		err = errors.Annotate(err, "encoding/json.Marshal() has error")
+		panic(errors.Details(err))
 	}
 
 	return string(jsonString)
@@ -134,12 +147,14 @@ func MarshalPrettyJSON(anyObject interface{}) string {
 
 	jsonObject, err := sjson.NewJson([]byte(jsonString))
 	if err != nil {
-		panic(err)
+		err = errors.Annotate(err, "simplejson.NewJson([]byte) has error")
+		panic(errors.Details(err))
 	}
 
 	prettyJson, jsonError := jsonObject.EncodePretty()
 	if jsonError != nil {
-		panic(jsonError)
+		err = errors.Annotate(err, "simplejson.JSON.EncodePretty() has error")
+		panic(errors.Details(err))
 	}
 
 	return string(prettyJson)

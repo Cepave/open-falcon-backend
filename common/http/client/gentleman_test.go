@@ -1,4 +1,4 @@
-package client
+package client_test
 
 import (
 	"errors"
@@ -10,13 +10,14 @@ import (
 	"gopkg.in/h2non/gentleman.v2/plugins/timeout"
 	"gopkg.in/h2non/gock.v1"
 
+	tl "github.com/Cepave/open-falcon-backend/common/http/client"
 	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var gockConfig = mock.NewGockConfig()
+var gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
 
 var _ = Describe("Get JSON from response", func() {
 	var client *gt.Client
@@ -37,7 +38,7 @@ var _ = Describe("Get JSON from response", func() {
 			)
 
 			client = gockConfig.GentlemanT.SetupClient(
-				CommonGentleman.NewDefaultClient(),
+				tl.CommonGentleman.NewDefaultClient(),
 			).Path("/r1")
 		})
 
@@ -46,7 +47,7 @@ var _ = Describe("Get JSON from response", func() {
 
 			Expect(err).To(Succeed())
 
-			respExt := ToGentlemanResp(resp)
+			respExt := tl.ToGentlemanResp(resp)
 			jsonBody := respExt.MustGetJson()
 
 			Expect(jsonBody.Get("v1").MustInt()).To(BeEquivalentTo(30))
@@ -62,7 +63,7 @@ var _ = Describe("Get JSON from response", func() {
 				BodyString("Non-JSON Body")
 
 			client = gockConfig.GentlemanT.SetupClient(
-				CommonGentleman.NewDefaultClient(),
+				tl.CommonGentleman.NewDefaultClient(),
 			).Path("/txt1")
 		})
 
@@ -71,7 +72,7 @@ var _ = Describe("Get JSON from response", func() {
 
 			Expect(err).To(Succeed())
 
-			respExt := ToGentlemanResp(resp)
+			respExt := tl.ToGentlemanResp(resp)
 			_, err = respExt.GetJson()
 
 			Expect(err).To(HaveOccurred())
@@ -97,19 +98,19 @@ var _ = Describe("Send request and check status", func() {
 				BodyString("Hello Man !!")
 
 			client = gockConfig.GentlemanT.SetupClient(
-				CommonGentleman.NewDefaultClient(),
+				tl.CommonGentleman.NewDefaultClient(),
 			).Path("/some1")
 		})
 
 		It("Equals to 200", func() {
-			resp, err := ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusOK)
+			resp, err := tl.ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusOK)
 
 			Expect(err).To(Succeed())
 			Expect(resp.String()).To(Equal("Hello Man !!"))
 		})
 
 		It("Not Equals to 404", func() {
-			resp, err := ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusNotFound)
+			resp, err := tl.ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusNotFound)
 
 			Expect(err).To(HaveOccurred())
 			GinkgoT().Logf("Error: %v", je.Details(err))
@@ -123,12 +124,12 @@ var _ = Describe("Send request and check status", func() {
 				ReplyError(errors.New("Sampele Error 1"))
 
 			client = gockConfig.GentlemanT.SetupClient(
-				CommonGentleman.NewDefaultClient(),
+				tl.CommonGentleman.NewDefaultClient(),
 			).Path("/some1")
 		})
 
 		It("The error message contains \"Send()\"", func() {
-			resp, err := ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusNotFound)
+			resp, err := tl.ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusNotFound)
 
 			Expect(err).To(HaveOccurred())
 			GinkgoT().Logf("Error: %v", je.Details(err))
@@ -145,14 +146,14 @@ var _ = Describe("Send request and check status", func() {
 				})
 
 			client = gockConfig.GentlemanT.SetupClient(
-				CommonGentleman.NewDefaultClient(),
+				tl.CommonGentleman.NewDefaultClient(),
 			).
 				Use(timeout.Request(1 * time.Millisecond)).
 				Path("/some1")
 		})
 
 		It("The error message contains \"timetout\"", func() {
-			resp, err := ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusNotFound)
+			resp, err := tl.ToGentlemanReq(client.Get()).SendAndStatusMatch(http.StatusNotFound)
 
 			Expect(err).To(HaveOccurred())
 			GinkgoT().Logf("Error: %v", je.Details(err))

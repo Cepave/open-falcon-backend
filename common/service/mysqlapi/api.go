@@ -34,7 +34,7 @@ func (s *ApiService) NewClient() *gt.Client {
 	).BaseURL(config.Url)
 
 	if config.FromModule != "" {
-		newClient.AddHeader("from-module", config.FromModule)
+		newClient.SetHeader("From-Module", config.FromModule)
 	}
 
 	for _, plugin := range s.config.Plugins {

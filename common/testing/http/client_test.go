@@ -1,9 +1,9 @@
 package http_test
 
 import (
-	"testing"
 	"net/http"
 	"strings"
+	"testing"
 
 	"github.com/dghubble/sling"
 
@@ -19,7 +19,7 @@ func TestByGinkgo(t *testing.T) {
 	RunSpecs(t, "Client Test Suite")
 }
 
-var gockConfig = mock.NewGockConfig()
+var gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
 
 var _ = Describe("ResponseResult and sling", func() {
 	var slingClient *sling.Sling

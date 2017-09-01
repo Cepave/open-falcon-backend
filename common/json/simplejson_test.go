@@ -1,22 +1,97 @@
 package json
 
 import (
+	"bytes"
+	"fmt"
+
 	sjson "github.com/bitly/go-simplejson"
-	. "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestJsonExtSuite struct{}
+var _ = Describe("JsonExt object", func() {
+	Context("GetxxxExt() functions", func() {
+		sampleJson := sjson.New()
+		sampleJson.Set("v1", 20)
+		testedExt := ToJsonExt(sampleJson)
 
-var _ = Suite(&TestJsonExtSuite{})
+		It("Value(existing) should not be nil", func() {
+			Expect(testedExt.GetExt("v1").IsNil()).NotTo(BeTrue())
+		})
 
-// Tests the getting of path
-func (suite *TestJsonExtSuite) TestGetPathExt(c *C) {
-	sampleJson := sjson.New()
-	sampleJson.Set("v1", 20)
+		It("Value(not-existing) should be nil", func() {
+			Expect(testedExt.GetExt("v2").IsNil()).To(BeTrue())
+		})
 
-	testedExt := ToJsonExt(sampleJson)
+		It("Value should be nil(child of existing value)", func() {
+			Expect(testedExt.GetPathExt("v1", "ck").IsNil()).To(BeTrue())
+		})
+	})
+})
 
-	c.Assert(testedExt.GetExt("v1"), NotNil)
-	c.Assert(testedExt.GetExt("v2").IsNil(), Equals, true)
-	c.Assert(testedExt.GetPathExt("v1", "ck").IsNil(), Equals, true)
+var _ = Describe("UnmarshalToJson(source)", func() {
+	var (
+		sampleName      = "j1"
+		sampleValue     = "hello445"
+		finalJsonString = fmt.Sprintf(`{ "%s": "%s" }`, sampleName, sampleValue)
+	)
+
+	Context("Viable JSON Content", func() {
+		DescribeTable("The value of property \"js\" is \"hello445\"",
+			func(sourceFunc func() interface{}) {
+				testedJson := UnmarshalToJson(sourceFunc())
+				Expect(testedJson.Get(sampleName).MustString()).To(Equal(sampleValue))
+			},
+			Entry("*go-simplejson.Json", func() interface{} {
+				simpleJson := sjson.New()
+				simpleJson.Set(sampleName, sampleValue)
+				return simpleJson
+			}),
+			Entry("SimpleJsonMarshaler", func() interface{} {
+				return &simpleJsonMarshaler{
+					sampleName, sampleValue,
+				}
+			}),
+			Entry("encoding/json.Marshaler", func() interface{} {
+				return &jsonMarshaler{finalJsonString}
+			}),
+			Entry("string", func() interface{} {
+				return finalJsonString
+			}),
+			Entry("[]byte", func() interface{} {
+				return []byte(finalJsonString)
+			}),
+			Entry("io.Reader", func() interface{} {
+				return bytes.NewBuffer([]byte(finalJsonString))
+			}),
+			Entry("Otherwise type", func() interface{} {
+				return &sampleS{sampleValue}
+			}),
+		)
+	})
+})
+
+type sampleS struct {
+	J1 string `json:"j1"`
+}
+
+type jsonMarshaler struct {
+	finalString string
+}
+
+func (s *jsonMarshaler) MarshalJSON() ([]byte, error) {
+	return []byte(s.finalString), nil
+}
+
+type simpleJsonMarshaler struct {
+	sampleName  string
+	sampleValue string
+}
+
+func (s *simpleJsonMarshaler) MarshalSimpleJSON() (*sjson.Json, error) {
+	newJson := sjson.New()
+	newJson.Set(s.sampleName, s.sampleValue)
+	return newJson, nil
 }
