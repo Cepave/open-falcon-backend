@@ -21,8 +21,8 @@ func GetAvaibleFun(c *gin.Context) {
 	})
 }
 
-func getParamsFromHTTP(funcParams []string, c *gin.Context) map[string]string {
-	tmpparams := map[string]string{}
+func getParamsFromHTTP(funcParams []string, c *gin.Context) (tmpparams map[string]interface{}) {
+	tmpparams = map[string]interface{}{}
 	for _, params := range funcParams {
 		ss := strings.Split(params, ":")
 		paramsKey := ss[0]
@@ -31,7 +31,7 @@ func getParamsFromHTTP(funcParams []string, c *gin.Context) map[string]string {
 			tmpparams[paramsKey] = paramset
 		}
 	}
-	return tmpparams
+	return
 }
 
 func Compute(c *gin.Context) {

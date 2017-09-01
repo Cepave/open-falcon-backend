@@ -1,6 +1,8 @@
 package openFalcon
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"time"
 
 	"strconv"
@@ -12,6 +14,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/lambda_extends/model"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 func GetEndpoints(c *gin.Context) {
@@ -25,6 +28,9 @@ func GetEndpoints(c *gin.Context) {
 }
 
 func BatchQuery(startTs int64, endTs int64, consolFun string, step int, counter string, endpoints []string) (result []cmodel.GraphQueryResponse) {
+	if viper.GetBool("test_mode") {
+		return getFakeData()
+	}
 	result = []cmodel.GraphQueryResponse{}
 	inputs := []cmodel.GraphQueryParam{}
 	for _, enp := range endpoints {
@@ -48,6 +54,9 @@ func BatchQuery(startTs int64, endTs int64, consolFun string, step int, counter 
 }
 
 func QueryOnce(startTs int64, endTs int64, consolFun string, step int, counter string, endpoints []string) (result []cmodel.GraphQueryResponse) {
+	if viper.GetBool("test_mode") {
+		return getFakeData()
+	}
 	result = []cmodel.GraphQueryResponse{}
 	for _, enp := range endpoints {
 		q := cmodel.GraphQueryParam{
@@ -105,4 +114,20 @@ func QueryData(c *gin.Context) {
 		"status": "ok",
 		"data":   result,
 	})
+}
+
+func getFakeData() (result []cmodel.GraphQueryResponse) {
+	root_dir := viper.GetString("lambda_extends.root_dir")
+	sampleDataPath := root_dir + "/data/test_data_sample1.json"
+	data, err := ioutil.ReadFile(sampleDataPath)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	return result
 }

@@ -3,7 +3,7 @@ package computeFunc
 import (
 	"encoding/json"
 	"io/ioutil"
-	"strconv"
+	"reflect"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -31,29 +31,24 @@ func initJSvM() *otto.Otto {
 	return otto.New()
 }
 
-func SetOttoVM(vm *otto.Otto, pmap map[string]string, key string, ptype string) {
+func SetOttoVM(vm *otto.Otto, pmap map[string]interface{}, key string, ptype string) {
 	if value, ok := pmap[key]; ok {
-		switch ptype {
-		case "string":
-			vm.Set(key, value)
-		case "int":
-			intval, err := strconv.Atoi(value)
-			if err != nil {
-				log.Error(err.Error())
-			} else {
-				vm.Set(key, intval)
-			}
-		case "bool":
-			boolVal, err := strconv.ParseBool(value)
-			if err != nil {
-				log.Error(err.Error())
-			}
-			vm.Set(key, boolVal)
+		switch value.(type) {
+		case string:
+			vm.Set(key, value.(string))
+		case int, int32, int64:
+			vm.Set(key, value.(int64))
+		case float32, float64:
+			vm.Set(key, value.(float64))
+		case bool:
+			vm.Set(key, value.(bool))
+		default:
+			log.Errorf("no support type for function params: %v, type: %v", value, reflect.TypeOf(value))
 		}
 	}
 }
 
-func SetParamsToJSVM(httpParams map[string]string, funcParams []string, vm *otto.Otto) *otto.Otto {
+func SetParamsToJSVM(httpParams map[string]interface{}, funcParams []string, vm *otto.Otto) *otto.Otto {
 	for _, params := range funcParams {
 		ss := strings.Split(params, ":")
 		paramsKey := ss[0]
