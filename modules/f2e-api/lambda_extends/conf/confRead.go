@@ -19,7 +19,7 @@ type Gconfig struct {
 }
 
 type FunConfig struct {
-	FuncationName string   `json:"funcation_name"`
+	FuncationName string   `json:"function_name"`
 	FilePath      string   `json:"file_path"`
 	Params        []string `json:"params"`
 	Description   string   `json:"description"`
