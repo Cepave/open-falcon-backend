@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 )
 
-var gockConfig = mock.NewGockConfig()
+var gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
 
 var _ = Describe("[RESTful client] Query Object", func() {
 	mysqlApiConfig := gockConfig.NewMySqlApiConfig()

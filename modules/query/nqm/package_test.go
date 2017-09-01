@@ -3,8 +3,8 @@ package nqm
 import (
 	"testing"
 
-	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
 	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
