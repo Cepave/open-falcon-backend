@@ -7,4 +7,4 @@ gin-bin
 cfg_cepave.json
 ./api
 owlight
-docs
+./docs
