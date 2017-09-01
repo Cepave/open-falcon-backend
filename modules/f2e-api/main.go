@@ -99,8 +99,16 @@ func main() {
 	}
 
 	//start gin server
-	log.Debugf("will start with port: %v", viper.GetString("web_port"))
-	go controller.StartGin(viper.GetString("web_port"), routes, false)
+	log.Debugf("will start with port: %v, test_mode: %v", viper.GetString("web_port"), viper.GetBool("test_mode"))
+	if viper.GetBool("test_mode") {
+		go func() {
+			ginTest := controller.StartGin(viper.GetString("web_port"), routes, viper.GetBool("test_mode"))
+			ginTest.Run(viper.GetString("web_port"))
+		}()
+	} else {
+		go controller.StartGin(viper.GetString("web_port"), routes, viper.GetBool("test_mode"))
+	}
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {

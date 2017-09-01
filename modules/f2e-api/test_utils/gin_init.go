@@ -2,6 +2,8 @@ package test_utils
 
 import (
 	"flag"
+	"os"
+	"strings"
 
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
@@ -25,6 +27,12 @@ func SetUpGin() *gin.Engine {
 		err := viper.ReadInConfig()
 		if err != nil {
 			log.Error(err.Error())
+		}
+		rtCheck := viper.GetString("lambda_extends.root_dir")
+		if strings.Contains(rtCheck, "${GOPATH}") {
+			gofpath := os.Getenv("GOPATH") + "/src"
+			rtCheck = strings.Replace(rtCheck, "${GOPATH}", gofpath, -1)
+			viper.Set("lambda_extends.root_dir", rtCheck)
 		}
 		gin.SetMode(gin.TestMode)
 		log.SetLevel(log.DebugLevel)
