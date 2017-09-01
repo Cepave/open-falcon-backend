@@ -65,6 +65,8 @@ pack: checkbin
 	@cp -r ./modules/alarm/{static,views} ./out/alarm/bin
 	@cp -r ./modules/agent/public ./out/agent/bin
 	@cp -r ./modules/f2e-api/data ./out/f2e-api/bin
+	@cp -r ./modules/f2e-api/lambda_extends/js ./out/f2e-api/bin
+	@cp -r ./modules/f2e-api/lambda_extends/conf/lambdaSetup.json ./out/f2e-api/config
 	@cp cfg.json ./out/cfg.json
 	@bash ./config/confgen.sh
 	@cp $(TARGET) ./out/$(TARGET)
