@@ -309,6 +309,12 @@
 			"revisionTime": "2017-01-11T10:11:55Z"
 		},
 		{
+			"checksumSHA1": "q4UgjHc+wfwiwla9bR9RzHL0vA4=",
+			"path": "github.com/h2non/gentleman/plugins/timeout",
+			"revision": "8d181ea5419025562b41134b401bd177e596e03e",
+			"revisionTime": "2017-07-30T08:26:02Z"
+		},
+		{
 			"checksumSHA1": "7JBkp3EZoc0MSbiyWfzVhO4RYoY=",
 			"path": "github.com/hashicorp/hcl",
 			"revision": "392dba7d905ed5d04a5794ba89f558b27e2ba1ca",
@@ -1039,6 +1045,90 @@
 			"path": "gopkg.in/go-playground/validator.v9",
 			"revision": "fb68f39656d7ebf8aa339ad4917aa0c260ecc237",
 			"revisionTime": "2017-06-12T05:26:53Z"
+		},
+		{
+			"checksumSHA1": "LzPZXrp24++tM/ScLydFABxZQeA=",
+			"path": "gopkg.in/h2non/gentleman.v2",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "MWPptJxCJompCJdS1oV1cBvKUr8=",
+			"path": "gopkg.in/h2non/gentleman.v2/context",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "lRy+uJ93CTrBzlVwCNFW/dai53A=",
+			"path": "gopkg.in/h2non/gentleman.v2/middleware",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "aLlD0T15krbjnoUz0N72ZZ/Q2yY=",
+			"path": "gopkg.in/h2non/gentleman.v2/mux",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "9hidmVfWlYSvT+wIniwUykAavEs=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugin",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "bdkPEU0TADLlc5Qwnlf89PvzGY0=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/body",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "XDCeoF1XB2W52sZkGwOiSIJDL+o=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/bodytype",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "EfGXi77khd8RhZo+FaArCbtHui0=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/cookies",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "VMorwBUGY45T4yZzH2ACvDjlosc=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/headers",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "hS5nve3L4bW72ZackJOjg3Y41rY=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/multipart",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "j6/36MLMgdUu12s85MQcLgQ8XDY=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/query",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "T/whz3Mu2rfWCleun8qVNAgXN9Q=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/url",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "IDJiewYyr2p7UJEvZVjqoEcAdr8=",
+			"path": "gopkg.in/h2non/gentleman.v2/utils",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
+			"checksumSHA1": "5wJsOcV7u6ijG48Y97GJBoG2BKc=",
+			"path": "gopkg.in/h2non/gock.v1",
+			"revision": "84d599244901620fb3eb96473eb9e50619f69b47",
+			"revisionTime": "2017-07-27T12:10:12Z"
 		},
 		{
 			"checksumSHA1": "4BwmmgQUhWtizsR2soXND0nqZ1I=",
