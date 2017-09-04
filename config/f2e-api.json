@@ -51,5 +51,10 @@
     "address": "127.0.0.1:6397",
     "password": "",
     "default_bucket": "extnal_event:all"
+  },
+  "lambda_extends": {
+    "enable": false,
+    "root_dir": "/home/f2e-api/bin",
+    "qlimit": 10000
   }
 }
