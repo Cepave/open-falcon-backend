@@ -22,6 +22,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/uic"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/utils"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
+	lb "github.com/Cepave/open-falcon-backend/modules/f2e-api/lambda_extends/gin_http"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 	log "github.com/sirupsen/logrus"
@@ -107,7 +108,13 @@ func StartGin(port string, r *gin.Engine, testMode bool) *gin.Engine {
 	dashboard_graph.Routes(r)
 	dashboard_screen.Routes(r)
 	alarm.Routes(r)
+
 	nqmDemo.Routes(r)
+	//inject lambda web
+	if viper.GetBool("lambda_extends.enable") {
+		log.Info("serve lambda web")
+		r = lb.StartLBWeb(r)
+	}
 	if !testMode {
 		r.Run(port)
 	}
