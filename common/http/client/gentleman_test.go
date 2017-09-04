@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/h2non/gentleman/plugins/timeout"
 	je "github.com/juju/errors"
 	gt "gopkg.in/h2non/gentleman.v2"
-	"github.com/h2non/gentleman/plugins/timeout"
 	"gopkg.in/h2non/gock.v1"
 
 	tl "github.com/Cepave/open-falcon-backend/common/http/client"

@@ -1,3 +1,48 @@
+/*
+
+Out-of-box Gock/Gentleman functions.
+
+Initializing a gock
+
+The "GockConfigBuilder.NewConfigByRandom()" function would set-up a random configuration for gock testing.
+And you could use "*GockConfig.NewClient()" to build client object of Gentleman with defined URL.
+
+	gockConfig := GockConfigBuilder.NewConfigByRandom()
+
+	gockConfig.New().Get.("/your-resource").
+		Reply(http.StatusOK).
+		JSON(
+			map[string]interface{} {
+				"v1": "hello",
+				"v2": 20,
+			},
+		)
+
+	client := gockConfig.NewClient()
+
+	// ... testing by gentleman ...
+
+Bridge of httptest
+
+"*GockConfig" has supports for interface of "testing/http/HttpTest", which
+you could use it to start a "real" web server by mocked implementation.
+
+	server := gockCofnig.NewServer(&FakcServerConfig{ Host: "127.0.0.1", Port: 10401 })
+
+	server.Start()
+	defer server.Stop()
+
+	gockConfig.New().Get.("/agent/33").
+		Reply(http.StatusOK).
+		JSON(
+			map[string]interface{} {
+				"v1": "hello",
+				"v2": 20,
+			},
+		)
+
+	// testing...
+*/
 package gock
 
 import (
@@ -22,6 +67,13 @@ import (
 )
 
 // Functions in namespace for building of *GockConfig
+//
+// NewConfig(string, string) *GockConfig:
+// 	Constructs a new configuration with your host and port
+// NewConfigByRandom() *GockConfig:
+// 	Constructs a new configuration with generated(randomly) host and port
+// 	Port is range from 30000 ~ 30999.
+// 	Host would have naming of suffixing by random number from "001" ~ "999".
 var GockConfigBuilder = &struct {
 	NewConfig         func(host string, port uint16) *GockConfig
 	NewConfigByRandom func() *GockConfig
@@ -51,8 +103,11 @@ func newGockConfig(host string, port uint16) *GockConfig {
 
 // Defines the interface used to ease testing by Gentleman library.
 type GentlemanT interface {
+	// Initializes a client object
 	NewClient() *gentleman.Client
+	// Sets-up client object
 	SetupClient(*gentleman.Client) *gentleman.Client
+	// Gets the plugin should be used in client object
 	Plugin() plugin.Plugin
 }
 
@@ -62,18 +117,22 @@ type GentlemanT interface {
 // 	2. Constructs a Gentleman client with configuration of mock
 // 	3. Initialize a new *httptest.Server, which could be used to start real server on mock-setup.
 type GockConfig struct {
-	Host       string
+	// The host of mocked URL
+	Host string
+	// The port of mocked URL
 	Port       uint16
 	GentlemanT GentlemanT
 	HttpTest   tHttp.HttpTest
 }
 
+// Constructs a configuration for HTTP client.
 func (c *GockConfig) NewHttpConfig() *client.HttpClientConfig {
 	config := client.NewDefaultConfig()
 	config.Url = c.GetUrl()
 	return config
 }
 
+// Constructs a configuration for RESTful client.
 func (c *GockConfig) NewRestfulClientConfig() *oHttp.RestfulClientConfig {
 	return &oHttp.RestfulClientConfig{
 		HttpClientConfig: c.NewHttpConfig(),
@@ -83,10 +142,12 @@ func (c *GockConfig) NewRestfulClientConfig() *oHttp.RestfulClientConfig {
 	}
 }
 
+// Gets the URL(by "http://") of this configuration.
 func (c *GockConfig) GetUrl() string {
 	return fmt.Sprintf("http://%s:%d", c.Host, c.Port)
 }
 
+// Initialize a "*gock.Request* object with defined URL.
 func (c *GockConfig) New() *gock.Request {
 	url := c.GetUrl()
 	return gock.New(url)

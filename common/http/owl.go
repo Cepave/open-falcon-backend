@@ -4,7 +4,7 @@ import (
 	gt "gopkg.in/h2non/gentleman.v2"
 	"gopkg.in/h2non/gentleman.v2/plugin"
 
-	client "github.com/Cepave/open-falcon-backend/common/http/client"
+	"github.com/Cepave/open-falcon-backend/common/http/client"
 )
 
 // General configuration to MySqlApi
@@ -31,7 +31,7 @@ func (s *ApiService) NewClient() *gt.Client {
 		&client.GentlemanConfig{
 			RequestTimeout: config.RequestTimeout,
 		},
-	).BaseURL(config.Url)
+	).URL(config.Url)
 
 	if config.FromModule != "" {
 		newClient.SetHeader("From-Module", config.FromModule)
