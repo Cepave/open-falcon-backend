@@ -6,7 +6,6 @@ import (
 	_ "net/http/pprof"
 
 	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
-	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +15,6 @@ type Dto struct {
 	Data interface{} `json:"data"`
 }
 
-var logger = log.NewDefaultLogger("INFO")
 var ginRouter *gin.Engine = nil
 var GinConfig *commonGin.GinConfig = &commonGin.GinConfig{}
 

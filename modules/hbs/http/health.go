@@ -1,17 +1,18 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/service"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/h2non/gentleman.v2"
 )
 
 func getHealth(c *gin.Context) {
-	mysqlInfo := fetchMysqlApiView(service.MysqlApiUrl)
+	req := NewMysqlApiCli().Head().AddPath("health")
+	mysqlInfo := fetchMysqlApiView(req)
 	httpInfo := g.Config().Http
 	rpcInfo := &g.RpcView{g.Config().Listen}
 	heartbeatService := rpc.AgentHeartbeatService
@@ -32,26 +33,19 @@ func getHealth(c *gin.Context) {
 	c.JSON(http.StatusOK, healthInfo)
 }
 
-func fetchMysqlApiView(apiUrl string) *g.MysqlApiView {
-	req := gentleman.New().BaseURL(apiUrl).Path("/health").Head()
+func fetchMysqlApiView(req *gentleman.Request) *g.MysqlApiView {
+	var msg string
+
 	res, err := req.Do()
-	return &g.MysqlApiView{
-		Address:     apiUrl,
-		PingResult:  Btoi(res.Ok),
-		PingMessage: Etos(err),
+	if err != nil {
+		msg = fmt.Sprintf("Err=%v. Body=%s.", err, res.String())
 	}
-}
 
-func Btoi(b bool) int {
-	if b {
-		return 1
+	view := &g.MysqlApiView{
+		Address:     req.Context.Request.URL.String(),
+		PingResult:  res.StatusCode,
+		PingMessage: msg,
 	}
-	return 0
-}
 
-func Etos(e error) string {
-	if e != nil {
-		return e.Error()
-	}
-	return ""
+	return view
 }
