@@ -28,8 +28,8 @@ func NewQueryService(config QueryServiceConfig) QueryService {
 	newClient := oHttp.NewApiService(*config.RestfulClientConfig).NewClient()
 
 	return &queryServiceImpl{
-		loadQueryByUuid:   newClient.Path("/api/v1/owl/query-object").Get(),
-		createOrLoadQuery: newClient.Path("/api/v1/owl/query-object").Post(),
+		loadQueryByUuid:   newClient.Get().AddPath("/api/v1/owl/query-object"),
+		createOrLoadQuery: newClient.Post().AddPath("/api/v1/owl/query-object"),
 	}
 }
 
