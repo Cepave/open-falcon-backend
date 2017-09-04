@@ -7,7 +7,7 @@ import (
 
 	je "github.com/juju/errors"
 	gt "gopkg.in/h2non/gentleman.v2"
-	"gopkg.in/h2non/gentleman.v2/plugins/timeout"
+	"github.com/h2non/gentleman/plugins/timeout"
 	"gopkg.in/h2non/gock.v1"
 
 	tl "github.com/Cepave/open-falcon-backend/common/http/client"
