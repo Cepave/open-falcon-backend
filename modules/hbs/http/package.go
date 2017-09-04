@@ -14,5 +14,5 @@ var ClientTimeout = 3 * time.Second
 var logger = log.NewDefaultLogger("INFO")
 
 func NewMysqlApiCli() *gentleman.Client {
-	return gentleman.New().Use(timeout.Request(ClientTimeout)).BaseURL(service.GetMysqlApiUrl())
+	return gentleman.New().Use(timeout.Request(ClientTimeout)).URL(service.GetMysqlApiUrl())
 }

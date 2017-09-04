@@ -11,7 +11,7 @@ import (
 )
 
 func getHealth(c *gin.Context) {
-	req := NewMysqlApiCli().Head().AddPath("health")
+	req := NewMysqlApiCli().Get().AddPath("/health")
 	mysqlInfo := fetchMysqlApiView(req)
 	httpInfo := g.Config().Http
 	rpcInfo := &g.RpcView{g.Config().Listen}
@@ -40,6 +40,7 @@ func fetchMysqlApiView(req *gentleman.Request) *g.MysqlApiView {
 	if err != nil {
 		msg = fmt.Sprintf("Err=%v. Body=%s.", err, res.String())
 	}
+	defer res.Close()
 
 	view := &g.MysqlApiView{
 		Address:     req.Context.Request.URL.String(),
