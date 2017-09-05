@@ -1,9 +1,10 @@
 package cron
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
-	log "github.com/sirupsen/logrus"
+	"log"
 	"time"
+
+	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
 )
 
 type Worker struct {
@@ -60,6 +61,10 @@ func deleteNoUseWorker(m map[string]*g.Cluster) {
 func createWorkerIfNeed(m map[string]*g.Cluster) {
 	for key, item := range m {
 		if _, ok := Workers[key]; !ok {
+			if item.Step <= 0 {
+				log.Println("[W] invalid cluster(step <= 0):", item)
+				continue
+			}
 			worker := NewWorker(item)
 			Workers[key] = worker
 			worker.Start()

@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
-	log "github.com/sirupsen/logrus"
+	"log"
 )
 
 func ReadClusterMonitorItems() (M map[string]*g.Cluster, err error) {

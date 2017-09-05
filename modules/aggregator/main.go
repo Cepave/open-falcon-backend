@@ -1,50 +1,44 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"github.com/Cepave/open-falcon-backend/common/logruslog"
-	"github.com/Cepave/open-falcon-backend/common/vipercfg"
-	"github.com/spf13/pflag"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/Cepave/open-falcon-backend/common/sdk/sender"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/cron"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/db"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/http"
-	"github.com/open-falcon/sdk/graph"
-	"github.com/open-falcon/sdk/portal"
-	"github.com/open-falcon/sdk/sender"
 )
 
 func main() {
-	vipercfg.Parse()
-	vipercfg.Bind()
+	cfg := flag.String("c", "cfg.json", "configuration file")
+	version := flag.Bool("v", false, "show version")
+	help := flag.Bool("h", false, "help")
+	flag.Parse()
 
-	if vipercfg.Config().GetBool("version") {
+	if *version {
 		fmt.Println(g.VERSION)
 		os.Exit(0)
 	}
 
-	if vipercfg.Config().GetBool("help") {
-		pflag.Usage()
+	if *help {
+		flag.Usage()
 		os.Exit(0)
 	}
 
-	vipercfg.Load()
-	g.ParseConfig(vipercfg.Config().GetString("config"))
-	logruslog.Init()
+	g.ParseConfig(*cfg)
 	db.Init()
 
 	go http.Start()
 	go cron.UpdateItems()
 
 	// sdk configuration
-	graph.GraphLastUrl = g.Config().Api.GraphLast
 	sender.Debug = g.Config().Debug
-	sender.PostPushUrl = g.Config().Api.Push
-	portal.HostnamesUrl = g.Config().Api.Hostnames
+	sender.PostPushUrl = g.Config().Api.PushApi
 
 	sender.StartSender()
 
