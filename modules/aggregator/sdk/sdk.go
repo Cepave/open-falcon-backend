@@ -6,7 +6,7 @@ import (
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/sdk/requests"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
-	f "github.com/Cepave/open-falcon-backend/modules/api/app/model/falcon_portal"
+	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	"github.com/toolkits/net/httplib"
 	"time"
 )
