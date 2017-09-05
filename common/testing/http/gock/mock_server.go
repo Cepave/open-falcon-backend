@@ -56,7 +56,6 @@ import (
 
 	"github.com/juju/errors"
 	"gopkg.in/h2non/gentleman.v2"
-	"gopkg.in/h2non/gentleman.v2/context"
 	"gopkg.in/h2non/gentleman.v2/plugin"
 	"gopkg.in/h2non/gock.v1"
 
@@ -64,6 +63,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	gp "github.com/Cepave/open-falcon-backend/common/testing/http/gock_plugin"
 )
 
 // Functions in namespace for building of *GockConfig
@@ -137,7 +137,7 @@ func (c *GockConfig) NewRestfulClientConfig() *oHttp.RestfulClientConfig {
 	return &oHttp.RestfulClientConfig{
 		HttpClientConfig: c.NewHttpConfig(),
 		Plugins: []plugin.Plugin{
-			_gentlemanMockPlugin,
+			gp.GockPlugin,
 		},
 	}
 }
@@ -186,13 +186,8 @@ func (t *implGentlemanT) SetupClient(client *gentleman.Client) *gentleman.Client
 	return client
 }
 func (t *implGentlemanT) Plugin() plugin.Plugin {
-	return _gentlemanMockPlugin
+	return gp.GockPlugin
 }
-
-var _gentlemanMockPlugin = plugin.NewPhasePlugin("before dial", func(ctx *context.Context, h context.Handler) {
-	gock.InterceptClient(ctx.Client)
-	h.Next(ctx)
-})
 
 type implHttptest struct {
 	mockUrl string

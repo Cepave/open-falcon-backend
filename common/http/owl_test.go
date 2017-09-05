@@ -25,7 +25,7 @@ var _ = Describe("Build a new client", func() {
 
 	JustBeforeEach(func() {
 		testedSrv = oHttp.NewApiService(
-			oHttp.RestfulClientConfig{
+			&oHttp.RestfulClientConfig{
 				HttpClientConfig: clientConfig,
 			},
 		)

@@ -1,3 +1,15 @@
+/*
+This package provides out-of-box configuraiton for initializing client object to calling of RESTful API services.
+
+Configuration
+
+The "RestfulClientConfig" object defines various properties used to consturct calling of OWL service.
+
+Gentleman Client
+
+You could use "ApiService.NewClient()" to get "*gentleman.Client" object.
+
+*/
 package http
 
 import (
@@ -9,21 +21,25 @@ import (
 
 // General configuration to MySqlApi
 type RestfulClientConfig struct {
+	// Configuration is used to set-up properties of supported library of HTTP client.
 	*client.HttpClientConfig
-	// If this value is non-empty, this service would add header "from-module: <FromModule>" in HTTP request.
+	// If this value is non-empty, this service would add header "From-Module: <FromModule>" in HTTP request.
 	FromModule string
-	Plugins    []plugin.Plugin
+	// The "NewClient()" function would USE the "Plugins" to construct "*gentleman.Client" object.
+	Plugins []plugin.Plugin
 }
 
-func NewApiService(config RestfulClientConfig) *ApiService {
-	return &ApiService{&config}
+// Constructs a new service to API.
+func NewApiService(config *RestfulClientConfig) *ApiService {
+	return &ApiService{config}
 }
 
-// Defines general operation for MysqlApiService
+// Provides general operation(as service) to RESTful API service
 type ApiService struct {
 	config *RestfulClientConfig
 }
 
+// Constructs a new client object with defined configuration(by RestfulClientConfig)
 func (s *ApiService) NewClient() *gt.Client {
 	config := s.config
 
