@@ -6,6 +6,7 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/rpc"
+	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/h2non/gentleman.v2"
 )
@@ -34,19 +35,22 @@ func getHealth(c *gin.Context) {
 }
 
 func fetchMysqlApiView(req *gentleman.Request) *g.MysqlApiView {
-	var msg string
-
 	res, err := req.Do()
-	if err != nil {
-		msg = fmt.Sprintf("Err=%v. Body=%s.", err, res.String())
-	}
-	defer res.Close()
-
 	view := &g.MysqlApiView{
-		Address:     req.Context.Request.URL.String(),
-		PingResult:  res.StatusCode,
-		PingMessage: msg,
+		Address:    req.Context.Request.URL.String(),
+		StatusCode: res.StatusCode,
 	}
+
+	if err != nil {
+		view.Message += fmt.Sprintf("Err=%v. Body=%s.", err, res.String())
+		return view
+	}
+
+	h := &apiModel.HealthView{}
+	if err = res.JSON(&h); err != nil {
+		view.Message += fmt.Sprintf("JSON response Err: %v.", err)
+	}
+	view.Response = h
 
 	return view
 }

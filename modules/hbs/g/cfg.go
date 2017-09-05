@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/toolkits/file"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type HttpConfig struct {
@@ -29,9 +31,10 @@ type GlobalConfig struct {
 }
 
 type MysqlApiView struct {
-	Address     string `json:"address"`
-	PingResult  int    `json:"ping_result"`
-	PingMessage string `json:"ping_message"`
+	Address    string               `json:"address"`
+	StatusCode int                  `json:"status_code"`
+	Message    string               `json:"message"`
+	Response   *apiModel.HealthView `json:"response"`
 }
 
 type RpcView struct {
