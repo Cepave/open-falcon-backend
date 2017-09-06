@@ -1,9 +1,9 @@
 /*
-This package provides out-of-box configuraiton for initializing client object to calling of RESTful API services.
+This package provides out-of-box configuration for initializing client object to calling of RESTful API services.
 
 Configuration
 
-The "RestfulClientConfig" object defines various properties used to consturct calling of OWL service.
+The "RestfulClientConfig" object defines various properties used to construct calling of OWL service.
 
 Gentleman Client
 
