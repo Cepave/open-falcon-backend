@@ -4,6 +4,7 @@ import (
 	"io"
 
 	gjson "encoding/json"
+
 	sjson "github.com/bitly/go-simplejson"
 
 	"github.com/juju/errors"
@@ -42,6 +43,9 @@ func UnmarshalToJson(v interface{}) *sjson.Json {
 	case string:
 		return UnmarshalToJson([]byte(typedJson))
 	case []byte:
+		if len(typedJson) == 0 {
+			return sjson.New()
+		}
 		jsonObject, err := sjson.NewJson(typedJson)
 		if err != nil {
 			err = errors.Annotate(err, "go-simplejson.NewJson([]byte) has error")

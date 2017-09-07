@@ -70,6 +70,22 @@ var _ = Describe("UnmarshalToJson(source)", func() {
 				return &sampleS{sampleValue}
 			}),
 		)
+
+		DescribeTable("The value of property \"js\" is empty(\"\")",
+			func(sourceFunc func() interface{}) {
+				testedJson := UnmarshalToJson(sourceFunc())
+				Expect(testedJson.Get(sampleName).MustString()).To(BeEmpty())
+			},
+			Entry("empty string", func() interface{} {
+				return ""
+			}),
+			Entry("empty []byte", func() interface{} {
+				return []byte{}
+			}),
+			Entry("nil []byte", func() interface{} {
+				return ([]byte)(nil)
+			}),
+		)
 	})
 })
 
