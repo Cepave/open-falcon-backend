@@ -8,13 +8,16 @@ import (
 
 	"github.com/satori/go.uuid"
 
+	dbt "github.com/Cepave/open-falcon-backend/common/db"
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	"github.com/Cepave/open-falcon-backend/common/types"
 	"github.com/Cepave/open-falcon-backend/common/utils"
 
+	db "github.com/Cepave/open-falcon-backend/modules/query/database"
 	metricDsl "github.com/Cepave/open-falcon-backend/modules/query/dsl/metric_parser"
 	model "github.com/Cepave/open-falcon-backend/modules/query/model/nqm"
 )
@@ -240,19 +243,20 @@ func (r sortableRecords) Less(i, j int) bool {
 }
 
 func BuildQuery(q *model.CompoundQuery) *owlModel.Query {
-	var digestValue [16]byte
-	copy(digestValue[:], q.GetDigestValue())
+	var digestValue = new(types.Bytes16)
+	digestValue.FromVarBytes(q.GetDigestValue())
 
 	queryObject := &owlModel.Query{
+		NamedId:    queryNamedId,
 		Content:    q.GetCompressedQuery(),
-		Md5Content: digestValue,
+		Md5Content: dbt.Bytes16(*digestValue),
 	}
 
-	queryService.CreateOrLoadQuery(queryObject)
+	db.QueryObjectService.CreateOrLoadQuery(queryObject)
 	return queryObject
 }
 func GetCompoundQueryByUuid(uuid uuid.UUID) *model.CompoundQuery {
-	queryObject := queryService.LoadQueryByUuid(uuid)
+	queryObject := db.QueryObjectService.LoadQueryByUuid(uuid)
 	if queryObject == nil {
 		return nil
 	}

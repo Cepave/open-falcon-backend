@@ -18,7 +18,7 @@ var _ = Suite(&TestPintTaskItSuite{})
 
 // Tests the listing of agents
 func (suite *TestPintTaskItSuite) TestListAgents(c *C) {
-	client := httpClientConfig.NewSlingByBase().Get("api/v1/nqm/pingtask/9801/agents").
+	client := httpClientConfig.NewClient().Get("api/v1/nqm/pingtask/9801/agents").
 		Set("order-by", "applied#desc")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)

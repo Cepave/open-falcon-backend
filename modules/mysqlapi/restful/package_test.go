@@ -14,7 +14,7 @@ import (
 )
 
 var dbFacade *f.DbFacade
-var httpClientConfig = tHttp.NewHttpClientConfigByFlag()
+var httpClientConfig = &tHttp.SlingClientConf{tHttp.NewHttpClientConfigByFlag()}
 
 func init() {
 	flag.Parse()

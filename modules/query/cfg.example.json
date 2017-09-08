@@ -57,6 +57,10 @@
         "uplink": "https://example.com/api_uplink_path",
         "max": 500
     },
+	"mysql_api": {
+        "host": "http://127.0.0.1:6040",
+        "resource": ""
+	},
     "db": {
         "addr": "root:@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
         "idle": 10,

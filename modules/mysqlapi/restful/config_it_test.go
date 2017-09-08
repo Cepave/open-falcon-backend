@@ -28,7 +28,7 @@ var _ = Describe("[Intg] Test getAgentConfig", ginkgoDb.NeedDb(func() {
 	DescribeTable("when value",
 		func(key string, expectedJson string) {
 			result := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewSlingByBase().Get("api/v1/agent/config?key=" + key),
+				httpClientConfig.NewClient().Get("api/v1/agent/config?key=" + key),
 			)
 			Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
 
@@ -47,7 +47,7 @@ var _ = Describe("[Intg] Test getAgentConfig", ginkgoDb.NeedDb(func() {
 	DescribeTable("404 status when",
 		func(key string) {
 			result := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewSlingByBase().Get("api/v1/agent/config?key=" + key),
+				httpClientConfig.NewClient().Get("api/v1/agent/config?key=" + key),
 			)
 			Expect(result).To(ogko.MatchHttpStatus(http.StatusNotFound))
 		},

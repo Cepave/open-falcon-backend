@@ -33,8 +33,6 @@ func GetDefaultServiceController() *ServiceController {
 
 // :~)
 
-var queryService *owlService.QueryService
-
 var ispService *owlService.IspService
 var provinceService *owlService.ProvinceService
 var cityService *owlService.CityService
@@ -59,14 +57,6 @@ func (srv *ServiceController) Init() {
 const queryNamedId = "nqm.compound.report"
 
 func initServices() {
-	queryService = owlService.NewQueryService(
-		owlService.QueryServiceConfig{
-			queryNamedId,
-			8,
-			time.Hour * 8,
-		},
-	)
-
 	// Cache for ISPs: Maximum 16 entities with 6 hours live time
 	ispService = owlService.NewIspService(cache.DataCacheConfig{
 		MaxSize: 16, Duration: time.Hour * 8,

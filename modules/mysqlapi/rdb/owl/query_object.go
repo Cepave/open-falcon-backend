@@ -1,13 +1,28 @@
 package owl
 
 import (
+	"time"
+
 	"github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	model "github.com/Cepave/open-falcon-backend/common/model/owl"
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
-	"time"
 )
+
+func RemoveOldQueryObject(beforeTime time.Time) int64 {
+	sqlResult := DbFacade.SqlxDbCtrl.NamedExec(
+		`
+		DELETE FROM owl_query
+		WHERE qr_time_access < :before_time
+		`,
+		map[string]interface{}{
+			"before_time": beforeTime,
+		},
+	)
+
+	return db.ToResultExt(sqlResult).RowsAffected()
+}
 
 // Adds a query or refresh an existing one
 func AddOrRefreshQuery(query *model.Query, accessTime time.Time) {
@@ -27,7 +42,7 @@ func UpdateAccessTimeOrAddNewOne(query *model.Query, accessTime time.Time) {
 }
 
 // It is possible that the access times of two requests are very closed(less than 1 second)
-func LoadQueryByUuidAndUpdateAccessTime(name string, uuid uuid.UUID, accessTime time.Time) *model.Query {
+func LoadQueryByUuidAndUpdateAccessTime(uuid uuid.UUID, accessTime time.Time) *model.Query {
 	updateAccessTimeByUuid(
 		db.DbUuid(uuid), accessTime,
 	)
@@ -37,7 +52,7 @@ func LoadQueryByUuidAndUpdateAccessTime(name string, uuid uuid.UUID, accessTime 
 	if !DbFacade.SqlxDbCtrl.GetOrNoRow(
 		&queryData,
 		`
-		SELECT qr_uuid, qr_named_id, qr_content, qr_md5_content
+		SELECT qr_uuid, qr_named_id, qr_content, qr_md5_content, qr_time_access, qr_time_creation
 		FROM owl_query
 		WHERE qr_uuid = ?
 		`,
@@ -57,8 +72,14 @@ type addOrRefreshQueryTx struct {
 func (queryTx *addOrRefreshQueryTx) InTx(tx *sqlx.Tx) db.TxFinale {
 	txExt := sqlxExt.ToTxExt(tx)
 
+	/**
+	 * The generated UUID may be abandoned because of duplicated key on "qr_named_id" and "qr_md5_content".
+	 *
+	 * This function always reload the actual UUID(whether or not it is created or existing one).
+	 */
 	queryTx.performAddOrUpdate(txExt)
 	queryTx.loadUuid(txExt)
+	// :~)
 
 	return db.TxCommit
 }
@@ -95,7 +116,7 @@ func (queryTx *addOrRefreshQueryTx) loadUuid(txExt *sqlxExt.TxExt) {
 
 	txExt.QueryRowxAndScan(
 		`
-		SELECT qr_uuid
+		SELECT qr_uuid, qr_time_access, qr_time_creation
 		FROM owl_query
 		WHERE qr_named_id = ?
 			AND qr_md5_content = ?
@@ -105,6 +126,8 @@ func (queryTx *addOrRefreshQueryTx) loadUuid(txExt *sqlxExt.TxExt) {
 			queryObject.Md5Content,
 		},
 		&queryObject.Uuid,
+		&queryObject.AccessTime,
+		&queryObject.CreationTime,
 	)
 }
 
@@ -114,6 +137,7 @@ func updateAccessTimeByUuid(uuid db.DbUuid, accessTime time.Time) {
 		UPDATE owl_query
 		SET qr_time_access = :access_time
 		WHERE qr_uuid = :uuid
+			AND qr_time_access < :access_time
 		`,
 		map[string]interface{}{
 			"access_time": accessTime,

@@ -58,11 +58,11 @@ func (suite *TestNqmLogSuite) TestGetStatisticsOfIcmpByDsl(c *C) {
 }
 
 func (s *TestNqmLogSuite) SetUpSuite(c *C) {
-	if !testHttp.HasWebConfigOrSkip(c) {
+	if !ginTestServer.GoCheckOrSkip(c) {
 		return
 	}
 
-	testHttp.StartGinWebServer(
+	ginTestServer.GoCheckStartGinWebServer(
 		c,
 		func(engine *gin.Engine) {
 			engine.POST("/nqm/icmp/query/by-dsl", mockIcmpService)
@@ -72,7 +72,7 @@ func (s *TestNqmLogSuite) SetUpSuite(c *C) {
 	g.SetConfig(
 		&g.GlobalConfig{
 			NqmLog: &g.NqmLogConfig{
-				ServiceUrl: testHttp.GetWebUrl(),
+				ServiceUrl: testHttp.WebTestServer.GetUrl(),
 			},
 		},
 	)

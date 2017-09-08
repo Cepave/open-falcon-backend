@@ -5,6 +5,10 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/spf13/viper"
+
+	oHttp "github.com/Cepave/open-falcon-backend/common/http"
+	"github.com/Cepave/open-falcon-backend/common/http/client"
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 
@@ -30,6 +34,9 @@ func main() {
 	// config
 	vipercfg.Load()
 	g.ParseConfig(vipercfg.Config().GetString("config"))
+
+	database.InitMySqlApi(loadMySqlApiConfig(vipercfg.Config()))
+
 	logruslog.Init()
 	gconf := g.Config()
 	// proc
@@ -63,5 +70,20 @@ func main() {
 		if sig.String() == "^C" {
 			os.Exit(3)
 		}
+	}
+}
+
+func loadMySqlApiConfig(viper *viper.Viper) *oHttp.RestfulClientConfig {
+	httpConfig := client.NewDefaultConfig()
+	httpConfig.Url = viper.GetString("mysql_api.host")
+
+	resource := viper.GetString("mysql_api.resource")
+	if resource != "" {
+		httpConfig.Url += "/" + resource
+	}
+
+	return &oHttp.RestfulClientConfig{
+		HttpClientConfig: httpConfig,
+		FromModule:       "query",
 	}
 }

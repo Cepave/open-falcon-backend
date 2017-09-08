@@ -1,166 +1,152 @@
 package owl
 
 import (
-	"encoding/hex"
-	db "github.com/Cepave/open-falcon-backend/common/db"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
-	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
-	t "github.com/Cepave/open-falcon-backend/common/testing"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
-	. "gopkg.in/check.v1"
+	"net/http"
 	"time"
+
+	"github.com/satori/go.uuid"
+
+	"github.com/Cepave/open-falcon-backend/common/db"
+	model "github.com/Cepave/open-falcon-backend/common/model/owl"
+	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
+	"github.com/Cepave/open-falcon-backend/common/types"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 )
 
-type TestQuerySuite struct{}
+var gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
 
-var _ = Suite(&TestQuerySuite{})
+var _ = Describe("[RESTful client] Query Object", func() {
+	mysqlApiConfig := gockConfig.NewRestfulClientConfig()
 
-var testedQueryService = NewQueryService(
-	QueryServiceConfig{
-		"qservice-q-1", 4, 5 * time.Second,
-	},
-)
-
-// Tests the loading of query by uuid
-func (suite *TestQuerySuite) TestLoadQueryByUuid(c *C) {
-	testCases := []*struct {
-		sampleUuid         string
-		expectedMd5Content string
-		inCache            bool
-	}{
-		{"890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", false}, // Load data into cache
-		{"120818a7d438495bb79a1ac0abf1eae2", "", false},                                 // Nothing found
-		{"120818a7d438495bb79a1ac0abf1eae2", "", false},                                 // Nothing found
-		{"890818a7d438495bb79a1ac0abf1eae2", "8c0a58a7d458430bb79812c0abf1eae7", true},  // Update access time
-	}
-
-	var lastAccessTime time.Time = time.Now()
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
-
-		sampleUuid := t.ParseUuid(c, testCase.sampleUuid)
-
-		/**
-		 * Asserts the existence itme in cache
-		 */
-		if testCase.inCache {
-			c.Assert(testedQueryService.cache.Get(sampleUuid.String()), NotNil, comment)
-		} else {
-			c.Assert(testedQueryService.cache.Get(sampleUuid.String()), IsNil, comment)
-		}
-		// :~)
-
-		time.Sleep(1 * time.Second)
-
-		testedQuery := testedQueryService.LoadQueryByUuid(sampleUuid)
-
-		if testCase.expectedMd5Content == "" {
-			c.Assert(testedQuery, IsNil)
-			continue
-		}
-
-		/**
-		 * Asserts the loaded data
-		 */
-		hexTestedMd5Content := hex.EncodeToString(testedQuery.Md5Content[:])
-		c.Assert(hexTestedMd5Content, Equals, testCase.expectedMd5Content, comment)
-		// :~)
-
-		/**
-		 * Asserts the update of access time
-		 */
-		accessTime := getAccessTimeByUuid(testedQuery.Uuid)
-		c.Logf("Access time: %v", accessTime)
-		c.Assert(accessTime, ocheck.TimeAfter, lastAccessTime, comment)
-		lastAccessTime = accessTime
-		// :~)
-	}
-}
-
-// Tests the creation of loading of query
-func (suite *TestQuerySuite) TestCreateOrLoadQuery(c *C) {
-	var md5Value db.Bytes16
-	(&md5Value).Scan("810512c76a1c44ddb0d6097ef4ef156e")
-
-	sampleQuery := &owlModel.Query{
-		NamedId:    "gp-query-1",
-		Md5Content: md5Value,
-		Content:    md5Value[:],
-	}
-
-	testedQueryService.CreateOrLoadQuery(sampleQuery)
-
-	c.Assert(sampleQuery.Uuid.IsNil(), Equals, false, Commentf("UUID is nil value"))
-	// Asserts the value is in cache
-	c.Assert(
-		testedQueryService.cache.Get(KeyByDbUuid(sampleQuery.Uuid)),
-		NotNil,
+	testedSrv := NewQueryService(
+		QueryServiceConfig{mysqlApiConfig},
 	)
 
-	/**
-	 * Trying to loads the same query with the same md5 value
-	 */
-	sampleQuery_2 := &owlModel.Query{
-		NamedId:    "gp-query-1",
-		Md5Content: md5Value,
-		Content:    md5Value[:],
-	}
-	testedQueryService.CreateOrLoadQuery(sampleQuery_2)
-	c.Assert(sampleQuery_2.Uuid, DeepEquals, sampleQuery.Uuid)
-	// :~)
-}
+	AfterEach(func() {
+		gockConfig.Off()
+	})
 
-func getAccessTimeByUuid(uuid db.DbUuid) time.Time {
-	var timeValue = time.Time{}
-	owlDb.DbFacade.SqlxDbCtrl.QueryRowxAndScan(
-		`
-		SELECT qr_time_access
-		FROM owl_query
-		WHERE qr_uuid = ?
-		`,
-		[]interface{}{uuid},
-		&timeValue,
-	)
+	Context("Create or load query", func() {
+		sampleReqBody := map[string]interface{}{
+			"feature_name": "easy.cool.f1",
+			"content":      "kvi4/PqaX8dVXMDwdkilAw==",
+			"md5_content":  "kvi4/PqaX8dVXMDwdkilAw==",
+		}
+		sampleUuid := "1b9b9cf3-b6c6-46ca-8cf4-b5a7d115b932"
+		sampleTime := 1426032000
 
-	return timeValue
-}
+		BeforeEach(func() {
+			gockConfig.New().
+				MatchType("json").
+				JSON(sampleReqBody).
+				Post("/api/v1/owl/query-object").
+				Reply(http.StatusOK).
+				JSON(map[string]interface{}{
+					"uuid":          sampleUuid,
+					"creation_time": sampleTime,
+					"access_time":   sampleTime,
+				})
+		})
 
-func (s *TestQuerySuite) SetUpTest(c *C) {
-	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
+		It("The UUID, creation time, and access time match expected one", func() {
+			var content = &types.VarBytes{}
+			content.MustFromBase64(sampleReqBody["content"].(string))
 
-	switch c.TestName() {
-	case "TestQuerySuite.TestLoadQueryByUuid":
-		inTx(
-			`
-			INSERT INTO owl_query(
-				qr_uuid, qr_named_id, qr_md5_content,
-				qr_content, qr_time_access, qr_time_creation
+			var md5Content = &types.Bytes16{}
+			md5Content.MustFromBase64(sampleReqBody["md5_content"].(string))
+
+			testedQuery := &model.Query{
+				NamedId:    "easy.cool.f1",
+				Content:    []byte(*content),
+				Md5Content: db.Bytes16(*md5Content),
+			}
+			testedSrv.CreateOrLoadQuery(testedQuery)
+
+			uuidValue, _ := uuid.FromString(sampleUuid)
+			expectedTime := time.Unix(int64(sampleTime), 0)
+			Expect(testedQuery).To(
+				PointTo(
+					MatchFields(IgnoreExtras, Fields{
+						"Uuid":         BeEquivalentTo(uuidValue),
+						"CreationTime": BeTemporally("==", expectedTime),
+						"AccessTime":   BeTemporally("==", expectedTime),
+					}),
+				),
 			)
-			VALUES(
-				x'890818a7d438495bb79a1ac0abf1eae2', 'qservice-q-1', x'8c0a58a7d458430bb79812c0abf1eae7',
-				x'e2f2384948f94c9c8dbd87278d2222eb', '2012-05-06T20:14:43', '2012-05-05T08:23:03'
-			)
-			`,
-		)
-	}
-}
+		})
+	})
 
-func (s *TestQuerySuite) TearDownTest(c *C) {
-	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
+	Context("Get query by UUID", func() {
+		Context("Get existing query object", func() {
+			uuidString := "bd747923-0ae7-44c2-8e45-8f8e3cde7bce"
+			expectedJson := map[string]interface{}{
+				"uuid":          uuidString,
+				"feature_name":  "get.uuid.f1",
+				"content":       "JJ68Cik12gCBfkqtyKV5Yg==",
+				"md5_content":   "cCy6iS7FzYN2otLGBHAmCA==",
+				"creation_time": 38976511, // [UNIX TIME]
+				"access_time":   72808242, // [UNIX TIME]
+			}
 
-	switch c.TestName() {
-	case "TestQuerySuite.TestLoadQueryByUuid":
-		inTx("DELETE FROM owl_query WHERE qr_named_id = 'qservice-q-1'")
-	case "TestQuerySuite.TestCreateOrLoadQuery":
-		inTx("DELETE FROM owl_query WHERE qr_named_id = 'gp-query-1'")
-	}
-}
+			BeforeEach(func() {
+				gockConfig.New().
+					Get("/api/v1/owl/query-object/" + uuidString).
+					Reply(http.StatusOK).
+					JSON(expectedJson)
+			})
 
-func (s *TestQuerySuite) SetUpSuite(c *C) {
-	owlDb.DbFacade = dbTest.InitDbFacade(c)
-}
+			It("Query content matching expected one", func() {
+				uuidValue, _ := uuid.FromString(uuidString)
+				creationTime := time.Unix(int64(expectedJson["creation_time"].(int)), 0)
+				accessTime := time.Unix(int64(expectedJson["access_time"].(int)), 0)
 
-func (s *TestQuerySuite) TearDownSuite(c *C) {
-	dbTest.ReleaseDbFacade(c, owlDb.DbFacade)
-}
+				testedQuery := testedSrv.LoadQueryByUuid(uuidValue)
+
+				var content = &types.VarBytes{}
+				content.MustFromBase64(expectedJson["content"].(string))
+
+				var md5Content = &types.Bytes16{}
+				md5Content.MustFromBase64(expectedJson["md5_content"].(string))
+
+				Expect(testedQuery).To(
+					PointTo(
+						MatchFields(IgnoreExtras, Fields{
+							"Uuid":         BeEquivalentTo(uuidValue),
+							"NamedId":      Equal(expectedJson["feature_name"]),
+							"Content":      BeEquivalentTo(*content),
+							"Md5Content":   BeEquivalentTo(*md5Content),
+							"CreationTime": BeTemporally("==", creationTime),
+							"AccessTime":   BeTemporally("==", accessTime),
+						}),
+					),
+				)
+			})
+		})
+
+		Context("Get non-existing query object", func() {
+			uuidString := "82fd6c62-c43f-40a1-b6da-0db7eccf0015"
+
+			BeforeEach(func() {
+				gockConfig.New().
+					Get("/api/v1/owl/query-object/" + uuidString).
+					Reply(http.StatusNotFound).
+					JSON(map[string]interface{}{
+						"uuid":        uuidString,
+						"http_status": http.StatusNotFound,
+						"error_code":  1,
+						"uri":         "/owl/query-object/" + uuidString,
+					})
+			})
+
+			It("Query object should be nil", func() {
+				uuidValue, _ := uuid.FromString(uuidString)
+				testedQuery := testedSrv.LoadQueryByUuid(uuidValue)
+
+				Expect(testedQuery).To(BeNil())
+			})
+		})
+	})
+})

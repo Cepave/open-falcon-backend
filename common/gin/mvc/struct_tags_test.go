@@ -1,6 +1,7 @@
 package mvc
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -11,300 +12,252 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/common/model"
 	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
-	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	ot "github.com/Cepave/open-falcon-backend/common/types"
 	"github.com/Cepave/open-falcon-backend/common/utils"
-	. "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestStructTagsSuite struct{}
+var _ = Describe("Param loader", func() {
+	Context("Query Parameters", func() {
+		reqSetup := func(context *gin.Context, sampleValues url.Values) {
+			context.Request = httptest.NewRequest("GET", "/my-resource-query?"+sampleValues.Encode(), nil)
+		}
 
-var _ = Suite(&TestStructTagsSuite{})
+		buildDescribeTable("query", reqSetup, SampleSlice|SampleCheckedParam)
+	})
 
-// Tests the building of loader
-func (suite *TestStructTagsSuite) TestBuildParamLoader(c *C) {
-	getReqSetup := func(context *gin.Context) {
-		context.Request = httptest.NewRequest("GET", "/query?qv-1=hello3&qv-2=56&nv=32&nv=76", nil)
-		context.Request.Header.Add("Cookie", "ck_1=hello98")
-		context.Request.Header.Add("Cookie", "ck_2=77")
+	Context("Form Parameters", func() {
+		reqSetup := func(context *gin.Context, sampleValues url.Values) {
+			context.Request = httptest.NewRequest(
+				"POST", "/my-resource-1-form",
+				strings.NewReader(sampleValues.Encode()),
+			)
+			context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
 
-		context.Request.Header.Add("hvv1", "hello24")
-		context.Request.Header.Add("hvv2", "278")
+		buildDescribeTable("form", reqSetup, SampleSlice|SampleCheckedParam)
+	})
 
-		context.Set("kg-1", "hello45")
-		context.Set("kg-2", "871")
-		context.Set("kg-3", nil)
-	}
-	postReqSetup := func(context *gin.Context) {
-		params := make(url.Values)
-		params.Add("fv-1", "hello256")
-		params.Add("fv-2", "23")
-		params.Add("fv-2", "56")
+	Context("Header Parameters", func() {
+		reqSetup := func(context *gin.Context, sampleValues url.Values) {
+			context.Request = httptest.NewRequest("GET", "/my-resource-1-header", nil)
 
-		context.Request = httptest.NewRequest(
-			"POST", "/query?qv-1=hello3&qv-2=56&nv=32&nv=76",
-			strings.NewReader(params.Encode()),
-		)
-		context.Request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	}
+			header := context.Request.Header
 
-	testCases := []*struct {
-		sampleType    reflect.Type
-		sampleTag     reflect.StructTag
-		setupFunc     func(*gin.Context)
-		expectedValue interface{}
-	}{
-		/**
-		 * Query parameters
-		 */
-		{ // Viable value
-			rt.TypeOfString, `mvc:"query[qv-1]"`,
-			getReqSetup, "hello3",
-		},
-		{ // Default value
-			rt.TypeOfString, `mvc:"query[qv-3] default[sde-13]"`,
-			getReqSetup, "sde-13",
-		},
-		{ // Default value of go lang
-			rt.TypeOfInt, `mvc:"query[qvn-3]"`,
-			getReqSetup, 0,
-		},
-		{ // Viable value with type conversion
-			rt.TypeOfInt16, `mvc:"query[qv-2]"`,
-			getReqSetup, int16(56),
-		},
-		{ // Checked param(true)
-			rt.TypeOfBool, `mvc:"query[?qv-1]"`,
-			getReqSetup, true,
-		},
-		{ // Checked param(false)
-			rt.TypeOfBool, `mvc:"query[?qv-3]"`,
-			getReqSetup, false,
-		},
-		{ // Viable slice
-			rt.STypeOfString, `mvc:"query[nv]"`,
-			getReqSetup, []string{"32", "76"},
-		},
-		{ // Vialbe slice with type conversion
-			rt.STypeOfUint16, `mvc:"query[nv]"`,
-			getReqSetup, []uint16{32, 76},
-		},
-		{ // Default value
-			rt.STypeOfUint32, `mvc:"query[nv9] default[88,76,39]"`,
-			getReqSetup, []uint32{88, 76, 39},
-		},
-		// :~)
+			for key, values := range sampleValues {
+				for _, singleValue := range values {
+					header.Add(key, singleValue)
+				}
+			}
+		}
 
-		/**
-		 * Form parameters
-		 */
-		{ // Viable value
-			rt.TypeOfString, `mvc:"form[fv-1]"`,
-			postReqSetup, "hello256",
-		},
-		{ // Default value
-			rt.TypeOfString, `mvc:"form[fv-3] default[ffcc-013]"`,
-			postReqSetup, "ffcc-013",
-		},
-		{ // Default value of go lang
-			rt.TypeOfUint8, `mvc:"form[nff]"`,
-			postReqSetup, uint8(0),
-		},
-		{ // Viable value with type conversion
-			rt.TypeOfInt16, `mvc:"form[fv-2]"`,
-			postReqSetup, int16(23),
-		},
-		{ // Checked param(true)
-			rt.TypeOfBool, `mvc:"form[?fv-1]"`,
-			postReqSetup, true,
-		},
-		{ // Checked param(false)
-			rt.TypeOfBool, `mvc:"form[?nfv03]"`,
-			postReqSetup, false,
-		},
-		{ // Viable slice
-			rt.STypeOfString, `mvc:"form[fv-2]"`,
-			postReqSetup, []string{"23", "56"},
-		},
-		{ // Vialbe slice with type conversion
-			rt.STypeOfUint16, `mvc:"form[fv-2]"`,
-			postReqSetup, []uint16{23, 56},
-		},
-		{ // Default value
-			rt.STypeOfUint32, `mvc:"form[ng55] default[28,176,89]"`,
-			postReqSetup, []uint32{28, 176, 89},
-		},
-		// :~)
+		buildDescribeTable("header", reqSetup, SampleSlice|SampleCheckedParam)
+	})
 
-		/**
-		 * Headers
-		 */
-		{ // Viable value
-			rt.TypeOfString, `mvc:"header[hvv1]"`,
-			getReqSetup, "hello24",
-		},
-		{ // Default value
-			rt.TypeOfString, `mvc:"header[hvv3] default[gd-103]"`,
-			getReqSetup, "gd-103",
-		},
-		{ // Default value of go lang
-			rt.TypeOfInt16, `mvc:"query[hvv722]"`,
-			getReqSetup, int16(0),
-		},
-		{ // Viable value with type conversion
-			rt.TypeOfInt32, `mvc:"header[hvv2]"`,
-			getReqSetup, int32(278),
-		},
-		{ // Checked param(true)
-			rt.TypeOfBool, `mvc:"header[?hvv1]"`,
-			getReqSetup, true,
-		},
-		{ // Checked param(false)
-			rt.TypeOfBool, `mvc:"header[?hvv3]"`,
-			getReqSetup, false,
-		},
-		// :~)
+	Context("Context Key/Value", func() {
+		reqSetup := func(context *gin.Context, sampleValues url.Values) {
+			context.Request = httptest.NewRequest("GET", "/my-resource-1-context", nil)
 
-		/**
-		 * Cookies
-		 */
-		{ // Viable value
-			rt.TypeOfString, `mvc:"cookie[ck_1]"`,
-			getReqSetup, "hello98",
-		},
-		{ // Default value
-			rt.TypeOfString, `mvc:"cookie[ck_3] default[gd-33]"`,
-			getReqSetup, "gd-33",
-		},
-		{ // Default value of go lang
-			rt.TypeOfString, `mvc:"query[ck_12]"`,
-			getReqSetup, "",
-		},
-		{ // Viable value with type conversion
-			rt.TypeOfUint64, `mvc:"cookie[ck_2]"`,
-			getReqSetup, uint64(77),
-		},
-		{ // Checked param(true)
-			rt.TypeOfBool, `mvc:"cookie[?ck_1]"`,
-			getReqSetup, true,
-		},
-		{ // Checked param(false)
-			rt.TypeOfBool, `mvc:"cookie[?ck_3]"`,
-			getReqSetup, false,
-		},
+			for key, values := range sampleValues {
+				switch len(values) {
+				case 1:
+					context.Set(key, values[0])
+				default:
+					context.Set(key, values)
+				}
+			}
+		}
 
-		/**
-		 * key/value in gin.Context
-		 */
-		{ // Viable value
-			rt.TypeOfString, `mvc:"key[kg-1]"`,
-			getReqSetup, "hello45",
-		},
-		{ // Default value
-			rt.TypeOfString, `mvc:"key[kg-5] default[sampleKey1]"`,
-			getReqSetup, "sampleKey1",
-		},
-		{ // Default value of go lang
-			rt.TypeOfString, `mvc:"key[kg-23]"`,
-			getReqSetup, "",
-		},
-		{ // Viable value with type conversion
-			rt.TypeOfInt32, `mvc:"key[kg-2]"`,
-			getReqSetup, int32(871),
-		},
-		{ // Checked param(true)
-			rt.TypeOfBool, `mvc:"key[?kg-1]"`,
-			getReqSetup, true,
-		},
-		{ // Checked param(false)
-			rt.TypeOfBool, `mvc:"key[?kg-3]"`,
-			getReqSetup, false,
-		},
-		{ // Checked param(false)
-			rt.TypeOfBool, `mvc:"key[?kg-5]"`,
-			getReqSetup, false,
-		},
-		// :~)
-		{ // Not a MVC field
-			rt.TypeOfBool, ``,
-			getReqSetup, nil,
-		},
-	}
+		buildDescribeTable("key", reqSetup, SampleSlice|SampleCheckedParam)
+	})
 
+	Context("Cookie Parameters", func() {
+		reqSetup := func(context *gin.Context, sampleValues url.Values) {
+			context.Request = httptest.NewRequest("GET", "/my-resource-1-header", nil)
+
+			header := context.Request.Header
+
+			for key, values := range sampleValues {
+				for _, singleValue := range values {
+					header.Add("Cookie", fmt.Sprintf("%s=%s", key, singleValue))
+				}
+			}
+		}
+
+		buildDescribeTable("cookie", reqSetup, SampleCheckedParam)
+	})
+
+	Context("URI Parameters", func() {
+		reqSetup := func(context *gin.Context, sampleValues url.Values) {
+			context.Request = httptest.NewRequest("GET", "/my-resource-1-uri", nil)
+
+			for key, values := range sampleValues {
+				for _, singleValue := range values {
+					context.Params = append(context.Params, gin.Param{key, singleValue})
+				}
+			}
+		}
+
+		buildDescribeTable("param", reqSetup, 0)
+	})
+})
+
+var _ = Describe("Paging object", func() {
+	fieldType, _ := reflect.TypeOf(struct {
+		P1 *model.Paging `mvc:"pageSize[17] pageOrderBy[ak_1:bd_2]"`
+	}{}).FieldByName("P1")
 	convSrv := ot.NewDefaultConversionService()
-	for i, testCase := range testCases {
-		comment := ocheck.TestCaseComment(i)
-		ocheck.LogTestCase(c, testCase)
 
-		fieldType := reflect.StructField{
-			Name: "FieldValue1",
-			Type: testCase.sampleType,
-			Tag:  testCase.sampleTag,
-		}
+	Context("By Param loader", func() {
+		DescribeTable("Check expected properties of page",
+			func(reqSetup func(*http.Request), expectedPageSize int, expectedOrderBy []*model.OrderByEntity) {
+				context := &gin.Context{
+					Request: httptest.NewRequest(http.MethodPost, "/", nil),
+				}
+				reqSetup(context.Request)
+				paramLoader := buildParamLoader(fieldType, convSrv)
+				testedPaging := paramLoader(context).(*model.Paging)
 
-		paramLoader := buildParamLoader(fieldType, convSrv)
-		if paramLoader == nil {
-			continue
-		}
+				GinkgoT().Logf("Result paging: %#v", testedPaging)
+				Expect(testedPaging.Size).To(BeEquivalentTo(expectedPageSize))
+				Expect(testedPaging.OrderBy).To(Equal(expectedOrderBy))
+			},
+			Entry(
+				"Default paging", func(req *http.Request) {},
+				17,
+				[]*model.OrderByEntity{
+					{Expr: "ak_1", Direction: utils.DefaultDirection},
+					{Expr: "bd_2", Direction: utils.DefaultDirection},
+				},
+			),
+			Entry(
+				"Viable paging", func(req *http.Request) {
+					req.Header = make(http.Header)
+					req.Header.Set("page-size", "39")
+					req.Header.Set("order-by", "cp_1#asc:cp_2#desc")
+				},
+				39,
+				[]*model.OrderByEntity{
+					{Expr: "cp_1", Direction: utils.Ascending},
+					{Expr: "cp_2", Direction: utils.Descending},
+				},
+			),
+		)
+	})
+})
 
-		context := &gin.Context{}
-		testCase.setupFunc(context)
+type SliceAliasG1 []int
+type SliceAliasG2 []int
 
-		testedValue := paramLoader(context)
-		c.Assert(testedValue, DeepEquals, testCase.expectedValue, comment)
+func setupLoaderAndGetValue(sampleType reflect.Type, sampleTag string, contextSetup func(context *gin.Context)) interface{} {
+	/**
+	 * Set-up the conversion service with converter
+	 */
+	convSrv := ot.NewDefaultConversionService()
+	convSrv.AddConverter(
+		rt.TypeOfString, reflect.TypeOf(SliceAliasG1{}),
+		func(v interface{}) interface{} {
+			return SliceAliasG1{88, 91}
+		},
+	)
+	convSrv.AddConverter(
+		rt.STypeOfString, reflect.TypeOf(SliceAliasG2{}),
+		func(v interface{}) interface{} {
+			return SliceAliasG2{101, 131}
+		},
+	)
+	// :~)
+
+	/**
+	 * Build loader
+	 */
+	fieldType := reflect.StructField{
+		Name: "FieldValue1",
+		Type: sampleType,
+		Tag:  reflect.StructTag(sampleTag),
 	}
+	testedParamLoader := buildParamLoader(fieldType, convSrv)
+	// :~)
+
+	if testedParamLoader == nil {
+		return nil
+	}
+
+	/**
+	 * Gets the value from loader
+	 */
+	context := &gin.Context{}
+	contextSetup(context)
+	return testedParamLoader(context)
+	// :~)
 }
 
-// Tests the loading of page
-func (suite *TestStructTagsSuite) TestPaging(c *C) {
-	type pagingSample struct {
-		P1 *model.Paging `mvc:"pageSize[17] pageOrderBy[ak_1:bd_2]"`
+const (
+	SampleSlice        = 0x01
+	SampleCheckedParam = 0x02
+)
+
+func buildDescribeTable(
+	paramHolderName string,
+	contextSetup func(context *gin.Context, sampleValues url.Values),
+	sampleSet int,
+) {
+	sampleValues := url.Values{
+		"vv-1": []string{"hello3"},
+		"vv-2": []string{"12"},
+		"sv-1": []string{"s1", "s2"},
+		"sv-2": []string{"11", "21"},
 	}
 
-	testCases := []*struct {
-		requestSetup    func(*http.Request)
-		expectedSize    int32
-		expectedOrderBy []*model.OrderByEntity
-	}{
-		{
-			func(req *http.Request) {},
-			17,
-			[]*model.OrderByEntity{
-				{Expr: "ak_1", Direction: utils.DefaultDirection},
-				{Expr: "bd_2", Direction: utils.DefaultDirection},
-			},
+	rawContextSetup := func(context *gin.Context) {
+		contextSetup(context, sampleValues)
+	}
+
+	entries := []TableEntry{
+		Entry("Viable value", rt.TypeOfString, `mvc:"%s[vv-1]"`, "hello3"),
+		Entry("Viable value(type converted by default)", rt.TypeOfInt16, `mvc:"%s[vv-2]"`, int16(12)),
+		Entry("Viable value(converted by string -> <type>)", reflect.TypeOf(SliceAliasG1{}), `mvc:"%s[vv-1]"`, SliceAliasG1{88, 91}),
+		Entry("Viable value(converted by []string -> <type>)", reflect.TypeOf(SliceAliasG2{}), `mvc:"%s[sv-1]"`, SliceAliasG2{101, 131}),
+		Entry("By default value", rt.TypeOfString, `mvc:"%s[non-1] default[gc1]"`, "gc1"),
+		Entry("By default value value(slice)", rt.STypeOfInt64, `mvc:"%s[non-1] default[31,41,51]"`, []int64{31, 41, 51}),
+		Entry("Empty value(golang's default)", rt.TypeOfInt, `mvc:"%s[non-2]"`, 0),
+		Entry("Not a mvc tag", rt.TypeOfInt, `abc:"non"`, nil),
+	}
+
+	if sampleSet&SampleSlice > 0 {
+		entries = append(
+			entries,
+			Entry("Viable value(slice)", rt.STypeOfString, `mvc:"%s[sv-1]"`, []string{"s1", "s2"}),
+			Entry("Viable value(slice, type converted)", rt.STypeOfUint16, `mvc:"%s[sv-2]"`, []uint16{11, 21}),
+			Entry("By default value value(slice)", rt.STypeOfInt64, `mvc:"%s[non-1] default[31,41,51]"`, []int64{31, 41, 51}),
+		)
+	}
+
+	if sampleSet&SampleCheckedParam > 0 {
+		entries = append(
+			entries,
+			Entry("Checked param(true)", rt.TypeOfBool, `mvc:"%s[?vv-1]"`, true),
+			Entry("Checked param(false)", rt.TypeOfBool, `mvc:"%s[?non-1]"`, false),
+			Entry("Checked param with default value(false)", rt.TypeOfBool, `mvc:"%s[?non-1] default[d1]"`, false),
+		)
+	}
+
+	DescribeTable("Match expected value",
+		func(sampleType reflect.Type, tagTemplate string, expectedValue interface{}) {
+			testedValue := setupLoaderAndGetValue(
+				sampleType, fmt.Sprintf(tagTemplate, paramHolderName), rawContextSetup,
+			)
+
+			if expectedValue == nil {
+				Expect(testedValue).To(BeNil())
+				return
+			}
+
+			Expect(testedValue).To(Equal(expectedValue))
 		},
-		{
-			func(req *http.Request) {
-				req.Header = make(http.Header)
-				req.Header.Set("page-size", "39")
-				req.Header.Set("order-by", "cp_1#asc:cp_2#desc")
-			},
-			39,
-			[]*model.OrderByEntity{
-				{Expr: "cp_1", Direction: utils.Ascending},
-				{Expr: "cp_2", Direction: utils.Descending},
-			},
-		},
-	}
-
-	fieldType, _ := reflect.TypeOf(pagingSample{}).FieldByName("P1")
-	convSrv := ot.NewDefaultConversionService()
-
-	for i, testCase := range testCases {
-		comment := ocheck.TestCaseComment(i)
-		ocheck.LogTestCase(c, testCase)
-
-		context := &gin.Context{
-			Request: httptest.NewRequest(http.MethodPost, "/", nil),
-		}
-		testCase.requestSetup(context.Request)
-
-		paramLoader := buildParamLoader(fieldType, convSrv)
-		testedPaging := paramLoader(context).(*model.Paging)
-
-		c.Logf("Result paging: %#v", testedPaging)
-		c.Assert(testedPaging.Size, Equals, testCase.expectedSize, comment)
-		c.Assert(testedPaging.OrderBy, DeepEquals, testCase.expectedOrderBy, comment)
-	}
+		entries...,
+	)
 }

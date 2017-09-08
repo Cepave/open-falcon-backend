@@ -46,7 +46,7 @@ func (suite *TestProcSuite) TestExpressions(c *C) {
 	ts.Listener = l
 	ts.Start()
 
-	slint := httpClientConfig.NewSlingByBase().Get("expressions")
+	slint := httpClientConfig.NewClient().Get("expressions")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 
@@ -71,7 +71,7 @@ func (suite *TestProcSuite) TestPlugins(c *C) {
 	ts.Listener = l
 	ts.Start()
 
-	slint := httpClientConfig.NewSlingByBase().Get("plugins/test-host")
+	slint := httpClientConfig.NewClient().Get("plugins/test-host")
 
 	slintChecker := httptesting.NewCheckSlint(c, slint)
 

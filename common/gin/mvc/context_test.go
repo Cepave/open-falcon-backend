@@ -535,7 +535,3 @@ func makeFile(
 	bufWriter.WriteString(fileContent)
 	c.Assert(bufWriter.Flush(), IsNil)
 }
-
-func (s *TestStructTagsSuite) SetUpSuite(c *C) {
-	gin.SetMode(gin.ReleaseMode)
-}
