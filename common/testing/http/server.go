@@ -1,3 +1,14 @@
+//
+// Fake Server Configuration
+//
+// The object of "FakeServerConfig" defines the network socket you like to use in testing.
+//
+// Listener and URL of Fake Server
+//
+// You could use "FakeServerConfig.GetListener()" or "FakeServerConfig.GetUrl()" to get
+// configuration of network when needing of fake server.
+//
+// See "common/testing/http/gock" for mock server.
 package http
 
 import (
@@ -20,19 +31,19 @@ var testGinMode = flag.String("test.gin_mode", gin.DebugMode, "Mode of gin fream
 var testServerHost = flag.String("test.web_host", "0.0.0.0", "Listening Host(0.0.0.0)")
 var testServerPort = flag.Uint("test.web_port", 0, "Listening port of web")
 
-type FakeServerConfig struct {
-	Host string
-	Port uint16
-}
-
-type FakeServer httptest.Server
-
-// Defines the interface used to set-up *net/http/httptest.Server
+// Defines the interface used to set-up "*net/http/httptest.Server"
 type HttpTest interface {
 	NewServer(serverConfig *FakeServerConfig) *httptest.Server
 	GetHttpHandler() http.Handler
 }
 
+// Configuration used to set-up faking server.
+type FakeServerConfig struct {
+	Host string
+	Port uint16
+}
+
+// Gets the listener object.
 func (c *FakeServerConfig) GetListener() net.Listener {
 	listenerString := fmt.Sprintf("%s:%d", c.Host, c.Port)
 	listener, err := net.Listen("tcp", listenerString)
@@ -44,6 +55,8 @@ func (c *FakeServerConfig) GetListener() net.Listener {
 
 	return listener
 }
+
+// Gets the URL(http) object of fake server.
 func (c *FakeServerConfig) GetUrl() *url.URL {
 	urlString := c.GetUrlString()
 
@@ -55,18 +68,20 @@ func (c *FakeServerConfig) GetUrl() *url.URL {
 
 	return urlValue
 }
+
+// Gets the URL(http) string of fake server.
 func (c *FakeServerConfig) GetUrlString() string {
 	return fmt.Sprintf("http://%s:%d", c.Host, c.Port)
 }
 
-// [Deprecated] Try to use testing/http/gock to start a mock server
-//
 // functions in namespace for getting value of flags for
 //
 // 	"test.web_host" - The host of web
 // 	"test.web_port" - The port of web
 //
 // The default value of port is "0", hence HasSetting() would be "false"
+//
+// Deprecated: Try to use testing/http/gock to start a mock server
 var WebTestServer = &struct {
 	// Gets value of "test.web_host
 	GetHost func() string
@@ -86,8 +101,6 @@ var WebTestServer = &struct {
 	},
 }
 
-// [Deprecated] Try to use testing/http/gock to start a mock server
-//
 // functions in namespace for set-up gin server(with GoCheck library)
 //
 // 	"test.gin_mode" - The mode of Gin framework
@@ -95,6 +108,8 @@ var WebTestServer = &struct {
 // 	"test.web_port" - The port of web
 //
 // The default value of port is "0", hence HasSetting() would be "false"
+//
+// Deprecated: Try to use testing/http/gock to start a mock server
 var GinTestServer = &struct {
 	GoCheckOrSkip            func(c *check.C) bool
 	GoCheckStartGinWebServer func(c *check.C, engineFunc GinEngineConfigFunc)
@@ -105,6 +120,9 @@ var GinTestServer = &struct {
 	GoCheckGetConfig:         goCheckGetGinConfig,
 }
 
+// Callback to set-up of Gin engine.
+//
+// Deprecated: Try to use testing/http/gock to start a fake server
 type GinEngineConfigFunc func(*gin.Engine)
 
 /* Implementation of WebTestServer */

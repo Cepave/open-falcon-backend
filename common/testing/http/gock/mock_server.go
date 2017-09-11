@@ -9,7 +9,7 @@ And you could use "*GockConfig.NewClient()" to build client object of Gentleman 
 
 	gockConfig := GockConfigBuilder.NewConfigByRandom()
 
-	gockConfig.New().Get.("/your-resource").
+	gockConfig.New().Get("/your-resource").
 		Reply(http.StatusOK).
 		JSON(
 			map[string]interface{} {
@@ -27,12 +27,13 @@ Bridge of httptest
 "*GockConfig" has supports for interface of "testing/http/HttpTest", which
 you could use it to start a "real" web server by mocked implementation.
 
-	server := gockCofnig.NewServer(&FakcServerConfig{ Host: "127.0.0.1", Port: 10401 })
+	server := gockConfig.NewServer(&FakcServerConfig{ Host: "127.0.0.1", Port: 10401 })
 
 	server.Start()
 	defer server.Stop()
 
-	gockConfig.New().Get.("/agent/33").
+	// The URL http://127.0.0.1:10401/agent/33 would be intercepted by this mock configuration.
+	gockConfig.New().Get("/agent/33").
 		Reply(http.StatusOK).
 		JSON(
 			map[string]interface{} {
@@ -56,7 +57,6 @@ import (
 
 	"github.com/juju/errors"
 	"gopkg.in/h2non/gentleman.v2"
-	"gopkg.in/h2non/gentleman.v2/context"
 	"gopkg.in/h2non/gentleman.v2/plugin"
 	"gopkg.in/h2non/gock.v1"
 
@@ -64,6 +64,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	gp "github.com/Cepave/open-falcon-backend/common/testing/http/gock_plugin"
 )
 
 // Functions in namespace for building of *GockConfig
@@ -111,7 +112,7 @@ type GentlemanT interface {
 	Plugin() plugin.Plugin
 }
 
-// Facade interface used to:
+// Facade object, which could be used to:
 //
 // 	1. Mock-up web service with simple configuration
 // 	2. Constructs a Gentleman client with configuration of mock
@@ -120,9 +121,11 @@ type GockConfig struct {
 	// The host of mocked URL
 	Host string
 	// The port of mocked URL
-	Port       uint16
+	Port uint16
+	// Supporting of out-of-box utility for Gentleman library.
 	GentlemanT GentlemanT
-	HttpTest   tHttp.HttpTest
+	// Supporting of out-of-box utility for "net/http/httptest.Server" object.
+	HttpTest tHttp.HttpTest
 }
 
 // Constructs a configuration for HTTP client.
@@ -137,7 +140,7 @@ func (c *GockConfig) NewRestfulClientConfig() *oHttp.RestfulClientConfig {
 	return &oHttp.RestfulClientConfig{
 		HttpClientConfig: c.NewHttpConfig(),
 		Plugins: []plugin.Plugin{
-			_gentlemanMockPlugin,
+			gp.GockPlugin,
 		},
 	}
 }
@@ -186,13 +189,8 @@ func (t *implGentlemanT) SetupClient(client *gentleman.Client) *gentleman.Client
 	return client
 }
 func (t *implGentlemanT) Plugin() plugin.Plugin {
-	return _gentlemanMockPlugin
+	return gp.GockPlugin
 }
-
-var _gentlemanMockPlugin = plugin.NewPhasePlugin("before dial", func(ctx *context.Context, h context.Handler) {
-	gock.InterceptClient(ctx.Client)
-	h.Next(ctx)
-})
 
 type implHttptest struct {
 	mockUrl string

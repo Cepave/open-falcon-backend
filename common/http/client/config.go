@@ -5,7 +5,7 @@ import (
 )
 
 // Default value of request time out for HTTP client.
-const DEFAULT_TIMEOUT = time.Duration(10) * time.Second
+const DEFAULT_TIMEOUT = 10 * time.Second
 
 type HttpClientConfig struct {
 	Url            string

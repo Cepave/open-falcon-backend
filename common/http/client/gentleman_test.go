@@ -12,6 +12,7 @@ import (
 
 	tl "github.com/Cepave/open-falcon-backend/common/http/client"
 	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
+	gp "github.com/Cepave/open-falcon-backend/common/testing/http/gock_plugin"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -162,3 +163,7 @@ var _ = Describe("Send request and check status", func() {
 		})
 	})
 })
+
+func newClientByGock() *gt.Client {
+	return gt.New().Use(gp.GockPlugin)
+}

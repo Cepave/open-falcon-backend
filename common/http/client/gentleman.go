@@ -12,13 +12,17 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
+// Converts "*gentleman.Response" to wrapper object of utility.
 func ToGentlemanResp(resp *gt.Response) *GentlemanResponse {
 	return (*GentlemanResponse)(resp)
 }
 
+// Wrapper object with providing additional functions to "*gentleman.Response"
 type GentlemanResponse gt.Response
 
-// This function would **close the response** because of the implementation of Gentleman library.
+// Gets the json object(by go-simplejson) with error.
+//
+// Be careful: This function would **close the response** because of the implementation of Gentleman library.
 func (r *GentlemanResponse) GetJson() (*sjson.Json, error) {
 	json := sjson.New()
 
@@ -29,7 +33,9 @@ func (r *GentlemanResponse) GetJson() (*sjson.Json, error) {
 	return json, nil
 }
 
-// This function would **close the response** because of the implementation of Gentleman library.
+// Gets the json object(by go-simplejson) or panic if some error has occurred.
+//
+// Be careful: This function would **close the response** because of the implementation of Gentleman library.
 func (r *GentlemanResponse) MustGetJson() *sjson.Json {
 	json, err := r.GetJson()
 	if err != nil {
@@ -39,7 +45,9 @@ func (r *GentlemanResponse) MustGetJson() *sjson.Json {
 	return json
 }
 
-// This function would **close the response** because of the implementation of Gentleman library.
+// Binds the body of response to input object(as JSON).
+//
+// Be careful: This function would **close the response** because of the implementation of Gentleman library.
 func (r *GentlemanResponse) BindJson(v interface{}) error {
 	resp := (*gt.Response)(r)
 	contentType := resp.Header.Get("Content-Type")
@@ -51,14 +59,32 @@ func (r *GentlemanResponse) BindJson(v interface{}) error {
 	)
 }
 
-// This function would **close the response** because of the implementation of Gentleman library.
+// Binds the body of response to input object(as JSON).
+//
+// This function would panic if some error has occurred.
+//
+// Be careful: This function would **close the response** because of the implementation of Gentleman library.
 func (r *GentlemanResponse) MustBindJson(v interface{}) {
 	if err := r.BindJson(v); err != nil {
 		panic(errors.Details(err))
 	}
 }
 
-// !!Be Caution!! This function would change the body to "closed".
+// Gets the string content of body.
+//
+// The format of returned value:
+//
+// If the body is empty, gives:
+//
+// 	Response[<StatusCode>(<ContentType>)]
+//
+// If the body is viable, gives:
+//
+// 	Response[<StatusCode>](ContentType). Body: << <Shortened Body> >>
+//
+// The shortened body would be 128 characters of maximum by preserving prefix and suffix string of body.
+//
+// Be careful: This function would **close the response** because of the implementation of Gentleman library.
 func (r *GentlemanResponse) ToDetailString() string {
 	resp := (*gt.Response)(r)
 
@@ -78,12 +104,16 @@ func (r *GentlemanResponse) ToDetailString() string {
 	return fmt.Sprintf("Response[%d](%s). Body: << %s >>", resp.StatusCode, contentType, bodyString)
 }
 
+// Converts "*gentleman.Request" to "*GentlemanRequest"
 func ToGentlemanReq(req *gt.Request) *GentlemanRequest {
 	return (*GentlemanRequest)(req)
 }
 
+// This type is used with "*GentlemanRequest", which
+// gets called for checking the expected response.
 type RespMatcher func(*gt.Response) error
 
+// Matcher for status code of HTTP
 func StatusMatcher(status int) RespMatcher {
 	return func(resp *gt.Response) error {
 		if resp.StatusCode == 0 {
@@ -98,14 +128,26 @@ func StatusMatcher(status int) RespMatcher {
 	}
 }
 
+// Wrapper object with providing additional functions to "*gentleman.Request"
 type GentlemanRequest gt.Request
 
+// Sends request with expected status code
+//
+// If the status code is not as expected, the error would not be nil.
 func (r *GentlemanRequest) SendAndStatusMatch(status int) (*gt.Response, error) {
 	return r.SendAndMatch(StatusMatcher(status))
 }
+
+// Sends request with expected status code
+//
+// If the status code is not as expected, the function would be panic.
 func (r *GentlemanRequest) SendAndStatusMustMatch(status int) *gt.Response {
 	return r.SendAndMustMatch(StatusMatcher(status))
 }
+
+// Sends request with checking by implementation of matcher.
+//
+// If the status code is not as expected, the error would not be nil.
 func (r *GentlemanRequest) SendAndMatch(matcher RespMatcher) (*gt.Response, error) {
 	request := (*gt.Request)(r)
 
@@ -126,6 +168,10 @@ func (r *GentlemanRequest) SendAndMatch(matcher RespMatcher) (*gt.Response, erro
 
 	return resp, nil
 }
+
+// Sends request with checking by implementation of matcher.
+//
+// If the status code is not as expected, the function would be panic.
 func (r *GentlemanRequest) SendAndMustMatch(matcher RespMatcher) *gt.Response {
 	resp, err := r.SendAndMatch(matcher)
 	if err != nil {
@@ -135,11 +181,27 @@ func (r *GentlemanRequest) SendAndMustMatch(matcher RespMatcher) *gt.Response {
 	return resp
 }
 
-// Common configurations used in
+// Common configurations used for building of "*gentleman.Client" object.
 type GentlemanConfig struct {
 	RequestTimeout time.Duration
 }
 
+// Utility functions for building "*gentleman.Client" or "*gentleman.Request" with
+// default configuration.
+//
+// 	Request Timeout: See "DEFAULT_TIMEOUT"
+//
+// NewDefaultClient()
+// 	Constructs a client with default configuration.
+//
+// NewClientByConfig(*GentlemanConfig)
+// 	Constructs a client with provided configuration.
+//
+// NewDefaultRequest()
+// 	Constructs a request with default configuration.
+//
+// NewRequestByConfig(*GentlemanConfig)
+// 	Constructs a request with provided configuration.
 var CommonGentleman = &struct {
 	NewDefaultClient   func() *gt.Client
 	NewClientByConfig  func(config *GentlemanConfig) *gt.Client
@@ -154,7 +216,7 @@ var CommonGentleman = &struct {
 
 func gtNewDefaultClient() *gt.Client {
 	return gtNewClientByConfig(&GentlemanConfig{
-		RequestTimeout: time.Second * 10,
+		RequestTimeout: DEFAULT_TIMEOUT,
 	})
 }
 

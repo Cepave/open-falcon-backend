@@ -1,3 +1,12 @@
+// Provides both HTTP client and HTTP fake server configuration for testing.
+//
+// Client Configuration
+//
+// The "HttpClientConfig" is main configuration object defines tested service of HTTP.
+//
+// Client Initialization
+//
+// The "HttpClientConfig" has "NewClient()" and "NewRequest()" to provide out-of-box gentleman client object.
 package http
 
 import (
@@ -17,9 +26,10 @@ import (
 
 // Initialize a client config by flag
 //
-// 	http_host - host name of http service
-// 	http_port - port of http service
-// 	http_ssl - whether or not use SSL to test http service
+// 	-http.host(127.0.0.1) - host name of http service
+// 	-http.port(80) - port of http service
+// 	-http.ssl(false)- whether or not use SSL to test http service
+// 	-http.resource("") - the additional resource(sub-path) after host of URL
 func NewHttpClientConfigByFlag() *HttpClientConfig {
 	var host = flag.String("http.host", "127.0.0.1", "Host of HTTP service to be tested")
 	var port = flag.Int("http.port", 80, "Port of HTTP service to be tested")
@@ -41,6 +51,8 @@ func NewHttpClientConfigByFlag() *HttpClientConfig {
 }
 
 // The configuration of http client
+//
+// See "NewHttpClientConfigByFlag()" to initialize this object by flag.
 type HttpClientConfig struct {
 	Ssl      bool
 	Host     string
@@ -68,11 +80,14 @@ func (self *HttpClientConfig) hostAndPort() string {
 	return fmt.Sprintf("%s://%s:%d", schema, self.Host, self.Port)
 }
 
-// Supporting configuration of testing by Gentleman library
+// Supporting configuration of testing by Gentleman library.
 type GentlemanClientConf struct {
 	*HttpClientConfig
 }
 
+// Consturcts a "*gentleman.Client" object by configuration.
+//
+// The timeout of request is three seconds.
 func (c *GentlemanClientConf) NewClient() *gt.Client {
 	gtClient := client.CommonGentleman.NewClientByConfig(
 		&client.GentlemanConfig{
@@ -88,11 +103,16 @@ func (c *GentlemanClientConf) NewClient() *gt.Client {
 	return gtClient
 }
 
+// Consturcts a "*gentleman.Request" object by configuration.
+//
+// The timeout of request is three seconds.
 func (c *GentlemanClientConf) NewRequest() *gt.Request {
 	return c.NewClient().Request()
 }
 
 // Supporting configuration of testing by Sling(deprecated) library
+//
+// Deprecated: You should use gentleman library instead.
 type SlingClientConf struct {
 	*HttpClientConfig
 }

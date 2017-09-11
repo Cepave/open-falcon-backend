@@ -25,7 +25,7 @@ type QueryService interface {
 }
 
 func NewQueryService(config QueryServiceConfig) QueryService {
-	newClient := oHttp.NewApiService(*config.RestfulClientConfig).NewClient()
+	newClient := oHttp.NewApiService(config.RestfulClientConfig).NewClient()
 
 	return &queryServiceImpl{
 		loadQueryByUuid:   newClient.Get().AddPath("/api/v1/owl/query-object"),
