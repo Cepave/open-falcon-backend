@@ -1,8 +1,6 @@
 package http_test
 
 import (
-	"fmt"
-
 	"github.com/Cepave/open-falcon-backend/common/http"
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 )
@@ -20,10 +18,7 @@ func ExampleApiService_newClient() {
 	apiService := http.NewApiService(restfulConfig)
 	client := apiService.NewClient()
 
-	request := client.Get()
-
-	fmt.Printf("%s", request.Context.Request.URL.Host)
-
-	// Output:
-	// some-1.mock.server
+	// The returned request is omitted in the example.
+	_ = client.Get()
+	// ...
 }
