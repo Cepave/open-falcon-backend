@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/viper"
 
+	oHttp "github.com/Cepave/open-falcon-backend/common/http"
+	"github.com/Cepave/open-falcon-backend/common/http/client"
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
 	"github.com/Cepave/open-falcon-backend/common/model/config"
 	oos "github.com/Cepave/open-falcon-backend/common/os"
@@ -34,6 +36,7 @@ func main() {
 		toMysqlApiConfig(vipercfg.Config()),
 		vipercfg.Config().GetString("hosts"),
 	)
+	http.InitMySqlApi(loadMySqlApiConfig(vipercfg.Config()))
 	rpc.InitPackage(vipercfg.Config())
 
 	go http.Start()
@@ -52,5 +55,22 @@ func toMysqlApiConfig(cfg *viper.Viper) *config.MysqlApiConfig {
 	return &config.MysqlApiConfig{
 		Host:     cfg.GetString("mysql_api.host"),
 		Resource: cfg.GetString("mysql_api.resource"),
+	}
+}
+
+func loadMySqlApiConfig(viper *viper.Viper) *oHttp.RestfulClientConfig {
+	httpConfig := &client.HttpClientConfig{
+		Url:            viper.GetString("mysql_api.host"),
+		RequestTimeout: http.CLIENT_TIMEOUT,
+	}
+
+	resource := viper.GetString("mysql_api.resource")
+	if resource != "" {
+		httpConfig.Url += "/" + resource
+	}
+
+	return &oHttp.RestfulClientConfig{
+		HttpClientConfig: httpConfig,
+		FromModule:       "hbs",
 	}
 }

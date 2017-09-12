@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"sync"
 
-	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
+	oModel "github.com/Cepave/open-falcon-backend/common/model"
+
 	"github.com/toolkits/file"
 
 	log "github.com/sirupsen/logrus"
@@ -30,13 +31,6 @@ type GlobalConfig struct {
 	MysqlApi  *MysqlApiConfig `json:"mysql_api"`
 }
 
-type MysqlApiView struct {
-	Address    string               `json:"address"`
-	StatusCode int                  `json:"status_code"`
-	Message    string               `json:"message"`
-	Response   *apiModel.HealthView `json:"response"`
-}
-
 type RpcView struct {
 	Listen string `json:"listen"`
 }
@@ -53,7 +47,7 @@ type HeartbeatView struct {
 }
 
 type HealthView struct {
-	MysqlApi    *MysqlApiView    `json:"mysql_api"`
+	MysqlApi    *oModel.MysqlApi `json:"mysql_api"`
 	Http        *HttpConfig      `json:"http"`
 	Rpc         *RpcView         `json:"rpc"`
 	FalconAgent *FalconAgentView `json:"falcon_agent"`
