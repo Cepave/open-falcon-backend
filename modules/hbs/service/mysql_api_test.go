@@ -50,7 +50,7 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 		})
 
 		It("should return correct affected amount", func() {
-			InitPackage(&cModelConfig.MysqlApiConfig{Host: ts.URL}, "")
+			InitAgentHeartbeat(&cModelConfig.MysqlApiConfig{Host: ts.URL}, "")
 			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
 			Expect(rowsAffectedCnt).To(Equal(int64(dataNum)))
@@ -60,7 +60,7 @@ var _ = Describe("Test agentHeartbeatCall() of AgentHeartbeat service", func() {
 
 	Context("when the call fail", func() {
 		It("should return correct dropped amount", func() {
-			InitPackage(&cModelConfig.MysqlApiConfig{Host: "dummyHost"}, "")
+			InitAgentHeartbeat(&cModelConfig.MysqlApiConfig{Host: "dummyHost"}, "")
 			rowsAffectedCnt, agentsDroppedCnt := agentHeartbeatCall(agents)
 
 			Expect(rowsAffectedCnt).To(BeZero())

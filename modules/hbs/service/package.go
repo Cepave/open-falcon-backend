@@ -5,11 +5,13 @@ import (
 	"time"
 
 	oHttp "github.com/Cepave/open-falcon-backend/common/http"
+	"github.com/Cepave/open-falcon-backend/common/http/client"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
-	"github.com/Cepave/open-falcon-backend/common/model/config"
+	oConfig "github.com/Cepave/open-falcon-backend/common/model/config"
 	oSrv "github.com/Cepave/open-falcon-backend/common/service"
 	"github.com/dghubble/sling"
 	"github.com/h2non/gentleman/plugins/timeout"
+	"github.com/spf13/viper"
 	"gopkg.in/h2non/gentleman.v2"
 )
 
@@ -18,10 +20,19 @@ var (
 	mysqlApiUrl     string
 	logger          = log.NewDefaultLogger("INFO")
 	MysqlApiService oSrv.MysqlApiService
-	CLIENT_TIMEOUT  = 3 * time.Second
+	ClientTimeout   = 3 * time.Second
 )
 
-func InitMySqlApi(config *oHttp.RestfulClientConfig) {
+func InitPackage(vpConfig *viper.Viper) {
+	apiConfig := toMysqlApiConfig(vpConfig)
+	InitAgentHeartbeat(
+		apiConfig,
+		vpConfig.GetString("hosts"),
+	)
+	InitMysqlApiService(buildRestfulConfig(apiConfig))
+}
+
+func InitMysqlApiService(config *oHttp.RestfulClientConfig) {
 	MysqlApiService = oSrv.NewMysqlApiService(
 		oSrv.MysqlApiServiceConfig{
 			config,
@@ -29,13 +40,42 @@ func InitMySqlApi(config *oHttp.RestfulClientConfig) {
 	)
 }
 
-func InitPackage(cfg *config.MysqlApiConfig, hosts string) {
-	mysqlApiUrl = resolveUrl(cfg.Host, cfg.Resource)
-	logger.Infoln("[Config] MySQL_API=", mysqlApiUrl)
+func InitAgentHeartbeat(config *oConfig.MysqlApiConfig, hosts string) {
+	if mysqlApiUrl == "" {
+		SetMysqlApiUrl(config)
+	}
 
 	if hosts != "" {
 		updateOnlyFlag = true
 	}
+}
+
+func toMysqlApiConfig(config *viper.Viper) *oConfig.MysqlApiConfig {
+	return &oConfig.MysqlApiConfig{
+		Host:     config.GetString("mysql_api.host"),
+		Resource: config.GetString("mysql_api.resource"),
+	}
+}
+
+func buildRestfulConfig(config *oConfig.MysqlApiConfig) *oHttp.RestfulClientConfig {
+	if mysqlApiUrl == "" {
+		SetMysqlApiUrl(config)
+	}
+
+	httpConfig := &client.HttpClientConfig{
+		Url:            GetMysqlApiUrl(),
+		RequestTimeout: ClientTimeout,
+	}
+
+	return &oHttp.RestfulClientConfig{
+		HttpClientConfig: httpConfig,
+		FromModule:       "hbs",
+	}
+}
+
+func SetMysqlApiUrl(cfg *oConfig.MysqlApiConfig) {
+	mysqlApiUrl = resolveUrl(cfg.Host, cfg.Resource)
+	logger.Infoln("[Config] MySQL_API=", mysqlApiUrl)
 }
 
 func GetMysqlApiUrl() string {
@@ -46,11 +86,11 @@ func GetMysqlApiUrl() string {
 }
 
 func NewSlingBase() *sling.Sling {
-	return sling.New().Base(mysqlApiUrl)
+	return sling.New().Base(GetMysqlApiUrl())
 }
 
 func NewMysqlApiCli() *gentleman.Client {
-	return gentleman.New().Use(timeout.Request(CLIENT_TIMEOUT)).URL(GetMysqlApiUrl())
+	return gentleman.New().Use(timeout.Request(ClientTimeout)).URL(GetMysqlApiUrl())
 }
 
 func resolveUrl(host string, resource string) string {
