@@ -36,7 +36,7 @@ func main() {
 		toMysqlApiConfig(vipercfg.Config()),
 		vipercfg.Config().GetString("hosts"),
 	)
-	http.InitMySqlApi(loadMySqlApiConfig(vipercfg.Config()))
+	service.InitMySqlApi(loadMySqlApiConfig(vipercfg.Config()))
 	rpc.InitPackage(vipercfg.Config())
 
 	go http.Start()
@@ -61,7 +61,7 @@ func toMysqlApiConfig(cfg *viper.Viper) *config.MysqlApiConfig {
 func loadMySqlApiConfig(viper *viper.Viper) *oHttp.RestfulClientConfig {
 	httpConfig := &client.HttpClientConfig{
 		Url:            viper.GetString("mysql_api.host"),
-		RequestTimeout: http.CLIENT_TIMEOUT,
+		RequestTimeout: service.CLIENT_TIMEOUT,
 	}
 
 	resource := viper.GetString("mysql_api.resource")

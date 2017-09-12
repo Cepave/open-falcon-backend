@@ -2,17 +2,32 @@ package service
 
 import (
 	"net/url"
+	"time"
 
-	"github.com/Cepave/open-falcon-backend/common/model/config"
-
+	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	"github.com/Cepave/open-falcon-backend/common/model/config"
+	oSrv "github.com/Cepave/open-falcon-backend/common/service"
 	"github.com/dghubble/sling"
+	"github.com/h2non/gentleman/plugins/timeout"
+	"gopkg.in/h2non/gentleman.v2"
 )
 
-var logger = log.NewDefaultLogger("INFO")
+var (
+	updateOnlyFlag  bool
+	mysqlApiUrl     string
+	logger          = log.NewDefaultLogger("INFO")
+	MysqlApiService oSrv.MysqlApiService
+	CLIENT_TIMEOUT  = 3 * time.Second
+)
 
-var updateOnlyFlag bool
-var mysqlApiUrl string
+func InitMySqlApi(config *oHttp.RestfulClientConfig) {
+	MysqlApiService = oSrv.NewMysqlApiService(
+		oSrv.MysqlApiServiceConfig{
+			config,
+		},
+	)
+}
 
 func InitPackage(cfg *config.MysqlApiConfig, hosts string) {
 	mysqlApiUrl = resolveUrl(cfg.Host, cfg.Resource)
@@ -32,6 +47,10 @@ func GetMysqlApiUrl() string {
 
 func NewSlingBase() *sling.Sling {
 	return sling.New().Base(mysqlApiUrl)
+}
+
+func NewMysqlApiCli() *gentleman.Client {
+	return gentleman.New().Use(timeout.Request(CLIENT_TIMEOUT)).URL(GetMysqlApiUrl())
 }
 
 func resolveUrl(host string, resource string) string {
