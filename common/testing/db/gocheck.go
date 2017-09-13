@@ -24,13 +24,13 @@ func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
 //
 // If the environment is not ready(flag is empty), this function returns "nil"
 func GetDbConfig(c *check.C) *commonDb.DbConfig {
-	if *dsnMysql == "" {
-		c.Skip("Skip database testing. Needs \"-dsn_mysql=<MySQL DSN>\"")
+	if !getTestFlags().HasMySql() {
+		c.Skip(flagMessage)
 		return nil
 	}
 
 	return &commonDb.DbConfig{
-		Dsn:     *dsnMysql,
+		Dsn:     getTestFlags().GetMySql(),
 		MaxIdle: 2,
 	}
 }
@@ -67,11 +67,10 @@ func ReleaseDbFacade(c *check.C, dbFacade *f.DbFacade) {
 //
 // If the environment is not ready(flag is empty), this function returns false value.
 func HasDbEnvForMysqlOrSkip(c *check.C) bool {
-	var hasMySqlDsn = *dsnMysql != ""
-
-	if !hasMySqlDsn {
-		c.Skip("Skip Mysql Test: -dsn_mysql=<dsn>")
+	hasMySql := getTestFlags().HasMySql()
+	if !hasMySql {
+		c.Skip(flagMessage)
 	}
 
-	return hasMySqlDsn
+	return hasMySql
 }

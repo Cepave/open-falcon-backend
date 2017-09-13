@@ -32,12 +32,12 @@ func OpenClientBenchmark(b *testing.B, callback FuncJsonRpcClientCallback) {
 	callback(client)
 }
 
-func HasJsonRpcServ(c *check.C) bool {
-	var hasJsonRpcHost = *jsonRpcHost != ""
+func HasJsonRpcClient(c *check.C) bool {
+	hasJsonRpcClient := getTestFlags().HasJsonRpcClient()
 
-	if !hasJsonRpcHost {
-		c.Skip("Skip json-rpc testing. Needs \"-jsonrpc.host=<Host address of JSON-RPC>\"")
+	if !hasJsonRpcClient {
+		c.Skip(flagMessage)
 	}
 
-	return hasJsonRpcHost
+	return hasJsonRpcClient
 }
