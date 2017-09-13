@@ -1,0 +1,75 @@
+{
+    "debug": false,
+    "http": {
+        "enabled": true,
+        "listen": "0.0.0.0:9966"
+    },
+    "hosts": {
+        "enabled": false,
+        "interval": 60
+    },
+    "contacts": {
+        "enabled": false,
+        "interval": 3600
+    },
+    "gin_http": {
+        "enabled":  false,
+        "listen":   "0.0.0.0:9967"
+    },
+    "graph": {
+        "connTimeout": 1000,
+        "callTimeout": 5000,
+        "maxConns": 32,
+        "maxIdle": 32,
+        "replicas": 500,
+        "cluster": {
+            "graph-00": "0.0.0.0:6070"
+        }
+    },
+    "grpc": {
+      "enabled":  false,
+      "port": 1235
+    },
+    "api": {
+        "name": "api_owl",
+        "token": "fastweb_owl",
+        "event": "https://cdnboss-api.fastweb.com.cn/Monitor/add_zabbix_event",
+        "map": "https://cdnboss-api.fastweb.com.cn/Base/platform/get_ip",
+        "geo": "https://cdnboss-api.fastweb.com.cn/pop/get_area",
+        "uplink": "https://cdnboss-api.fastweb.com.cn/base/get_uplink_list",
+        "query": "0.0.0.0:9966",
+        "dashboard": "http://127.0.0.1:8081",
+        "max": 1000
+    },
+    "graphdb": {
+        "addr": "root:password@tcp(127.0.0.1:3306)/graph?charset=utf8&parseTime=True&loc=Local",
+        "idle": 10,
+        "max": 100,
+        "limit": -1
+    },
+    "db": {
+        "addr": "root:password@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
+    "apollodb": {
+      "addr": "root:password@tcp(127.0.0.1:3306)/apollo?charset=utf8&loc=Asia%2FTaipei",
+      "idle": 10,
+      "max": 100
+    },
+    "bossdb": {
+        "addr": "root:password@tcp(127.0.0.1:3306)/boss?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
+    "nqm": {
+        "addr": "root:password@tcp(127.0.0.1:3306)/gz_nqm?charset=utf8&loc=Asia%2FTaipei",
+        "idle": 10,
+        "max": 100
+    },
+    "local": "0.0.0.0:9966",
+    "nqmlog": {
+		"serviceUrl": "http://127.0.0.1:6171"
+    },
+    "fe": "127.0.0.1:1235"
+}

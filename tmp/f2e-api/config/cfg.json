@@ -1,0 +1,58 @@
+{
+  "db": {
+    "falcon_portal": "root:password@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&parseTime=True&loc=Local",
+    "graph": "root:password@tcp(127.0.0.1:3306)/graph?charset=utf8&parseTime=True&loc=Local",
+    "uic": "root:password@tcp(127.0.0.1:3306)/uic?charset=utf8&parseTime=True&loc=Local",
+    "dashboard": "root:password@tcp(127.0.0.1:3306)/dashboard?charset=utf8&parseTime=True&loc=Local",
+    "boss": "root:password@tcp(127.0.0.1:3306)/boss?charset=utf8&parseTime=True&loc=Local",
+    "alarms": "root:password@tcp(127.0.0.1:3306)/falcon_portal?charset=utf8&parseTime=True&loc=Local",
+    "db_bug": true
+  },
+  "log_level": "debug",
+  "signup_disable": false,
+  "graphs": {
+    "cluster": {
+      "graph-01": "10.20.30.40:6070"
+    },
+    "max_conns": 100,
+    "max_idle": 100,
+    "conn_timeout": 1000,
+    "call_timeout": 5000,
+    "numberOfReplicas": 500
+  },
+  "boss_api": {
+    "boss_f_token": "boss_token",
+    "boss_host": "https://myboss.com",
+    "user_query_key": "boss_auth_key",
+    "boss_get_info_v2": "https://myboss.com/url/url/url"
+  },
+  "access_control": true,
+  "gen_doc": false,
+  "gen_doc_path": "doc/module.html",
+  "salt": "pleaseinputwhichyouareusingnow",
+  "web_port": ":8080",
+  "enable_services": true,
+  "services": {
+    "services_name": "services_token"
+  },
+  "frontend": {
+    "enable": false,
+    "folder": "./owlight",
+    "static_path": "./owlight/static"
+  },
+  "web_doc_site":{
+    "enable": false,
+    "folder": "./docs/_site"
+  },
+  "redis": {
+    "enable": false,
+    "address": "127.0.0.1:6397",
+    "password": "",
+    "default_bucket": "extnal_event:all"
+  },
+  "lambda_extends": {
+    "enable": false,
+    "root_dir": "/home/f2e-api/bin",
+    "qlimit": 10000
+  }
+}

@@ -1,0 +1,30 @@
+{
+    "debug": true,
+    "hosts": "",
+    "maxIdle": 100,
+    "listen": ":6030",
+    "trustable": [""],
+    "http": {
+        "enabled": true,
+        "listen": "0.0.0.0:6031"
+    },
+    "gitrepo": "https://gitlab.com/Cepave/OwlPlugin.git",
+    "nqm" : {
+        "queue_size": {
+            "refresh_agent_ping_list": 8
+        },
+        "cache_minutes": {
+            "agent_ping_list": 20
+        }
+    },
+    "mysql_api": {
+        "host": "http://127.0.0.1:6040",
+        "resource": ""
+    },
+    "heartbeat" :{
+		"falcon": {
+			"batchSize": 16,
+			"duration": 1
+		}
+	}
+}

@@ -1,0 +1,26 @@
+{
+    "debug": false,
+    "http": {
+        "enabled": true,
+        "listen": "0.0.0.0:8002"
+    },
+    "index": {
+        "enabled": true,
+        "dsn": "root:password@tcp(127.0.0.1:3306)/graph?loc=Local&parseTime=true",
+        "maxIdle": 4,
+        "autoDelete": true,
+        "cluster": {
+            "graph:6071" : "0 0 0 ? * 0-5"
+        }
+    },
+    "collector":{
+        "enabled": true,
+        "destUrl" : "http://127.0.0.1:1988/v1/push",
+        "srcUrlFmt" : "http://%s/statistics/all",
+        "cluster" : [
+            "transfer,0.0.0.0:6060",
+            "graph,0.0.0.0:6071",
+            "task,127.0.0.1:8002"
+        ]
+    }
+}
