@@ -24,11 +24,14 @@ var (
 )
 
 func InitPackage(vpConfig *viper.Viper) {
-	apiConfig := toMysqlApiConfig(vpConfig)
-	InitAgentHeartbeat(
-		apiConfig,
-		vpConfig.GetString("hosts"),
-	)
+	apiConfig := ToMysqlApiConfig(vpConfig)
+	SetMysqlApiUrl(apiConfig)
+
+	// Set a flag of heartbeat call
+	if vpConfig.GetString("hosts") != "" {
+		updateOnlyFlag = true
+	}
+
 	InitMysqlApiService(buildRestfulConfig(apiConfig))
 }
 
@@ -40,17 +43,7 @@ func InitMysqlApiService(config *oHttp.RestfulClientConfig) {
 	)
 }
 
-func InitAgentHeartbeat(config *oConfig.MysqlApiConfig, hosts string) {
-	if mysqlApiUrl == "" {
-		SetMysqlApiUrl(config)
-	}
-
-	if hosts != "" {
-		updateOnlyFlag = true
-	}
-}
-
-func toMysqlApiConfig(config *viper.Viper) *oConfig.MysqlApiConfig {
+func ToMysqlApiConfig(config *viper.Viper) *oConfig.MysqlApiConfig {
 	return &oConfig.MysqlApiConfig{
 		Host:     config.GetString("mysql_api.host"),
 		Resource: config.GetString("mysql_api.resource"),
@@ -58,10 +51,6 @@ func toMysqlApiConfig(config *viper.Viper) *oConfig.MysqlApiConfig {
 }
 
 func buildRestfulConfig(config *oConfig.MysqlApiConfig) *oHttp.RestfulClientConfig {
-	if mysqlApiUrl == "" {
-		SetMysqlApiUrl(config)
-	}
-
 	httpConfig := &client.HttpClientConfig{
 		Url:            GetMysqlApiUrl(),
 		RequestTimeout: ClientTimeout,
