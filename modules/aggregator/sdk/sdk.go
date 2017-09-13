@@ -3,12 +3,13 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/common/sdk/requests"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
 	f "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/falcon_portal"
 	"github.com/toolkits/net/httplib"
-	"time"
 )
 
 func HostnamesByID(group_id int64) ([]string, error) {
@@ -41,7 +42,7 @@ func HostnamesByID(group_id int64) ([]string, error) {
 
 func QueryLastPoints(endpoints, counters []string) (resp []*cmodel.GraphLastResp, err error) {
 	cfg := g.Config()
-	uri := fmt.Sprintf("%s/api/v1/graph/lastpoint", cfg.Api.PlusApi)
+	uri := fmt.Sprintf("%s/api/v1/graph/graph/lastpoint", cfg.Api.PlusApi)
 
 	var req *httplib.BeegoHttpRequest
 	headers := map[string]string{"Content-type": "application/json"}
@@ -66,7 +67,6 @@ func QueryLastPoints(endpoints, counters []string) (resp []*cmodel.GraphLastResp
 	if err != nil {
 		return
 	}
-
 	req.Body(b)
 
 	err = req.ToJson(&resp)
