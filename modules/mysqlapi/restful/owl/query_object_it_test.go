@@ -56,7 +56,7 @@ var _ = Describe("[POST] on /owl/query-object", ginkgoDb.NeedDb(func() {
 	})
 }))
 
-var _ = Describe("[GET] on /owl/query-object/:uuid", func() {
+var _ = Describe("[GET] on /owl/query-object/:uuid", ginkgoDb.NeedDb(func() {
 	BeforeEach(func() {
 		inTx(`
 		INSERT INTO owl_query(
@@ -126,9 +126,9 @@ var _ = Describe("[GET] on /owl/query-object/:uuid", func() {
 			Expect(jsonBody.Get("uuid").MustString()).To(Equal("70d420fb-6a6b-a682-9613-2c2b5458f4ac"))
 		})
 	})
-})
+}))
 
-var _ = Describe("[POST] on /owl/query-object/vacuum", func() {
+var _ = Describe("[POST] on /owl/query-object/vacuum", ginkgoDb.NeedDb(func() {
 	Context("Remove older query objects", func() {
 		BeforeEach(func() {
 			inTx(`
@@ -182,4 +182,4 @@ var _ = Describe("[POST] on /owl/query-object/vacuum", func() {
 			Entry("Vacuum is not affecting data", 120, 0),
 		)
 	})
-})
+}))
