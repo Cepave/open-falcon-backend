@@ -63,5 +63,9 @@ func (suite *TestCommonSuite) TestReloadConfig(c *C) {
 }
 
 func (s *TestCommonSuite) SetUpSuite(c *C) {
+	if !testFlags.HasHttpClient() {
+		c.Skip("Skipping testng because properties HTTP client is missing")
+		return
+	}
 	c.Logf("Testing service of common: %s", httpClientConfig)
 }

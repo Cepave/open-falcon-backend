@@ -20,6 +20,8 @@ func TestByCheck(t *testing.T) {
 	ch.TestingT(t)
 }
 
+var testFlags = tFlag.NewTestFlags()
+
 var mockMySqlApi = gock.GockConfigBuilder.NewConfig(
 	"ack.com.cc", 22060,
 )

@@ -63,11 +63,17 @@ func (loader *ConfigLoader) ParseCmd() (*viper.Viper, error) {
 	}
 
 	/**
+	 * Prevents re-parsing of flags
+	 */
+	if !pflag.Parsed() {
+		loader.FlagDefiner()
+		pflag.Parse()
+	}
+	// :~)
+
+	/**
 	 * Loads arguments from command line
 	 */
-	loader.FlagDefiner()
-	pflag.Parse()
-
 	loader.cmdViper = viper.New()
 	pflag.VisitAll(func(flag *pflag.Flag) {
 		/**
