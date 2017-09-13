@@ -16,7 +16,7 @@ const expecstatus = http.StatusExpectationFailed
 func Routes(r *gin.Engine) {
 	db = config.Con()
 	grphapi := r.Group("/api/v1/graph")
-	grphapi.Use(utils.AuthSessionMidd)
+	//grphapi.Use(utils.AuthSessionMidd)
 	grphapi.GET("/endpoint", EndpointRegexpQuery)
 	grphapi.GET("/endpoint_counter", EndpointCounterRegexpQuery)
 	grphapi.GET("/endpointstr_counter", EndpointStrCounterRegexpQuery)
