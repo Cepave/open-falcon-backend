@@ -18,15 +18,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var itEnabled = tHttp.GinkgoHttpIt.NeedItWeb
-
 var itConfig = tHttp.NewHttpClientConfigByFlag()
 var itClient = tHttp.GentlemanClientConf{itConfig}
 
 var gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
 var fakeServerConfig = &tHttp.FakeServerConfig{"127.0.0.1", 6040}
 
-var _ = Describe("[POST] on /nqm/icmp/compound-report", itEnabled(func() {
+var _ = Describe("[POST] on /nqm/icmp/compound-report", func() {
+	skipItOnMySqlApi.BeforeEachSkip()
+
 	var (
 		mockMysqlApiServer *httptest.Server
 		currentUuid        string
@@ -137,9 +137,11 @@ var _ = Describe("[POST] on /nqm/icmp/compound-report", itEnabled(func() {
 			Expect(jsonBody.Get("error_code").MustInt()).To(BeEquivalentTo(1))
 		})
 	})
-}))
+})
 
-var _ = Describe("[GET] on /nqm/icmp/compound-report/query/{uuid}", itEnabled(func() {
+var _ = Describe("[GET] on /nqm/icmp/compound-report/query/{uuid}", func() {
+	skipItOnMySqlApi.BeforeEachSkip()
+
 	var (
 		mockMysqlApiServer *httptest.Server
 		currentUuid        string
@@ -224,4 +226,4 @@ var _ = Describe("[GET] on /nqm/icmp/compound-report/query/{uuid}", itEnabled(fu
 		It(`Should got 404(Not Found)`, performTest)
 		It(`Should got 404(Not Found) - again`, performTest)
 	})
-}))
+})

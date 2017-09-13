@@ -4,6 +4,7 @@ import (
 	ch "gopkg.in/check.v1"
 	"testing"
 
+	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
 	"github.com/Cepave/open-falcon-backend/common/testing/http/gock"
 
 	. "github.com/onsi/ginkgo"
@@ -22,3 +23,5 @@ func TestByCheck(t *testing.T) {
 var mockMySqlApi = gock.GockConfigBuilder.NewConfig(
 	"ack.com.cc", 22060,
 )
+
+var skipItOnMySqlApi = tFlag.BuildSkipFactory(tFlag.F_ItWeb, tFlag.FeatureHelpString(tFlag.F_ItWeb))
