@@ -4,38 +4,65 @@ TARGET_SOURCE = $(shell find main.go g cmd common -name '*.go')
 CMD = aggregator graph hbs judge nodata query sender task transfer fe alarm agent mysqlapi f2e-api
 TARGET = open-falcon
 VERSION := $(shell cat VERSION)
-GOFILES := $(shell find . -name "*.go" -type f ! -path "./vendor/*")
+
+##################################################
+# For the target of "fmt", "misspell", "fmt-check", and "misspell-check",
+# it is possible the listing of files too long to run in shell.
+#
+# Following variables defines arguments used by "xargs" command
+##################################################
+
+# Maximum characters fed to "xargs -s xx"
+CMD_MAX_CHARS := 16384
+CMD_LIST_GO_FILES := find . -name "*.go" -type f ! -path "./vendor/*"
+
+# Temporary file used to keep listing of go files
+LISTFILE_OF_GO_FILES := $(shell mktemp).gofiles.list
+
+XARGS_CMD := xargs --max-procs=1 -s $(CMD_MAX_CHARS) --arg-file=$(LISTFILE_OF_GO_FILES)
+
+# // :~)
+
 GOFMT ?= gofmt -s
+
+# The folder of GoLang used to search testing package
+GO_TEST_FOLDER := common modules scripts/mysql/dbpatch/go
+# You should assign the path starting with any of $(GO_TEST_FOLDER)
+GO_TEST_EXCLUDE := modules/agent modules/f2e-api modules/fe
 
 all: install $(CMD) $(TARGET)
 
-.PHONY: fmt
-fmt:
-	$(GOFMT) -w $(GOFILES)
+fmt: build_gofile_listfile
+	$(XARGS_CMD) $(GOFMT) -w
 
-.PHONY: fmt-check
-fmt-check:
+misspell: build_gofile_listfile
+	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+		go get -u github.com/client9/misspell/cmd/misspell; \
+	fi
+	$(XARGS_CMD) misspell -w
+
+fmt-check: build_gofile_listfile
 	# get all go files and run go fmt on them
-	@diff=$$($(GOFMT) -d $(GOFILES)); \
+	@diff=$$($(XARGS_CMD) $(GOFMT) -d); \
 	if [ -n "$$diff" ]; then \
 		echo "Please run 'make fmt' and commit the result:"; \
 		echo "$${diff}"; \
 		exit 1; \
 	fi;
 
-.PHONY: misspell-check
-misspell-check:
+misspell-check: build_gofile_listfile
 	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/client9/misspell/cmd/misspell; \
 	fi
-	misspell -error $(GOFILES)
+	$(XARGS_CMD) misspell -error
 
-.PHONY: misspell
-misspell:
-	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/client9/misspell/cmd/misspell; \
-	fi
-	misspell -w $(GOFILES)
+build_gofile_listfile:
+	echo Generate "$(LISTFILE_OF_GO_FILES)" file for GoLang files.
+	$(CMD_LIST_GO_FILES) >$(LISTFILE_OF_GO_FILES)
+	echo There are \"`wc -l <$(LISTFILE_OF_GO_FILES)`\" GoLang files.
+
+go-test:
+	./go-test-all.sh -t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)"
 
 $(CMD):
 	go build -ldflags "-X main.GitCommit=`git log -n1 --pretty=format:%h modules/$@` -X main.Version=${VERSION}" -o bin/$@/falcon-$@ ./modules/$@
@@ -81,6 +108,9 @@ clean:
 	@rm -rf ./bin
 	@rm -rf ./out
 	@rm -rf ./$(TARGET)
-	@rm -rf open-falcon-v$(VERSION).tar.gz
+	@rm -rf open-falcon-v$(VERSION).tar.g
 
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage
+.PHONY: fmt misspell fmt-check misspell-check build_gofile_listfile go-test
+
+.SILENT: build_gofile_listfile go-test

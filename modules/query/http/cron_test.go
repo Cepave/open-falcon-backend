@@ -3,8 +3,8 @@ package http
 import (
 	"testing"
 
-	"github.com/astaxie/beego/orm"
 	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
+	"github.com/astaxie/beego/orm"
 
 	_ "github.com/go-sql-driver/mysql" // import your used driver
 )

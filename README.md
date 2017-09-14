@@ -68,3 +68,24 @@ Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exporte
 # Package Release
 
 	make clean all pack
+
+# Testing
+
+## By `make go-test`
+
+You could set `GO_TEST_FOLDER` and `GO_TEST_EXCLUDE` to set-up the folder you like to test.
+
+```sh
+make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api"
+```
+
+See `Makefile` for default values of the two variables.
+
+## By `go-test-all.sh`
+
+You could use `-t <testing folders>` and `-e <exclude folders>` to set-up the folder you like to test
+
+```sh
+make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api"
+	./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api"
+```

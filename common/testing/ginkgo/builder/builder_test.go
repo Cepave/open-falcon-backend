@@ -133,7 +133,7 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 	Context("?It related functions",
 		func() {
 			var (
-				it  = 0
+				it = 0
 			)
 
 			NewGinkgoBuilder("").
@@ -159,7 +159,7 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 	Context("?Specify related functions",
 		func() {
 			var (
-				specify  = 0
+				specify = 0
 			)
 
 			NewGinkgoBuilder("").
@@ -185,7 +185,7 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 	Context("?Measure related functions",
 		func() {
 			var (
-				measure  = 0
+				measure = 0
 			)
 
 			NewGinkgoBuilder("").
