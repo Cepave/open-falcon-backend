@@ -37,7 +37,7 @@ func InitPackage(vpConfig *viper.Viper) {
 
 func InitMysqlApiService(config *oHttp.RestfulClientConfig) {
 	MysqlApiService = oSrv.NewMysqlApiService(
-		oSrv.MysqlApiServiceConfig{
+		&oSrv.MysqlApiServiceConfig{
 			config,
 		},
 	)
