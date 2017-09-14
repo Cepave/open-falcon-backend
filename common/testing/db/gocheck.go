@@ -23,6 +23,10 @@ func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
 // Gets the database configuration or skip the testing(depends on "gopkg.in/check.v1").
 //
 // If the environment is not ready(flag is empty), this function returns "nil"
+//
+// Deprecated: Try to use "flag.SkipFactory"
+//
+// See "common/testing/flag"
 func GetDbConfig(c *check.C) *commonDb.DbConfig {
 	if !getTestFlags().HasMySql() {
 		c.Skip(flagMessage)
@@ -66,6 +70,10 @@ func ReleaseDbFacade(c *check.C, dbFacade *f.DbFacade) {
 // Checks whether or not skipping testing by viable arguments.
 //
 // If the environment is not ready(flag is empty), this function returns false value.
+//
+// Deprecated: Try to use "flag.SkipFactory"
+//
+// See "common/testing/flag"
 func HasDbEnvForMysqlOrSkip(c *check.C) bool {
 	hasMySql := getTestFlags().HasMySql()
 	if !hasMySql {

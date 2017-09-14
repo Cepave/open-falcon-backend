@@ -29,6 +29,11 @@ func (g *GinkgoDb) InitDbFacade() *f.DbFacade {
 	return dbFacade
 }
 
+// Prepends "BeforeEach()" for skipping test if there is no value for database flag.
+//
+// Deprecated: Try to use "flag.SkipFactory"
+//
+// See "common/testing/flag"
 func (g *GinkgoDb) NeedDb(src func()) func() {
 	if getTestFlags().HasMySql() {
 		return src

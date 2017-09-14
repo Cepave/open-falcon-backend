@@ -32,6 +32,11 @@ func OpenClientBenchmark(b *testing.B, callback FuncJsonRpcClientCallback) {
 	callback(client)
 }
 
+// Prepends "BeforeEach()" for skipping if there is no value for JSONRPC flags.
+//
+// Deprecated: Try to use "flag.SkipFactory"
+//
+// See "common/testing/flag"
 func HasJsonRpcClient(c *check.C) bool {
 	hasJsonRpcClient := getTestFlags().HasJsonRpcClient()
 

@@ -19,6 +19,11 @@ func (g *GinkgoJsonRpc) OpenClient(callback FuncJsonRpcClientCallback) {
 	callback(client)
 }
 
+// Prepends "BeforeEach()" for skipping if there is no value for JSONRPC flags.
+//
+// Deprecated: Try to use "flag.SkipFactory"
+//
+// See "common/testing/flag"
 func (g *GinkgoJsonRpc) NeedJsonRpc(src func()) func() {
 	return func() {
 		BeforeEach(func() {
