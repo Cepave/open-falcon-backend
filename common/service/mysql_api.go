@@ -1,15 +1,12 @@
 package service
 
 import (
-	"net/http"
-
 	gt "gopkg.in/h2non/gentleman.v2"
 
 	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
-	"github.com/juju/errors"
 )
 
 type MysqlApiServiceConfig struct {
@@ -20,41 +17,36 @@ type MysqlApiService interface {
 	GetHealth() *model.MysqlApi
 }
 
-func NewMysqlApiService(config MysqlApiServiceConfig) MysqlApiService {
+func NewMysqlApiService(config *MysqlApiServiceConfig) MysqlApiService {
 	newClient := oHttp.NewApiService(config.RestfulClientConfig).NewClient()
 	return &mysqlApiServiceImpl{
+		Config:    config,
 		getHealth: newClient.Get().AddPath("/health"),
 	}
 }
 
 type mysqlApiServiceImpl struct {
+	Config    *MysqlApiServiceConfig
 	getHealth *gt.Request
 }
 
 func (s *mysqlApiServiceImpl) GetHealth() *model.MysqlApi {
 	req := s.getHealth.Clone()
-	resp, err := client.ToGentlemanReq(req).SendAndMatch(
-		func(resp *gt.Response) error {
-			switch resp.StatusCode {
-			case http.StatusOK, http.StatusNotFound:
-				return nil
-			}
-
-			return errors.Errorf(client.ToGentlemanResp(resp).ToDetailString())
-		},
-	)
-
 	view := &model.MysqlApi{
-		Address:    req.Context.Request.URL.String(),
-		StatusCode: resp.StatusCode,
+		Address: s.Config.HttpClientConfig.Url,
 	}
 
-	health := &apiModel.HealthView{}
-	if e := client.ToGentlemanResp(resp).BindJson(health); e != nil {
-		err = errors.Annotate(err, e.Error())
-	}
+	resp, err := client.ToGentlemanReq(req).SendAndStatusMatch(200)
 	if err != nil {
 		view.Message = err.Error()
+		return view
+	}
+
+	// Handle the response body
+	health := &apiModel.HealthView{}
+	if err := client.ToGentlemanResp(resp).BindJson(health); err != nil {
+		view.Message = err.Error()
+		return view
 	}
 	view.Response = health
 

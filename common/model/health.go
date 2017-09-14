@@ -5,8 +5,7 @@ import (
 )
 
 type MysqlApi struct {
-	Address    string               `json:"address"`
-	StatusCode int                  `json:"status_code"`
-	Message    string               `json:"message"`
-	Response   *apiModel.HealthView `json:"response"`
+	Address  string               `json:"address"`
+	Message  string               `json:"message"`
+	Response *apiModel.HealthView `json:"response"`
 }

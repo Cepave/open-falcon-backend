@@ -157,13 +157,13 @@ func (r *GentlemanRequest) SendAndMatch(matcher RespMatcher) (*gt.Response, erro
 		if resp != nil {
 			defer resp.Close()
 		}
-		return nil, errors.Annotate(err, "Send() of gentleman request has error")
+		return nil, errors.Annotatef(err, "Send() of gentleman request has error. URL: %s", request.Context.Request.URL)
 	}
 
 	if matcherErr := matcher(resp); matcherErr != nil {
 		defer resp.Close()
 
-		return nil, errors.Errorf("HTTP response has error: %v", errors.Details(matcherErr))
+		return nil, errors.Errorf("HTTP response has error: %v. URL: %s", errors.Details(matcherErr), resp.RawRequest.URL)
 	}
 
 	return resp, nil
