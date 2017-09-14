@@ -2,9 +2,82 @@ package builder
 
 import (
 	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+// Since focus would make the exit code to be non-zero,
+// following testing is uneffective by default.
+var _ = XDescribe("Focused(modify code to run effective testing)", func() {
+	Context("FDescribe()", func() {
+		var fdescribe = 1
+		NewGinkgoBuilder("ToFDescribe()").
+			It("Sample It", func() {
+				fdescribe = 1
+			}).
+			ToFDescribe()
+		It("Flag for FDescribe() should be 1", func() {
+			Expect(fdescribe).To(Equal(1))
+		})
+	})
+
+	/**
+	 * FContext()
+	 */
+	var fcontext = 0
+	NewGinkgoBuilder("ToFContext()").
+		It("Sample It", func() {
+			fcontext = 1
+		}).
+		ToFContext()
+	It("Flag for FContext() should be 1", func() {
+		Expect(fcontext).To(Equal(1))
+	})
+	// :~)
+
+	Context("FIt()", func() {
+		fit := 0
+
+		NewGinkgoBuilder("").
+			FIt("For FIt", func() {
+				fit = 1
+			}).
+			Expose()
+
+		It("Flag for FIt() should be set to 1", func() {
+			Expect(fit).To(Equal(1))
+		})
+	})
+
+	Context("FSpecify()", func() {
+		fspecify := 0
+
+		NewGinkgoBuilder("").
+			FSpecify("For FSpecify", func() {
+				fspecify = 1
+			}).
+			Expose()
+
+		It("Flag for FSpecify() should be set to 1", func() {
+			Expect(fspecify).To(Equal(1))
+		})
+	})
+
+	Context("FMeasure()", func() {
+		fmeasure := 0
+
+		NewGinkgoBuilder("").
+			FMeasure("For FMeasure", func(b Benchmarker) {
+				fmeasure = 1
+			}, 1).
+			Expose()
+
+		It("Flag for FMeasure() should be set to 1", func() {
+			Expect(fmeasure).To(Equal(1))
+		})
+	})
+})
 
 var _ = Describe("GinkgoBuilder: For To?Describe()", func() {
 	var describe = 0
@@ -15,16 +88,6 @@ var _ = Describe("GinkgoBuilder: For To?Describe()", func() {
 		ToDescribe()
 	It("Flag for Describe() should be 1", func() {
 		Expect(describe).To(Equal(1))
-	})
-
-	var fdescribe = 1
-	NewGinkgoBuilder("ToFDescribe()").
-		It("Sample It", func() {
-			fdescribe = 1
-		}).
-		ToFDescribe()
-	It("Flag for FDescribe() should be 1", func() {
-		Expect(fdescribe).To(Equal(1))
 	})
 
 	NewGinkgoBuilder("ToPDescribe()").
@@ -53,16 +116,6 @@ var _ = Describe("GinkgoBuilder: For To?Context()", func() {
 		Expect(context).To(Equal(1))
 	})
 
-	var fcontext = 0
-	NewGinkgoBuilder("ToFContext()").
-		It("Sample It", func() {
-			fcontext = 1
-		}).
-		ToFContext()
-	It("Flag for FContext() should be 1", func() {
-		Expect(fcontext).To(Equal(1))
-	})
-
 	NewGinkgoBuilder("ToPContext()").
 		It("Sample It", func() {
 			Expect(1).To(Equal(2))
@@ -81,15 +134,11 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 		func() {
 			var (
 				it  = 0
-				fit = 0
 			)
 
 			NewGinkgoBuilder("").
 				It("For It", func() {
 					it = 1
-				}).
-				FIt("For FIt", func() {
-					fit = 1
 				}).
 				PIt("For PIt", func() {
 					// This should be pending
@@ -104,9 +153,6 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 			It("Flag for It() should be set to 1", func() {
 				Expect(it).To(Equal(1))
 			})
-			It("Flag for FIt() should be set to 1", func() {
-				Expect(fit).To(Equal(1))
-			})
 		},
 	)
 
@@ -114,15 +160,11 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 		func() {
 			var (
 				specify  = 0
-				fspecify = 0
 			)
 
 			NewGinkgoBuilder("").
 				Specify("For Specify", func() {
 					specify = 1
-				}).
-				FSpecify("For FSpecify", func() {
-					fspecify = 1
 				}).
 				PSpecify("For PSpecify", func() {
 					// This should be pending
@@ -137,9 +179,6 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 			It("Flag for Specify() should be set to 1", func() {
 				Expect(specify).To(Equal(1))
 			})
-			It("Flag for FSpecify() should be set to 1", func() {
-				Expect(fspecify).To(Equal(1))
-			})
 		},
 	)
 
@@ -147,15 +186,11 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 		func() {
 			var (
 				measure  = 0
-				fmeasure = 0
 			)
 
 			NewGinkgoBuilder("").
 				Measure("For Measure", func(b Benchmarker) {
 					measure = 1
-				}, 1).
-				FMeasure("For FMeasure", func(b Benchmarker) {
-					fmeasure = 1
 				}, 1).
 				PMeasure("For PMeasure", func(b Benchmarker) {
 					// This should be pending
@@ -169,9 +204,6 @@ var _ = Describe("GinkgoBuilder: For building of testing function", func() {
 
 			It("Flag for Measure() should be set to 1", func() {
 				Expect(measure).To(Equal(1))
-			})
-			It("Flag for FMeasure() should be set to 1", func() {
-				Expect(fmeasure).To(Equal(1))
 			})
 		},
 	)
