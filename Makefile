@@ -6,6 +6,12 @@ TARGET = open-falcon
 VERSION := $(shell cat VERSION)
 
 ##################################################
+# Variables for Different OS information
+##################################################
+OSTYPE := $(shell echo $$OSTYPE)
+# // :~)
+
+##################################################
 # For the target of "fmt", "misspell", "fmt-check", and "misspell-check",
 # it is possible the listing of files too long to run in shell.
 #
@@ -13,13 +19,21 @@ VERSION := $(shell cat VERSION)
 ##################################################
 
 # Maximum characters fed to "xargs -s xx"
-CMD_MAX_CHARS := 16384
+XARGS_ARGS :=
+ifeq ($(findstring cygwin,$(OSTYPE)), cygwin)
+	XARGS_ARGS := --max-procs=1 --max-chars=16384
+else ifeq ($(findstring linux,$(OSTYPE)), linux)
+	XARGS_ARGS := --max-procs=1 --max-chars=65536
+else ifeq ($(findstring darwin,$(OSTYPE)), darwin)
+	XARGS_ARGS := -P 1 -s 65536
+endif
+
 CMD_LIST_GO_FILES := find . -name "*.go" -type f ! -path "./vendor/*"
 
 # Temporary file used to keep listing of go files
 LISTFILE_OF_GO_FILES := $(shell mktemp).gofiles.list
 
-XARGS_CMD := xargs --max-procs=1 -s $(CMD_MAX_CHARS) --arg-file=$(LISTFILE_OF_GO_FILES)
+XARGS_CMD := xargs $(XARGS_ARGS) --arg-file=$(LISTFILE_OF_GO_FILES)
 
 # // :~)
 

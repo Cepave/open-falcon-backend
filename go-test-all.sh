@@ -68,8 +68,8 @@ final_result=0
 error_count=0
 success_count=0
 for go_test_folder in ${TEST_FOLDER[*]}; do
-	for folder in `find $go_test_folder -xtype d $exclude_syntax`; do
-		if [[ `find $folder -maxdepth 1 -xtype f -name "*_test.go" | wc -l` -gt 0 ]]; then
+	for folder in `find $go_test_folder -type d $exclude_syntax`; do
+		if [[ `find $folder -maxdepth 1 -type f -name "*_test.go" | wc -l` -gt 0 ]]; then
 			echo go test for: ./$folder;
 
 			go test ./$folder
