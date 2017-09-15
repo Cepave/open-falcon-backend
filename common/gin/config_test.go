@@ -5,77 +5,124 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/gin-gonic/gin"
-
 	sjson "github.com/bitly/go-simplejson"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/validator.v9"
+	"gopkg.in/h2non/gentleman.v2"
 
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
-	. "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	ch "gopkg.in/check.v1"
 )
+
+var _ = Describe("Redirect http.Server(listening) to gin engine", func() {
+	Context("Serve by \"net/http\", redirect to Gin engine", func() {
+		sampleBody := `Hello World!!`
+
+		BeforeEach(func() {
+			/**
+			 * The gin engine used to process real request of HTTP.
+			 */
+			sampleGin := NewDefaultJsonEngine(&GinConfig{Mode: gin.ReleaseMode})
+			sampleGin.GET("/", func(context *gin.Context) {
+				context.String(http.StatusOK, sampleBody)
+			})
+			// :~)
+
+			sampleHandler := func(resp http.ResponseWriter, req *http.Request) {
+				// Delegates to Gin engine
+				sampleGin.ServeHTTP(resp, req)
+
+				/**
+				 * Ordinal code of http handler
+				 */
+				//resp.Header().Add("Content-Type", "text/plain")
+				//resp.Write([]byte(sampleBody))
+				// :~)
+			}
+
+			go http.ListenAndServe(
+				":20301", http.HandlerFunc(sampleHandler),
+			)
+		})
+
+		It("Should be 200 status and the body must be \"Hello World!!\"", func() {
+			resp, err := gentleman.New().URL("http://127.0.0.1:20301").
+				Get().
+				Send()
+
+			Expect(err).To(Succeed())
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+			Expect(resp.String()).To(Equal(sampleBody))
+		})
+	})
+})
 
 type TestConfigSuite struct{}
 
-var _ = Suite(&TestConfigSuite{})
+var _ = ch.Suite(&TestConfigSuite{})
 
 // Tests the JSON engine for CORS and exception handler, etc.
-func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *C) {
+func (suite *TestConfigSuite) TestNewDefaultJsonEngine(c *ch.C) {
 	testCases := []*struct {
 		req        *http.Request
-		assertFunc func(*C, *httptest.ResponseRecorder, CommentInterface)
+		assertFunc func(*ch.C, *httptest.ResponseRecorder, ch.CommentInterface)
 	}{
 		{ // Tests the CORS
 			httptest.NewRequest(http.MethodOptions, "/simple-1", nil),
-			func(c *C, resp *httptest.ResponseRecorder, comment CommentInterface) {
-				c.Assert(resp.Header().Get("Access-Control-Allow-Origin"), Equals, "*", comment)
+			func(c *ch.C, resp *httptest.ResponseRecorder, comment ch.CommentInterface) {
+				c.Assert(resp.Header().Get("Access-Control-Allow-Origin"), ch.Equals, "*", comment)
 			},
 		},
 		{ // Tests the error of json binding
 			httptest.NewRequest(http.MethodPost, "/json-error-1", nil),
-			func(c *C, resp *httptest.ResponseRecorder, comment CommentInterface) {
-				c.Assert(resp.Code, Equals, http.StatusBadRequest, comment)
+			func(c *ch.C, resp *httptest.ResponseRecorder, comment ch.CommentInterface) {
+				c.Assert(resp.Code, ch.Equals, http.StatusBadRequest, comment)
 
 				jsonResult, err := sjson.NewFromReader(resp.Body)
-				c.Assert(err, IsNil)
+				c.Assert(err, ch.IsNil)
 
-				c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -101, comment)
-				c.Assert(jsonResult.Get("error_message").MustString(), Equals, "EOF", comment)
+				c.Assert(jsonResult.Get("error_code").MustInt(), ch.Equals, -101, comment)
+				c.Assert(jsonResult.Get("error_message").MustString(), ch.Equals, "EOF", comment)
 			},
 		},
 		{ // Tests the error of validation
 			httptest.NewRequest(http.MethodGet, "/validation-error-1", nil),
-			func(c *C, resp *httptest.ResponseRecorder, comment CommentInterface) {
-				c.Assert(resp.Code, Equals, http.StatusBadRequest, comment)
+			func(c *ch.C, resp *httptest.ResponseRecorder, comment ch.CommentInterface) {
+				c.Assert(resp.Code, ch.Equals, http.StatusBadRequest, comment)
 
 				jsonResult, err := sjson.NewFromReader(resp.Body)
-				c.Assert(err, IsNil)
+				c.Assert(err, ch.IsNil)
 
-				c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1, comment)
-				c.Assert(jsonResult.Get("error_message").MustString(), Matches, ".*Error:Field validation.*", comment)
+				c.Assert(jsonResult.Get("error_code").MustInt(), ch.Equals, -1, comment)
+				c.Assert(jsonResult.Get("error_message").MustString(), ch.Matches, ".*Error:Field validation.*", comment)
 			},
 		},
 		{ // Tests the error of panic
 			httptest.NewRequest(http.MethodGet, "/panic-1", nil),
-			func(c *C, resp *httptest.ResponseRecorder, comment CommentInterface) {
-				c.Assert(resp.Code, Equals, http.StatusInternalServerError, comment)
+			func(c *ch.C, resp *httptest.ResponseRecorder, comment ch.CommentInterface) {
+				c.Assert(resp.Code, ch.Equals, http.StatusInternalServerError, comment)
 
 				jsonResult, err := sjson.NewFromReader(resp.Body)
-				c.Assert(err, IsNil)
+				c.Assert(err, ch.IsNil)
 
-				c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1, comment)
-				c.Assert(jsonResult.Get("error_message").MustString(), Equals, "HERE WE PANIC!!", comment)
+				c.Assert(jsonResult.Get("error_code").MustInt(), ch.Equals, -1, comment)
+				c.Assert(jsonResult.Get("error_message").MustString(), ch.Equals, "HERE WE PANIC!!", comment)
 			},
 		},
 		{ // Tests the error of not-found
 			httptest.NewRequest(http.MethodGet, "/not-found", nil),
-			func(c *C, resp *httptest.ResponseRecorder, comment CommentInterface) {
-				c.Assert(resp.Code, Equals, http.StatusNotFound, comment)
+			func(c *ch.C, resp *httptest.ResponseRecorder, comment ch.CommentInterface) {
+				c.Assert(resp.Code, ch.Equals, http.StatusNotFound, comment)
 
 				jsonResult, err := sjson.NewFromReader(resp.Body)
-				c.Assert(err, IsNil)
+				c.Assert(err, ch.IsNil)
 
-				c.Assert(jsonResult.Get("error_code").MustInt(), Equals, -1, comment)
-				c.Assert(jsonResult.Get("uri").MustString(), Equals, "/not-found", comment)
+				c.Assert(jsonResult.Get("error_code").MustInt(), ch.Equals, -1, comment)
+				c.Assert(jsonResult.Get("uri").MustString(), ch.Equals, "/not-found", comment)
 			},
 		},
 	}
