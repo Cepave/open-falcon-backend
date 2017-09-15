@@ -33,7 +33,7 @@ CMD_LIST_GO_FILES := find . -name "*.go" -type f ! -path "./vendor/*"
 # Temporary file used to keep listing of go files
 LISTFILE_OF_GO_FILES := $(shell mktemp).gofiles.list
 
-XARGS_CMD := xargs $(XARGS_ARGS) --arg-file=$(LISTFILE_OF_GO_FILES)
+XARGS_CMD := xargs $(XARGS_ARGS)
 
 # // :~)
 
@@ -47,22 +47,16 @@ GO_TEST_EXCLUDE := modules/agent modules/f2e-api modules/fe
 all: install $(CMD) $(TARGET)
 
 fmt: build_gofile_listfile
-	fmt_cmd="$(XARGS_CMD) $(GOFMT) -w"; \
-	echo $$fmt_cmd; \
-	$$fmt_cmd;
+	cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) $(GOFMT) -w;
 
 misspell: build_gofile_listfile
 	hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/client9/misspell/cmd/misspell; \
 	fi
-	spell_cmd="$(XARGS_CMD) misspell -w"; \
-	echo $$spell_cmd; \
-	$$spell_cmd;
+	cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) misspell -w;
 
 fmt-check: build_gofile_listfile
-	fmt_cmd="$(XARGS_CMD) $(GOFMT) -d"; \
-	echo $$fmt_cmd; \
-	diff=$$($$fmt_cmd); \
+	diff=$$(cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) $(GOFMT) -d); \
 	if [ -n "$$diff" ]; then \
 		echo "Please run 'make fmt' and commit the result:"; \
 		echo "$${diff}"; \
@@ -73,9 +67,7 @@ misspell-check: build_gofile_listfile
 	hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/client9/misspell/cmd/misspell; \
 	fi
-	spell_cmd="$(XARGS_CMD) misspell -error"; \
-	echo $$spell_cmd; \
-	$$spell_cmd;
+	cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) misspell -error;
 
 build_gofile_listfile:
 	echo Generate "$(LISTFILE_OF_GO_FILES)" file for GoLang files.
@@ -134,4 +126,4 @@ clean:
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage
 .PHONY: fmt misspell fmt-check misspell-check build_gofile_listfile go-test
 
-.SILENT: build_gofile_listfile go-test fmt fmt-check misspell misspell-check
+.SILENT: build_gofile_listfile go-test
