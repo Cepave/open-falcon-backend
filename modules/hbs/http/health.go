@@ -10,12 +10,19 @@ import (
 )
 
 func getHealth(c *gin.Context) {
-	mysqlInfo := service.MysqlApiService.GetHealth()
 	httpInfo := g.Config().Http
 	rpcInfo := &g.RpcView{g.Config().Listen}
 	heartbeatService := rpc.AgentHeartbeatService
+	mysqlInfo := service.MysqlApiService.GetHealth()
+
+	// Set health check value
+	healthcheck := 1
+	if mysqlInfo != nil && mysqlInfo.Response != nil {
+		healthcheck = mysqlInfo.Response.Rdb.PingResult
+	}
 
 	healthInfo := &g.HealthView{
+		healthcheck,
 		mysqlInfo,
 		httpInfo,
 		rpcInfo,

@@ -5,7 +5,10 @@ import (
 )
 
 type MysqlApi struct {
-	Address  string               `json:"address"`
-	Message  string               `json:"message"`
+	// Address of MySQL-API
+	Address string `json:"address"`
+	// Error messages during the health request
+	Message string `json:"message"`
+	// Response of the health request
 	Response *apiModel.HealthView `json:"response"`
 }

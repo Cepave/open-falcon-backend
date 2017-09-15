@@ -39,6 +39,7 @@ type FalconAgentView struct {
 	Heartbeat *HeartbeatView `json:"heartbeat"`
 }
 
+// Statistical info of heartbeat service
 type HeartbeatView struct {
 	CurrentSize         int   `json:"current_size"`
 	CumulativeDropped   int64 `json:"cumulative_dropped"`
@@ -46,7 +47,10 @@ type HeartbeatView struct {
 	CumulativeProcessed int64 `json:"cumulative_processed"`
 }
 
+// Response struct of /api/v1/health
 type HealthView struct {
+	// Health check value
+	HealthCheck int              `json:"health_check"`
 	MysqlApi    *oModel.MysqlApi `json:"mysql_api"`
 	Http        *HttpConfig      `json:"http"`
 	Rpc         *RpcView         `json:"rpc"`

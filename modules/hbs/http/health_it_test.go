@@ -78,6 +78,7 @@ var _ = Describe("[Intg] Test GET on /api/v1/health", itEnabled(func() {
 			},
 		}
 
+		Expect(h.HealthCheck).To(Equal(expVal.MysqlApi.Response.Rdb.PingResult))
 		Expect(h.MysqlApi).To(Equal(expVal.MysqlApi))
 	})
 }))

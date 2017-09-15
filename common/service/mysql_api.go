@@ -30,6 +30,8 @@ type mysqlApiServiceImpl struct {
 	getHealth *gt.Request
 }
 
+// Return some information about MySQL-API: address, error message,
+//  response of health request
 func (s *mysqlApiServiceImpl) GetHealth() *model.MysqlApi {
 	req := s.getHealth.Clone()
 	view := &model.MysqlApi{
