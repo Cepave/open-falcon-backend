@@ -33,17 +33,22 @@ GO_TEST_EXCLUDE := modules/agent modules/f2e-api modules/fe
 all: install $(CMD) $(TARGET)
 
 fmt: build_gofile_listfile
-	$(XARGS_CMD) $(GOFMT) -w
+	fmt_cmd="$(XARGS_CMD) $(GOFMT) -w"; \
+	echo $$fmt_cmd; \
+	$$fmt_cmd;
 
 misspell: build_gofile_listfile
-	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/client9/misspell/cmd/misspell; \
 	fi
-	$(XARGS_CMD) misspell -w
+	spell_cmd="$(XARGS_CMD) misspell -w"; \
+	echo $$spell_cmd; \
+	$$spell_cmd;
 
 fmt-check: build_gofile_listfile
-	# get all go files and run go fmt on them
-	@diff=$$($(XARGS_CMD) $(GOFMT) -d); \
+	fmt_cmd="$(XARGS_CMD) $(GOFMT) -d"; \
+	echo $$fmt_cmd; \
+	diff=$$($$fmt_cmd); \
 	if [ -n "$$diff" ]; then \
 		echo "Please run 'make fmt' and commit the result:"; \
 		echo "$${diff}"; \
@@ -51,15 +56,17 @@ fmt-check: build_gofile_listfile
 	fi;
 
 misspell-check: build_gofile_listfile
-	@hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
+	hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/client9/misspell/cmd/misspell; \
 	fi
-	$(XARGS_CMD) misspell -error
+	spell_cmd="$(XARGS_CMD) misspell -error"; \
+	echo $$spell_cmd; \
+	$$spell_cmd;
 
 build_gofile_listfile:
 	echo Generate "$(LISTFILE_OF_GO_FILES)" file for GoLang files.
 	$(CMD_LIST_GO_FILES) >$(LISTFILE_OF_GO_FILES)
-	echo There are \"`wc -l <$(LISTFILE_OF_GO_FILES)`\" GoLang files.
+	echo -e There are \"`wc -l <$(LISTFILE_OF_GO_FILES)`\" GoLang files."\n"
 
 go-test:
 	./go-test-all.sh -t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)"
@@ -113,4 +120,4 @@ clean:
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage
 .PHONY: fmt misspell fmt-check misspell-check build_gofile_listfile go-test
 
-.SILENT: build_gofile_listfile go-test
+.SILENT: build_gofile_listfile go-test fmt fmt-check misspell misspell-check
