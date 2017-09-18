@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	sjson "github.com/bitly/go-simplejson"
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,7 @@ import (
 )
 
 var _ = Describe("Redirect http.Server(listening) to gin engine", func() {
-	Context("Serve by \"net/http\", redirect to Gin engine", func() {
+	Context("Service uses \"net/http\", we redirect the implmentation to Gin engine", func() {
 		sampleBody := `Hello World!!`
 
 		BeforeEach(func() {
@@ -46,6 +47,8 @@ var _ = Describe("Redirect http.Server(listening) to gin engine", func() {
 			go http.ListenAndServe(
 				":20301", http.HandlerFunc(sampleHandler),
 			)
+
+			time.Sleep(2 * time.Second)
 		})
 
 		It("Should be 200 status and the body must be \"Hello World!!\"", func() {
