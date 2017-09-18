@@ -127,6 +127,12 @@
 			"revisionTime": "2017-02-06T15:46:32Z"
 		},
 		{
+			"checksumSHA1": "pE4DO3iIkNvnWzuqnnTNc59PROQ=",
+			"path": "github.com/chyeh/pubip",
+			"revision": "b7e679cf541cd580e99712413b9351008731d09d",
+			"revisionTime": "2017-02-03T09:59:19Z"
+		},
+		{
 			"checksumSHA1": "3ot05ECs2ot4H5v3ul1dKoTWozA=",
 			"path": "github.com/corpix/uarand",
 			"revision": "2b8494104d86337cdd41d0a49cbed8e4583c0ab4",
@@ -453,6 +459,12 @@
 			"revisionTime": "2017-04-30T19:46:03Z"
 		},
 		{
+			"checksumSHA1": "qekNouYjoxRxaEZeD6GtySY1wlM=",
+			"path": "github.com/jpillora/backoff",
+			"revision": "8eab2debe79d12b7bd3d10653910df25fa9552ba",
+			"revisionTime": "2017-09-18T00:21:02Z"
+		},
+		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
 			"path": "github.com/jtolds/gls",
 			"revision": "77f18212c9c7edc9bd6a33d383a7b545ce62f064",
@@ -529,6 +541,12 @@
 			"path": "github.com/mitchellh/mapstructure",
 			"revision": "d0303fe809921458f417bcf828397a65db30a7e4",
 			"revisionTime": "2017-05-23T03:00:23Z"
+		},
+		{
+			"checksumSHA1": "FkE4gK6CB2Z+07dBaALsoTGlElI=",
+			"path": "github.com/montanaflynn/stats",
+			"revision": "4a163274fa4ca0b524ccee24757d7bec79475aca",
+			"revisionTime": "2017-07-29T21:13:33Z"
 		},
 		{
 			"checksumSHA1": "EykqGCTy45u1Z2oZQti8i0acsgI=",
