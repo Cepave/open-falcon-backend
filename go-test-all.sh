@@ -88,7 +88,7 @@ done
 
 if [[ $error_count -gt 0 ]]; then
 	echo -e "\n========================================"
-	echo "Number of folder has failed for testing: $error_count" >&2
+	echo "Number of folders has failed for testing: $error_count" >&2
 	echo -e "========================================\n"
 fi
 echo -e "\nNumber of folders has succeeded for testing: $success_count\n"

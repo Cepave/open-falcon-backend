@@ -46,33 +46,45 @@ GO_TEST_EXCLUDE := modules/agent modules/f2e-api modules/fe
 
 all: install $(CMD) $(TARGET)
 
-fmt: build_gofile_listfile
-	cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) $(GOFMT) -w;
+misspell: build_gofile_listfile .get_misspell
+	@echo "Inline fix mis-spelled files.";
+	$(XARGS_CMD) misspell -w <$(LISTFILE_OF_GO_FILES);
 
-misspell: build_gofile_listfile
-	hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/client9/misspell/cmd/misspell; \
-	fi
-	cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) misspell -w;
+misspell-check: build_gofile_listfile .get_misspell
+	check_cmd="$(XARGS_CMD) misspell -error <$(LISTFILE_OF_GO_FILES)"; \
+	echo $$check_cmd; \
+	check_output=$$(eval "$$check_cmd"); \
+	test -z "$$check_output" || { \
+		echo -e "misspell capture error:\n $$check_output\n"; \
+		echo "[HELP]" Use \"make misspell\" to fix files inline."(Don't forget to commit changed files)"; \
+		exit 1; \
+	}
+
+fmt: build_gofile_listfile
+	@echo "Inline fix mis-formatted files.";
+	$(XARGS_CMD) $(GOFMT) -l -w <$(LISTFILE_OF_GO_FILES);
 
 fmt-check: build_gofile_listfile
-	diff=$$(cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) $(GOFMT) -d); \
-	if [ -n "$$diff" ]; then \
-		echo "Please run 'make fmt' and commit the result:"; \
-		echo "$${diff}"; \
+	check_cmd="$(XARGS_CMD) $(GOFMT) -d <$(LISTFILE_OF_GO_FILES)"; \
+	echo $$check_cmd; \
+	check_output=$$(eval "$$check_cmd"); \
+	test -z "$$check_output" || { \
+		echo -e "gofmt capture error:\n $$check_output\n"; \
+		echo "[HELP]" Use \"make fmt\" to fix files inline."(Don't forget to commit changed files)"; \
 		exit 1; \
-	fi;
-
-misspell-check: build_gofile_listfile
-	hash misspell > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		go get -u github.com/client9/misspell/cmd/misspell; \
-	fi
-	cat $(LISTFILE_OF_GO_FILES) | $(XARGS_CMD) misspell -error;
+	}
 
 build_gofile_listfile:
 	echo Generate "$(LISTFILE_OF_GO_FILES)" file for GoLang files.
 	$(CMD_LIST_GO_FILES) >$(LISTFILE_OF_GO_FILES)
 	echo -e There are \"`wc -l <$(LISTFILE_OF_GO_FILES)`\" GoLang files."\n"
+
+.get_misspell:
+	type -p misspell &>/dev/null || { \
+		cmd="go get -v -u github.com/client9/misspell/cmd/misspell"; \
+		echo $$cmd; \
+		$$cmd; \
+	}
 
 go-test:
 	./go-test-all.sh -t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)"
@@ -124,6 +136,6 @@ clean:
 	@rm -rf open-falcon-v$(VERSION).tar.g
 
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage
-.PHONY: fmt misspell fmt-check misspell-check build_gofile_listfile go-test
+.PHONY: fmt misspell fmt-check misspell-check .get_misspell build_gofile_listfile go-test
 
-.SILENT: build_gofile_listfile go-test
+.SILENT: build_gofile_listfile misspell-check fmt-check go-test .get_misspell
