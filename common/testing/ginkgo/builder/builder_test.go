@@ -11,7 +11,7 @@ import (
 // following testing is uneffective by default.
 var _ = XDescribe("Focused(modify code to run effective testing)", func() {
 	Context("FDescribe()", func() {
-		var fdescribe = 1
+		var fdescribe = 0
 		NewGinkgoBuilder("ToFDescribe()").
 			It("Sample It", func() {
 				fdescribe = 1
