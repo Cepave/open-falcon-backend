@@ -7,6 +7,7 @@ import (
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	commonModel "github.com/Cepave/open-falcon-backend/common/model"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+	owlSrv "github.com/Cepave/open-falcon-backend/common/service/owl"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	"github.com/Cepave/open-falcon-backend/common/types"
 	"github.com/Cepave/open-falcon-backend/common/utils"
@@ -30,6 +31,9 @@ func (s *mockQueryService) LoadQueryByUuid(targetUuid uuid.UUID) *owlModel.Query
 }
 func (s *mockQueryService) CreateOrLoadQuery(query *owlModel.Query) {
 	s.sampleQuery = query
+}
+func (s *mockQueryService) VacuumQueryObjects(int) *owlSrv.ResultOfVacuumQueryObjects {
+	return nil
 }
 
 var _ = Describe("Query object", func() {
