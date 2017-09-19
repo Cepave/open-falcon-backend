@@ -2,6 +2,7 @@ package owl
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/juju/errors"
@@ -11,6 +12,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/db"
 	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	"github.com/Cepave/open-falcon-backend/common/http/client"
+	"github.com/Cepave/open-falcon-backend/common/json"
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	model "github.com/Cepave/open-falcon-backend/common/model/owl"
 )
@@ -20,22 +22,25 @@ type QueryServiceConfig struct {
 }
 
 type QueryService interface {
-	LoadQueryByUuid(uuid uuid.UUID) *model.Query
-	CreateOrLoadQuery(query *model.Query)
+	LoadQueryByUuid(uuid.UUID) *model.Query
+	CreateOrLoadQuery(*model.Query)
+	VacuumQueryObjects(int) *ResultOfVacuumQueryObjects
 }
 
 func NewQueryService(config QueryServiceConfig) QueryService {
 	newClient := oHttp.NewApiService(config.RestfulClientConfig).NewClient()
 
 	return &queryServiceImpl{
-		loadQueryByUuid:   newClient.Get().AddPath("/api/v1/owl/query-object"),
-		createOrLoadQuery: newClient.Post().AddPath("/api/v1/owl/query-object"),
+		loadQueryByUuid:    newClient.Get().AddPath("/api/v1/owl/query-object"),
+		createOrLoadQuery:  newClient.Post().AddPath("/api/v1/owl/query-object"),
+		vacuumQueryObjects: newClient.Post().AddPath("/api/v1/owl/query-object/vacuum"),
 	}
 }
 
 type queryServiceImpl struct {
-	loadQueryByUuid   *gt.Request
-	createOrLoadQuery *gt.Request
+	loadQueryByUuid    *gt.Request
+	createOrLoadQuery  *gt.Request
+	vacuumQueryObjects *gt.Request
 }
 
 func (s *queryServiceImpl) LoadQueryByUuid(uuid uuid.UUID) *model.Query {
@@ -106,4 +111,31 @@ func (s *queryServiceImpl) CreateOrLoadQuery(query *model.Query) {
 	query.Uuid = db.DbUuid(jsonBody.Uuid)
 	query.CreationTime = time.Time(jsonBody.CreationTime)
 	query.AccessTime = time.Time(jsonBody.AccessTime)
+}
+
+type ResultOfVacuumQueryObjects struct {
+	BeforeTime   json.JsonTime `json:"before_time"`
+	AffectedRows int           `json:"affected_rows"`
+}
+
+func (r *ResultOfVacuumQueryObjects) GetBeforeTime() time.Time {
+	return time.Time(r.BeforeTime)
+}
+
+// Vacuums out-dated query objects(by access time)
+//
+// Any error would be expressed by panic.
+func (s *queryServiceImpl) VacuumQueryObjects(forDays int) *ResultOfVacuumQueryObjects {
+	req := s.vacuumQueryObjects.Clone().
+		SetQueryParams(map[string]string{
+			"for_days": strconv.Itoa(forDays),
+		})
+
+	result := &ResultOfVacuumQueryObjects{}
+
+	client.ToGentlemanResp(
+		client.ToGentlemanReq(req).SendAndStatusMustMatch(http.StatusOK),
+	).MustBindJson(result)
+
+	return result
 }
