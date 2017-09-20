@@ -73,7 +73,10 @@ Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exporte
 
 ## By using `make go-test`
 
-You could set `GO_TEST_FOLDER` and `GO_TEST_EXCLUDE` to set-up the folder you like to test.
+Variables:
+* `GO_TEST_FOLDER` - The inclusions of folders(recursively probed) to be tested
+* `GO_TEST_EXCLUDE` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
+* `GO_TEST_VERBOSE` - If the value is "yes", the execution of "go test -test.v"(with additional flags of 3-party frameworks) would be applied
 
 ```sh
 make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api"
@@ -83,7 +86,10 @@ See `Makefile` for default values of the two variables.
 
 ## By using `go-test-all.sh`
 
-You could use `-t <testing folders>` and `-e <exclude folders>` to set-up the folder you like to test
+Arguments:
+* `-t` - The inclusions of folders(recursively probed) to be tested
+* `-e` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
+* `-v` - If this flag is shown, the execution of `go test -test.v`(with additional flags of 3-party frameworks) would be applied
 
 ```sh
 ./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api"

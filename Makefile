@@ -43,6 +43,10 @@ GOFMT ?= gofmt -s
 GO_TEST_FOLDER := common modules scripts/mysql/dbpatch/go
 # You should assign the path starting with any of $(GO_TEST_FOLDER)
 GO_TEST_EXCLUDE := modules/agent modules/f2e-api modules/fe
+# If using verbose
+ifeq ($(GO_TEST_VERBOSE), yes)
+	run_gotest_verbose = "-v"
+endif
 
 all: install $(CMD) $(TARGET)
 
@@ -87,7 +91,7 @@ build_gofile_listfile:
 	}
 
 go-test:
-	./go-test-all.sh -t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)"
+	./go-test-all.sh -t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)" $(run_gotest_verbose)
 
 $(CMD):
 	go build -ldflags "-X main.GitCommit=`git log -n1 --pretty=format:%h modules/$@` -X main.Version=${VERSION}" -o bin/$@/falcon-$@ ./modules/$@

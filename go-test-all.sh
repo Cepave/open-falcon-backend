@@ -7,20 +7,29 @@ function parseOpt
 
 	-t - Folders separated by space
 	-e - Exclude folders separated by space
+	-v - Verbose(-test.v -gocheck.vv -ginkgo.v)
+	-o - Put "-owl.test=<properties>"
+	-s - Put "-owl.test.sep=<properties>"
 
 	For example:
 
 	# Tests folder(recursively) "modules/fe" and "modules/hbs"
 	# but excludes "modules/fe/ex1" and "modules/fe/ex9"
-	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9"
+	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9" -o "mysql=root:cepave@tcp(192.16.20.50:3306)/falcon_portal"
 	'
 
-	local OPTS="t:e:"
+	local OPTS="t:e:o:s:v"
 	while getopts $OPTS opt; do
 		case $opt in
 			t) TEST_FOLDER=($OPTARG)
 				;;
 			e) TEST_FOLDER_EXCLUDE=($OPTARG)
+				;;
+			v) VERBOSE="-test.v"
+				;;
+			o) OWL_TEST_PROPS="$OPTARG"
+				;;
+			s) OWL_TEST_SEP="$OPTARG"
 				;;
 			*) echo -e "Usage: \n$USAGE" >&2; exit 1
 				;;
@@ -54,8 +63,37 @@ function buildFindExcludeFolder
 	echo ! \( $COMBINED_EXCLUDE \)
 }
 
+function frameworkVerbose
+{
+	local existingVerbose=$1
+	local folder=$2
+	local checkPackage=$3
+	local frameworkFlag=$4
+
+	if grep -q -e "$checkPackage" $folder/*_test.go; then
+		echo "$existingVerbose" "$frameworkFlag"
+	else
+		echo "$existingVerbose"
+	fi
+}
+function getVerbose
+{
+	test -z $VERBOSE && return 0
+
+	local folder=$1
+	local currentVerbose="$VERBOSE"
+
+	currentVerbose=$(frameworkVerbose "$currentVerbose" "$folder" "gopkg.in/check.v1" "-gocheck.vv")
+	currentVerbose=$(frameworkVerbose "$currentVerbose" "$folder" "github.com/onsi/ginkgo" "-ginkgo.v")
+
+	echo $currentVerbose
+}
+
 TEST_FOLDER=
 TEST_FOLDER_EXCLUDE=
+VERBOSE=
+OWL_TEST_PROPS=
+OWL_TEST_SEP=
 
 parseOpt "$@"
 
@@ -70,9 +108,9 @@ success_count=0
 for go_test_folder in ${TEST_FOLDER[*]}; do
 	for folder in `find $go_test_folder -type d $exclude_syntax`; do
 		if [[ `find $folder -maxdepth 1 -type f -name "*_test.go" | wc -l` -gt 0 ]]; then
-			echo go test for: ./$folder;
-
-			go test ./$folder
+			current_verbose=$(getVerbose $folder)
+			echo go test ./$folder $current_verbose
+			go test ./$folder $current_verbose
 			TEST_RESULT=$?
 
 			if [[ $TEST_RESULT -eq 0 ]]; then
