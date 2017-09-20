@@ -6,7 +6,6 @@ import (
 	"syscall"
 
 	"github.com/Cepave/open-falcon-backend/common/logruslog"
-	"github.com/Cepave/open-falcon-backend/common/model/config"
 	oos "github.com/Cepave/open-falcon-backend/common/os"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
@@ -28,12 +27,7 @@ func main() {
 	g.ParseConfig(vipercfg.Config().GetString("config"))
 	logruslog.Init()
 
-	service.InitPackage(&config.MysqlApiConfig{
-		Host:     vipercfg.Config().GetString("mysql_api.host"),
-		Resource: vipercfg.Config().GetString("mysql_api.resource"),
-	},
-		vipercfg.Config().GetString("hosts"),
-	)
+	service.InitPackage(vipercfg.Config())
 	rpc.InitPackage(vipercfg.Config())
 
 	go http.Start()

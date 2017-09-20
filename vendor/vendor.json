@@ -1257,6 +1257,12 @@
 			"revisionTime": "2017-07-26T15:27:18Z"
 		},
 		{
+			"checksumSHA1": "QEXqA8X0366BScvLJyMD8mMtHsU=",
+			"path": "gopkg.in/h2non/gentleman.v2/plugins/timeout",
+			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
+			"revisionTime": "2017-07-26T15:27:18Z"
+		},
+		{
 			"checksumSHA1": "T/whz3Mu2rfWCleun8qVNAgXN9Q=",
 			"path": "gopkg.in/h2non/gentleman.v2/plugins/url",
 			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",

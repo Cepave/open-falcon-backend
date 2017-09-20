@@ -2,11 +2,12 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
-	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
+
+	commonGin "github.com/Cepave/open-falcon-backend/common/gin"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
+	"github.com/gin-gonic/gin"
 )
 
 type Dto struct {
@@ -14,11 +15,14 @@ type Dto struct {
 	Data interface{} `json:"data"`
 }
 
-var ginRouter *gin.Engine
+var ginRouter *gin.Engine = nil
+var GinConfig *commonGin.GinConfig = &commonGin.GinConfig{}
 
 func init() {
-	gin.SetMode(gin.ReleaseMode)
-	ginRouter = gin.New()
+	GinConfig.Mode = gin.ReleaseMode
+	ginRouter = commonGin.NewDefaultJsonEngine(GinConfig)
+	v1 := ginRouter.Group("/api/v1")
+	v1.GET("/health", getHealth)
 
 	configCommonRoutes(ginRouter)
 	configProcRoutes(ginRouter)
@@ -65,6 +69,6 @@ func Start() {
 		MaxHeaderBytes: 1 << 30,
 	}
 
-	log.Println("http listening", addr)
-	log.Fatalln(s.ListenAndServe())
+	logger.Println("http listening", addr)
+	logger.Fatalln(s.ListenAndServe())
 }

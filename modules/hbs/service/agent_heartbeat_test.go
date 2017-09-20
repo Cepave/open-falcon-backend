@@ -86,16 +86,13 @@ var _ = Describe("Test Put() of AgentHeartbeat service", func() {
 	)
 
 	BeforeEach(func() {
+		cache.Agents = cache.NewSafeAgents()
 		agentHeartbeatService = NewAgentHeartbeatService(
 			&cQueue.Config{Num: 16},
 		)
 		heartbeatImpl = &fakeHeartbeat{alwaysSuccess: true}
 		agentHeartbeatService.heartbeatCall = heartbeatImpl.calling
 		now = time.Now().Unix()
-	})
-
-	AfterEach(func() {
-		cache.Agents = cache.NewSafeAgents()
 	})
 
 	Context("when service is not running", func() {
