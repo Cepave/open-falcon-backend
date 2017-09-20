@@ -17,13 +17,11 @@ import (
 )
 
 var (
-	itClient = tHttp.GentlemanClientConf{itConfig}
-
-	gockConfig       = mock.GockConfigBuilder.NewConfigByRandom()
-	fakeServerConfig = &tHttp.FakeServerConfig{"127.0.0.1", 6040}
+	itClient   = tHttp.GentlemanClientConf{itConfig}
+	gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
 )
 
-var _ = Describe("[Intg] Test GET on /api/v1/health", itEnabled(func() {
+var _ = Describe("[Intg] Test GET on /api/v1/health", sf.PrependBeforeEach(func() {
 	const PATH = "/health"
 	var (
 		mockMysqlApiServer *httptest.Server

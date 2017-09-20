@@ -10,7 +10,6 @@
 package http
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,26 +23,23 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/http/client"
 )
 
-// Initialize a client config by flag
+// Initialize a client config by flag(properties).
 //
-// 	-http.host(127.0.0.1) - host name of http service
-// 	-http.port(80) - port of http service
-// 	-http.ssl(false)- whether or not use SSL to test http service
-// 	-http.resource("") - the additional resource(sub-path) after host of URL
+// 	client.http.host=
+// 	client.http.port=
+// 	client.http.resource=
+// 	client.http.ssl=
+//
+// See common/testing/flag for detail
 func NewHttpClientConfigByFlag() *HttpClientConfig {
-	var host = flag.String("http.host", "127.0.0.1", "Host of HTTP service to be tested")
-	var port = flag.Int("http.port", 80, "Port of HTTP service to be tested")
-	var ssl = flag.Bool("http.ssl", false, "Whether or not to use SSL for HTTP service to be tested")
-	var resource = flag.String("http.resource", "", "resource for http://<host>:<port/<resource>")
-
-	flag.Parse()
-
-	config := &HttpClientConfig{
-		Host:     *host,
-		Port:     uint16(*port),
-		Ssl:      *ssl,
-		Resource: *resource,
+	testFlags := getTestFlags()
+	if !testFlags.HasHttpClient() {
+		return nil
 	}
+
+	config := &HttpClientConfig{}
+	config.Host, config.Port, config.Resource, config.Ssl =
+		testFlags.GetHttpClient()
 
 	logger.Infof("HTTP URL for testing: %s", config.String())
 

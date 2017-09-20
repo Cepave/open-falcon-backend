@@ -228,7 +228,7 @@ var tsRsps = []string{
 
 // Tests the refreshing and retrieving list of targets for NQM agent
 func (suite *TestNqmAgentSuite) TestTask(c *C) {
-	if !testJsonRpc.HasJsonRpcServ(c) {
+	if !testJsonRpc.HasJsonRpcClient(c) {
 		return
 	}
 
