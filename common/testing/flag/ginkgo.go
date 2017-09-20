@@ -54,7 +54,7 @@
 // You could "Compose()" multiple "SkipFactory"s to perform complex checking of testing environments.
 //
 //	features := F_HttpClient
-//	sdb := OWL_DB_PORTAL | OWL_DB_UIC
+//	db := OWL_DB_PORTAL | OWL_DB_UIC
 //
 // 	sf := BuildSkipFactory(features, FeatureHelpString(features))
 // 	sdb := BuildSkipFactoryOfOwlDb(db, OwlDbHelpString(db)).Compose(sf)
