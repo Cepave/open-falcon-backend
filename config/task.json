@@ -1,5 +1,12 @@
 {
     "debug": false,
+	"cron": {
+		"vacuum_query_objects": {
+			"enable": true,
+			"schedule": "@daily",
+			"for_days": 90
+		}
+	},
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:8002"
@@ -22,5 +29,9 @@
             "graph,%%GRAPH_HTTP%%",
             "task,127.0.0.1:8002"
         ]
+    },
+    "mysql_api": {
+        "host": "http://%%MYSQL_SERVICE%%",
+        "resource": ""
     }
 }
