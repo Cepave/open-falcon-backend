@@ -82,5 +82,10 @@ func (suite *TestProcSuite) TestPlugins(c *C) {
 }
 
 func (s *TestProcSuite) SetUpSuite(c *C) {
+	if !testFlags.HasHttpClient() {
+		c.Skip("Skipping testng because properties HTTP client is missing")
+		return
+	}
+
 	c.Logf("Testing service of proc: %s", httpClientConfig)
 }

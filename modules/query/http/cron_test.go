@@ -1,14 +1,22 @@
 package http
 
 import (
-	"github.com/astaxie/beego/orm"
-	_ "github.com/go-sql-driver/mysql" // import your used driver
 	"testing"
+
+	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
+	"github.com/astaxie/beego/orm"
+
+	_ "github.com/go-sql-driver/mysql" // import your used driver
 )
 
 // this test can only test when boss.hosts is empty.
 func TestUpdateHostsTable(t *testing.T) {
-	orm.RegisterDataBase("default", "mysql", "root:password@tcp(10.20.30.40:3306)/boss?charset=utf8&loc=Asia%2FTaipei", 30)
+	if !testFlags.HasMySqlOfOwlDb(tFlag.OWL_DB_BOSS) {
+		t.Log("Skip test because the property of \"mysql.owl_boss=\" is not set")
+		return
+	}
+
+	orm.RegisterDataBase("default", "mysql", testFlags.GetMysqlOfOwlDb(tFlag.OWL_DB_BOSS), 30)
 
 	updateHostsTable(
 		[]string{

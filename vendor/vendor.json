@@ -127,6 +127,18 @@
 			"revisionTime": "2017-02-06T15:46:32Z"
 		},
 		{
+			"checksumSHA1": "pE4DO3iIkNvnWzuqnnTNc59PROQ=",
+			"path": "github.com/chyeh/pubip",
+			"revision": "b7e679cf541cd580e99712413b9351008731d09d",
+			"revisionTime": "2017-02-03T09:59:19Z"
+		},
+		{
+			"checksumSHA1": "3ot05ECs2ot4H5v3ul1dKoTWozA=",
+			"path": "github.com/corpix/uarand",
+			"revision": "2b8494104d86337cdd41d0a49cbed8e4583c0ab4",
+			"revisionTime": "2017-09-03T19:08:22Z"
+		},
+		{
 			"checksumSHA1": "LrOnRW6KCAcKDnKPs+Hibtb7Duk=",
 			"path": "github.com/dghubble/sling",
 			"revision": "80ec33c6152a53edb5545864ca37567b506c4ca5",
@@ -375,6 +387,12 @@
 			"revisionTime": "2017-05-05T08:58:37Z"
 		},
 		{
+			"checksumSHA1": "vrYJBnqzBJBmCmiVPgCLwxuBCmc=",
+			"path": "github.com/icrowley/fake",
+			"revision": "e64cc2cf92049a299f359734c6ea76073f2a8b2c",
+			"revisionTime": "2017-07-23T15:10:11Z"
+		},
+		{
 			"checksumSHA1": "40vJyUB4ezQSn/NSadsKEOrudMc=",
 			"path": "github.com/inconshreveable/mousetrap",
 			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
@@ -439,6 +457,12 @@
 			"path": "github.com/jmoiron/sqlx/reflectx",
 			"revision": "d9bd385d68c068f1fabb5057e3dedcbcbb039d0f",
 			"revisionTime": "2017-04-30T19:46:03Z"
+		},
+		{
+			"checksumSHA1": "qekNouYjoxRxaEZeD6GtySY1wlM=",
+			"path": "github.com/jpillora/backoff",
+			"revision": "8eab2debe79d12b7bd3d10653910df25fa9552ba",
+			"revisionTime": "2017-09-18T00:21:02Z"
 		},
 		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
@@ -507,10 +531,22 @@
 			"revisionTime": "2017-03-22T23:44:13Z"
 		},
 		{
+			"checksumSHA1": "vJOfjdXbjymKpuay2nyRnGncJUw=",
+			"path": "github.com/mattn/go-sqlite3",
+			"revision": "05548ff55570cdb9ac72ff4a25a3b5e77a6fb7e5",
+			"revisionTime": "2017-09-01T08:40:05Z"
+		},
+		{
 			"checksumSHA1": "EHjhpHipgm+XGccrRAms9AW3Ewk=",
 			"path": "github.com/mitchellh/mapstructure",
 			"revision": "d0303fe809921458f417bcf828397a65db30a7e4",
 			"revisionTime": "2017-05-23T03:00:23Z"
+		},
+		{
+			"checksumSHA1": "FkE4gK6CB2Z+07dBaALsoTGlElI=",
+			"path": "github.com/montanaflynn/stats",
+			"revision": "4a163274fa4ca0b524ccee24757d7bec79475aca",
+			"revisionTime": "2017-07-29T21:13:33Z"
 		},
 		{
 			"checksumSHA1": "EykqGCTy45u1Z2oZQti8i0acsgI=",
@@ -677,6 +713,12 @@
 		{
 			"checksumSHA1": "egeG/afVkrtqk62j86WS7ATVAbI=",
 			"path": "github.com/smartystreets/goconvey",
+			"revision": "e5b2b7c9111590d019a696c7800593f666e1a7f4",
+			"revisionTime": "2017-08-25T22:14:26Z"
+		},
+		{
+			"checksumSHA1": "f4m09DHEetaanti/GqUJzyCBTaI=",
+			"path": "github.com/smartystreets/goconvey/convey",
 			"revision": "e5b2b7c9111590d019a696c7800593f666e1a7f4",
 			"revisionTime": "2017-08-25T22:14:26Z"
 		},
