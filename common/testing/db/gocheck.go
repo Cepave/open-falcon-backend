@@ -8,10 +8,12 @@ import (
 
 // This function is used to:
 //
-// 	1. Check whether or not the configuration o "dsn_mysql" has been supplied
+// 	1. Checks whether or not the property of "mysql" has been supplied
 // 	2. If it does, supply the data of configuration to callback function
+//
+// Deprecated: Try to use "flag.SkipFactory"(common/testing/flag) instead
 func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
-	config := GetDbConfig(c)
+	config := getDbConfig(c)
 
 	if config != nil {
 		configFunc(config)
@@ -20,33 +22,16 @@ func SetupByViableDbConfig(c *check.C, configFunc ViableDbConfigFunc) bool {
 	return config != nil
 }
 
-// Gets the database configuration or skip the testing(depends on "gopkg.in/check.v1").
-//
-// If the environment is not ready(flag is empty), this function returns "nil"
-//
-// Deprecated: Try to use "flag.SkipFactory"
-//
-// See "common/testing/flag"
-func GetDbConfig(c *check.C) *commonDb.DbConfig {
-	if !getTestFlags().HasMySql() {
-		c.Skip(flagMessage)
-		return nil
-	}
-
-	return &commonDb.DbConfig{
-		Dsn:     getTestFlags().GetMySql(),
-		MaxIdle: 2,
-	}
-}
-
 // Constructs "*db/facade/DbFacade" object by configuration of flag.
 //
 // The checker object is used to trigger panic if the database cannot be opened.
 //
 // If the environment is not ready(flag is empty), this function returns "nil"
+//
+// Deprecated: Try to use "flag.SkipFactory"(common/testing/flag) instead
 func InitDbFacade(c *check.C) *f.DbFacade {
 	var dbFacade = &f.DbFacade{}
-	dbConfig := GetDbConfig(c)
+	dbConfig := getDbConfig(c)
 
 	if dbConfig == nil {
 		return nil
@@ -67,18 +52,21 @@ func ReleaseDbFacade(c *check.C, dbFacade *f.DbFacade) {
 	}
 }
 
-// Checks whether or not skipping testing by viable arguments.
+// Gets the database configuration or skip the testing(depends on "gopkg.in/check.v1").
 //
-// If the environment is not ready(flag is empty), this function returns false value.
+// If the environment is not ready(flag is empty), this function returns "nil"
 //
 // Deprecated: Try to use "flag.SkipFactory"
 //
 // See "common/testing/flag"
-func HasDbEnvForMysqlOrSkip(c *check.C) bool {
-	hasMySql := getTestFlags().HasMySql()
-	if !hasMySql {
+func getDbConfig(c *check.C) *commonDb.DbConfig {
+	if !getTestFlags().HasMySql() {
 		c.Skip(flagMessage)
+		return nil
 	}
 
-	return hasMySql
+	return &commonDb.DbConfig{
+		Dsn:     getTestFlags().GetMySql(),
+		MaxIdle: 2,
+	}
 }

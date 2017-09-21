@@ -8,7 +8,7 @@ function parseOpt
 	-t - Folders separated by space
 	-e - Exclude folders separated by space
 	-v - Verbose(-test.v -gocheck.vv -ginkgo.v)
-	-o - Put "-owl.test=<properties>"
+	-p - Put "-owl.test=<properties>"
 	-s - Put "-owl.test.sep=<properties>"
 
 	For example:
@@ -18,18 +18,18 @@ function parseOpt
 	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9" -o "mysql=root:cepave@tcp(192.16.20.50:3306)/falcon_portal"
 	'
 
-	local OPTS="t:e:o:s:v"
+	local OPTS="t:e:p:s:v"
 	while getopts $OPTS opt; do
 		case $opt in
 			t) TEST_FOLDER=($OPTARG)
 				;;
 			e) TEST_FOLDER_EXCLUDE=($OPTARG)
 				;;
-			v) VERBOSE="-test.v"
+			v) VERBOSE=true
 				;;
-			o) OWL_TEST_PROPS="$OPTARG"
+			p) OWL_TEST_PROPS="$OPTARG"
 				;;
-			s) OWL_TEST_SEP="$OPTARG"
+			s) OWL_TEST_PROPS_SEP="$OPTARG"
 				;;
 			*) echo -e "Usage: \n$USAGE" >&2; exit 1
 				;;
@@ -40,77 +40,99 @@ function parseOpt
 # Converts the list of folders to exclusions of path used by "find" command:
 #
 # ! ( -path <path-1> -prune -o -path <path-2> -prune  ... )
-function buildFindExcludeFolder
+function setupFindExcludeSyntax
 {
-	local EXCLUDES=($@)
+	local var_name=$1
+	shift
+	local excludes=($@)
 
-	if [[ ${#EXCLUDES[*]} -eq 0 ]]; then
-		return 0
-	fi
+	test ${#excludes[@]} -eq 0 && return 0
 
-	local COMBINED_EXCLUDE=
+	local final_syntax=()
 
-	for exclude_path in ${EXCLUDES[*]}; do
-		local path_syntax="-path $exclude_path -prune"
-
-		local OR_CONN=" -o "
-		if [[ ${#COMBINED_EXCLUDE} -eq 0 ]]; then
-			OR_CONN=""
+	for exclude_path in ${excludes[@]}; do
+		if [[ ${#final_syntax[@]} -gt 0 ]]; then
+			final_syntax+=("-o")
 		fi
-		COMBINED_EXCLUDE+="$OR_CONN$path_syntax"
+
+		final_syntax+=("-path" "$exclude_path" "-prune")
 	done
 
-	echo ! \( $COMBINED_EXCLUDE \)
+	final_syntax=("!" "(" "${final_syntax[@]}" ")")
+
+	eval "$var_name=(\"\${final_syntax[@]}\")"
 }
 
-function frameworkVerbose
+function hasFramework
 {
-	local existingVerbose=$1
-	local folder=$2
-	local checkPackage=$3
-	local frameworkFlag=$4
-
-	if grep -q -e "$checkPackage" $folder/*_test.go; then
-		echo "$existingVerbose" "$frameworkFlag"
-	else
-		echo "$existingVerbose"
-	fi
-}
-function getVerbose
-{
-	test -z $VERBOSE && return 0
-
 	local folder=$1
-	local currentVerbose="$VERBOSE"
+	local checkPackage=$2
 
-	currentVerbose=$(frameworkVerbose "$currentVerbose" "$folder" "gopkg.in/check.v1" "-gocheck.vv")
-	currentVerbose=$(frameworkVerbose "$currentVerbose" "$folder" "github.com/onsi/ginkgo" "-ginkgo.v")
+	grep -q -e "$checkPackage" $folder/*_test.go &>/dev/null
+}
+function setupVerbose
+{
+	local folder=$1
+	local var_name=$2
 
-	echo $currentVerbose
+	eval "$var_name=()"
+
+	test $VERBOSE == "false" && return 0
+
+	local final_args=("-test.v")
+
+	if hasFramework "$folder" "gopkg.in/check.v1"; then
+		final_args+=("-gocheck.vv")
+	fi
+	if hasFramework "$folder" "github.com/onsi/ginkgo"; then
+		final_args+=("-ginkgo.v")
+	fi
+
+	eval "$var_name=(\"\${final_args[@]}\")"
+}
+function setupOwlProps
+{
+	local folder=$1
+	local var_name=$2
+
+	cmd_flags=()
+	if grep -q -Ee "common/testing/(db|http|jsonrpc)" $folder/*_test.go &>/dev/null; then
+		if test -n "$OWL_TEST_PROPS"; then
+			cmd_flags+=("-owl.test=$OWL_TEST_PROPS")
+		fi
+		if test -n "$OWL_TEST_PROPS_SEP"; then
+			cmd_flags+=("-owl.test.sep=$OWL_TEST_PROPS_SEP")
+		fi
+	fi
+
+	eval "$var_name=(\"\${cmd_flags[@]}\")"
 }
 
 TEST_FOLDER=
 TEST_FOLDER_EXCLUDE=
-VERBOSE=
+
+VERBOSE=false
+
 OWL_TEST_PROPS=
-OWL_TEST_SEP=
+OWL_TEST_PROPS_SEP=
 
 parseOpt "$@"
 
-echo Test folders: ${TEST_FOLDER[*]}
-echo -e Exclude folders: ${TEST_FOLDER_EXCLUDE[*]} "\n"
+echo Test folders: ${TEST_FOLDER[@]}
+echo -e Exclude folders: ${TEST_FOLDER_EXCLUDE[@]} "\n"
 
-exclude_syntax=$(buildFindExcludeFolder ${TEST_FOLDER_EXCLUDE[*]})
+setupFindExcludeSyntax find_exclude_syntax "${TEST_FOLDER_EXCLUDE[@]}"
 
-final_result=0
 error_count=0
 success_count=0
-for go_test_folder in ${TEST_FOLDER[*]}; do
-	for folder in `find $go_test_folder -type d $exclude_syntax`; do
+for go_test_folder in ${TEST_FOLDER[@]}; do
+	for folder in `find $go_test_folder -type d "${find_exclude_syntax[@]}"`; do
 		if [[ `find $folder -maxdepth 1 -type f -name "*_test.go" | wc -l` -gt 0 ]]; then
-			current_verbose=$(getVerbose $folder)
-			echo go test ./$folder $current_verbose
-			go test ./$folder $current_verbose
+			setupVerbose "$folder" verbose_args
+			setupOwlProps "$folder" owl_flag_args
+
+			echo go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}"
+			go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}"
 			TEST_RESULT=$?
 
 			if [[ $TEST_RESULT -eq 0 ]]; then
@@ -118,7 +140,6 @@ for go_test_folder in ${TEST_FOLDER[*]}; do
 			else
 				echo -e "\nTest failed. Code: $TEST_RESULT\n" >&2
 				(( error_count++ ))
-				final_result=1
 			fi
 		fi
 	done
@@ -131,4 +152,8 @@ if [[ $error_count -gt 0 ]]; then
 fi
 echo -e "\nNumber of folders has succeeded for testing: $success_count\n"
 
-exit $final_result
+if [[ $error_count -gt 0 ]]; then
+	exit 1
+fi
+
+exit 0

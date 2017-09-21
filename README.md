@@ -77,9 +77,15 @@ Variables:
 * `GO_TEST_FOLDER` - The inclusions of folders(recursively probed) to be tested
 * `GO_TEST_EXCLUDE` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
 * `GO_TEST_VERBOSE` - If the value is "yes", the execution of "go test -test.v"(with additional flags of 3-party frameworks) would be applied
+* `GO_TEST_PROPS` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<GO_TEST_PROPS>`
+* `GO_TEST_PROPS_SEP` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<GO_TEST_PROPS_SEP>`
 
 ```sh
+# Default execution
 make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api"
+
+# With MySql property and verbose output
+make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api" GO_TEST_VERBOSE=yes GO_TEST_PROPS="mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
 ```
 
 See `Makefile` for default values of the two variables.
@@ -90,7 +96,13 @@ Arguments:
 * `-t` - The inclusions of folders(recursively probed) to be tested
 * `-e` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
 * `-v` - If this flag is shown, the execution of `go test -test.v`(with additional flags of 3-party frameworks) would be applied
+* `-p` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<args>`
+* `-s` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<args>`
 
 ```sh
+# Default execution
 ./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api"
+
+# With MySql property and verbose output
+./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api" -v -p "mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
 ```
