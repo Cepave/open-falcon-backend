@@ -4,7 +4,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/model"
 	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
 	rt "github.com/Cepave/open-falcon-backend/common/reflect/types"
-
 	"github.com/Cepave/open-falcon-backend/common/utils"
 
 	. "github.com/onsi/ginkgo"
@@ -19,7 +18,7 @@ func inTx(sqls ...string) func() {
 	}
 }
 
-var _ = Describe("Tests GetNameTagById(...)", ginkgoDb.NeedDb(func() {
+var _ = Describe("Tests GetNameTagById(...)", itSkip.PrependBeforeEach(func() {
 	/**
 	 * Prepares data
 	 */
@@ -45,7 +44,7 @@ var _ = Describe("Tests GetNameTagById(...)", ginkgoDb.NeedDb(func() {
 	)
 }))
 
-var _ = Describe("Tests ListNameTags(...)", ginkgoDb.NeedDb(func() {
+var _ = Describe("Tests ListNameTags(...)", itSkip.PrependBeforeEach(func() {
 	/**
 	 * Prepares data
 	 */

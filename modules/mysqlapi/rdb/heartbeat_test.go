@@ -96,6 +96,7 @@ func (suite *TestHeartbeatSuite) TearDownTest(c *ch.C) {
 }
 
 func (suite *TestHeartbeatSuite) SetUpSuite(c *ch.C) {
+	itSkipForGocheck(c)
 	DbFacade = dbTest.InitDbFacade(c)
 }
 
@@ -104,7 +105,7 @@ func (suite *TestHeartbeatSuite) TearDownSuite(c *ch.C) {
 	DbFacade = nil
 }
 
-var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
+var _ = Describe("Test UpdateNqmAgentHeartbeat()", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(test.InitNqmAgent...)
 	})
@@ -223,7 +224,7 @@ var _ = Describe("Test UpdateNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	)
 }))
 
-var _ = Describe("Test SelectNqmAgentByConnId()", ginkgoDb.NeedDb(func() {
+var _ = Describe("Test SelectNqmAgentByConnId()", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(test.InitNqmAgent...)
 	})
@@ -247,7 +248,7 @@ var _ = Describe("Test SelectNqmAgentByConnId()", ginkgoDb.NeedDb(func() {
 	)
 }))
 
-var _ = Describe("Test NotNewNqmAgent()", ginkgoDb.NeedDb(func() {
+var _ = Describe("Test NotNewNqmAgent()", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(test.InitNqmAgent...)
 	})
@@ -271,7 +272,7 @@ var _ = Describe("Test NotNewNqmAgent()", ginkgoDb.NeedDb(func() {
 	)
 }))
 
-var _ = Describe("Test InsertNqmAgentByHeartbeat()", ginkgoDb.NeedDb(func() {
+var _ = Describe("Test InsertNqmAgentByHeartbeat()", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(test.InitNqmAgent...)
 	})

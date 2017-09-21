@@ -16,7 +16,7 @@ import (
 
 var gtResp = client.ToGentlemanResp
 
-var _ = Describe("[POST] on /owl/query-object", ginkgoDb.NeedDb(func() {
+var _ = Describe("[POST] on /owl/query-object", itSkip.PrependBeforeEach(func() {
 	AfterEach(func() {
 		inTx(
 			`
@@ -56,7 +56,7 @@ var _ = Describe("[POST] on /owl/query-object", ginkgoDb.NeedDb(func() {
 	})
 }))
 
-var _ = Describe("[GET] on /owl/query-object/:uuid", ginkgoDb.NeedDb(func() {
+var _ = Describe("[GET] on /owl/query-object/:uuid", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(`
 		INSERT INTO owl_query(
@@ -128,7 +128,7 @@ var _ = Describe("[GET] on /owl/query-object/:uuid", ginkgoDb.NeedDb(func() {
 	})
 }))
 
-var _ = Describe("[POST] on /owl/query-object/vacuum", ginkgoDb.NeedDb(func() {
+var _ = Describe("[POST] on /owl/query-object/vacuum", itSkip.PrependBeforeEach(func() {
 	Context("Remove older query objects", func() {
 		BeforeEach(func() {
 			inTx(`

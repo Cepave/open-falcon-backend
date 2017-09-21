@@ -9,7 +9,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var _ = Describe("Tests the loading of query by UUID", ginkgoDb.NeedDb(func() {
+var _ = Describe("Tests the loading of query by UUID", itSkip.PrependBeforeEach(func() {
 	var testedSrv *queryObjectService
 
 	BeforeEach(func() {

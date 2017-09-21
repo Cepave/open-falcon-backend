@@ -1,19 +1,28 @@
 package rdb
 
 import (
-	"flag"
 	"testing"
 
 	ch "gopkg.in/check.v1"
 
 	tDb "github.com/Cepave/open-falcon-backend/common/testing/db"
+	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func init() {
-	flag.Parse()
+var (
+	itFeatures    = tFlag.F_MySql
+	itSkipMessage = tFlag.FeatureHelpString(itFeatures)
+	itSkip        = tFlag.BuildSkipFactory(tFlag.F_MySql, itSkipMessage)
+	testFlags     = tFlag.NewTestFlags()
+)
+
+func itSkipForGocheck(c *ch.C) {
+	if !testFlags.HasMySql() {
+		c.Skip(itSkipMessage)
+	}
 }
 
 func TestByGinkgo(t *testing.T) {

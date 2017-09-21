@@ -144,7 +144,7 @@ var _ = Describe("Tests draining before enqueuing(with waiting)", func() {
 		// :~)
 
 		/**
-		 * Enqueues data after 1 second(the consuemr should un-lock the queue while it is waiting)
+		 * Enqueues data after 1 second(the consumer should un-lock the queue while it is waiting)
 		 */
 		wg.Add(1)
 		go func() {

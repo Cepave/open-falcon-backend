@@ -644,6 +644,7 @@ func (s *TestNqmAgentHeartbeatTargetListSuite) TearDownTest(c *C) {
 }
 
 func (s *TestNqmAgentHeartbeatTargetListSuite) SetUpSuite(c *C) {
+	itSkipForGocheck(c)
 	DbFacade = dbTest.InitDbFacade(c)
 }
 func (s *TestNqmAgentHeartbeatTargetListSuite) TearDownSuite(c *C) {

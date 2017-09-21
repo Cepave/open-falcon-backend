@@ -5,7 +5,9 @@ import (
 
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 	tDb "github.com/Cepave/open-falcon-backend/common/testing/db"
+	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
 	owlDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -32,3 +34,9 @@ var _ = AfterSuite(func() {
 func inTx(sql ...string) {
 	dbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
 }
+
+var (
+	itFeatures    = tFlag.F_MySql
+	itSkipMessage = tFlag.FeatureHelpString(itFeatures)
+	itSkip        = tFlag.BuildSkipFactory(tFlag.F_MySql, itSkipMessage)
+)
