@@ -14,7 +14,7 @@ type TestCommonSuite struct{}
 
 var _ = Suite(&TestCommonSuite{})
 
-var httpClientConfig = th.SlingClientConf{th.NewHttpClientConfigByFlag()}
+var httpClientConfig = th.SlingClientConf{itConfig}
 
 // Tests the health
 func (suite *TestCommonSuite) TestHealth(c *C) {

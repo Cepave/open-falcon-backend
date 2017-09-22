@@ -27,7 +27,7 @@ Bridge of httptest
 "*GockConfig" has supports for interface of "testing/http/HttpTest", which
 you could use it to start a "real" web server by mocked implementation.
 
-	server := gockConfig.NewServer(&FakcServerConfig{ Host: "127.0.0.1", Port: 10401 })
+	server := gockConfig.HttpTest.NewServer(&FakeServerConfig{ Host: "127.0.0.1", Port: 10401 })
 
 	server.Start()
 	defer server.Stop()
