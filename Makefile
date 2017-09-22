@@ -57,6 +57,11 @@ ifneq ($(GO_TEST_PROPS_SEP),)
 	run_go_test_props_sep_flag = "-s"
 	run_go_test_props_sep = $(GO_TEST_PROPS_SEP)
 endif
+GO_TEST_PROPS_FILE=
+ifneq ($(GO_TEST_PROPS_FILE),)
+	run_go_test_props_file_flag = "-f"
+	run_go_test_props_file = $(GO_TEST_PROPS_FILE)
+endif
 
 all: install $(CMD) $(TARGET)
 
@@ -103,6 +108,7 @@ build_gofile_listfile:
 go-test:
 	./go-test-all.sh -t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)" \
 		$(run_gotest_verbose) \
+		$(run_go_test_props_file_flag) $(run_go_test_props_file) \
 		$(run_go_test_props_flag) "$(run_go_test_props)" $(run_go_test_props_sep_flag) "$(run_go_test_props_sep)"
 
 $(CMD):

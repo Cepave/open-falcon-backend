@@ -8,6 +8,7 @@ function parseOpt
 	-t - Folders separated by space
 	-e - Exclude folders separated by space
 	-v - Verbose(-test.v -gocheck.vv -ginkgo.v)
+	-f - Put "-owl.test.propfile=<file>"
 	-p - Put "-owl.test=<properties>"
 	-s - Put "-owl.test.sep=<properties>"
 
@@ -18,7 +19,7 @@ function parseOpt
 	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9" -o "mysql=root:cepave@tcp(192.16.20.50:3306)/falcon_portal"
 	'
 
-	local OPTS="t:e:p:s:v"
+	local OPTS="t:e:p:s:f:v"
 	while getopts $OPTS opt; do
 		case $opt in
 			t) TEST_FOLDER=($OPTARG)
@@ -27,9 +28,11 @@ function parseOpt
 				;;
 			v) VERBOSE=true
 				;;
-			p) OWL_TEST_PROPS="$OPTARG"
+			f) FLAG_OWL_TEST_PROPS_FILE=($OPTARG)
 				;;
-			s) OWL_TEST_PROPS_SEP="$OPTARG"
+			p) FLAG_OWL_TEST_PROPS="$OPTARG"
+				;;
+			s) FLAG_OWL_TEST_PROPS_SEP="$OPTARG"
 				;;
 			*) echo -e "Usage: \n$USAGE" >&2; exit 1
 				;;
@@ -97,11 +100,14 @@ function setupOwlProps
 
 	cmd_flags=()
 	if grep -q -Ee "common/testing/(db|http|jsonrpc)" $folder/*_test.go &>/dev/null; then
-		if test -n "$OWL_TEST_PROPS"; then
-			cmd_flags+=("-owl.test=$OWL_TEST_PROPS")
+		if test -n "$FLAG_OWL_TEST_PROPS_FILE"; then
+			cmd_flags+=("-owl.test.propfile=$FLAG_OWL_TEST_PROPS_FILE")
 		fi
-		if test -n "$OWL_TEST_PROPS_SEP"; then
-			cmd_flags+=("-owl.test.sep=$OWL_TEST_PROPS_SEP")
+		if test -n "$FLAG_OWL_TEST_PROPS"; then
+			cmd_flags+=("-owl.test=$FLAG_OWL_TEST_PROPS")
+		fi
+		if test -n "$FLAG_OWL_TEST_PROPS_SEP"; then
+			cmd_flags+=("-owl.test.sep=$FLAG_OWL_TEST_PROPS_SEP")
 		fi
 	fi
 
@@ -113,8 +119,8 @@ TEST_FOLDER_EXCLUDE=
 
 VERBOSE=false
 
-OWL_TEST_PROPS=
-OWL_TEST_PROPS_SEP=
+FLAG_OWL_TEST_PROPS=
+FLAG_OWL_TEST_PROPS_SEP=
 
 parseOpt "$@"
 
