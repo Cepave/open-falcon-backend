@@ -115,8 +115,8 @@ const (
 )
 
 const (
-	ENV_OWL_TEST_PROPS = "OWL_TEST_PROPS"
-	ENV_OWL_TEST_PROPS_SEP = "OWL_TEST_PROPS_SEP"
+	ENV_OWL_TEST_PROPS      = "OWL_TEST_PROPS"
+	ENV_OWL_TEST_PROPS_SEP  = "OWL_TEST_PROPS_SEP"
 	ENV_OWL_TEST_PROPS_FILE = "OWL_TEST_PROPS_FILE"
 )
 
@@ -141,8 +141,8 @@ var owlDbMap = map[int]string{
 }
 
 var (
-	owlTest    = flag.String("owl.test", "", "Owl typedFlags for testing properties")
-	owlTestSep = flag.String("owl.test.sep", DEFAULT_SEPARATOR, "Owl typedFlags for separator of properties")
+	owlTest         = flag.String("owl.test", "", "Owl typedFlags for testing properties")
+	owlTestSep      = flag.String("owl.test.sep", DEFAULT_SEPARATOR, "Owl typedFlags for separator of properties")
 	owlTestPropFile = flag.String("owl.test.propfile", "", "Owl property file for testing")
 )
 
@@ -150,10 +150,6 @@ var (
 //
 // This function parses os.Args every time it is get called.
 func NewTestFlags() *TestFlags {
-	if !flag.Parsed() {
-		flag.Parse()
-	}
-
 	viperLoader := newMultiPropLoader()
 	viperLoader.loadFromEnv()
 	viperLoader.loadFromFlag()
@@ -345,8 +341,9 @@ func newMultiPropLoader() *multiPropLoader {
 	viperObj := viper.New()
 	viperObj.SetConfigType("properties")
 
-	return &multiPropLoader{ viperObj }
+	return &multiPropLoader{viperObj}
 }
+
 type multiPropLoader struct {
 	viperObj *viper.Viper
 }
@@ -365,6 +362,10 @@ func (l *multiPropLoader) loadFromEnv() {
 	)
 }
 func (l *multiPropLoader) loadFromFlag() {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
 	l.loadProperties(*owlTestPropFile, *owlTest, *owlTestSep)
 }
 

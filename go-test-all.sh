@@ -11,6 +11,7 @@ function parseOpt
 	-f - Put "-owl.test.propfile=<file>"
 	-p - Put "-owl.test=<properties>"
 	-s - Put "-owl.test.sep=<properties>"
+	-a - Put "<flags>"(seperated by space) to "go test <flags>"
 
 	For example:
 
@@ -19,9 +20,11 @@ function parseOpt
 	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9" -o "mysql=root:cepave@tcp(192.16.20.50:3306)/falcon_portal"
 	'
 
-	local OPTS="t:e:p:s:f:v"
+	local OPTS="t:e:p:s:f:a:v"
 	while getopts $OPTS opt; do
 		case $opt in
+			a) TEST_FLAGS=(${OPTARG[@]})
+				;;
 			t) TEST_FOLDER=($OPTARG)
 				;;
 			e) TEST_FOLDER_EXCLUDE=($OPTARG)
@@ -116,11 +119,13 @@ function setupOwlProps
 
 TEST_FOLDER=
 TEST_FOLDER_EXCLUDE=
-
-VERBOSE=false
+TEST_FLAGS=
 
 FLAG_OWL_TEST_PROPS=
+FLAG_OWL_TEST_PROPS_FILE=
 FLAG_OWL_TEST_PROPS_SEP=
+
+VERBOSE=false
 
 parseOpt "$@"
 
@@ -137,8 +142,8 @@ for go_test_folder in ${TEST_FOLDER[@]}; do
 			setupVerbose "$folder" verbose_args
 			setupOwlProps "$folder" owl_flag_args
 
-			echo go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}"
-			go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}"
+			echo go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}" "${TEST_FLAGS[@]}"
+			go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}" "${TEST_FLAGS[@]}"
 			TEST_RESULT=$?
 
 			if [[ $TEST_RESULT -eq 0 ]]; then

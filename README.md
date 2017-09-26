@@ -96,6 +96,7 @@ Variables:
 * `GO_TEST_PROPS_FILE` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.propfile=<GO_TEST_PROPS_FILE>`
 * `GO_TEST_PROPS` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<GO_TEST_PROPS>`
 * `GO_TEST_PROPS_SEP` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<GO_TEST_PROPS_SEP>`
+* `GO_TEST_FLAGS` - If the value is viable, the execution of "go test" would have additional flags `<flags...>`
 * `GO_TEST_VERBOSE` - If the value is "yes", the execution of "go test -test.v"(with additional flags of 3-party frameworks) would be applied
 
 ```sh
@@ -122,6 +123,7 @@ Arguments:
 * `-f` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.propfile=<args>`
 * `-p` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<args>`
 * `-s` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<args>`
+* `-a` - If the value is viable, the execution of "go test" would have additional flags `<flags>`
 * `-v` - If this flag is shown, the execution of `go test -test.v`(with additional flags of 3-party frameworks) would be applied
 
 ```sh
