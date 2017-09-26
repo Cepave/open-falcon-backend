@@ -163,3 +163,8 @@
     filename: "masato-31.sql",
     comment: "fix time fields schmea issue for alarms"
 }
+- {
+    id: "masato-32",
+    filename: "masato-32.sql",
+    comment: "fix update_time issue on OWL-1956"
+}
