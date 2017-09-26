@@ -146,10 +146,16 @@ var (
 	owlTestPropFile = flag.String("owl.test.propfile", "", "Owl property file for testing")
 )
 
+var singletonTestFlags *TestFlags
+
 // Initializes the object of "*TestFlags" by parsing flag automatically.
 //
 // This function parses os.Args every time it is get called.
 func NewTestFlags() *TestFlags {
+	if singletonTestFlags != nil {
+		return singletonTestFlags.clone()
+	}
+
 	viperLoader := newMultiPropLoader()
 	viperLoader.loadFromEnv()
 	viperLoader.loadFromFlag()
@@ -160,7 +166,9 @@ func NewTestFlags() *TestFlags {
 	newFlags := newTestFlags(viperLoader.viperObj)
 	// :~)
 
-	return newFlags
+	singletonTestFlags = newFlags
+
+	return singletonTestFlags.clone()
 }
 
 // Convenient type used to access specific testing environment of OWL.
@@ -267,6 +275,23 @@ func (f *TestFlags) HasMySqlOfOwlDb(owlDb int) bool {
 func (f *TestFlags) HasItWeb() bool {
 	hasItWeb, ok := f.typedFlags["it.web.enable"].(bool)
 	return ok && hasItWeb
+}
+
+func (f *TestFlags) clone() *TestFlags {
+	newViper := viper.New()
+
+	for k, v := range f.viperObj.AllSettings() {
+		newViper.Set(k, v)
+	}
+
+	newTypedFlags := make(map[string]interface{})
+	for k, v := range f.typedFlags {
+		newTypedFlags[k] = v
+	}
+
+	return &TestFlags{
+		newTypedFlags, newViper,
+	}
 }
 
 func (f *TestFlags) setupByViper() {
