@@ -1,16 +1,21 @@
 package utils
 
 import (
-	. "gopkg.in/check.v1"
 	"reflect"
+
+	ch "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
 type TestArraySuite struct{}
 
-var _ = Suite(&TestArraySuite{})
+var _ = ch.Suite(&TestArraySuite{})
 
 // Tests the filtering for array
-func (suite *TestArraySuite) TestFilterWith(c *C) {
+func (suite *TestArraySuite) TestFilterWith(c *ch.C) {
 	sampleData := []int{2, 4, 6, 9}
 
 	testedResult := MakeAbstractArray(sampleData).
@@ -22,11 +27,11 @@ func (suite *TestArraySuite) TestFilterWith(c *C) {
 			return true
 		})
 
-	c.Assert(testedResult.GetArray(), DeepEquals, []int{2, 4})
+	c.Assert(testedResult.GetArray(), ch.DeepEquals, []int{2, 4})
 }
 
 // Tests the mapping for array
-func (suite *TestArraySuite) TestMapperTo(c *C) {
+func (suite *TestArraySuite) TestMapperTo(c *ch.C) {
 	sampleData := []int{1, 3, 5}
 
 	testedResult := MakeAbstractArray(sampleData).
@@ -37,11 +42,11 @@ func (suite *TestArraySuite) TestMapperTo(c *C) {
 			reflect.TypeOf(int(0)),
 		)
 
-	c.Assert(testedResult.GetArray(), DeepEquals, []int{4, 6, 8})
+	c.Assert(testedResult.GetArray(), ch.DeepEquals, []int{4, 6, 8})
 }
 
 // Tests the conversion from typed function to filter
-func (suite *TestArraySuite) TestTypedFuncToFilter(c *C) {
+func (suite *TestArraySuite) TestTypedFuncToFilter(c *ch.C) {
 	testCases := []*struct {
 		testedFunc   FilterFunc
 		sampleData   interface{}
@@ -58,17 +63,17 @@ func (suite *TestArraySuite) TestTypedFuncToFilter(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
+		comment := ch.Commentf("Test Case: %d", i+1)
 
 		testedResult := MakeAbstractArray(testCase.sampleData).
 			FilterWith(testCase.testedFunc)
 
-		c.Assert(testedResult.GetArray(), DeepEquals, testCase.expectedData, comment)
+		c.Assert(testedResult.GetArray(), ch.DeepEquals, testCase.expectedData, comment)
 	}
 }
 
 // Tests the conversion from typed function to mapper
-func (suite *TestArraySuite) TestTypedFuncToMapper(c *C) {
+func (suite *TestArraySuite) TestTypedFuncToMapper(c *ch.C) {
 	testCases := []*struct {
 		testedFunc   MapperFunc
 		targetType   reflect.Type
@@ -93,16 +98,16 @@ func (suite *TestArraySuite) TestTypedFuncToMapper(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
+		comment := ch.Commentf("Test Case: %d", i+1)
 
 		testedResult := MakeAbstractArray(testCase.sampleData).
 			MapTo(testCase.testedFunc, testCase.targetType)
-		c.Assert(testedResult.GetArray(), DeepEquals, testCase.expectedData, comment)
+		c.Assert(testedResult.GetArray(), ch.DeepEquals, testCase.expectedData, comment)
 	}
 }
 
 // Tests the unique filter
-func (suite *TestArraySuite) TestNewUniqueFilter(c *C) {
+func (suite *TestArraySuite) TestNewUniqueFilter(c *ch.C) {
 	testCases := []*struct {
 		targetType   reflect.Type
 		sampleData   interface{}
@@ -121,16 +126,16 @@ func (suite *TestArraySuite) TestNewUniqueFilter(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
+		comment := ch.Commentf("Test Case: %d", i+1)
 
 		testedResult := MakeAbstractArray(testCase.sampleData).
 			FilterWith(NewUniqueFilter(testCase.targetType))
-		c.Assert(testedResult.GetArray(), DeepEquals, testCase.expectedData, comment)
+		c.Assert(testedResult.GetArray(), ch.DeepEquals, testCase.expectedData, comment)
 	}
 }
 
 // Tests the domain filter
-func (suite *TestArraySuite) TestNewDomainFilter(c *C) {
+func (suite *TestArraySuite) TestNewDomainFilter(c *ch.C) {
 	testCases := []*struct {
 		domain       interface{}
 		sampleData   interface{}
@@ -149,34 +154,28 @@ func (suite *TestArraySuite) TestNewDomainFilter(c *C) {
 	}
 
 	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
+		comment := ch.Commentf("Test Case: %d", i+1)
 
 		testedResult := MakeAbstractArray(testCase.sampleData).
 			FilterWith(NewDomainFilter(testCase.domain))
-		c.Assert(testedResult.GetArray(), DeepEquals, testCase.expectedData, comment)
+		c.Assert(testedResult.GetArray(), ch.DeepEquals, testCase.expectedData, comment)
 	}
 }
 
-// Tests the getting array by type conversion
-func (suite *TestArraySuite) TestGetArrayAsType(c *C) {
-	testCases := []*struct {
-		sourceArray    interface{}
-		targetValue    interface{}
-		expectedResult interface{}
-	}{
-		{[]int16{11, 16}, uint32(0), []uint32{11, 16}},
-		{[]int64{-1, -11}, int8(0), []int8{-1, -11}},
-		{[]int32{-13, 109}, int32(0), []int32{-13, 109}},
-		{[]int32{}, int8(0), []int8{}},
-		{[]int32(nil), int16(0), []int16{}},
-	}
+var _ = Describe("Abstract Array", func() {
+	Context("GetArrayAsTargetType()", func() {
+		DescribeTable("result as expected one",
+			func(sourceArray, targetValue, expectedResult interface{}) {
+				testedResult := MakeAbstractArray(sourceArray).
+					GetArrayAsTargetType(targetValue)
 
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
-
-		testedResult := MakeAbstractArray(testCase.sourceArray).
-			GetArrayAsTargetType(testCase.targetValue)
-
-		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
-	}
-}
+				Expect(testedResult).To(Equal(expectedResult))
+			},
+			Entry("[]int16 to []uint32", []int16{11, 16}, uint32(0), []uint32{11, 16}),
+			Entry("[]int64 to []int8", []int64{-1, -11}, int8(0), []int8{-1, -11}),
+			Entry("[]int32 to []int32", []int32{-13, 109}, int32(0), []int32{-13, 109}),
+			Entry("(empty array) []int32 to []int8", []int32{}, int8(0), []int8{}),
+			Entry("(nil array) []int32 to []int16", []int32(nil), int16(0), []int16{}),
+		)
+	})
+})
