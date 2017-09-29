@@ -495,6 +495,12 @@
 			"revisionTime": "2016-01-26T18:01:36Z"
 		},
 		{
+			"checksumSHA1": "rdR+/3F7uCEzEQQsTcfhOM6TCv8=",
+			"path": "github.com/masato25/mygo_pagination",
+			"revision": "0a153b89bc8599081d0a4f6451c3fdeeaae657df",
+			"revisionTime": "2017-09-29T09:15:10Z"
+		},
+		{
 			"checksumSHA1": "nZjXphKXslmvuOpODCXuDjwFTQ8=",
 			"path": "github.com/masato25/resty",
 			"revision": "927c0e7d74a06df167960e43bc92fd01345a5b8c",
