@@ -15,6 +15,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/expression"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/graph"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/host"
+	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/imdb"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/mockcfg"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/nqmDemo"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller/strategy"
@@ -115,6 +116,9 @@ func StartGin(port string, r *gin.Engine, testMode bool) *gin.Engine {
 		log.Info("serve lambda web")
 		r = lb.StartLBWeb(r)
 	}
+
+	imdb.Routes(r)
+
 	if !testMode {
 		r.Run(port)
 	}
