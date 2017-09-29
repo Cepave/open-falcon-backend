@@ -152,7 +152,7 @@ func InsertEvent(eve *coommonModel.Event, alarmType string) error {
 		if eve.Tpl() != nil {
 			tpl_creator = eve.Tpl().Creator
 		}
-		if eve.CurrentStep == 1 {
+		if eve.CurrentStep == 1 && eve.Status != "OK" {
 			//update start time of cases
 			sqltemplete = fmt.Sprintf("%v ,timestamp = ? WHERE id = ?", sqltemplete)
 			sqlLog, errRes = q.Raw(
