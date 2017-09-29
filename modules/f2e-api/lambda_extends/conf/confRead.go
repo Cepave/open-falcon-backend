@@ -41,7 +41,7 @@ func Config() map[string]*FunConfig {
 
 func functionMapGen() {
 	currentPath := viper.GetString("lambda_extends.root_dir")
-	possiblePath := []string{"lambda_extends/config/js", "lambda_extends/conf/js", "lambda_extends/js", "../config/js", "../js"}
+	possiblePath := []string{"lambda_extends/config/js", "lambda_extends/conf/js", "lambda_extends/js", "../config/js", "../js", "f2e-api/bin"}
 	f := ""
 	for _, pa := range possiblePath {
 		paf := fmt.Sprintf("%s/%s", currentPath, pa)
@@ -68,7 +68,7 @@ func functionMapGen() {
 
 func ReadConf() {
 	currentPath := viper.GetString("lambda_extends.root_dir")
-	possiblePath := []string{"lambda_extends/conf/lambdaSetup.json", "lambda_extends/config/lambdaSetup.json", "../config/lambdaSetup.json"}
+	possiblePath := []string{"lambda_extends/conf/lambdaSetup.json", "lambda_extends/config/lambdaSetup.json", "../config/lambdaSetup.json", "f2e-api/config/lambdaSetup.json"}
 	f := ""
 	for _, pa := range possiblePath {
 		paf := fmt.Sprintf("%s/%s", currentPath, pa)
