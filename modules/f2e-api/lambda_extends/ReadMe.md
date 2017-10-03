@@ -21,16 +21,27 @@
 {
   "from":  1504240064,
   "until": 1504250000,
-  "endpoints": []string{
+  "endpoints": [
     "hostA",
-    "hostB",
-  },
-  "metrics": []string{
-    "net.if.in.bin/iface=eth_all",
-  },
+    "hostB"
+  ],
+  "metrics": [
+    "net.if.in.bin/iface=eth_all"
+  ],
   "func": {
     "function":  "sumAll",
     "aliasName": "combineAllData"
   }
 }
+```
+
+* Curl example
+```
+#!/bin/bash
+
+curl -s 'http://10.20.30.40:10080/api/v1/lambdaq/q' \
+     -H 'Content-Type: application/json' \
+     -H 'ApiToken: {"name":"example-user","sig":"example-sig-as-28c422f8a72011e79ecd0242ac120010"}' \
+     -d '{"from": 1504240064, "until": 1504250000, "endpoints": ["hostA", "hostB"], "metrics": ["net.if.in.bits/iface=eth_all"], "func":{"function":"sumAll"}}'
+
 ```
