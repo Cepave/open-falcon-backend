@@ -1,32 +1,24 @@
 package utils
 
 import (
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestCompareSuite struct{}
-
-var _ = Suite(&TestCompareSuite{})
-
-// Tests the compare of two arrays
-func (suite *TestCompareSuite) TestAreArrayOfStringsSame(c *C) {
-	testCases := []*struct {
-		leftArray      []string
-		rightArray     []string
-		expectedResult bool
-	}{
-		{[]string{"A", "B"}, []string{"A", "B"}, true},
-		{[]string{"A", "B"}, []string{"B", "A"}, true},
-		{[]string{}, []string{}, true},
-		{nil, nil, true},
-		{[]string{}, nil, true},
-		{[]string{"A", "B"}, []string{"C", "B"}, false},
-		{[]string{"A", "B"}, []string{}, false},
-		{[]string{"A", "B"}, nil, false},
-	}
-
-	for i, testCase := range testCases {
-		testedResult := AreArrayOfStringsSame(testCase.leftArray, testCase.rightArray)
-		c.Assert(testedResult, Equals, testCase.expectedResult, Commentf("Test Case: %d", i+1))
-	}
-}
+var _ = Describe("AreArrayOfStringsSame(interface{}, interface{})", func() {
+	DescribeTable("result as expected one",
+		func(leftArray []string, rightArray []string, expectedResult bool) {
+			testedResult := AreArrayOfStringsSame(leftArray, rightArray)
+			Expect(testedResult).To(Equal(expectedResult))
+		},
+		Entry("Same array", []string{"A", "B"}, []string{"A", "B"}, true),
+		Entry("Differ sequence", []string{"A", "B"}, []string{"B", "A"}, true),
+		Entry("Empty arrays", []string{}, []string{}, true),
+		Entry("nil arrays", nil, nil, true),
+		Entry("Empty array and nil array", []string{}, nil, true),
+		Entry("Different arrays", []string{"A", "B"}, []string{"C", "B"}, false),
+		Entry("Viable array and empty array", []string{"A", "B"}, []string{}, false),
+		Entry("Viable array and nil array", []string{"A", "B"}, nil, false),
+	)
+})

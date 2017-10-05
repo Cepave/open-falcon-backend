@@ -8,8 +8,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type TestArraySuite struct{}
-
 var _ = Describe("Abstract Array", func() {
 	Context("Filter by customized function", func() {
 		DescribeTable("result as expected one",
