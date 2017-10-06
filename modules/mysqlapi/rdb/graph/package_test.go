@@ -1,9 +1,7 @@
-package rdb
+package graph
 
 import (
 	"testing"
-
-	ch "gopkg.in/check.v1"
 
 	tDb "github.com/Cepave/open-falcon-backend/common/testing/db"
 	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
@@ -12,30 +10,27 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var (
-	itSkipMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_PORTAL)
-	itSkip        = tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_PORTAL, itSkipMessage)
-)
-
 func TestByGinkgo(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Base Suite")
 }
 
-func TestByCheck(t *testing.T) {
-	ch.TestingT(t)
-}
+var ginkgoDb = &tDb.GinkgoDb{}
 
 func inTx(sql ...string) {
 	DbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
 }
 
-var ginkgoDb = &tDb.GinkgoDb{}
 var _ = BeforeSuite(func() {
-	DbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_PORTAL)
+	DbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_GRAPH)
 })
 
 var _ = AfterSuite(func() {
 	ginkgoDb.ReleaseDbFacade(DbFacade)
 	DbFacade = nil
 })
+
+var (
+	itSkipMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_GRAPH)
+	itSkip        = tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_GRAPH, itSkipMessage)
+)

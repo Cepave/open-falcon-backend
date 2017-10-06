@@ -96,7 +96,6 @@ func (suite *TestHeartbeatSuite) TearDownTest(c *ch.C) {
 }
 
 func (suite *TestHeartbeatSuite) SetUpSuite(c *ch.C) {
-	itSkipForGocheck(c)
 	DbFacade = dbTest.InitDbFacade(c)
 }
 

@@ -6,7 +6,10 @@ import (
 	nqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
-	localOwlDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
+
+	graphdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/graph"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
+	owldb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
 )
 
 var logger = log.NewDefaultLogger("INFO")
@@ -14,7 +17,7 @@ var logger = log.NewDefaultLogger("INFO")
 var DbFacade = &f.DbFacade{}
 var DbConfig *commonDb.DbConfig = &commonDb.DbConfig{}
 
-func InitRdb(dbConfig *commonDb.DbConfig) {
+func InitPortalRdb(dbConfig *commonDb.DbConfig) {
 	logger.Infof("Open RDB: %s ...", dbConfig)
 
 	err := DbFacade.Open(dbConfig)
@@ -22,22 +25,54 @@ func InitRdb(dbConfig *commonDb.DbConfig) {
 		logger.Warnf("Open database error: %v", err)
 	}
 
+	/**
+	 * Protal database
+	 */
 	nqmDb.DbFacade = DbFacade
-	owlDb.DbFacade = DbFacade
-	localOwlDb.DbFacade = DbFacade
+	owldb.DbFacade = DbFacade
+
+	hbsdb.DbFacade = DbFacade
+	hbsdb.DB = DbFacade.SqlDb
+	// :~)
 
 	*DbConfig = *dbConfig
 
 	logger.Info("[FINISH] Open RDB.")
 }
-func ReleaseRdb() {
+func InitGraphRdb(dbConfig *commonDb.DbConfig) {
+	graphDbFacade := &f.DbFacade{}
+
+	logger.Infof("Open RDB: %s ...", dbConfig)
+
+	err := graphDbFacade.Open(dbConfig)
+	if err != nil {
+		logger.Warnf("Open database error: %v", err)
+	}
+
+	graphdb.DbFacade = graphDbFacade
+}
+
+func ReleaseAllRdb() {
 	logger.Info("Release RDB resources...")
 
+	/**
+	 * Protal database
+	 */
 	DbFacade.Release()
 
 	nqmDb.DbFacade = nil
 	owlDb.DbFacade = nil
-	localOwlDb.DbFacade = nil
+
+	hbsdb.DbFacade = nil
+	hbsdb.DB = nil
+	// :~)
+
+	/**
+	 * Graph database
+	 */
+	graphdb.DbFacade.Release()
+	graphdb.DbFacade = nil
+	// :~)
 
 	logger.Info("[FINISH] Release RDB resources.")
 }

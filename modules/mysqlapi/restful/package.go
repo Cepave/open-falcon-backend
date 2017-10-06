@@ -8,6 +8,7 @@ import (
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	ov "github.com/Cepave/open-falcon-backend/common/validate"
 
+	graphRest "github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful/graph"
 	owlRest "github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful/owl"
 )
 
@@ -44,6 +45,8 @@ func InitCache(config *CacheConfig) {
 
 func initApi() {
 	mvcBuilder := mvc.NewMvcBuilder(initGinMvcConfig())
+
+	graphRest.InitHttpServices(router, mvcBuilder)
 
 	h := mvcBuilder.BuildHandler
 
