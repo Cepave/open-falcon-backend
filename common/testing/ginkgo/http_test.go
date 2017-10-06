@@ -58,8 +58,7 @@ var _ = Describe("MatchHttpBodyAsJson(interface{})", func() {
 		}
 		DescribeTable("Matching result is true",
 			func(actual interface{}) {
-				//Expect(actual).To(MatchHttpBodyAsJson(sampleJson))
-				Expect(actual).To(MatchHttpBodyAsJson(`{ "a": 10 }`))
+				Expect(actual).To(MatchHttpBodyAsJson(sampleJson))
 			},
 			Entry("By *http.Response", newResp()),
 			Entry("By *testing/http.ResponseResult", ohttp.NewResponseResultByResponse(newResp())),
@@ -67,8 +66,7 @@ var _ = Describe("MatchHttpBodyAsJson(interface{})", func() {
 
 		DescribeTable("Matching result is false",
 			func(actual interface{}) {
-				//Expect(actual).ToNot(MatchHttpBodyAsJson(`{ "name": "joe", "age": 34 }`))
-				Expect(actual).ToNot(MatchHttpBodyAsJson(sampleJson))
+				Expect(actual).ToNot(MatchHttpBodyAsJson(`{ "name": "joe", "age": 34 }`))
 			},
 			Entry("By *http.Response", newResp()),
 			Entry("By *testing/http.ResponseResult", ohttp.NewResponseResultByResponse(newResp())),
