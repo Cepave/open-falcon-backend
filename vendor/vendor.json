@@ -429,6 +429,12 @@
 			"revisionTime": "2016-06-29T18:10:17Z"
 		},
 		{
+			"checksumSHA1": "j6XafsL9j74n4p3Nx1FDNetQ2PU=",
+			"path": "github.com/jinzhu/copier",
+			"revision": "db4671f3a9b8df855e993f7c94ec5ef1ffb0a23b",
+			"revisionTime": "2017-09-22T08:27:39Z"
+		},
+		{
 			"checksumSHA1": "IqQmIPZbwgzbZD4k7YX6Rj230pY=",
 			"path": "github.com/jinzhu/gorm",
 			"revision": "2a1463811ee1dc85d168fd639a2d4251d030e6e5",
