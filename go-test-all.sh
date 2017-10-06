@@ -17,7 +17,7 @@ function parseOpt
 
 	# Tests folder(recursively) "modules/fe" and "modules/hbs"
 	# but excludes "modules/fe/ex1" and "modules/fe/ex9"
-	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9" -o "mysql=root:cepave@tcp(192.16.20.50:3306)/falcon_portal"
+	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9" -p "mysql=root:cepave@tcp(192.16.20.50:3306)/falcon_portal"
 	'
 
 	local OPTS="t:e:p:s:f:a:v"
