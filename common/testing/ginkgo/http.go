@@ -13,6 +13,7 @@ import (
 // Matches the status of HTTP response, the type of tested value could be:
 // 	*http.Response
 // 	*testing/http.ResponseResult
+// 	*h2non/gentleman.Response
 func MatchHttpStatus(status int) GomegaMatcher {
 	return &httpStatusMatcher{status}
 }
@@ -20,38 +21,38 @@ func MatchHttpStatus(status int) GomegaMatcher {
 // Matches the JSON body of HTTP response, the type of tested value could be:
 // 	*http.Response
 // 	*testing/http.ResponseResult
+// 	*h2non/gentleman.Response
 func MatchHttpBodyAsJson(json interface{}) GomegaMatcher {
 	return &jsonBodyMatcher{
-		expectedBody: json,
-		matcher:      MatchJson(json),
+		matcher: MatchJson(json),
 	}
 }
 
 type jsonBodyMatcher struct {
-	expectedBody interface{}
-	matcher      GomegaMatcher
+	matcher    GomegaMatcher
+	respResult *ohttp.ResponseResult
 }
 
 func (m *jsonBodyMatcher) Match(actual interface{}) (success bool, err error) {
-	respResult := getResponseResult(actual)
-	if respResult == nil {
+	m.respResult = getResponseResult(actual)
+	if m.respResult == nil {
 		return false, buildRespError(actual)
 	}
 
-	return m.matcher.Match(respResult.GetBodyAsJson())
+	return m.matcher.Match(m.respResult.GetBodyAsJson())
 }
 func (m *jsonBodyMatcher) FailureMessage(actual interface{}) (message string) {
-	respResult := getResponseResult(actual)
-
-	return fmt.Sprintf("[HTTP] Expected JSON body is not match. %s",
-		m.matcher.FailureMessage(respResult.GetBodyAsJson()),
+	return fmt.Sprintf(
+		"[HTTP] Response[%T] body should match expected, but failed.\n%s",
+		actual,
+		m.matcher.FailureMessage(m.respResult.GetBodyAsJson()),
 	)
 }
 func (m *jsonBodyMatcher) NegatedFailureMessage(actual interface{}) (message string) {
-	respResult := getResponseResult(actual)
-
-	return fmt.Sprintf("[HTTP] Not expected match body of JSON. %s",
-		m.matcher.NegatedFailureMessage(respResult.GetBodyAsJson()),
+	return fmt.Sprintf(
+		"[HTTP] Response[%T] body should not match expected, but failed.\n%s",
+		actual,
+		m.matcher.NegatedFailureMessage(m.respResult.GetBodyAsJson()),
 	)
 }
 
@@ -91,6 +92,8 @@ func getResponseResult(actual interface{}) *ohttp.ResponseResult {
 	switch v := actual.(type) {
 	case *ohttp.ResponseResult:
 		return v
+	case *gt.Response:
+		return ohttp.NewResponseResultByGentlemanResp(v)
 	case *http.Response:
 		return ohttp.NewResponseResultByResponse(v)
 	}

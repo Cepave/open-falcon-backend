@@ -170,6 +170,15 @@ func NewResponseResultByResponse(resp *http.Response) *ResponseResult {
 	}
 }
 
+func NewResponseResultByGentlemanResp(resp *gt.Response) *ResponseResult {
+	defer resp.Close()
+
+	return &ResponseResult{
+		Response: resp.RawResponse,
+		body:     resp.Bytes(),
+	}
+}
+
 type ResponseResult struct {
 	Response *http.Response
 	body     []byte

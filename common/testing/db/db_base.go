@@ -28,4 +28,4 @@ func getTestFlags() *tflag.TestFlags {
 	return testFlags
 }
 
-var flagMessage = fmt.Sprintf("Skip MySql Test: -owl.test=%s", tflag.FeatureHelp(tflag.F_MySql)[0])
+var flagMessage = fmt.Sprintf("Skip MySql Test. Missed property: \"mysql.owl_portal=<dsn>\" or properties in flag \"-owl.test=%s\"", tflag.FeatureHelp(tflag.F_MySql)[0])
