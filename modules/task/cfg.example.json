@@ -5,6 +5,11 @@
 			"enable": true,
 			"schedule": "@daily",
 			"for_days": 90
+		},
+		"vacuum_graph_index": {
+			"enable": true,
+			"schedule": "0 0 2 ? * 6",
+			"for_days": 7
 		}
 	},
     "http": {
@@ -15,7 +20,6 @@
         "enable": false,
         "dsn": "root:root@tcp(127.0.0.1:3306)/graph?loc=Local&parseTime=true",
         "maxIdle": 4,
-        "autoDelete": false,
         "cluster":{
             "test.hostname01:6071" : "0 0 0 ? * 0-5",
             "test.hostname02:6071" : "0 30 0 ? * 0-5"

@@ -14,11 +14,10 @@ type HttpConfig struct {
 }
 
 type IndexConfig struct {
-	Enable     bool              `json:"enable"`
-	Dsn        string            `json:"dsn"`
-	MaxIdle    int               `json:"maxIdle"`
-	AutoDelete bool              `json:"autoDelete"`
-	Cluster    map[string]string `json:"cluster"`
+	Enable  bool              `json:"enable"`
+	Dsn     string            `json:"dsn"`
+	MaxIdle int               `json:"maxIdle"`
+	Cluster map[string]string `json:"cluster"`
 }
 
 type CollectorConfig struct {

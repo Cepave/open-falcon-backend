@@ -15,10 +15,6 @@ func Start() {
 	}
 
 	InitDB()
-	if cfg.Index.AutoDelete {
-		StartIndexDeleteTask()
-		log.Println("index.Start warning, index cleaner enable")
-	}
 	StartIndexUpdateAllTask()
 	log.Println("index.Start ok")
 }
