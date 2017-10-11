@@ -1,0 +1,184 @@
+FORMAT: 1A
+
+# Tags
+監控機器屬性列表
+
+## Tags Collection [/api/v1/imdb/tags]
+
+### List All Tags [GET]
+
+
++ Parameters
+  + page: 1 (optional, number)
+  + limit: 2 (optional, number)
+  + order_by: "id" (optional, string) - 排序, default asc -> 可用: "id" or "id desc" or "id desc, name"
+  + q: "o" (optional, string) - 列表關鍵字過濾搜尋
+
++ Response 200 (application/json)
+  + Body
+
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "platform",
+          "tag_type_id": 3,
+          "description": "",
+          "default": -1,
+          "created_at": "2017-09-28 02:24:31",
+          "updated_at": "2017-09-28 02:24:31",
+          "tag_type": {
+            "id": 3,
+            "type_name": "value_model",
+            "db_table_name": "vmodel_values"
+          }
+        },
+        {
+          "id": 3,
+          "name": "ip",
+          "tag_type_id": 1,
+          "description": "",
+          "default": -1,
+          "created_at": "2017-09-28 02:24:50",
+          "updated_at": "2017-09-28 02:24:50",
+          "tag_type": {
+            "id": 1,
+            "type_name": "string",
+            "db_table_name": "str_values"
+          }
+        }
+      ],
+      "page": {
+        "total_record": 2,
+        "total_page": 1,
+        "offset": 0,
+        "limit": 2,
+        "page:": 1
+      }
+    }
+
+## Get Tag info [/api/v1/imdb/tag/:id]
+
+### Get Tag info [GET]
+* id: 1 (number) - tag id
+
++ Response 200 (application/json)
+  + Body
+  {
+    "data": {
+      "id": 1,
+      "name": "platform",
+      "tag_type_id": 3,
+      "description": "",
+      "default": -1,
+      "created_at": "2017-09-27T16:11:58+08:00",
+      "updated_at": "2017-09-27T16:11:58+08:00",
+      "tag_type": {
+        "id": 3,
+        "type_name": "value_model",
+        "db_table_name": "vmodel_values"
+      }
+    }
+  }
+
+
+## Data Structures
+
+### TagCreate
++ name: tag2 (string,required) - tag name
++ tag_type_id: 2 (number, required) - id of tag_type
++ description: this tags is a... (string)
+
+## Create tag [/api/v1/imdb/tag]
+
+### create a new tag [POST]
+* name 不可重複
+
++ Request v1 (application/json)
+  + Attributes (TagCreate)
+
++ Response 200 (application/json)
+  + Body
+  {
+    "data": {
+      "id": 7,
+      "name": "tag2",
+      "tag_type_id": 2,
+      "description": "this tags is a...",
+      "default": 0,
+      "created_at": "2017-09-27T16:32:32+08:00",
+      "updated_at": "2017-09-27T16:32:32+08:00",
+      "tag_type": {
+        "id": 2,
+        "type_name": "int",
+        "db_table_name": "int_values"
+      }
+    },
+    "message": "ok"
+  }
+
++ Response 400 (application/json)
+  + Body
+  {
+    "error": "Error 1062: Duplicate entry 'tag1' for key 'uk_tag_name'"
+  }
+
+## Data Structures
+
+### TagUpdate
++ description: this tags is a...2 (string, required)
+
+## Update tag [/api/v1/imdb/tag/:id]
+
+### Update a existing tag [PUT]
+* id: 1 (number) - tag_id
+* 目前允許使用者更改description. 其他屬性值為不可修改. 為保持後續操作一致性.
+
++ Request v1 (application/json)
+  + Attributes (TagUpdate)
+
++ Response 200 (application/json)
+  + Body
+  {
+    "data": {
+      "id": 7,
+      "name": "tag2",
+      "tag_type_id": 2,
+      "description": "this tags is a...2",
+      "default": 0,
+      "created_at": "2017-09-27T16:32:32+08:00",
+      "updated_at": "2017-09-27T16:41:31+08:00",
+      "tag_type": {
+        "id": 2,
+        "type_name": "int",
+        "db_table_name": "int_values"
+      }
+    },
+    "message": "ok"
+  }
++ Response 400 (application/json)
+  + Body
+  {
+    "error": "record not found"
+  }
+
+## Delete tag [/api/v1/imdb/tag/:id]
+
+### Delete a tag [DELETE]
+* id: 9 (number) - tag_id
+* 被指定為預設的tag無法被刪除
+
++ Response 200 (application/json)
+  + Body
+  {
+    "data": {
+      "id": 9
+    },
+    "message": "ok"
+  }
+
++ Response 400 (application/json)
+  + Body
+  {
+    "error": "tag id: 14 is a default tag, can not be remove"
+  }

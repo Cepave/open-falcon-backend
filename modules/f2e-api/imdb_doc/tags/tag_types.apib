@@ -1,0 +1,35 @@
+FORMAT: 1A
+
+# TaTypes
+屬性類別列表
+
+## Get Tag Types [/api/v1/imdb/tag_types]
+
+### Get Tag Types [GET]
+
++ Response 200 (application/json)
+  + Body
+    {
+      "data": [
+          {
+            "id": 1,
+            "type_name": "string",
+            "db_table_name": "str_values"
+          },
+          {
+            "id": 2,
+            "type_name": "int",
+            "db_table_name": "int_values"
+          },
+          {
+            "id": 3,
+            "type_name": "value_model",
+            "db_table_name": "vmodel_values"
+          },
+          {
+            "id": 4,
+            "type_name": "description",
+            "db_table_name": "description_values"
+          }
+      ]
+    }

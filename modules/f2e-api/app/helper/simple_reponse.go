@@ -3,11 +3,18 @@ package helper
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
+
+type DataWaper struct {
+	Data interface{} `json:"data,omitempty"`
+	Page interface{} `json:"page,omitempty"`
+	Msg  string      `json:"message,omitempty"`
+}
 
 type RespJson struct {
 	Error string `json:"error,omitempty"`
@@ -49,15 +56,28 @@ func JSONR(c *gin.Context, arg ...interface{}) (werror error) {
 	} else {
 		switch msg.(type) {
 		case string:
-			body = RespJson{Error: msg.(string)}
+			msgerr := checkEnv(c, msg.(string))
+			body = RespJson{Error: msgerr}
 			c.JSON(wcode, body)
 		case error:
-			body = RespJson{Error: msg.(error).Error()}
+			msgerr := checkEnv(c, msg.(error).Error())
+			body = RespJson{Error: msgerr}
 			c.JSON(wcode, body)
 		default:
 			body = RespJson{Error: "system type error. please ask admin for help"}
 			c.JSON(wcode, body)
 		}
+	}
+	return
+}
+
+func checkEnv(c *gin.Context, errMsg string) (msg string) {
+	msg = errMsg
+	// check error message is from sql?
+	matched, _ := regexp.MatchString("^\\s*Error\\s\\d+", errMsg)
+	if viper.Get("env") == "production" && matched {
+		msg = "got error of sql query. please check your api params"
+		log.Errorf("sql error: %v, url: %v, form ip: %v", errMsg, c.Request.URL.String(), c.ClientIP())
 	}
 	return
 }
