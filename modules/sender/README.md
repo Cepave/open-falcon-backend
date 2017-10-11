@@ -39,3 +39,17 @@ go get ./...
 - worker: 最多同时有多少个线程玩命得调用短信、邮件发送接口
 - api: 短信、邮件发送的http接口，各公司自己提供
 
+## How to debug
+
+想知道 sender 是否可以正常運作，需要去查看 Redis 的狀態
+```
+redis-cli monitor
+```
+
+假設 redis 裡的 /sms 佇列是用來產生 sms 的 queue，用如下的方式可以直接在 redis 裡塞入資料。
+
+```
+redis-cli
+
+127.0.0.1:6379> LPUSH /sms "{\"tos\":\"phone number\",\"content\":\"redis testing\"}"
+```
