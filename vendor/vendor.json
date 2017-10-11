@@ -429,6 +429,12 @@
 			"revisionTime": "2016-06-29T18:10:17Z"
 		},
 		{
+			"checksumSHA1": "j6XafsL9j74n4p3Nx1FDNetQ2PU=",
+			"path": "github.com/jinzhu/copier",
+			"revision": "db4671f3a9b8df855e993f7c94ec5ef1ffb0a23b",
+			"revisionTime": "2017-09-22T08:27:39Z"
+		},
+		{
 			"checksumSHA1": "IqQmIPZbwgzbZD4k7YX6Rj230pY=",
 			"path": "github.com/jinzhu/gorm",
 			"revision": "2a1463811ee1dc85d168fd639a2d4251d030e6e5",
@@ -493,6 +499,12 @@
 			"path": "github.com/manucorporat/sse",
 			"revision": "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d",
 			"revisionTime": "2016-01-26T18:01:36Z"
+		},
+		{
+			"checksumSHA1": "rdR+/3F7uCEzEQQsTcfhOM6TCv8=",
+			"path": "github.com/masato25/mygo_pagination",
+			"revision": "0a153b89bc8599081d0a4f6451c3fdeeaae657df",
+			"revisionTime": "2017-09-29T09:15:10Z"
 		},
 		{
 			"checksumSHA1": "nZjXphKXslmvuOpODCXuDjwFTQ8=",

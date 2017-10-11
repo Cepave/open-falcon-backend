@@ -1,0 +1,182 @@
+FORMAT: 1A
+
+# ValueModel
+選項型 - Tag 值域模型
+
+## ValueModel Type Tags [/api/v1/imdb/value_models]
+
+### List All ValueModel Type Tags [GET]
+* 取得屬性為value_model的tags
+
++ Response 200 (application/json)
+  + Body
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "platform",
+          "tag_type_id": 3,
+          "description": "",
+          "default": -1,
+          "created_at": "2017-09-28 02:24:31",
+          "updated_at": "2017-09-28 02:24:31",
+          "tag_type": {
+            "id": 3,
+            "type_name": "value_model",
+            "db_table_name": "vmodel_values"
+          }
+        }
+      ]
+    }
+
+## ValueModel Collection [/value_model/:id]
+
+### ValueModel Collection [GET]
+* id: 1 (number) - value_model_id
+
++ Response 200 (application/json)
+  + Body
+    {
+      "data": [
+        {
+          "id": 1,
+          "name": "platform",
+          "tag_type_id": 3,
+          "description": "",
+          "default": -1,
+          "created_at": "2017-09-27T16:11:58+08:00",
+          "updated_at": "2017-09-27T16:11:58+08:00",
+          "tag_type": {
+            "id": 3,
+            "type_name": "value_model",
+            "db_table_name": "vmodel_values"
+          }
+        }
+      ]
+    }
+
+## List all values of one value_model [/api/v1/imdb/value_model/:id]
+
+### List all values of one value_model [GET]
+* id: 1 (number) - tag id
+* 取得某一個tag中的值域模型清單
+
++ Parameters
+  + page: 1 (optional, number)
+  + limit: 10 (optional, number)
+  + q: "" (optional, string) - 列表關鍵字過濾搜尋
+
++ Response 200 (application/json)
+  + Body
+    {
+      "data": [
+        {
+          "id": 1,
+          "tag_id": 1,
+          "value": "c01.i01",
+          "created_at": "2017-09-27T16:12:20+08:00",
+          "updated_at": "2017-09-27T16:12:20+08:00"
+        },
+        {
+          "id": 2,
+          "tag_id": 1,
+          "value": "c01.i02",
+          "created_at": "2017-09-27T16:12:20+08:00",
+          "updated_at": "2017-09-27T16:12:20+08:00"
+        }
+      ]
+    }
+
+## Data Structures
+
+### ValueModelCreate
+  + value: d99.i8 (string,required) - model value
+
+## Create a tag to value_model [/api/v1/imdb/value_model/:id]
+
+### Create a ValueModel [POST]
+* id: 1 (number) - tag id
+* tag_id + value 為唯一值
+
++ Request v1 (application/json)
+  + Attributes (ValueModelCreate)
+
++ Response 200 (application/json)
+  + Body
+    {
+      "data": {
+        "id": 6,
+        "tag_id": 1,
+        "value": "d99.i8",
+        "created_at": "2017-09-27T17:42:48.405155665+08:00",
+        "updated_at": "2017-09-27T17:42:48.405155665+08:00"
+      },
+      "message": "ok"
+    }
+
++ Response 400 (application/json)
+  + Body
+    {
+      "error": "Error 1062: Duplicate entry '000-1' for key 'uk_tag_name'"
+    }
+
+## Data Structures
+
+### ValueModelUpdate
++ id: 6 (number,required) - value_model_id
++ value: d91.i3 (string,required) - model value
+
+## Update a ValueModel [/api/v1/imdb/value_model/:id]
+
+### Update a ValueModel [PUT]
+* id: 1 (number) - tag id
+
++ Request v1 (application/json)
+  + Attributes (ValueModelUpdate)
+
++ Response 200 (application/json)
+  + Body
+    {
+      "data": {
+        "id": 6,
+        "tag_id": 1,
+        "value": "d93.i1",
+        "created_at": "2017-09-27T17:42:48+08:00",
+        "updated_at": "2017-09-27T17:54:18.695910748+08:00"
+      },
+      "message": "ok"
+    }
+
++ Response 400 (application/json)
+  + Body
+    {
+      "error": "record not found"
+    }
+
+
+## Data Structures
+
+### ValueModelDelete
+  + value_model_ids: [1,2] (array[number],required) - value_model_id
+
+## Delete a ValueModel [/api/v1/imdb/value_model/:id]
+
+### Delete a ValueModel [DELETE]
+*  id: 1 (number) - tag_id
+* 被將連帶綁定的所有object_tag 都一併刪除
+  * 因為特殊的資料庫設計的因為, 需要手動實做transaction 去刪除
+  * 透過綁定的`vmodel_values` id 去刪除
+  * delete from `object_tag` where tag_id = 1 and id IN (8,9,12);
+
++ Request v1 (application/json)
+  + Attributes (ValueModelDelete)
+
++ Response 200 (application/json)
+  + Body
+  {
+    "data": {
+      "deleted_number_of_object_tags": 3,
+      "deleted_number_of_value_models": 2
+    },
+    "message": "ok"
+  }

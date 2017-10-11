@@ -1,0 +1,131 @@
+FORMAT: 1A
+
+# ObjectTag
+被監控端的標籤屬性管理
+
+
+
+## Get ObjectTag by id [/api/v1/imdb/object_tag/:id]
+
+### Show info of ObjectTag [GET]
+
++ Parameters
+  + id (number) - object tag id
+
++ Response 200 (application/json)
+  + Body
+
+  {
+    "data": {
+      "object_tag": {
+        "id": 1,
+        "tag_id": 1,
+        "resource_object_id": 20,
+        "value_id": 3,
+        "created_by": "",
+        "created_at": "2017-09-28 02:35:32",
+        "updated_at": "2017-09-28 10:35:32"
+      },
+      "value": "c01.i01"
+    }
+  }
+
++ Response 304 (application/json)
+  + Body
+
+  {
+    "error": "not found"
+  }
+
+## Data Structures
+
+### ObjectTagCreate
++ resource_object_id: 1 (number, required) - resource object id, 來源於resource object 表.
++ tag_id: 2 (number, required) - 選擇建立的tag id
++ value_text: 台灣中華機房 (string) - 建立標籤值
++ value_int: 0 (number) - 建立標籤值
+
+## ObjectTag Create [/api/v1/imdb/object_tag]
+
+### Create a ObjectTag [POST]
+* 礙於golang是靜態語言的關係, 所以在api層就將value的型態作為區分, 前端實做時請按照tag_type給出來的型態來請求api
+* 在value_model 的類型的標籤更新時, value_int填入的是 value_model的id不是數值. 例如 [{id: 1, value: "a"},{id: 2, value: "b"}], 使用者選擇了b, 這時帶給後端的請求數值為 `2`
+
++ Request v1 (application/json)
+  + Attributes (ObjectTagCreate)
+
++ Response 200 (application/json)
+  + Body
+
+  {
+    "data": {
+      "object_tag": {
+        "id": 194,
+        "tag_id": 5,
+        "resource_object_id": 4,
+        "value_id": 52,
+        "created_by": "root",
+        "created_at": "2017-09-28 17:49:59",
+        "updated_at": "2017-09-28 17:49:59"
+      },
+      "value": "中華台灣機房"
+    },
+    "message": "ok"
+  }
+
+## Data Structures
+
+### ObjectTagUpdate
++ value_text: "" (string) - 建立標籤值
++ value_int: 30 (number) - 建立標籤值
+
+## ObjectTag Update [/api/v1/imdb/object_tag/:id]
+
+### Update ObjectTag [PUT]
++ Parameters
+  + id (number) - value id
+
++ Request v1 (application/json)
+  + Attributes (ObjectTagUpdate)
+
++ Response 200 (application/json)
+  + Body
+  {
+    "data": {
+      "object_tag": {
+        "id": 13,
+        "tag_id": 4,
+        "resource_object_id": 20,
+        "value_id": 1,
+        "created_by": "",
+        "created_at": "2017-09-27 19:37:02",
+        "updated_at": "2017-09-28 03:37:02"
+      },
+      "value": 30
+    },
+    "message": "ok"
+  }
+
++ Response 304 (application/json)
+  + Body
+  {
+    "error": "not found"
+  }
+
+## ObjectTag Delete [/api/v1/imdb/object_tag/:id]
+
+### Delete a ObjectTag [DELETE]
+
++ Response 200 (application/json)
+  + Body
+  {
+    "message": "ok",
+    "data": {
+      "id": 3,
+      "tag_id": 1,
+      "tag_type": "value_model",
+      "tag_name": "platform",
+      "resource_object_id": 3,
+      "value": "台灣台哥大機房"
+    }
+  }

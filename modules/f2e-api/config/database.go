@@ -15,6 +15,7 @@ type DBPool struct {
 	Uic       *gorm.DB
 	Dashboard *gorm.DB
 	Alarm     *gorm.DB
+	IMDB      *gorm.DB
 
 	//fastweb only
 	Boss *gorm.DB
@@ -35,6 +36,7 @@ func SetLogLevel(loggerlevel bool) {
 	dbp.Dashboard.LogMode(loggerlevel)
 	dbp.Alarm.LogMode(loggerlevel)
 	dbp.Boss.LogMode(loggerlevel)
+	dbp.IMDB.LogMode(loggerlevel)
 }
 
 func InitDB(loggerlevel bool) (err error) {
@@ -88,6 +90,16 @@ func InitDB(loggerlevel bool) (err error) {
 	almd.SingularTable(true)
 	dbp.Alarm = almd
 
+	var imdbda *sql.DB
+	imdbd, err := gorm.Open("mysql", viper.GetString("db.imdb"))
+	imdbd.Dialect().SetDB(imdbda)
+	imdbd.LogMode(loggerlevel)
+	if err != nil {
+		return fmt.Errorf("connect to imdb: %s", err.Error())
+	}
+	imdbd.SingularTable(true)
+	dbp.IMDB = imdbd
+
 	//fastweb only
 	var b *sql.DB
 	bossd, err := gorm.Open("mysql", viper.GetString("db.boss"))
@@ -126,6 +138,11 @@ func CloseDB() (err error) {
 		return
 	}
 
+	err = dbp.IMDB.Close()
+	if err != nil {
+		return
+	}
+
 	//fastweb only
 	err = dbp.Boss.Close()
 	if err != nil {
@@ -156,6 +173,10 @@ func (db DBPool) HealthCheck() (errorBool int, errorTable []string) {
 	}
 	if err := db.Alarm.DB().Ping(); err != nil {
 		errorTable = append(errorTable, "alarm")
+		errorBool = 1
+	}
+	if err := db.IMDB.DB().Ping(); err != nil {
+		errorTable = append(errorTable, "imdb")
 		errorBool = 1
 	}
 	return
