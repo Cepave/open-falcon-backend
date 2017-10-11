@@ -260,8 +260,9 @@ func (f *TestFlags) HasHttpClient() bool {
 //
 // Depcrecated: Use "HasMySqlOfOwlDb(int)" instead.
 func (f *TestFlags) HasMySql() bool {
-	_, ok := f.typedFlags["mysql"]
-	return ok
+	_, oldMySql := f.typedFlags["mysql"]
+
+	return oldMySql || f.HasMySqlOfOwlDb(OWL_DB_PORTAL)
 }
 
 // Gives "true" if and only if "mysql.<db>" property is non-empty
