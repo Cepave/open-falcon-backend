@@ -8,12 +8,18 @@ import (
 )
 
 func health() mvc.OutputBody {
-	diagRdb := rdb.DiagnoseRdb(
-		rdb.DbConfig.Dsn,
-		rdb.DbFacade.SqlDb,
-	)
-	resp := &model.HealthView{
-		Rdb: diagRdb,
+	portalRdbDiag := rdb.GlobalDbHolder.Diagnose(rdb.DB_PORTAL)
+	graphRdbDiag := rdb.GlobalDbHolder.Diagnose(rdb.DB_GRAPH)
+
+	health := &model.HealthView{
+		Rdb: map[string]interface{}{
+			"dsn":              portalRdbDiag.Dsn,
+			"open_connections": portalRdbDiag.OpenConnections,
+			"ping_result":      portalRdbDiag.PingResult,
+			"ping_message":     portalRdbDiag.PingMessage,
+			"portal":           portalRdbDiag,
+			"graph":            graphRdbDiag,
+		},
 		Http: &model.Http{
 			Listening: GinConfig.GetAddress(),
 		},
@@ -24,5 +30,5 @@ func health() mvc.OutputBody {
 		},
 	}
 
-	return mvc.JsonOutputBody(resp)
+	return mvc.JsonOutputBody(health)
 }

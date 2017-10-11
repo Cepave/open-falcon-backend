@@ -8,8 +8,8 @@ import (
 
 // The base environment for RDB testing
 func InitRdb(c *check.C) {
-	dbTest.SetupByViableDbConfig(c, rdb.InitRdb)
+	dbTest.SetupByViableDbConfig(c, rdb.InitPortalRdb)
 }
 func ReleaseRdb(c *check.C) {
-	rdb.ReleaseRdb()
+	rdb.ReleaseAllRdb()
 }

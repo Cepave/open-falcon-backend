@@ -35,7 +35,7 @@ func hidePasswordOfDsn(dsn string) string {
 	}
 
 	return fmt.Sprintf(
-		"%s:!hide password!@%s(%s)/%s",
+		"%s:!hidden password!@%s(%s)/%s",
 		config.User, config.Net, config.Addr,
 		config.DBName,
 	)

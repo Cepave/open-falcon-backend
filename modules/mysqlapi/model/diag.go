@@ -7,7 +7,19 @@ package model
 //       "dsn":"DSN....",
 //       "open_connections":10,
 //       "ping_result":0,
-//       "ping_message":""
+//       "ping_message":"",
+//       "<db1_name>": {
+//       	"dsn":"DSN....",
+//       	"open_connections":10,
+//       	"ping_result":0,
+//       	"ping_message":"",
+//		 },
+//       "<db2_name>": {
+//       	"dsn":"DSN....",
+//       	"open_connections":10,
+//       	"ping_result":0,
+//       	"ping_message":"",
+//		 }
 //    },
 //    "http":{
 //       "listening":":6040"
@@ -19,9 +31,9 @@ package model
 //    }
 // }
 type HealthView struct {
-	Rdb  *Rdb  `json:"rdb"`
-	Http *Http `json:"http"`
-	Nqm  *Nqm  `json:"nqm"`
+	Rdb  map[string]interface{} `json:"rdb"`
+	Http *Http                  `json:"http"`
+	Nqm  *Nqm                   `json:"nqm"`
 }
 
 type Rdb struct {
