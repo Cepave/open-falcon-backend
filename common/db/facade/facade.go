@@ -17,12 +17,21 @@ import (
 // 	sqlx - github.com/Cepave/open-falcon-backend/common/db/sqlx
 // 	database/sql.DB
 // 	dbCtrl
+//
+// Release resources
+//
+// In order to release resources in solid way, this facade provides "SetReleaseCallback(func())" to
+// register callback function which gets called before this object releases the connections of database.
 type DbFacade struct {
 	SqlDb      *sql.DB
 	SqlDbCtrl  *commonDb.DbController
 	GormDb     *gorm.DB
 	SqlxDb     *sqlx.DB
 	SqlxDbCtrl *commonSqlx.DbController
+
+	dbConfig commonDb.DbConfig
+
+	releaseCallback func()
 
 	initialized bool
 }
@@ -32,6 +41,8 @@ func (facade *DbFacade) Open(dbConfig *commonDb.DbConfig) (err error) {
 	if facade.initialized {
 		return
 	}
+
+	facade.dbConfig = *dbConfig
 
 	/**
 	 * Initialize Gorm(It would call ping())
@@ -58,10 +69,28 @@ func (facade *DbFacade) Open(dbConfig *commonDb.DbConfig) (err error) {
 	return
 }
 
+// Gets the configuration of database.
+//
+// Warning: the information of password is revealed
+func (facade *DbFacade) GetDbConfig() *commonDb.DbConfig {
+	newConfig := facade.dbConfig
+	return &newConfig
+}
+
+// Sets the callback used before releasing connections
+func (facade *DbFacade) SetReleaseCallback(callback func()) {
+	facade.releaseCallback = callback
+}
+
 // Close the database, release the resources
 func (facade *DbFacade) Release() {
 	if !facade.initialized {
 		return
+	}
+
+	if facade.releaseCallback != nil {
+		facade.releaseCallback()
+		facade.releaseCallback = nil
 	}
 
 	facade.GormDb.Close()
@@ -71,6 +100,8 @@ func (facade *DbFacade) Release() {
 	facade.GormDb = nil
 	facade.SqlxDb = nil
 	facade.SqlxDbCtrl = nil
+
+	facade.dbConfig = commonDb.DbConfig{}
 
 	facade.initialized = false
 }
