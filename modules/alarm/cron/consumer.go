@@ -89,6 +89,11 @@ func ParseUserSms(event *model.Event, action *api.Action) {
 			Phone:    user.Phone,
 			Status:   status,
 		}
+		// if Phone field with empty string, just skip it.
+		if dto.Phone == "" {
+			log.Println("found SmsDto has phone field with empty string.")
+			continue
+		}
 		bs, err := json.Marshal(dto)
 		if err != nil {
 			log.Println("json marshal SmsDto fail:", err)
