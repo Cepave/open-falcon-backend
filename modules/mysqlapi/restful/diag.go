@@ -2,7 +2,7 @@ package restful
 
 import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
+	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
 )
@@ -12,13 +12,13 @@ func health() mvc.OutputBody {
 		rdb.DbConfig.Dsn,
 		rdb.DbFacade.SqlDb,
 	)
-	resp := &model.HealthView{
+	resp := &apiModel.HealthView{
 		Rdb: diagRdb,
-		Http: &model.Http{
+		Http: &apiModel.Http{
 			Listening: GinConfig.GetAddress(),
 		},
-		Nqm: &model.Nqm{
-			Heartbeat: &model.Heartbeat{
+		Nqm: &apiModel.Nqm{
+			Heartbeat: &apiModel.Heartbeat{
 				Count: service.NqmQueue.ConsumedCount(),
 			},
 		},

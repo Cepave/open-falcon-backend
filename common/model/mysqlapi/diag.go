@@ -1,4 +1,4 @@
-package model
+package mysqlapi
 
 // HealthView is the model for responsed JSON data in ``/health`
 // example:

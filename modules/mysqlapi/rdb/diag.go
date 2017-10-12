@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
+	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 	"github.com/go-sql-driver/mysql"
 )
 
 // Performs the diagnosis to RDB
-func DiagnoseRdb(dsn string, db *sql.DB) *model.Rdb {
+func DiagnoseRdb(dsn string, db *sql.DB) *apiModel.Rdb {
 	var v int
 	err := db.QueryRow("SELECT 0 FROM DUAL").Scan(&v)
 
@@ -20,7 +20,7 @@ func DiagnoseRdb(dsn string, db *sql.DB) *model.Rdb {
 		pingMessage = err.Error()
 	}
 
-	return &model.Rdb{
+	return &apiModel.Rdb{
 		Dsn:             hidePasswordOfDsn(dsn),
 		OpenConnections: db.Stats().OpenConnections,
 		PingResult:      pingResult,
