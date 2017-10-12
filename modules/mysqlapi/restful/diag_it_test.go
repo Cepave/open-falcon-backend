@@ -14,7 +14,7 @@ import (
 var _ = Describe("Test /health", ginkgoDb.NeedDb(func() {
 	It("returns the JSON data", func() {
 		resp := testingHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Get("health"),
 		)
 		jsonBody := resp.GetBodyAsJson()

@@ -90,13 +90,11 @@ func getTargetById(c *gin.Context) {
 }
 
 func listTargets(
-	c *gin.Context,
 	q *commonNqmModel.TargetQuery,
 	p *struct {
 		Paging *commonModel.Paging `mvc:"pageSize[50] pageOrderBy[status#desc:name#asc:host#asc]"`
 	},
 ) (*commonModel.Paging, mvc.OutputBody) {
-	p.Paging = commonGin.PagingByHeader(c, p.Paging)
 	pingtasks, resultPaging := commonNqmDb.ListTargets(q, *p.Paging)
 
 	return resultPaging, mvc.JsonOutputBody(pingtasks)

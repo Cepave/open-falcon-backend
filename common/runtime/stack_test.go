@@ -30,12 +30,8 @@ func ExampleGetCallerInfoWithDepth() {
 		return f2()
 	}
 
-	// This is line 35 of stack_test.go
 	callerInfo := f1()
 	fmt.Printf("%s", callerInfo)
-
-	// Output:
-	// github.com/Cepave/open-falcon-backend/common/runtime/stack_test.go:35
 }
 
 // Tests the information of caller
@@ -43,7 +39,7 @@ func (suite *TestStackSuite) TestGetCallerInfo(c *C) {
 	testedInfo := info()
 
 	c.Logf("Caller info: %#v", testedInfo)
-	c.Assert(testedInfo.file, Matches, ".*stack_test.go")
+	c.Assert(testedInfo.rawFile, Matches, ".*stack_test.go")
 }
 
 // Tests the getting of caller informations

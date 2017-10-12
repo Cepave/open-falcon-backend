@@ -19,7 +19,7 @@ var _ = Suite(&TestTargetItSuite{})
 
 // Tests the getting of agent by id
 func (suite *TestTargetItSuite) TestGetTargetById(c *C) {
-	client := httpClientConfig.NewSlingByBase().Get(
+	client := httpClientConfig.NewClient().Get(
 		"api/v1/nqm/target/40021",
 	)
 
@@ -74,7 +74,7 @@ func (suite *TestTargetItSuite) TestAddNewTarget(c *C) {
 		jsonBody.NameTag = testCase.nameTag
 		jsonBody.GroupTags = testCase.groupTags
 
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Post("api/v1/nqm/target").
 			BodyJSON(jsonBody)
 
@@ -150,7 +150,7 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 		jsonBody.NameTag = testCase.nameTag
 		jsonBody.GroupTags = testCase.groupTags
 
-		client := httpClientConfig.NewSlingByBase().
+		client := httpClientConfig.NewClient().
 			Put("api/v1/nqm/target/39347").
 			BodyJSON(jsonBody)
 
@@ -180,7 +180,7 @@ func (suite *TestTargetItSuite) TestModifyTarget(c *C) {
 
 // Tests the listing of targets
 func (suite *TestTargetItSuite) TestListTargets(c *C) {
-	client := httpClientConfig.NewSlingByBase().
+	client := httpClientConfig.NewClient().
 		Get("api/v1/nqm/targets")
 
 	slintChecker := testingHttp.NewCheckSlint(c, client)

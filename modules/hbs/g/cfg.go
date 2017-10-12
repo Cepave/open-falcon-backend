@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	oModel "github.com/Cepave/open-falcon-backend/common/model"
+
 	"github.com/toolkits/file"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type HttpConfig struct {
@@ -21,12 +24,37 @@ type MysqlApiConfig struct {
 type GlobalConfig struct {
 	Debug     bool            `json:"debug"`
 	Hosts     string          `json:"hosts"`
-	Database  string          `json:"database"`
 	MaxIdle   int             `json:"maxIdle"`
 	Listen    string          `json:"listen"`
 	Trustable []string        `json:"trustable"`
 	Http      *HttpConfig     `json:"http"`
 	MysqlApi  *MysqlApiConfig `json:"mysql_api"`
+}
+
+type RpcView struct {
+	Listen string `json:"listen"`
+}
+
+type FalconAgentView struct {
+	Heartbeat *HeartbeatView `json:"heartbeat"`
+}
+
+// Statistical info of heartbeat service
+type HeartbeatView struct {
+	CurrentSize         int   `json:"current_size"`
+	CumulativeDropped   int64 `json:"cumulative_dropped"`
+	CumulativeReceived  int64 `json:"cumulative_received"`
+	CumulativeProcessed int64 `json:"cumulative_processed"`
+}
+
+// Response struct of /api/v1/health
+type HealthView struct {
+	// Health check value
+	HealthCheck int              `json:"health_check"`
+	MysqlApi    *oModel.MysqlApi `json:"mysql_api"`
+	Http        *HttpConfig      `json:"http"`
+	Rpc         *RpcView         `json:"rpc"`
+	FalconAgent *FalconAgentView `json:"falcon_agent"`
 }
 
 var (

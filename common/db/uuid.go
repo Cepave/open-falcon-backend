@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql/driver"
+
 	"github.com/satori/go.uuid"
 )
 
@@ -26,4 +27,8 @@ func (u DbUuid) Value() (driver.Value, error) {
 
 func (u DbUuid) IsNil() bool {
 	return uuid.UUID(u) == uuid.Nil
+}
+
+func (u DbUuid) ToUuid() uuid.UUID {
+	return uuid.UUID(u)
 }

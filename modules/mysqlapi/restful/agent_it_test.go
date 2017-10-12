@@ -69,7 +69,7 @@ var _ = Describe("Getting NQM agent by id", ginkgoDb.NeedDb(func() {
 
 	It("Get data of a NQM agent", func() {
 		resp := tHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().
+			httpClientConfig.NewClient().
 				Get("api/v1/nqm/agent/36771"),
 		)
 
@@ -116,7 +116,7 @@ var _ = Describe("Adding new NQM agent", ginkgoDb.NeedDb(func() {
 
 	callApi := func(jsonBody interface{}) *tHttp.ResponseResult {
 		return tHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().Post("api/v1/nqm/agent").
+			httpClientConfig.NewClient().Post("api/v1/nqm/agent").
 				BodyJSON(reqBody),
 		)
 	}
@@ -196,7 +196,7 @@ var _ = Describe("Listing agents", ginkgoDb.NeedDb(func() {
 
 	It("Listing without any conditions", func() {
 		result := tHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().Get("api/v1/nqm/agents"),
+			httpClientConfig.NewClient().Get("api/v1/nqm/agents"),
 		)
 		Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
 
@@ -219,7 +219,7 @@ var _ = Describe("Listing targets of agent(ping list)", ginkgoDb.NeedDb(func() {
 	pInt64 := func(v int64) *int64 { return &v }
 	fetchTargets := func(agentId int) *tHttp.ResponseResult {
 		return tHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().Get(
+			httpClientConfig.NewClient().Get(
 				fmt.Sprintf("api/v1/nqm/agent/%d/targets", agentId),
 			),
 		)
@@ -267,7 +267,7 @@ var _ = Describe("Clearing cache of target(ping list) on a agent", ginkgoDb.Need
 
 	callApi := func(agentId int) *tHttp.ResponseResult {
 		return tHttp.NewResponseResultBySling(
-			httpClientConfig.NewSlingByBase().Post(
+			httpClientConfig.NewClient().Post(
 				fmt.Sprintf("api/v1/nqm/agent/%d/targets/clear", agentId),
 			),
 		)
@@ -364,7 +364,7 @@ var _ = Describe("Modifying NQM agent", ginkgoDb.NeedDb(func() {
 			reqJson.GroupTags = groupTags
 
 			result := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewSlingByBase().Put(
+				httpClientConfig.NewClient().Put(
 					fmt.Sprintf("api/v1/nqm/agent/23041"),
 				).BodyJSON(reqJson),
 			)

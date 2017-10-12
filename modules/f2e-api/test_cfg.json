@@ -1,0 +1,54 @@
+{
+  "test_mode": true,
+  "db": {
+    "falcon_portal": "root:password@tcp(0.0.0.0:3307)/falcon_portal?charset=utf8&parseTime=True&loc=Local",
+    "graph": "root:password@tcp(0.0.0.0:3307)/graph?charset=utf8&parseTime=True&loc=Local",
+    "uic": "root:password@tcp(0.0.0.0:3307)/uic?charset=utf8&parseTime=True&loc=Local",
+    "dashboard": "root:password@tcp(0.0.0.0:3307)/dashboard?charset=utf8&parseTime=True&loc=Local",
+    "boss": "root:password@tcp(0.0.0.0:3307)/boss?charset=utf8&parseTime=True&loc=Local",
+    "alarms": "root:password@tcp(0.0.0.0:3307)/falcon_portal?charset=utf8&parseTime=True&loc=Local",
+    "db_debug": true
+  },
+  "signup_disable": false,
+  "log_level": "debug",
+  "graphs": {
+    "cluster": {
+      "graph-01" : "0.0.0.0:6070"
+    },
+    "max_conns": 100,
+    "max_idle": 100,
+    "conn_timeout": 1000,
+    "call_timeout": 5000,
+    "numberOfReplicas": 500
+  },
+  "access_control": true,
+  "gen_doc": false,
+  "gen_doc_path": "doc/module.html",
+  "salt": "salt123",
+  "web_port": ":10080",
+  "skip_auth": false ,
+  "enable_services": true,
+  "services": {
+    "testone": "000000000000"
+  },
+  "frontend": {
+    "enable": false,
+    "folder": "./owlight",
+    "static_path": "./owlight/static"
+  },
+  "web_doc_site":{
+    "enable": false,
+    "folder": "./docs/_site"
+  },
+  "redis": {
+    "enable": false,
+    "address": "127.0.0.1:6379",
+    "password": "",
+    "default_bucket": "extnal_event:all"
+  },
+  "lambda_extends": {
+    "enable": true,
+    "root_dir": "${GOPATH}/github.com/Cepave/open-falcon-backend/modules/f2e-api",
+    "qlimit": 1000
+  }
+}

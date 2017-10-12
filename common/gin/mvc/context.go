@@ -7,13 +7,14 @@ import (
 	"mime/multipart"
 	"reflect"
 
-	"github.com/Cepave/open-falcon-backend/common/model"
-	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
-	ot "github.com/Cepave/open-falcon-backend/common/types"
+	"github.com/gin-gonic/gin"
 	"gopkg.in/go-playground/validator.v9"
 
 	ogin "github.com/Cepave/open-falcon-backend/common/gin"
-	"github.com/gin-gonic/gin"
+	"github.com/Cepave/open-falcon-backend/common/model"
+	oreflect "github.com/Cepave/open-falcon-backend/common/reflect"
+	ot "github.com/Cepave/open-falcon-backend/common/types"
+	ov "github.com/Cepave/open-falcon-backend/common/validate"
 )
 
 // Defines configuration of MVC framework
@@ -26,9 +27,15 @@ type MvcConfig struct {
 
 // Constructs default configuration of MVC framework
 func NewDefaultMvcConfig() *MvcConfig {
+	newValidator := validator.New()
+	ov.RegisterDefaultValidators(newValidator)
+
+	convService := ot.NewDefaultConversionService()
+	ot.AddDefaultConverters(convService)
+
 	return &MvcConfig{
-		ConvertService: ot.NewDefaultConversionService(),
-		Validator:      validator.New(),
+		ConvertService: convService,
+		Validator:      newValidator,
 	}
 }
 

@@ -1,10 +1,11 @@
 package http
 
 import (
-	json "github.com/Cepave/open-falcon-backend/common/json"
-	httptesting "github.com/Cepave/open-falcon-backend/common/testing/http"
-	. "gopkg.in/check.v1"
 	"testing"
+
+	json "github.com/Cepave/open-falcon-backend/common/json"
+	th "github.com/Cepave/open-falcon-backend/common/testing/http"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -13,13 +14,13 @@ type TestCommonSuite struct{}
 
 var _ = Suite(&TestCommonSuite{})
 
-var httpClientConfig = httptesting.NewHttpClientConfigByFlag()
+var httpClientConfig = th.SlingClientConf{itConfig}
 
 // Tests the health
 func (suite *TestCommonSuite) TestHealth(c *C) {
-	slint := httpClientConfig.NewSlingByBase().Get("health")
+	slint := httpClientConfig.NewClient().Get("health")
 
-	slintChecker := httptesting.NewCheckSlint(c, slint)
+	slintChecker := th.NewCheckSlint(c, slint)
 
 	message := slintChecker.GetStringBody(200)
 
@@ -28,9 +29,9 @@ func (suite *TestCommonSuite) TestHealth(c *C) {
 
 // Tests the version
 func (suite *TestCommonSuite) TestVersion(c *C) {
-	slint := httpClientConfig.NewSlingByBase().Get("version")
+	slint := httpClientConfig.NewClient().Get("version")
 
-	slintChecker := httptesting.NewCheckSlint(c, slint)
+	slintChecker := th.NewCheckSlint(c, slint)
 
 	message := slintChecker.GetStringBody(200)
 
@@ -39,9 +40,9 @@ func (suite *TestCommonSuite) TestVersion(c *C) {
 
 // Tests the workdir
 func (suite *TestCommonSuite) TestWorkdir(c *C) {
-	slint := httpClientConfig.NewSlingByBase().Get("workdir")
+	slint := httpClientConfig.NewClient().Get("workdir")
 
-	slintChecker := httptesting.NewCheckSlint(c, slint)
+	slintChecker := th.NewCheckSlint(c, slint)
 
 	jsonMessage := slintChecker.GetJsonBody(200)
 
@@ -51,9 +52,9 @@ func (suite *TestCommonSuite) TestWorkdir(c *C) {
 
 // Tests the reload of configuration
 func (suite *TestCommonSuite) TestReloadConfig(c *C) {
-	slint := httpClientConfig.NewSlingByBase().Get("config/reload")
+	slint := httpClientConfig.NewClient().Get("config/reload")
 
-	slintChecker := httptesting.NewCheckSlint(c, slint)
+	slintChecker := th.NewCheckSlint(c, slint)
 
 	jsonMessage := slintChecker.GetJsonBody(200)
 
@@ -62,5 +63,9 @@ func (suite *TestCommonSuite) TestReloadConfig(c *C) {
 }
 
 func (s *TestCommonSuite) SetUpSuite(c *C) {
+	if !testFlags.HasHttpClient() {
+		c.Skip("Skipping testng because properties HTTP client is missing")
+		return
+	}
 	c.Logf("Testing service of common: %s", httpClientConfig)
 }

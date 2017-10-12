@@ -4,9 +4,11 @@ import (
 	"database/sql/driver"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/Cepave/open-falcon-backend/common/types"
 )
 
-type Bytes16 [16]byte
+type Bytes16 types.Bytes16
 
 // Supports hex string or bytes
 func (b *Bytes16) Scan(src interface{}) error {
@@ -16,11 +18,11 @@ func (b *Bytes16) Scan(src interface{}) error {
 
 	var srcBytes []byte
 
-	switch src.(type) {
+	switch srcValue := src.(type) {
 	case []byte:
-		srcBytes = src.([]byte)
+		srcBytes = srcValue
 	case string:
-		decodedHex, err := hex.DecodeString("810512c76a1c44ddb0d6097ef4ef156e")
+		decodedHex, err := hex.DecodeString(srcValue)
 		if err != nil {
 			return err
 		}

@@ -5,7 +5,7 @@ import (
 )
 
 type BossHost struct {
-	Platform string `json:"platform" gorm:"column:platform"`
+	Platform string `json:"platform" gorm:"column:platforms"`
 	Province string `json:"province" gorm:"column:province"`
 	Isp      string `json:"isp"  gorm:"column:isp"`
 	Idc      string `json:"idc" gorm:"column:idc"`
@@ -20,6 +20,6 @@ func (this BossHost) TableName() string {
 func GetBossObjs() (res []BossHost) {
 	db := con.Con()
 	res = []BossHost{}
-	db.Boss.Select("platform, province, isp, idc, ip, hostname").Table("hosts").Where("exist = 1").Scan(&res)
+	db.Boss.Select("platforms, province, isp, idc, ip, hostname").Table("hosts").Where("exist = 1").Scan(&res)
 	return res
 }

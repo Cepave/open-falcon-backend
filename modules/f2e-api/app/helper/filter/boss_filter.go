@@ -12,6 +12,7 @@ func PlatformFilter(dat []boss.BossHost, filterTxt string, limit int) []boss.Bos
 	for _, n := range dat {
 		if strings.Contains(n.Platform, filterTxt) {
 			res = append(res, n)
+			res[len(res)-1].Platform = filterTxt
 			count += 1
 		}
 		if count >= limit {

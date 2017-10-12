@@ -1,21 +1,27 @@
 package http
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/hbs/cache"
+	"github.com/Cepave/open-falcon-backend/modules/hbs/service"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func configProcRoutes(router *gin.Engine) {
-	router.GET("/expressions", gin.WrapF(expressions))
-	router.GET("/plugins/", gin.WrapF(plugins))
+	router.GET("/expressions", expressions)
+	router.GET("/plugins/:hostname", plugins)
 }
 
-func expressions(w http.ResponseWriter, r *http.Request) {
-	RenderDataJson(w, cache.ExpressionCache.Get())
+func expressions(c *gin.Context) {
+	d, err := service.Expressions()
+	if err != nil {
+		logger.Errorln(err)
+	}
+	RenderDataJson(c.Writer, d)
 }
 
-func plugins(w http.ResponseWriter, r *http.Request) {
-	hostname := r.URL.Path[len("/plugins/"):]
-	RenderDataJson(w, cache.GetPlugins(hostname))
+func plugins(c *gin.Context) {
+	d, err := service.Plugins(c.Param("hostname"))
+	if err != nil {
+		logger.Errorln(err)
+	}
+	RenderDataJson(c.Writer, d)
 }

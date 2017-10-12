@@ -11,6 +11,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/app/controller"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/config"
 	"github.com/Cepave/open-falcon-backend/modules/f2e-api/graph"
+	jconf "github.com/Cepave/open-falcon-backend/modules/f2e-api/lambda_extends/conf"
 	"github.com/gin-gonic/gin"
 	yaagGin "github.com/masato25/yaag/gin"
 	"github.com/masato25/yaag/yaag"
@@ -43,6 +44,13 @@ func main() {
 		os.Exit(0)
 	}
 
+	var err error
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	viper.Set("lambda_extends.root_dir", pwd)
 	viper.AddConfigPath(".")
 	viper.AddConfigPath("/")
 	viper.AddConfigPath("./config")
@@ -50,7 +58,7 @@ func main() {
 	cfg = strings.Replace(cfg, ".json", "", 1)
 	viper.SetConfigName(cfg)
 
-	err := viper.ReadInConfig()
+	err = viper.ReadInConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,9 +93,22 @@ func main() {
 		viper.GetString("redis.default_bucket"),
 	)
 
+	//inject lambda web
+	if viper.GetBool("lambda_extends.enable") {
+		jconf.ReadConf()
+	}
+
 	//start gin server
-	log.Debugf("will start with port:%v", viper.GetString("web_port"))
-	go controller.StartGin(viper.GetString("web_port"), routes, false)
+	log.Debugf("will start with port: %v, test_mode: %v", viper.GetString("web_port"), viper.GetBool("test_mode"))
+	if viper.GetBool("test_mode") {
+		go func() {
+			ginTest := controller.StartGin(viper.GetString("web_port"), routes, viper.GetBool("test_mode"))
+			ginTest.Run(viper.GetString("web_port"))
+		}()
+	} else {
+		go controller.StartGin(viper.GetString("web_port"), routes, viper.GetBool("test_mode"))
+	}
+
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {

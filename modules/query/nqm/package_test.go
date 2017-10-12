@@ -1,19 +1,33 @@
 package nqm
 
 import (
-	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
-	. "gopkg.in/check.v1"
 	"testing"
+
+	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	qtest "github.com/Cepave/open-falcon-backend/modules/query/test"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	ch "gopkg.in/check.v1"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestByGinkgo(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Base Suite")
+}
+
+func TestByCheck(t *testing.T) {
+	ch.TestingT(t)
+}
 
 type dbTestSuite struct{}
 
-func (s *dbTestSuite) SetUpSuite(c *C) {
+func (s *dbTestSuite) SetUpSuite(c *ch.C) {
 	qtest.InitDb(c)
 	initServices()
 }
-func (s *dbTestSuite) TearDownSuite(c *C) {
+func (s *dbTestSuite) TearDownSuite(c *ch.C) {
 	qtest.ReleaseDb(c)
 }
+
+var ginTestServer = tHttp.GinTestServer

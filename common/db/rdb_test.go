@@ -2,12 +2,10 @@ package db
 
 import (
 	"database/sql"
+
 	_ "github.com/mattn/go-sqlite3"
 	. "gopkg.in/check.v1"
-	"testing"
 )
-
-func Test(t *testing.T) { TestingT(t) }
 
 type TestRdbSuite struct{}
 

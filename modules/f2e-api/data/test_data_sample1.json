@@ -1,0 +1,142 @@
+[
+  {
+    "endpoint": "hostA",
+    "counter": "cpu.idle",
+    "dstype": "GAUGE",
+    "step": 60,
+    "Values": [
+      {
+        "timestamp": 1504238940,
+        "value": 100
+      },
+      {
+        "timestamp": 1504239000,
+        "value": 99
+      },
+      {
+        "timestamp": 1504239060,
+        "value": 98
+      },
+      {
+        "timestamp": 1504239120,
+        "value": 100
+      },
+      {
+        "timestamp": 1504239180,
+        "value": 100
+      }
+    ]
+  },
+  {
+    "endpoint": "hostB",
+    "counter": "cpu.idle",
+    "dstype": "GAUGE",
+    "step": 60,
+    "Values": [
+      {
+        "timestamp": 1504239000,
+        "value": 98
+      },
+      {
+        "timestamp": 1504239060,
+        "value": 89
+      },
+      {
+        "timestamp": 1504239120,
+        "value": 87
+      },
+      {
+        "timestamp": 1504239180,
+        "value": 80
+      },
+      {
+        "timestamp": 1504239240,
+        "value": 85
+      }
+    ]
+  },
+  {
+    "endpoint": "hostC",
+    "counter": "cpu.idle",
+    "dstype": "GAUGE",
+    "step": 60,
+    "Values": [
+      {
+        "timestamp": 1504239000,
+        "value": 60
+      },
+      {
+        "timestamp": 1504239060,
+        "value": 58
+      },
+      {
+        "timestamp": 1504239120,
+        "value": 55
+      },
+      {
+        "timestamp": 1504239180,
+        "value": 40
+      },
+      {
+        "timestamp": 1504239240,
+        "value": 45
+      }
+    ]
+  },
+  {
+    "endpoint": "hostD",
+    "counter": "cpu.idle",
+    "dstype": "GAUGE",
+    "step": 60,
+    "Values": [
+      {
+        "timestamp": 1504239000,
+        "value": 70
+      },
+      {
+        "timestamp": 1504239060,
+        "value": 75
+      },
+      {
+        "timestamp": 1504239120,
+        "value": 80
+      },
+      {
+        "timestamp": 1504239180,
+        "value": 83
+      },
+      {
+        "timestamp": 1504239240,
+        "value": 83
+      }
+    ]
+  },
+  {
+    "endpoint": "hostE",
+    "counter": "cpu.idle",
+    "dstype": "GAUGE",
+    "step": 60,
+    "Values": [
+      {
+        "timestamp": 1504239000,
+        "value": 3
+      },
+      {
+        "timestamp": 1504239060,
+        "value": 5
+      },
+      {
+        "timestamp": 1504239120,
+        "value": 2
+      },
+      {
+        "timestamp": 1504239180,
+        "value": 3
+      },
+      {
+        "timestamp": 1504239240,
+        "value": 10
+      }
+    ]
+  }
+]

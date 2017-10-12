@@ -32,12 +32,17 @@ func OpenClientBenchmark(b *testing.B, callback FuncJsonRpcClientCallback) {
 	callback(client)
 }
 
-func HasJsonRpcServ(c *check.C) bool {
-	var hasJsonRpcHost = *jsonRpcHost != ""
+// Prepends "BeforeEach()" for skipping if there is no value for JSONRPC flags.
+//
+// Deprecated: Try to use "flag.SkipFactory"
+//
+// See "common/testing/flag"
+func HasJsonRpcClient(c *check.C) bool {
+	hasJsonRpcClient := getTestFlags().HasJsonRpcClient()
 
-	if !hasJsonRpcHost {
-		c.Skip("Skip json-rpc testing. Needs \"-jsonrpc.host=<Host address of JSON-RPC>\"")
+	if !hasJsonRpcClient {
+		c.Skip(flagMessage)
 	}
 
-	return hasJsonRpcHost
+	return hasJsonRpcClient
 }

@@ -1,19 +1,19 @@
 package validator
 
 import (
-	"gopkg.in/check.v1"
+	ch "gopkg.in/check.v1"
 	"gopkg.in/go-playground/validator.v9"
 )
 
 // Asserts that there is an field error with specifying name
-func AssertSingleErrorForField(c *check.C, err error, expectedFieldName string) {
-	c.Assert(err, check.NotNil, check.Commentf("The expected error of validation is nil"))
+func AssertSingleErrorForField(c *ch.C, err error, expectedFieldName string) {
+	c.Assert(err, ch.NotNil, ch.Commentf("The expected error of validation is nil"))
 
 	validateErrors, ok := err.(validator.ValidationErrors)
 
 	c.Assert(
-		ok, check.Equals, true,
-		check.Commentf("Cannot cast error to validator.ValidationErrors"),
+		ok, ch.Equals, true,
+		ch.Commentf("Cannot cast error to validator.ValidationErrors"),
 	)
 
 	for _, fieldError := range validateErrors {

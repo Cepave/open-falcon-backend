@@ -112,3 +112,59 @@ type FalconAgentHeartbeat struct {
 type FalconAgentHeartbeatResult struct {
 	RowsAffected int64 `json:"rows_affected"`
 }
+
+type NewAgentPluginsResponse struct {
+	Plugins   []string `json:"plugins"`
+	Timestamp int64    `json:"timestamp"`
+	GitRepo   string   `json:"git_repo" conform:"trim"`
+}
+
+func (this *NewAgentPluginsResponse) String() string {
+	return fmt.Sprintf(
+		"<Plugins:%v, Timestamp:%v, GitRepo:%v>",
+		this.Plugins,
+		this.Timestamp,
+		this.GitRepo,
+	)
+}
+
+// e.g. net.port.listen or proc.num
+type NewBuiltinMetric struct {
+	Metric string `json:"metric"`
+	Tags   string `json:"tags"`
+}
+
+func (this *NewBuiltinMetric) String() string {
+	return fmt.Sprintf(
+		"%s/%s",
+		this.Metric,
+		this.Tags,
+	)
+}
+
+type NewBuiltinMetricResponse struct {
+	Metrics   []*NewBuiltinMetric `json:"metrics"`
+	Checksum  string              `json:"checksum"`
+	Timestamp int64               `json:"timestamp"`
+}
+
+func (this *NewBuiltinMetricResponse) String() string {
+	return fmt.Sprintf(
+		"<Metrics:%v, Checksum:%s, Timestamp:%v>",
+		this.Metrics,
+		this.Checksum,
+		this.Timestamp,
+	)
+}
+
+type NewBuiltinMetricSlice []*NewBuiltinMetric
+
+func (this NewBuiltinMetricSlice) Len() int {
+	return len(this)
+}
+func (this NewBuiltinMetricSlice) Swap(i, j int) {
+	this[i], this[j] = this[j], this[i]
+}
+func (this NewBuiltinMetricSlice) Less(i, j int) bool {
+	return this[i].String() < this[j].String()
+}

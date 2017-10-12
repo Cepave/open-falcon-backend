@@ -14,13 +14,11 @@ import (
 )
 
 func listPingtasks(
-	c *gin.Context,
 	q *commonNqmModel.PingtaskQuery,
 	p *struct {
 		Paging *commonModel.Paging `mvc:"pageSize[50] pageOrderBy[enable#desc:name#asc:num_of_enabled_agents#desc]"`
 	},
 ) (*commonModel.Paging, mvc.OutputBody) {
-	p.Paging = commonGin.PagingByHeader(c, p.Paging)
 	pingtasks, resultPaging := commonNqmDb.ListPingtasks(q, *p.Paging)
 
 	return resultPaging, mvc.JsonOutputBody(pingtasks)

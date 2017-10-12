@@ -48,7 +48,7 @@ var _ = Describe("[Intg] Test listhosts", ginkgoDb.NeedDb(func() {
 	DescribeTable("when page size is",
 		func(pageSize int, expectedHostsNums int) {
 			result := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewSlingByBase().Get("api/v1/hosts").Set("page-size", strconv.Itoa(pageSize)),
+				httpClientConfig.NewClient().Get("api/v1/hosts").Set("page-size", strconv.Itoa(pageSize)),
 			)
 			Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
 
@@ -90,7 +90,7 @@ var _ = Describe("[Intg] Test listHostgroups", ginkgoDb.NeedDb(func() {
 	DescribeTable("when page size is",
 		func(pageSize int, expectedHostsNums int) {
 			result := tHttp.NewResponseResultBySling(
-				httpClientConfig.NewSlingByBase().Get("api/v1/hostgroups").Set("page-size", strconv.Itoa(pageSize)),
+				httpClientConfig.NewClient().Get("api/v1/hostgroups").Set("page-size", strconv.Itoa(pageSize)),
 			)
 			Expect(result).To(ogko.MatchHttpStatus(http.StatusOK))
 

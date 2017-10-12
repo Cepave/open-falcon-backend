@@ -1,0 +1,32 @@
+[
+  {
+    "function_name": "avgCompare",
+    "file_path": "avgCompare.js",
+    "params": ["cond:string"],
+    "description": "找出高/低於平均值的機器"
+  },
+  {
+    "function_name": "top",
+    "file_path": "top.js",
+    "params": ["limit:int", "orderby:string", "sortby:string"],
+    "description": "找出topN的機器. orderby 調整正負排序. sortby指定比較基準數值 Mean/Max/Min"
+  },
+  {
+    "function_name": "sumAll",
+    "file_path": "sumAll.js",
+    "params": ["aliasName:string"],
+    "description": "加總所有的數值"
+  },
+  {
+    "function_name": "limit",
+    "file_path": "limit.js",
+    "params": ["limit:int"],
+    "description": "只拿出前幾筆查條件來畫圖"
+  },
+  {
+    "function_name": "topDiff",
+    "file_path": "topDiff.js",
+    "params": ["limit:int", "orderby:string", "sortby:string"],
+    "description": "找出兩點間成長幅度最高/低的metric, orderby 調整正負排序. sortby指定比較基準數值 Mean/Max/Min"
+  }
+]

@@ -18,6 +18,6 @@ CREATE TABLE IF NOT EXISTS event_note (
     ON UPDATE CASCADE
 );
 
-ALTER TABLE falcon_portal.event_cases
+ALTER TABLE event_cases
   ADD COLUMN process_note MEDIUMINT,
   ADD COLUMN process_status VARCHAR(20) DEFAULT 'unresolved'

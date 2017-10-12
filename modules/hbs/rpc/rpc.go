@@ -17,7 +17,7 @@ type NqmAgent int
 
 func Start() {
 	nqmAgentHbsService.Start()
-	agentHeartbeatService.Start()
+	AgentHeartbeatService.Start()
 
 	addr := g.Config().Listen
 
@@ -46,5 +46,5 @@ func Start() {
 }
 func Stop() {
 	nqmAgentHbsService.Stop()
-	agentHeartbeatService.Stop()
+	AgentHeartbeatService.Stop()
 }

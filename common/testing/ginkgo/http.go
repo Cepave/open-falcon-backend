@@ -2,9 +2,12 @@ package ginkgo
 
 import (
 	"fmt"
-	ohttp "github.com/Cepave/open-falcon-backend/common/testing/http"
-	. "github.com/onsi/gomega/types"
 	"net/http"
+
+	ohttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	gt "gopkg.in/h2non/gentleman.v2"
+
+	. "github.com/onsi/gomega/types"
 )
 
 // Matches the status of HTTP response, the type of tested value could be:
@@ -98,9 +101,11 @@ func getResponse(actual interface{}) *http.Response {
 	switch v := actual.(type) {
 	case *ohttp.ResponseResult:
 		return v.Response
+	case *gt.Response:
+		return v.RawResponse
 	case *http.Response:
 		return v
 	}
 
-	return nil
+	panic(fmt.Sprintf("Unsupported type of response: %T", actual))
 }

@@ -1,168 +1,229 @@
 package http
 
 import (
-	"fmt"
-	owlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
-	ojson "github.com/Cepave/open-falcon-backend/common/json"
-	httpT "github.com/Cepave/open-falcon-backend/common/testing/http"
-	t "github.com/Cepave/open-falcon-backend/modules/query/test"
-	sjson "github.com/bitly/go-simplejson"
-	. "gopkg.in/check.v1"
 	"net/http"
+	"net/http/httptest"
+	"time"
+
+	"github.com/satori/go.uuid"
+
+	oHttp "github.com/Cepave/open-falcon-backend/common/http/client"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	tg "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
+	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
+	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestNqmItSuite struct{}
+var itConfig = tHttp.NewHttpClientConfigByFlag()
+var itClient = tHttp.GentlemanClientConf{itConfig}
 
-var _ = Suite(&TestNqmItSuite{})
+var gockConfig = mock.GockConfigBuilder.NewConfigByRandom()
+var fakeServerConfig = &tHttp.FakeServerConfig{"127.0.0.1", 6040}
 
-var httpClientConfig = httpT.NewHttpClientConfigByFlag()
+var _ = Describe("[POST] on /nqm/icmp/compound-report", func() {
+	skipItOnMySqlApi.BeforeEachSkip()
 
-// Tests the building of ICMP query
-func (suite *TestNqmItSuite) TestBuildQueryOfIcmp(c *C) {
-	testCases := []*struct {
-		metricFilter   string
-		expectedStatus int
-	}{
-		{"$min >= 55", http.StatusOK},
-		{"$min >= invalid", http.StatusBadRequest},
-	}
+	var (
+		mockMysqlApiServer *httptest.Server
+		currentUuid        string
+	)
 
-	var loadFunc = func(metricFilter string, expectedStatus int) *sjson.Json {
-		jsonBody := ojson.RawJsonForm(fmt.Sprintf(
-			// Uses default conditions
-			`
-			{
-				"filters": {
-					"time": {
-						"start_time": 209807000,
-						"end_time": 209847000
+	BeforeEach(func() {
+		mockMysqlApiServer = gockConfig.HttpTest.NewServer(fakeServerConfig)
+		mockMysqlApiServer.Start()
+	})
+	AfterEach(func() {
+		mockMysqlApiServer.Close()
+		mockMysqlApiServer = nil
+		gockConfig.Off()
+	})
+
+	Context("Successful building of query", func() {
+		BeforeEach(func() {
+			var (
+				currentContent    string
+				currentMd5Content string
+			)
+
+			currentUuid = uuid.NewV4().String()
+			gockConfig.New().Post("/owl/query-object").
+				MatchType("json").
+				Filter(
+					func(req *http.Request) bool {
+						json := ojson.UnmarshalToJson(req.Body)
+
+						/**
+						 * Loads fed binary data and output as same as source
+						 */
+						currentContent = json.Get("content").MustString()
+						currentMd5Content = json.Get("md5_content").MustString()
+						GinkgoT().Logf("Content: %s", currentContent)
+						GinkgoT().Logf("Md5 Content: %s", currentMd5Content)
+						// :~)
+
+						return true
 					},
-					"metrics": "%s"
-				}
-			}
-			`, metricFilter,
-		))
+				).
+				Reply(http.StatusOK).
+				JSON(map[string]interface{}{
+					"uuid":          currentUuid,
+					"feature_name":  "nqm.compound.report",
+					"content":       currentContent,
+					"md5_content":   currentMd5Content,
+					"creation_time": time.Now().Unix(),
+					"access_time":   time.Now().Unix(),
+				})
+		})
 
-		return httpT.NewCheckSlint(
-			c,
-			httpClientConfig.NewSlingByBase().
-				Post("nqm/icmp/compound-report").
-				BodyJSON(jsonBody),
-		).
-			GetJsonBody(expectedStatus)
-	}
+		DescribeTable("The UUID should be same as generated",
+			func(queryBody map[string]interface{}) {
+				resp, err := itClient.NewClient().Path("/nqm/icmp/compound-report").
+					Post().
+					JSON(queryBody).
+					Send()
 
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
+				Expect(err).To(Succeed())
+				defer resp.Close()
 
-		testedJson := loadFunc(testCase.metricFilter, testCase.expectedStatus)
-		testedJsonString, _ := testedJson.MarshalJSON()
+				Expect(resp).To(tg.MatchHttpStatus(http.StatusOK))
 
-		c.Logf("JSON Response: %s", testedJsonString)
+				jsonBody := oHttp.ToGentlemanResp(resp).MustGetJson()
 
-		switch testCase.expectedStatus {
-		case http.StatusOK:
-			c.Assert(testedJson.Get("query_id").MustString(), HasLen, 36, comment)
-		case http.StatusBadRequest:
-			c.Assert(testedJson.Get("error_code").MustInt(), Equals, 1, comment)
-		default:
-			c.Fail()
+				jsonText, _ := jsonBody.MarshalJSON()
+				GinkgoT().Logf("JSON Result: %s", jsonText)
+
+				Expect(jsonBody.Get("query_id").MustString()).To(Equal(currentUuid))
+			},
+			Entry("Get a new UUID by empty JSON body: \"{}\"", map[string]interface{}{}),
+			Entry(`Get a new UUID by filter of agent: "connection_id": []string{ "conn-id-1", "conn-id-2" }`,
+				map[string]interface{}{
+					"filters": map[string]interface{}{
+						"target": map[string]interface{}{
+							"host": []string{"pc-01", "pc-02"},
+						},
+						//"agent": map[string]interface{} {
+						//"connection_id": []string{ "conn-id-1", "conn-id-2" },
+						//},
+					},
+				},
+			),
+		)
+	})
+
+	Context("Error of DSL(metric filter)", func() {
+		It("Get status of \"Bad Request(400)\" and < \"error_code\": 1 >(JSON)", func() {
+			resp, err := itClient.NewClient().Path("/nqm/icmp/compound-report").
+				Post().
+				JSON(map[string]interface{}{
+					"filters": map[string]interface{}{
+						"metrics": "$min >= ccl",
+					},
+				}).Send()
+
+			Expect(err).To(Succeed())
+			defer resp.Close()
+
+			Expect(resp).To(tg.MatchHttpStatus(http.StatusBadRequest))
+
+			jsonBody := oHttp.ToGentlemanResp(resp).MustGetJson()
+
+			jsonText, _ := jsonBody.MarshalJSON()
+			GinkgoT().Logf("JSON Result for error: %s", jsonText)
+
+			Expect(jsonBody.Get("error_code").MustInt()).To(BeEquivalentTo(1))
+		})
+	})
+})
+
+var _ = Describe("[GET] on /nqm/icmp/compound-report/query/{uuid}", func() {
+	skipItOnMySqlApi.BeforeEachSkip()
+
+	var (
+		mockMysqlApiServer *httptest.Server
+		currentUuid        string
+	)
+
+	BeforeEach(func() {
+		mockMysqlApiServer = gockConfig.HttpTest.NewServer(fakeServerConfig)
+		mockMysqlApiServer.Start()
+	})
+	AfterEach(func() {
+		mockMysqlApiServer.Close()
+		mockMysqlApiServer = nil
+		gockConfig.Off()
+	})
+
+	Context("Get viable query", func() {
+		BeforeEach(func() {
+			currentUuid = uuid.NewV4().String()
+			gockConfig.New().Get("/api/v1/owl/query-object/" + currentUuid).
+				Reply(http.StatusOK).
+				JSON(map[string]interface{}{
+					"uuid":          currentUuid,
+					"feature_name":  "nqm.compound.report",
+					"content":       "tJDBbsQgDET/Zc5U6vaYX4lWCBHKWkoMApO2WvHvFSQtXanXPaGxB7+x73inVVzKmO4Q2lx7s5gk+lBc1lXB8fKgJWgOH81bmAQTblDYzVocpkutCsY7ltZn037NV4VbyDIURW2WJbmcD20Ds7NCgTUtpyVHTcvZjynsxNaNiiX5GqpN1mL8qPgUSvxbqgpiknf/5MI0I9qX1wtUf9/wHP7mJJHNmIB6Ooh9y3MebD6CPdxnwHFQ0bNhQFvan9U6JxSJpe/5S5yxmU8obMRQMLuHwhr6eBsKC661fgMAAP//AQAA//8=",
+					"md5_content":   "iyunvQkZgMBp2hxsm4x5Kw==",
+					"creation_time": time.Now().Unix(),
+					"access_time":   time.Now().Unix(),
+				})
+		})
+
+		It(`Filter of target matches host on ["pc01", "pc02"]`, func() {
+			resp, err := itClient.NewClient().Path("/nqm/icmp/compound-report/query/" + currentUuid).
+				Get().
+				Send()
+
+			Expect(err).To(Succeed())
+			defer resp.Close()
+
+			Expect(resp).To(tg.MatchHttpStatus(http.StatusOK))
+
+			jsonBody := oHttp.ToGentlemanResp(resp).MustGetJson()
+
+			jsonText, _ := jsonBody.MarshalJSON()
+			GinkgoT().Logf("JSON Result: %s", jsonText)
+
+			Expect(jsonBody.GetPath("target", "host").MustStringArray()).To(Equal([]string{"pc-01", "pc-02"}))
+		})
+	})
+
+	Context("Get non-existing query", func() {
+		BeforeEach(func() {
+			currentUuid = uuid.NewV4().String()
+			gockConfig.New().Get("/api/v1/owl/query-object/" + currentUuid).
+				Reply(http.StatusNotFound).
+				JSON(map[string]interface{}{
+					"uuid":        currentUuid,
+					"http_status": http.StatusNotFound,
+					"error_code":  1,
+					"uri":         "/owl/query-object/" + currentUuid,
+				})
+		})
+
+		performTest := func() {
+			resp, err := itClient.NewClient().Path("/nqm/icmp/compound-report/query/" + currentUuid).
+				Get().
+				Send()
+
+			Expect(err).To(Succeed())
+			defer resp.Close()
+
+			Expect(resp).To(tg.MatchHttpStatus(http.StatusNotFound))
+
+			jsonBody := oHttp.ToGentlemanResp(resp).MustGetJson()
+
+			jsonText, _ := jsonBody.MarshalJSON()
+			GinkgoT().Logf("JSON Result for error: %s", jsonText)
+
+			Expect(jsonBody.GetPath("uri").MustString()).To(ContainSubstring(currentUuid))
+			Expect(jsonBody.GetPath("error_code").MustInt()).To(BeEquivalentTo(1))
 		}
-	}
-}
 
-// Tests the getting of content for a query by UUID
-func (suite *TestNqmItSuite) TestGetQueryContentOfIcmp(c *C) {
-	testCases := []*struct {
-		sampleUuid     string
-		expectedStatus int
-	}{
-		{"1B57D5EA-A02D-4942-871E-C9AFC2916BB1", http.StatusOK},
-		{"046084CD-05F7-09C8-09E9-0209CF8D0543", http.StatusNotFound},
-		{"046084CD-05F7-09C8-09E9-0209CF8D0543", http.StatusNotFound}, // Repeats the non-existing query
-		{"zzoo--cc", http.StatusNotFound},
-	}
-
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
-
-		/**
-		 * Calls RESTful service and retrieve data
-		 */
-		slingObject := httpClientConfig.NewSlingByBase().
-			Get("nqm/icmp/compound-report/query/" + testCase.sampleUuid)
-
-		clientChecker := httpT.NewCheckSlint(c, slingObject)
-
-		jsonBody := clientChecker.GetJsonBody(testCase.expectedStatus)
-
-		jsonString, _ := jsonBody.MarshalJSON()
-		// :~)
-
-		c.Logf("JSON Response: %s", jsonString)
-
-		switch testCase.expectedStatus {
-		case http.StatusOK:
-			/**
-			 * Asserts the normal(200) result
-			 */
-			c.Assert(
-				jsonBody.GetPath("output", "metrics").MustArray(),
-				HasLen,
-				5,
-				comment,
-			)
-			// :~)
-		case http.StatusNotFound:
-			/**
-			 * Asserts the 404 result
-			 */
-			c.Assert(jsonBody.Get("error_code").MustInt(), Equals, 1, comment)
-			c.Assert(jsonBody.Get("uri").MustString(), Matches, ".*"+testCase.sampleUuid+".*", comment)
-			// :~)
-		default:
-			c.Fail()
-		}
-	}
-}
-
-func (s *TestNqmItSuite) SetUpTest(c *C) {
-	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
-
-	switch c.TestName() {
-	case "TestNqmItSuite.TestGetQueryContentOfIcmp":
-		inTx(
-			`
-			INSERT INTO owl_query(qr_uuid, qr_named_id, qr_md5_content, qr_content, qr_time_access, qr_time_creation)
-			VALUES(
-				x'1B57D5EAA02D4942871EC9AFC2916BB1',
-				'nqm.compound.report',
-				x'CE402A1EB8126D0111CD4DF80ECC114C',
-				x'B450CB6EC4200CFC179F73C8567D44FB2B518410A1D45262233069AB15FF5E48A2B2957ADD8B61C68F19FB06EFB8880D11AE37105C6D7DA3E820EA4097A7D797B76118FABE034BF31D3B5C9EFBCA0A2BE2CFDA970805AE001D6C7A49A5ACCFB903ED2C494D93AEADE3D4C107476908BDD2F31C6C8C07364C648D2093C2F92C89BEFCCFBC0FBC2119DB1883F2DD509DAC44BBC6B8C0C9DF53C556D9D1D97F7C3D4C70B512D0C47AA07C5620B96AE0BCD07838F97390260E872AECDEA089C2D476D97538894FFB62BF8A23ACFAABF4AC4825EACD95B8F03EDE702ADA53CE3F000000FFFF010000FFFF',
-				NOW(), NOW()
-			)
-			`,
-		)
-	}
-}
-func (s *TestNqmItSuite) TearDownTest(c *C) {
-	inTx := owlDb.DbFacade.SqlDbCtrl.ExecQueriesInTx
-
-	switch c.TestName() {
-	case "TestNqmItSuite.TestGetQueryContentOfIcmp":
-		inTx(
-			"DELETE FROM owl_query WHERE qr_named_id = 'nqm.compound.report'",
-		)
-	case "TestNqmItSuite.TestBuildQueryOfIcmp":
-		inTx(
-			"DELETE FROM owl_query WHERE qr_named_id = 'nqm.compound.report'",
-		)
-	}
-}
-
-func (s *TestNqmItSuite) SetUpSuite(c *C) {
-	t.InitDb(c)
-}
-func (s *TestNqmItSuite) TearDownSuite(c *C) {
-	t.ReleaseDb(c)
-}
+		It(`Should got 404(Not Found)`, performTest)
+		It(`Should got 404(Not Found) - again`, performTest)
+	})
+})
