@@ -77,7 +77,9 @@ func WriteSms(tos []string, content string) {
 	if len(tos) == 0 {
 		return
 	}
-
+	if len(strings.Join(tos, ",")) == 0 {
+		return
+	}
 	sms := &model.Sms{Tos: strings.Join(tos, ","), Content: content}
 	WriteSmsModel(sms)
 }
