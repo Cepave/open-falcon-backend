@@ -1,6 +1,7 @@
 package test
 
 import (
+	"flag"
 	"testing"
 
 	coommonModel "github.com/Cepave/open-falcon-backend/common/model"
@@ -10,14 +11,23 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+var (
+	err error
+	q   orm.Ormer
+	// events []eventOpt.EventCases
+	event              eventOpt.EventCases
+	runIntegrationTest bool
+)
+
+func init() {
+	flag.BoolVar(&runIntegrationTest, "integration", false, "run with integration testing. (mysql docker image required)")
+}
+
 func TestAlarmBase(t *testing.T) {
+	if !runIntegrationTest {
+		return
+	}
 	initTest()
-	var (
-		err error
-		q   orm.Ormer
-		// events []eventOpt.EventCases
-		event eventOpt.EventCases
-	)
 	q = orm.NewOrm()
 	q.Using("falcon_portal")
 	strategyTemplate := coommonModel.Strategy{
