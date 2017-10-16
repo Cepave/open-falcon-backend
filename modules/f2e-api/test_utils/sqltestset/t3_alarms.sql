@@ -1,15 +1,14 @@
+USE `falcon_portal`;
+
 LOCK TABLES `alarm_types` WRITE;
-/*!40000 ALTER TABLE `alarm_types` DISABLE KEYS */;
-INSERT INTO `alarm_types` VALUES (1,'owl',1,'default type of owl','purple','2017-09-18 03:00:41');
 INSERT INTO `alarm_types` VALUES (2,'ext_test',0,'test external alarm','black','2017-09-30 03:00:41');
-/*!40000 ALTER TABLE `alarm_types` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 LOCK TABLES `event_cases` WRITE;
-/*!40000 ALTER TABLE `event_cases` DISABLE KEYS */;
 INSERT INTO `event_cases` (`id`, `endpoint`, `metric`, `func`, `cond`, `note`, `max_step`, `current_step`, `priority`, `status`, `timestamp`, `update_at`, `process_note`, `closed_at`, `closed_note`, `tpl_creator`, `user_modified`, `expression_id`, `strategy_id`, `template_id`, `process_status`) VALUES
 ('s_165_9d223f126e7ecb3477cd6806f1ee9656','agent1','cpu.idle','all(#1)','93.27165685449958 != 66','測試告警自動更新',300,3,0,'PROBLEM','2016-06-22 20:51:00','2016-06-22 21:01:00',NULL,NULL,NULL,'root',0,165,45,20,'ignored'),
+('s_165_cef145900bf4e2a4a0db8b85762b9cdb','agent2','cpu.idle','all(#1)','0 != 66','測試告警自動更新',300,3,0,'PROBLEM','2017-03-22 12:20:42','2016-06-22 21:00:00',NULL,NULL,NULL,'root',0,165,45,56561,'ignored'),
+('s_191_ddd09333257b2e92e1941860ee86ab15','agent1','cpu.idle','all(#3)','11.813186813186814 < 10','cpu.idle小于10%',1,1,3,'OK','2016-07-06 01:13:00','2016-07-06 01:13:00',NULL,NULL,NULL,'root',0,191,42,0,'unresolved'),
 ('s_322_001da6a5f95d83387cdfecc37ac70c24','agent2','cpu.iowait','avg(#3)','34.40479690409319 > 40','CPU I/O wait超过40',1,1,1,'OK','2016-10-27 07:37:00','2016-10-27 07:37:00',NULL,NULL,NULL,'root',0,322,125,0,'unresolved'),
 ('s_322_002e499f3b56420fdea506c887e51799','agent3','cpu.iowait','avg(#3)','30.76679150609009 > 40','CPU I/O wait超过40',1,1,1,'OK','2016-11-06 20:28:00','2016-11-06 20:28:00',NULL,NULL,NULL,'root',0,322,125,0,'unresolved'),
 ('s_322_00500cfbaf93a18bdab1cacdb7090226','agent4','cpu.iowait','avg(#3)','0.4165741367509111 > 40','CPU I/O wait超过40',1,1,1,'OK','2016-12-06 18:14:00','2016-12-06 18:14:00',NULL,NULL,NULL,'root',0,322,125,0,'unresolved'),
@@ -22,11 +21,9 @@ INSERT INTO `event_cases` (`id`, `endpoint`, `metric`, `func`, `cond`, `note`, `
 ('s_322_5af549ba7abca6225cf219fab74a9644','agent3','cpu.iowait','avg(#3)','2.5631157529122624e+17 > 40','CPU I/O wait超过40',1,1,1,'PROBLEM','2016-12-07 19:55:00','2016-12-07 19:55:00',NULL,NULL,NULL,'root',0,322,125,0,'unresolved'),
 ('s_46_1ac45122afb893adc02fbd30154ac303','agent4','cpu.iowait','all(#3)','48.33759590792839 > 40','CPU I/O wait超过40',1,1,1,'PROBLEM','2016-07-31 22:25:00','2016-07-31 22:25:00',NULL,NULL,NULL,'root',0,46,126,16907,'ignored'),
 ('s_50_6438ac68b30e2712fb8f00d894c46e21','agent5','cpu.idle','avg(#3)','95.16331658291456 <= 98','cpu空闲值报警',1,1,3,'PROBLEM','2016-07-03 08:13:00','2016-07-03 08:13:00',NULL,NULL,NULL,'root',0,50,53,1181,'ignored');
-/*!40000 ALTER TABLE `event_cases` ENABLE KEYS */;
 UNLOCK TABLES;
 
 LOCK TABLES `event_note` WRITE;
-/*!40000 ALTER TABLE `event_note` DISABLE KEYS */;
 INSERT INTO `event_note` (`id`, `event_caseId`, `note`, `case_id`, `status`, `timestamp`, `user_id`) VALUES
 (21,'s_165_9d223f126e7ecb3477cd6806f1ee9656','Ignored by user',NULL,'ignored','2016-06-22 21:38:56',1),
 (22,'s_165_cef145900bf4e2a4a0db8b85762b9cdb','test',NULL,'ignored','2016-06-22 21:39:09',1),
@@ -78,14 +75,12 @@ INSERT INTO `event_note` (`id`, `event_caseId`, `note`, `case_id`, `status`, `ti
 (56559,'s_165_cef145900bf4e2a4a0db8b85762b9cdb','test note',NULL,'ignored','2017-03-22 10:58:41',2),
 (56560,'s_165_cef145900bf4e2a4a0db8b85762b9cdb','test note',NULL,'comment','2017-03-22 12:20:42',1),
 (56561,'s_165_cef145900bf4e2a4a0db8b85762b9cdb','test note',NULL,'ignored','2017-03-22 12:20:42',1);
-/*!40000 ALTER TABLE `event_note` ENABLE KEYS */;
 UNLOCK TABLES;
 
 
 LOCK TABLES `events` WRITE;
-/*!40000 ALTER TABLE `events` DISABLE KEYS */;
 INSERT INTO `events` (`id`, `event_caseId`, `step`, `cond`, `status`, `timestamp`) VALUES
-(635149,'s_165_cef145900bf4e2a4a0db8b85762b9cdb',1,'13.486005089058525 != 66',0,'2016-06-22 20:50:00'),
+-- (635149,'s_165_cef145900bf4e2a4a0db8b85762b9cdb',1,'13.486005089058525 != 66',0,'2016-06-22 20:50:00');
 (635152,'s_165_9d223f126e7ecb3477cd6806f1ee9656',1,'93.69747899159664 != 66',0,'2016-06-22 20:51:00'),
 (635166,'s_165_cef145900bf4e2a4a0db8b85762b9cdb',2,'10.649350649350648 != 66',0,'2016-06-22 20:55:00'),
 (635168,'s_165_9d223f126e7ecb3477cd6806f1ee9656',2,'93.04274937133277 != 66',0,'2016-06-22 20:56:00'),
@@ -176,5 +171,4 @@ INSERT INTO `events` (`id`, `event_caseId`, `step`, `cond`, `status`, `timestamp
 (2283566,'s_322_00f5a68989281d30fbbb647194a09230',1,'2.5609807127182493e+17 > 40',0,'2016-12-07 18:07:00'),
 (2283581,'s_322_00f5a68989281d30fbbb647194a09230',1,'0 > 40',1,'2016-12-07 18:10:00'),
 (2283964,'s_322_5af549ba7abca6225cf219fab74a9644',1,'2.5631157529122624e+17 > 40',0,'2016-12-07 19:55:00');
-/*!40000 ALTER TABLE `events` ENABLE KEYS */;
 UNLOCK TABLES;
