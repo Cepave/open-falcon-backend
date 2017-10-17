@@ -103,8 +103,11 @@ function check_database()
 		dashboard)
 		DATABASE_NAME=dashboard
 		;;
+		imdb)
+		DATABASE_NAME=imdb
+		;;
 		*)
-		>&2 echo "Needs \"-database=<boss|portal|uic|links|graph|grafana|dashboard>\""
+		>&2 echo "Needs \"-database=<boss|portal|uic|links|graph|grafana|dashboard|imdb>\""
 		exit 1
 		;;
 	esac
