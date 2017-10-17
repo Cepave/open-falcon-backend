@@ -145,5 +145,5 @@ client.http.port=6040
 
 Execute by `go-test-all.sh`:
 ```sh
-OWL_TEST_PROPS_FILE="sample.properties" ./go-test-all.sh -t "modules/mysqlapi/restful"
+OWL_TEST_PROPS_FILE="$PWD/sample.properties" ./go-test-all.sh -t "modules/mysqlapi/restful"
 ```
