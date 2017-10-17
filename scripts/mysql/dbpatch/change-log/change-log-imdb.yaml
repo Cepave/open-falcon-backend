@@ -1,0 +1,12 @@
+[
+    {
+        id: "masato-1",
+        filename: "masato-1.sql",
+        comment: "init imdb tables"
+    },
+    {
+        id: "masato-2",
+        filename: "masato-2.sql",
+        comment: "create data views for imdb"
+    }
+]
