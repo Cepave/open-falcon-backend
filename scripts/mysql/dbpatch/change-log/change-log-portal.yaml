@@ -168,3 +168,8 @@
     filename: "masato-32.sql",
     comment: "add imdb function feilds for hosts & grp table"
 }
+- {
+    id: "masato-33",
+    filename: "masato-33.sql",
+    comment: "fix update_time issue on OWL-1956"
+}
