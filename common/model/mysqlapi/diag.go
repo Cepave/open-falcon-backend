@@ -1,4 +1,4 @@
-package model
+package mysqlapi
 
 // HealthView is the model for responsed JSON data in ``/health`
 // example:
@@ -31,9 +31,23 @@ package model
 //    }
 // }
 type HealthView struct {
-	Rdb  map[string]interface{} `json:"rdb"`
-	Http *Http                  `json:"http"`
-	Nqm  *Nqm                   `json:"nqm"`
+	Rdb  *AllRdbHealth `json:"rdb"`
+	Http *Http         `json:"http"`
+	Nqm  *Nqm          `json:"nqm"`
+}
+
+type AllRdbHealth struct {
+	// Deprecated; old information on portal database
+	Dsn string `json:"dsn"`
+	// Deprecated; old information on portal database
+	OpenConnections int `json:"open_connections"`
+	// Deprecated; old information on portal database
+	PingResult int `json:"ping_result"`
+	// Deprecated; old information on portal database
+	PingMessage string `json:"ping_message"`
+
+	Portal *Rdb `json:"portal"`
+	Graph  *Rdb `json:"graph"`
 }
 
 type Rdb struct {

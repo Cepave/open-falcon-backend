@@ -3,8 +3,8 @@ package service
 import (
 	"net/http"
 
+	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
-	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,11 +22,11 @@ var _ = Describe("[Unit] GetHealth()", func() {
 		)
 
 		mockResp = apiModel.HealthView{
-			Rdb: &apiModel.Rdb{
-				Dsn:             "root:!hide password!@tcp(mysql.mock.com:3306)/falcon_portal",
-				OpenConnections: 12,
-				PingResult:      0,
-				PingMessage:     "",
+			Rdb: map[string]interface{}{
+				"Dsn":             "root:!hide password!@tcp(mysql.mock.com:3306)/falcon_portal",
+				"OpenConnections": 12,
+				"PingResult":      0,
+				"PingMessage":     "",
 			},
 			Http: &apiModel.Http{
 				Listening: "0.0.0.0:12345",

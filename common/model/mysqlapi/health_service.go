@@ -1,8 +1,4 @@
-package model
-
-import (
-	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
-)
+package mysqlapi
 
 type MysqlApi struct {
 	// Address of MySQL-API
@@ -10,5 +6,5 @@ type MysqlApi struct {
 	// Error messages during the health request
 	Message string `json:"message"`
 	// Response of the health request
-	Response *apiModel.HealthView `json:"response"`
+	Response *HealthView `json:"response"`
 }

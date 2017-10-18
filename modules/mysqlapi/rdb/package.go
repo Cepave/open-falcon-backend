@@ -6,8 +6,8 @@ import (
 	commonNqmDb "github.com/Cepave/open-falcon-backend/common/db/nqm"
 	commonOwlDb "github.com/Cepave/open-falcon-backend/common/db/owl"
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
+	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	graphdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/graph"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 	apiOwlDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
@@ -31,7 +31,7 @@ func (self *DbHolder) releaseDb(dbname string) {
 		delete(self.facades, dbname)
 	}
 }
-func (self *DbHolder) Diagnose(dbname string) *model.Rdb {
+func (self *DbHolder) Diagnose(dbname string) *apiModel.Rdb {
 	facade, ok := self.facades[dbname]
 
 	if !ok {

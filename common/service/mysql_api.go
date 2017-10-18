@@ -5,8 +5,7 @@ import (
 
 	oHttp "github.com/Cepave/open-falcon-backend/common/http"
 	"github.com/Cepave/open-falcon-backend/common/http/client"
-	"github.com/Cepave/open-falcon-backend/common/model"
-	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
+	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 )
 
 type MysqlApiServiceConfig struct {
@@ -14,7 +13,7 @@ type MysqlApiServiceConfig struct {
 }
 
 type MysqlApiService interface {
-	GetHealth() *model.MysqlApi
+	GetHealth() *apiModel.MysqlApi
 }
 
 func NewMysqlApiService(config *MysqlApiServiceConfig) MysqlApiService {
@@ -32,9 +31,9 @@ type mysqlApiServiceImpl struct {
 
 // Return some information about MySQL-API: address, error message,
 //  response of health request
-func (s *mysqlApiServiceImpl) GetHealth() *model.MysqlApi {
+func (s *mysqlApiServiceImpl) GetHealth() *apiModel.MysqlApi {
 	req := s.getHealth.Clone()
-	view := &model.MysqlApi{
+	view := &apiModel.MysqlApi{
 		Address: s.Config.HttpClientConfig.Url,
 	}
 
