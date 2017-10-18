@@ -3,8 +3,8 @@ package service
 import (
 	"net/http"
 
+	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
-	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
