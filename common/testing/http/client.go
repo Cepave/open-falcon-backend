@@ -85,6 +85,10 @@ type GentlemanClientConf struct {
 //
 // The timeout of request is three seconds.
 func (c *GentlemanClientConf) NewClient() *gt.Client {
+	if c.HttpClientConfig == nil {
+		return nil
+	}
+
 	gtClient := client.CommonGentleman.NewClientByConfig(
 		&client.GentlemanConfig{
 			RequestTimeout: time.Duration(3) * time.Second,
@@ -103,7 +107,12 @@ func (c *GentlemanClientConf) NewClient() *gt.Client {
 //
 // The timeout of request is three seconds.
 func (c *GentlemanClientConf) NewRequest() *gt.Request {
-	return c.NewClient().Request()
+	client := c.NewClient()
+	if client == nil {
+		return nil
+	}
+
+	return client.Request()
 }
 
 // Supporting configuration of testing by Sling(deprecated) library
