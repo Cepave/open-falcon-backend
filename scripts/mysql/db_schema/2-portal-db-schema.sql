@@ -251,7 +251,7 @@ CREATE TABLE event_cases (
   priority INT(6) NOT NULL,
   status VARCHAR(20) NOT NULL,
   timestamp Timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  update_at Timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  update_at Timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   process_note mediumint(9),
   process_status  varchar(20) DEFAULT 'unresolved',
   closed_at Timestamp NULL DEFAULT NULL,
