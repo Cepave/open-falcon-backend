@@ -1,59 +1,46 @@
 package utils
 
 import (
-	. "gopkg.in/check.v1"
 	"sort"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-type TestSetSuite struct{}
+var _ = Describe("Unique array of <type>", func() {
+	Context("UniqueElements()", func() {
+		DescribeTable("result as expected one",
+			func(source interface{}, expectedResult interface{}) {
+				testedResult := UniqueElements(source)
+				Expect(testedResult).To(Equal(expectedResult))
+			},
+			Entry("array of string",
+				[]string{"Z1", "Z2", "Z1", "Z2"},
+				[]string{"Z1", "Z2"},
+			),
+			Entry("array of int",
+				[]int{33, 33, 67, 67, 56, 33},
+				[]int{33, 67, 56},
+			),
+		)
+	})
 
-var _ = Suite(&TestSetSuite{})
+	Context("UniqueArrayOfStrings()", func() {
+		DescribeTable("result as expected one",
+			func(sampleStrings []string, expectedResult []string) {
+				testedResult := UniqueArrayOfStrings(sampleStrings)
 
-// Tests the unique processing for a array of types which are valid as a key of map
-func (suite *TestSetSuite) TestUniqueElements(c *C) {
-	testCases := []*struct {
-		source         interface{}
-		expectedResult interface{}
-	}{
-		{
-			[]string{"Z1", "Z2", "Z1", "Z2"},
-			[]string{"Z1", "Z2"},
-		},
-		{
-			[]int{33, 33, 67, 67, 56, 33},
-			[]int{33, 67, 56},
-		},
-	}
+				sort.Strings(testedResult)
+				sort.Strings(expectedResult)
 
-	for i, testCase := range testCases {
-		comment := Commentf("Test Case: %d", i+1)
-
-		testedResult := UniqueElements(testCase.source)
-
-		c.Assert(testedResult, DeepEquals, testCase.expectedResult, comment)
-	}
-}
-
-// Tests the unique prcessing for a array of strings
-func (suite *TestSetSuite) TestUniqueArrayOfString(c *C) {
-	testCases := []*struct {
-		sampleStrings  []string
-		expectedResult []string
-	}{
-		{[]string{"A", "B", "A", "B"}, []string{"A", "B"}},
-		{[]string{"C1", "C2", "C3", "C4"}, []string{"C1", "C2", "C3", "C4"}},
-		{[]string{"C1", "C1", "C3", "C3", "C1", "C2", "C3", "C2"}, []string{"C1", "C3", "C2"}},
-		{[]string{"G1", "", "G1", "G2", "", "G2"}, []string{"G1", "", "G2"}},
-		{[]string{}, []string{}},
-		{nil, nil},
-	}
-
-	for i, testCase := range testCases {
-		testedResult := UniqueArrayOfStrings(testCase.sampleStrings)
-
-		sort.Strings(testedResult)
-		sort.Strings(testCase.expectedResult)
-
-		c.Assert(testedResult, DeepEquals, testCase.expectedResult, Commentf("Test Case: %d", i))
-	}
-}
+				Expect(testedResult).To(Equal(expectedResult))
+			},
+			Entry("Duplicated elements", []string{"A", "B", "A", "B"}, []string{"A", "B"}),
+			Entry("Source is unique", []string{"C1", "C2", "C3", "C4"}, []string{"C1", "C2", "C3", "C4"}),
+			Entry("Contains empty string", []string{"G1", "", "G1", "G2", "", "G2"}, []string{"G1", "", "G2"}),
+			Entry("Empty array", []string{}, []string{}),
+			Entry("Nil array", nil, nil),
+		)
+	})
+})

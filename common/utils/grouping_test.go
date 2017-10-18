@@ -1,12 +1,9 @@
 package utils
 
 import (
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
-
-type TestGroupingSuite struct{}
-
-var _ = Suite(&TestGroupingSuite{})
 
 type sampleKey string
 
@@ -14,33 +11,33 @@ func (k sampleKey) GetKey() interface{} {
 	return k
 }
 
-// Tests the putting and retrieving of grouping data
-func (suite *TestGroupingSuite) TestGroupingProcessor(c *C) {
-	testedProcessor := NewGroupingProcessorOfTargetType(int(0))
+var _ = Describe("Grouping by NewGroupingProcessorOfTargetType()", func() {
+	Context("Grouping operations", func() {
+		testedProcessor := NewGroupingProcessorOfTargetType(int(0))
 
-	testedProcessor.Put(sampleKey("GD-1"), 20)
-	testedProcessor.Put(sampleKey("GD-1"), 30)
-	testedProcessor.Put(sampleKey("GD-1"), 40)
-	testedProcessor.Put(sampleKey("GD-2"), 70)
-	testedProcessor.Put(sampleKey("GD-2"), 80)
+		testedProcessor.Put(sampleKey("GD-1"), 20)
+		testedProcessor.Put(sampleKey("GD-1"), 30)
+		testedProcessor.Put(sampleKey("GD-1"), 40)
+		testedProcessor.Put(sampleKey("GD-2"), 70)
+		testedProcessor.Put(sampleKey("GD-2"), 80)
 
-	c.Assert(testedProcessor.Keys(), HasLen, 2)
-	c.Assert(testedProcessor.KeyObject(sampleKey("GD-1")), Equals, sampleKey("GD-1"))
-	c.Assert(testedProcessor.KeyObject(sampleKey("GD-2")), Equals, sampleKey("GD-2"))
-	c.Assert(testedProcessor.Children(sampleKey("GD-1")), HasLen, 3)
-	c.Assert(testedProcessor.Children(sampleKey("GD-2")), HasLen, 2)
-}
+		It("Number of keys should be 2", func() {
+			Expect(testedProcessor.Keys()).To(HaveLen(2))
+		})
 
-// Tests the type conversion of grouping
-func (suite *TestGroupingSuite) TestTypedValues(c *C) {
-	testedProcessor := NewGroupingProcessorOfTargetType(int(0))
+		It("Key object should be as same as input", func() {
+			Expect(testedProcessor.KeyObject(sampleKey("GD-1"))).To(Equal(sampleKey("GD-1")))
+			Expect(testedProcessor.KeyObject(sampleKey("GD-2"))).To(Equal(sampleKey("GD-2")))
+		})
 
-	testedProcessor.Put(sampleKey("GD-1"), 20)
-	testedProcessor.Put(sampleKey("GD-1"), 30)
+		It("Number of children should be as same as input", func() {
+			Expect(testedProcessor.Children(sampleKey("GD-1"))).To(HaveLen(3))
+			Expect(testedProcessor.Children(sampleKey("GD-2"))).To(HaveLen(2))
+		})
 
-	typedKey := testedProcessor.KeyObject(sampleKey("GD-1")).(sampleKey)
-	c.Assert(typedKey, Equals, sampleKey("GD-1"))
-
-	intValues := testedProcessor.Children(sampleKey("GD-1")).([]int)
-	c.Assert(intValues, HasLen, 2)
-}
+		It("Children should be array of <type>", func() {
+			intValues := testedProcessor.Children(sampleKey("GD-1")).([]int)
+			Expect(intValues).To(Equal([]int{20, 30, 40}))
+		})
+	})
+})

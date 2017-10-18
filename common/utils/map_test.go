@@ -1,24 +1,27 @@
 package utils
 
 import (
-	. "gopkg.in/check.v1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-type TestMapSuite struct{}
+var _ = Describe("Abstract Map", func() {
+	Context("ToType() of different types for key and value", func() {
+		type s2 string
 
-var _ = Suite(&TestMapSuite{})
+		It("result map should be same as expected", func() {
+			sampleAMap := MakeAbstractMap(map[int16]s2{
+				1: "Nice",
+				2: "Good",
+			})
 
-// Tests the conversion of types for a map
-func (suite *TestMapSuite) Test(c *C) {
-	type s2 string
-
-	sampleAMap := MakeAbstractMap(map[int16]s2{
-		1: "Nice",
-		2: "Good",
+			testedMap := sampleAMap.ToTypeOfTarget(int32(0), "").(map[int32]string)
+			Expect(testedMap).To(Equal(
+				map[int32]string{
+					1: "Nice",
+					2: "Good",
+				},
+			))
+		})
 	})
-
-	testedMap := sampleAMap.ToTypeOfTarget(int32(0), "").(map[int32]string)
-
-	c.Logf("Map: %#v", testedMap)
-	c.Assert(testedMap, HasLen, 2)
-}
+})

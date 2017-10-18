@@ -71,20 +71,79 @@ Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exporte
 
 # Testing
 
-## By using `make go-test`
+There are environment variables could be used to set-up properties for testing:
 
-You could set `GO_TEST_FOLDER` and `GO_TEST_EXCLUDE` to set-up the folder you like to test.
+* `$OWL_TEST_PROPS_FILE` - File name of properties
+* `$OWL_TEST_PROPS` - Property content as single string
+* `$OWL_TEST_PROPS_SEP` - Seperator to split record of property content in `$OWL_TEST_PROPS`
+
+For example, you could use `make go-test` by:
 
 ```sh
+OWL_TEST_PROPS="mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local" make go-test GO_TEST_VERBOSE=yes GO_TEST_FOLDER="modules/mysqlapi/rdb/owl"
+```
+
+Or use `go test`:
+```sh
+OWL_TEST_PROPS="mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local" go test ./modules/mysqlapi/rdb/owl -test.v
+```
+
+## By using `make go-test`
+
+Variables:
+* `GO_TEST_FOLDER` - The inclusions of folders(recursively probed) to be tested
+* `GO_TEST_EXCLUDE` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
+* `GO_TEST_PROPS_FILE` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.propfile=<GO_TEST_PROPS_FILE>`
+* `GO_TEST_PROPS` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<GO_TEST_PROPS>`
+* `GO_TEST_PROPS_SEP` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<GO_TEST_PROPS_SEP>`
+* `GO_TEST_FLAGS` - If the value is viable, the execution of "go test" would have additional flags `<flags...>`
+* `GO_TEST_VERBOSE` - If the value is "yes", the execution of "go test -test.v"(with additional flags of 3-party frameworks) would be applied
+
+```sh
+# Default execution
 make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api"
+
+# With MySql property and verbose output
+make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api" GO_TEST_VERBOSE=yes GO_TEST_PROPS="mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
 ```
 
 See `Makefile` for default values of the two variables.
 
+In fact, the __Makefile__ uses __`go-test-all.sh`__ to perform `go-test`.
+
 ## By using `go-test-all.sh`
 
-You could use `-t <testing folders>` and `-e <exclude folders>` to set-up the folder you like to test
+This script would try to detect the importing of "common/testing/<lib>" in __*\_test.go__ files.
+
+If the configuration is matched, this script would append `-owl.test.propfile`, `-owl.test`, or `-owl.test.sep` flags.
+
+Arguments:
+* `-t` - The inclusions of folders(recursively probed) to be tested
+* `-e` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
+* `-f` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.propfile=<args>`
+* `-p` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<args>`
+* `-s` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<args>`
+* `-a` - If the value is viable, the execution of "go test" would have additional flags `<flags>`
+* `-v` - If this flag is shown, the execution of `go test -test.v`(with additional flags of 3-party frameworks) would be applied
 
 ```sh
+# Default execution
 ./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api"
+
+# With MySql property and verbose output
+./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api" -v -p "mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
+```
+
+## Usage of property file
+
+Example of property file("__sample.properties__"):
+```ini
+mysql=root:cepave@tcp(192.168.20.50:3307)/falcon_portal
+client.http.host=127.0.0.1
+client.http.port=6040
+```
+
+Execute by `go-test-all.sh`:
+```sh
+OWL_TEST_PROPS_FILE="$PWD/sample.properties" ./go-test-all.sh -t "modules/mysqlapi/restful"
 ```

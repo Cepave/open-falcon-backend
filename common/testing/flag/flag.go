@@ -1,6 +1,20 @@
 //
 // Provides unified interface to access needed flags when you are testing.
 //
+// Property file
+//
+// "NewTestFlags()" has two way to load property file:
+//
+// 	OWL_TEST_PROPS_FILE - Environment Variable
+// 	"-owl.test.propfile" - flag of "go test"
+//
+// Entry Environment Variables
+//
+// Following environment variables are supported when calling "NewTestFlags()".
+//
+// 	OWL_TEST_PROPS - As same as "-owl.test"
+// 	OWL_TEST_PROPS_SEP - As same as "-owl.test.sep"
+//
 // Entry Flags
 //
 // There are only two flags of Golang needed:
@@ -16,6 +30,16 @@
 // recognize a record of property file.
 //
 // See "DEFAULT_SEPARATOR" constant for default separator.
+//
+// Loading priority
+//
+// When you execute go test with viable values for both of the environment variables and the flags,
+// the priority is:
+//
+// 	1. Load file from environment variable(OWL_TEST_PROPS_FILE)
+// 	2. Load properties of environment variable(OWL_TEST_PROPS)
+// 	3. Load file from flag("-owl.test.propfile")
+// 	4. Load properties from flag("-owl.test")
 //
 // Pre-defined Properties - Features
 //
@@ -91,6 +115,12 @@ const (
 )
 
 const (
+	ENV_OWL_TEST_PROPS      = "OWL_TEST_PROPS"
+	ENV_OWL_TEST_PROPS_SEP  = "OWL_TEST_PROPS_SEP"
+	ENV_OWL_TEST_PROPS_FILE = "OWL_TEST_PROPS_FILE"
+)
+
+const (
 	OWL_DB_PORTAL    = 0x01
 	OWL_DB_GRAPH     = 0x02
 	OWL_DB_UIC       = 0x04
@@ -111,33 +141,34 @@ var owlDbMap = map[int]string{
 }
 
 var (
-	owlTest    = flag.String("owl.test", "", "Owl typedFlags for testing properties")
-	owlTestSep = flag.String("owl.test.sep", DEFAULT_SEPARATOR, "Owl typedFlags for separator of properties")
+	owlTest         = flag.String("owl.test", "", "Owl typedFlags for testing properties")
+	owlTestSep      = flag.String("owl.test.sep", DEFAULT_SEPARATOR, "Owl typedFlags for separator of properties")
+	owlTestPropFile = flag.String("owl.test.propfile", "", "Owl property file for testing")
 )
+
+var singletonTestFlags *TestFlags
 
 // Initializes the object of "*TestFlags" by parsing flag automatically.
 //
-// This function doesn't re-call "flag.Parse()" function.
+// This function parses os.Args every time it is get called.
 func NewTestFlags() *TestFlags {
-	if !flag.Parsed() {
-		flag.Parse()
+	if singletonTestFlags != nil {
+		return singletonTestFlags.clone()
 	}
 
-	propertiesString := strings.TrimSpace(*owlTest)
-
-	/**
-	 * Loads properties into viper object
-	 */
-	viperObj := convertToProperties(propertiesString, *owlTestSep)
-	// :~)
+	viperLoader := newMultiPropLoader()
+	viperLoader.loadFromEnv()
+	viperLoader.loadFromFlag()
 
 	/**
 	 * Setup Flags of testing
 	 */
-	newFlags := newTestFlags(viperObj)
+	newFlags := newTestFlags(viperLoader.viperObj)
 	// :~)
 
-	return newFlags
+	singletonTestFlags = newFlags
+
+	return singletonTestFlags.clone()
 }
 
 // Convenient type used to access specific testing environment of OWL.
@@ -246,6 +277,23 @@ func (f *TestFlags) HasItWeb() bool {
 	return ok && hasItWeb
 }
 
+func (f *TestFlags) clone() *TestFlags {
+	newViper := viper.New()
+
+	for k, v := range f.viperObj.AllSettings() {
+		newViper.Set(k, v)
+	}
+
+	newTypedFlags := make(map[string]interface{})
+	for k, v := range f.typedFlags {
+		newTypedFlags[k] = v
+	}
+
+	return &TestFlags{
+		newTypedFlags, newViper,
+	}
+}
+
 func (f *TestFlags) setupByViper() {
 	viperObj := f.viperObj
 
@@ -314,22 +362,66 @@ func newTestFlags(viperObj *viper.Viper) *TestFlags {
 	return testFlag
 }
 
-func convertToProperties(propertiesString string, separator string) *viper.Viper {
+func newMultiPropLoader() *multiPropLoader {
+	viperObj := viper.New()
+	viperObj.SetConfigType("properties")
+
+	return &multiPropLoader{viperObj}
+}
+
+type multiPropLoader struct {
+	viperObj *viper.Viper
+}
+
+func (l *multiPropLoader) loadFromEnv() {
+	envLoader := viper.New()
+	envLoader.SetDefault(ENV_OWL_TEST_PROPS_SEP, DEFAULT_SEPARATOR)
+	envLoader.BindEnv(ENV_OWL_TEST_PROPS)
+	envLoader.BindEnv(ENV_OWL_TEST_PROPS_SEP)
+	envLoader.BindEnv(ENV_OWL_TEST_PROPS_FILE)
+
+	l.loadProperties(
+		envLoader.GetString(ENV_OWL_TEST_PROPS_FILE),
+		envLoader.GetString(ENV_OWL_TEST_PROPS),
+		envLoader.GetString(ENV_OWL_TEST_PROPS_SEP),
+	)
+}
+func (l *multiPropLoader) loadFromFlag() {
+	if !flag.Parsed() {
+		flag.Parse()
+	}
+
+	l.loadProperties(*owlTestPropFile, *owlTest, *owlTestSep)
+}
+
+func (l *multiPropLoader) loadProperties(filename string, propertiesString string, separator string) {
+	/**
+	 * Loads property file into viper object
+	 */
+	if filename != "" {
+		l.viperObj.SetConfigFile(filename)
+		if err := l.viperObj.MergeInConfig(); err != nil {
+			logger.Warnf("Load property file[%s] has error: %v", filename, err)
+		}
+	}
+	// :~)
+
+	propertiesString = strings.TrimSpace(propertiesString)
+	if propertiesString == "" {
+		return
+	}
+
 	splitRegExp := regexp.MustCompile(separator)
 	properties := splitRegExp.ReplaceAllString(propertiesString, "\n")
 
 	/**
 	 * Loads properties into viper object
 	 */
-	viperObj := viper.New()
-	viperObj.SetConfigType("properties")
-
 	if err := errors.Annotate(
-		viperObj.ReadConfig(strings.NewReader(properties)),
+		l.viperObj.MergeConfig(strings.NewReader(properties)),
 		"Read owl.test as format of property file has error",
 	); err != nil {
 		panic(errors.Details(err))
 	}
-
-	return viperObj
+	// :~)
 }

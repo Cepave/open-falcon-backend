@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	tDb "github.com/Cepave/open-falcon-backend/common/testing/db"
+	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -29,3 +31,9 @@ var _ = AfterSuite(func() {
 	ginkgoDb.ReleaseDbFacade(DbFacade)
 	DbFacade = nil
 })
+
+var (
+	itFeatures    = tFlag.F_MySql
+	itSkipMessage = tFlag.FeatureHelpString(itFeatures)
+	itSkip        = tFlag.BuildSkipFactory(tFlag.F_MySql, itSkipMessage)
+)

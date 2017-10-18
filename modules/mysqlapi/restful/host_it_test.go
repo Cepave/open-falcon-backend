@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Intg] Test listhosts", ginkgoDb.NeedDb(func() {
+var _ = Describe("[Intg] Test listhosts", itSkip.PrependBeforeEach(func() {
 	const NumOfTestHost = 4
 
 	BeforeEach(func() {
@@ -62,7 +62,7 @@ var _ = Describe("[Intg] Test listhosts", ginkgoDb.NeedDb(func() {
 	)
 }))
 
-var _ = Describe("[Intg] Test listHostgroups", ginkgoDb.NeedDb(func() {
+var _ = Describe("[Intg] Test listHostgroups", itSkip.PrependBeforeEach(func() {
 	const NumOfTestHostgroup = 3
 
 	BeforeEach(func() {

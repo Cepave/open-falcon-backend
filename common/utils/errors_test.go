@@ -2,23 +2,51 @@ package utils
 
 import (
 	"fmt"
-	. "gopkg.in/check.v1"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
 type TestErrorsSuite struct{}
 
-var _ = Suite(&TestErrorsSuite{})
-
-// Tests the capture of panic to error object
-func (suite *TestErrorsSuite) TestPanicToSimpleError(c *C) {
+var _ = Describe("Capture panic with &err object", func() {
 	sampleFunc := func() (err error) {
 		defer PanicToSimpleError(&err)()
-
 		panic("Sample Error 1")
 	}
 
-	c.Assert(sampleFunc(), NotNil)
-}
+	It("Error object should not be nil", func() {
+		err := sampleFunc()
+		Expect(err).To(HaveOccurred())
+	})
+})
+
+var _ = Describe("Put content of &err while panic", func() {
+	DescribeTable("result error as expected",
+		func(needPanic bool) {
+			var err error
+
+			testedFunc := BuildPanicToError(
+				func() {
+					if needPanic {
+						panic("We are panic!!")
+					}
+				},
+				&err,
+			)
+			testedFunc()
+
+			if needPanic {
+				Expect(err).To(HaveOccurred())
+			} else {
+				Expect(err).To(Succeed())
+			}
+		},
+		Entry("Got panic", true),
+		Entry("Nothing panic", false),
+	)
+})
 
 func ExamplePanicToError() {
 	sampleFunc := func() (err error) {
@@ -63,39 +91,4 @@ func ExamplePanicToSimpleErrorWrapper() {
 	)
 
 	fmt.Println(testedFunc())
-}
-
-// Tests the capture of error object
-func (suite *TestErrorsSuite) TestBuildPanicToError(c *C) {
-	testCases := []*struct {
-		needPanic    bool
-		errorChecker Checker
-	}{
-		{true, NotNil},
-		{false, IsNil},
-	}
-
-	for i, testCase := range testCases {
-		comment := Commentf("[%d] Test Case: %v", i+1, testCase)
-		c.Logf("%s", comment.CheckCommentString())
-
-		var err error
-
-		needPanic := testCase.needPanic
-		testedFunc := BuildPanicToError(
-			func() {
-				samplePanic(needPanic)
-			},
-			&err,
-		)
-		testedFunc()
-
-		c.Assert(err, testCase.errorChecker, comment)
-	}
-}
-
-func samplePanic(needPanic bool) {
-	if needPanic {
-		panic("We are panic!!")
-	}
 }

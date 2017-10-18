@@ -44,6 +44,13 @@ GO_TEST_FOLDER := common modules scripts/mysql/dbpatch/go
 # You should assign the path starting with any of $(GO_TEST_FOLDER)
 GO_TEST_EXCLUDE := modules/agent modules/f2e-api modules/fe
 
+GO_TEST_FLAGS :=
+GO_TEST_VERBOSE :=
+GO_TEST_PROPS :=
+mp =
+GO_TEST_PROPS_SEP :=
+GO_TEST_PROPS_FILE :=
+
 all: install $(CMD) $(TARGET)
 
 misspell: build_gofile_listfile .get_misspell
@@ -87,7 +94,13 @@ build_gofile_listfile:
 	}
 
 go-test:
-	./go-test-all.sh -t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)"
+	./go-test-all.sh \
+		-t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)" \
+		$(if $(strip $(GO_TEST_PROPS_FILE)),-f "$(GO_TEST_PROPS_FILE)",) \
+		$(if $(strip $(GO_TEST_PROPS)),-p "$(GO_TEST_PROPS)",) \
+		$(if $(strip $(GO_TEST_PROPS_SEP)),-s "$(GO_TEST_PROPS_SEP)",) \
+		$(if $(strip $(GO_TEST_FLAGS)),-a "$(GO_TEST_FLAGS)",) \
+		$(if $(filter yes,$(GO_TEST_VERBOSE)),-v,)
 
 $(CMD):
 	go build -ldflags "-X main.GitCommit=`git log -n1 --pretty=format:%h modules/$@` -X main.Version=${VERSION}" -o bin/$@/falcon-$@ ./modules/$@

@@ -22,7 +22,7 @@ func sPtr(v string) *string {
 	return &v
 }
 
-var _ = Describe("Getting NQM agent by id", ginkgoDb.NeedDb(func() {
+var _ = Describe("Getting NQM agent by id", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			`
@@ -82,7 +82,7 @@ var _ = Describe("Getting NQM agent by id", ginkgoDb.NeedDb(func() {
 	})
 }))
 
-var _ = Describe("Adding new NQM agent", ginkgoDb.NeedDb(func() {
+var _ = Describe("Adding new NQM agent", itSkip.PrependBeforeEach(func() {
 	AfterEach(func() {
 		inTx(
 			"DELETE FROM nqm_agent WHERE ag_connection_id LIKE 'add-agent%'",
@@ -171,7 +171,7 @@ var _ = Describe("Adding new NQM agent", ginkgoDb.NeedDb(func() {
 	})
 }))
 
-var _ = Describe("Listing agents", ginkgoDb.NeedDb(func() {
+var _ = Describe("Listing agents", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			`
@@ -207,7 +207,7 @@ var _ = Describe("Listing agents", ginkgoDb.NeedDb(func() {
 	})
 }))
 
-var _ = Describe("Listing targets of agent(ping list)", ginkgoDb.NeedDb(func() {
+var _ = Describe("Listing targets of agent(ping list)", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(nqmSql.InitNqmCacheAgentPingList...)
 	})
@@ -256,7 +256,7 @@ var _ = Describe("Listing targets of agent(ping list)", ginkgoDb.NeedDb(func() {
 	})
 }))
 
-var _ = Describe("Clearing cache of target(ping list) on a agent", ginkgoDb.NeedDb(func() {
+var _ = Describe("Clearing cache of target(ping list) on a agent", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(nqmSql.InitNqmCacheAgentPingList...)
 	})
@@ -305,7 +305,7 @@ var _ = Describe("Clearing cache of target(ping list) on a agent", ginkgoDb.Need
 	})
 }))
 
-var _ = Describe("Modifying NQM agent", ginkgoDb.NeedDb(func() {
+var _ = Describe("Modifying NQM agent", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			`

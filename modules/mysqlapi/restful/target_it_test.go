@@ -193,6 +193,7 @@ func (suite *TestTargetItSuite) TestListTargets(c *C) {
 }
 
 func (s *TestTargetItSuite) SetUpSuite(c *C) {
+	itSkipForGocheck(c)
 	testingDb.InitRdb(c)
 }
 func (s *TestTargetItSuite) TearDownSuite(c *C) {

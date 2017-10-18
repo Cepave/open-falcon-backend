@@ -72,6 +72,7 @@ func (s *TestHeartbeatItSuite) TestFalconAgentHeartbeat(c *ch.C) {
 }
 
 func (s *TestHeartbeatItSuite) SetUpSuite(c *ch.C) {
+	itSkipForGocheck(c)
 	testingDb.InitRdb(c)
 }
 func (s *TestHeartbeatItSuite) TearDownSuite(c *ch.C) {
@@ -89,7 +90,7 @@ func (s *TestHeartbeatItSuite) TearDownTest(c *ch.C) {
 	}
 }
 
-var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
+var _ = Describe("Test TestNqmAgentHeartbeat()", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			test.DeleteNqmAgentSQL,
@@ -138,7 +139,7 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", ginkgoDb.NeedDb(func() {
 	)
 }))
 
-var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", ginkgoDb.NeedDb(func() {
+var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			test.DeleteNqmAgentSQL,

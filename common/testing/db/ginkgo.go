@@ -4,7 +4,6 @@ import (
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
 
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
@@ -27,25 +26,6 @@ func (g *GinkgoDb) InitDbFacade() *f.DbFacade {
 	Expect(err).To(BeNil())
 
 	return dbFacade
-}
-
-// Prepends "BeforeEach()" for skipping test if there is no value for database flag.
-//
-// Deprecated: Try to use "flag.SkipFactory"
-//
-// See "common/testing/flag"
-func (g *GinkgoDb) NeedDb(src func()) func() {
-	if getTestFlags().HasMySql() {
-		return src
-	}
-
-	return func() {
-		BeforeEach(func() {
-			Skip(flagMessage)
-		})
-
-		src()
-	}
 }
 
 func (g *GinkgoDb) GetDbConfig() *commonDb.DbConfig {

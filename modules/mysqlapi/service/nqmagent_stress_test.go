@@ -14,20 +14,22 @@ import (
 	. "github.com/onsi/ginkgo"
 )
 
-var heartbeatRequests = make(map[int]*nqmModel.HeartbeatRequest)
-
 var ginkgoDb = &dbTest.GinkgoDb{}
 
-var numOfReqs int = 3000
-var batchSize int = 0
+var numberOfSampleRequests = 0 // 2048
+var batchSize = 64
 
-var _ = Describe("Pressure Test", ginkgoDb.NeedDb(func() {
+var _ = Describe("Pressure Test", itSkip.PrependBeforeEach(func() {
+	var heartbeatRequests map[int]*nqmModel.HeartbeatRequest
+
 	BeforeEach(func() {
-		if batchSize == 0 {
-			return
+		heartbeatRequests = make(map[int]*nqmModel.HeartbeatRequest)
+
+		if numberOfSampleRequests == 0 {
+			Skip("The variable \"numberOfSampleRequests\" == 0, skip benchmarks")
 		}
 		rdb.DbFacade = ginkgoDb.InitDbFacade()
-		for i := 0; i < numOfReqs; i++ {
+		for i := 0; i < numberOfSampleRequests; i++ {
 			r := randomHeartbeatRequest()
 			heartbeatRequests[i] = r
 			insert(r)
@@ -35,9 +37,6 @@ var _ = Describe("Pressure Test", ginkgoDb.NeedDb(func() {
 	})
 
 	AfterEach(func() {
-		if batchSize == 0 {
-			return
-		}
 		inTx(
 			`DELETE FROM nqm_agent`,
 			`DELETE FROM host`,
@@ -48,22 +47,18 @@ var _ = Describe("Pressure Test", ginkgoDb.NeedDb(func() {
 	})
 
 	Measure("performance of the batch size", func(b Benchmarker) {
-		if batchSize == 0 {
-			GinkgoT().Logf(" == Skip Pressure Testing ==")
-			return
-		}
-
-		GinkgoT().Logf("Number of requests: %d, Batch size: %d", numOfReqs, batchSize)
+		GinkgoT().Logf("Number of requests: %d, Batch size: %d", numberOfSampleRequests, batchSize)
 		InitNqmHeartbeat(&commonQueue.Config{Num: batchSize, Dur: 1})
 		NqmQueue.Start()
 		b.Time("runtime", func() {
 			for _, req := range heartbeatRequests {
-				func(r *nqmModel.HeartbeatRequest) {
-					NqmQueue.Put(req)
-				}(req)
+				reqObject := req
+				NqmQueue.Put(reqObject)
 			}
 			CloseNqmHeartbeat()
 		})
+
+		GinkgoT().Logf("Count of consumed request: [%d]", NqmQueue.ConsumedCount())
 	}, 3)
 
 }))

@@ -2,6 +2,7 @@ package flag
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/viper"
 
@@ -82,26 +83,79 @@ var _ = Describe("Set-up TestFlags by Viper", func() {
 		ToContext()
 })
 
-var _ = Describe("convertToProperties()", func() {
-	gb.NewGinkgoBuilder("Different Separators").
-		Table(gb.NewGinkgoTable().
-			Exec(func(propString, separator string) {
-				testedViper := convertToProperties(
-					propString, separator,
+var _ = Describe("multiPropLoader", func() {
+	Context("calling of loadProperties()", func() {
+		gb.NewGinkgoBuilder("Different Separators").
+			Table(gb.NewGinkgoTable().
+				Exec(func(propString, separator string) {
+					testedLoader := newMultiPropLoader()
+					testedLoader.loadProperties(
+						"", propString, separator,
+					)
+
+					testedViper := testedLoader.viperObj
+
+					expectFunc := func(propName, expected string) {
+						GinkgoT().Logf("Asserts prop[%s]", propName)
+						Expect(testedViper.GetString(propName)).To(Equal(expected))
+					}
+
+					expectFunc("a.v1", "33")
+					expectFunc("a.v2", "99")
+					expectFunc("a.v3", "hh")
+					expectFunc("a.v4", "jj")
+				}).
+				Case(fmt.Sprintf("Default separator(%s)", DEFAULT_SEPARATOR), "a.v1=33 a.v2=99   a.v3=hh\na.v4=jj", DEFAULT_SEPARATOR).
+				Case("Customized separator(!!)", "a.v1=33!!a.v2=99!!a.v3=hh!!a.v4=jj", "!!"),
+			).
+			ToContext()
+
+		gb.NewGinkgoBuilder("String properties overrides property file").
+			It("Overrode value should match expectd", func() {
+				testedLoader := newMultiPropLoader()
+				testedLoader.loadProperties(
+					"./sample.properties", "a.v2=99", DEFAULT_SEPARATOR,
 				)
+
+				testedViper := testedLoader.viperObj
+
 				expectFunc := func(propName, expected string) {
 					GinkgoT().Logf("Asserts prop[%s]", propName)
 					Expect(testedViper.GetString(propName)).To(Equal(expected))
 				}
 
-				expectFunc("a.v1", "33")
-				expectFunc("a.v2", "99")
-				expectFunc("a.v3", "hh")
-				expectFunc("a.v4", "jj")
+				expectFunc("a.v2", "99") // Overrides property file
+				expectFunc("b.v1", "40") // From property file
 			}).
-			Case(fmt.Sprintf("Default separator(%s)", DEFAULT_SEPARATOR), "a.v1=33 a.v2=99   a.v3=hh\na.v4=jj", DEFAULT_SEPARATOR).
-			Case("Customized separator(!!)", "a.v1=33!!a.v2=99!!a.v3=hh!!a.v4=jj", "!!"),
-		).
+			ToContext()
+	})
+
+	gb.NewGinkgoBuilder("Load from environment variables").
+		BeforeEach(func() {
+			os.Setenv(ENV_OWL_TEST_PROPS_FILE, "sample.properties")
+			os.Setenv(ENV_OWL_TEST_PROPS, "a1=11!!a2=33")
+			os.Setenv(ENV_OWL_TEST_PROPS_SEP, "!!")
+		}).
+		AfterEach(func() {
+			os.Unsetenv(ENV_OWL_TEST_PROPS_FILE)
+			os.Unsetenv(ENV_OWL_TEST_PROPS)
+			os.Unsetenv(ENV_OWL_TEST_PROPS_SEP)
+		}).
+		It("Final properties should match expected", func() {
+			testedLoader := newMultiPropLoader()
+			testedLoader.loadFromEnv()
+
+			testedViper := testedLoader.viperObj
+
+			expectFunc := func(propName, expected string) {
+				GinkgoT().Logf("Asserts prop[%s]", propName)
+				Expect(testedViper.GetString(propName)).To(Equal(expected))
+			}
+
+			expectFunc("a1", "11")
+			expectFunc("a2", "33")
+			expectFunc("b.v1", "40")
+		}).
 		ToContext()
 })
 

@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Intg] Test getAgentConfig", ginkgoDb.NeedDb(func() {
+var _ = Describe("[Intg] Test getAgentConfig", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			"INSERT INTO common_config(`key`, `value`)" +

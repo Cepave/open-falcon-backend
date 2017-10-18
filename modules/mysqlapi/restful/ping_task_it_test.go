@@ -42,6 +42,7 @@ func (suite *TestPintTaskItSuite) TestListAgents(c *C) {
 }
 
 func (s *TestPintTaskItSuite) SetUpSuite(c *C) {
+	itSkipForGocheck(c)
 	testingDb.InitRdb(c)
 }
 func (s *TestPintTaskItSuite) TearDownSuite(c *C) {

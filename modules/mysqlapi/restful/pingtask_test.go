@@ -18,6 +18,7 @@ type TestPingtaskItSuite struct{}
 var _ = Suite(&TestPingtaskItSuite{})
 
 func (s *TestPingtaskItSuite) SetUpSuite(c *C) {
+	itSkipForGocheck(c)
 	testingDb.InitRdb(c)
 }
 func (s *TestPingtaskItSuite) TearDownSuite(c *C) {

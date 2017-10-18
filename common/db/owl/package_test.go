@@ -1,18 +1,15 @@
 package owl
 
 import (
-	"flag"
-	ch "gopkg.in/check.v1"
 	"testing"
 
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	tFlag "github.com/Cepave/open-falcon-backend/common/testing/flag"
+	ch "gopkg.in/check.v1"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func init() {
-	flag.Parse()
-}
 
 func TestByGinkgo(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -32,3 +29,10 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	ginkgoDb.ReleaseDbFacade(DbFacade)
 })
+
+var (
+	itFeatures    = tFlag.F_MySql
+	itSkipMessage = tFlag.FeatureHelpString(itFeatures)
+	itSkip        = tFlag.BuildSkipFactory(tFlag.F_MySql, itSkipMessage)
+	testFlags     = tFlag.NewTestFlags()
+)

@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Query object", ginkgoDb.NeedDb(func() {
+var _ = Describe("Query object", itSkip.PrependBeforeEach(func() {
 	Context("Add by content(md5)", func() {
 		assertAddOrRefresh := func(accessTime string) *owlModel.Query {
 			timeValue := t.ParseTimeByGinkgo(accessTime)

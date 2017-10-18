@@ -1,7 +1,6 @@
 package utils
 
 import (
-	ch "gopkg.in/check.v1"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -11,8 +10,4 @@ import (
 func TestByGinkgo(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Base Suite")
-}
-
-func TestByCheck(t *testing.T) {
-	ch.TestingT(t)
 }
