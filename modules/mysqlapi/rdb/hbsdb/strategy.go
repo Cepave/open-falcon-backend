@@ -20,8 +20,12 @@ func QueryStrategies(tpls map[int]*model.NewTemplate) (map[int]*model.NewStrateg
 
 	now := time.Now().Format("15:04")
 	sql := fmt.Sprintf(
-		"select %s from strategy as s where (s.run_begin='' and s.run_end='') or (s.run_begin <= '%s' and s.run_end > '%s')",
+		"select %s from strategy as s where (s.run_begin='' and s.run_end='') "+
+			"or (s.run_begin <= '%s' and s.run_end > '%s')"+
+			"or (s.run_begin > s.run_end and !(s.run_begin > '%s' and s.run_end < '%s'))",
 		"s.id, s.metric, s.tags, s.func, s.op, s.right_value, s.max_step, s.priority, s.note, s.tpl_id",
+		now,
+		now,
 		now,
 		now,
 	)
