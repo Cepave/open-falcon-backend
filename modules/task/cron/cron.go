@@ -11,8 +11,15 @@ import (
 
 var logger = log.NewDefaultLogger("info")
 
+type commonJobConfig interface {
+	isEnable() bool
+	getSchedule() string
+	buildJob() func()
+}
+
 type TaskCronConfig struct {
 	VacuumQueryObjects *VacuumQueryObjectsConf
+	VacuumGraphIndex   *VacuumGraphIndexConf
 }
 
 // Configurations for vacuum of query objects
@@ -23,31 +30,45 @@ type VacuumQueryObjectsConf struct {
 }
 
 func (v *VacuumQueryObjectsConf) String() string {
-	return fmt.Sprintf("For days: %d. Schedule: [%s].", v.ForDays, v.Cron)
+	return fmt.Sprintf("[Vacuum Query Object] For days: %d. Schedule: [%s].", v.ForDays, v.Cron)
+}
+func (v *VacuumQueryObjectsConf) isEnable() bool {
+	return v.Enable
+}
+func (v *VacuumQueryObjectsConf) getSchedule() string {
+	return v.Cron
+}
+func (v *VacuumQueryObjectsConf) buildJob() func() {
+	return buildProcOfVacuumQueryObjects(v.ForDays)
+}
+
+// Configurations for vacuum of graph index
+type VacuumGraphIndexConf struct {
+	Cron    string
+	ForDays int
+	Enable  bool
+}
+
+func (v *VacuumGraphIndexConf) String() string {
+	return fmt.Sprintf("[Vacuum Graph Index] For days: %d. Schedule: [%s].", v.ForDays, v.Cron)
+}
+func (v *VacuumGraphIndexConf) isEnable() bool {
+	return v.Enable
+}
+func (v *VacuumGraphIndexConf) getSchedule() string {
+	return v.Cron
+}
+func (v *VacuumGraphIndexConf) buildJob() func() {
+	return buildProcOfVacuumGraphIndex(v.ForDays)
 }
 
 func NewCronServices(config *TaskCronConfig) *TaskCronService {
-	cronImpl := cron.New()
+	cronServ := &TaskCronService{cron.New()}
 
-	/**
-	 * Constructs job for vacuum of query objects
-	 */
-	if config.VacuumQueryObjects.Enable {
-		vacuumConfig := config.VacuumQueryObjects
+	cronServ.addFunc(config.VacuumQueryObjects)
+	cronServ.addFunc(config.VacuumGraphIndex)
 
-		logger.Infof("Enable vacuum of query objects. %s", vacuumConfig)
-
-		err := errors.Annotatef(
-			cronImpl.AddFunc(vacuumConfig.Cron, buildProcOfVacuumQueryObjects(vacuumConfig.ForDays)),
-			"Cannot add cron job for vacuum of query objects. Config: %s", vacuumConfig,
-		)
-		if err != nil {
-			panic(errors.Details(err))
-		}
-	}
-	// :~)
-
-	return &TaskCronService{cronImpl}
+	return cronServ
 }
 
 type TaskCronService struct {
@@ -55,10 +76,25 @@ type TaskCronService struct {
 }
 
 func (s *TaskCronService) Start() {
-	logger.Info("Start cron(by robfig/cron) service.")
+	logger.Info("Start cron(by \"robfig/cron\") service.")
 	s.cronImpl.Start()
 }
 func (s *TaskCronService) Stop() {
-	logger.Info("Stop cron(by robfig/cron) service.")
+	logger.Info("Stop cron(by \"robfig/cron\") service.")
 	s.cronImpl.Stop()
+}
+
+func (s *TaskCronService) addFunc(jobConfig commonJobConfig) {
+	if !jobConfig.isEnable() {
+		logger.Infof("Job is disabled: %s", jobConfig)
+		return
+	}
+
+	logger.Infof("Job is enabled: %s", jobConfig)
+
+	if err := errors.Annotate(
+		s.cronImpl.AddFunc(jobConfig.getSchedule(), jobConfig.buildJob()), "Cannot add cron job",
+	); err != nil {
+		panic(errors.Details(err))
+	}
 }

@@ -5,23 +5,27 @@
 			"enable": true,
 			"schedule": "@daily",
 			"for_days": 90
+		},
+		"vacuum_graph_index": {
+			"enable": true,
+			"schedule": "0 0 2 ? * 6",
+			"for_days": 7
 		}
 	},
     "http": {
-        "enabled": true,
+        "enable": true,
         "listen": "0.0.0.0:8002"
     },
     "index": {
-        "enabled": true,
+        "enable": true,
         "dsn": "%%MYSQL%%/graph?loc=Local&parseTime=true",
         "maxIdle": 4,
-        "autoDelete": true,
         "cluster": {
             "graph:6071" : "0 0 0 ? * 0-5"
         }
     },
     "collector":{
-        "enabled": true,
+        "enable": true,
         "destUrl" : "http://127.0.0.1:1988/v1/push",
         "srcUrlFmt" : "http://%s/statistics/all",
         "cluster" : [

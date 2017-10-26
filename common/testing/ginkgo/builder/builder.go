@@ -498,10 +498,8 @@ func (c *countingEvent) isAfterLastOrIncrease() bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
+	c.currentCount++
 	result := c.currentCount == c.totalCount
-	if !result {
-		c.currentCount++
-	}
 
 	return result
 }

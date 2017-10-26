@@ -6,11 +6,10 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/hbs/g"
 
-	oModel "github.com/Cepave/open-falcon-backend/common/model"
+	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 	tg "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	tHttp "github.com/Cepave/open-falcon-backend/common/testing/http"
 	mock "github.com/Cepave/open-falcon-backend/common/testing/http/gock"
-	apiModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -26,7 +25,7 @@ var _ = Describe("[Intg] Test GET on /api/v1/health", sf.PrependBeforeEach(func(
 	var (
 		mockMysqlApiServer *httptest.Server
 		mockResp           = &apiModel.HealthView{
-			Rdb: &apiModel.Rdb{
+			Rdb: &apiModel.AllRdbHealth{
 				Dsn:             "root:!hide password!@tcp(mysql.mock.com:3306)/falcon_portal",
 				OpenConnections: 12,
 				PingResult:      0,
@@ -69,7 +68,7 @@ var _ = Describe("[Intg] Test GET on /api/v1/health", sf.PrependBeforeEach(func(
 		h := &g.HealthView{}
 		Expect(resp.JSON(h)).To(Succeed())
 		expVal := &g.HealthView{
-			MysqlApi: &oModel.MysqlApi{
+			MysqlApi: &apiModel.MysqlApi{
 				Address:  fakeServerConfig.GetUrlString(),
 				Message:  "",
 				Response: mockResp,

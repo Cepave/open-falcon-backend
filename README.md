@@ -80,12 +80,33 @@ There are environment variables could be used to set-up properties for testing:
 For example, you could use `make go-test` by:
 
 ```sh
-OWL_TEST_PROPS="mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local" make go-test GO_TEST_VERBOSE=yes GO_TEST_FOLDER="modules/mysqlapi/rdb/owl"
+OWL_TEST_PROPS="mysql.owl_portal=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local" make go-test GO_TEST_VERBOSE=yes GO_TEST_FOLDER="modules/mysqlapi/rdb/owl"
 ```
 
 Or use `go test`:
 ```sh
-OWL_TEST_PROPS="mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local" go test ./modules/mysqlapi/rdb/owl -test.v
+OWL_TEST_PROPS="mysql.owl_portal=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local" go test ./modules/mysqlapi/rdb/owl -test.v
+```
+
+## GOMAXPROCS(-parallel)
+
+Since some tests(e.x. database unit test) are stateful, these tests should be run in **single thread**:
+
+1. `GOMAXPROCS=<n>` - By environment variable
+1. `-parallel <n>` - By test flags
+
+See `go help testflag` for detail information.
+
+Example:
+
+```sh
+OWL_TEST_PROPS="mysql.owl_portal=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local mysql.graph=root:cepave@tcp(192.168.20.50:3306)/graph?parseTime=True&loc=Local"
+
+# By $GOMAXPROCS
+GOMAXPROCS=1 go test ./modules/mysqlapi/...
+
+# By -parallel
+go test -parallel 1 ./modules/mysqlapi/...
 ```
 
 ## By using `make go-test`
@@ -104,7 +125,7 @@ Variables:
 make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api"
 
 # With MySql property and verbose output
-make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api" GO_TEST_VERBOSE=yes GO_TEST_PROPS="mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
+make go-test GO_TEST_FOLDER="modules common" GO_TEST_EXCLUDE="modules/fe modules/f2e-api" GO_TEST_VERBOSE=yes GO_TEST_PROPS="mysql.owl_portal=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
 ```
 
 See `Makefile` for default values of the two variables.
@@ -131,14 +152,14 @@ Arguments:
 ./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api"
 
 # With MySql property and verbose output
-./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api" -v -p "mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
+./go-test-all.sh -t "modules common" -e "modules/fe modules/f2e-api" -v -p "mysql.owl_portal=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
 ```
 
 ## Usage of property file
 
 Example of property file("__sample.properties__"):
 ```ini
-mysql=root:cepave@tcp(192.168.20.50:3307)/falcon_portal
+mysql.owl_portal=root:cepave@tcp(192.168.20.50:3307)/falcon_portal
 client.http.host=127.0.0.1
 client.http.port=6040
 ```

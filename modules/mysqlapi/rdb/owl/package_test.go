@@ -17,14 +17,12 @@ func TestByGinkgo(t *testing.T) {
 
 var ginkgoDb = &tDb.GinkgoDb{}
 
-var inTx func(sql ...string)
+func inTx(sql ...string) {
+	DbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
+}
 
 var _ = BeforeSuite(func() {
-	DbFacade = ginkgoDb.InitDbFacade()
-
-	if DbFacade != nil {
-		inTx = DbFacade.SqlDbCtrl.ExecQueriesInTx
-	}
+	DbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_PORTAL)
 })
 
 var _ = AfterSuite(func() {
@@ -33,7 +31,6 @@ var _ = AfterSuite(func() {
 })
 
 var (
-	itFeatures    = tFlag.F_MySql
-	itSkipMessage = tFlag.FeatureHelpString(itFeatures)
-	itSkip        = tFlag.BuildSkipFactory(tFlag.F_MySql, itSkipMessage)
+	itSkipMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_PORTAL)
+	itSkip        = tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_PORTAL, itSkipMessage)
 )

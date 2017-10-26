@@ -18,7 +18,7 @@ func getHealth(c *gin.Context) {
 	// Set health check value
 	healthcheck := 1
 	if mysqlInfo != nil && mysqlInfo.Response != nil {
-		healthcheck = mysqlInfo.Response.Rdb.PingResult
+		healthcheck = mysqlInfo.Response.Rdb.Portal.PingResult
 	}
 
 	healthInfo := &g.HealthView{

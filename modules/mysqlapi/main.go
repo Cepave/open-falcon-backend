@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"syscall"
 	"time"
@@ -16,7 +17,6 @@ import (
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
 	"github.com/Cepave/open-falcon-backend/common/vipercfg"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/restful"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/hbscache"
@@ -37,14 +37,16 @@ func main() {
 
 	config := confLoader.MustLoadConfigFile()
 
-	rdb.InitRdb(toRdbConfig(config))
+	rdb.InitPortalRdb(toRdbConfig(config, "portal"))
+	rdb.InitGraphRdb(toRdbConfig(config, "graph"))
+
 	restful.InitGin(toGinConfig(config))
 	restful.InitCache(toCacheConfig(config))
 
 	service.InitNqmHeartbeat(toNqmHeartbeatConfig(config))
 	service.InitCachedTargetList(toTargetListConfig(config))
 	owlSrv.InitQueryObjectService(*toQueryObjectServiceConfig(config))
-	hbsdb.Init(toRdbConfig(config))
+
 	hbscache.Init()
 
 	commonOs.HoldingAndWaitSignal(exitApp, syscall.SIGINT, syscall.SIGTERM)
@@ -53,8 +55,8 @@ func main() {
 func exitApp(signal os.Signal) {
 	service.CloseNqmHeartbeat()
 	service.CloseCachedTargetList()
-	hbsdb.Release()
-	rdb.ReleaseRdb()
+
+	rdb.ReleaseAllRdb()
 }
 
 func toGinConfig(config *viper.Viper) *commonGin.GinConfig {
@@ -65,10 +67,10 @@ func toGinConfig(config *viper.Viper) *commonGin.GinConfig {
 	}
 }
 
-func toRdbConfig(config *viper.Viper) *commonDb.DbConfig {
+func toRdbConfig(config *viper.Viper, dbname string) *commonDb.DbConfig {
 	return &commonDb.DbConfig{
-		Dsn:     config.GetString("rdb.dsn"),
-		MaxIdle: config.GetInt("rdb.maxIdle"),
+		Dsn:     config.GetString(fmt.Sprintf("rdb.%s.dsn", dbname)),
+		MaxIdle: config.GetInt(fmt.Sprintf("rdb.%s.maxIdle", dbname)),
 	}
 }
 

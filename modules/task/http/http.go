@@ -2,11 +2,13 @@ package http
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
+	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	"net/http"
 
 	"github.com/Cepave/open-falcon-backend/modules/task/g"
 )
+
+var logger = log.NewDefaultLogger("INFO")
 
 type Dto struct {
 	Msg  string      `json:"msg"`
@@ -19,11 +21,13 @@ func Start() {
 }
 func startHttpServer() {
 	if !g.Config().Http.Enable {
+		logger.Infof("[HTTP] HTTP server is disabled.")
 		return
 	}
 
 	addr := g.Config().Http.Listen
 	if addr == "" {
+		logger.Infof("[HTTP] Address of HTTP server is empty.")
 		return
 	}
 
@@ -37,8 +41,8 @@ func startHttpServer() {
 		MaxHeaderBytes: 1 << 30,
 	}
 
-	log.Println("http:startHttpServer, ok, listening ", addr)
-	log.Fatalln(s.ListenAndServe())
+	logger.Infof("[HTTP] Start HTTP server: %s", addr)
+	logger.Fatalln(s.ListenAndServe())
 }
 
 func RenderJson(w http.ResponseWriter, v interface{}) {

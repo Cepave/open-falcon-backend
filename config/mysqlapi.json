@@ -1,7 +1,13 @@
 {
 	"rdb" : {
-		"dsn" : "%%MYSQL%%/falcon_portal?loc=Local&parseTime=true",
-		"maxIdle" : 8
+		"portal": {
+			"dsn" : "%%MYSQL%%/falcon_portal?loc=Local&parseTime=true",
+			"maxIdle" : 8
+		},
+		"graph": {
+			"dsn" : "%%MYSQL%%/graph?loc=Local&parseTime=true",
+			"maxIdle" : 8
+		}
 	},
 	"restful" : {
 		"listen" : {

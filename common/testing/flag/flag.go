@@ -45,7 +45,7 @@
 //
 // There are some pre-defined properties:
 //
-// 	mysql - MySql connection
+// 	mysql(DEPRECATED) - MySql connection
 //
 // 	client.http.host - HTTP client
 // 	client.http.port - HTTP client
@@ -108,7 +108,7 @@ const (
 	F_HttpClient = 0x01
 	// Feature of JSONRPC client
 	F_JsonRpcClient = 0x02
-	// Feature of MySql
+	// Deprecated: Feature of MySql
 	F_MySql = 0x100
 	// Feature of IT web
 	F_ItWeb = 0x10000
@@ -183,6 +183,8 @@ func (f *TestFlags) GetViper() *viper.Viper {
 }
 
 // Gets property value of "mysql"
+//
+// Deprecated: Use "GetMysqlOfOwlDb(int)" instead.
 func (f *TestFlags) GetMySql() string {
 	if f.HasMySql() {
 		return f.typedFlags["mysql"].(string)
@@ -255,9 +257,12 @@ func (f *TestFlags) HasHttpClient() bool {
 //
 // Example:
 // 	"-owl.flag=mysql=root:cepave@tcp(192.168.20.50:3306)/falcon_portal_test?parseTime=True&loc=Local"
+//
+// Depcrecated: Use "HasMySqlOfOwlDb(int)" instead.
 func (f *TestFlags) HasMySql() bool {
-	_, ok := f.typedFlags["mysql"]
-	return ok
+	_, oldMySql := f.typedFlags["mysql"]
+
+	return oldMySql || f.HasMySqlOfOwlDb(OWL_DB_PORTAL)
 }
 
 // Gives "true" if and only if "mysql.<db>" property is non-empty

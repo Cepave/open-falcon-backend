@@ -1,9 +1,12 @@
 package db
 
 import (
+	check "gopkg.in/check.v1"
+
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	f "github.com/Cepave/open-falcon-backend/common/db/facade"
-	check "gopkg.in/check.v1"
+
+	tflag "github.com/Cepave/open-falcon-backend/common/testing/flag"
 )
 
 // This function is used to:
@@ -60,6 +63,13 @@ func ReleaseDbFacade(c *check.C, dbFacade *f.DbFacade) {
 //
 // See "common/testing/flag"
 func getDbConfig(c *check.C) *commonDb.DbConfig {
+	if getTestFlags().HasMySqlOfOwlDb(tflag.OWL_DB_PORTAL) {
+		return &commonDb.DbConfig{
+			Dsn:     getTestFlags().GetMysqlOfOwlDb(tflag.OWL_DB_PORTAL),
+			MaxIdle: 2,
+		}
+	}
+
 	if !getTestFlags().HasMySql() {
 		c.Skip(flagMessage)
 		return nil

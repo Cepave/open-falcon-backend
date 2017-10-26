@@ -7,7 +7,19 @@ package mysqlapi
 //       "dsn":"DSN....",
 //       "open_connections":10,
 //       "ping_result":0,
-//       "ping_message":""
+//       "ping_message":"",
+//       "<db1_name>": {
+//       	"dsn":"DSN....",
+//       	"open_connections":10,
+//       	"ping_result":0,
+//       	"ping_message":"",
+//		 },
+//       "<db2_name>": {
+//       	"dsn":"DSN....",
+//       	"open_connections":10,
+//       	"ping_result":0,
+//       	"ping_message":"",
+//		 }
 //    },
 //    "http":{
 //       "listening":":6040"
@@ -19,9 +31,23 @@ package mysqlapi
 //    }
 // }
 type HealthView struct {
-	Rdb  *Rdb  `json:"rdb"`
-	Http *Http `json:"http"`
-	Nqm  *Nqm  `json:"nqm"`
+	Rdb  *AllRdbHealth `json:"rdb"`
+	Http *Http         `json:"http"`
+	Nqm  *Nqm          `json:"nqm"`
+}
+
+type AllRdbHealth struct {
+	// Deprecated; old information on portal database
+	Dsn string `json:"dsn"`
+	// Deprecated; old information on portal database
+	OpenConnections int `json:"open_connections"`
+	// Deprecated; old information on portal database
+	PingResult int `json:"ping_result"`
+	// Deprecated; old information on portal database
+	PingMessage string `json:"ping_message"`
+
+	Portal *Rdb `json:"portal"`
+	Graph  *Rdb `json:"graph"`
 }
 
 type Rdb struct {

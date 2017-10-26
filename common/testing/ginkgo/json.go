@@ -1,44 +1,38 @@
 package ginkgo
 
 import (
-	"encoding/json"
+	ojson "github.com/Cepave/open-falcon-backend/common/json"
+	sjson "github.com/bitly/go-simplejson"
 
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/types"
 )
 
 func MatchJson(v interface{}) GomegaMatcher {
+	expectedJsonString, _ := ojson.UnmarshalToJson(v).MarshalJSON()
+
 	return &matchJsonImpl{
-		MatchJSON(loadJsonString(v)),
+		matcher: MatchJSON(expectedJsonString),
 	}
 }
 
 type matchJsonImpl struct {
-	gomegaMatcher GomegaMatcher
+	matcher    GomegaMatcher
+	actualJson *sjson.Json
 }
 
 func (m *matchJsonImpl) Match(actual interface{}) (success bool, err error) {
-	jsonContent := loadJsonString(actual)
-	return m.gomegaMatcher.Match(jsonContent)
+	m.actualJson = ojson.UnmarshalToJson(actual)
+
+	actualJsonString, _ := m.actualJson.MarshalJSON()
+
+	return m.matcher.Match(actualJsonString)
 }
 func (m *matchJsonImpl) FailureMessage(actual interface{}) (message string) {
-	jsonContent := loadJsonString(actual)
-	return m.gomegaMatcher.FailureMessage(jsonContent)
+	actualJsonString, _ := m.actualJson.MarshalJSON()
+	return m.matcher.FailureMessage(actualJsonString)
 }
 func (m *matchJsonImpl) NegatedFailureMessage(actual interface{}) (message string) {
-	jsonContent := loadJsonString(actual)
-	return m.gomegaMatcher.FailureMessage(jsonContent)
-}
-
-func loadJsonString(v interface{}) interface{} {
-	if jsonMarshaler, ok := v.(json.Marshaler); ok {
-		jsonContent, err := jsonMarshaler.MarshalJSON()
-		if err != nil {
-			panic(err)
-		}
-
-		return jsonContent
-	}
-
-	return v
+	actualJsonString, _ := m.actualJson.MarshalJSON()
+	return m.matcher.NegatedFailureMessage(actualJsonString)
 }

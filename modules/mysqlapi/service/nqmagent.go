@@ -142,6 +142,10 @@ func (q *nqmAgentUpdateService) drainFromQueue(config *commonQueue.Config) []*nq
 }
 
 func updateNqmAgentHeartbeatImpl(reqs []*nqmModel.HeartbeatRequest) {
+	if len(reqs) == 0 {
+		return
+	}
+
 	utils.BuildPanicCapture(
 		func() {
 			rdb.UpdateNqmAgentHeartbeat(reqs)

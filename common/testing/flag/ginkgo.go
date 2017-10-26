@@ -204,7 +204,7 @@ func FeatureHelp(matchFeatures int) []string {
 //
 // This function likes "FeatureHelp(int)" beside joining the messages with a space character.
 func FeatureHelpString(matchFeatures int) string {
-	return fmt.Sprintf("Need test flags: %s", strings.Join(FeatureHelp(matchFeatures), " "))
+	return fmt.Sprintf("Need test properties: %s", strings.Join(FeatureHelp(matchFeatures), " "))
 }
 
 // Gets help of properties about OWL databases
@@ -213,7 +213,7 @@ func OwlDbHelp(matchDbs int) []string {
 
 	for db, propName := range owlDbMap {
 		if matchDbs&db > 0 {
-			messages = append(messages, fmt.Sprintf("%s=<db_conn>"), propName)
+			messages = append(messages, fmt.Sprintf("%s=<db_conn>", propName))
 		}
 	}
 
@@ -224,7 +224,7 @@ func OwlDbHelp(matchDbs int) []string {
 //
 // This function likes "OwlDbHelp(int)" beside joining the messages with a space character.
 func OwlDbHelpString(matchDbs int) string {
-	return fmt.Sprintf("Need test flags: %s", strings.Join(OwlDbHelp(matchDbs), " "))
+	return fmt.Sprintf("Need test properties: %s", strings.Join(OwlDbHelp(matchDbs), " "))
 }
 
 // Checks the match features on "*TestFlags"
