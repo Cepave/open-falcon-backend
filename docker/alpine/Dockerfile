@@ -1,54 +1,21 @@
-FROM alpine:3.4
+FROM golang:1.7.6-alpine3.4
 
 LABEL maintainer cheminlin@cepave.com
-
-# Golang
-ENV GOPATH /go
-ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
-ENV GOLANG_VERSION 1.7.5
-ENV GOLANG_SRC_URL https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz
-ENV GOLANG_SRC_SHA256 4e834513a2079f8cbbd357502cccaac9507fd00a1efe672375798858ff291815
 
 # Falcon
 ARG ENTRYFILE=run.sh
 ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
 ENV WORK_PATH=${GOPATH}/src/github.com/Cepave/open-falcon-backend
 
-# Copy golang & backend sources
-COPY ${DOCKER_DIR}/alpine/go-wrapper /usr/local/bin/
-COPY ${DOCKER_DIR}/alpine/no-pic.patch /
-COPY ${DOCKER_DIR}/alpine/17847.patch /
+# Copy backend sources
 COPY . ${WORK_PATH}
+WORKDIR ${WORK_PATH}
 
-RUN set -ex \
-    && apk add --no-cache ca-certificates \
-	&& apk add --no-cache --virtual .build-deps \
-		bash \
-		gcc \
-		musl-dev \
-		openssl \
-		go \
-	\
-	&& export GOROOT_BOOTSTRAP="$(go env GOROOT)" \
-	\
-	&& wget -q "$GOLANG_SRC_URL" -O golang.tar.gz \
-	&& echo "$GOLANG_SRC_SHA256  golang.tar.gz" | sha256sum -c - \
-	&& tar -C /usr/local -xzf golang.tar.gz \
-	&& rm golang.tar.gz \
-	&& cd /usr/local/go/src \
-	&& patch -p2 -i /no-pic.patch \
-	&& patch -p2 -i /17847.patch \
-	&& ./make.bash \
-	\
-	&& rm -rf /*.patch \
-	&& apk del .build-deps \
-    && mkdir -p "$GOPATH/src" "$GOPATH/bin" \
-    && chmod -R 777 "$GOPATH" \
-    \
-    && apk add --no-cache ca-certificates bash curl git iproute2 jq \
+# Build binary
+RUN \
+    apk add --no-cache ca-certificates bash curl git iproute2 jq \
     && mkdir -p ${FALCON_DIR} ${CONFIG_DIR} \
     && apk add --no-cache --virtual .build-deps g++ perl make \
-    && cd ${WORK_PATH} \
     && make all \
     && make pack \
     && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR} \
