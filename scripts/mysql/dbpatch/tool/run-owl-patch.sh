@@ -12,13 +12,17 @@ PATCH_YAML_FILE=
 PATCH_CHANGLOG_BASE=
 
 bin_paran=
-bin_os_param=
+
+bin_os=
+bin_arch=32
 
 HELP="
 Options:\n\n
 -bin=<bin file> - default value is \"dbpatch\"\n
 -bin-os=<os for bin file> - If this value is provided, ignores \"-bin\" option\n
 \t linux, windows, or osx\n
+-bin-arch=<32> - If this value is provided, ignores \"-bin\" option\n
+\t 64 or 32\n
 -database=<boss|portal|uic|links|graph|grafana|dashboard>\n
 -log-base=<base directory>. Defualt value is \"$PATCH_LOG_BASE\"\n
 -db-connection=<connection string> - default value is \"$DATABASE_CONNECTION\"\n
@@ -40,7 +44,10 @@ function load_params()
 			bin_param=${key#-bin=}
 			;;
 			-bin-os=*)
-			bin_os_param=dbpatch-${key#-bin-os=}-32
+			bin_os=dbpatch-${key#-bin-os=}
+			;;
+			-bin-arch=*)
+			bin_arch=${key#-bin-arch=}
 			;;
 			-log-base=*)
 			PATCH_LOG_BASE=${key#-log-base=}
@@ -129,7 +136,7 @@ function check_database()
 }
 function find_bin()
 {
-	test -n $bin_os_param && PATCH_BIN=$bin_os_param
+	test -n "$bin_os" && PATCH_BIN="$bin_os-$bin_arch"
 	test -n $bin_param && test -z $PATCH_BIN && PATCH_BIN=$bin_param
 
 	if [ -n $PATCH_BIN ] && ! [ -e $PATCH_BIN ] ; then
