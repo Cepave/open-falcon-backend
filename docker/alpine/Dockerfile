@@ -1,35 +1,40 @@
-FROM golang:1.7.6-alpine3.4
-
+####################
+# Build base image
+####################
+FROM golang:1.7.6-alpine3.4 as build-base
 LABEL maintainer cheminlin@cepave.com
+ENV FALCON_DIR=/home CONFIG_DIR=/config
+ENV PROJ_PATH=${GOPATH}/src/github.com/Cepave/open-falcon-backend
 
-# Falcon
-ARG ENTRYFILE=run.sh
-ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
-ENV WORK_PATH=${GOPATH}/src/github.com/Cepave/open-falcon-backend
-
-# Copy backend sources
-COPY . ${WORK_PATH}
-WORKDIR ${WORK_PATH}
-
-# Build binary
+COPY . ${PROJ_PATH}
+WORKDIR ${PROJ_PATH}
 RUN \
-    apk add --no-cache ca-certificates bash curl git iproute2 jq \
-    && mkdir -p ${FALCON_DIR} ${CONFIG_DIR} \
+    apk add --no-cache ca-certificates bash git \
     && apk add --no-cache --virtual .build-deps g++ perl make \
     && make all \
     && make pack \
     && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR} \
-    && rm -rf ${GOPATH} /usr/local/go \
     && apk del .build-deps
 
-# Set timezone
+
+####################
+# Build final image
+####################
+FROM alpine:3.4
+LABEL maintainer cheminlin@cepave.com
+ARG ENTRYFILE=run.sh
+ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
+
+COPY --from=build-base ${FALCON_DIR} ${FALCON_DIR}}
+# Set timezone, packages
 # Set alias in the case of user want to execute control in their terminal
 # Set soft links
 RUN \
-  apk add --no-cache tzdata \
+  apk add --no-cache tzdata ca-certificates bash curl git iproute2 jq \
   && cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime \
   && echo "Asia/Taipei" > /etc/timezone \
   && echo "alias ps='pstree'" > ~/.bashrc \
+  && mkdir -p ${CONFIG_DIR} \
   && touch ${CONFIG_DIR}/agent.json \
   && ln -sf ${CONFIG_DIR}/agent.json ${FALCON_DIR}/agent/${CONFIG_LINK} \
   && rm -f ${CONFIG_DIR}/agent.json \
