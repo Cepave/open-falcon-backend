@@ -6,15 +6,13 @@ LABEL maintainer cheminlin@cepave.com
 ENV FALCON_DIR=/home CONFIG_DIR=/config
 ENV PROJ_PATH=${GOPATH}/src/github.com/Cepave/open-falcon-backend
 
+RUN apk add --no-cache ca-certificates bash git g++ perl make
 COPY . ${PROJ_PATH}
 WORKDIR ${PROJ_PATH}
 RUN \
-    apk add --no-cache ca-certificates bash git \
-    && apk add --no-cache --virtual .build-deps g++ perl make \
-    && make all \
+    make all \
     && make pack \
-    && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR} \
-    && apk del .build-deps
+    && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR}
 
 
 ####################
@@ -25,7 +23,7 @@ LABEL maintainer cheminlin@cepave.com
 ARG ENTRYFILE=run.sh
 ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
 
-COPY --from=build-base ${FALCON_DIR} ${FALCON_DIR}}
+COPY --from=build-base ${FALCON_DIR} ${FALCON_DIR}
 # Set timezone, packages
 # Set alias in the case of user want to execute control in their terminal
 # Set soft links
