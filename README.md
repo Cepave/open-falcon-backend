@@ -69,6 +69,10 @@ Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exporte
 
 	make clean all pack
 
+# Upgrading of MySql databases
+
+See [scripts/mysql/README.md](scripts/mysql/README.md)
+
 # Testing
 
 There are environment variables could be used to set-up properties for testing:

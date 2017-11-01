@@ -1,0 +1,19 @@
+databaseChangeLog:
+    - changeSet:
+        id: "init-1"
+        author: "mike"
+        preConditions:
+            onFail: MARK_RAN
+            onFailMessage: "\"sysdb_change_log\" is existing, mark the init-1 as ran one"
+            not:
+                tableExists:
+                    tableName: sysdb_change_log
+        changes:
+            - sqlFile:
+                endDelimiter: ";"
+                relativeToChangelogFile: true
+                path: links.ori.chyeh-2.sql.gz
+    - changeSet:
+        id: "init-2"
+        author: "mike"
+        changes: [ tagDatabase: { tag: "init.171101" } ]
