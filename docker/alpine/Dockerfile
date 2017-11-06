@@ -28,7 +28,7 @@ COPY --from=build-base ${FALCON_DIR} ${FALCON_DIR}
 # Set alias in the case of user want to execute control in their terminal
 # Set soft links
 RUN \
-  apk add --no-cache tzdata ca-certificates bash curl git iproute2 jq \
+  apk add --no-cache tzdata ca-certificates bash curl git iproute2 jq vim \
   && cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime \
   && echo "Asia/Taipei" > /etc/timezone \
   && echo "alias ps='pstree'" > ~/.bashrc \
