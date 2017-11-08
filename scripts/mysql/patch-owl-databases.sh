@@ -20,6 +20,7 @@ liquibase_options=()
 liquibase_command=(update)
 mysql_conn=192.168.20.50:3306
 change_log_base="./liquibase-changelog/"
+yes=
 
 java_property=()
 current_script=$(basename ${BASH_SOURCE[0]})
@@ -40,6 +41,7 @@ ${current_script} [--mysql_conn=192.168.20.50:3306] [--command=update] [--change
 \n\n\t\tDefault value: \"./liquibase-changelog/\"
 \n\n\t--prefix=<prefix> - The prefix to be added to name of database
 \n\n\t--suffix=<suffix> - The suffix to be appended to name of database
+\n\n\t--yes - Applys \"yes\" to any question
 \n\n\t--help - Show this message
 "
 
@@ -70,6 +72,9 @@ function parseParam()
 			param=${param#--command=}
 			liquibase_command=(${param[@]})
 			;;
+			--yes)
+			yes=1
+			;;
 			--help)
 			echo -e $help
 			exit 0
@@ -86,6 +91,8 @@ function parseParam()
 
 function ask_execute()
 {
+	test $yes -eq 1 && return 0
+
 	echo Databases: ${databases[@]}.
 	echo Command: ${liquibase_command[@]}
 	echo MySql Host: $mysql_conn
@@ -117,6 +124,11 @@ for dbname in "${databases[@]}"; do
 
 	./liquibase/liquibase "--url=$finalUrl" "--changeLogFile=$change_log_base$changeLogFile" \
 		--databaseChangeLogTableName=lq_change_log --databaseChangeLogLockTableName=lg_lock \
-			"${liquibase_options[@]}" "${liquibase_command[@]}" "${java_property[@]}" || \
+			"${liquibase_options[@]}" "${liquibase_command[@]}" "${java_property[@]}"
+
+	result=$?
+	if [[ $result -ne 0 ]]; then
 		echo "Update database: $finalDbName has error. Code: $?" >&2
+		exit $result
+	fi
 done

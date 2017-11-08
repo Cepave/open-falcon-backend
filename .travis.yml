@@ -3,14 +3,42 @@ language: go
 go:
   - 1.7.x
   - 1.8.x
-  - master
+
+addons:
+  apt:
+      packages:
+      - openjdk-8-jre
+      - mysql-client-5.6
+
+env:
+  global:
+    - mysql_user=root
+    - mysql_password=ci_test
+    - mysql_host=127.0.0.1
+    - mysql_port=3306
+    - db_prefix=ci_
+    - db_options="parseTime=True&loc=Local"
+    - OWL_TEST_PROPS="mysql.owl_portal=$mysql_user:$mysql_password@tcp($mysql_host:$mysql_port)/${db_prefix}falcon_portal?$db_options mysql.owl_graph=$mysql_user:$mysql_password@tcp($mysql_host:$mysql_port)/${db_prefix}graph?$db_options"
+
+services:
+  - docker
+
+before_install:
+  - sudo /etc/init.d/mysql stop
+  - docker pull mysql
+  - docker run --name ci-mysql -e "MYSQL_ROOT_PASSWORD=$mysql_password" -d -p $mysql_host:$mysql_port:3306 mysql:5.7
+  - scripts/mysql/wait-mysql-ready.sh 3s 16
+  - cd scripts/mysql
+  - ./recreate-owl-databases.sh --mysql="-h $mysql_host -P $mysql_port -u$mysql_user -p$mysql_password" --prefix=$db_prefix --yes
+  - ./patch-owl-databases.sh --prefix=$db_prefix --options="--username=$mysql_user --password=$mysql_password" --mysql_conn=$mysql_host:$mysql_port --yes
+  - cd $TRAVIS_BUILD_DIR
 
 script:
   - make misspell-check
   - make fmt-check
   - make all
   - make pack
-  - make coverage
+  - make GO_TEST_COVERAGE_FILE=coverage.txt go-test
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

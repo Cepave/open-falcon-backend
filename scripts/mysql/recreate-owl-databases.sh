@@ -5,6 +5,7 @@ PREFIX=
 databases=(imdb falcon_portal uic falcon_links grafana graph boss dashboard)
 mysql_args=()
 action=recreate
+yes=
 
 current_script=$(basename ${BASH_SOURCE[0]})
 
@@ -16,6 +17,7 @@ ${current_script} [--action=recreate] [--mysql=<args>] [--prefix=<db prefix>] [-
 \n\n\t--prefix=<prefix> - The prefix to be added to name of database
 \n\n\t--suffix=<suffix> - The suffix to be appended to name of database
 \n\n\t--mysql=<args> - The arguments to be fed to \"mysql\" command
+\n\n\t--yes - Applys \"yes\" for any questions
 \n\n\t--help - Show this message
 "
 
@@ -36,6 +38,9 @@ function parseParam()
 			--action=*)
 			action=${param#--action=}
 			;;
+			--yes)
+			yes=1
+			;;
 			--help)
 			echo -e $help
 			exit 0
@@ -50,6 +55,8 @@ function parseParam()
 
 function ask_execute()
 {
+	test $yes -eq 1 && return 0
+
 	echo Databases: "${databases[@]}"
 	echo -n "Are you sure to **[$action]** databases(PREFIX=$PREFIX, SUFFIX=$SUFFIX)? [Y/N]: "
 
