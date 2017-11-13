@@ -140,10 +140,6 @@ pack: checkbin
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
 	@rm -rf out
 
-coverage: checkvendor
-	@$(MAKE) -f $(THIS_FILE) install
-	./coverage.sh
-
 clean:
 	@rm -rf ./bin
 	@rm -rf ./out

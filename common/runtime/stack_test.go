@@ -2,6 +2,8 @@ package runtime
 
 import (
 	"fmt"
+	"regexp"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -16,10 +18,12 @@ func ExampleGetCallerInfo() {
 
 	// This is line 18 of stack_test.go
 	callerInfo := f()
-	fmt.Printf("%s", callerInfo)
+	replaceRegExp, _ := regexp.Compile(`github\.com/.+$`)
+
+	fmt.Printf("%s", replaceRegExp.FindStringSubmatch(callerInfo.String())[0])
 
 	// Output:
-	// github.com/Cepave/open-falcon-backend/common/runtime/stack_test.go:18
+	// github.com/Cepave/open-falcon-backend/common/runtime/stack_test.go:20
 }
 
 func ExampleGetCallerInfoWithDepth() {
