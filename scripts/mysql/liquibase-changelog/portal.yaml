@@ -28,3 +28,24 @@ databaseChangeLog:
         id: "init-2"
         author: "mike"
         changes: [ tagDatabase: { tag: "init.171101" } ]
+    - changeSet:
+        id: "3"
+        author: "mike"
+        preConditions:
+            onFail: MARK_RAN
+            onFailMessage: "\"events.ev_time_creation\" is existing, mark the mike-3 as ran one"
+            not:
+                columnExists:
+                    tableName: events
+                    columnName: ev_time_creation
+        changes:
+            - addColumn:
+                tableName: events
+                columns:
+                    - column:
+                        name: ev_time_creation
+                        type: DATETIME
+                        valueComputed: "timestamp"
+                        defaultValueComputed: "NOW()"
+                        constraints:
+                            nullable: false
