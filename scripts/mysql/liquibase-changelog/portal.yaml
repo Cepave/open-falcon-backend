@@ -126,6 +126,6 @@ databaseChangeLog:
         - sql:
             comment: "Create DESC indices of owl_schedule_log."
             sql:
-                 "CREATE INDEX ix_owl_schedule_log__sl_start_time ON owl_schedule_log(sl_start_time DESC);"
-                 "CREATE UNIQUE INDEX ix_owl_schedule_log__sl_sch_id_sl_start_time ON owl_schedule_log(sl_sch_id, sl_start_time DESC);"
+                CREATE INDEX ix_owl_schedule_log__sl_start_time ON owl_schedule_log(sl_start_time DESC);
+                CREATE UNIQUE INDEX ix_owl_schedule_log__sl_sch_id_sl_start_time ON owl_schedule_log(sl_sch_id, sl_start_time DESC);
             stripComments: true
