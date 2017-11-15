@@ -39,14 +39,22 @@
     tar zxvf open-falcon-v2.0.0.tar.gz
     ./open-falcon start agent graph transfer hbs fe query
 
-# Compilation
+# Building from source
 
+## Binary
 ```bash
 # all modules
 make all
 
 # specified module
 make agent
+```
+
+## Docker image
+
+Use [docker build](https://docs.docker.com/engine/reference/commandline/build/) at project root, for example:
+```sh
+docker build -t <image_name>:<image_tag> -f docker/alpine/Dockerfile .
 ```
 
 # Run Open-Falcon Commands

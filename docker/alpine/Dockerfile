@@ -1,68 +1,38 @@
-FROM alpine:3.4
-
+####################
+# Build base image
+####################
+FROM golang:1.7.6-alpine3.4 as build-base
 LABEL maintainer cheminlin@cepave.com
+ENV FALCON_DIR=/home CONFIG_DIR=/config
+ENV PROJ_PATH=${GOPATH}/src/github.com/Cepave/open-falcon-backend
 
-# Golang
-ENV GOPATH /go
-ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
-ENV GOLANG_VERSION 1.7.5
-ENV GOLANG_SRC_URL https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz
-ENV GOLANG_SRC_SHA256 4e834513a2079f8cbbd357502cccaac9507fd00a1efe672375798858ff291815
+RUN apk add --no-cache ca-certificates bash git g++ perl make
+COPY . ${PROJ_PATH}
+WORKDIR ${PROJ_PATH}
+RUN \
+    make all \
+    && make pack \
+    && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR}
 
-# Falcon
+
+####################
+# Build final image
+####################
+FROM alpine:3.4
+LABEL maintainer cheminlin@cepave.com
 ARG ENTRYFILE=run.sh
 ENV FALCON_DIR=/home DOCKER_DIR=docker CONFIG_DIR=/config CONFIG_LINK=config/cfg.json
-ENV WORK_PATH=${GOPATH}/src/github.com/Cepave/open-falcon-backend
 
-# Copy golang & backend sources
-COPY ${DOCKER_DIR}/alpine/go-wrapper /usr/local/bin/
-COPY ${DOCKER_DIR}/alpine/no-pic.patch /
-COPY ${DOCKER_DIR}/alpine/17847.patch /
-COPY . ${WORK_PATH}
-
-RUN set -ex \
-    && apk add --no-cache ca-certificates \
-	&& apk add --no-cache --virtual .build-deps \
-		bash \
-		gcc \
-		musl-dev \
-		openssl \
-		go \
-	\
-	&& export GOROOT_BOOTSTRAP="$(go env GOROOT)" \
-	\
-	&& wget -q "$GOLANG_SRC_URL" -O golang.tar.gz \
-	&& echo "$GOLANG_SRC_SHA256  golang.tar.gz" | sha256sum -c - \
-	&& tar -C /usr/local -xzf golang.tar.gz \
-	&& rm golang.tar.gz \
-	&& cd /usr/local/go/src \
-	&& patch -p2 -i /no-pic.patch \
-	&& patch -p2 -i /17847.patch \
-	&& ./make.bash \
-	\
-	&& rm -rf /*.patch \
-	&& apk del .build-deps \
-    && mkdir -p "$GOPATH/src" "$GOPATH/bin" \
-    && chmod -R 777 "$GOPATH" \
-    \
-    && apk add --no-cache ca-certificates bash curl git iproute2 jq \
-    && mkdir -p ${FALCON_DIR} ${CONFIG_DIR} \
-    && apk add --no-cache --virtual .build-deps g++ perl make \
-    && cd ${WORK_PATH} \
-    && make all \
-    && make pack \
-    && tar zxvf open-falcon-v*.tar.gz -C ${FALCON_DIR} \
-    && rm -rf ${GOPATH} /usr/local/go \
-    && apk del .build-deps
-
-# Set timezone
+COPY --from=build-base ${FALCON_DIR} ${FALCON_DIR}
+# Set timezone, packages
 # Set alias in the case of user want to execute control in their terminal
 # Set soft links
 RUN \
-  apk add --no-cache tzdata \
+  apk add --no-cache tzdata ca-certificates bash curl git iproute2 jq vim \
   && cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime \
   && echo "Asia/Taipei" > /etc/timezone \
   && echo "alias ps='pstree'" > ~/.bashrc \
+  && mkdir -p ${CONFIG_DIR} \
   && touch ${CONFIG_DIR}/agent.json \
   && ln -sf ${CONFIG_DIR}/agent.json ${FALCON_DIR}/agent/${CONFIG_LINK} \
   && rm -f ${CONFIG_DIR}/agent.json \
