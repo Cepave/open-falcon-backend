@@ -9,6 +9,7 @@ import (
 	h "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/helper"
 	alm "github.com/Cepave/open-falcon-backend/modules/f2e-api/app/model/alarm"
 	"github.com/gin-gonic/gin"
+	mypg "github.com/masato25/mygo_pagination"
 )
 
 type APIGetAlarmListsInputs struct {
@@ -145,21 +146,20 @@ type APIEventsGetInputs struct {
 	Status    int   `json:"status" form:"status" binding:"gte=-1,lte=1"`
 	//event_caseId
 	EventId string `json:"event_id" form:"event_id" binding:"required"`
-	//number of reacord's limit on each page
-	Limit int `json:"limit" form:"limit"`
-	//pagging
-	Page int `json:"page" form:"page"`
+	mypg.Pagging
 }
 
 func (s APIEventsGetInputs) collectFilters() string {
 	tmp := []string{}
 	filterStrTmp := ""
-	if s.StartTime != 0 {
+	if s.StartTime != 0 && s.EndTime != 0 {
+		tmp = append(tmp, fmt.Sprintf("timestamp BETWEEN FROM_UNIXTIME(%v) AND FROM_UNIXTIME(%v)", s.StartTime, s.EndTime))
+	} else if s.StartTime != 0 {
 		tmp = append(tmp, fmt.Sprintf("timestamp >= FROM_UNIXTIME(%v)", s.StartTime))
-	}
-	if s.EndTime != 0 {
+	} else if s.EndTime != 0 {
 		tmp = append(tmp, fmt.Sprintf("timestamp <= FROM_UNIXTIME(%v)", s.EndTime))
 	}
+
 	if s.EventId != "" {
 		tmp = append(tmp, fmt.Sprintf("event_caseId = '%s'", s.EventId))
 	}
@@ -176,8 +176,6 @@ func (s APIEventsGetInputs) collectFilters() string {
 func EventsGet(c *gin.Context) {
 	var inputs APIEventsGetInputs
 	inputs.Status = -1
-	inputs.Page = -1
-	inputs.Limit = 10
 	if err := c.Bind(&inputs); err != nil {
 		h.JSONR(c, badstatus, err)
 		return
@@ -186,7 +184,12 @@ func EventsGet(c *gin.Context) {
 	//for get correct table name
 	f := alm.Events{}
 	evens := []alm.Events{}
-	perparedSql := fmt.Sprintf("select id, event_caseId, cond, status, timestamp from %s %s order by timestamp DESC limit %d,%d", f.TableName(), filterCollector, inputs.Page, inputs.Limit)
+	pg, err := inputs.GenOffset(db.Alarm.Model(&f))
+	if err != nil {
+		h.JSONR(c, badstatus, err.Error())
+		return
+	}
+	perparedSql := fmt.Sprintf("select id, event_caseId, cond, status, timestamp from %s %s order by timestamp DESC limit %d,%d", f.TableName(), filterCollector, pg.Offset, pg.Limit)
 	db.Alarm.Raw(perparedSql).Scan(&evens)
 	h.JSONR(c, evens)
 }

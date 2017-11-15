@@ -15,8 +15,8 @@
   * 測試資料放置位置 `test_utils/sqltestset`
     * 如果需要增加新的測試資料請依照`t?_ooo.sql`去編號命名, 如果資料建立有先後順序關系, 請調整t之後的數字排序. 可以輔助判斷資料建立的順序
   * 資料庫的建立:
-    * 你可建立一個空的資料庫, 並手動執行過所有open-faclon需要資料的db patch. 然後運行 `cd test_utils/sqltestset && ./import_test_data.sh`
-    * 另外一個比較簡易的辦法是建立測試的docker-image, `cd #{falcon_plus}/docker && docker-compose -f init.yml up -d mysqltest `
+    * 方法一(推薦): 簡易的辦法是建立測試的docker-image. `cd ${open-falcon-backend_root_dir}/docker && docker-compose -f init.yml up -d mysqltest`
+    * 方法二: 你可建立一個空的資料庫, 並手動執行過所有open-faclon需要資料的db patch. 然後運行 `cd test_utils/sqltestset && ./import_test_data.sh`
   * 需要註意的是預設測試使用的資料庫port 為 `3307`
 4. 測試時會使用api模組資料夾下的`test_cfg`作為測試設置檔. 可以依需求修改此設置檔.
 5. 如何執行測試
