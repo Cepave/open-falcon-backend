@@ -97,7 +97,7 @@ databaseChangeLog:
                     constraints:
                         nullable: false
                         references: owl_schedule(sch_id)
-                        foreignKeyName: fk_sl_sch_id__owl_schedule
+                        foreignKeyName: fk_owl_schedule_log__owl_schedule
                 - column:
                     name: sl_start_time
                     type: DATETIME
