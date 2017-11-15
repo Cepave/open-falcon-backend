@@ -50,7 +50,7 @@ func BuildMappers() {
 		{
 			Fs: []func() []*model.MetricValue{
 				PortMetrics,
-				SocketStatSummaryMetrics,
+				// SocketStatSummaryMetrics,
 			},
 			Interval: interval,
 		},
