@@ -49,3 +49,35 @@ databaseChangeLog:
                         defaultValueComputed: "NOW()"
                         constraints:
                             nullable: false
+    - changeSet:
+        id: "4"
+        author: "cheminlin"
+        changes:
+        - createTable:
+            tableName: owl_schedule
+            columns:
+                - column:
+                    name: sch_id
+                    type: INT
+                    autoIncrement: true
+                    constraints:
+                        nullable: false
+                        primaryKey: true
+                        primaryKeyName: pk_owl_schedule
+                - column:
+                    name: sch_name
+                    type: VARCHAR(64)
+                    constraints:
+                        nullable: false
+                        unique: true
+                        uniqueConstraintName: unq_owl_schedule__sch_name
+                - column:
+                    name: sch_lock
+                    type: TINYINT
+                    constraints:
+                        nullable: false
+                - column:
+                    name: sch_modify_time
+                    type: DATETIME
+                    constraints:
+                        nullable: false
