@@ -128,7 +128,7 @@ for dbname in "${databases[@]}"; do
 	echo "Target Database: \"$finalDbName\". Change log file: \"$changeLogFile\"."
 
 	./liquibase/liquibase "--url=$finalUrl" "--changeLogFile=$change_log_base$changeLogFile" \
-		--databaseChangeLogTableName=lq_change_log --databaseChangeLogLockTableName=lg_lock \
+		--databaseChangeLogTableName=lq_change_log --databaseChangeLogLockTableName=lq_lock \
 			"${liquibase_options[@]}" "${liquibase_command[@]}" "${java_property[@]}"
 
 	result=$?
