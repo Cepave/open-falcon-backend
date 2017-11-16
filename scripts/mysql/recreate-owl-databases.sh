@@ -60,7 +60,7 @@ function parseParam()
 
 function ask_execute()
 {
-	test $yes -eq 1 && return 0
+	[[ $yes -eq 1 ]] && return 0
 
 	echo Databases: "${databases[@]}"
 	echo -n "Are you sure to **[$action]** databases(PREFIX=$PREFIX, SUFFIX=$SUFFIX)? [Y/N]: "
