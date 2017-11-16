@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ ${BASH_VERSION:0:1} -lt 4 ]]; then
+	echo "Need version of BASH to be at least \"4.x\"" >&2
+	exit 1
+fi
+
 databases=(uic falcon_portal falcon_links grafana graph boss dashboard imdb)
 
 declare -A dbAndChangelog

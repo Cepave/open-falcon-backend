@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ ${BASH_VERSION:0:1} -lt 4 ]]; then
+	echo "Need version of BASH to be at least \"4.x\"" >&2
+	exit 1
+fi
+
 SUFFIX=
 PREFIX=
 databases=(imdb falcon_portal uic falcon_links grafana graph boss dashboard)
