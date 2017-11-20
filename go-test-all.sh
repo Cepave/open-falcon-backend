@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ ${BASH_VERSION:0:1} -lt 4 ]]; then
+	echo "Need version of BASH to be at least \"4.x\"" >&2
+	exit 1
+fi
+
 function parseOpt
 {
 	local USAGE='
@@ -12,6 +17,7 @@ function parseOpt
 	-p - Put "-owl.test=<properties>"
 	-s - Put "-owl.test.sep=<properties>"
 	-a - Put "<flags>"(seperated by space) to "go test <flags>"
+	-c - Put "-coverprofile=<file>"
 
 	For example:
 
@@ -20,12 +26,14 @@ function parseOpt
 	go-test-all.sh -t "modules/fe modules/hbs" -e "modules/fe/ex1 modules/fe/ex9" -p "mysql=root:cepave@tcp(192.16.20.50:3306)/falcon_portal"
 	'
 
-	local OPTS="t:e:p:s:f:a:v"
+	local OPTS="c:t:e:p:s:f:a:v"
 	while getopts $OPTS opt; do
 		case $opt in
 			a) TEST_FLAGS=(${OPTARG[@]})
 				;;
 			t) TEST_FOLDER=($OPTARG)
+				;;
+			c) COVERAGE_FILE="$OPTARG"
 				;;
 			e) TEST_FOLDER_EXCLUDE=($OPTARG)
 				;;
@@ -120,6 +128,8 @@ function setupOwlProps
 TEST_FOLDER=
 TEST_FOLDER_EXCLUDE=
 TEST_FLAGS=
+COVERAGE_FILE=
+COVERAGE_TMP_FILE=.tmp.gotest.coverage
 
 FLAG_OWL_TEST_PROPS=
 FLAG_OWL_TEST_PROPS_FILE=
@@ -134,6 +144,11 @@ echo -e Exclude folders: ${TEST_FOLDER_EXCLUDE[@]} "\n"
 
 setupFindExcludeSyntax find_exclude_syntax "${TEST_FOLDER_EXCLUDE[@]}"
 
+if [[ -n "$COVERAGE_FILE" ]]; then
+	>$COVERAGE_FILE
+	TEST_FLAGS+=("-coverprofile=$COVERAGE_TMP_FILE" "-covermode=atomic")
+fi
+
 error_count=0
 success_count=0
 for go_test_folder in ${TEST_FOLDER[@]}; do
@@ -142,12 +157,18 @@ for go_test_folder in ${TEST_FOLDER[@]}; do
 			setupVerbose "$folder" verbose_args
 			setupOwlProps "$folder" owl_flag_args
 
-			echo go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}" "${TEST_FLAGS[@]}"
-			go test ./$folder "${verbose_args[@]}" "${owl_flag_args[@]}" "${TEST_FLAGS[@]}"
+			all_flags=(${verbose_args[@]} ${TEST_FLAGS[@]} ${owl_flag_args[@]})
+
+			echo go test "./$folder" "${all_flags[@]}"
+			go test "./$folder" "${all_flags[@]}"
 			TEST_RESULT=$?
 
 			if [[ $TEST_RESULT -eq 0 ]]; then
 				(( success_count++ ))
+				if [[ -n "$COVERAGE_FILE" ]]; then
+					cat $COVERAGE_TMP_FILE >>$COVERAGE_FILE
+					rm $COVERAGE_TMP_FILE
+				fi
 			else
 				echo -e "\nTest failed. Code: $TEST_RESULT\n" >&2
 				(( error_count++ ))

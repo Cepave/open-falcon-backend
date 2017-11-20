@@ -28,7 +28,7 @@ var _ = Describe("Query object", itSkip.PrependBeforeEach(func() {
 			AddOrRefreshQuery(sampleQuery, timeValue)
 
 			Expect(sampleQuery.Uuid.IsNil()).To(BeFalse())
-			Expect(sampleQuery.AccessTime).To(Equal(timeValue))
+			Expect(sampleQuery.AccessTime.Unix()).To(Equal(timeValue.Unix()))
 
 			return sampleQuery
 		}
@@ -94,7 +94,7 @@ var _ = Describe("Query object", itSkip.PrependBeforeEach(func() {
 
 				Expect(testedQuery).To(Not(BeNil()))
 				Expect(testedQuery.NamedId).To(Equal("test.load.uu2"))
-				Expect(testedQuery.AccessTime).To(Equal(sampleTime))
+				Expect(testedQuery.AccessTime.Unix()).To(Equal(sampleTime.Unix()))
 
 				expectedContent, _ := hex.DecodeString("7011e902d4a848c184e242e8d71aa961")
 				Expect(testedQuery.Content).To(Equal(expectedContent))
@@ -105,7 +105,7 @@ var _ = Describe("Query object", itSkip.PrependBeforeEach(func() {
 				testedQuery = LoadQueryByUuidAndUpdateAccessTime(
 					sampleUuid, t.ParseTimeByGinkgo("2013-07-01T10:20:36+08:00"),
 				)
-				Expect(testedQuery.AccessTime).To(Equal(sampleTime))
+				Expect(testedQuery.AccessTime.Unix()).To(Equal(sampleTime.Unix()))
 			})
 		})
 
@@ -160,7 +160,8 @@ var _ = Describe("Query object", itSkip.PrependBeforeEach(func() {
 				}
 				UpdateAccessTimeOrAddNewOne(sampleQuery, sampleTime)
 
-				Expect(getAccessTimeByUuid(db.DbUuid(sampleUuid))).To(Equal(sampleTime))
+				Expect(time.Time(getAccessTimeByUuid(db.DbUuid(sampleUuid))).Unix()).
+					To(Equal(sampleTime.Unix()))
 			})
 		})
 
@@ -189,8 +190,8 @@ var _ = Describe("Query object", itSkip.PrependBeforeEach(func() {
 				}
 				UpdateAccessTimeOrAddNewOne(sampleQuery, sampleTime)
 
-				Expect(sampleQuery.CreationTime).To(Equal(sampleTime))
-				Expect(sampleQuery.AccessTime).To(Equal(sampleTime))
+				Expect(sampleQuery.CreationTime.Unix()).To(Equal(sampleTime.Unix()))
+				Expect(sampleQuery.AccessTime.Unix()).To(Equal(sampleTime.Unix()))
 			})
 		})
 	})

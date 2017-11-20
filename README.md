@@ -77,6 +77,10 @@ Make sure you're using Go 1.5+ and **GO15VENDOREXPERIMENT=1** env var is exporte
 
 	make clean all pack
 
+# Upgrading of MySql databases
+
+See [scripts/mysql/README.md](scripts/mysql/README.md)
+
 # Testing
 
 There are environment variables could be used to set-up properties for testing:
@@ -127,6 +131,7 @@ Variables:
 * `GO_TEST_PROPS_SEP` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<GO_TEST_PROPS_SEP>`
 * `GO_TEST_FLAGS` - If the value is viable, the execution of "go test" would have additional flags `<flags...>`
 * `GO_TEST_VERBOSE` - If the value is "yes", the execution of "go test -test.v"(with additional flags of 3-party frameworks) would be applied
+* `GO_TEST_COVERAGE_FILE` - If the value is viable, the execution of "go test" would be added with `-coverprofile <file>`
 
 ```sh
 # Default execution
@@ -147,13 +152,14 @@ This script would try to detect the importing of "common/testing/<lib>" in __*\_
 If the configuration is matched, this script would append `-owl.test.propfile`, `-owl.test`, or `-owl.test.sep` flags.
 
 Arguments:
-* `-t` - The inclusions of folders(recursively probed) to be tested
-* `-e` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
-* `-f` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.propfile=<args>`
-* `-p` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<args>`
-* `-s` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<args>`
-* `-a` - If the value is viable, the execution of "go test" would have additional flags `<flags>`
+* `-t <folders>` - The inclusions of folders(recursively probed) to be tested
+* `-e <folders>` - The exclusions of folders(include children), which are descendants of `GO_TEST_FOLDER`
+* `-f <args>` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.propfile=<args>`
+* `-p <args>` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test=<args>`
+* `-s <args>` - If the value is viable, the execution of "go test" would have additional arguments `-owl.test.sep=<args>`
+* `-a <flags>` - If the value is viable, the execution of "go test" would have additional flags `<flags>`
 * `-v` - If this flag is shown, the execution of `go test -test.v`(with additional flags of 3-party frameworks) would be applied
+* `-c <file>` - If this flag is shown, the `-coverprofile <file> would be set`
 
 ```sh
 # Default execution

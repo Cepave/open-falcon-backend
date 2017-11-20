@@ -1,0 +1,51 @@
+databaseChangeLog:
+    - property:
+        name: dbname.uic
+        value: uic
+    - changeSet:
+        id: "init-1"
+        author: "mike"
+        preConditions:
+            onFail: MARK_RAN
+            onFailMessage: "\"sysdb_change_log\" is existing, mark the init-1 as ran one"
+            not:
+                tableExists:
+                    tableName: sysdb_change_log
+        changes:
+            - sqlFile:
+                endDelimiter: ";"
+                relativeToChangelogFile: true
+                path: portal.ori.masato-33.tables.sql.gz
+            - sqlFile:
+                endDelimiter: "#"
+                relativeToChangelogFile: true
+                path: portal.ori.masato-33.code.sql.gz
+        modifySql:
+            - replace:
+                replace: "%uic%"
+                with: "${dbname.uic}"
+    - changeSet:
+        id: "init-2"
+        author: "mike"
+        changes: [ tagDatabase: { tag: "init.171101" } ]
+    - changeSet:
+        id: "3"
+        author: "mike"
+        preConditions:
+            onFail: MARK_RAN
+            onFailMessage: "\"events.ev_time_creation\" is existing, mark the mike-3 as ran one"
+            not:
+                columnExists:
+                    tableName: events
+                    columnName: ev_time_creation
+        changes:
+            - addColumn:
+                tableName: events
+                columns:
+                    - column:
+                        name: ev_time_creation
+                        type: DATETIME
+                        valueComputed: "timestamp"
+                        defaultValueComputed: "NOW()"
+                        constraints:
+                            nullable: false

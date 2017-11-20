@@ -40,7 +40,7 @@ XARGS_CMD := xargs $(XARGS_ARGS)
 GOFMT ?= gofmt -s
 
 # The folder of GoLang used to search testing package
-GO_TEST_FOLDER := common modules scripts/mysql/dbpatch/go
+GO_TEST_FOLDER := common modules
 # You should assign the path starting with any of $(GO_TEST_FOLDER)
 GO_TEST_EXCLUDE := modules/agent modules/f2e-api modules/fe
 
@@ -50,6 +50,7 @@ GO_TEST_PROPS :=
 mp =
 GO_TEST_PROPS_SEP :=
 GO_TEST_PROPS_FILE :=
+GO_TEST_COVERAGE_FILE :=
 
 all: install $(CMD) $(TARGET)
 
@@ -96,6 +97,7 @@ build_gofile_listfile:
 go-test:
 	./go-test-all.sh \
 		-t "$(GO_TEST_FOLDER)" -e "$(GO_TEST_EXCLUDE)" \
+		$(if $(strip $(GO_TEST_COVERAGE_FILE)),-c "$(GO_TEST_COVERAGE_FILE)",) \
 		$(if $(strip $(GO_TEST_PROPS_FILE)),-f "$(GO_TEST_PROPS_FILE)",) \
 		$(if $(strip $(GO_TEST_PROPS)),-p "$(GO_TEST_PROPS)",) \
 		$(if $(strip $(GO_TEST_PROPS_SEP)),-s "$(GO_TEST_PROPS_SEP)",) \
@@ -137,10 +139,6 @@ pack: checkbin
 	@cp $(TARGET) ./out/$(TARGET)
 	tar -C out -zcf open-falcon-v$(VERSION).tar.gz .
 	@rm -rf out
-
-coverage: checkvendor
-	@$(MAKE) -f $(THIS_FILE) install
-	./coverage.sh
 
 clean:
 	@rm -rf ./bin
