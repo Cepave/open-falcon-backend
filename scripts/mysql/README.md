@@ -52,7 +52,7 @@ The dependencies of OWL databases is depicted by following graph:
 +-----+     +---------------+     +------+
 ```
 
-The **recreate-owl-databases.sh** and **run-liquibase.sh** script complies with the dependencies.
+The **recreate-owl-databases.sh** and **patch-owl-databases.sh** script complies with the dependencies.
 
 # Old patching(Deprecated)
 

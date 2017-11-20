@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ ${BASH_VERSION:0:1} -lt 4 ]]; then
+	echo "Need version of BASH to be at least \"4.x\"" >&2
+	exit 1
+fi
+
 wait_time=${1:=3s}
 max_times=${2:=6}
 

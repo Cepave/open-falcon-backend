@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ ${BASH_VERSION:0:1} -lt 4 ]]; then
+	echo "Need version of BASH to be at least \"4.x\"" >&2
+	exit 1
+fi
+
 databases=(uic falcon_portal falcon_links grafana graph boss dashboard imdb)
 
 declare -A dbAndChangelog
@@ -91,7 +96,7 @@ function parseParam()
 
 function ask_execute()
 {
-	test $yes -eq 1 && return 0
+	[[ $yes -eq 1 ]] && return 0
 
 	echo Databases: ${databases[@]}.
 	echo Command: ${liquibase_command[@]}
@@ -123,7 +128,7 @@ for dbname in "${databases[@]}"; do
 	echo "Target Database: \"$finalDbName\". Change log file: \"$changeLogFile\"."
 
 	./liquibase/liquibase "--url=$finalUrl" "--changeLogFile=$change_log_base$changeLogFile" \
-		--databaseChangeLogTableName=lq_change_log --databaseChangeLogLockTableName=lg_lock \
+		--databaseChangeLogTableName=lq_change_log --databaseChangeLogLockTableName=lq_lock \
 			"${liquibase_options[@]}" "${liquibase_command[@]}" "${java_property[@]}"
 
 	result=$?

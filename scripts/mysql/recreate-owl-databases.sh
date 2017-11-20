@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ ${BASH_VERSION:0:1} -lt 4 ]]; then
+	echo "Need version of BASH to be at least \"4.x\"" >&2
+	exit 1
+fi
+
 SUFFIX=
 PREFIX=
 databases=(imdb falcon_portal uic falcon_links grafana graph boss dashboard)
@@ -55,7 +60,7 @@ function parseParam()
 
 function ask_execute()
 {
-	test $yes -eq 1 && return 0
+	[[ $yes -eq 1 ]] && return 0
 
 	echo Databases: "${databases[@]}"
 	echo -n "Are you sure to **[$action]** databases(PREFIX=$PREFIX, SUFFIX=$SUFFIX)? [Y/N]: "
