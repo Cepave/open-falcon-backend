@@ -6,7 +6,6 @@ import (
 
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	cpool "github.com/Cepave/open-falcon-backend/modules/transfer/sender/conn_pool"
-	log "github.com/sirupsen/logrus"
 	nset "github.com/toolkits/container/set"
 )
 
@@ -123,7 +122,7 @@ func initConnPools() {
 	influxdbInstances := make([]cpool.InfluxdbConnection, 1)
 	dsn, err := parseDSN(cfg.Influxdb.Address)
 	if err != nil {
-		log.Print("syntax of influxdb address is wrong")
+		log.Errorf("syntax of influxdb address is wrong: %v", err)
 	} else {
 		influxdbInstances[0] = *dsn
 		InfluxdbConnPools = cpool.CreateInfluxdbConnPools(cfg.Influxdb.MaxConns, cfg.Influxdb.MaxIdle,
