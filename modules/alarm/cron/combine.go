@@ -7,7 +7,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	redi "github.com/Cepave/open-falcon-backend/modules/alarm/redis"
 	"github.com/garyburd/redigo/redis"
-	log "github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
@@ -120,7 +119,7 @@ func combineSms() {
 		sms := ""
 		if err != nil || path == "" {
 			sms = fmt.Sprintf("[P%d][%s] %d %s.  e.g. %s detail in email", arr[0].Priority, arr[0].Status, size, arr[0].Metric, eg)
-			log.Println("get link fail", err)
+			log.Errorf("get link fail: %v", err)
 		} else {
 			links := g.Config().Api.Links
 			sms = fmt.Sprintf("[P%d][%s] %d %s e.g. %s %s/%s ", arr[0].Priority, arr[0].Status, size, arr[0].Metric, eg, links, path)
@@ -208,7 +207,7 @@ func popAllSmsDto() []*SmsDto {
 		reply, err := redis.String(rc.Do("RPOP", queue))
 		if err != nil {
 			if err != redis.ErrNil {
-				log.Println("get SmsDto fail", err)
+				log.Errorf("get SmsDto fail: %v", err)
 			}
 			break
 		}
@@ -220,7 +219,7 @@ func popAllSmsDto() []*SmsDto {
 		var smsDto SmsDto
 		err = json.Unmarshal([]byte(reply), &smsDto)
 		if err != nil {
-			log.Printf("json unmarshal SmsDto: %s fail: %v", reply, err)
+			log.Errorf("json unmarshal SmsDto: %s fail: %v", reply, err)
 			continue
 		}
 
@@ -241,7 +240,7 @@ func popAllMailDto() []*MailDto {
 		reply, err := redis.String(rc.Do("RPOP", queue))
 		if err != nil {
 			if err != redis.ErrNil {
-				log.Println("get MailDto fail", err)
+				log.Errorf("get MailDto fail: %v", err)
 			}
 			break
 		}
@@ -253,7 +252,7 @@ func popAllMailDto() []*MailDto {
 		var mailDto MailDto
 		err = json.Unmarshal([]byte(reply), &mailDto)
 		if err != nil {
-			log.Printf("json unmarshal MailDto: %s fail: %v", reply, err)
+			log.Errorf("json unmarshal MailDto: %s fail: %v", reply, err)
 			continue
 		}
 
@@ -274,7 +273,7 @@ func popAllQQDto() []*QQDto {
 		reply, err := redis.String(rc.Do("RPOP", queue))
 		if err != nil {
 			if err != redis.ErrNil {
-				log.Println("get QQDto fail", err)
+				log.Errorf("get QQDto fail: %v", err)
 			}
 			break
 		}
@@ -286,7 +285,7 @@ func popAllQQDto() []*QQDto {
 		var qqDto QQDto
 		err = json.Unmarshal([]byte(reply), &qqDto)
 		if err != nil {
-			log.Printf("json unmarshal QQDto: %s fail: %v", reply, err)
+			log.Errorf("json unmarshal QQDto: %s fail: %v", reply, err)
 			continue
 		}
 
@@ -307,7 +306,7 @@ func popAllServerchanDto() []*ServerchanDto {
 		reply, err := redis.String(rc.Do("RPOP", queue))
 		if err != nil {
 			if err != redis.ErrNil {
-				log.Println("get ServerchanDto fail", err)
+				log.Errorf("get ServerchanDto fail: %v", err)
 			}
 			break
 		}
@@ -319,7 +318,7 @@ func popAllServerchanDto() []*ServerchanDto {
 		var serverchanDto ServerchanDto
 		err = json.Unmarshal([]byte(reply), &serverchanDto)
 		if err != nil {
-			log.Printf("json unmarshal ServerchanDto: %s fail: %v", reply, err)
+			log.Errorf("json unmarshal ServerchanDto: %s fail: %v", reply, err)
 			continue
 		}
 

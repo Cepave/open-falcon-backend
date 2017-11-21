@@ -6,7 +6,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/alarm/api"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	"github.com/Cepave/open-falcon-backend/modules/alarm/redis"
-	log "github.com/sirupsen/logrus"
 )
 
 func consume(event *model.Event, isHigh bool) {
@@ -96,13 +95,13 @@ func ParseUserSms(event *model.Event, action *api.Action) {
 		}
 		bs, err := json.Marshal(dto)
 		if err != nil {
-			log.Println("json marshal SmsDto fail:", err)
+			log.Errorf("json marshal SmsDto fail: %v", err)
 			continue
 		}
 
 		_, err = rc.Do("LPUSH", queue, string(bs))
 		if err != nil {
-			log.Println("LPUSH redis", queue, "fail:", err, "dto:", string(bs))
+			log.Errorf("LPUSH redis: %v. Fail: %v. dto: %s", queue, err, bs)
 		}
 	}
 }
@@ -132,13 +131,13 @@ func ParseUserMail(event *model.Event, action *api.Action) {
 		}
 		bs, err := json.Marshal(dto)
 		if err != nil {
-			log.Println("json marshal MailDto fail:", err)
+			log.Errorf("json marshal MailDto fail: %v", err)
 			continue
 		}
 
 		_, err = rc.Do("LPUSH", queue, string(bs))
 		if err != nil {
-			log.Println("LPUSH redis", queue, "fail:", err, "dto:", string(bs))
+			log.Errorf("LPUSH redis %v. Fail: %v. dto: %s", queue, err, bs)
 		}
 	}
 }
@@ -168,13 +167,13 @@ func ParseUserQQ(event *model.Event, action *api.Action) {
 		}
 		bs, err := json.Marshal(dto)
 		if err != nil {
-			log.Println("json marshal QQDto fail:", err)
+			log.Errorf("json marshal QQDto fail: %v", err)
 			continue
 		}
 
 		_, err = rc.Do("LPUSH", queue, string(bs))
 		if err != nil {
-			log.Println("LPUSH redis", queue, "fail:", err, "dto:", string(bs))
+			log.Errorf("LPUSH redis: %v. fail: %v. dto: %s", queue, err, bs)
 		}
 	}
 }
@@ -204,13 +203,13 @@ func ParseUserServerchan(event *model.Event, action *api.Action) {
 		}
 		bs, err := json.Marshal(dto)
 		if err != nil {
-			log.Println("json marshal ServerchanDto fail:", err)
+			log.Errorf("json marshal ServerchanDto fail: %v", err)
 			continue
 		}
 
 		_, err = rc.Do("LPUSH", queue, string(bs))
 		if err != nil {
-			log.Println("LPUSH redis", queue, "fail:", err, "dto:", string(bs))
+			log.Errorf("LPUSH redis: %v. fail: %v. dto: %s", queue, err, bs)
 		}
 	}
 }
