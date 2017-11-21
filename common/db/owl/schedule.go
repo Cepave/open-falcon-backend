@@ -26,13 +26,13 @@ type OwlSchedule struct {
 }
 
 type OwlScheduleLog struct {
-	Uuid      db.DbUuid `db:"sl_uuid"`
-	SchId     int       `db:"sl_sch_id"`
-	StartTime time.Time `db:"sl_start_time"`
-	EndTime   time.Time `db:"sl_end_time"`
-	Timeout   int       `db:"sl_timeout"`
-	Status    byte      `db:"sl_status"`
-	Message   string    `db:"sl_message"`
+	Uuid      cdb.DbUuid `db:"sl_uuid"`
+	SchId     int        `db:"sl_sch_id"`
+	StartTime time.Time  `db:"sl_start_time"`
+	EndTime   time.Time  `db:"sl_end_time"`
+	Timeout   int        `db:"sl_timeout"`
+	Status    byte       `db:"sl_status"`
+	Message   string     `db:"sl_message"`
 }
 
 var insertSql = `
