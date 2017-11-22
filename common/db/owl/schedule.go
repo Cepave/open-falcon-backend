@@ -25,6 +25,10 @@ type OwlSchedule struct {
 	LastUpdateTime time.Time `db:"sch_modify_time"`
 }
 
+func (sch *OwlSchedule) isLocked() bool {
+	return sch.Lock == byte(LOCKED)
+}
+
 type OwlScheduleLog struct {
 	Uuid      cdb.DbUuid `db:"sl_uuid"`
 	SchId     int        `db:"sl_sch_id"`
@@ -74,7 +78,10 @@ const (
 )
 
 func AcquireLock(schedule *Schedule) error {
-	txProcessor := &txAcquireLock{schedule, nil}
+	txProcessor := &txAcquireLock{
+		schedule:     schedule,
+		timeoutError: nil,
+	}
 	DbFacade.SqlxDbCtrl.InTx(txProcessor)
 	return txProcessor.timeoutError
 }
@@ -82,6 +89,9 @@ func AcquireLock(schedule *Schedule) error {
 type txAcquireLock struct {
 	schedule     *Schedule
 	timeoutError *TimeOutOfSchedule
+
+	lockTable OwlSchedule
+	logTable  OwlScheduleLog
 }
 
 func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
@@ -91,9 +101,9 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	/**
 	 * Lock table
 	 */
-	ret := ack.selectOrInsertLock(tx, now)
+	ack.selectOrInsertLock(tx, now)
 	// The previous task is not timeout()
-	if ret.isLocked() && ack.notTimeout(tx, now) {
+	if ack.lockTable.isLocked() && ack.notTimeout(tx, now) {
 		return cdb.TxCommit
 	}
 
@@ -108,8 +118,8 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	generatedUuid := uuid.NewV4()
 	r := sqlxExt.ToTxExt(tx).NamedExec(insertSql,
 		map[string]interface{}{
-			"uuid":      generatedUuid,
-			"schid":     ret.Id,
+			"uuid":      cdb.DbUuid(generatedUuid),
+			"schid":     ack.lockTable.Id,
 			"starttime": now,
 			"timeout":   ack.schedule.Timeout,
 			"status":    RUN,
@@ -134,9 +144,9 @@ func (sck *scheduleLock) isLocked() bool {
 	return sck.Lock == byte(LOCKED)
 }
 
-func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, now time.Time) (ret scheduleLock) {
+func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, now time.Time) {
 	name := ack.schedule.Name
-	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(&ret, `
+	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(&ack.lockTable, `
 		SELECT sch_id, sch_lock
 		FROM owl_schedule
 		WHERE sch_name = ?
@@ -151,11 +161,9 @@ func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, now time.Time) (ret sc
 			)
 			VALUES (?, 0, ?)
 		`, name, now)
-		ret.Id = int(cdb.ToResultExt(r).LastInsertId())
-		ret.Lock = byte(FREE)
+		ack.lockTable.Id = int(cdb.ToResultExt(r).LastInsertId())
+		ack.lockTable.Lock = byte(FREE)
 	}
-
-	return
 }
 
 func (ack *txAcquireLock) successUpdateLock(tx *sqlx.Tx, now time.Time) bool {
@@ -173,7 +181,7 @@ func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx, now time.Time) bool {
 		StartTime time.Time `db:"sl_start_time"`
 		Timeout   int       `db:"sl_timeout"`
 	}{}
-	sqlxExt.ToTxExt(tx).Get(&ret, `
+	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(&ret, `
 		SELECT sl.sl_start_time, sl.sl_timeout
 		FROM owl_schedule sch
 		LEFT JOIN owl_schedule_log sl
@@ -182,6 +190,9 @@ func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx, now time.Time) bool {
 		ORDER BY sl.sl_start_time DESC
 		LIMIT 1
 	`, ack.schedule.Name)
+	if !exist {
+		return true
+	}
 
 	shouldLocked := now.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second
 	if shouldLocked {
