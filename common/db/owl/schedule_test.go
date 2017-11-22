@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	var (
 		scheduleName = "test-schedule-3"
