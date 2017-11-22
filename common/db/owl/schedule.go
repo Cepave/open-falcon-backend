@@ -55,7 +55,7 @@ type TimeOutOfSchedule struct {
 }
 
 func (t *TimeOutOfSchedule) Error() string {
-	return fmt.Sprintf("%s error: from %s to %s less than %ds", t.Name,
+	return fmt.Sprintf("%s error: period between %s and %s should longer than %ds", t.Name,
 		t.LastStartTime.Format(time.RFC3339),
 		t.AcquiredTime.Format(time.RFC3339),
 		t.Timeout)
