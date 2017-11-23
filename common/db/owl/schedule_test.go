@@ -31,9 +31,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	Context("Schedule is new", func() {
 		It("should acquire the lock", func() {
-			s := &Schedule{
-				Name: scheduleName,
-			}
+			s := NewSchedule(scheduleName, 0)
 			err := AcquireLock(s)
 
 			GinkgoT().Logf("UUID=%v", s.Uuid)
@@ -45,23 +43,21 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	Describe("A schedule has been created", func() {
 		Context("lock is held too long", func() {
 			It("should preempt the lock", func() {
-				s := &Schedule{
-					Name:    scheduleName,
-					Timeout: 0,
-				}
 
 				By("Lock is held by another schedule")
+				s := NewSchedule(scheduleName, 0)
 				err := AcquireLock(s)
 				GinkgoT().Logf("UUID=%v", s.Uuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Acquire lock from the stale task")
 				time.Sleep(time.Second)
-				uuidPrev := s.Uuid
-				err = AcquireLock(s)
-				GinkgoT().Logf("UUID=%v", s.Uuid)
+				ps := NewSchedule(scheduleName, 1)
+				err = AcquireLock(ps)
+				time.Sleep(time.Second)
+				GinkgoT().Logf("UUID=%v", ps.Uuid)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(s.Uuid).NotTo(Equal(uuidPrev))
+				Expect(ps.Uuid).NotTo(Equal(uuid.Nil))
 			})
 		})
 
@@ -69,11 +65,8 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			BeforeEach(inTx(crashedSchedule))
 
 			It("should preempt the lock", func() {
-				s := &Schedule{
-					Name: scheduleName,
-				}
-
 				By("Acquire lock from the crashed task")
+				s := NewSchedule(scheduleName, 0)
 				err := AcquireLock(s)
 				GinkgoT().Logf("UUID=%v", s.Uuid)
 				Expect(err).NotTo(HaveOccurred())
@@ -83,20 +76,17 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 		Context("lock is just held", func() {
 			It("should trigger error", func() {
-				s := &Schedule{
-					Name:    scheduleName,
-					Timeout: 2,
-				}
-
 				By("Lock is held")
+				s := NewSchedule(scheduleName, 2)
 				err := AcquireLock(s)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(s.Uuid).NotTo(Equal(uuid.Nil))
 
 				By("Acquire lock but get error")
-				err = AcquireLock(s)
+				ps := NewSchedule(scheduleName, 0)
+				err = AcquireLock(ps)
 				GinkgoT().Logf("Err=%s", err)
 				Expect(err).To(HaveOccurred())
+				Expect(ps.Uuid).To(Equal(uuid.Nil))
 			})
 		})
 	})

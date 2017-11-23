@@ -16,6 +16,13 @@ type Schedule struct {
 	Uuid    uuid.UUID
 }
 
+func NewSchedule(name string, timeout int) *Schedule {
+	return &Schedule{
+		Name:    name,
+		Timeout: timeout,
+	}
+}
+
 type OwlSchedule struct {
 	Id             int       `db:"sch_id"`
 	Name           string    `db:"sch_name"`
