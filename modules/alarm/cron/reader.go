@@ -9,7 +9,6 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/alarm/g"
 	eventmodel "github.com/Cepave/open-falcon-backend/modules/alarm/model/event"
 	"github.com/garyburd/redigo/redis"
-	log "github.com/sirupsen/logrus"
 )
 
 func ReadHighEvent() {
@@ -59,19 +58,20 @@ func popEvent(queues []string) (*model.Event, error) {
 
 	reply, err := redis.Strings(rc.Do("BRPOP", params...))
 	if err != nil {
-		log.Error(fmt.Sprintf("get alarm event from redis fail: %v", err))
+		log.Errorf("[REDIS BRPOP] has error. [%v] Redis Param: [%v]. ", err, params)
 		return nil, err
 	}
 
 	var event model.Event
 	err = json.Unmarshal([]byte(reply[1]), &event)
 	if err != nil {
-		log.Error(fmt.Sprintf("parse alarm event fail: %v", err))
+		log.Errorf("Unmarshal JSON of event has error: %v", err)
 		return nil, err
 	}
 
 	log.Debug(event.String())
 	//insert event into database
+	go warningIfEventTooLate(5, &event)
 	err = eventmodel.InsertEvent(&event, "owl")
 	if err != nil {
 		log.Error(err.Error())
@@ -91,7 +91,7 @@ func ReadExternalEvent() {
 	for {
 		err := popExternalEvent(queues)
 		if err != nil {
-			log.Error(err.Error())
+			log.Errorf("[popExternalEvent] %v", err)
 			time.Sleep(time.Second)
 			continue
 		}
@@ -113,7 +113,7 @@ func popExternalEvent(queues []string) error {
 
 	reply, err := redis.Strings(rc.Do("BRPOP", params...))
 	if err != nil {
-		log.Error(fmt.Sprintf("get alarm event from redis fail: %v", err))
+		log.Errorf("get alarm event from redis fail: %v", err)
 		return err
 	}
 
@@ -121,7 +121,7 @@ func popExternalEvent(queues []string) error {
 
 	err = json.Unmarshal([]byte(reply[1]), &event)
 	if err != nil {
-		log.Error(fmt.Sprintf("parse alarm event fail: %v", err))
+		log.Errorf("parse alarm event fail: %v", err)
 		return err
 	}
 	if err := event.CheckFormating(); err != nil {
@@ -130,7 +130,7 @@ func popExternalEvent(queues []string) error {
 			params := []interface{}{g.Config().Redis.ErrorQueue.Queue, errMsg}
 			_, err := rc.Do("LPUSH", params...)
 			if err != nil {
-				log.Error(err.Error())
+				log.Errorf("[Radis LPUSH<Error Queue>] %v", err)
 			}
 		}
 		return err
@@ -140,16 +140,25 @@ func popExternalEvent(queues []string) error {
 	//insert event into database
 	err = eventmodel.InsertExternalEvent(event)
 	if err != nil {
-		log.Error(err.Error())
+		log.Errorf("InsertExternalEvent() has error %v", err)
 		errMsg := fmt.Sprintf("insert event got error: %v, event: %v", err.Error(), event)
 		if g.Config().Redis.ErrorQueue.Enable {
 			params := []interface{}{g.Config().Redis.ErrorQueue.Queue, errMsg}
 			_, err := rc.Do("LPUSH", params...)
 			if err != nil {
-				log.Error(err.Error())
+				log.Errorf("[Radis LPUSH<Error Queue>][ForceFixStepWhenStatusOk] %v", err)
 			}
 		}
 	}
 
 	return nil
+}
+
+func warningIfEventTooLate(minutes int, event *model.Event) {
+	now := time.Now()
+	eventTime := time.Unix(event.EventTime, 0)
+
+	if now.Sub(eventTime) >= (time.Duration(minutes) * time.Minute) {
+		log.Warnf("[DELAY DATA] Event [%v] is delay more than %d minutes. Now: %s. EventTime: %s", event, minutes, now, eventTime)
+	}
 }

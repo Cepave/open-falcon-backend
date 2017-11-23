@@ -2,7 +2,6 @@ package sender
 
 import (
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
-	log "github.com/sirupsen/logrus"
 	"github.com/toolkits/container/list"
 	"strings"
 	"time"
@@ -49,5 +48,5 @@ func calcSendCacheSize(mapList map[string]*list.SafeListLimited) int64 {
 }
 
 func logConnPoolsProc() {
-	log.Printf("connPools proc: \n%v", strings.Join(GraphConnPools.Proc(), "\n"))
+	log.Debugf("connPools proc: \n%v", strings.Join(GraphConnPools.Proc(), "\n"))
 }
