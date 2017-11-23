@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"database/sql"
-
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"github.com/jmoiron/sqlx"
@@ -113,16 +111,14 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 		return cdb.TxCommit
 	}
 
-	if !ack.successUpdateLock(tx, now) {
-		return cdb.TxRollback
-	}
+	ack.updateLockByName(tx, now)
 	// :~)
 
 	/**
 	 * Log table
 	 */
 	generatedUuid := uuid.NewV4()
-	r := sqlxExt.ToTxExt(tx).NamedExec(insertSql,
+	_ = sqlxExt.ToTxExt(tx).NamedExec(insertSql,
 		map[string]interface{}{
 			"uuid":      cdb.DbUuid(generatedUuid),
 			"schid":     ack.lockTable.Id,
@@ -131,10 +127,6 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 			"status":    RUN,
 		},
 	)
-	if !isCorrectRowsAffected(r, 1) {
-		return cdb.TxRollback
-	}
-
 	ack.schedule.Uuid = generatedUuid
 	// :~)
 
@@ -163,14 +155,13 @@ func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, now time.Time) {
 	}
 }
 
-func (ack *txAcquireLock) successUpdateLock(tx *sqlx.Tx, now time.Time) bool {
-	r := tx.MustExec(`
+func (ack *txAcquireLock) updateLockByName(tx *sqlx.Tx, now time.Time) {
+	_ = tx.MustExec(`
 		UPDATE owl_schedule
 		SET sch_lock = 1,
 			sch_modify_time = ?
 		WHERE sch_name = ?
 	`, now, ack.schedule.Name)
-	return isCorrectRowsAffected(r, 1)
 }
 
 func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx, now time.Time) bool {
@@ -185,8 +176,4 @@ func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx, now time.Time) bool {
 
 	// Check timeout iff row exists
 	return exist && (now.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second)
-}
-
-func isCorrectRowsAffected(r sql.Result, expectRowsAffected int64) bool {
-	return cdb.ToResultExt(r).RowsAffected() == expectRowsAffected
 }
