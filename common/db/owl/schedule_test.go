@@ -11,11 +11,7 @@ import (
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	var (
-		scheduleName    = "test-schedule-3"
-		crashedSchedule = `
-			INSERT INTO owl_schedule (sch_name, sch_lock, sch_modify_time)
-			VALUES ('test-schedule-3', 1, '2020-01-01 12:00:00')
-		`
+		scheduleName = "test-schedule-test"
 	)
 
 	AfterEach(inTx(
@@ -62,11 +58,18 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		})
 
 		Context("lock is held but cannot determine the timeout", func() {
+			var (
+				crashedScheduleName = "test-schedule-crash"
+				crashedSchedule     = `
+					INSERT INTO owl_schedule (sch_name, sch_lock, sch_modify_time)
+					VALUES ('test-schedule-crash', 1, '2020-01-01 12:00:00')
+				`
+			)
 			BeforeEach(inTx(crashedSchedule))
 
 			It("should preempt the lock", func() {
 				By("Acquire lock from the crashed task")
-				s := NewSchedule(scheduleName, 0)
+				s := NewSchedule(crashedScheduleName, 0)
 				err := AcquireLock(s)
 				GinkgoT().Logf("UUID=%v", s.Uuid)
 				Expect(err).NotTo(HaveOccurred())
