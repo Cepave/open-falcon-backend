@@ -5,12 +5,17 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/satori/go.uuid"
 )
 
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	var (
-		scheduleName = "test-schedule-3"
+		scheduleName    = "test-schedule-3"
+		crashedSchedule = `
+			INSERT INTO owl_schedule (sch_name, sch_lock, sch_modify_time)
+			VALUES ('test-schedule-3', 1, '2020-01-01 12:00:00')
+		`
 	)
 
 	AfterEach(inTx(
@@ -27,19 +32,19 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	Context("Schedule is new", func() {
 		It("should acquire the lock", func() {
 			s := &Schedule{
-				Name:    scheduleName,
-				Timeout: 0,
+				Name: scheduleName,
 			}
 			err := AcquireLock(s)
 
 			GinkgoT().Logf("UUID=%v", s.Uuid)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(s.Uuid).NotTo(Equal(uuid.Nil))
 		})
 	})
 
 	Describe("A schedule has been created", func() {
 		Context("lock is held too long", func() {
-			It("should acquire the lock", func() {
+			It("should preempt the lock", func() {
 				s := &Schedule{
 					Name:    scheduleName,
 					Timeout: 0,
@@ -56,7 +61,23 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 				err = AcquireLock(s)
 				GinkgoT().Logf("UUID=%v", s.Uuid)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(uuidPrev).NotTo(Equal(s.Uuid))
+				Expect(s.Uuid).NotTo(Equal(uuidPrev))
+			})
+		})
+
+		Context("lock is held but cannot determine the timeout", func() {
+			BeforeEach(inTx(crashedSchedule))
+
+			It("should preempt the lock", func() {
+				s := &Schedule{
+					Name: scheduleName,
+				}
+
+				By("Acquire lock from the crashed task")
+				err := AcquireLock(s)
+				GinkgoT().Logf("UUID=%v", s.Uuid)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(s.Uuid).NotTo(Equal(uuid.Nil))
 			})
 		})
 
@@ -70,6 +91,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 				By("Lock is held")
 				err := AcquireLock(s)
 				Expect(err).NotTo(HaveOccurred())
+				Expect(s.Uuid).NotTo(Equal(uuid.Nil))
 
 				By("Acquire lock but get error")
 				err = AcquireLock(s)

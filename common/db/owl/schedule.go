@@ -104,6 +104,12 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	ack.selectOrInsertLock(tx, now)
 	// The previous task is not timeout()
 	if ack.lockTable.isLocked() && ack.notTimeout(tx, now) {
+		ack.timeoutError = &TimeOutOfSchedule{
+			Name:          "Schedule locked",
+			LastStartTime: ack.logTable.StartTime,
+			AcquiredTime:  now,
+			Timeout:       ack.logTable.Timeout,
+		}
 		return cdb.TxCommit
 	}
 
@@ -133,15 +139,6 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	// :~)
 
 	return cdb.TxCommit
-}
-
-type scheduleLock struct {
-	Id   int  `db:"sch_id"`
-	Lock byte `db:"sch_lock"`
-}
-
-func (sck *scheduleLock) isLocked() bool {
-	return sck.Lock == byte(LOCKED)
 }
 
 func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, now time.Time) {
@@ -177,33 +174,17 @@ func (ack *txAcquireLock) successUpdateLock(tx *sqlx.Tx, now time.Time) bool {
 }
 
 func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx, now time.Time) bool {
-	ret := struct {
-		StartTime time.Time `db:"sl_start_time"`
-		Timeout   int       `db:"sl_timeout"`
-	}{}
-	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(&ret, `
+	ret := &ack.logTable
+	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(ret, `
 		SELECT sl.sl_start_time, sl.sl_timeout
-		FROM owl_schedule sch
-		LEFT JOIN owl_schedule_log sl
-		ON sch.sch_id = sl.sl_sch_id
-		WHERE sch.sch_name = ?
+		FROM owl_schedule_log sl
+		WHERE sl.sl_sch_id = ?
 		ORDER BY sl.sl_start_time DESC
 		LIMIT 1
-	`, ack.schedule.Name)
-	if !exist {
-		return true
-	}
+	`, ack.lockTable.Id)
 
-	shouldLocked := now.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second
-	if shouldLocked {
-		ack.timeoutError = &TimeOutOfSchedule{
-			Name:          "Schedule locked",
-			LastStartTime: ret.StartTime,
-			AcquiredTime:  now,
-			Timeout:       ret.Timeout,
-		}
-	}
-	return shouldLocked
+	// Check timeout iff row exists
+	return exist && (now.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second)
 }
 
 func isCorrectRowsAffected(r sql.Result, expectRowsAffected int64) bool {
