@@ -44,14 +44,6 @@ type OwlScheduleLog struct {
 	Message   string     `db:"sl_message"`
 }
 
-var insertSql = `
-	INSERT INTO owl_schedule_log(
-		sl_uuid, sl_sch_id,
-		sl_start_time, sl_timeout, sl_status
-	)
-	VALUES (:uuid, :schid, :starttime, :timeout, :status)
-`
-
 type TimeOutOfSchedule struct {
 	Name          string
 	AcquiredTime  time.Time
@@ -125,7 +117,13 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	 * Log table
 	 */
 	generatedUuid := uuid.NewV4()
-	_ = sqlxExt.ToTxExt(tx).NamedExec(insertSql,
+	_ = sqlxExt.ToTxExt(tx).NamedExec(`
+			INSERT INTO owl_schedule_log(
+				sl_uuid, sl_sch_id,
+				sl_start_time, sl_timeout, sl_status
+			)
+			VALUES (:uuid, :schid, :starttime, :timeout, :status)
+		`,
 		map[string]interface{}{
 			"uuid":      cdb.DbUuid(generatedUuid),
 			"schid":     ack.lockTable.Id,

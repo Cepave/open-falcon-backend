@@ -8,7 +8,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-var _ = FDescribe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	var (
 		now          time.Time
