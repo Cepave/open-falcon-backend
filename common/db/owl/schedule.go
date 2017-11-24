@@ -82,9 +82,10 @@ const (
 	TIMEOUT
 )
 
-func AcquireLock(schedule *Schedule) error {
+func AcquireLock(schedule *Schedule, now time.Time) error {
 	txProcessor := &txAcquireLock{
 		schedule:     schedule,
+		timeNow:      now,
 		timeoutError: nil,
 	}
 	DbFacade.SqlxDbCtrl.InTx(txProcessor)
@@ -95,30 +96,29 @@ type txAcquireLock struct {
 	schedule     *Schedule
 	timeoutError *TimeOutOfSchedule
 
+	timeNow   time.Time
 	lockTable OwlSchedule
 	logTable  OwlScheduleLog
 }
 
 func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 
-	now := time.Now()
-
 	/**
 	 * Lock table
 	 */
-	ack.selectOrInsertLock(tx, now)
+	ack.selectOrInsertLock(tx)
 	// The previous task is not timeout()
-	if ack.lockTable.isLocked() && ack.notTimeout(tx, now) {
+	if ack.lockTable.isLocked() && ack.notTimeout(tx) {
 		ack.timeoutError = &TimeOutOfSchedule{
 			Name:          "Schedule locked",
 			LastStartTime: ack.logTable.StartTime,
-			AcquiredTime:  now,
+			AcquiredTime:  ack.timeNow,
 			Timeout:       ack.logTable.Timeout,
 		}
 		return cdb.TxCommit
 	}
 
-	ack.updateLockByName(tx, now)
+	ack.updateLockByName(tx)
 	// :~)
 
 	/**
@@ -129,7 +129,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 		map[string]interface{}{
 			"uuid":      cdb.DbUuid(generatedUuid),
 			"schid":     ack.lockTable.Id,
-			"starttime": now,
+			"starttime": ack.timeNow,
 			"timeout":   ack.schedule.Timeout,
 			"status":    RUN,
 		},
@@ -140,7 +140,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	return cdb.TxCommit
 }
 
-func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, now time.Time) {
+func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx) {
 	name := ack.schedule.Name
 	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(&ack.lockTable, `
 		SELECT sch_id, sch_lock
@@ -156,22 +156,22 @@ func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, now time.Time) {
 				sch_lock, sch_modify_time
 			)
 			VALUES (?, 0, ?)
-		`, name, now)
+		`, name, ack.timeNow)
 		ack.lockTable.Id = int(cdb.ToResultExt(r).LastInsertId())
 		ack.lockTable.Lock = byte(FREE)
 	}
 }
 
-func (ack *txAcquireLock) updateLockByName(tx *sqlx.Tx, now time.Time) {
+func (ack *txAcquireLock) updateLockByName(tx *sqlx.Tx) {
 	_ = tx.MustExec(`
 		UPDATE owl_schedule
 		SET sch_lock = 1,
 			sch_modify_time = ?
 		WHERE sch_name = ?
-	`, now, ack.schedule.Name)
+	`, ack.timeNow, ack.schedule.Name)
 }
 
-func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx, now time.Time) bool {
+func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx) bool {
 	ret := &ack.logTable
 	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(ret, `
 		SELECT sl.sl_start_time, sl.sl_timeout
@@ -182,5 +182,5 @@ func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx, now time.Time) bool {
 	`, ack.lockTable.Id)
 
 	// Check timeout iff row exists
-	return exist && (now.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second)
+	return exist && (ack.timeNow.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second)
 }
