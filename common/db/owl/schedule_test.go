@@ -1,6 +1,8 @@
 package owl
 
 import (
+	"fmt"
+	"math/rand"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -11,9 +13,9 @@ import (
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	const (
-		defaultTimeout      = 2
-		defaultScheduleName = "test-schedule-test"
-		deleteLockSql       = `
+		defaultTimeout       = 2
+		scheduleNameTemplate = "test-schedule-"
+		deleteLockSql        = `
 			DELETE FROM owl_schedule WHERE sch_name LIKE 'test-schedule-%'
 		`
 		deleteLogSql = `
@@ -26,10 +28,9 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	)
 
 	var (
+		scheduleName    string
 		defaultSchedule *Schedule
 		defaultNow      time.Time
-		lockTable       OwlSchedule
-		logTable        OwlScheduleLog
 
 		/**
 		 * Helper function
@@ -41,24 +42,31 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		}
 
 		ExpectLockAndLog = func(expSchedule *Schedule, expNow time.Time, expLogCount int) {
-			selectLockSql := `
+			const (
+				selectLockSql = `
 				SELECT *
 				FROM owl_schedule
 				WHERE sch_name = ?
 			`
-			selectLogSql := `
+				selectLogSql = `
 				SELECT *
 				FROM owl_schedule_log
 				WHERE sl_sch_id = ?
 				ORDER BY sl_start_time DESC
 				LIMIT 1
 			`
-			countLogSql := `
+				countLogSql = `
 				SELECT COUNT(*)
 				FROM owl_schedule_log
 				WHERE sl_sch_id = ?
 			`
-			timeThreshold := 500 * time.Millisecond
+				timeThreshold = 500 * time.Millisecond
+			)
+
+			var (
+				lockTable OwlSchedule
+				logTable  OwlScheduleLog
+			)
 
 			By("Check lock")
 			DbFacade.SqlxDbCtrl.Get(&lockTable, selectLockSql, expSchedule.Name)
@@ -79,10 +87,10 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	)
 
 	BeforeEach(func() {
-		defaultSchedule = NewSchedule(defaultScheduleName, defaultTimeout)
+		scheduleName = scheduleNameTemplate + fmt.Sprint(rand.Int())
+		GinkgoT().Logf("Name=%s", scheduleName)
+		defaultSchedule = NewSchedule(scheduleName, defaultTimeout)
 		defaultNow = time.Now()
-		lockTable = OwlSchedule{}
-		logTable = OwlScheduleLog{}
 	})
 
 	AfterEach(inTx(deleteLogSql, deleteLockSql))
@@ -105,7 +113,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			It("should preempt the lock", func() {
 				thisTimeout := defaultTimeout + 1
 				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
-				ps := NewSchedule(defaultScheduleName, thisTimeout)
+				ps := NewSchedule(scheduleName, thisTimeout)
 				err := AcquireLock(ps, newCurrent)
 
 				ExpectSuccessSchedule(ps, err)
@@ -116,7 +124,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		Context("lock is just held", func() {
 			It("should trigger error", func() {
 				thisTimeout := defaultTimeout + 1
-				ps := NewSchedule(defaultScheduleName, thisTimeout)
+				ps := NewSchedule(scheduleName, thisTimeout)
 				err := AcquireLock(ps, defaultNow)
 
 				Expect(err).To(HaveOccurred())
@@ -137,7 +145,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 				By("Acquire lock from the crashed task")
 				thisTimeout := defaultTimeout + 1
 				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
-				sp := NewSchedule(defaultScheduleName, thisTimeout)
+				sp := NewSchedule(scheduleName, thisTimeout)
 				err := AcquireLock(sp, newCurrent)
 
 				ExpectSuccessSchedule(sp, err)
