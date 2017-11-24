@@ -10,15 +10,30 @@ import (
 
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
-	var (
-		defaultSchedule     *Schedule
+	const (
 		defaultTimeout      = 2
-		defaultNow          time.Time
 		defaultScheduleName = "test-schedule-test"
+		deleteLockSql       = `
+			DELETE FROM owl_schedule WHERE sch_name LIKE 'test-schedule-%'
+		`
+		deleteLogSql = `
+			DELETE sl
+			FROM owl_schedule sch
+			LEFT JOIN owl_schedule_log sl
+			ON sch.sch_id = sl.sl_sch_id
+			WHERE sch_name LIKE 'test-schedule-%'
+		`
+	)
 
-		lockTable OwlSchedule
-		logTable  OwlScheduleLog
+	var (
+		defaultSchedule *Schedule
+		defaultNow      time.Time
+		lockTable       OwlSchedule
+		logTable        OwlScheduleLog
 
+		/**
+		 * Helper function
+		 */
 		ExpectSuccessSchedule = func(testSchedule *Schedule, testError error) {
 			GinkgoT().Logf("UUID=%v", testSchedule.Uuid)
 			Expect(testError).NotTo(HaveOccurred())
@@ -60,6 +75,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			DbFacade.SqlxDbCtrl.Get(&count, countLogSql, lockTable.Id)
 			Expect(count).To(Equal(expLogCount))
 		}
+		// :~)
 	)
 
 	BeforeEach(func() {
@@ -69,16 +85,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		logTable = OwlScheduleLog{}
 	})
 
-	AfterEach(inTx(
-		`
-		DELETE sl
-		FROM owl_schedule sch
-		LEFT JOIN owl_schedule_log sl
-		ON sch.sch_id = sl.sl_sch_id
-		WHERE sch_name LIKE 'test-schedule-%'
-		`,
-		`DELETE FROM owl_schedule WHERE sch_name LIKE 'test-schedule-%'`,
-	))
+	AfterEach(inTx(deleteLogSql, deleteLockSql))
 
 	Context("Schedule is new", func() {
 		It("should acquire the lock", func() {
