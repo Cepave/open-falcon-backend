@@ -15,11 +15,33 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		defaultTimeout      = 0
 		now                 time.Time
 		defaultScheduleName = "test-schedule-test"
+
+		lockTable     OwlSchedule
+		logTable      OwlScheduleLog
+		selectLockSql = `
+			SELECT *
+			FROM owl_schedule
+			WHERE sch_name = ?
+		`
+		selectLogSql = `
+			SELECT *
+			FROM owl_schedule_log
+			WHERE sl_sch_id = ?
+			ORDER BY sl_start_time DESC
+			LIMIT 1
+		`
+		countLogSql = `
+			SELECT COUNT(*)
+			FROM owl_schedule_log
+			WHERE sl_sch_id = ?
+		`
 	)
 
 	BeforeEach(func() {
 		defaultSchedule = NewSchedule(defaultScheduleName, defaultTimeout)
 		now = time.Now()
+		lockTable = OwlSchedule{}
+		logTable = OwlScheduleLog{}
 	})
 
 	AfterEach(inTx(
@@ -40,6 +62,19 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			GinkgoT().Logf("UUID=%v", defaultSchedule.Uuid)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(defaultSchedule.Uuid).NotTo(Equal(uuid.Nil))
+
+			By("Check lock")
+			DbFacade.SqlxDbCtrl.Get(&lockTable, selectLockSql, defaultScheduleName)
+			Expect(lockTable.isLocked()).To(BeTrue())
+
+			By("Check time")
+			DbFacade.SqlxDbCtrl.Get(&logTable, selectLogSql, lockTable.Id)
+			Expect(logTable.StartTime).To(Equal(lockTable.LastUpdateTime))
+
+			By("Check log count")
+			var count int
+			DbFacade.SqlxDbCtrl.Get(&count, countLogSql, lockTable.Id)
+			Expect(count).To(Equal(1))
 		})
 	})
 
