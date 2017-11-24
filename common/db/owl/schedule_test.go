@@ -11,11 +11,14 @@ import (
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	var (
-		now          time.Time
-		scheduleName = "test-schedule-test"
+		defaultSchedule     *Schedule
+		defaultTimeout      = 0
+		now                 time.Time
+		defaultScheduleName = "test-schedule-test"
 	)
 
 	BeforeEach(func() {
+		defaultSchedule = NewSchedule(defaultScheduleName, defaultTimeout)
 		now = time.Now()
 	})
 
@@ -32,12 +35,11 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	Context("Schedule is new", func() {
 		It("should acquire the lock", func() {
-			s := NewSchedule(scheduleName, 0)
-			err := AcquireLock(s, now)
+			err := AcquireLock(defaultSchedule, now)
 
-			GinkgoT().Logf("UUID=%v", s.Uuid)
+			GinkgoT().Logf("UUID=%v", defaultSchedule.Uuid)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(s.Uuid).NotTo(Equal(uuid.Nil))
+			Expect(defaultSchedule.Uuid).NotTo(Equal(uuid.Nil))
 		})
 	})
 
@@ -46,13 +48,13 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			It("should preempt the lock", func() {
 
 				By("Lock is held by another schedule")
-				s := NewSchedule(scheduleName, 1)
+				s := NewSchedule(defaultScheduleName, 1)
 				err := AcquireLock(s, now)
 				GinkgoT().Logf("UUID=%v", s.Uuid)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Acquire lock from the stale task")
-				ps := NewSchedule(scheduleName, 0)
+				ps := NewSchedule(defaultScheduleName, 0)
 				now = now.Add(2 * time.Second)
 				err = AcquireLock(ps, now)
 				GinkgoT().Logf("UUID=%v", ps.Uuid)
@@ -63,8 +65,8 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 		Context("lock is held but cannot determine the timeout", func() {
 			var (
-				crashedScheduleName = "test-schedule-crash"
-				crashedSchedule     = `
+				crasheddefaultScheduleName = "test-schedule-crash"
+				crashedSchedule            = `
 					INSERT INTO owl_schedule (sch_name, sch_lock, sch_modify_time)
 					VALUES ('test-schedule-crash', 1, '2020-01-01 12:00:00')
 				`
@@ -73,7 +75,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 			It("should preempt the lock", func() {
 				By("Acquire lock from the crashed task")
-				s := NewSchedule(crashedScheduleName, 0)
+				s := NewSchedule(crasheddefaultScheduleName, 0)
 				err := AcquireLock(s, now)
 				GinkgoT().Logf("UUID=%v", s.Uuid)
 				Expect(err).NotTo(HaveOccurred())
@@ -84,12 +86,12 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		Context("lock is just held", func() {
 			It("should trigger error", func() {
 				By("Lock is held")
-				s := NewSchedule(scheduleName, 2)
+				s := NewSchedule(defaultScheduleName, 2)
 				err := AcquireLock(s, now)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Acquire lock but get error")
-				ps := NewSchedule(scheduleName, 0)
+				ps := NewSchedule(defaultScheduleName, 0)
 				err = AcquireLock(ps, now)
 				GinkgoT().Logf("Err=%s", err)
 				Expect(err).To(HaveOccurred())
