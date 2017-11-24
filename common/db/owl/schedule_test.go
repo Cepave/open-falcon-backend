@@ -104,8 +104,8 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		Context("lock is held too long", func() {
 			It("should preempt the lock", func() {
 				thisTimeout := defaultTimeout + 1
-				ps := NewSchedule(defaultScheduleName, thisTimeout)
 				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
+				ps := NewSchedule(defaultScheduleName, thisTimeout)
 				err := AcquireLock(ps, newCurrent)
 
 				ExpectSuccessSchedule(ps, err)
@@ -126,25 +126,24 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			})
 		})
 
-		// Context("lock is held but cannot determine the timeout", func() {
-		// 	var (
-		// 		crasheddefaultScheduleName = "test-schedule-crash"
-		// 		crashedSchedule            = `
-		// 				INSERT INTO owl_schedule (sch_name, sch_lock, sch_modify_time)
-		// 				VALUES ('test-schedule-crash', 1, '2020-01-01 12:00:00')
-		// 			`
-		// 	)
-		// 	BeforeEach(inTx(crashedSchedule))
+		Context("lock is held but cannot determine the timeout", func() {
+			BeforeEach(func() {
+				_ = AcquireLock(defaultSchedule, defaultNow)
+			})
 
-		// 	It("should preempt the lock", func() {
-		// 		By("Acquire lock from the crashed task")
-		// 		s := NewSchedule(crasheddefaultScheduleName, 0)
-		// 		err := AcquireLock(s, defaultNow)
-		// 		GinkgoT().Logf("UUID=%v", s.Uuid)
-		// 		Expect(err).NotTo(HaveOccurred())
-		// 		Expect(s.Uuid).NotTo(Equal(uuid.Nil))
-		// 	})
-		// })
+			JustBeforeEach(inTx(deleteLogSql))
+
+			It("should preempt the lock", func() {
+				By("Acquire lock from the crashed task")
+				thisTimeout := defaultTimeout + 1
+				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
+				sp := NewSchedule(defaultScheduleName, thisTimeout)
+				err := AcquireLock(sp, newCurrent)
+
+				ExpectSuccessSchedule(sp, err)
+				ExpectLockAndLog(sp, newCurrent, 1)
+			})
+		})
 
 	})
 
