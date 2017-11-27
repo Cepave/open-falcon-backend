@@ -25,6 +25,57 @@ type syncHostGroupTx struct {
 }
 
 func (syncTx *syncHostGroupTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS tempgrp`)
+	tx.MustExec(`
+		CREATE TEMPORARY TABLE tempgrp (
+		id int(10) unsigned NOT NULL AUTO_INCREMENT,
+		grp_name varchar(255) NOT NULL DEFAULT '',
+		create_user varchar(64) NOT NULL DEFAULT '',
+		create_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		come_from tinyint(4) NOT NULL DEFAULT '0',
+		objects_search_term varchar(150) DEFAULT NULL,
+		object_group_type varchar(50) DEFAULT NULL,
+		auto_sync tinyint(1) DEFAULT NULL,
+		PRIMARY KEY (id),
+		UNIQUE KEY idx_host_grp_grp_name (grp_name)
+		) ENGINE=MEMORY DEFAULT CHARSET=utf8
+    `)
+	/*
+	 *  multiple insertion with prepared statement
+	 *  come_from = 1
+	 *  create_user = ?
+	 */
+	txExt := sqlxExt.ToTxExt(tx)
+	namedStmt := txExt.PrepareNamed(
+		`INSERT INTO tempgrp (grp_name, create_user, come_from)
+		 VALUES (:name, :creator, 1)`)
+	for _, s := range syncTx.groups {
+		namedStmt.MustExec(s)
+	}
+	// :~)
+
+	/*
+	 *  update host table from temp_host
+	 */
+	tx.MustExec(
+		`
+		UPDATE grp INNER JOIN tempgrp
+		ON grp.grp_name = tempgrp.grp_name
+		SET grp.create_user = tempgrp.create_user,
+    		grp.come_from   = tempgrp.come_from
+		`)
+	/*
+	 * insert host table from temp_host
+	 */
+	tx.MustExec(
+		`
+		INSERT INTO grp(grp_name, create_user, come_from)
+		SELECT tempgrp.grp_name, tempgrp.create_user, tempgrp.come_from
+		FROM tempgrp LEFT JOIN grp
+		ON tempgrp.grp_name = grp.grp_name
+		WHERE grp.grp_name IS NULL
+		`)
+	tx.MustExec(`DROP TEMPORARY TABLE tempgrp`)
 	return commonDb.TxCommit
 }
 

@@ -63,6 +63,78 @@ func (suite *TestCmdbSuite) TestApi2tuple(c *C) {
 	c.Assert(obtain, DeepEquals, spec)
 }
 
+type groupTuple struct {
+	Name      string
+	Creator   string
+	Come_from int8
+}
+
+func (suite *TestCmdbSuite) TestSyncGrp(c *C) {
+	testCase := []cmdbModel.SyncHostGroup{
+		cmdbModel.SyncHostGroup{
+			Name:    "cmdb-test-grp-a",
+			Creator: "root"},
+		cmdbModel.SyncHostGroup{
+			Name:    "cmdb-test-grp-b",
+			Creator: "root"},
+		cmdbModel.SyncHostGroup{
+			Name:    "cmdb-test-grp-c",
+			Creator: "root"},
+		cmdbModel.SyncHostGroup{
+			Name:    "cmdb-test-grp-d",
+			Creator: "root"},
+	}
+	txProcessor := &syncHostGroupTx{
+		groups: testCase,
+	}
+	ocheck.LogTestCase(c, testCase)
+	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
+	c.Assert(txProcessor.err, IsNil)
+	//
+	spec := []groupTuple{
+		groupTuple{
+			Name:      "cmdb-test-grp-a",
+			Creator:   "root",
+			Come_from: 1},
+		groupTuple{
+			Name:      "cmdb-test-grp-e",
+			Creator:   "default",
+			Come_from: 0},
+		groupTuple{
+			Name:      "cmdb-test-grp-f",
+			Creator:   "default",
+			Come_from: 0},
+		groupTuple{
+			Name:      "cmdb-test-grp-b",
+			Creator:   "root",
+			Come_from: 1},
+		groupTuple{
+			Name:      "cmdb-test-grp-c",
+			Creator:   "root",
+			Come_from: 1},
+		groupTuple{
+			Name:      "cmdb-test-grp-d",
+			Creator:   "root",
+			Come_from: 1},
+	}
+	//
+	// obtain -> select * from host
+	rows, err := DbFacade.SqlxDb.Query("SELECT grp_name, create_user, come_from FROM grp")
+	c.Assert(err, IsNil)
+	index := 0
+	for rows.Next() {
+		var name string
+		var creator string
+		var from int8
+		err := rows.Scan(&name, &creator, &from)
+		c.Assert(err, IsNil)
+		c.Assert(name, Equals, spec[index].Name)
+		c.Assert(creator, Equals, spec[index].Creator)
+		c.Assert(from, Equals, spec[index].Come_from)
+		index = index + 1
+	}
+}
+
 func (suite *TestCmdbSuite) TestSyncHost(c *C) {
 	testCase := []cmdbModel.SyncHost{
 		cmdbModel.SyncHost{
@@ -139,8 +211,6 @@ func (suite *TestCmdbSuite) TestSyncHost(c *C) {
 		c.Assert(m_e, Equals, spec[index].Maintain_end)
 		index = index + 1
 	}
-
-	// c.Assert(obtain, Equals, spec)
 }
 
 func (s *TestCmdbSuite) SetUpTest(c *C) {
@@ -155,6 +225,13 @@ func (s *TestCmdbSuite) SetUpTest(c *C) {
 			       ("cmdb-test-e","69.69.69.5", 0, 0),
 				   ("cmdb-test-f","69.69.69.6", 0, 0)
 			`)
+	case "TestCmdbSuite.TestSyncGrp":
+		inTx(
+			`INSERT INTO grp (grp_name, create_user, come_from)
+			 VALUES ("cmdb-test-grp-a", "default", 0),
+					("cmdb-test-grp-e", "default", 0),
+					("cmdb-test-grp-f", "default", 0)
+			`)
 	}
 }
 
@@ -165,6 +242,10 @@ func (s *TestCmdbSuite) TearDownTest(c *C) {
 	case "TestCmdbSuite.TestSyncHost":
 		inTx(
 			`DELETE FROM host WHERE hostname LIKE "cmdb-test-%"`,
+		)
+	case "TestCmdbSuite.TestSyncGrp":
+		inTx(
+			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
 		)
 	}
 }

@@ -7,7 +7,7 @@ type SyncHost struct {
 }
 
 type SyncHostGroup struct {
-	Creater string `json:"creater"`
+	Creator string `json:"creator"`
 	Name    string `json:"name"`
 }
 
