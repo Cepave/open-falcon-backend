@@ -48,15 +48,14 @@ type OwlScheduleLog struct {
 	Message   *string    `db:"sl_message"`
 }
 
-type TimeOutOfSchedule struct {
-	Name          string
+type UnableToLockSchedule struct {
 	AcquiredTime  time.Time
 	LastStartTime time.Time
 	Timeout       int
 }
 
-func (t *TimeOutOfSchedule) Error() string {
-	return fmt.Sprintf("%s error: period between %s and %s should longer than %ds", t.Name,
+func (t *UnableToLockSchedule) Error() string {
+	return fmt.Sprintf("Unable to lock schedule error: period between %s and %s should longer than %ds",
 		t.LastStartTime.Format(time.RFC3339),
 		t.AcquiredTime.Format(time.RFC3339),
 		t.Timeout)
@@ -186,17 +185,17 @@ func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 
 func AcquireLock(schedule *Schedule, now time.Time) error {
 	txProcessor := &txAcquireLock{
-		schedule:     schedule,
-		timeNow:      now,
-		timeoutError: nil,
+		schedule:  schedule,
+		timeNow:   now,
+		lockError: nil,
 	}
 	DbFacade.SqlxDbCtrl.InTx(txProcessor)
-	return txProcessor.timeoutError
+	return txProcessor.lockError
 }
 
 type txAcquireLock struct {
-	schedule     *Schedule
-	timeoutError *TimeOutOfSchedule
+	schedule  *Schedule
+	lockError *UnableToLockSchedule
 
 	timeNow   time.Time
 	lockTable OwlSchedule
@@ -211,8 +210,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	ack.selectOrInsertLock(tx)
 	// The previous task is not timeout()
 	if ack.lockTable.isLocked() && ack.notTimeout(tx) {
-		ack.timeoutError = &TimeOutOfSchedule{
-			Name:          "Schedule locked",
+		ack.lockError = &UnableToLockSchedule{
 			LastStartTime: ack.logTable.StartTime,
 			AcquiredTime:  ack.timeNow,
 			Timeout:       ack.logTable.Timeout,
