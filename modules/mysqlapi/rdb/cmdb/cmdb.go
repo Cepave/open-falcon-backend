@@ -26,45 +26,44 @@ type syncRelTx struct {
 	relations map[string][]string
 }
 
-type relHostTuple struct {
-	Id       int
-	Hostname string
-}
-
-func hostTuples2map(tuples []relHostTuple) map[string]int {
-	result := make(map[string]int)
-	for _, t := range tuples {
-		result[t.Hostname] = t.Id
-	}
-	return result
-}
-
-type relGroupTuple struct {
-	Id       int
-	Grp_name string
-}
-
-func groupTuples2map(tuples []relGroupTuple) map[string]int {
-	result := make(map[string]int)
-	for _, t := range tuples {
-		result[t.Grp_name] = t.Id
-	}
-	return result
-}
-
 func (syncTx *syncRelTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	// prepare id, name mapping data
-	h := []relHostTuple{}
-	tx.Select(&h, "id, hostname from host")
-	//hd := hostTuples2map(h)
-	g := []relGroupTuple{}
-	tx.Select(&g, "id, grp_name from grp")
-	//gd := groupTuples2map(g)
+	// delete all the grp relation that come_from = 1
+	tx.MustExec(`
+		DELETE FROM grp_host WHERE grp_id IN
+		(SELECT id FROM grp WHERE come_from = 1)
+	`)
+	// transform string string relation into temporary memory table
+	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS trel`)
 
-	/*transform string 2 string relation to id 2 id relation
-	for _, r := syncTx.relations {
+	tx.MustExec(`
+		CREATE TEMPORARY TABLE trel (
+		grp_name varchar(255) NOT NULL DEFAULT '',
+		hostname varchar(255) NOT NULL DEFAULT ''
+		) ENGINE=MEMORY DEFAULT CHARSET=utf8
+    `)
+	txExt := sqlxExt.ToTxExt(tx)
+	namedStmt := txExt.PrepareNamed(`
+		INSERT INTO trel(grp_name, hostname)
+		VALUES (:gname, :hname)
+	`)
+	for key, val := range syncTx.relations {
+		for _, hname := range val {
+			m := map[string]interface{}{
+				"gname": key,
+				"hname": hname,
+			}
+			namedStmt.MustExec(m)
+		}
+	}
 
-	}*/
+	// insert into grp_host
+	tx.MustExec(`
+		INSERT INTO grp_host (grp_id, host_id)
+		SELECT grp.id, host.id FROM grp, trel, host
+   		WHERE grp.grp_name = trel.grp_name
+		AND host.hostname = trel.hostname
+	`)
+	tx.MustExec(`DROP TEMPORARY TABLE trel`)
 	return commonDb.TxCommit
 }
 

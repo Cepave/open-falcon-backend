@@ -69,6 +69,57 @@ type groupTuple struct {
 	Come_from int8
 }
 
+type relTuple struct {
+	GrpID  int
+	HostID int
+}
+
+func (suite *TestCmdbSuite) TestSyncRel(c *C) {
+	testCase := map[string][]string{
+		"cmdb-test-grp-b": []string{"cmdb-test-a", "cmdb-test-b"},
+		"cmdb-test-grp-c": []string{"cmdb-test-a", "cmdb-test-b"},
+	}
+	txProcessor := &syncRelTx{
+		relations: testCase,
+	}
+	ocheck.LogTestCase(c, testCase)
+	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
+	//
+	spec := []relTuple{
+		relTuple{
+			GrpID:  10,
+			HostID: 1},
+		relTuple{
+			GrpID:  10,
+			HostID: 2},
+		relTuple{
+			GrpID:  20,
+			HostID: 1},
+		relTuple{
+			GrpID:  20,
+			HostID: 2},
+		relTuple{
+			GrpID:  30,
+			HostID: 1},
+		relTuple{
+			GrpID:  30,
+			HostID: 2},
+	}
+	// compare table grp_host after sync
+	rows, err := DbFacade.SqlxDb.Query("SELECT grp_id, host_id FROM grp_host order by grp_id, host_id")
+	c.Assert(err, IsNil)
+	index := 0
+	for rows.Next() {
+		var gid int
+		var hid int
+		err := rows.Scan(&gid, &hid)
+		c.Assert(err, IsNil)
+		c.Assert(gid, Equals, spec[index].GrpID)
+		c.Assert(hid, Equals, spec[index].HostID)
+		index = index + 1
+	}
+}
+
 func (suite *TestCmdbSuite) TestSyncGrp(c *C) {
 	testCase := []cmdbModel.SyncHostGroup{
 		cmdbModel.SyncHostGroup{
@@ -116,8 +167,7 @@ func (suite *TestCmdbSuite) TestSyncGrp(c *C) {
 			Creator:   "root",
 			Come_from: 1},
 	}
-	//
-	// obtain -> select * from host
+	// compare host table after sync
 	rows, err := DbFacade.SqlxDb.Query("SELECT grp_name, create_user, come_from FROM grp")
 	c.Assert(err, IsNil)
 	index := 0
@@ -191,8 +241,7 @@ func (suite *TestCmdbSuite) TestSyncHost(c *C) {
 			Maintain_begin: 0,
 			Maintain_end:   0},
 	}
-	//
-	// obtain -> select * from host
+	// compare table host after sync
 	rows, err := DbFacade.SqlxDb.Query("SELECT hostname, ip, maintain_begin, maintain_end FROM host")
 	c.Assert(err, IsNil)
 	index := 0
@@ -230,6 +279,27 @@ func (s *TestCmdbSuite) SetUpTest(c *C) {
 					("cmdb-test-grp-e", "default", 0),
 					("cmdb-test-grp-f", "default", 0)
 			`)
+	case "TestCmdbSuite.TestSyncRel":
+		inTx(
+			`
+			INSERT INTO host (id, hostname)
+			VALUES (1, "cmdb-test-a"),
+			       (2, "cmdb-test-b"),
+				   (3, "cmdb-test-c")
+			`,
+			`
+			INSERT INTO grp (id, grp_name, come_from)
+			VALUES (10, "cmdb-test-grp-a", 0),
+				   (20, "cmdb-test-grp-b", 1),
+				   (30, "cmdb-test-grp-c", 1)
+			`,
+			`
+			INSERT INTO grp_host(grp_id, host_id)
+			VALUES (10, 1),
+			       (10, 2),
+				   (20, 2),
+				   (30, 3)
+			`)
 	}
 }
 
@@ -243,6 +313,13 @@ func (s *TestCmdbSuite) TearDownTest(c *C) {
 		)
 	case "TestCmdbSuite.TestSyncGrp":
 		inTx(
+			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
+		)
+	case "TestCmdbSuite.TestSyncRel":
+		inTx(
+			`DELETE FROM grp_host WHERE grp_id IN (SELECT id FROM grp)`,
+			`DELETE FROM grp_host WHERE host_id IN (SELECT id FROM host)`,
+			`DELETE FROM host WHERE hostname LIKE "cmdb-test-%"`,
 			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
 		)
 	}
