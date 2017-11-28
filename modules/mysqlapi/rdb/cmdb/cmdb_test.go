@@ -89,7 +89,6 @@ func (suite *TestCmdbSuite) TestSyncGrp(c *C) {
 	}
 	ocheck.LogTestCase(c, testCase)
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
-	c.Assert(txProcessor.err, IsNil)
 	//
 	spec := []groupTuple{
 		groupTuple{
@@ -155,11 +154,10 @@ func (suite *TestCmdbSuite) TestSyncHost(c *C) {
 			IP:       "69.69.69.4"},
 	}
 	txProcessor := &syncHostTx{
-		hosts: testCase,
+		hosts: api2tuple(testCase),
 	}
 	ocheck.LogTestCase(c, testCase)
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
-	c.Assert(txProcessor.err, IsNil)
 	//
 	spec := []hostTuple{
 		hostTuple{

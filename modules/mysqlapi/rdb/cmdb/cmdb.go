@@ -7,11 +7,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type syncHostTx struct {
-	hosts []cmdbModel.SyncHost
-	err   error
-}
-
 type hostTuple struct {
 	Hostname       string
 	Ip             string
@@ -19,18 +14,57 @@ type hostTuple struct {
 	Maintain_end   uint32
 }
 
+type syncHostTx struct {
+	hosts []hostTuple
+}
+
 type syncHostGroupTx struct {
 	groups []cmdbModel.SyncHostGroup
-	err    error
 }
 
 type syncRelTx struct {
 	relations map[string][]string
-	err       error
+}
+
+type relHostTuple struct {
+	Id       int
+	Hostname string
+}
+
+func hostTuples2map(tuples []relHostTuple) map[string]int {
+	result := make(map[string]int)
+	for _, t := range tuples {
+		result[t.Hostname] = t.Id
+	}
+	return result
+}
+
+type relGroupTuple struct {
+	Id       int
+	Grp_name string
+}
+
+func groupTuples2map(tuples []relGroupTuple) map[string]int {
+	result := make(map[string]int)
+	for _, t := range tuples {
+		result[t.Grp_name] = t.Id
+	}
+	return result
 }
 
 func (syncTx *syncRelTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+	// prepare id, name mapping data
+	h := []relHostTuple{}
+	tx.Select(&h, "id, hostname from host")
+	//hd := hostTuples2map(h)
+	g := []relGroupTuple{}
+	tx.Select(&g, "id, grp_name from grp")
+	//gd := groupTuples2map(g)
 
+	/*transform string 2 string relation to id 2 id relation
+	for _, r := syncTx.relations {
+
+	}*/
 	return commonDb.TxCommit
 }
 
@@ -38,15 +72,9 @@ func (syncTx *syncHostGroupTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS tempgrp`)
 	tx.MustExec(`
 		CREATE TEMPORARY TABLE tempgrp (
-		id int(10) unsigned NOT NULL AUTO_INCREMENT,
 		grp_name varchar(255) NOT NULL DEFAULT '',
 		create_user varchar(64) NOT NULL DEFAULT '',
-		create_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		come_from tinyint(4) NOT NULL DEFAULT '0',
-		objects_search_term varchar(150) DEFAULT NULL,
-		object_group_type varchar(50) DEFAULT NULL,
-		auto_sync tinyint(1) DEFAULT NULL,
-		PRIMARY KEY (id),
 		UNIQUE KEY idx_host_grp_grp_name (grp_name)
 		) ENGINE=MEMORY DEFAULT CHARSET=utf8
     `)
@@ -115,16 +143,10 @@ func (syncTx *syncHostTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS temp_host`)
 	tx.MustExec(`
 		CREATE TEMPORARY TABLE temp_host (
-		id int(11) NOT NULL AUTO_INCREMENT,
      	hostname varchar(255) NOT NULL DEFAULT '',
      	ip varchar(16) NOT NULL DEFAULT '',
-     	agent_version varchar(16) NOT NULL DEFAULT '',
-     	plugin_version varchar(128) NOT NULL DEFAULT '',
      	maintain_begin int(10) unsigned NOT NULL DEFAULT '0',
      	maintain_end int(10) unsigned NOT NULL DEFAULT '0',
-     	update_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-     	resource_object_id int(10) DEFAULT NULL,
-     	PRIMARY KEY (id),
      	UNIQUE KEY idx_host_hostname (hostname)
     	) ENGINE=MEMORY AUTO_INCREMENT=7 DEFAULT CHARSET=utf8
      `)
@@ -135,8 +157,7 @@ func (syncTx *syncHostTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	namedStmt := txExt.PrepareNamed(
 		`INSERT INTO temp_host (hostname, ip, maintain_begin, maintain_end)
 		 VALUES (:hostname, :ip, :maintain_begin, :maintain_end)`)
-	hostsData := api2tuple(syncTx.hosts)
-	for _, s := range hostsData {
+	for _, s := range syncTx.hosts {
 		namedStmt.MustExec(s)
 	}
 	// :~)
@@ -169,29 +190,13 @@ func (syncTx *syncHostTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 }
 
 // Start the Synchronization of CMDB data.
-func StartSync(syncData *cmdbModel.SyncForAdding) (*cmdbModel.SyncItem, error) {
-	/*
-	 * Checks if this sync can be carried on
-	 * Required parameters should be name, function, and timeout
-	 */
-	/*
-		item, err := chemin.checkDoableSync("cmdbSync")
-		if err != nil {
-			return nil, err
-		}
-	*/
-
+func StartSync(syncData *cmdbModel.SyncForAdding) {
 	// sync Hosts
-
 	txProcessorHost := &syncHostTx{
-		hosts: syncData.Hosts,
+		hosts: api2tuple(syncData.Hosts),
 	}
 
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessorHost)
-
-	if txProcessorHost.err != nil {
-		return nil, txProcessorHost.err
-	}
 
 	// sync HostGroups
 
@@ -201,10 +206,6 @@ func StartSync(syncData *cmdbModel.SyncForAdding) (*cmdbModel.SyncItem, error) {
 
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessorGroup)
 
-	if txProcessorGroup.err != nil {
-		return nil, txProcessorGroup.err
-	}
-
 	// sync Relations
 
 	txProcessorRel := &syncRelTx{
@@ -212,12 +213,4 @@ func StartSync(syncData *cmdbModel.SyncForAdding) (*cmdbModel.SyncItem, error) {
 	}
 
 	DbFacade.NewSqlxDbCtrl().InTx(txProcessorRel)
-
-	if txProcessorRel.err != nil {
-		return nil, txProcessorRel.err
-	}
-	// wait to fix
-	var item *cmdbModel.SyncItem
-	item = nil
-	return item, nil
 }
