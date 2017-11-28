@@ -77,10 +77,10 @@ func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	return cdb.TxCommit
 }
 
-func AcquireLock(schedule *model.Schedule, now time.Time) error {
+func AcquireLock(schedule *model.Schedule, startTime time.Time) error {
 	txProcessor := &txAcquireLock{
 		schedule:  schedule,
-		timeNow:   now,
+		startTime: startTime,
 		lockError: nil,
 	}
 	DbFacade.SqlxDbCtrl.InTx(txProcessor)
@@ -91,7 +91,7 @@ type txAcquireLock struct {
 	schedule  *model.Schedule
 	lockError *model.UnableToLockSchedule
 
-	timeNow   time.Time
+	startTime time.Time
 	lockTable model.OwlSchedule
 	logTable  model.OwlScheduleLog
 }
@@ -106,7 +106,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	if ack.lockTable.IsLocked() && ack.notTimeout(tx) {
 		ack.lockError = &model.UnableToLockSchedule{
 			LastStartTime: ack.logTable.StartTime,
-			AcquiredTime:  ack.timeNow,
+			AcquiredTime:  ack.startTime,
 			Timeout:       ack.logTable.Timeout,
 		}
 		return cdb.TxCommit
@@ -129,7 +129,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 		map[string]interface{}{
 			"uuid":      cdb.DbUuid(generatedUuid),
 			"schid":     ack.lockTable.Id,
-			"starttime": ack.timeNow,
+			"starttime": ack.startTime,
 			"timeout":   ack.schedule.Timeout,
 			"status":    model.RUN,
 		},
@@ -156,7 +156,7 @@ func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx) {
 				sch_lock, sch_modify_time
 			)
 			VALUES (?, 0, ?)
-		`, name, ack.timeNow)
+		`, name, ack.startTime)
 		ack.lockTable.Id = int(cdb.ToResultExt(r).LastInsertId())
 		ack.lockTable.Lock = byte(model.FREE)
 	}
@@ -168,7 +168,7 @@ func (ack *txAcquireLock) updateLockByName(tx *sqlx.Tx) {
 		SET sch_lock = 1,
 			sch_modify_time = ?
 		WHERE sch_name = ?
-	`, ack.timeNow, ack.schedule.Name)
+	`, ack.startTime, ack.schedule.Name)
 }
 
 func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx) bool {
@@ -182,5 +182,5 @@ func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx) bool {
 	`, ack.lockTable.Id)
 
 	// Check timeout iff row exists
-	return exist && (ack.timeNow.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second)
+	return exist && (ack.startTime.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second)
 }
