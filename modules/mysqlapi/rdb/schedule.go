@@ -11,7 +11,7 @@ import (
 )
 
 func FreeLock(schedule *model.Schedule,
-	endStatus model.TaskStatus, endMsg string, endTime time.Time) {
+	endStatus model.TaskStatus, endMsg *string, endTime time.Time) {
 	txProcessor := &txFreeLock{
 		schedule: schedule,
 		status:   byte(endStatus),
@@ -25,7 +25,7 @@ type txFreeLock struct {
 	schedule *model.Schedule
 	endTime  time.Time
 	status   byte
-	message  string
+	message  *string
 
 	lockTable    model.OwlSchedule
 	logStartTime time.Time

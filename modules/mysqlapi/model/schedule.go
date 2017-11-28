@@ -18,6 +18,11 @@ func (s *Schedule) GetUuidString() string {
 	return s.Uuid.String()
 }
 
+func (s *Schedule) String() string {
+	return fmt.Sprintf("Schedule<Name: %s, Timeout: %d, UUID: %s>",
+		s.Name, s.Timeout, s.Uuid)
+}
+
 func NewSchedule(name string, timeout int) *Schedule {
 	return &Schedule{
 		Name:    name,
