@@ -98,7 +98,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		inTx(deleteLogSql, deleteLockSql)
 	})
 
-	Context("model.Schedule is new", func() {
+	Context("Schedule is new", func() {
 		It("should acquire the lock", func() {
 			err := AcquireLock(defaultSchedule, defaultNow)
 
