@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/satori/go.uuid"
@@ -29,19 +30,19 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	var (
 		scheduleName    string
-		defaultSchedule *Schedule
+		defaultSchedule *model.Schedule
 		defaultNow      time.Time
 
 		/**
 		 * Helper function
 		 */
-		ExpectSuccessSchedule = func(testSchedule *Schedule, testError error) {
+		ExpectSuccessSchedule = func(testSchedule *model.Schedule, testError error) {
 			GinkgoT().Logf("UUID=%v", testSchedule.Uuid)
 			Expect(testError).NotTo(HaveOccurred())
 			Expect(testSchedule.Uuid).NotTo(Equal(uuid.Nil))
 		}
 
-		ExpectLockAndLog = func(expSchedule *Schedule, expNow time.Time, expLogCount int) {
+		ExpectLockAndLog = func(expSchedule *model.Schedule, expNow time.Time, expLogCount int) {
 			const (
 				selectLockSql = `
 				SELECT *
@@ -64,13 +65,13 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			)
 
 			var (
-				lockTable OwlSchedule
-				logTable  OwlScheduleLog
+				lockTable model.OwlSchedule
+				logTable  model.OwlScheduleLog
 			)
 
 			By("Check lock")
 			DbFacade.SqlxDbCtrl.Get(&lockTable, selectLockSql, expSchedule.Name)
-			Expect(lockTable.isLocked()).To(BeTrue())
+			Expect(lockTable.IsLocked()).To(BeTrue())
 			Expect(lockTable.LastUpdateTime).To(BeTemporally("~", expNow, timeThreshold))
 
 			By("Check time")
@@ -89,7 +90,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		scheduleName = scheduleNameTemplate + fmt.Sprint(rand.Int())
 		GinkgoT().Logf("Name=%s", scheduleName)
-		defaultSchedule = NewSchedule(scheduleName, defaultTimeout)
+		defaultSchedule = model.NewSchedule(scheduleName, defaultTimeout)
 		defaultNow = time.Now()
 	})
 
@@ -97,7 +98,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		inTx(deleteLogSql, deleteLockSql)
 	})
 
-	Context("Schedule is new", func() {
+	Context("model.Schedule is new", func() {
 		It("should acquire the lock", func() {
 			err := AcquireLock(defaultSchedule, defaultNow)
 
@@ -115,7 +116,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			It("should preempt the lock", func() {
 				thisTimeout := defaultTimeout + 1
 				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
-				ps := NewSchedule(scheduleName, thisTimeout)
+				ps := model.NewSchedule(scheduleName, thisTimeout)
 				err := AcquireLock(ps, newCurrent)
 
 				ExpectSuccessSchedule(ps, err)
@@ -126,7 +127,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		Context("lock is just held", func() {
 			It("should trigger error", func() {
 				thisTimeout := defaultTimeout + 1
-				ps := NewSchedule(scheduleName, thisTimeout)
+				ps := model.NewSchedule(scheduleName, thisTimeout)
 				err := AcquireLock(ps, defaultNow)
 
 				Expect(err).To(HaveOccurred())
@@ -149,7 +150,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 				By("Acquire lock from the crashed task")
 				thisTimeout := defaultTimeout + 1
 				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
-				sp := NewSchedule(scheduleName, thisTimeout)
+				sp := model.NewSchedule(scheduleName, thisTimeout)
 				err := AcquireLock(sp, newCurrent)
 
 				ExpectSuccessSchedule(sp, err)

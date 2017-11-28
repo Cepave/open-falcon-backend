@@ -6,80 +6,14 @@ import (
 
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/jmoiron/sqlx"
 	"github.com/satori/go.uuid"
 )
 
-type Schedule struct {
-	Name    string
-	Timeout int
-	Uuid    uuid.UUID
-}
-
-func (s *Schedule) GetUuidString() string {
-	return s.Uuid.String()
-}
-
-func NewSchedule(name string, timeout int) *Schedule {
-	return &Schedule{
-		Name:    name,
-		Timeout: timeout,
-	}
-}
-
-type OwlSchedule struct {
-	Id             int       `db:"sch_id"`
-	Name           string    `db:"sch_name"`
-	Lock           byte      `db:"sch_lock"`
-	LastUpdateTime time.Time `db:"sch_modify_time"`
-}
-
-func (sch *OwlSchedule) isLocked() bool {
-	return sch.Lock == byte(LOCKED)
-}
-
-type OwlScheduleLog struct {
-	Uuid      cdb.DbUuid `db:"sl_uuid"`
-	SchId     int        `db:"sl_sch_id"`
-	StartTime time.Time  `db:"sl_start_time"`
-	EndTime   *time.Time `db:"sl_end_time"`
-	Timeout   int        `db:"sl_timeout"`
-	Status    byte       `db:"sl_status"`
-	Message   *string    `db:"sl_message"`
-}
-
-type UnableToLockSchedule struct {
-	AcquiredTime  time.Time
-	LastStartTime time.Time
-	Timeout       int
-}
-
-func (t *UnableToLockSchedule) Error() string {
-	return fmt.Sprintf("Unable to lock schedule error: period between %s and %s should longer than %ds",
-		t.LastStartTime.Format(time.RFC3339),
-		t.AcquiredTime.Format(time.RFC3339),
-		t.Timeout)
-}
-
-type LockStatus byte
-
-const (
-	FREE LockStatus = iota
-	LOCKED
-)
-
-type TaskStatus byte
-
-const (
-	DONE TaskStatus = iota
-	RUN
-	FAIL
-	TIMEOUT
-)
-
 type ScheduleCallback func() error
 
-func Execute(schedule *Schedule, callback ScheduleCallback) error {
+func Execute(schedule *model.Schedule, callback ScheduleCallback) error {
 	err := AcquireLock(schedule, time.Now())
 	if err != nil {
 		return err
@@ -94,17 +28,17 @@ func Execute(schedule *Schedule, callback ScheduleCallback) error {
 		defer func() {
 			var (
 				errMsg    string
-				endStatus TaskStatus
+				endStatus model.TaskStatus
 			)
 
 			if p := recover(); p != nil {
-				endStatus = FAIL
+				endStatus = model.FAIL
 				errMsg = fmt.Sprint(p)
 			} else if err != nil {
-				endStatus = FAIL
+				endStatus = model.FAIL
 				errMsg = err.Error()
 			} else {
-				endStatus = DONE
+				endStatus = model.DONE
 			}
 
 			FreeLock(schedule, endStatus, errMsg, time.Now())
@@ -117,7 +51,8 @@ func Execute(schedule *Schedule, callback ScheduleCallback) error {
 	return nil
 }
 
-func FreeLock(schedule *Schedule, endStatus TaskStatus, endMsg string, endTime time.Time) {
+func FreeLock(schedule *model.Schedule,
+	endStatus model.TaskStatus, endMsg string, endTime time.Time) {
 	txProcessor := &txFreeLock{
 		schedule: schedule,
 		status:   byte(endStatus),
@@ -128,12 +63,12 @@ func FreeLock(schedule *Schedule, endStatus TaskStatus, endMsg string, endTime t
 }
 
 type txFreeLock struct {
-	schedule *Schedule
+	schedule *model.Schedule
 	endTime  time.Time
 	status   byte
 	message  string
 
-	lockTable    OwlSchedule
+	lockTable    model.OwlSchedule
 	logStartTime time.Time
 }
 
@@ -168,7 +103,7 @@ func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 				WHERE sl_uuid = ?
 			`, free.endTime, free.status, free.message, free.schedule.Uuid)
 		// Release lock iff it is held by this task
-		if free.lockTable.isLocked() &&
+		if free.lockTable.IsLocked() &&
 			free.lockTable.LastUpdateTime.Equal(free.logStartTime) {
 			_ = tx.MustExec(`
 					UPDATE owl_schedule
@@ -183,7 +118,7 @@ func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	return cdb.TxCommit
 }
 
-func AcquireLock(schedule *Schedule, now time.Time) error {
+func AcquireLock(schedule *model.Schedule, now time.Time) error {
 	txProcessor := &txAcquireLock{
 		schedule:  schedule,
 		timeNow:   now,
@@ -194,12 +129,12 @@ func AcquireLock(schedule *Schedule, now time.Time) error {
 }
 
 type txAcquireLock struct {
-	schedule  *Schedule
-	lockError *UnableToLockSchedule
+	schedule  *model.Schedule
+	lockError *model.UnableToLockSchedule
 
 	timeNow   time.Time
-	lockTable OwlSchedule
-	logTable  OwlScheduleLog
+	lockTable model.OwlSchedule
+	logTable  model.OwlScheduleLog
 }
 
 func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
@@ -209,8 +144,8 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	 */
 	ack.selectOrInsertLock(tx)
 	// The previous task is not timeout()
-	if ack.lockTable.isLocked() && ack.notTimeout(tx) {
-		ack.lockError = &UnableToLockSchedule{
+	if ack.lockTable.IsLocked() && ack.notTimeout(tx) {
+		ack.lockError = &model.UnableToLockSchedule{
 			LastStartTime: ack.logTable.StartTime,
 			AcquiredTime:  ack.timeNow,
 			Timeout:       ack.logTable.Timeout,
@@ -237,7 +172,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 			"schid":     ack.lockTable.Id,
 			"starttime": ack.timeNow,
 			"timeout":   ack.schedule.Timeout,
-			"status":    RUN,
+			"status":    model.RUN,
 		},
 	)
 	ack.schedule.Uuid = generatedUuid
@@ -264,7 +199,7 @@ func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx) {
 			VALUES (?, 0, ?)
 		`, name, ack.timeNow)
 		ack.lockTable.Id = int(cdb.ToResultExt(r).LastInsertId())
-		ack.lockTable.Lock = byte(FREE)
+		ack.lockTable.Lock = byte(model.FREE)
 	}
 }
 
