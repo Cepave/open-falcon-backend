@@ -1,4 +1,4 @@
-package owl
+package rdb
 
 import (
 	"fmt"
@@ -93,7 +93,9 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		defaultNow = time.Now()
 	})
 
-	AfterEach(inTx(deleteLogSql, deleteLockSql))
+	AfterEach(func() {
+		inTx(deleteLogSql, deleteLockSql)
+	})
 
 	Context("Schedule is new", func() {
 		It("should acquire the lock", func() {
@@ -139,7 +141,9 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 				_ = AcquireLock(defaultSchedule, defaultNow)
 			})
 
-			JustBeforeEach(inTx(deleteLogSql))
+			JustBeforeEach(func() {
+				inTx(deleteLogSql)
+			})
 
 			It("should preempt the lock", func() {
 				By("Acquire lock from the crashed task")
