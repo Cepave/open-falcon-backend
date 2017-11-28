@@ -1,4 +1,4 @@
-package cmdb
+package model
 
 type SyncHost struct {
 	Activate int    `json:"activate"`

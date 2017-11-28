@@ -5,9 +5,9 @@ import (
 	_ "reflect"
 	"testing"
 
-	cmdbModel "github.com/Cepave/open-falcon-backend/common/model/cmdb"
 	ocheck "github.com/Cepave/open-falcon-backend/common/testing/check"
 	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
+	cmdbModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	. "gopkg.in/check.v1"
 )
 

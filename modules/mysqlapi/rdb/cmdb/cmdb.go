@@ -3,7 +3,7 @@ package cmdb
 import (
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
-	cmdbModel "github.com/Cepave/open-falcon-backend/common/model/cmdb"
+	cmdbModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -22,6 +22,16 @@ type hostTuple struct {
 type syncHostGroupTx struct {
 	groups []cmdbModel.SyncHostGroup
 	err    error
+}
+
+type syncRelTx struct {
+	relations map[string][]string
+	err       error
+}
+
+func (syncTx *syncRelTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+
+	return commonDb.TxCommit
 }
 
 func (syncTx *syncHostGroupTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
@@ -193,6 +203,18 @@ func StartSync(syncData *cmdbModel.SyncForAdding) (*cmdbModel.SyncItem, error) {
 
 	if txProcessorGroup.err != nil {
 		return nil, txProcessorGroup.err
+	}
+
+	// sync Relations
+
+	txProcessorRel := &syncRelTx{
+		relations: syncData.Relations,
+	}
+
+	DbFacade.NewSqlxDbCtrl().InTx(txProcessorRel)
+
+	if txProcessorRel.err != nil {
+		return nil, txProcessorRel.err
 	}
 	// wait to fix
 	var item *cmdbModel.SyncItem
