@@ -18,7 +18,7 @@ func addNewCmdbSync(c *gin.Context) {
 	commonGin.BindJson(c, targetForAdding)
 	logger.Infof("Get data from API %s", targetForAdding)
 	// :~)
-	newSync, err := commonCmdbDb.StartSync(targetForAdding)
+	newSync, err := commonCmdbDb.SyncForHosts(targetForAdding)
 	if err != nil {
 		switch err.(type) {
 		/*

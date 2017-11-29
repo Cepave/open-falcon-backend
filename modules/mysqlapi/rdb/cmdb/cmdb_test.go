@@ -19,40 +19,40 @@ var _ = Suite(&TestCmdbSuite{})
 
 func (suite *TestCmdbSuite) TestApi2tuple(c *C) {
 	testCase := []cmdbModel.SyncHost{
-		cmdbModel.SyncHost{
+		{
 			Activate: 0,
 			Name:     "cmdb-test-a",
 			IP:       "69.69.69.1"},
-		cmdbModel.SyncHost{
+		{
 			Activate: 0,
 			Name:     "cmdb-test-b",
 			IP:       "69.69.69.2"},
-		cmdbModel.SyncHost{
+		{
 			Activate: 1,
 			Name:     "cmdb-test-c",
 			IP:       "69.69.69.3"},
-		cmdbModel.SyncHost{
+		{
 			Activate: 1,
 			Name:     "cmdb-test-d",
 			IP:       "69.69.69.4"},
 	}
-	spec := []hostTuple{
-		hostTuple{
+	spec := []*hostTuple{
+		&hostTuple{
 			Hostname:       "cmdb-test-a",
 			Ip:             "69.69.69.1",
 			Maintain_begin: 946684800,
 			Maintain_end:   4292329420},
-		hostTuple{
+		&hostTuple{
 			Hostname:       "cmdb-test-b",
 			Ip:             "69.69.69.2",
 			Maintain_begin: 946684800,
 			Maintain_end:   4292329420},
-		hostTuple{
+		&hostTuple{
 			Hostname:       "cmdb-test-c",
 			Ip:             "69.69.69.3",
 			Maintain_begin: 0,
 			Maintain_end:   0},
-		hostTuple{
+		&hostTuple{
 			Hostname:       "cmdb-test-d",
 			Ip:             "69.69.69.4",
 			Maintain_begin: 0,
