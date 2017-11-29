@@ -178,9 +178,9 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 		defaultNow = time.Now()
 	})
 
-	// AfterEach(func() {
-	// 	inTx(deleteLogSql, deleteLockSql)
-	// })
+	AfterEach(func() {
+		inTx(deleteLogSql, deleteLockSql)
+	})
 
 	JustBeforeEach(func() {
 		_ = AcquireLock(defaultSchedule, defaultNow)
