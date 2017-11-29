@@ -108,5 +108,10 @@ func buildTaskCronConfig(viperObj *viper.Viper) *cron.TaskCronConfig {
 			ForDays: viperObj.GetInt("cron.vacuum_graph_index.for_days"),
 			Enable:  viperObj.GetBool("cron.vacuum_graph_index.enable"),
 		},
+		ClearTaskLogEntries: &cron.ClearTaskLogEntriesConf{
+			Cron:    viperObj.GetString("cron.clear_task_log_entries.schedule"),
+			ForDays: viperObj.GetInt("cron.clear_task_log_entries.for_days"),
+			Enable:  viperObj.GetBool("cron.clear_task_log_entries.enable"),
+		},
 	}
 }

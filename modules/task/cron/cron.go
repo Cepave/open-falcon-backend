@@ -18,8 +18,9 @@ type commonJobConfig interface {
 }
 
 type TaskCronConfig struct {
-	VacuumQueryObjects *VacuumQueryObjectsConf
-	VacuumGraphIndex   *VacuumGraphIndexConf
+	VacuumQueryObjects  *VacuumQueryObjectsConf
+	VacuumGraphIndex    *VacuumGraphIndexConf
+	ClearTaskLogEntries *ClearTaskLogEntriesConf
 }
 
 // Configurations for vacuum of query objects
@@ -62,11 +63,32 @@ func (v *VacuumGraphIndexConf) buildJob() func() {
 	return buildProcOfVacuumGraphIndex(v.ForDays)
 }
 
+// Configurations for vacuum of query objects
+type ClearTaskLogEntriesConf struct {
+	Cron    string
+	ForDays int
+	Enable  bool
+}
+
+func (c *ClearTaskLogEntriesConf) String() string {
+	return fmt.Sprintf("[Clear Task Log Entries] For days: %d. Schedule: [%s].", c.ForDays, c.Cron)
+}
+func (c *ClearTaskLogEntriesConf) isEnable() bool {
+	return c.Enable
+}
+func (c *ClearTaskLogEntriesConf) getSchedule() string {
+	return c.Cron
+}
+func (c *ClearTaskLogEntriesConf) buildJob() func() {
+	return clearLogs(c.ForDays)
+}
+
 func NewCronServices(config *TaskCronConfig) *TaskCronService {
 	cronServ := &TaskCronService{cron.New()}
 
 	cronServ.addFunc(config.VacuumQueryObjects)
 	cronServ.addFunc(config.VacuumGraphIndex)
+	cronServ.addFunc(config.ClearTaskLogEntries)
 
 	return cronServ
 }

@@ -8,6 +8,7 @@ import (
 
 var QueryObjectService owlSrv.QueryService
 var GraphService graphSrv.GraphService
+var ClearTaskLogEntryService owlSrv.ClearLogService
 
 func InitMySqlApi(restConfig *oHttp.RestfulClientConfig) {
 	QueryObjectService = owlSrv.NewQueryService(
@@ -16,5 +17,9 @@ func InitMySqlApi(restConfig *oHttp.RestfulClientConfig) {
 
 	GraphService = graphSrv.NewGraphService(
 		&graphSrv.GraphServiceConfig{restConfig},
+	)
+
+	ClearTaskLogEntryService = owlSrv.NewClearLogService(
+		owlSrv.ClearLogServiceConfig{restConfig},
 	)
 }
