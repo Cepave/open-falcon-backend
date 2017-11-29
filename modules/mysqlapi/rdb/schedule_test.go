@@ -40,7 +40,6 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 		 * Helper function
 		 */
 		ExpectSuccessSchedule = func(testSchedule *model.Schedule, testError error) {
-			GinkgoT().Logf("UUID=%v", testSchedule.Uuid)
 			Expect(testError).NotTo(HaveOccurred())
 			Expect(testSchedule.Uuid).NotTo(Equal(uuid.Nil))
 		}
@@ -70,6 +69,7 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 				lockTable model.OwlSchedule
 				logTable  model.OwlScheduleLog
 			)
+			GinkgoT().Log(defaultSchedule)
 
 			By("Check lock")
 			DbFacade.SqlxDbCtrl.Get(&lockTable, selectLockSql, expSchedule.Name)
@@ -91,7 +91,6 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 	BeforeEach(func() {
 		scheduleName = scheduleNameTemplate + fmt.Sprint(rand.Int())
-		GinkgoT().Logf("Name=%s", scheduleName)
 		defaultSchedule = model.NewSchedule(scheduleName, defaultTimeout)
 		defaultNow = time.Now()
 	})
