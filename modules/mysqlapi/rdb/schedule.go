@@ -36,6 +36,7 @@ func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	/**
 	 * Lock & fetch table
 	 */
+	uuid := cdb.DbUuid(free.schedule.Uuid)
 	sqlxExt.ToTxExt(tx).Get(&free.lockTable, `
 		SELECT sch_lock, sch_modify_time
 		FROM owl_schedule
@@ -47,7 +48,7 @@ func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 		SELECT sl_start_time
 		FROM owl_schedule_log
 		WHERE sl_uuid = ?
-	`, free.schedule.Uuid)
+	`, uuid)
 	// :~)
 
 	/**
@@ -56,17 +57,17 @@ func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	if exist {
 		_ = tx.MustExec(`
 				UPDATE owl_schedule_log
-				SET sl_end_time = ?
-				    sl_status = ?
+				SET sl_end_time = ?,
+				    sl_status = ?,
 					sl_message = ?
 				WHERE sl_uuid = ?
-			`, free.endTime, free.status, free.message, free.schedule.Uuid)
+			`, free.endTime, free.status, free.message, uuid)
 		// Release lock iff it is held by this task
 		if free.lockTable.IsLocked() &&
 			free.lockTable.LastUpdateTime.Equal(free.logStartTime) {
 			_ = tx.MustExec(`
 					UPDATE owl_schedule
-					SET sch_lock = 0
+					SET sch_lock = 0,
 						sch_modify_time = ?
 					WHERE sch_name = ?
 				`, free.endTime, free.schedule.Name)
