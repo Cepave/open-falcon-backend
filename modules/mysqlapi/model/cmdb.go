@@ -12,8 +12,8 @@ type SyncHostGroup struct {
 }
 
 type SyncForAdding struct {
-	Hosts      []SyncHost          `json:"hosts"`
-	Hostgroups []SyncHostGroup     `json:"hostgroups"`
+	Hosts      []*SyncHost         `json:"hosts"`
+	Hostgroups []*SyncHostGroup    `json:"hostgroups"`
 	Relations  map[string][]string `json:"relations"`
 }
 

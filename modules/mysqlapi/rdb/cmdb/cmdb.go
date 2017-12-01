@@ -26,7 +26,7 @@ type syncHostTx struct {
 }
 
 type syncHostGroupTx struct {
-	groups []cmdbModel.SyncHostGroup
+	groups []*cmdbModel.SyncHostGroup
 }
 
 type syncRelTx struct {
@@ -123,7 +123,7 @@ func (syncTx *syncHostGroupTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	return commonDb.TxCommit
 }
 
-func api2tuple(hosts []cmdbModel.SyncHost) []*hostTuple {
+func api2tuple(hosts []*cmdbModel.SyncHost) []*hostTuple {
 	var begin uint32
 	var end uint32
 	dbData := []*hostTuple{}

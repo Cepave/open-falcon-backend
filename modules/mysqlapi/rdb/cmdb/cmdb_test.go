@@ -23,7 +23,7 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 	})
 	Context("Sync testCase, Select and Check", func() {
 		It("Initially insert 4 entries and then sync 4 entries", func() {
-			testCase := []cmdbModel.SyncHost{
+			testCase := []*cmdbModel.SyncHost{
 				{
 					Activate: 0,
 					Name:     "cmdb-test-a",
@@ -49,7 +49,7 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 				hosts: api2tuple(testCase),
 			}
 			//
-			spec := []hostTuple{
+			spec := []*hostTuple{
 				{
 					Hostname:       "cmdb-test-a",
 					Ip:             "69.69.69.1",
@@ -87,7 +87,7 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 					Maintain_end:   0,
 				},
 			}
-			obtain := []hostTuple{}
+			obtain := []*hostTuple{}
 			DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 			DbFacade.NewSqlxDbCtrl().Select(&obtain, "SELECT hostname, ip, maintain_begin, maintain_end from host")
 			Expect(obtain).To(Equal(spec))
@@ -117,7 +117,7 @@ var _ = Describe("[CMDB] Test SyncGrp()", itSkip.PrependBeforeEach(func() {
 	})
 	Context("Sync testCase, Select and Check", func() {
 		It("Initially insert 3 entries and then sync 4 entries", func() {
-			testCase := []cmdbModel.SyncHostGroup{
+			testCase := []*cmdbModel.SyncHostGroup{
 				{
 					Name:    "cmdb-test-grp-a",
 					Creator: "root",
@@ -139,7 +139,7 @@ var _ = Describe("[CMDB] Test SyncGrp()", itSkip.PrependBeforeEach(func() {
 				groups: testCase,
 			}
 			//
-			spec := []groupTuple{
+			spec := []*groupTuple{
 				{
 					Name:      "cmdb-test-grp-a",
 					Creator:   "root",
@@ -171,7 +171,7 @@ var _ = Describe("[CMDB] Test SyncGrp()", itSkip.PrependBeforeEach(func() {
 					Come_from: 1,
 				},
 			}
-			obtain := []groupTuple{}
+			obtain := []*groupTuple{}
 			DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 			DbFacade.NewSqlxDbCtrl().Select(&obtain, "SELECT grp_name, create_user, come_from from grp")
 			Expect(obtain).To(Equal(spec))
@@ -260,7 +260,7 @@ var _ = Describe("[CMDB] Test SyncRel()", itSkip.PrependBeforeEach(func() {
 }))
 
 var _ = Describe("[CMDB] Test api2tuple()", itSkip.PrependBeforeEach(func() {
-	testCase := []cmdbModel.SyncHost{
+	testCase := []*cmdbModel.SyncHost{
 		{
 			Activate: 0,
 			Name:     "cmdb-test-a",
