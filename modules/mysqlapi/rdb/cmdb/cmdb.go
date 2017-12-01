@@ -9,6 +9,11 @@ import (
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 )
 
+const (
+	MAINTAIN_PERIOD_BEGIN = 946684800  // Sat, 01 Jan 2000 00:00:00 GMT
+	MAINTAIN_PERIOD_END   = 4292329420 // Thu, 07 Jan 2106 17:43:40 GMT
+)
+
 type hostTuple struct {
 	Hostname       string
 	Ip             string
@@ -127,8 +132,8 @@ func api2tuple(hosts []cmdbModel.SyncHost) []*hostTuple {
 			begin = uint32(0)
 			end = uint32(0)
 		} else {
-			begin = uint32(946684800) //  Sat, 01 Jan 2000 00:00:00 GMT
-			end = uint32(4292329420)  // Thu, 07 Jan 2106 17:43:40 GMT
+			begin = MAINTAIN_PERIOD_BEGIN // Sat, 01 Jan 2000 00:00:00 GMT
+			end = MAINTAIN_PERIOD_END     // Thu, 07 Jan 2106 17:43:40 GMT
 		}
 		dbData = append(dbData, &hostTuple{
 			Hostname:       h.Name,

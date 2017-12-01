@@ -12,7 +12,7 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 			`
 			INSERT INTO host (hostname, ip, maintain_begin, maintain_end)
 			VALUES ("cmdb-test-a","69.69.69.99",946684800,4292329420),
-			       ("cmdb-test-e","69.69.69.5", 0, 0),
+				   ("cmdb-test-e","69.69.69.5", 0, 0),
 				   ("cmdb-test-f","69.69.69.6", 0, 0)
 			`)
 	})
@@ -53,8 +53,8 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 				{
 					Hostname:       "cmdb-test-a",
 					Ip:             "69.69.69.1",
-					Maintain_begin: 946684800,
-					Maintain_end:   4292329420,
+					Maintain_begin: MAINTAIN_PERIOD_BEGIN,
+					Maintain_end:   MAINTAIN_PERIOD_END,
 				},
 				{
 					Hostname:       "cmdb-test-e",
@@ -71,8 +71,8 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 				{
 					Hostname:       "cmdb-test-b",
 					Ip:             "69.69.69.2",
-					Maintain_begin: 946684800,
-					Maintain_end:   4292329420,
+					Maintain_begin: MAINTAIN_PERIOD_BEGIN,
+					Maintain_end:   MAINTAIN_PERIOD_END,
 				},
 				{
 					Hostname:       "cmdb-test-c",
@@ -286,14 +286,14 @@ var _ = Describe("[CMDB] Test api2tuple()", itSkip.PrependBeforeEach(func() {
 		{
 			Hostname:       "cmdb-test-a",
 			Ip:             "69.69.69.1",
-			Maintain_begin: 946684800,
-			Maintain_end:   4292329420,
+			Maintain_begin: MAINTAIN_PERIOD_BEGIN, // Sat, 01 Jan 2000 00:00:00 GMT
+			Maintain_end:   MAINTAIN_PERIOD_END,   // Thu, 07 Jan 2106 17:43:40 GMT
 		},
 		{
 			Hostname:       "cmdb-test-b",
 			Ip:             "69.69.69.2",
-			Maintain_begin: 946684800,
-			Maintain_end:   4292329420,
+			Maintain_begin: MAINTAIN_PERIOD_BEGIN, // Sat, 01 Jan 2000 00:00:00 GMT
+			Maintain_end:   MAINTAIN_PERIOD_END,   // Thu, 07 Jan 2106 17:43:40 GMT
 		},
 		{
 			Hostname:       "cmdb-test-c",
