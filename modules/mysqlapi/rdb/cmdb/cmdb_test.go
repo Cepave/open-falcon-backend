@@ -259,7 +259,7 @@ var _ = Describe("[CMDB] Test SyncRel()", itSkip.PrependBeforeEach(func() {
 	})
 }))
 
-var _ = Describe("[CMDB] Test api2tuple()", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[CMDB] api2tuple()", itSkip.PrependBeforeEach(func() {
 	testCase := []*cmdbModel.SyncHost{
 		{
 			Activate: 0,
@@ -282,35 +282,35 @@ var _ = Describe("[CMDB] Test api2tuple()", itSkip.PrependBeforeEach(func() {
 			IP:       "69.69.69.4",
 		},
 	}
-	spec := []*hostTuple{
-		{
-			Hostname:       "cmdb-test-a",
-			Ip:             "69.69.69.1",
-			Maintain_begin: MAINTAIN_PERIOD_BEGIN, // Sat, 01 Jan 2000 00:00:00 GMT
-			Maintain_end:   MAINTAIN_PERIOD_END,   // Thu, 07 Jan 2106 17:43:40 GMT
-		},
-		{
-			Hostname:       "cmdb-test-b",
-			Ip:             "69.69.69.2",
-			Maintain_begin: MAINTAIN_PERIOD_BEGIN, // Sat, 01 Jan 2000 00:00:00 GMT
-			Maintain_end:   MAINTAIN_PERIOD_END,   // Thu, 07 Jan 2106 17:43:40 GMT
-		},
-		{
-			Hostname:       "cmdb-test-c",
-			Ip:             "69.69.69.3",
-			Maintain_begin: 0,
-			Maintain_end:   0,
-		},
-		{
-			Hostname:       "cmdb-test-d",
-			Ip:             "69.69.69.4",
-			Maintain_begin: 0,
-			Maintain_end:   0,
-		},
-	}
-	Context("test api2tuple activate -> (maintain_begin, maintain_end)", func() {
-		It("activate 1 -> (0, 0)", func() {
-			Expect(api2tuple(testCase)).To(Equal(spec))
+	Context("With activate 0", func() {
+		It("maintain_begin should be MAINTAIN_PERIOD_BEGIN", func() {
+			Expect(api2tuple(testCase)[0].Maintain_begin).To(Equal(uint32(MAINTAIN_PERIOD_BEGIN))) //  Sat, 01 Jan 2000 00:00:00 GMT
+		})
+		It("maintain_end should be MAINTAIN_PERIOD_END", func() {
+			Expect(api2tuple(testCase)[0].Maintain_end).To(Equal(uint32(MAINTAIN_PERIOD_END))) //  Thu, 07 Jan 2106 17:43:40 GMT
+		})
+	})
+	Context("With activate 1", func() {
+		It("maintain_begin should be 0", func() {
+			Expect(api2tuple(testCase)[3].Maintain_begin).To(Equal(uint32(0)))
+		})
+		It("maintain_end should be 0", func() {
+			Expect(api2tuple(testCase)[3].Maintain_end).To(Equal(uint32(0)))
+		})
+	})
+	Context("With name cmdb-test-a", func() {
+		It("Hostname should be cmdb-test-a", func() {
+			Expect(api2tuple(testCase)[0].Hostname).To(Equal("cmdb-test-a"))
+		})
+	})
+	Context("With IP 69.69.69.1", func() {
+		It("Ip should be 69.69.69.1", func() {
+			Expect(api2tuple(testCase)[0].Ip).To(Equal("69.69.69.1"))
+		})
+	})
+	Context("With testCase length 4", func() {
+		It("output should be length 4", func() {
+			Expect(len(api2tuple(testCase))).To(Equal(4))
 		})
 	})
 }))
