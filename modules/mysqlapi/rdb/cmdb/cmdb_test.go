@@ -95,13 +95,7 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 	})
 }))
 
-type groupTuple struct {
-	Name      string `db:"grp_name"`
-	Creator   string `db:"create_user"`
-	Come_from int8   `db:"come_from"`
-}
-
-var _ = Describe("[CMDB] Test SyncGrp()", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			`INSERT INTO grp (grp_name, create_user, come_from)
@@ -109,72 +103,67 @@ var _ = Describe("[CMDB] Test SyncGrp()", itSkip.PrependBeforeEach(func() {
 					("cmdb-test-grp-e", "default", 0),
 					("cmdb-test-grp-f", "default", 0)
 			`)
+		testCase := []*cmdbModel.SyncHostGroup{
+			{
+				Name:    "cmdb-test-grp-a",
+				Creator: "root",
+			},
+			{
+				Name:    "cmdb-test-grp-b",
+				Creator: "root",
+			},
+			{
+				Name:    "cmdb-test-grp-c",
+				Creator: "root",
+			},
+			{
+				Name:    "cmdb-test-grp-d",
+				Creator: "root",
+			},
+		}
+		txProcessor := &syncHostGroupTx{
+			groups: testCase,
+		}
+		DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 	})
 	AfterEach(func() {
 		inTx(
 			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
 		)
 	})
-	Context("Sync testCase, Select and Check", func() {
-		It("Initially insert 3 entries and then sync 4 entries", func() {
-			testCase := []*cmdbModel.SyncHostGroup{
-				{
-					Name:    "cmdb-test-grp-a",
-					Creator: "root",
-				},
-				{
-					Name:    "cmdb-test-grp-b",
-					Creator: "root",
-				},
-				{
-					Name:    "cmdb-test-grp-c",
-					Creator: "root",
-				},
-				{
-					Name:    "cmdb-test-grp-d",
-					Creator: "root",
-				},
-			}
-			txProcessor := &syncHostGroupTx{
-				groups: testCase,
-			}
-			//
-			spec := []*groupTuple{
-				{
-					Name:      "cmdb-test-grp-a",
-					Creator:   "root",
-					Come_from: 1,
-				},
-				{
-					Name:      "cmdb-test-grp-e",
-					Creator:   "default",
-					Come_from: 0,
-				},
-				{
-					Name:      "cmdb-test-grp-f",
-					Creator:   "default",
-					Come_from: 0,
-				},
-				{
-					Name:      "cmdb-test-grp-b",
-					Creator:   "root",
-					Come_from: 1,
-				},
-				{
-					Name:      "cmdb-test-grp-c",
-					Creator:   "root",
-					Come_from: 1,
-				},
-				{
-					Name:      "cmdb-test-grp-d",
-					Creator:   "root",
-					Come_from: 1,
-				},
-			}
-			obtain := []*groupTuple{}
-			DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
-			DbFacade.NewSqlxDbCtrl().Select(&obtain, "SELECT grp_name, create_user, come_from from grp")
-			Expect(obtain).To(Equal(spec))
+	Context("Select count of grp", func() {
+		It("count should be 6", func() {
+			var count int
+			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT count(*) from grp")
+			Expect(count).To(Equal(6))
+		})
+	})
+	Context("With select come_from = 1", func() {
+		It("Name should be cmdb-test-grp-[a-d]", func() {
+			var names []string
+			DbFacade.NewSqlxDbCtrl().Select(&names, "SELECT grp_name FROM grp where come_from = 1 order by grp_name")
+			Expect(names).To(Equal([]string{"cmdb-test-grp-a", "cmdb-test-grp-b", "cmdb-test-grp-c", "cmdb-test-grp-d"}))
+		})
+	})
+	Context("With select come_from = 1", func() {
+		It("Creator should be root", func() {
+			var name string
+			DbFacade.NewSqlxDbCtrl().Get(&name, "SELECT create_user FROM grp where come_from = 1 limit 1")
+			Expect(name).To(Equal("root"))
+		})
+	})
+	Context("With select come_from = 0", func() {
+		It("Name should be cmdb-test-grp-[ef]", func() {
+			var names []string
+			DbFacade.NewSqlxDbCtrl().Select(&names, "SELECT grp_name FROM grp where come_from = 0 order by grp_name")
+			Expect(names).To(Equal([]string{"cmdb-test-grp-e", "cmdb-test-grp-f"}))
+		})
+	})
+	Context("With select come_from = 0", func() {
+		It("Creator should be default", func() {
+			var name string
+			DbFacade.NewSqlxDbCtrl().Get(&name, "SELECT create_user FROM grp where come_from = 0 limit 1")
+			Expect(name).To(Equal("default"))
 		})
 	})
 }))
