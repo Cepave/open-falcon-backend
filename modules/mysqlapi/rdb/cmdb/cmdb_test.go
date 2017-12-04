@@ -179,12 +179,7 @@ var _ = Describe("[CMDB] Test SyncGrp()", itSkip.PrependBeforeEach(func() {
 	})
 }))
 
-type relTuple struct {
-	Gid int `db:"grp_id"`
-	Hid int `db:"host_id"`
-}
-
-var _ = Describe("[CMDB] Test SyncRel()", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[CMDB] syncRelTx", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			`
@@ -206,6 +201,15 @@ var _ = Describe("[CMDB] Test SyncRel()", itSkip.PrependBeforeEach(func() {
 				   (20, 2),
 				   (30, 3)
 			`)
+		// relation data for sync
+		testCase := map[string][]string{
+			"cmdb-test-grp-b": []string{"cmdb-test-a", "cmdb-test-b"},
+			"cmdb-test-grp-c": []string{"cmdb-test-a", "cmdb-test-b"},
+		}
+		txProcessor := &syncRelTx{
+			relations: testCase,
+		}
+		DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 	})
 	AfterEach(func() {
 		inTx(
@@ -215,46 +219,32 @@ var _ = Describe("[CMDB] Test SyncRel()", itSkip.PrependBeforeEach(func() {
 			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
 		)
 	})
-	Context("Sync testCase, Select and Check", func() {
-		It("Initially prefill three tables and then sync 4 relation entries", func() {
-			testCase := map[string][]string{
-				"cmdb-test-grp-b": []string{"cmdb-test-a", "cmdb-test-b"},
-				"cmdb-test-grp-c": []string{"cmdb-test-a", "cmdb-test-b"},
-			}
-			txProcessor := &syncRelTx{
-				relations: testCase,
-			}
-			//
-			spec := []relTuple{
-				{
-					Gid: 10,
-					Hid: 1,
-				},
-				{
-					Gid: 10,
-					Hid: 2,
-				},
-				{
-					Gid: 20,
-					Hid: 1,
-				},
-				{
-					Gid: 20,
-					Hid: 2,
-				},
-				{
-					Gid: 30,
-					Hid: 1,
-				},
-				{
-					Gid: 30,
-					Hid: 2,
-				},
-			}
-			obtain := []relTuple{}
-			DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
-			DbFacade.NewSqlxDbCtrl().Select(&obtain, "SELECT grp_id, host_id FROM grp_host order by grp_id, host_id")
-			Expect(obtain).To(Equal(spec))
+	Context("With select only count", func() {
+		It("count should be 6.", func() {
+			var count int
+			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT count(*) FROM grp_host")
+			Expect(count).To(Equal(6))
+		})
+	})
+	Context("With select group id = 10", func() {
+		It("Hid should be 1 and 2", func() {
+			var hids []int
+			DbFacade.NewSqlxDbCtrl().Select(&hids, "SELECT host_id FROM grp_host where grp_id = 10 order by host_id")
+			Expect(hids).To(Equal([]int{1, 2}))
+		})
+	})
+	Context("With select group id = 20", func() {
+		It("Hid should be 1 and 2", func() {
+			var hids []int
+			DbFacade.NewSqlxDbCtrl().Select(&hids, "SELECT host_id FROM grp_host where grp_id = 20 order by host_id")
+			Expect(hids).To(Equal([]int{1, 2}))
+		})
+	})
+	Context("With select group id = 30", func() {
+		It("Hid should be 1 and 2", func() {
+			var hids []int
+			DbFacade.NewSqlxDbCtrl().Select(&hids, "SELECT host_id FROM grp_host where grp_id = 30 order by host_id")
+			Expect(hids).To(Equal([]int{1, 2}))
 		})
 	})
 }))
