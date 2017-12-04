@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[CMDB] syncHostTx", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			`
@@ -15,82 +15,94 @@ var _ = Describe("[CMDB] Test SyncHost()", itSkip.PrependBeforeEach(func() {
 				   ("cmdb-test-e","69.69.69.5", 0, 0),
 				   ("cmdb-test-f","69.69.69.6", 0, 0)
 			`)
+		testCase := []*cmdbModel.SyncHost{
+			{
+				Activate: 0,
+				Name:     "cmdb-test-a",
+				IP:       "69.69.69.1",
+			},
+			{
+				Activate: 0,
+				Name:     "cmdb-test-b",
+				IP:       "69.69.69.2",
+			},
+			{
+				Activate: 1,
+				Name:     "cmdb-test-c",
+				IP:       "69.69.69.3",
+			},
+			{
+				Activate: 1,
+				Name:     "cmdb-test-d",
+				IP:       "69.69.69.4",
+			},
+		}
+		txProcessor := &syncHostTx{
+			hosts: api2tuple(testCase),
+		}
+		DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
 	})
 	AfterEach(func() {
 		inTx(
 			`DELETE FROM host WHERE hostname LIKE "cmdb-test-%"`,
 		)
 	})
-	Context("Sync testCase, Select and Check", func() {
-		It("Initially insert 4 entries and then sync 4 entries", func() {
-			testCase := []*cmdbModel.SyncHost{
-				{
-					Activate: 0,
-					Name:     "cmdb-test-a",
-					IP:       "69.69.69.1",
-				},
-				{
-					Activate: 0,
-					Name:     "cmdb-test-b",
-					IP:       "69.69.69.2",
-				},
-				{
-					Activate: 1,
-					Name:     "cmdb-test-c",
-					IP:       "69.69.69.3",
-				},
-				{
-					Activate: 1,
-					Name:     "cmdb-test-d",
-					IP:       "69.69.69.4",
-				},
-			}
-			txProcessor := &syncHostTx{
-				hosts: api2tuple(testCase),
-			}
-			//
-			spec := []*hostTuple{
-				{
-					Hostname:       "cmdb-test-a",
-					Ip:             "69.69.69.1",
-					Maintain_begin: MAINTAIN_PERIOD_BEGIN,
-					Maintain_end:   MAINTAIN_PERIOD_END,
-				},
-				{
-					Hostname:       "cmdb-test-e",
-					Ip:             "69.69.69.5",
-					Maintain_begin: 0,
-					Maintain_end:   0,
-				},
-				{
-					Hostname:       "cmdb-test-f",
-					Ip:             "69.69.69.6",
-					Maintain_begin: 0,
-					Maintain_end:   0,
-				},
-				{
-					Hostname:       "cmdb-test-b",
-					Ip:             "69.69.69.2",
-					Maintain_begin: MAINTAIN_PERIOD_BEGIN,
-					Maintain_end:   MAINTAIN_PERIOD_END,
-				},
-				{
-					Hostname:       "cmdb-test-c",
-					Ip:             "69.69.69.3",
-					Maintain_begin: 0,
-					Maintain_end:   0,
-				},
-				{
-					Hostname:       "cmdb-test-d",
-					Ip:             "69.69.69.4",
-					Maintain_begin: 0,
-					Maintain_end:   0,
-				},
-			}
-			obtain := []*hostTuple{}
-			DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
-			DbFacade.NewSqlxDbCtrl().Select(&obtain, "SELECT hostname, ip, maintain_begin, maintain_end from host")
-			Expect(obtain).To(Equal(spec))
+	Context("Select count of host", func() {
+		It("count should be 6", func() {
+			var count int
+			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT count(*) from host")
+			Expect(count).To(Equal(6))
+		})
+	})
+	Context("With select hostname = cmdb-test-a", func() {
+		It("maintain_begin should be MAINTAIN_PERIOD_BEGIN", func() {
+			var mt int
+			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_begin FROM host where hostname = 'cmdb-test-a'")
+			Expect(mt).To(Equal(MAINTAIN_PERIOD_BEGIN)) //  Sat, 01 Jan 2000 00:00:00 GMT
+		})
+		It("maintain_end should be MAINTAIN_PERIOD_END", func() {
+			var mt int
+			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_end FROM host where hostname = 'cmdb-test-a'")
+			Expect(mt).To(Equal(MAINTAIN_PERIOD_END)) //  Thu, 07 Jan 2106 17:43:40 GMT
+		})
+		It("ip should be 69.69.69.1", func() {
+			var ip string
+			DbFacade.NewSqlxDbCtrl().Get(&ip, "SELECT ip FROM host where hostname = 'cmdb-test-a'")
+			Expect(ip).To(Equal("69.69.69.1"))
+		})
+	})
+	Context("With select hostname = cmdb-test-e", func() {
+		It("maintain_begin should be 0", func() {
+			var mt int
+			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_begin FROM host where hostname = 'cmdb-test-e'")
+			Expect(mt).To(Equal(0))
+		})
+		It("maintain_end should be 0", func() {
+			var mt int
+			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_end FROM host where hostname = 'cmdb-test-e'")
+			Expect(mt).To(Equal(0))
+		})
+		It("ip should be 69.69.69.5", func() {
+			var ip string
+			DbFacade.NewSqlxDbCtrl().Get(&ip, "SELECT ip FROM host where hostname = 'cmdb-test-e'")
+			Expect(ip).To(Equal("69.69.69.5"))
+		})
+	})
+	Context("With select hostname = cmdb-test-c", func() {
+		It("maintain_begin should be 0", func() {
+			var mt int
+			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_begin FROM host where hostname = 'cmdb-test-c'")
+			Expect(mt).To(Equal(0))
+		})
+		It("maintain_end should be 0", func() {
+			var mt int
+			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_end FROM host where hostname = 'cmdb-test-c'")
+			Expect(mt).To(Equal(0))
+		})
+		It("ip should be 69.69.69.3", func() {
+			var ip string
+			DbFacade.NewSqlxDbCtrl().Get(&ip, "SELECT ip FROM host where hostname = 'cmdb-test-c'")
+			Expect(ip).To(Equal("69.69.69.3"))
 		})
 	})
 }))
@@ -144,8 +156,6 @@ var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 			DbFacade.NewSqlxDbCtrl().Select(&names, "SELECT grp_name FROM grp where come_from = 1 order by grp_name")
 			Expect(names).To(Equal([]string{"cmdb-test-grp-a", "cmdb-test-grp-b", "cmdb-test-grp-c", "cmdb-test-grp-d"}))
 		})
-	})
-	Context("With select come_from = 1", func() {
 		It("Creator should be root", func() {
 			var name string
 			DbFacade.NewSqlxDbCtrl().Get(&name, "SELECT create_user FROM grp where come_from = 1 limit 1")
@@ -158,8 +168,6 @@ var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 			DbFacade.NewSqlxDbCtrl().Select(&names, "SELECT grp_name FROM grp where come_from = 0 order by grp_name")
 			Expect(names).To(Equal([]string{"cmdb-test-grp-e", "cmdb-test-grp-f"}))
 		})
-	})
-	Context("With select come_from = 0", func() {
 		It("Creator should be default", func() {
 			var name string
 			DbFacade.NewSqlxDbCtrl().Get(&name, "SELECT create_user FROM grp where come_from = 0 limit 1")
