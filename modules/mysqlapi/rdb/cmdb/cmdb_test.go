@@ -120,8 +120,8 @@ var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 		inTx(
 			`INSERT INTO grp (grp_name, create_user, come_from)
 			 VALUES ("cmdb-test-grp-a", "default", 0),
-					("cmdb-test-grp-e", "default", 0),
-					("cmdb-test-grp-f", "default", 0)
+					("cmdb-test-grp-nm-e", "default", 0),
+					("cmdb-test-grp-nm-f", "default", 0)
 			`)
 		testCase := []*cmdbModel.SyncHostGroup{
 			{
@@ -129,15 +129,15 @@ var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 				Creator: "root",
 			},
 			{
-				Name:    "cmdb-test-grp-b",
+				Name:    "cmdb-test-grp-new-b",
 				Creator: "root",
 			},
 			{
-				Name:    "cmdb-test-grp-c",
+				Name:    "cmdb-test-grp-new-c",
 				Creator: "root",
 			},
 			{
-				Name:    "cmdb-test-grp-d",
+				Name:    "cmdb-test-grp-new-d",
 				Creator: "root",
 			},
 		}
@@ -158,28 +158,49 @@ var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 			Expect(count).To(Equal(6))
 		})
 	})
-	Context("With select come_from = 1", func() {
-		It("Name should be cmdb-test-grp-[a-d]", func() {
-			var names []string
-			DbFacade.NewSqlxDbCtrl().Select(&names, "SELECT grp_name FROM grp where come_from = 1 order by grp_name")
-			Expect(names).To(Equal([]string{"cmdb-test-grp-a", "cmdb-test-grp-b", "cmdb-test-grp-c", "cmdb-test-grp-d"}))
-		})
-		It("Creator should be root", func() {
-			var name string
-			DbFacade.NewSqlxDbCtrl().Get(&name, "SELECT create_user FROM grp where come_from = 1 limit 1")
-			Expect(name).To(Equal("root"))
+	Context("Updated and inserted grp's creator and come_from", func() {
+		It("Creator should be root and come_from should be 1", func() {
+			var n int
+			DbFacade.NewSqlxDbCtrl().Get(
+				&n,
+				`
+				SELECT COUNT(*) FROM grp
+				WHERE grp_name = 'cmdb-test-grp-a'
+					AND come_from = 1
+					AND create_user = 'root'
+				`,
+			)
+			Expect(n).To(Equal(1))
 		})
 	})
-	Context("With select come_from = 0", func() {
-		It("Name should be cmdb-test-grp-[ef]", func() {
-			var names []string
-			DbFacade.NewSqlxDbCtrl().Select(&names, "SELECT grp_name FROM grp where come_from = 0 order by grp_name")
-			Expect(names).To(Equal([]string{"cmdb-test-grp-e", "cmdb-test-grp-f"}))
+	Context("Updated and inserted with some grps left not modified", func() {
+		It("intact grp number be 2", func() {
+			var n int
+			DbFacade.NewSqlxDbCtrl().Get(
+				&n,
+				`
+				SELECT COUNT(*) FROM grp
+				WHERE grp_name LIKE "cmdb-test-grp-nm-%"
+					AND come_from = 0
+					AND create_user = 'default'
+				`,
+			)
+			Expect(n).To(Equal(2))
 		})
-		It("Creator should be default", func() {
-			var name string
-			DbFacade.NewSqlxDbCtrl().Get(&name, "SELECT create_user FROM grp where come_from = 0 limit 1")
-			Expect(name).To(Equal("default"))
+	})
+	Context("Updated and inserted with some grps inserted", func() {
+		It("newly inserted grp number be 3", func() {
+			var n int
+			DbFacade.NewSqlxDbCtrl().Get(
+				&n,
+				`
+				SELECT COUNT(*) FROM grp
+				WHERE grp_name LIKE "cmdb-test-grp-new-%"
+					AND come_from = 1
+					AND create_user = 'root'
+				`,
+			)
+			Expect(n).To(Equal(3))
 		})
 	})
 }))
