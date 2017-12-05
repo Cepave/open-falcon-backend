@@ -12,8 +12,9 @@ var _ = Describe("[CMDB] syncHostTx", itSkip.PrependBeforeEach(func() {
 			`
 			INSERT INTO host (hostname, ip, maintain_begin, maintain_end)
 			VALUES ("cmdb-test-a","69.69.69.99",946684800,4292329420),
-				   ("cmdb-test-e","69.69.69.5", 0, 0),
-				   ("cmdb-test-f","69.69.69.6", 0, 0)
+				   ("cmdb-test-b","69.69.69.2", 0, 0),
+				   ("cmdb-test-nm-e","69.69.69.5", 0, 0),
+				   ("cmdb-test-nm-f","69.69.69.6", 0, 0)
 			`)
 		testCase := []*cmdbModel.SyncHost{
 			{
@@ -22,18 +23,18 @@ var _ = Describe("[CMDB] syncHostTx", itSkip.PrependBeforeEach(func() {
 				IP:       "69.69.69.1",
 			},
 			{
-				Activate: 0,
+				Activate: 1,
 				Name:     "cmdb-test-b",
 				IP:       "69.69.69.2",
 			},
 			{
 				Activate: 1,
-				Name:     "cmdb-test-c",
+				Name:     "cmdb-test-new-c",
 				IP:       "69.69.69.3",
 			},
 			{
 				Activate: 1,
-				Name:     "cmdb-test-d",
+				Name:     "cmdb-test-new-d",
 				IP:       "69.69.69.4",
 			},
 		}
@@ -47,62 +48,69 @@ var _ = Describe("[CMDB] syncHostTx", itSkip.PrependBeforeEach(func() {
 			`DELETE FROM host WHERE hostname LIKE "cmdb-test-%"`,
 		)
 	})
-	Context("Select count of host", func() {
-		It("count should be 6", func() {
+	Context("Total number of hosts after importing(4 records before)", func() {
+		It("The number should be 6", func() {
 			var count int
-			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT count(*) from host")
+			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT COUNT(*) FROM host")
 			Expect(count).To(Equal(6))
 		})
 	})
-	Context("With select hostname = cmdb-test-a", func() {
-		It("maintain_begin should be MAINTAIN_PERIOD_BEGIN", func() {
+	Context("Updated and inserted hosts to in-active", func() {
+		It("maintain_begin and maintain_end should be pre-define values", func() {
 			var mt int
-			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_begin FROM host where hostname = 'cmdb-test-a'")
-			Expect(mt).To(Equal(MAINTAIN_PERIOD_BEGIN)) //  Sat, 01 Jan 2000 00:00:00 GMT
-		})
-		It("maintain_end should be MAINTAIN_PERIOD_END", func() {
-			var mt int
-			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_end FROM host where hostname = 'cmdb-test-a'")
-			Expect(mt).To(Equal(MAINTAIN_PERIOD_END)) //  Thu, 07 Jan 2106 17:43:40 GMT
-		})
-		It("ip should be 69.69.69.1", func() {
-			var ip string
-			DbFacade.NewSqlxDbCtrl().Get(&ip, "SELECT ip FROM host where hostname = 'cmdb-test-a'")
-			Expect(ip).To(Equal("69.69.69.1"))
+			DbFacade.NewSqlxDbCtrl().Get(
+				&mt,
+				`
+				SELECT COUNT(*) FROM host
+				WHERE hostname = 'cmdb-test-a'
+					AND ip = '69.69.69.1'
+					AND maintain_begin = ? AND maintain_end = ?
+				`,
+				MAINTAIN_PERIOD_BEGIN, MAINTAIN_PERIOD_END,
+			)
+			Expect(mt).To(Equal(1))
 		})
 	})
-	Context("With select hostname = cmdb-test-e", func() {
-		It("maintain_begin should be 0", func() {
+	Context("Updated and inserted hosts to active", func() {
+		It("maintain_begin and maintain_end should be pre-define values", func() {
 			var mt int
-			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_begin FROM host where hostname = 'cmdb-test-e'")
-			Expect(mt).To(Equal(0))
-		})
-		It("maintain_end should be 0", func() {
-			var mt int
-			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_end FROM host where hostname = 'cmdb-test-e'")
-			Expect(mt).To(Equal(0))
-		})
-		It("ip should be 69.69.69.5", func() {
-			var ip string
-			DbFacade.NewSqlxDbCtrl().Get(&ip, "SELECT ip FROM host where hostname = 'cmdb-test-e'")
-			Expect(ip).To(Equal("69.69.69.5"))
+			DbFacade.NewSqlxDbCtrl().Get(
+				&mt,
+				`
+				SELECT COUNT(*) FROM host
+				WHERE hostname = 'cmdb-test-b'
+					AND ip = '69.69.69.2'
+					AND maintain_begin = ? AND maintain_end = ?
+				`,
+				0, 0,
+			)
+			Expect(mt).To(Equal(1))
 		})
 	})
-	Context("With select hostname = cmdb-test-c", func() {
-		It("maintain_begin should be 0", func() {
+	Context("Updated and inserted with some hosts left not modified", func() {
+		It("intact host number should be 2", func() {
 			var mt int
-			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_begin FROM host where hostname = 'cmdb-test-c'")
-			Expect(mt).To(Equal(0))
+			DbFacade.NewSqlxDbCtrl().Get(
+				&mt,
+				`SELECT COUNT(*) FROM host
+				 WHERE hostname LIKE "cmdb-test-nm-%"
+					AND maintain_begin = ? AND maintain_end = ?
+				`,
+				0, 0)
+			Expect(mt).To(Equal(2))
 		})
-		It("maintain_end should be 0", func() {
+	})
+	Context("Updated and inserted with some hosts inserted", func() {
+		It("newly inserted host number be 2", func() {
 			var mt int
-			DbFacade.NewSqlxDbCtrl().Get(&mt, "SELECT maintain_end FROM host where hostname = 'cmdb-test-c'")
-			Expect(mt).To(Equal(0))
-		})
-		It("ip should be 69.69.69.3", func() {
-			var ip string
-			DbFacade.NewSqlxDbCtrl().Get(&ip, "SELECT ip FROM host where hostname = 'cmdb-test-c'")
-			Expect(ip).To(Equal("69.69.69.3"))
+			DbFacade.NewSqlxDbCtrl().Get(
+				&mt,
+				`SELECT COUNT(*) FROM host
+				 WHERE hostname LIKE "cmdb-test-new-%"
+					AND maintain_begin = ? AND maintain_end = ?
+				`,
+				0, 0)
+			Expect(mt).To(Equal(2))
 		})
 	})
 }))
@@ -143,10 +151,10 @@ var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
 		)
 	})
-	Context("Select count of grp", func() {
-		It("count should be 6", func() {
+	Context("Total number of groups after importing (4 records before)", func() {
+		It("The number should be 6", func() {
 			var count int
-			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT count(*) from grp")
+			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT COUNT(*) FROM grp")
 			Expect(count).To(Equal(6))
 		})
 	})
