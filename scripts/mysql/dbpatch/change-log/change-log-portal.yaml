@@ -173,3 +173,8 @@
     filename: "masato-33.sql",
     comment: "fix update_time issue on OWL-1956"
 }
+- {
+    id: "mike-32",
+    filename: "mike-32.sql",
+    comment: "Add creation time for events"
+}

@@ -1,0 +1,2 @@
+ALTER TABLE events
+ADD COLUMN ev_time_creation DATETIME DEFAULT NOW();
