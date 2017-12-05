@@ -245,31 +245,38 @@ var _ = Describe("[CMDB] syncRelTx", itSkip.PrependBeforeEach(func() {
 			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
 		)
 	})
-	Context("With select only count", func() {
-		It("count should be 6.", func() {
+	Context("Total number of relations after importing (4 records before)", func() {
+		It("The number should be 6.", func() {
 			var count int
-			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT count(*) FROM grp_host")
+			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT COUNT(*) FROM grp_host")
 			Expect(count).To(Equal(6))
 		})
 	})
-	Context("With select group id = 10", func() {
-		It("Hid should be 1 and 2", func() {
+	Context("For relations with hostgroup which come from UI ('grp_host.come_from' is 0)", func() {
+		It("The ralations should be intact", func() {
 			var hids []int
-			DbFacade.NewSqlxDbCtrl().Select(&hids, "SELECT host_id FROM grp_host where grp_id = 10 order by host_id")
+			DbFacade.NewSqlxDbCtrl().Select(
+				&hids,
+				`
+				SELECT host_id FROM grp_host
+				WHERE grp_id = 10
+					ORDER BY host_id
+				`,
+			)
 			Expect(hids).To(Equal([]int{1, 2}))
 		})
 	})
-	Context("With select group id = 20", func() {
-		It("Hid should be 1 and 2", func() {
+	Context("For relations with hostgroup which come_from BOSS ('grp_host.come_from' is 1)", func() {
+		It("The relations should be updated", func() {
 			var hids []int
-			DbFacade.NewSqlxDbCtrl().Select(&hids, "SELECT host_id FROM grp_host where grp_id = 20 order by host_id")
-			Expect(hids).To(Equal([]int{1, 2}))
-		})
-	})
-	Context("With select group id = 30", func() {
-		It("Hid should be 1 and 2", func() {
-			var hids []int
-			DbFacade.NewSqlxDbCtrl().Select(&hids, "SELECT host_id FROM grp_host where grp_id = 30 order by host_id")
+			DbFacade.NewSqlxDbCtrl().Select(
+				&hids,
+				`
+				SELECT host_id FROM grp_host
+				WHERE grp_id = 20
+					ORDER BY host_id
+				`,
+			)
 			Expect(hids).To(Equal([]int{1, 2}))
 		})
 	})
