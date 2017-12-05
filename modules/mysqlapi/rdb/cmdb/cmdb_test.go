@@ -4,6 +4,7 @@ import (
 	cmdbModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 )
 
 var _ = Describe("[CMDB] syncHostTx", itSkip.PrependBeforeEach(func() {
@@ -305,35 +306,34 @@ var _ = Describe("[CMDB] api2tuple()", itSkip.PrependBeforeEach(func() {
 			IP:       "69.69.69.4",
 		},
 	}
-	Context("With activate 0", func() {
-		It("maintain_begin should be MAINTAIN_PERIOD_BEGIN", func() {
-			Expect(api2tuple(testCase)[0].Maintain_begin).To(Equal(uint32(MAINTAIN_PERIOD_BEGIN))) //  Sat, 01 Jan 2000 00:00:00 GMT
+	result := api2tuple(testCase)
+	Context("With testCase length 4", func() {
+		It("result should be length 4", func() {
+			Expect(len(result)).To(Equal(4))
 		})
-		It("maintain_end should be MAINTAIN_PERIOD_END", func() {
-			Expect(api2tuple(testCase)[0].Maintain_end).To(Equal(uint32(MAINTAIN_PERIOD_END))) //  Thu, 07 Jan 2106 17:43:40 GMT
+	})
+	Context("With activate 0", func() {
+		It("(maintain_begin, maintain_end) should be pre-defined values", func() {
+			Expect(result[0]).To(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Maintain_begin": BeEquivalentTo(MAINTAIN_PERIOD_BEGIN), // Sat, 01 Jan 2000 00:00:00 GMT
+				"Maintain_end":   BeEquivalentTo(MAINTAIN_PERIOD_END),   // Thu, 07 Jan 2106 17:43:40 GMT
+			})))
 		})
 	})
 	Context("With activate 1", func() {
-		It("maintain_begin should be 0", func() {
-			Expect(api2tuple(testCase)[3].Maintain_begin).To(Equal(uint32(0)))
-		})
-		It("maintain_end should be 0", func() {
-			Expect(api2tuple(testCase)[3].Maintain_end).To(Equal(uint32(0)))
-		})
-	})
-	Context("With name cmdb-test-a", func() {
-		It("Hostname should be cmdb-test-a", func() {
-			Expect(api2tuple(testCase)[0].Hostname).To(Equal("cmdb-test-a"))
+		It("(maintain_begin, maintain_end) should be pre-defined values", func() {
+			Expect(result[3]).To(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Maintain_begin": BeEquivalentTo(0),
+				"Maintain_end":   BeEquivalentTo(0),
+			})))
 		})
 	})
-	Context("With IP 69.69.69.1", func() {
-		It("Ip should be 69.69.69.1", func() {
-			Expect(api2tuple(testCase)[0].Ip).To(Equal("69.69.69.1"))
-		})
-	})
-	Context("With testCase length 4", func() {
-		It("output should be length 4", func() {
-			Expect(len(api2tuple(testCase))).To(Equal(4))
+	Context("With name as 'cmdb-test-a', ip as '69.69.69.1'", func() {
+		It("Hostname should be cmdb-test-a, Ip should be 69.69.69.1", func() {
+			Expect(result[0]).To(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Hostname": Equal("cmdb-test-a"),
+				"Ip":       Equal("69.69.69.1"),
+			})))
 		})
 	})
 }))
