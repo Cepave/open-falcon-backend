@@ -1,6 +1,7 @@
 package rdb
 
 import (
+	"database/sql"
 	"time"
 
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
@@ -10,11 +11,14 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func FreeLock(schedule *model.Schedule,
-	endStatus model.TaskStatus, endMsg *string, endTime time.Time) {
+func FreeLock(
+	schedule *model.Schedule,
+	endStatus model.TaskStatus, endMsg string,
+	endTime time.Time,
+) {
 	txProcessor := &txFreeLock{
 		schedule: schedule,
-		status:   byte(endStatus),
+		status:   endStatus,
 		message:  endMsg,
 		endTime:  endTime,
 	}
@@ -24,29 +28,41 @@ func FreeLock(schedule *model.Schedule,
 type txFreeLock struct {
 	schedule *model.Schedule
 	endTime  time.Time
-	status   byte
-	message  *string
+	status   model.TaskStatus
+	message  string
 }
 
-func (free *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
-
+func (self *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	/**
 	 * Release the lock directly rather than check the lock holder
 	 */
-	uuid := cdb.DbUuid(free.schedule.Uuid)
-	_ = tx.MustExec(`
-				UPDATE owl_schedule_log
-				SET sl_end_time = ?,
-				    sl_status = ?,
-					sl_message = ?
-				WHERE sl_uuid = ?
-			`, free.endTime, free.status, free.message, uuid)
-	_ = tx.MustExec(`
-					UPDATE owl_schedule
-					SET sch_lock = 0,
-						sch_modify_time = ?
-					WHERE sch_name = ?
-				`, free.endTime, free.schedule.Name)
+	nullableMessage := sql.NullString{ Valid: false }
+	if self.status == model.FAIL {
+		nullableMessage.String = self.message
+		nullableMessage.Valid = true
+	}
+
+	uuid := cdb.DbUuid(self.schedule.Uuid)
+	tx.MustExec(
+		`
+		UPDATE owl_schedule_log
+		SET sl_end_time = ?,
+			sl_status = ?,
+			sl_message = ?
+		WHERE sl_uuid = ?
+		`,
+		self.endTime, self.status,
+		nullableMessage, uuid,
+	)
+	tx.MustExec(
+		`
+		UPDATE owl_schedule
+		SET sch_lock = 0,
+			sch_modify_time = ?
+		WHERE sch_name = ?
+		`,
+		self.endTime, self.schedule.Name,
+	)
 	// :~)
 
 	return cdb.TxCommit
@@ -64,7 +80,7 @@ func AcquireLock(schedule *model.Schedule, startTime time.Time) error {
 
 type txAcquireLock struct {
 	schedule  *model.Schedule
-	lockError *model.UnableToLockSchedule
+	lockError error
 
 	startTime time.Time
 	lockTable model.OwlSchedule
@@ -133,7 +149,7 @@ func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx) {
 			VALUES (?, 0, ?)
 		`, name, ack.startTime)
 		ack.lockTable.Id = int(cdb.ToResultExt(r).LastInsertId())
-		ack.lockTable.Lock = byte(model.FREE)
+		ack.lockTable.Lock = model.FREE
 	}
 }
 

@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"time"
+	"database/sql/driver"
 
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
 	uuid "github.com/satori/go.uuid"
@@ -33,12 +34,12 @@ func NewSchedule(name string, timeout int) *Schedule {
 type OwlSchedule struct {
 	Id             int       `db:"sch_id"`
 	Name           string    `db:"sch_name"`
-	Lock           byte      `db:"sch_lock"`
+	Lock           LockStatus      `db:"sch_lock"`
 	LastUpdateTime time.Time `db:"sch_modify_time"`
 }
 
 func (sch *OwlSchedule) IsLocked() bool {
-	return sch.Lock == byte(LOCKED)
+	return sch.Lock == LOCKED
 }
 
 type OwlScheduleLog struct {
@@ -47,7 +48,7 @@ type OwlScheduleLog struct {
 	StartTime time.Time  `db:"sl_start_time"`
 	EndTime   *time.Time `db:"sl_end_time"`
 	Timeout   int        `db:"sl_timeout"`
-	Status    byte       `db:"sl_status"`
+	Status    TaskStatus       `db:"sl_status"`
 	Message   *string    `db:"sl_message"`
 }
 
@@ -64,7 +65,15 @@ func (t *UnableToLockSchedule) Error() string {
 		t.Timeout)
 }
 
+
 type LockStatus byte
+func (s *LockStatus) Scan(src interface{}) error {
+	*s = LockStatus(src.(int64))
+	return nil
+}
+func (s LockStatus) Value() (driver.Value, error) {
+	return int64(s), nil
+}
 
 const (
 	FREE LockStatus = iota
@@ -72,6 +81,14 @@ const (
 )
 
 type TaskStatus byte
+
+func (s *TaskStatus) Scan(src interface{}) error {
+	*s = TaskStatus(src.(int64))
+	return nil
+}
+func (s TaskStatus) Value() (driver.Value, error) {
+	return int64(s), nil
+}
 
 const (
 	DONE TaskStatus = iota

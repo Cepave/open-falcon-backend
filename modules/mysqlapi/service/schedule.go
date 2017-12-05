@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	cutil "github.com/Cepave/open-falcon-backend/common/utils"
+	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 )
@@ -26,43 +26,36 @@ func ScheduleExecutor(schedule *model.Schedule, callback ScheduleCallback) error
 		return err
 	}
 
-	var (
-		errMsg    *string
-		endStatus model.TaskStatus
+	var callbackHandler = func() {
+		var err error = nil
 
-		/**
-		 * Because the panic in DB execution layer cannot be recovered, simply log it.
-		 */
-		freeLockTarget = func() {
-			rdb.FreeLock(schedule, endStatus, errMsg, time.Now())
-		}
-		freeLockHandler = func(p interface{}) {
-			logger.Errorf("During free lock of %s. Panic: %v", schedule, p)
-		}
-		// :~)
-	)
+		defer func() {
+			msg := ""
 
-	/**
-	 * Since this go routine runs asynchronously, panic won't be captured by Gin.
-	 * We should capture the panic by ourselves.
-	 */
-	callbackTarget := func() {
-		err := callback()
-		if err != nil {
-			panic(err.Error())
-		}
-		errMsg = nil
-		endStatus = model.DONE
-		cutil.BuildPanicCapture(freeLockTarget, freeLockHandler)
+			p := recover()
+			if p != nil {
+				msg = fmt.Sprintf("Panic from scheduled callback: %v", p)
+			} else if err != nil {
+				msg = fmt.Sprintf("Error from scheduled callback: %v", err)
+			}
+
+			status := model.DONE
+			if msg != "" {
+				status = model.FAIL
+			}
+
+			rdb.FreeLock(schedule, status, msg, time.Now())
+		}()
+
+		err = callback()
 	}
 
-	go cutil.BuildPanicCapture(callbackTarget, func(p interface{}) {
-		tmp := fmt.Sprint(p)
-		errMsg = &tmp
-		endStatus = model.FAIL
-		cutil.BuildPanicCapture(freeLockTarget, freeLockHandler)
-	})
-	// :~)
+	go utils.BuildPanicCapture(
+		callbackHandler,
+		func(p interface{}) {
+			logger.Errorf("During free lock of %s. Panic: %v", schedule, p)
+		},
+	)()
 
 	return nil
 }

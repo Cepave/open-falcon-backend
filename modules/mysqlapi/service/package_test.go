@@ -21,13 +21,12 @@ var (
 	ginkgoDb = &tDb.GinkgoDb{}
 	dbFacade = &f.DbFacade{}
 
-	itFeatures    = tFlag.F_MySql
-	itSkipMessage = tFlag.FeatureHelpString(itFeatures)
-	itSkip        = tFlag.BuildSkipFactory(tFlag.F_MySql, itSkipMessage)
+	itDbs    = tFlag.OWL_DB_PORTAL
+	itSkip        = tFlag.BuildSkipFactoryOfOwlDb(itDbs, tFlag.OwlDbHelpString(itDbs))
 )
 
 var _ = BeforeSuite(func() {
-	dbFacade = ginkgoDb.InitDbFacade()
+	dbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_PORTAL)
 	rdb.DbFacade = dbFacade
 })
 
