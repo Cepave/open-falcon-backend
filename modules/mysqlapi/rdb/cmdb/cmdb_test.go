@@ -206,7 +206,7 @@ var _ = Describe("[CMDB] syncHostGroupTx", itSkip.PrependBeforeEach(func() {
 	})
 }))
 
-var _ = Describe("[CMDB] syncRelTx", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[CMDB] syncHostgroupContaining", itSkip.PrependBeforeEach(func() {
 	BeforeEach(func() {
 		inTx(
 			`
@@ -233,7 +233,7 @@ var _ = Describe("[CMDB] syncRelTx", itSkip.PrependBeforeEach(func() {
 			"cmdb-test-grp-b": []string{"cmdb-test-a", "cmdb-test-b"},
 			"cmdb-test-grp-c": []string{"cmdb-test-a", "cmdb-test-b"},
 		}
-		txProcessor := &syncRelTx{
+		txProcessor := &syncHostgroupContaining{
 			relations: testCase,
 		}
 		DbFacade.NewSqlxDbCtrl().InTx(txProcessor)
@@ -315,16 +315,16 @@ var _ = Describe("[CMDB] api2tuple()", itSkip.PrependBeforeEach(func() {
 	Context("With activate 0", func() {
 		It("(maintain_begin, maintain_end) should be pre-defined values", func() {
 			Expect(result[0]).To(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Maintain_begin": BeEquivalentTo(MAINTAIN_PERIOD_BEGIN), // Sat, 01 Jan 2000 00:00:00 GMT
-				"Maintain_end":   BeEquivalentTo(MAINTAIN_PERIOD_END),   // Thu, 07 Jan 2106 17:43:40 GMT
+				"MaintainBegin": BeEquivalentTo(MAINTAIN_PERIOD_BEGIN), // Sat, 01 Jan 2000 00:00:00 GMT
+				"MaintainEnd":   BeEquivalentTo(MAINTAIN_PERIOD_END),   // Thu, 07 Jan 2106 17:43:40 GMT
 			})))
 		})
 	})
 	Context("With activate 1", func() {
 		It("(maintain_begin, maintain_end) should be pre-defined values", func() {
 			Expect(result[3]).To(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Maintain_begin": BeEquivalentTo(0),
-				"Maintain_end":   BeEquivalentTo(0),
+				"MaintainBegin": BeEquivalentTo(0),
+				"MaintainEnd":   BeEquivalentTo(0),
 			})))
 		})
 	})

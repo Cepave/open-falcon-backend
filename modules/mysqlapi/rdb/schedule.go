@@ -12,12 +12,12 @@ import (
 )
 
 func FreeLock(
-	schedule *model.Schedule,
+	scheduleLog *model.OwlScheduleLog,
 	endStatus model.TaskStatus, endMsg string,
 	endTime time.Time,
 ) {
 	txProcessor := &txFreeLock{
-		schedule: schedule,
+		scheduleLog: scheduleLog,
 		status:   endStatus,
 		message:  endMsg,
 		endTime:  endTime,
@@ -26,7 +26,7 @@ func FreeLock(
 }
 
 type txFreeLock struct {
-	schedule *model.Schedule
+	scheduleLog *model.OwlScheduleLog
 	endTime  time.Time
 	status   model.TaskStatus
 	message  string
@@ -42,7 +42,7 @@ func (self *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 		nullableMessage.Valid = true
 	}
 
-	uuid := cdb.DbUuid(self.schedule.Uuid)
+	uuid := cdb.DbUuid(self.scheduleLog.Uuid)
 	tx.MustExec(
 		`
 		UPDATE owl_schedule_log
@@ -59,119 +59,153 @@ func (self *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 		UPDATE owl_schedule
 		SET sch_lock = 0,
 			sch_modify_time = ?
-		WHERE sch_name = ?
+		WHERE sch_id = ?
 		`,
-		self.endTime, self.schedule.Name,
+		self.endTime, self.scheduleLog.SchId,
 	)
 	// :~)
 
 	return cdb.TxCommit
 }
 
-func AcquireLock(schedule *model.Schedule, startTime time.Time) error {
+func AcquireLock(schedule *model.Schedule, startTime time.Time) (*model.OwlScheduleLog, error) {
 	txProcessor := &txAcquireLock{
 		schedule:  schedule,
 		startTime: startTime,
-		lockError: nil,
 	}
+
 	DbFacade.SqlxDbCtrl.InTx(txProcessor)
-	return txProcessor.lockError
+
+	return txProcessor.scheduleLog, txProcessor.lockError
 }
 
 type txAcquireLock struct {
 	schedule  *model.Schedule
-	lockError error
-
 	startTime time.Time
-	lockTable model.OwlSchedule
-	logTable  model.OwlScheduleLog
+
+	scheduleLog *model.OwlScheduleLog
+	lockError error
 }
 
 func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
-
 	/**
 	 * Lock table
 	 */
-	ack.selectOrInsertLock(tx)
-	// The previous task is not timeout()
-	if ack.lockTable.IsLocked() && ack.notTimeout(tx) {
-		ack.lockError = &model.UnableToLockSchedule{
-			LastStartTime: ack.logTable.StartTime,
-			AcquiredTime:  ack.startTime,
-			Timeout:       ack.logTable.Timeout,
-		}
-		return cdb.TxCommit
-	}
+	scheduleData := ack.selectOrInsertLock(tx, ack.schedule.Name)
 
-	ack.updateLockByName(tx)
+	// Builds error if the previous task is locked and is not timeout
+	if scheduleData.IsLocked() {
+		if existingLog := ack.getExistingLog(tx, scheduleData.Id);
+			existingLog != nil && !existingLog.IsTimeout(ack.startTime) {
+			ack.lockError = &model.UnableToLockSchedule{
+				LastStartTime: existingLog.StartTime,
+				AcquiredTime:  ack.startTime,
+				Timeout:       existingLog.Timeout,
+			}
+			return cdb.TxCommit
+		}
+	}
 	// :~)
+
+	newLog := &model.OwlScheduleLog{
+		Uuid: cdb.DbUuid(uuid.NewV4()),
+		SchId: scheduleData.Id,
+		StartTime: ack.startTime,
+		Timeout: ack.schedule.Timeout,
+		Status: model.RUN,
+	}
 
 	/**
 	 * Log table
 	 */
-	generatedUuid := uuid.NewV4()
-	_ = sqlxExt.ToTxExt(tx).NamedExec(`
-			INSERT INTO owl_schedule_log(
-				sl_uuid, sl_sch_id,
-				sl_start_time, sl_timeout, sl_status
-			)
-			VALUES (:uuid, :schid, :starttime, :timeout, :status)
+	ack.updateLockByName(tx, ack.schedule.Name)
+	sqlxExt.ToTxExt(tx).NamedExec(
+		`
+		INSERT INTO owl_schedule_log(
+			sl_uuid, sl_sch_id,
+			sl_start_time, sl_timeout, sl_status
+		)
+		VALUES (:uuid, :schid, :starttime, :timeout, :status)
 		`,
 		map[string]interface{}{
-			"uuid":      cdb.DbUuid(generatedUuid),
-			"schid":     ack.lockTable.Id,
-			"starttime": ack.startTime,
-			"timeout":   ack.schedule.Timeout,
-			"status":    model.RUN,
+			"uuid":      newLog.Uuid,
+			"schid":     newLog.SchId,
+			"starttime": newLog.StartTime,
+			"timeout":   newLog.Timeout,
+			"status":    newLog.Status,
 		},
 	)
-	ack.schedule.Uuid = generatedUuid
 	// :~)
+
+	ack.scheduleLog = newLog
 
 	return cdb.TxCommit
 }
 
-func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx) {
-	name := ack.schedule.Name
-	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(&ack.lockTable, `
-		SELECT sch_id, sch_lock
+func (ack *txAcquireLock) selectOrInsertLock(tx *sqlx.Tx, name string) *model.OwlSchedule {
+	scheduleData := &model.OwlSchedule{}
+
+	existing := sqlxExt.ToTxExt(tx).GetOrNoRow(
+		scheduleData,
+		`
+		SELECT *
 		FROM owl_schedule
 		WHERE sch_name = ?
 		FOR UPDATE
-	`, name)
+		`,
+		name,
+	)
 
-	if !exist {
-		r := tx.MustExec(`
-			INSERT INTO owl_schedule(
-				sch_name,
-				sch_lock, sch_modify_time
-			)
-			VALUES (?, 0, ?)
-		`, name, ack.startTime)
-		ack.lockTable.Id = int(cdb.ToResultExt(r).LastInsertId())
-		ack.lockTable.Lock = model.FREE
+	if existing {
+		return scheduleData
 	}
+
+	/**
+	 * Re-read data after insertion
+	 */
+	tx.MustExec(
+		`
+		INSERT INTO owl_schedule(
+			sch_lock, sch_name, sch_modify_time
+		)
+		VALUES (0, ?, ?)
+		`,
+		name, ack.startTime,
+	)
+
+	return ack.selectOrInsertLock(tx, name)
+	// :~)
 }
 
-func (ack *txAcquireLock) updateLockByName(tx *sqlx.Tx) {
-	_ = tx.MustExec(`
+func (ack *txAcquireLock) updateLockByName(tx *sqlx.Tx, name string) {
+	tx.MustExec(
+		`
 		UPDATE owl_schedule
 		SET sch_lock = 1,
 			sch_modify_time = ?
 		WHERE sch_name = ?
-	`, ack.startTime, ack.schedule.Name)
+		`,
+		ack.startTime, name,
+	)
 }
 
-func (ack *txAcquireLock) notTimeout(tx *sqlx.Tx) bool {
-	ret := &ack.logTable
-	exist := sqlxExt.ToTxExt(tx).GetOrNoRow(ret, `
+func (ack *txAcquireLock) getExistingLog(tx *sqlx.Tx, scheduleId int32) *model.OwlScheduleLog {
+	logRecord := &model.OwlScheduleLog{}
+	existing := sqlxExt.ToTxExt(tx).GetOrNoRow(
+		logRecord,
+		`
 		SELECT sl.sl_start_time, sl.sl_timeout
 		FROM owl_schedule_log sl
 		WHERE sl.sl_sch_id = ?
 		ORDER BY sl.sl_start_time DESC
 		LIMIT 1
-	`, ack.lockTable.Id)
+		`,
+		scheduleId,
+	)
 
-	// Check timeout iff row exists
-	return exist && (ack.startTime.Sub(ret.StartTime) <= time.Duration(ret.Timeout)*time.Second)
+	if !existing {
+		return nil
+	}
+
+	return logRecord
 }

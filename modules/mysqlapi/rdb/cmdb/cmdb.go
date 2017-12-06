@@ -15,10 +15,10 @@ const (
 )
 
 type hostTuple struct {
-	Hostname       string
-	Ip             string
-	Maintain_begin uint32
-	Maintain_end   uint32
+	Hostname       string `db:"hostname"`
+	Ip             string `db:"ip"`
+	MaintainBegin uint32 `db:"maintain_begin"`
+	MaintainEnd   uint32 `db:"maintain_end"`
 }
 
 type syncHostTx struct {
@@ -29,11 +29,11 @@ type syncHostGroupTx struct {
 	groups []*cmdbModel.SyncHostGroup
 }
 
-type syncRelTx struct {
+type syncHostgroupContaining struct {
 	relations map[string][]string
 }
 
-func (syncTx *syncRelTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
+func (syncTx *syncHostgroupContaining) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	// delete all the grp relation that come_from = 1
 	tx.MustExec(`
 		DELETE FROM grp_host WHERE grp_id IN
@@ -138,8 +138,8 @@ func api2tuple(hosts []*cmdbModel.SyncHost) []*hostTuple {
 		dbData = append(dbData, &hostTuple{
 			Hostname:       h.Name,
 			Ip:             h.IP,
-			Maintain_begin: begin,
-			Maintain_end:   end,
+			MaintainBegin: begin,
+			MaintainEnd:   end,
 		})
 	}
 	return dbData
@@ -214,7 +214,7 @@ func SyncForHosts(syncData *cmdbModel.SyncForAdding) {
 
 	// sync Relations
 
-	txProcessorRel := &syncRelTx{
+	txProcessorRel := &syncHostgroupContaining{
 		relations: syncData.Relations,
 	}
 

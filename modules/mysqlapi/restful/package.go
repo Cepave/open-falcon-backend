@@ -105,7 +105,7 @@ func initApi() {
 	v1.GET("/owl/query-object/:uuid", h(owlRest.GetQueryObjectByUuid))
 	v1.POST("/owl/query-object", h(owlRest.SaveQueryObject))
 	v1.POST("/owl/query-object/vacuum", h(owlRest.VacuumOldQueryObjects))
-	v1.POST("/cmdb/sync", addNewCmdbSync)
+	v1.POST("/cmdb/sync", h(addNewCmdbSync))
 
 	router.GET("/health", h(health))
 }

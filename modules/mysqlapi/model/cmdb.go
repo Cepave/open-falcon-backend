@@ -1,5 +1,11 @@
 package model
 
+import (
+	"github.com/gin-gonic/gin"
+
+	oGin "github.com/Cepave/open-falcon-backend/common/gin"
+)
+
 type SyncHost struct {
 	Activate int    `json:"activate"`
 	Name     string `json:"name"`
@@ -17,7 +23,6 @@ type SyncForAdding struct {
 	Relations  map[string][]string `json:"relations"`
 }
 
-type SyncItem struct {
-	Uuid      string
-	StartTime int
+func (p *SyncForAdding) Bind(c *gin.Context) {
+	oGin.BindJson(c, p)
 }

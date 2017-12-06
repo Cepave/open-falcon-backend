@@ -16,131 +16,98 @@ import (
 )
 
 const (
-	defaultTimeout       = 2
-	scheduleNamePrefix = "test-schedule"
-	timeThreshold        = 500 * time.Millisecond
-	deleteLockSql        =
+	_DEFAULT_TIMEOUT       = 60
+	_SCHEDULE_PREFIX = "test-schedule"
+)
+
+var (
+	deleteLockSql        = fmt.Sprintf(
 		`
 		DELETE FROM owl_schedule
-		WHERE sch_name LIKE 'test-schedule%'
-		`
-	deleteLogSql =
+		WHERE sch_name LIKE '%s%%'
+		`,
+		_SCHEDULE_PREFIX,
+	)
+	deleteLogSql = fmt.Sprintf(
 		`
 		DELETE sl
 		FROM owl_schedule sch
 			LEFT JOIN owl_schedule_log sl
 			ON sch.sch_id = sl.sl_sch_id
-		WHERE sch_name LIKE 'test-schedule%'
-		`
+		WHERE sch_name LIKE '%s%%'
+		`,
+		_SCHEDULE_PREFIX,
+	)
 )
 
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	var (
-		scheduleName    string
-		defaultSchedule *model.Schedule
 		defaultNow      time.Time
-
-		ExpectSuccessSchedule = func(testSchedule *model.Schedule, testError error) {
-			Expect(testError).NotTo(HaveOccurred())
-			Expect(testSchedule.Uuid).NotTo(Equal(uuid.Nil))
-		}
-
-		ExpectLockAndLog = func(expSchedule *model.Schedule, expTime time.Time, expLogCount int) {
-			const (
-				selectLockSql = `
-					SELECT *
-					FROM owl_schedule
-					WHERE sch_name = ?
-				`
-				selectLogSql = `
-					SELECT *
-					FROM owl_schedule_log
-					WHERE sl_sch_id = ?
-					ORDER BY sl_start_time DESC
-					LIMIT 1
-				`
-				countLogSql = `
-					SELECT COUNT(*)
-					FROM owl_schedule_log
-					WHERE sl_sch_id = ?
-				`
-			)
-
-			var (
-				lockTable model.OwlSchedule
-				logTable  model.OwlScheduleLog
-			)
-			GinkgoT().Log(defaultSchedule)
-
-			By("Check lock")
-			DbFacade.SqlxDbCtrl.Get(&lockTable, selectLockSql, expSchedule.Name)
-			Expect(lockTable.IsLocked()).To(BeTrue())
-			Expect(lockTable.LastUpdateTime).To(BeTemporally("~", expTime, timeThreshold))
-
-			By("Check time")
-			DbFacade.SqlxDbCtrl.Get(&logTable, selectLogSql, lockTable.Id)
-			Expect(logTable.Timeout).To(Equal(expSchedule.Timeout))
-			Expect(logTable.StartTime).To(BeTemporally("~", expTime, timeThreshold))
-
-			By("Check log count")
-			var count int
-			DbFacade.SqlxDbCtrl.Get(&count, countLogSql, lockTable.Id)
-			Expect(count).To(Equal(expLogCount))
-		}
 	)
-
-	BeforeEach(func() {
-		scheduleName = fmt.Sprintf("%s-%d", scheduleNamePrefix, rand.Int())
-		defaultSchedule = model.NewSchedule(scheduleName, defaultTimeout)
-		defaultNow = time.Now()
-	})
 
 	AfterEach(func() {
 		inTx(deleteLogSql, deleteLockSql)
 	})
 
-	Context("Schedule is new", func() {
-		It("should acquire the lock", func() {
-			err := AcquireLock(defaultSchedule, defaultNow)
+	Context("New schedule(not-used before)", func() {
+		It("Successful locking", func() {
+			sampleSchedule := model.NewSchedule(randomScheduleName(), _DEFAULT_TIMEOUT)
+			now := time.Now()
 
-			ExpectSuccessSchedule(defaultSchedule, err)
-			ExpectLockAndLog(defaultSchedule, defaultNow, 1)
+			log, err := AcquireLock(sampleSchedule, now)
+
+			assertSuccessScheduleLog(log, err)
+			assertLockedSchedule(sampleSchedule, now, 1)
 		})
 	})
 
-	Context("A schedule has been created", func() {
-		JustBeforeEach(func() {
-			_ = AcquireLock(defaultSchedule, defaultNow)
+	Context("Existing schedule(used before)", func() {
+		var scheduleName string
+		var lastLockTime time.Time
+
+		BeforeEach(func() {
+			scheduleName = randomScheduleName()
 		})
 
-		Context("lock is held too long", func() {
-			It("should preempt the lock", func() {
-				thisTimeout := defaultTimeout + 1
-				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
-				ps := model.NewSchedule(scheduleName, thisTimeout)
-				err := AcquireLock(ps, newCurrent)
+		JustBeforeEach(func() {
+			_, err := AcquireLock(model.NewSchedule(scheduleName, _DEFAULT_TIMEOUT), lastLockTime)
+			Expect(err).To(Succeed())
+		})
 
-				ExpectSuccessSchedule(ps, err)
-				ExpectLockAndLog(ps, newCurrent, 2)
+		Context("Lock is held too long", func() {
+			BeforeEach(func() {
+				lastLockTime = time.Now().Add(-(_DEFAULT_TIMEOUT + 2) * time.Second)
+			})
+
+			It("Should preempt the lock", func() {
+				schedule := model.NewSchedule(scheduleName, _DEFAULT_TIMEOUT)
+				now := time.Now()
+				log, err := AcquireLock(schedule, now)
+
+				assertSuccessScheduleLog(log, err)
+				assertLockedSchedule(schedule, now, 2)
 			})
 		})
 
-		Context("lock is just held", func() {
+		Context("Lock is still held", func() {
+			BeforeEach(func() {
+				lastLockTime = time.Now()
+			})
+
 			It("should trigger error", func() {
-				thisTimeout := defaultTimeout + 1
-				ps := model.NewSchedule(scheduleName, thisTimeout)
-				err := AcquireLock(ps, defaultNow)
+				schedule := model.NewSchedule(scheduleName, _DEFAULT_TIMEOUT)
+				log, err := AcquireLock(schedule, defaultNow)
 
 				Expect(err).To(HaveOccurred())
-				Expect(ps.Uuid).To(Equal(uuid.Nil))
+				Expect(log).To(BeNil())
 
-				ExpectLockAndLog(defaultSchedule, defaultNow, 1)
+				assertLockedSchedule(schedule, lastLockTime, 1)
 			})
 		})
 
-		Context("lock is held but cannot determine the timeout", func() {
+		Context("Lock is held but the log is missing", func() {
 			BeforeEach(func() {
-				_ = AcquireLock(defaultSchedule, defaultNow)
+				lastLockTime = time.Now().Add(-10 * time.Second)
 			})
 
 			JustBeforeEach(func() {
@@ -148,50 +115,41 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 			})
 
 			It("should preempt the lock", func() {
-				By("Acquire lock from the crashed task")
-				thisTimeout := defaultTimeout + 1
-				newCurrent := defaultNow.Add(time.Duration(thisTimeout) * time.Second)
-				sp := model.NewSchedule(scheduleName, thisTimeout)
-				err := AcquireLock(sp, newCurrent)
+				schedule := model.NewSchedule(scheduleName, _DEFAULT_TIMEOUT)
+				now := time.Now()
+				log, err := AcquireLock(schedule, now)
 
-				ExpectSuccessSchedule(sp, err)
-				ExpectLockAndLog(sp, newCurrent, 1)
+				assertSuccessScheduleLog(log, err)
+				assertLockedSchedule(schedule, now, 1)
 			})
 		})
-
 	})
-
 }))
 
 var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 	var (
-		scheduleName    string
-		defaultSchedule *model.Schedule
-		startTime      time.Time
+		sampleScheduleLog *model.OwlScheduleLog
+		startTime      time.Time = time.Now().Add(-120 * time.Second)
+		logTime = startTime.Add(10 * time.Second)
 	)
 
 	BeforeEach(func() {
-		scheduleName = fmt.Sprintf("%s-%d", scheduleNamePrefix, rand.Int())
-		defaultSchedule = model.NewSchedule(scheduleName, 300)
-		startTime = time.Now().Add(-120 * time.Second)
+		sampleSchedule := model.NewSchedule(randomScheduleName(), _DEFAULT_TIMEOUT)
+
+		var err error
+		sampleScheduleLog, err = AcquireLock(sampleSchedule, startTime)
+		Expect(err).To(Succeed())
+
+		GinkgoT().Logf("Setup new schedule: %v", sampleSchedule)
 	})
 
 	AfterEach(func() {
 		inTx(deleteLogSql, deleteLockSql)
 	})
 
-	JustBeforeEach(func() {
-		AcquireLock(defaultSchedule, startTime)
-		GinkgoT().Logf("Setup new schedule: %v", defaultSchedule)
-	})
-
 	DescribeTable("The updated data should be as expected",
 		func(expStatus model.TaskStatus, expMsg string) {
-			var (
-				expSchedule = defaultSchedule
-				expTime     = startTime.Add(10 * time.Second)
-			)
-			FreeLock(expSchedule, expStatus, expMsg, expTime)
+			FreeLock(sampleScheduleLog, expStatus, expMsg, logTime)
 
 			var checkedResult = &struct {
 				Locked bool `db:"sch_lock"`
@@ -214,17 +172,17 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 					INNER JOIN
 					owl_schedule_log
 					ON sch_id = sl_sch_id
-				WHERE sch_name = ?
+				WHERE sch_id = ?
 				`,
-				expSchedule.Name,
+				sampleScheduleLog.SchId,
 			)
 			Expect(checkedResult).To(PointTo(
 				MatchAllFields(Fields{
 					"Locked": BeFalse(),
-					"ModifyTime": BeTemporally("~", expTime, time.Second),
+					"ModifyTime": BeTemporally("~", logTime, time.Second),
 					"Status": Equal(expStatus),
 					"Message": Equal(expectedMessage),
-					"EndTime": BeTemporally("~", expTime, time.Second),
+					"EndTime": BeTemporally("~", logTime, time.Second),
 				}),
 			))
 		},
@@ -232,3 +190,57 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 		Entry("FAIL", model.FAIL, "Sample error message"),
 	)
 }))
+
+func randomScheduleName() string {
+	return fmt.Sprintf("%s-%d", _SCHEDULE_PREFIX, rand.Int())
+}
+
+func assertSuccessScheduleLog(scheduleLog *model.OwlScheduleLog, testError error) {
+	Expect(testError).To(Succeed())
+	Expect(scheduleLog.Uuid).NotTo(Equal(uuid.Nil))
+}
+
+func assertLockedSchedule(scheduleContent *model.Schedule, expTime time.Time, expLogCount int) {
+	type scheduleData struct {
+		Lock model.LockStatus `db:"sch_lock"`
+		LastUpdateTime time.Time `db:"sch_modify_time"`
+		Timeout int32 `db:"sl_timeout"`
+		StartTime time.Time `db:"sl_start_time"`
+		TotalCount int `db:"count_log"`
+	}
+
+	var testedData = &scheduleData{}
+
+	DbFacade.SqlxDbCtrl.Get(
+		testedData,
+		`
+		SELECT sch_lock, sch_modify_time, lm.sl_timeout, lm.sl_start_time,
+			ll.count_log
+		FROM owl_schedule
+			LEFT OUTER JOIN
+			owl_schedule_log AS lm
+			ON sch_id = lm.sl_sch_id,
+			(
+				SELECT COUNT(sl_uuid) AS count_log
+				FROM owl_schedule
+					INNER JOIN
+					owl_schedule_log
+					ON sch_id = sl_sch_id
+						AND sch_name = ?
+			) AS ll
+		WHERE sch_name = ?
+		ORDER BY lm.sl_start_time DESC
+		LIMIT 1
+		`,
+		scheduleContent.Name, scheduleContent.Name,
+	)
+	Expect(testedData).To(PointTo(
+		MatchFields(IgnoreExtras, Fields {
+			"Lock": Equal(model.LOCKED),
+			"LastUpdateTime": BeTemporally("~", expTime, time.Second),
+			"Timeout": Equal(scheduleContent.Timeout),
+			"StartTime": BeTemporally("~", expTime, time.Second),
+			"TotalCount": Equal(expLogCount),
+		}),
+	))
+}

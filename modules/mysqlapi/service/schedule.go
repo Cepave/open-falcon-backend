@@ -17,13 +17,13 @@ var ScheduleService = &scheduleService{
 type ScheduleCallback func() error
 
 type scheduleService struct {
-	Execute func(*model.Schedule, ScheduleCallback) error
+	Execute func(*model.Schedule, ScheduleCallback) (*model.OwlScheduleLog, error)
 }
 
-func ScheduleExecutor(schedule *model.Schedule, callback ScheduleCallback) error {
-	err := rdb.AcquireLock(schedule, time.Now())
+func ScheduleExecutor(schedule *model.Schedule, callback ScheduleCallback) (*model.OwlScheduleLog, error) {
+	scheduleLog, err := rdb.AcquireLock(schedule, time.Now())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var callbackHandler = func() {
@@ -42,9 +42,10 @@ func ScheduleExecutor(schedule *model.Schedule, callback ScheduleCallback) error
 			status := model.DONE
 			if msg != "" {
 				status = model.FAIL
+				logger.Warnf("Execute task: [%v] has error: %s", schedule, msg)
 			}
 
-			rdb.FreeLock(schedule, status, msg, time.Now())
+			rdb.FreeLock(scheduleLog, status, msg, time.Now())
 		}()
 
 		err = callback()
@@ -57,5 +58,5 @@ func ScheduleExecutor(schedule *model.Schedule, callback ScheduleCallback) error
 		},
 	)()
 
-	return nil
+	return scheduleLog, nil
 }

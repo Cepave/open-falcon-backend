@@ -14,10 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func inTx(sql ...string) {
-	dbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
-}
-
 func sPtr(v string) *string {
 	return &v
 }

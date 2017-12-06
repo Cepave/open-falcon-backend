@@ -10,6 +10,7 @@ import (
 
 	graphdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/graph"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
 	apiOwlDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
 )
 
@@ -74,6 +75,7 @@ func InitPortalRdb(dbConfig *commonDb.DbConfig) {
 	commonNqmDb.DbFacade = DbFacade
 	commonOwlDb.DbFacade = DbFacade
 	apiOwlDb.DbFacade = DbFacade
+	cmdb.DbFacade = DbFacade
 
 	hbsdb.DbFacade = DbFacade
 	hbsdb.DB = DbFacade.SqlDb

@@ -13,6 +13,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 )
 
 var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
@@ -47,10 +48,21 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 			name string, callback ScheduleCallback,
 			expectedStatus model.TaskStatus, matchMessage string,
 		) {
-			newSchedule := &model.Schedule{ Name: fmt.Sprintf("%s-%s", schedulePrefix, name), Timeout: 300 }
+			newSchedule := model.NewSchedule(fmt.Sprintf("%s-%s", schedulePrefix, name), 300)
 
-			err := ScheduleService.Execute(newSchedule, callback)
+			scheduleLog, err := ScheduleService.Execute(newSchedule, callback)
 			Expect(err).To(Succeed())
+			Expect(scheduleLog).To(PointTo(
+				MatchFields(
+					IgnoreExtras,
+					Fields {
+						"Status": Equal(model.RUN),
+						"StartTime": BeTemporally("<=", time.Now(), time.Millisecond),
+						"Timeout": BeEquivalentTo(300),
+						"SchId": BeNumerically(">", 0),
+					},
+				),
+			))
 
 			waitToken.Wait()
 			time.Sleep(time.Second)

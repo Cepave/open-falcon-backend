@@ -1,6 +1,7 @@
 package restful
 
 import (
+	"fmt"
 	ch "gopkg.in/check.v1"
 	"testing"
 
@@ -14,7 +15,9 @@ import (
 )
 
 var dbFacade *f.DbFacade
-var httpClientConfig = &tHttp.SlingClientConf{tHttp.NewHttpClientConfigByFlag()}
+var clientConfig = tHttp.NewHttpClientConfigByFlag()
+var httpClientConfig = &tHttp.SlingClientConf{ clientConfig }
+var gentlemanClientConfig = &tHttp.GentlemanClientConf{ clientConfig }
 
 func TestByGinkgo(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -27,14 +30,14 @@ func TestByCheck(t *testing.T) {
 
 func itSkipForGocheck(c *ch.C) {
 	if !testFlags.HasHttpClient() ||
-		!testFlags.HasMySql() {
+		!testFlags.HasMySqlOfOwlDb(tFlag.OWL_DB_PORTAL) {
 		c.Skip(itSkipMessage)
 	}
 }
 
 var ginkgoDb = &tDb.GinkgoDb{}
 var _ = BeforeSuite(func() {
-	dbFacade = ginkgoDb.InitDbFacade()
+	dbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_PORTAL)
 })
 
 var _ = AfterSuite(func() {
@@ -43,8 +46,18 @@ var _ = AfterSuite(func() {
 })
 
 var (
-	itFeatures    = tFlag.F_HttpClient | tFlag.F_MySql
-	itSkipMessage = tFlag.FeatureHelpString(itFeatures)
-	itSkip        = tFlag.BuildSkipFactory(tFlag.F_HttpClient|tFlag.F_MySql, itSkipMessage)
+	httpMessage = tFlag.FeatureHelpString(tFlag.F_HttpClient)
+	mysqlMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_PORTAL)
+
+	itSkipMessage = fmt.Sprintf(
+		"%s; %s", httpMessage, mysqlMessage,
+	)
+	itSkip = tFlag.BuildSkipFactory(tFlag.F_HttpClient, httpMessage).Compose(
+		tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_PORTAL, mysqlMessage),
+	)
 	testFlags     = tFlag.NewTestFlags()
 )
+
+func inTx(sql ...string) {
+	dbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
+}
