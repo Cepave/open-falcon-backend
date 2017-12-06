@@ -2,11 +2,15 @@ package restful
 
 import (
 	"net/http"
-	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 
+	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
+	oJson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
+
+	"github.com/satori/go.uuid"
 )
 
 func addNewCmdbSync(
@@ -40,6 +44,32 @@ func addNewCmdbSync(
 		map[string]interface{} {
 			"sync_id": scheduleLog.GetUuidString(),
 			"start_time": scheduleLog.StartTime.Unix(),
+		},
+	)
+}
+
+func getSyncTask(
+	params *struct {
+		Uuid string `mvc:"param[uuid]"`
+	},
+) mvc.OutputBody {
+	targetUuid, err := uuid.FromString(params.Uuid)
+	if err != nil {
+		panic(err)
+	}
+
+	scheduleLog := rdb.GetScheduleLog(targetUuid)
+
+	if scheduleLog == nil {
+		return mvc.NotFoundOutputBody
+	}
+
+	return mvc.JsonOutputBody(
+		map[string]interface{} {
+			"status": scheduleLog.Status,
+			"start_time": scheduleLog.StartTime.Unix(),
+			"end_time": oJson.JsonTime(scheduleLog.EndTime),
+			"timeout": scheduleLog.Timeout,
 		},
 	)
 }

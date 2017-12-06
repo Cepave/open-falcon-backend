@@ -191,6 +191,72 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 	)
 }))
 
+var _ = Describe("Tests getting of schedule log", func() {
+	BeforeEach(func() {
+		inTx(
+			`
+			INSERT INTO owl_schedule(sch_id, sch_name, sch_lock, sch_modify_time)
+			VALUES(302, 'gp.009', 0, NOW())
+			`,
+			`
+			INSERT INTO owl_schedule_log(
+				sl_sch_id, sl_uuid, sl_status,
+				sl_timeout, sl_start_time, sl_end_time
+			)
+			VALUES(302, x'93a01bfc55ebcedf9c6d962ed51f496d', 0, 300, '2017-06-12 10:10:20', NOW()),
+				(302, x'21a01bfc55ebcedf9c6d962ed51f496d', 1, 300, '2017-06-12 18:40:20', NULL)
+			`,
+		)
+	})
+	AfterEach(func() {
+		inTx(
+			`
+			DELETE FROM owl_schedule_log
+			WHERE sl_sch_id = 302
+			`,
+			`
+			DELETE FROM owl_schedule
+			WHERE sch_id = 302
+			`,
+		)
+	})
+
+	DescribeTable("Getting schedule log by UUID",
+		func(sampleUuidString string, existing bool, hasEndTime bool) {
+			sampleUuid, _ := uuid.FromString(sampleUuidString)
+
+			testedLog := GetScheduleLog(sampleUuid)
+
+			/**
+			 * Asserts existing
+			 */
+			nilMatcher := BeNil()
+			if existing {
+				nilMatcher = Not(nilMatcher)
+			}
+			Expect(testedLog).To(nilMatcher)
+			// :~)
+
+			if !existing {
+				return
+			}
+
+			/**
+			 * Asserts end time
+			 */
+			endTimeMatcher := BeTrue()
+			if !hasEndTime {
+				endTimeMatcher = BeFalse()
+			}
+			Expect(testedLog.EndTime.IsNil()).NotTo(endTimeMatcher)
+			// :~)
+		},
+		Entry("Existing log", "93a01bfc-55eb-cedf-9c6d-962ed51f496d", true, true),
+		Entry("Existing log(null end time)", "21a01bfc-55eb-cedf-9c6d-962ed51f496d", true, false),
+		Entry("Non-existing log", "41301bfc-55eb-cedf-9c6d-962ed51f496d", false, false),
+	)
+})
+
 func randomScheduleName() string {
 	return fmt.Sprintf("%s-%d", _SCHEDULE_PREFIX, rand.Int())
 }

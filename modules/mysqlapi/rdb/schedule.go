@@ -11,6 +11,35 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+func GetScheduleLog(uuid uuid.UUID) *model.OwlScheduleLog {
+	loadedScheduleLog := &model.OwlScheduleLog{}
+
+	if existing := DbFacade.SqlxDbCtrl.GetOrNoRow(
+		loadedScheduleLog,
+		`
+		SELECT *
+		FROM owl_schedule_log
+		WHERE sl_uuid = ?
+		`,
+		cdb.DbUuid(uuid),
+	); existing {
+		return loadedScheduleLog
+	}
+
+	return nil
+}
+
+func AcquireLock(schedule *model.Schedule, startTime time.Time) (*model.OwlScheduleLog, error) {
+	txProcessor := &txAcquireLock{
+		schedule:  schedule,
+		startTime: startTime,
+	}
+
+	DbFacade.SqlxDbCtrl.InTx(txProcessor)
+
+	return txProcessor.scheduleLog, txProcessor.lockError
+}
+
 func FreeLock(
 	scheduleLog *model.OwlScheduleLog,
 	endStatus model.TaskStatus, endMsg string,
@@ -66,17 +95,6 @@ func (self *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	// :~)
 
 	return cdb.TxCommit
-}
-
-func AcquireLock(schedule *model.Schedule, startTime time.Time) (*model.OwlScheduleLog, error) {
-	txProcessor := &txAcquireLock{
-		schedule:  schedule,
-		startTime: startTime,
-	}
-
-	DbFacade.SqlxDbCtrl.InTx(txProcessor)
-
-	return txProcessor.scheduleLog, txProcessor.lockError
 }
 
 type txAcquireLock struct {

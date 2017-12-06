@@ -40,7 +40,7 @@ type OwlScheduleLog struct {
 	Uuid      cdb.DbUuid `db:"sl_uuid"`
 	SchId     int32        `db:"sl_sch_id"`
 	StartTime time.Time  `db:"sl_start_time"`
-	EndTime   *time.Time `db:"sl_end_time"`
+	EndTime   cdb.DbTime `db:"sl_end_time"`
 	Timeout   int32        `db:"sl_timeout"`
 	Status    TaskStatus       `db:"sl_status"`
 	Message   *string    `db:"sl_message"`

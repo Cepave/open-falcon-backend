@@ -16,6 +16,8 @@ func (u *DbUuid) Scan(src interface{}) error {
 }
 
 // This function would supply []byte as value of database driver
+//
+// The value of "null" is supported either.
 func (u DbUuid) Value() (driver.Value, error) {
 	srcUuid := uuid.UUID(u)
 	if srcUuid == uuid.Nil {

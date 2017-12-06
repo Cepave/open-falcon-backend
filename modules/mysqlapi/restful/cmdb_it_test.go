@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
-
 	oJson "github.com/Cepave/open-falcon-backend/common/json"
 	oClient "github.com/Cepave/open-falcon-backend/common/http/client"
 	oGko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	gb "github.com/Cepave/open-falcon-backend/common/testing/ginkgo/builder"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 )
@@ -62,6 +62,80 @@ var _ = Describe("[POST] /api/v1/cmdb/sync", itSkip.PrependBeforeEach(func() {
 	AfterLast(func() {
 		cleanImportData()
 	}).ToContext()
+}))
+
+var _ = Describe("[GET] /api/v1/cmdb/sync/:uuid", itSkip.PrependBeforeEach(func() {
+	Context("Found schedule log", func() {
+		BeforeEach(func() {
+			inTx(
+				`
+				INSERT INTO owl_schedule(sch_id, sch_name, sch_lock, sch_modify_time)
+				VALUES(312, 'gp.009', 0, NOW())
+				`,
+				`
+				INSERT INTO owl_schedule_log(
+					sl_sch_id, sl_uuid, sl_status,
+					sl_timeout, sl_start_time, sl_end_time
+				)
+				VALUES(312, x'7dc535add25693024620dfe4258b9001', 0, 300, '2017-05-05 10:10:20', '2017-05-05 10:22:07'),
+					(312, x'ec612430312ed634a5cbc2307780a03f', 1, 300, '2017-05-06 14:32:12', NULL)
+				`,
+			)
+		})
+		AfterEach(func() {
+			inTx(
+				`
+				DELETE FROM owl_schedule_log
+				WHERE sl_sch_id = 312
+				`,
+				`
+				DELETE FROM owl_schedule
+				WHERE sch_id = 312
+				`,
+			)
+		})
+
+		DescribeTable("Content should match expected one",
+			func(uuidString string, hasEndtime bool, expectedStatus int) {
+				resp, err := gentlemanClientConfig.NewClient().
+					Path("/api/v1/cmdb/sync/" + uuidString).Get().
+					Send()
+
+				Expect(err).To(Succeed())
+
+				jsonBody := oClient.ToGentlemanResp(resp).MustGetJson()
+				GinkgoT().Logf("[/api/v1/cmdb/%s] JSON Result:\n%s", uuidString, oJson.MarshalPrettyJSON(jsonBody))
+
+				Expect(resp).To(oGko.MatchHttpStatus(http.StatusOK))
+
+				Expect(jsonBody.Get("status").MustInt()).To(Equal(expectedStatus))
+				Expect(jsonBody.Get("timeout").MustInt()).To(Equal(300))
+
+				matchEndTime := BeNumerically(">=", 1)
+				if !hasEndtime {
+					matchEndTime = Equal(0)
+				}
+				Expect(jsonBody.Get("end_time").MustInt()).To(matchEndTime)
+			},
+			Entry("Has end time", "7dc535ad-d256-9302-4620-dfe4258b9001", true, 0),
+			Entry("No end time", "ec612430-312e-d634-a5cb-c2307780a03f", false, 1),
+		)
+	})
+
+	Context("Not found schedule log", func() {
+		It("Should be 404", func() {
+			resp, err := gentlemanClientConfig.NewClient().
+				Path("/api/v1/cmdb/sync/80915aae-7b75-1eed-2db9-6e0b450172e4").Get().
+				Send()
+
+			Expect(err).To(Succeed())
+
+			jsonBody := oClient.ToGentlemanResp(resp).MustGetJson()
+			GinkgoT().Logf("[/api/v1/cmdb/sync] JSON Result:\n%s", oJson.MarshalPrettyJSON(jsonBody))
+
+			Expect(resp).To(oGko.MatchHttpStatus(http.StatusNotFound))
+		})
+	})
 }))
 
 func setupImportAndAssertion(
