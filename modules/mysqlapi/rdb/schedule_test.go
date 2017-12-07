@@ -1,8 +1,8 @@
 package rdb
 
 import (
-	"fmt"
 	"database/sql"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -16,12 +16,12 @@ import (
 )
 
 const (
-	_DEFAULT_TIMEOUT       = 60
+	_DEFAULT_TIMEOUT = 60
 	_SCHEDULE_PREFIX = "test-schedule"
 )
 
 var (
-	deleteLockSql        = fmt.Sprintf(
+	deleteLockSql = fmt.Sprintf(
 		`
 		DELETE FROM owl_schedule
 		WHERE sch_name LIKE '%s%%'
@@ -42,7 +42,7 @@ var (
 
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	var (
-		defaultNow      time.Time
+		defaultNow time.Time
 	)
 
 	AfterEach(func() {
@@ -129,8 +129,8 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 	var (
 		sampleScheduleLog *model.OwlScheduleLog
-		startTime      time.Time = time.Now().Add(-120 * time.Second)
-		logTime = startTime.Add(10 * time.Second)
+		startTime         time.Time = time.Now().Add(-120 * time.Second)
+		logTime                     = startTime.Add(10 * time.Second)
 	)
 
 	BeforeEach(func() {
@@ -152,14 +152,14 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 			FreeLock(sampleScheduleLog, expStatus, expMsg, logTime)
 
 			var checkedResult = &struct {
-				Locked bool `db:"sch_lock"`
-				ModifyTime time.Time `db:"sch_modify_time"`
-				Status model.TaskStatus `db:"sl_status"`
-				Message sql.NullString `db:"sl_message"`
-				EndTime time.Time `db:"sl_end_time"`
+				Locked     bool             `db:"sch_lock"`
+				ModifyTime time.Time        `db:"sch_modify_time"`
+				Status     model.TaskStatus `db:"sl_status"`
+				Message    sql.NullString   `db:"sl_message"`
+				EndTime    time.Time        `db:"sl_end_time"`
 			}{}
 
-			expectedMessage := sql.NullString{ String: expMsg, Valid: false }
+			expectedMessage := sql.NullString{String: expMsg, Valid: false}
 			if expStatus == model.FAIL {
 				expectedMessage.Valid = true
 			}
@@ -178,11 +178,11 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 			)
 			Expect(checkedResult).To(PointTo(
 				MatchAllFields(Fields{
-					"Locked": BeFalse(),
+					"Locked":     BeFalse(),
 					"ModifyTime": BeTemporally("~", logTime, time.Second),
-					"Status": Equal(expStatus),
-					"Message": Equal(expectedMessage),
-					"EndTime": BeTemporally("~", logTime, time.Second),
+					"Status":     Equal(expStatus),
+					"Message":    Equal(expectedMessage),
+					"EndTime":    BeTemporally("~", logTime, time.Second),
 				}),
 			))
 		},
@@ -268,11 +268,11 @@ func assertSuccessScheduleLog(scheduleLog *model.OwlScheduleLog, testError error
 
 func assertLockedSchedule(scheduleContent *model.Schedule, expTime time.Time, expLogCount int) {
 	type scheduleData struct {
-		Lock model.LockStatus `db:"sch_lock"`
-		LastUpdateTime time.Time `db:"sch_modify_time"`
-		Timeout int32 `db:"sl_timeout"`
-		StartTime time.Time `db:"sl_start_time"`
-		TotalCount int `db:"count_log"`
+		Lock           model.LockStatus `db:"sch_lock"`
+		LastUpdateTime time.Time        `db:"sch_modify_time"`
+		Timeout        int32            `db:"sl_timeout"`
+		StartTime      time.Time        `db:"sl_start_time"`
+		TotalCount     int              `db:"count_log"`
 	}
 
 	var testedData = &scheduleData{}
@@ -301,12 +301,12 @@ func assertLockedSchedule(scheduleContent *model.Schedule, expTime time.Time, ex
 		scheduleContent.Name, scheduleContent.Name,
 	)
 	Expect(testedData).To(PointTo(
-		MatchFields(IgnoreExtras, Fields {
-			"Lock": Equal(model.LOCKED),
+		MatchFields(IgnoreExtras, Fields{
+			"Lock":           Equal(model.LOCKED),
 			"LastUpdateTime": BeTemporally("~", expTime, time.Second),
-			"Timeout": Equal(scheduleContent.Timeout),
-			"StartTime": BeTemporally("~", expTime, time.Second),
-			"TotalCount": Equal(expLogCount),
+			"Timeout":        Equal(scheduleContent.Timeout),
+			"StartTime":      BeTemporally("~", expTime, time.Second),
+			"TotalCount":     Equal(expLogCount),
 		}),
 	))
 }

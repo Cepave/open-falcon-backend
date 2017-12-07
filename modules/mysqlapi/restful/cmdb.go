@@ -6,8 +6,8 @@ import (
 	"github.com/Cepave/open-falcon-backend/common/gin/mvc"
 	oJson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
 
 	"github.com/satori/go.uuid"
@@ -30,8 +30,8 @@ func addNewCmdbSync(
 		if cannotLockError, ok := err.(*model.UnableToLockSchedule); ok {
 			return mvc.JsonOutputBody2(
 				http.StatusBadRequest,
-				map[string]interface{} {
-					"error_code": 1,
+				map[string]interface{}{
+					"error_code":    1,
 					"error_message": cannotLockError.Error(),
 				},
 			)
@@ -41,8 +41,8 @@ func addNewCmdbSync(
 	}
 
 	return mvc.JsonOutputBody(
-		map[string]interface{} {
-			"sync_id": scheduleLog.GetUuidString(),
+		map[string]interface{}{
+			"sync_id":    scheduleLog.GetUuidString(),
 			"start_time": scheduleLog.StartTime.Unix(),
 		},
 	)
@@ -65,11 +65,11 @@ func getSyncTask(
 	}
 
 	return mvc.JsonOutputBody(
-		map[string]interface{} {
-			"status": scheduleLog.Status,
+		map[string]interface{}{
+			"status":     scheduleLog.Status,
 			"start_time": scheduleLog.StartTime.Unix(),
-			"end_time": oJson.JsonTime(scheduleLog.EndTime),
-			"timeout": scheduleLog.Timeout,
+			"end_time":   oJson.JsonTime(scheduleLog.EndTime),
+			"timeout":    scheduleLog.Timeout,
 		},
 	)
 }

@@ -230,8 +230,8 @@ var _ = Describe("[CMDB] syncHostgroupContaining", itSkip.PrependBeforeEach(func
 			`)
 		// relation data for sync
 		testCase := map[string][]string{
-			"cmdb-test-grp-b": []string{"cmdb-test-a", "cmdb-test-b"},
-			"cmdb-test-grp-c": []string{"cmdb-test-a", "cmdb-test-b"},
+			"cmdb-test-grp-b": {"cmdb-test-a", "cmdb-test-b"},
+			"cmdb-test-grp-c": {"cmdb-test-a", "cmdb-test-b"},
 		}
 		txProcessor := &syncHostgroupContaining{
 			relations: testCase,

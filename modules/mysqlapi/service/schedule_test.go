@@ -1,10 +1,10 @@
 package service
 
 import (
-	"sync"
-	"errors"
 	"database/sql"
+	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
@@ -55,11 +55,11 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 			Expect(scheduleLog).To(PointTo(
 				MatchFields(
 					IgnoreExtras,
-					Fields {
-						"Status": Equal(model.RUN),
+					Fields{
+						"Status":    Equal(model.RUN),
 						"StartTime": BeTemporally("<=", time.Now(), time.Millisecond),
-						"Timeout": BeEquivalentTo(300),
-						"SchId": BeNumerically(">", 0),
+						"Timeout":   BeEquivalentTo(300),
+						"SchId":     BeNumerically(">", 0),
 					},
 				),
 			))
@@ -109,8 +109,8 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 }))
 
 type scheduleLog struct {
-	Message sql.NullString `db:"sl_message"`
-	Status model.TaskStatus `db:"sl_status"`
+	Message sql.NullString   `db:"sl_message"`
+	Status  model.TaskStatus `db:"sl_status"`
 }
 
 func getContentOfScheduleLog(name string) *scheduleLog {

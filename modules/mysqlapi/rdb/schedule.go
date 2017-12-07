@@ -47,25 +47,25 @@ func FreeLock(
 ) {
 	txProcessor := &txFreeLock{
 		scheduleLog: scheduleLog,
-		status:   endStatus,
-		message:  endMsg,
-		endTime:  endTime,
+		status:      endStatus,
+		message:     endMsg,
+		endTime:     endTime,
 	}
 	DbFacade.SqlxDbCtrl.InTx(txProcessor)
 }
 
 type txFreeLock struct {
 	scheduleLog *model.OwlScheduleLog
-	endTime  time.Time
-	status   model.TaskStatus
-	message  string
+	endTime     time.Time
+	status      model.TaskStatus
+	message     string
 }
 
 func (self *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	/**
 	 * Release the lock directly rather than check the lock holder
 	 */
-	nullableMessage := sql.NullString{ Valid: false }
+	nullableMessage := sql.NullString{Valid: false}
 	if self.status == model.FAIL {
 		nullableMessage.String = self.message
 		nullableMessage.Valid = true
@@ -102,7 +102,7 @@ type txAcquireLock struct {
 	startTime time.Time
 
 	scheduleLog *model.OwlScheduleLog
-	lockError error
+	lockError   error
 }
 
 func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
@@ -113,8 +113,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 
 	// Builds error if the previous task is locked and is not timeout
 	if scheduleData.IsLocked() {
-		if existingLog := ack.getExistingLog(tx, scheduleData.Id);
-			existingLog != nil && !existingLog.IsTimeout(ack.startTime) {
+		if existingLog := ack.getExistingLog(tx, scheduleData.Id); existingLog != nil && !existingLog.IsTimeout(ack.startTime) {
 			ack.lockError = &model.UnableToLockSchedule{
 				LastStartTime: existingLog.StartTime,
 				AcquiredTime:  ack.startTime,
@@ -126,11 +125,11 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	// :~)
 
 	newLog := &model.OwlScheduleLog{
-		Uuid: cdb.DbUuid(uuid.NewV4()),
-		SchId: scheduleData.Id,
+		Uuid:      cdb.DbUuid(uuid.NewV4()),
+		SchId:     scheduleData.Id,
 		StartTime: ack.startTime,
-		Timeout: ack.schedule.Timeout,
-		Status: model.RUN,
+		Timeout:   ack.schedule.Timeout,
+		Status:    model.RUN,
 	}
 
 	/**

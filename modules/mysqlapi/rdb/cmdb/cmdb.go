@@ -15,8 +15,8 @@ const (
 )
 
 type hostTuple struct {
-	Hostname       string `db:"hostname"`
-	Ip             string `db:"ip"`
+	Hostname      string `db:"hostname"`
+	Ip            string `db:"ip"`
 	MaintainBegin uint32 `db:"maintain_begin"`
 	MaintainEnd   uint32 `db:"maintain_end"`
 }
@@ -136,8 +136,8 @@ func api2tuple(hosts []*cmdbModel.SyncHost) []*hostTuple {
 			end = MAINTAIN_PERIOD_END     // Thu, 07 Jan 2106 17:43:40 GMT
 		}
 		dbData = append(dbData, &hostTuple{
-			Hostname:       h.Name,
-			Ip:             h.IP,
+			Hostname:      h.Name,
+			Ip:            h.IP,
 			MaintainBegin: begin,
 			MaintainEnd:   end,
 		})

@@ -16,8 +16,8 @@ import (
 
 var dbFacade *f.DbFacade
 var clientConfig = tHttp.NewHttpClientConfigByFlag()
-var httpClientConfig = &tHttp.SlingClientConf{ clientConfig }
-var gentlemanClientConfig = &tHttp.GentlemanClientConf{ clientConfig }
+var httpClientConfig = &tHttp.SlingClientConf{clientConfig}
+var gentlemanClientConfig = &tHttp.GentlemanClientConf{clientConfig}
 
 func TestByGinkgo(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -46,7 +46,7 @@ var _ = AfterSuite(func() {
 })
 
 var (
-	httpMessage = tFlag.FeatureHelpString(tFlag.F_HttpClient)
+	httpMessage  = tFlag.FeatureHelpString(tFlag.F_HttpClient)
 	mysqlMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_PORTAL)
 
 	itSkipMessage = fmt.Sprintf(
@@ -55,7 +55,7 @@ var (
 	itSkip = tFlag.BuildSkipFactory(tFlag.F_HttpClient, httpMessage).Compose(
 		tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_PORTAL, mysqlMessage),
 	)
-	testFlags     = tFlag.NewTestFlags()
+	testFlags = tFlag.NewTestFlags()
 )
 
 func inTx(sql ...string) {

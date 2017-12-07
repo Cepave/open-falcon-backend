@@ -21,8 +21,8 @@ var (
 	ginkgoDb = &tDb.GinkgoDb{}
 	dbFacade = &f.DbFacade{}
 
-	itDbs    = tFlag.OWL_DB_PORTAL
-	itSkip        = tFlag.BuildSkipFactoryOfOwlDb(itDbs, tFlag.OwlDbHelpString(itDbs))
+	itDbs  = tFlag.OWL_DB_PORTAL
+	itSkip = tFlag.BuildSkipFactoryOfOwlDb(itDbs, tFlag.OwlDbHelpString(itDbs))
 )
 
 var _ = BeforeSuite(func() {

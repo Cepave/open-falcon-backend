@@ -1,9 +1,9 @@
 package model
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"time"
-	"database/sql/driver"
 
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
 )
@@ -26,10 +26,10 @@ func NewSchedule(name string, timeout int) *Schedule {
 }
 
 type OwlSchedule struct {
-	Id             int32       `db:"sch_id"`
-	Name           string    `db:"sch_name"`
-	Lock           LockStatus      `db:"sch_lock"`
-	LastUpdateTime time.Time `db:"sch_modify_time"`
+	Id             int32      `db:"sch_id"`
+	Name           string     `db:"sch_name"`
+	Lock           LockStatus `db:"sch_lock"`
+	LastUpdateTime time.Time  `db:"sch_modify_time"`
 }
 
 func (sch *OwlSchedule) IsLocked() bool {
@@ -38,11 +38,11 @@ func (sch *OwlSchedule) IsLocked() bool {
 
 type OwlScheduleLog struct {
 	Uuid      cdb.DbUuid `db:"sl_uuid"`
-	SchId     int32        `db:"sl_sch_id"`
+	SchId     int32      `db:"sl_sch_id"`
 	StartTime time.Time  `db:"sl_start_time"`
 	EndTime   cdb.DbTime `db:"sl_end_time"`
-	Timeout   int32        `db:"sl_timeout"`
-	Status    TaskStatus       `db:"sl_status"`
+	Timeout   int32      `db:"sl_timeout"`
+	Status    TaskStatus `db:"sl_status"`
 	Message   *string    `db:"sl_message"`
 }
 
@@ -68,8 +68,8 @@ func (t *UnableToLockSchedule) Error() string {
 	)
 }
 
-
 type LockStatus byte
+
 func (s *LockStatus) Scan(src interface{}) error {
 	*s = LockStatus(src.(int64))
 	return nil

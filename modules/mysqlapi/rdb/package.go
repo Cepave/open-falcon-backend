@@ -8,9 +8,9 @@ import (
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
 	graphdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/graph"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
 	apiOwlDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
 )
 
