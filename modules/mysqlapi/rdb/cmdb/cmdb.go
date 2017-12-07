@@ -3,10 +3,11 @@ package cmdb
 import (
 	"github.com/jmoiron/sqlx"
 
-	cmdbModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
-
 	commonDb "github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
+	"github.com/Cepave/open-falcon-backend/common/utils"
+
+	cmdbModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 )
 
 const (
@@ -34,43 +35,101 @@ type syncHostgroupContaining struct {
 }
 
 func (syncTx *syncHostgroupContaining) InTx(tx *sqlx.Tx) commonDb.TxFinale {
-	// delete all the grp relation that come_from = 1
-	tx.MustExec(`
-		DELETE FROM grp_host WHERE grp_id IN
-		(SELECT id FROM grp WHERE come_from = 1)
-	`)
 	// transform string string relation into temporary memory table
-	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS trel`)
+	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS tmp_hostgroup_host`)
 
 	tx.MustExec(`
-		CREATE TEMPORARY TABLE trel (
-			grp_name varchar(255) NOT NULL DEFAULT '',
-			hostname varchar(255) NOT NULL DEFAULT ''
-		) ENGINE=MEMORY DEFAULT CHARSET=utf8
+		CREATE TEMPORARY TABLE tmp_hostgroup_host (
+			hh_group_name varchar(255) NOT NULL,
+			hh_hostname varchar(255) NOT NULL,
+			PRIMARY KEY(hh_group_name, hh_hostname)
+		) DEFAULT CHARSET=utf8
     `)
 	txExt := sqlxExt.ToTxExt(tx)
-	namedStmt := txExt.PrepareNamed(`
-		INSERT INTO trel(grp_name, hostname)
-		VALUES (:gname, :hname)
-	`)
-	for key, val := range syncTx.relations {
-		for _, hname := range val {
-			m := map[string]interface{}{
-				"gname": key,
-				"hname": hname,
-			}
-			namedStmt.MustExec(m)
-		}
+
+	batchStmt := txExt.Preparex(
+		`
+		INSERT INTO tmp_hostgroup_host(hh_group_name, hh_hostname)
+		VALUES (?, ?), (?, ?), (?, ?), (?, ?),
+			(?, ?), (?, ?), (?, ?), (?, ?),
+			(?, ?), (?, ?), (?, ?), (?, ?)
+		`,
+	)
+	restStmt := txExt.Preparex(
+		`
+		INSERT INTO tmp_hostgroup_host(hh_group_name, hh_hostname)
+		VALUES (?, ?)
+		`,
+	)
+	for groupName, hosts := range syncTx.relations {
+		utils.MakeAbstractArray(hosts).BatchProcess(
+			12,
+			func(batch interface{}) {
+				batchStmt.Exec(
+					utils.FlattenToSlice(
+						batch,
+						func(v interface{}) []interface{} {
+							return []interface{} {
+								groupName, v,
+							}
+						},
+					)...,
+				)
+			},
+			func(rest interface{}) {
+				for _, hostName := range rest.([]string) {
+					restStmt.MustExec(
+						groupName, hostName,
+					)
+				}
+			},
+		)
 	}
 
-	// insert into grp_host
+	/**
+	 * Removes hosts which are not appeared in BOSS
+	 */
+	tx.MustExec(`
+		DELETE gh
+		FROM grp_host AS gh
+			INNER JOIN
+			grp gp
+			ON gh.grp_id = gp.id
+				AND gp.come_from = 1
+			INNER JOIN
+			host AS hs
+			ON hs.id = gh.host_id
+			LEFT OUTER JOIN
+			tmp_hostgroup_host AS hh
+			ON hs.hostname = hh.hh_hostname
+				AND gp.grp_name = hh.hh_group_name
+		WHERE hh.hh_hostname IS NULL AND
+			hh.hh_group_name IS NULL
+	`)
+	// :~)
+	/**
+	 * Adds hosts which are appeared in BOSS
+	 */
 	tx.MustExec(`
 		INSERT INTO grp_host (grp_id, host_id)
-		SELECT grp.id, host.id FROM grp, trel, host
-			WHERE grp.grp_name = trel.grp_name
-			AND host.hostname = trel.hostname
+		SELECT gp.id, hs.id
+		FROM tmp_hostgroup_host AS hh
+			INNER JOIN
+			grp gp
+			ON hh.hh_group_name = gp.grp_name
+			INNER JOIN
+			host AS hs
+			ON hh.hh_hostname = hs.hostname
+			LEFT OUTER JOIN
+			grp_host AS gh
+			ON hs.id = gh.host_id
+				AND gp.id = gh.grp_id
+		WHERE gh.host_id IS NULL
+			AND gh.grp_id IS NULL
 	`)
-	tx.MustExec(`DROP TEMPORARY TABLE trel`)
+	// :~)
+
+	tx.MustExec(`DROP TEMPORARY TABLE tmp_hostgroup_host`)
 	return commonDb.TxCommit
 }
 
@@ -78,11 +137,11 @@ func (syncTx *syncHostGroupTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS tempgrp`)
 	tx.MustExec(`
 		CREATE TEMPORARY TABLE tempgrp (
-			grp_name varchar(255) NOT NULL DEFAULT '',
-			create_user varchar(64) NOT NULL DEFAULT '',
-			come_from tinyint(4) NOT NULL DEFAULT '0',
+			grp_name varchar(255) NOT NULL,
+			create_user varchar(64) NOT NULL,
+			come_from tinyint(4) NOT NULL,
 			UNIQUE KEY idx_host_grp_grp_name (grp_name)
-		) ENGINE=MEMORY DEFAULT CHARSET=utf8
+		) DEFAULT CHARSET=utf8
     `)
 	/*
 	 *  multiple insertion with prepared statement
@@ -90,12 +149,42 @@ func (syncTx *syncHostGroupTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	 *  create_user = ?
 	 */
 	txExt := sqlxExt.ToTxExt(tx)
-	namedStmt := txExt.PrepareNamed(
-		`INSERT INTO tempgrp (grp_name, create_user, come_from)
-		 VALUES (:name, :creator, 1)`)
-	for _, s := range syncTx.groups {
-		namedStmt.MustExec(s)
-	}
+
+	batchStmt := txExt.Preparex(
+		`
+		INSERT INTO tempgrp (grp_name, create_user, come_from)
+		VALUES (?, ?, 1), (?, ?, 1), (?, ?, 1), (?, ?, 1),
+			 (?, ?, 1), (?, ?, 1), (?, ?, 1), (?, ?, 1),
+			 (?, ?, 1), (?, ?, 1), (?, ?, 1), (?, ?, 1)
+		`,
+	)
+	restStmt := txExt.PrepareNamed(
+		`
+		INSERT INTO tempgrp (grp_name, create_user, come_from)
+		VALUES (:name, :creator, 1)
+		`,
+	)
+	utils.MakeAbstractArray(syncTx.groups).BatchProcess(
+		12,
+		func(batch interface{}) {
+			batchStmt.MustExec(
+				utils.FlattenToSlice(
+					batch,
+					func(group interface{}) []interface{} {
+						groupData := group.(*cmdbModel.SyncHostGroup)
+						return []interface{} {
+							groupData.Name, groupData.Creator,
+						}
+					},
+				)...,
+			)
+		},
+		func(rest interface{}) {
+			for _, group := range rest.([]*cmdbModel.SyncHostGroup) {
+				restStmt.MustExec(group)
+			}
+		},
+	)
 	// :~)
 
 	/*
@@ -149,23 +238,52 @@ func (syncTx *syncHostTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 	tx.MustExec(`DROP TEMPORARY TABLE IF EXISTS temp_host`)
 	tx.MustExec(`
 		CREATE TEMPORARY TABLE temp_host (
-			hostname varchar(255) NOT NULL DEFAULT '',
-			ip varchar(16) NOT NULL DEFAULT '',
-			maintain_begin int(10) unsigned NOT NULL DEFAULT '0',
-			maintain_end int(10) unsigned NOT NULL DEFAULT '0',
-			UNIQUE KEY idx_host_hostname (hostname)
-    	) ENGINE=MEMORY AUTO_INCREMENT=7 DEFAULT CHARSET=utf8
+			hostname varchar(255) NOT NULL PRIMARY KEY,
+			ip varchar(16) NOT NULL,
+			maintain_begin int(10) unsigned NOT NULL,
+			maintain_end int(10) unsigned NOT NULL
+    	) DEFAULT CHARSET=utf8
      `)
 	/*
 	 *  multiple insertion with prepared statement
 	 */
 	txExt := sqlxExt.ToTxExt(tx)
-	namedStmt := txExt.PrepareNamed(
-		`INSERT INTO temp_host (hostname, ip, maintain_begin, maintain_end)
-		 VALUES (:hostname, :ip, :maintain_begin, :maintain_end)`)
-	for _, s := range syncTx.hosts {
-		namedStmt.MustExec(s)
-	}
+
+	batchStmt := txExt.Preparex(
+		`
+		INSERT INTO temp_host (hostname, ip, maintain_begin, maintain_end)
+		VALUES (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?),
+			 (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)
+		`,
+	)
+	restStmt := txExt.PrepareNamed(
+		`
+		INSERT INTO temp_host (hostname, ip, maintain_begin, maintain_end)
+		VALUES (:hostname, :ip, :maintain_begin, :maintain_end)
+		`,
+	)
+	utils.MakeAbstractArray(syncTx.hosts).BatchProcess(
+		8,
+		func(batch interface{}) {
+			batchStmt.Exec(
+				utils.FlattenToSlice(
+					batch,
+					func(host interface{}) []interface{} {
+						hostData := host.(*hostTuple)
+						return []interface{} {
+							hostData.Hostname, hostData.Ip,
+							hostData.MaintainBegin, hostData.MaintainEnd,
+						}
+					},
+				)...,
+			)
+		},
+		func(rest interface{}) {
+			for _, host := range rest.([]*hostTuple) {
+				restStmt.MustExec(host)
+			}
+		},
+	)
 	// :~)
 
 	/*

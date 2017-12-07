@@ -210,28 +210,29 @@ var _ = Describe("[CMDB] syncHostgroupContaining", itSkip.PrependBeforeEach(func
 	BeforeEach(func() {
 		inTx(
 			`
-			INSERT INTO host (id, hostname)
-			VALUES (1, "cmdb-test-a"),
-			       (2, "cmdb-test-b"),
-				   (3, "cmdb-test-c")
+			INSERT INTO grp (id, grp_name, come_from)
+			VALUES (10021, "cmdb-test-grp-a", 0),
+				(10022, "cmdb-test-grp-b", 1),
+				(10023, "cmdb-test-grp-c", 1),
+				(10024, "cmdb-test-grp-d", 1)
 			`,
 			`
-			INSERT INTO grp (id, grp_name, come_from)
-			VALUES (10, "cmdb-test-grp-a", 0),
-				   (20, "cmdb-test-grp-b", 1),
-				   (30, "cmdb-test-grp-c", 1)
+			INSERT INTO host (id, hostname)
+			VALUES (91081, "cmdb-test-a"),
+				(91082, "cmdb-test-b"),
+				(91083, "cmdb-test-c"),
+				(91084, "cmdb-test-d")
 			`,
 			`
 			INSERT INTO grp_host(grp_id, host_id)
-			VALUES (10, 1),
-			       (10, 2),
-				   (20, 2),
-				   (30, 3)
-			`)
+			VALUES (10021, 91081), (10021, 91082), (10022, 91083), (10023, 91084),
+				(10024, 91081), (10024, 91082)
+			`,
+		)
 		// relation data for sync
 		testCase := map[string][]string{
-			"cmdb-test-grp-b": {"cmdb-test-a", "cmdb-test-b"},
-			"cmdb-test-grp-c": {"cmdb-test-a", "cmdb-test-b"},
+			"cmdb-test-grp-b": {"cmdb-test-a", "cmdb-test-c"},
+			"cmdb-test-grp-c": {"cmdb-test-a", "cmdb-test-b", "cmdb-test-c"},
 		}
 		txProcessor := &syncHostgroupContaining{
 			relations: testCase,
@@ -240,45 +241,70 @@ var _ = Describe("[CMDB] syncHostgroupContaining", itSkip.PrependBeforeEach(func
 	})
 	AfterEach(func() {
 		inTx(
-			`DELETE FROM grp_host WHERE grp_id IN (SELECT id FROM grp)`,
-			`DELETE FROM grp_host WHERE host_id IN (SELECT id FROM host)`,
+			`DELETE FROM grp_host`,
 			`DELETE FROM host WHERE hostname LIKE "cmdb-test-%"`,
 			`DELETE FROM grp WHERE grp_name LIKE "cmdb-test-grp-%"`,
 		)
 	})
 	Context("Total number of relations after importing (4 records before)", func() {
-		It("The number should be 6.", func() {
+		It("The number should be 7.", func() {
 			var count int
 			DbFacade.NewSqlxDbCtrl().Get(&count, "SELECT COUNT(*) FROM grp_host")
-			Expect(count).To(Equal(6))
+			Expect(count).To(Equal(7))
 		})
 	})
-	Context("For relations with hostgroup which come from UI ('grp_host.come_from' is 0)", func() {
+	Context("For relations of hostgroup which come from UI ('grp_host.come_from' is 0)", func() {
 		It("The ralations should be intact", func() {
 			var hids []int
 			DbFacade.NewSqlxDbCtrl().Select(
 				&hids,
 				`
 				SELECT host_id FROM grp_host
-				WHERE grp_id = 10
-					ORDER BY host_id
+				WHERE grp_id = 10021
+				ORDER BY host_id
 				`,
 			)
-			Expect(hids).To(Equal([]int{1, 2}))
+			Expect(hids).To(Equal([]int{ 91081, 91082 }))
 		})
 	})
-	Context("For relations with hostgroup which come_from BOSS ('grp_host.come_from' is 1)", func() {
-		It("The relations should be updated", func() {
+	Context("For relations of hostgroup which come_from BOSS ('grp_host.come_from' is 1)", func() {
+		It("The relations with added hosts", func() {
 			var hids []int
 			DbFacade.NewSqlxDbCtrl().Select(
 				&hids,
 				`
 				SELECT host_id FROM grp_host
-				WHERE grp_id = 20
-					ORDER BY host_id
+				WHERE grp_id = 10022
+				ORDER BY host_id
 				`,
 			)
-			Expect(hids).To(Equal([]int{1, 2}))
+			Expect(hids).To(Equal([]int{ 91081, 91083 }))
+		})
+
+		It("The relations with different set(totally)", func() {
+			var hids []int
+			DbFacade.NewSqlxDbCtrl().Select(
+				&hids,
+				`
+				SELECT host_id FROM grp_host
+				WHERE grp_id = 10023
+				ORDER BY host_id
+				`,
+			)
+			Expect(hids).To(Equal([]int{ 91081, 91082, 91083 }))
+		})
+	})
+	Context("For relations no hosts", func() {
+		It("The relations with added hosts", func() {
+			var count int
+			DbFacade.NewSqlxDbCtrl().Get(
+				&count,
+				`
+				SELECT COUNT(host_id) FROM grp_host
+				WHERE grp_id = 10024
+				`,
+			)
+			Expect(count).To(Equal(0))
 		})
 	})
 }))
