@@ -1,12 +1,7 @@
 package boss
 
 import (
-	"github.com/jmoiron/sqlx"
-
 	bossModel "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
-
-	commonDb "github.com/Cepave/open-falcon-backend/common/db"
-	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 )
 
 // Get the Data from boss.hosts
