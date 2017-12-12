@@ -26,7 +26,7 @@ func buildProcOfVacuumGraphIndex(beforeDays int) func() {
 	}
 }
 
-func clearLogs(forDays int) func() {
+func buildProcOfClearTaskLogs(forDays int) func() {
 	return func() {
 		logger.Infof("[Start] Clear task log entries. For days: %d", forDays)
 

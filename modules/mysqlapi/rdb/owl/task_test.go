@@ -12,53 +12,47 @@ var _ = Describe("owl_schedule_log", itSkip.PrependBeforeEach(func() {
 		BeforeEach(func() {
 			inTx(
 				`
-          INSERT INTO owl_schedule(
-            sch_id, sch_name, sch_lock, sch_modify_time
-          )
-          VALUES
-          (
-            1, 'test-schedule-1', 0, '2014-05-01T00:00:00'
-          ),
-          (
-            2, 'test-schedule-2', 0, '2014-05-01T00:00:00'
-          ),
-          (
-            3, 'test-schedule-3', 0, '2014-05-01T00:00:00'
-          )
-        `,
+				INSERT INTO owl_schedule(
+					sch_id, sch_name, sch_lock, sch_modify_time
+				)
+				VALUES
+					(1, 'test-schedule-1', 0, '2014-05-01T00:00:00'),
+					(2, 'test-schedule-2', 0, '2014-05-01T00:00:00'),
+					(3, 'test-schedule-3', 0, '2014-05-01T00:00:00')
+				`,
 				`
-        INSERT INTO owl_schedule_log(
-          sl_uuid, sl_sch_id,
-          sl_start_time, sl_end_time, sl_timeout,
-          sl_status, sl_message
-        )
-        VALUES
-        (
-          x'209f18f4f89b42568e1e5270987c057d', 1,
-          '2014-05-06T20:14:43', '2014-05-07T20:14:43', 172800,
-          0, 'test-schedule-1'
-        ),
-        (
-          x'7011e902d4a848c184e242e8d71aa961', 1,
-          '2014-04-06T20:14:43', '2014-04-07T20:14:43', 172800,
-          0, 'test-schedule-1'
-        ),
-        (
-          x'349f18f4f89b42568e1e5270987c057d', 2,
-          '2014-05-06T20:14:43', '2014-05-07T20:14:43', 172800,
-          0, 'test-schedule-2'
-        ),
-        (
-          x'bdfa89f3df204071b2f48b359440e0fc', 2,
-          '2014-04-16T20:14:43', NULL, 172800,
-          2, 'test-schedule-2'
-        ),
-        (
-          x'109f1cf4f89b42568e1e5270987c057d', 3,
-          '2014-05-06T20:14:43', '2014-05-07T20:14:43', 172800,
-          0, 'test-schedule-3'
-        )
-        `,
+				INSERT INTO owl_schedule_log(
+				  sl_uuid, sl_sch_id,
+				  sl_start_time, sl_end_time, sl_timeout,
+				  sl_status, sl_message
+				)
+				VALUES
+				(
+				  x'209f18f4f89b42568e1e5270987c057d', 1,
+				  '2014-05-06T20:14:43', '2014-05-07T20:14:43', 172800,
+				  0, 'test-schedule-1'
+				),
+				(
+				  x'7011e902d4a848c184e242e8d71aa961', 1,
+				  '2014-04-06T20:14:43', '2014-04-07T20:14:43', 172800,
+				  0, 'test-schedule-1'
+				),
+				(
+				  x'349f18f4f89b42568e1e5270987c057d', 2,
+				  '2014-05-06T20:14:43', '2014-05-07T20:14:43', 172800,
+				  0, 'test-schedule-2'
+				),
+				(
+				  x'bdfa89f3df204071b2f48b359440e0fc', 2,
+				  '2014-04-16T20:14:43', NULL, 172800,
+				  2, 'test-schedule-2'
+				),
+				(
+				  x'109f1cf4f89b42568e1e5270987c057d', 3,
+				  '2014-05-06T20:14:43', '2014-05-07T20:14:43', 172800,
+				  0, 'test-schedule-3'
+				)
+				`,
 			)
 		})
 

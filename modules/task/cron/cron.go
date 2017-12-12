@@ -80,7 +80,7 @@ func (c *ClearTaskLogEntriesConf) getSchedule() string {
 	return c.Cron
 }
 func (c *ClearTaskLogEntriesConf) buildJob() func() {
-	return clearLogs(c.ForDays)
+	return buildProcOfClearTaskLogs(c.ForDays)
 }
 
 func NewCronServices(config *TaskCronConfig) *TaskCronService {
