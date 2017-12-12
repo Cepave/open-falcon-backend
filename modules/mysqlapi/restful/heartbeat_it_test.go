@@ -80,19 +80,19 @@ func (s *TestHeartbeatItSuite) TearDownSuite(c *ch.C) {
 }
 
 func (s *TestHeartbeatItSuite) TearDownTest(c *ch.C) {
-	inTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
+	inPortalTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
 	case "TestHeartbeatItSuite.TestFalconAgentHeartbeat":
-		inTx(
+		inPortalTx(
 			`DELETE FROM host WHERE hostname LIKE 'mysqlapi-it-tc1-%'`,
 		)
 	}
 }
 
-var _ = Describe("Test TestNqmAgentHeartbeat()", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Test TestNqmAgentHeartbeat()", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(
+		inPortalTx(
 			test.DeleteNqmAgentSQL,
 			test.DeleteHostSQL,
 			test.ResetAutoIncForNqmAgent,
@@ -105,7 +105,7 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", itSkip.PrependBeforeEach(func()
 	})
 
 	AfterEach(func() {
-		inTx(test.ClearNqmAgent...)
+		inPortalTx(test.ClearNqmAgent...)
 	})
 
 	DescribeTable("update an existent agent or instert a new agent", func(inputConnId string, inputHostname string, inputIPAddr string) {
@@ -139,9 +139,9 @@ var _ = Describe("Test TestNqmAgentHeartbeat()", itSkip.PrependBeforeEach(func()
 	)
 }))
 
-var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(
+		inPortalTx(
 			test.DeleteNqmAgentSQL,
 			test.DeleteHostSQL,
 			test.ResetAutoIncForNqmAgent,
@@ -157,7 +157,7 @@ var _ = Describe("Test TestNqmAgentHeartbeatTargetList()", itSkip.PrependBeforeE
 	})
 
 	AfterEach(func() {
-		inTx(
+		inPortalTx(
 			test.DeleteNqmAgentPingtaskSQL,
 			test.DeletetNqmPingtaskSQL,
 			test.DeleteNqmtargetSQL,

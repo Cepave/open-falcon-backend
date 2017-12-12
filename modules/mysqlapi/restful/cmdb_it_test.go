@@ -8,7 +8,6 @@ import (
 	oJson "github.com/Cepave/open-falcon-backend/common/json"
 	oGko "github.com/Cepave/open-falcon-backend/common/testing/ginkgo"
 	gb "github.com/Cepave/open-falcon-backend/common/testing/ginkgo/builder"
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -16,58 +15,51 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 )
 
-var _ = Describe("[POST] /api/v1/cmdb/sync", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[POST] /api/v1/cmdb/sync", itSkipForCmdb.PrependBeforeEach(func() {
 	setupImportAndAssertion(
 		gb.NewGinkgoBuilder("Imports new data of host/host groups"),
-		&model.SyncForAdding{
-			Hosts: []*model.SyncHost{
-				{Name: "it.h01.gp1", IP: "10.6.51.1", Activate: 1},
-				{Name: "it.h01.gp2", IP: "10.6.51.2", Activate: 1},
-				{Name: "it.h01.gp3", IP: "10.6.51.3", Activate: 0},
-			},
-			Hostgroups: []*model.SyncHostGroup{
-				{Name: "it-g01", Creator: "it-user-91"},
-				{Name: "it-g02", Creator: "it-user-91"},
-			},
-			Relations: map[string][]string{
-				"it-g01": {"it.h01.gp1", "it.h01.gp2"},
-				"it-g02": {"it.h01.gp3"},
-			},
-		},
 		3, 2,
-	).ToContext()
+	).
+		BeforeFirst(func() {
+			inBossTx(
+				`
+				INSERT INTO hosts(hostname, activate, platform, ip, isp, exist)
+				VALUES
+					('it.h01.gp1', 1, 'it-g01', '10.6.51.1', '', 1),
+					('it.h01.gp2', 1, 'it-g01', '10.6.51.2', '', 1),
+					('it.h01.gp3', 1, 'it-g02', '10.6.51.2', '', 1)
+				`,
+			)
+		}).
+	ToContext()
 
 	setupImportAndAssertion(
 		gb.NewGinkgoBuilder("Imports over existing data"),
-		&model.SyncForAdding{
-			Hosts: []*model.SyncHost{
-				{Name: "it.h01.gp1", IP: "10.6.51.1", Activate: 1},
-				{Name: "it.h01.gp4", IP: "10.6.51.2", Activate: 1},
-				{Name: "it.h01.gp5", IP: "10.6.51.3", Activate: 0},
-			},
-			Hostgroups: []*model.SyncHostGroup{
-				{Name: "it-g01", Creator: "it-user-91"},
-				{Name: "it-g03", Creator: "it-user-82"},
-			},
-			Relations: map[string][]string{
-				"it-g01": {"it.h01.gp1", "it.h01.gp4"},
-				"it-g03": {"it.h01.gp5"},
-			},
-		},
 		5, 3,
 	).
 		BeforeFirst(func() {
 			time.Sleep(1 * time.Second)
+
+			inBossTx(
+				`
+				INSERT INTO hosts(hostname, activate, platform, ip, isp, exist)
+				VALUES
+					('it.h01.gp4', 1, 'it-g01', '10.6.51.4', '', 1),
+					('it.h01.gp5', 1, 'it-g03', '10.6.51.5', '', 1)
+				`,
+			)
 		}).
 		AfterLast(func() {
 			cleanImportData()
-		}).ToContext()
+			cleanBossData()
+		}).
+	ToContext()
 }))
 
-var _ = Describe("[GET] /api/v1/cmdb/sync/:uuid", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[GET] /api/v1/cmdb/sync/:uuid", itSkipOnPortal.PrependBeforeEach(func() {
 	Context("Found schedule log", func() {
 		BeforeEach(func() {
-			inTx(
+			inPortalTx(
 				`
 				INSERT INTO owl_schedule(sch_id, sch_name, sch_lock, sch_modify_time)
 				VALUES(312, 'gp.009', 0, NOW())
@@ -83,7 +75,7 @@ var _ = Describe("[GET] /api/v1/cmdb/sync/:uuid", itSkip.PrependBeforeEach(func(
 			)
 		})
 		AfterEach(func() {
-			inTx(
+			inPortalTx(
 				`
 				DELETE FROM owl_schedule_log
 				WHERE sl_sch_id = 312
@@ -140,13 +132,12 @@ var _ = Describe("[GET] /api/v1/cmdb/sync/:uuid", itSkip.PrependBeforeEach(func(
 
 func setupImportAndAssertion(
 	ginkgoBuilder *gb.GinkgoBuilder,
-	importData interface{}, expectedHosts int, expectedHostgroups int,
+	expectedHosts int, expectedHostgroups int,
 ) *gb.GinkgoBuilder {
 	ginkgoBuilder.
 		It("The job should be started successfully", func() {
 			resp, err := gentlemanClientConfig.NewClient().
 				Path("/api/v1/cmdb/sync").Post().
-				JSON(importData).
 				Send()
 
 			Expect(err).To(Succeed())
@@ -163,7 +154,7 @@ func setupImportAndAssertion(
 				func() int {
 					var isReady int
 
-					dbFacade.SqlxDbCtrl.Get(
+					portalDbFacade.SqlxDbCtrl.Get(
 						&isReady,
 						`
 						SELECT COUNT(*) FROM owl_schedule
@@ -183,7 +174,7 @@ func setupImportAndAssertion(
 				CountHostGroups int `db:"count_hostgroups"`
 			}{}
 
-			dbFacade.SqlxDbCtrl.Get(
+			portalDbFacade.SqlxDbCtrl.Get(
 				countHolder,
 				`
 				SELECT
@@ -211,8 +202,17 @@ func setupImportAndAssertion(
 	return ginkgoBuilder
 }
 
+func cleanBossData() {
+	inBossTx(
+		`
+		DELETE FROM hosts
+		WHERE hostname LIKe 'it.h01%'
+		`,
+	)
+}
+
 func cleanImportData() {
-	inTx(
+	inPortalTx(
 		`
 		DELETE owl_schedule_log
 		FROM owl_schedule_log
@@ -236,6 +236,8 @@ func cleanImportData() {
 		`
 		DELETE FROM grp
 		WHERE grp_name LIKE 'it-%'
+			OR
+			grp_name = 'Owl_Default_Group'
 		`,
 		`
 		DELETE FROM host

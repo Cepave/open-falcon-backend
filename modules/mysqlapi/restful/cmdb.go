@@ -7,45 +7,34 @@ import (
 	oJson "github.com/Cepave/open-falcon-backend/common/json"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
-	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service"
+	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/service/cmdb"
 
 	"github.com/satori/go.uuid"
 )
 
-func addNewCmdbSync(
-	sourceData *model.SyncForAdding,
-) mvc.OutputBody {
-	task := model.NewSchedule("import.imdb", 300)
+func addNewCmdbSync() mvc.OutputBody {
+	scheduleLog, err := cmdb.SyncDataFromBoss()
 
-	scheduleLog, err := service.ScheduleService.Execute(
-		task,
-		func() error {
-			cmdb.SyncForHosts(sourceData)
-			return nil
-		},
-	)
-
-	if err != nil {
-		if cannotLockError, ok := err.(*model.UnableToLockSchedule); ok {
-			return mvc.JsonOutputBody2(
-				http.StatusBadRequest,
-				map[string]interface{}{
-					"error_code":    1,
-					"error_message": cannotLockError.Error(),
-				},
-			)
-		} else {
-			panic(err)
-		}
+	if err == nil {
+		return mvc.JsonOutputBody(
+			map[string]interface{}{
+				"sync_id":    scheduleLog.GetUuidString(),
+				"start_time": scheduleLog.StartTime.Unix(),
+			},
+		)
 	}
 
-	return mvc.JsonOutputBody(
-		map[string]interface{}{
-			"sync_id":    scheduleLog.GetUuidString(),
-			"start_time": scheduleLog.StartTime.Unix(),
-		},
-	)
+	if cannotLockError, ok := err.(*model.UnableToLockSchedule); ok {
+		return mvc.JsonOutputBody2(
+			http.StatusBadRequest,
+			map[string]interface{}{
+				"error_code":    1,
+				"error_message": cannotLockError.Error(),
+			},
+		)
+	} else {
+		panic(err)
+	}
 }
 
 func getSyncTask(

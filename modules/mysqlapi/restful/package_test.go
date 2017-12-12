@@ -14,7 +14,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var dbFacade *f.DbFacade
 var clientConfig = tHttp.NewHttpClientConfigByFlag()
 var httpClientConfig = &tHttp.SlingClientConf{clientConfig}
 var gentlemanClientConfig = &tHttp.GentlemanClientConf{clientConfig}
@@ -28,6 +27,7 @@ func TestByCheck(t *testing.T) {
 	ch.TestingT(t)
 }
 
+var testFlags = tFlag.NewTestFlags()
 func itSkipForGocheck(c *ch.C) {
 	if !testFlags.HasHttpClient() ||
 		!testFlags.HasMySqlOfOwlDb(tFlag.OWL_DB_PORTAL) {
@@ -37,27 +37,47 @@ func itSkipForGocheck(c *ch.C) {
 
 var ginkgoDb = &tDb.GinkgoDb{}
 var _ = BeforeSuite(func() {
-	dbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_PORTAL)
+	portalDbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_PORTAL)
+	bossDbFacade = ginkgoDb.InitDbFacadeByFlag(tFlag.OWL_DB_BOSS)
 })
 
 var _ = AfterSuite(func() {
-	ginkgoDb.ReleaseDbFacade(dbFacade)
-	dbFacade = nil
+	ginkgoDb.ReleaseDbFacade(portalDbFacade)
+	ginkgoDb.ReleaseDbFacade(bossDbFacade)
+
+	portalDbFacade = nil
+	bossDbFacade = nil
 })
 
 var (
 	httpMessage  = tFlag.FeatureHelpString(tFlag.F_HttpClient)
-	mysqlMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_PORTAL)
+	portalMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_PORTAL)
 
 	itSkipMessage = fmt.Sprintf(
-		"%s; %s", httpMessage, mysqlMessage,
+		"%s; %s", httpMessage, portalMessage,
 	)
-	itSkip = tFlag.BuildSkipFactory(tFlag.F_HttpClient, httpMessage).Compose(
-		tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_PORTAL, mysqlMessage),
+
+	httpClientSkip = tFlag.BuildSkipFactory(tFlag.F_HttpClient, httpMessage)
+
+	itSkipOnPortal = httpClientSkip.Compose(
+		tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_PORTAL, portalMessage),
 	)
-	testFlags = tFlag.NewTestFlags()
+
+	cmdbFlags = (tFlag.OWL_DB_PORTAL | tFlag.OWL_DB_BOSS)
+	itSkipForCmdb = httpClientSkip.Compose(
+		tFlag.BuildSkipFactoryOfOwlDb(
+			cmdbFlags,
+			tFlag.OwlDbHelpString(cmdbFlags),
+		),
+	)
 )
 
-func inTx(sql ...string) {
-	dbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
+var portalDbFacade *f.DbFacade
+func inPortalTx(sql ...string) {
+	portalDbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
+}
+
+var bossDbFacade *f.DbFacade
+func inBossTx(sql ...string) {
+	bossDbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
 }

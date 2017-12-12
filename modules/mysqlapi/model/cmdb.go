@@ -7,20 +7,20 @@ import (
 )
 
 type SyncHost struct {
-	Activate int    `json:"activate"`
-	Name     string `json:"name"`
-	IP       string `json:"ip"`
+	Activate int
+	Name string
+	IP string
 }
 
 type SyncHostGroup struct {
-	Creator string `json:"creator"`
-	Name    string `json:"name"`
+	Creator string
+	Name string
 }
 
 type SyncForAdding struct {
-	Hosts      []*SyncHost         `json:"hosts"`
-	Hostgroups []*SyncHostGroup    `json:"hostgroups"`
-	Relations  map[string][]string `json:"relations"`
+	Hosts      []*SyncHost
+	Hostgroups []*SyncHostGroup
+	Relations  map[string][]string
 }
 
 func (p *SyncForAdding) Bind(c *gin.Context) {

@@ -18,9 +18,9 @@ func sPtr(v string) *string {
 	return &v
 }
 
-var _ = Describe("Getting NQM agent by id", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Getting NQM agent by id", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(
+		inPortalTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
 			VALUES(407, 'nt-rest-01')
@@ -51,7 +51,7 @@ var _ = Describe("Getting NQM agent by id", itSkip.PrependBeforeEach(func() {
 	})
 
 	AfterEach(func() {
-		inTx(
+		inPortalTx(
 			`DELETE FROM nqm_agent WHERE ag_id = 36771`,
 			`DELETE FROM host WHERE id = 25101`,
 			`DELETE FROM owl_name_tag WHERE nt_id = 407`,
@@ -78,9 +78,9 @@ var _ = Describe("Getting NQM agent by id", itSkip.PrependBeforeEach(func() {
 	})
 }))
 
-var _ = Describe("Adding new NQM agent", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Adding new NQM agent", itSkipOnPortal.PrependBeforeEach(func() {
 	AfterEach(func() {
-		inTx(
+		inPortalTx(
 			"DELETE FROM nqm_agent WHERE ag_connection_id LIKE 'add-agent%'",
 			"DELETE FROM host WHERE hostname = 'new-host-cccc'",
 			"DELETE FROM owl_name_tag where nt_value LIKE 'add-agent-%'",
@@ -167,9 +167,9 @@ var _ = Describe("Adding new NQM agent", itSkip.PrependBeforeEach(func() {
 	})
 }))
 
-var _ = Describe("Listing agents", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Listing agents", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(
+		inPortalTx(
 			`
 			INSERT INTO host(id, hostname, agent_version, plugin_version)
 			VALUES(22091, 'agent-it-01', '', '')
@@ -184,7 +184,7 @@ var _ = Describe("Listing agents", itSkip.PrependBeforeEach(func() {
 	})
 
 	AfterEach(func() {
-		inTx(
+		inPortalTx(
 			"DELETE FROM nqm_agent WHERE ag_id >= 4321 AND ag_id <= 4323",
 			"DELETE FROM host WHERE id = 22091",
 		)
@@ -203,13 +203,13 @@ var _ = Describe("Listing agents", itSkip.PrependBeforeEach(func() {
 	})
 }))
 
-var _ = Describe("Listing targets of agent(ping list)", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Listing targets of agent(ping list)", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(nqmSql.InitNqmCacheAgentPingList...)
+		inPortalTx(nqmSql.InitNqmCacheAgentPingList...)
 	})
 
 	AfterEach(func() {
-		inTx(nqmSql.ClearNqmCacheAgentPingList...)
+		inPortalTx(nqmSql.ClearNqmCacheAgentPingList...)
 	})
 
 	pInt64 := func(v int64) *int64 { return &v }
@@ -252,13 +252,13 @@ var _ = Describe("Listing targets of agent(ping list)", itSkip.PrependBeforeEach
 	})
 }))
 
-var _ = Describe("Clearing cache of target(ping list) on a agent", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Clearing cache of target(ping list) on a agent", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(nqmSql.InitNqmCacheAgentPingList...)
+		inPortalTx(nqmSql.InitNqmCacheAgentPingList...)
 	})
 
 	AfterEach(func() {
-		inTx(nqmSql.ClearNqmCacheAgentPingList...)
+		inPortalTx(nqmSql.ClearNqmCacheAgentPingList...)
 	})
 
 	callApi := func(agentId int) *tHttp.ResponseResult {
@@ -301,9 +301,9 @@ var _ = Describe("Clearing cache of target(ping list) on a agent", itSkip.Prepen
 	})
 }))
 
-var _ = Describe("Modifying NQM agent", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Modifying NQM agent", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(
+		inPortalTx(
 			`
 			INSERT INTO owl_name_tag(nt_id, nt_value)
 			VALUES(8461, 'rest-nt-1')
@@ -328,7 +328,7 @@ var _ = Describe("Modifying NQM agent", itSkip.PrependBeforeEach(func() {
 	})
 
 	AfterEach(func() {
-		inTx(
+		inPortalTx(
 			"DELETE FROM nqm_agent WHERE ag_id = 23041",
 			"DELETE FROM host WHERE id = 4401",
 			"DELETE FROM owl_name_tag WHERE nt_value LIKE 'rest-nt-%'",

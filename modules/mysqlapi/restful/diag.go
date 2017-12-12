@@ -10,6 +10,7 @@ import (
 func health() mvc.OutputBody {
 	portalRdbDiag := rdb.GlobalDbHolder.Diagnose(rdb.DB_PORTAL)
 	graphRdbDiag := rdb.GlobalDbHolder.Diagnose(rdb.DB_GRAPH)
+	bossRdbDiag := rdb.GlobalDbHolder.Diagnose(rdb.DB_BOSS)
 
 	health := &apiModel.HealthView{
 		Rdb: &apiModel.AllRdbHealth{
@@ -19,6 +20,7 @@ func health() mvc.OutputBody {
 			PingMessage:     portalRdbDiag.PingMessage,
 			Portal:          portalRdbDiag,
 			Graph:           graphRdbDiag,
+			Boss:           bossRdbDiag,
 		},
 		Http: &apiModel.Http{
 			Listening: GinConfig.GetAddress(),
