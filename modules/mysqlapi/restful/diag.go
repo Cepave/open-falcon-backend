@@ -20,7 +20,7 @@ func health() mvc.OutputBody {
 			PingMessage:     portalRdbDiag.PingMessage,
 			Portal:          portalRdbDiag,
 			Graph:           graphRdbDiag,
-			Boss:           bossRdbDiag,
+			Boss:            bossRdbDiag,
 		},
 		Http: &apiModel.Http{
 			Listening: GinConfig.GetAddress(),

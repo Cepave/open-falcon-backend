@@ -110,7 +110,7 @@ var _ = Describe("Abstract Array", func() {
 	})
 
 	Context("BatchProcess()", func() {
-		sampleData := []int{ 10, 11, 22, 33, 71, 32 }
+		sampleData := []int{10, 11, 22, 33, 71, 32}
 
 		DescribeTable("The result slice should be as same as original",
 			func(batchSize int) {
@@ -146,22 +146,22 @@ var _ = Describe("FlattenToSlice()", func() {
 			Expect(testedResult).To(Equal(expectedResult))
 		},
 		Entry("Normal flatten",
-			[]int{ 20, 30, 40 },
+			[]int{20, 30, 40},
 			func(v interface{}) []interface{} {
-				return []interface{} {
+				return []interface{}{
 					v, v.(int) + 2,
 				}
 			},
-			[]interface{} {
+			[]interface{}{
 				20, 22, 30, 32, 40, 42,
 			},
 		),
 		Entry("Empty slice",
 			[]int{},
 			func(v interface{}) []interface{} {
-				return []interface{} { v, v }
+				return []interface{}{v, v}
 			},
-			[]interface{} {},
+			[]interface{}{},
 		),
 	)
 })

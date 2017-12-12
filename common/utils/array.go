@@ -278,7 +278,7 @@ func (a *AbstractArray) BatchProcess(
 			reflect.SliceOf(a.arrayElementType), 0, batchSize,
 		)
 		for b := 0; b < batchSize; b++ {
-			batchSlice = reflect.Append(batchSlice, valueOfAnyArray.Index(i + b))
+			batchSlice = reflect.Append(batchSlice, valueOfAnyArray.Index(i+b))
 		}
 		batchProcessor(batchSlice.Interface())
 	}

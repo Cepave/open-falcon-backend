@@ -2,11 +2,12 @@ package boss
 
 import (
 	"database/sql"
+	"testing"
+
 	model "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
-	"testing"
 )
 
 func TestByGinkgo(t *testing.T) {
@@ -14,10 +15,8 @@ func TestByGinkgo(t *testing.T) {
 	RunSpecs(t, "Base Suite")
 }
 
-// how NullString initialized ?
-// how NullInt64 initialzied?
 var _ = Describe("Tests boss2cmdb", func() {
-	testCase := []*model.BossHost{
+	sampleData := []*model.BossHost{
 		{
 			Hostname: "boss-test-a",
 			Ip:       "69.69.69.1",
@@ -55,48 +54,48 @@ var _ = Describe("Tests boss2cmdb", func() {
 			Platform: sql.NullString{String: "", Valid: false},
 		},
 	}
-	result := Boss2cmdb(testCase)
-	Context("With testCase has 6 valid Hosts", func() {
-		It("result.Hosts should be length 6", func() {
-			Expect(len(result.Hosts)).To(Equal(6))
+	result := Boss2cmdb(sampleData)
+
+	Context("Data of hosts", func() {
+		It("Hosts should match expected result", func() {
+			Expect(result.Hosts).To(ConsistOf(
+				[]*model.SyncHost{
+					{Name: "boss-test-a", IP: "69.69.69.1", Activate: 1},
+					{Name: "boss-test-b", IP: "69.69.69.2", Activate: 1},
+					{Name: "boss-test-c", IP: "69.69.69.3", Activate: 1},
+					{Name: "boss-test-d", IP: "69.69.69.4", Activate: 1},
+					{Name: "boss-test-e", IP: "69.69.69.5", Activate: 0},
+					{Name: "boss-test-f", IP: "69.69.69.6", Activate: 0},
+				},
+			))
 		})
 	})
-	Context("With testCase has 2 valid HostGroups", func() {
-		It("result.Hostgroups should be length 3", func() {
-			Expect(len(result.Hostgroups)).To(Equal(3))
+
+	Context("Data of host groups", func() {
+		It("Host groups should match expected result", func() {
+			Expect(result.Hostgroups).To(ConsistOf(
+				[]*model.SyncHostGroup{
+					{Name: "boss-platform-1", Creator: "root"},
+					{Name: "boss-platform-2", Creator: "root"},
+					{Name: DEFAULT_GRP, Creator: "root"},
+				},
+			))
 		})
 	})
-	Context("With testCase has 4 valid Relations", func() {
-		It("result.Relations should be length 3, which means 3 groups", func() {
-			Expect(len(result.Relations)).To(Equal(3))
-		})
-	})
-	Context("With name as 'boss-test-a', ip as '69.69.69.1', Activate is 1", func() {
-		It("Hostname should be cmdb-test-a, Ip should be 69.69.69.1, Activate is 1", func() {
-			Expect(result.Hosts[0]).To(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Name":     Equal("boss-test-a"),
-				"IP":       Equal("69.69.69.1"),
-				"Activate": Equal(1),
-			})))
-		})
-	})
-	Context("With group name as 'boss-platform-1'", func() {
-		It("Name should be 'boss-platform-1', Creator should be 'root'.", func() {
-			Expect(result.Hostgroups[0]).To(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Name":    Equal("boss-platform-1"),
-				"Creator": Equal("root"),
-			})))
-		})
-	})
-	Context("With relation of DEFAULT_GRP, boss-platform-1, boss-platform-2", func() {
-		It("Should be 4 hosts in DEFAULT_GRP", func() {
-			Expect(len(result.Relations[DEFAULT_GRP])).To(Equal(6))
-		})
-		It("Should be 3 hosts in boss-platform-1", func() {
-			Expect(len(result.Relations["boss-platform-1"])).To(Equal(3))
-		})
-		It("Should be 1 hosts in boss-platform-2", func() {
-			Expect(len(result.Relations["boss-platform-2"])).To(Equal(1))
+
+	Context("Data of relations", func() {
+		It("Relations should match expected result", func() {
+			Expect(result.Relations).To(And(
+				HaveKeyWithValue("boss-platform-1",
+					ConsistOf([]string{"boss-test-a", "boss-test-b", "boss-test-d"}),
+				),
+				HaveKeyWithValue("boss-platform-2",
+					ConsistOf([]string{"boss-test-c"}),
+				),
+				HaveKeyWithValue(DEFAULT_GRP,
+					ConsistOf([]string{"boss-test-a", "boss-test-b", "boss-test-c", "boss-test-d", "boss-test-e", "boss-test-f"}),
+				),
+			))
 		})
 	})
 })

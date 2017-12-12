@@ -2,9 +2,11 @@ package boss
 
 import (
 	"database/sql"
+
+	model "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gstruct"
 )
 
 var _ = Describe("[Boss] GetSyncData", itSkip.PrependBeforeEach(func() {
@@ -26,27 +28,21 @@ var _ = Describe("[Boss] GetSyncData", itSkip.PrependBeforeEach(func() {
 	Context("With testcase with 2 case existed", func() {
 		It("result should be length 2", func() {
 			result := GetSyncData()
-			Expect(len(result)).To(Equal(2))
-		})
-	})
-	Context("With hostname as 'boss-test-a', ip as '69.69.69.1', activate as 1, platform as c01.i01", func() {
-		It("Hostname should be boss-test-a, Ip should be 69.69.69.1, Activate should be 1, Platform should be c01.i01", func() {
-			result := GetSyncData()
-			Expect(result[0]).To(PointTo(MatchAllFields(Fields{
-				"Hostname": Equal("boss-test-a"),
-				"Ip":       Equal("69.69.69.1"),
-				"Activate": Equal(sql.NullInt64{Int64: 1, Valid: true}),
-				"Platform": Equal(sql.NullString{String: "c01.i01", Valid: true}),
-			})))
-		})
-	})
-	Context("With activate as NULL, platform as NULL", func() {
-		It("Activate should be Null, Platform should be Null", func() {
-			result := GetSyncData()
-			Expect(result[1]).To(PointTo(MatchFields(IgnoreExtras, Fields{
-				"Activate": Equal(sql.NullInt64{Int64: 0, Valid: false}),
-				"Platform": Equal(sql.NullString{String: "", Valid: false}),
-			})))
+
+			Expect(result).To(ConsistOf(
+				[]*model.BossHost{
+					{
+						Hostname: "boss-test-a", Ip: "69.69.69.1",
+						Activate: sql.NullInt64{Int64: 1, Valid: true},
+						Platform: sql.NullString{String: "c01.i01", Valid: true},
+					},
+					{
+						Hostname: "boss-test-b", Ip: "69.69.69.2",
+						Activate: sql.NullInt64{Int64: 0, Valid: false},
+						Platform: sql.NullString{String: "", Valid: false},
+					},
+				},
+			))
 		})
 	})
 }))

@@ -264,7 +264,7 @@ var _ = Describe("[CMDB] syncHostgroupContaining", itSkip.PrependBeforeEach(func
 				ORDER BY host_id
 				`,
 			)
-			Expect(hids).To(Equal([]int{ 91081, 91082 }))
+			Expect(hids).To(Equal([]int{91081, 91082}))
 		})
 	})
 	Context("For relations of hostgroup which come_from BOSS ('grp_host.come_from' is 1)", func() {
@@ -278,7 +278,7 @@ var _ = Describe("[CMDB] syncHostgroupContaining", itSkip.PrependBeforeEach(func
 				ORDER BY host_id
 				`,
 			)
-			Expect(hids).To(Equal([]int{ 91081, 91083 }))
+			Expect(hids).To(Equal([]int{91081, 91083}))
 		})
 
 		It("The relations with different set(totally)", func() {
@@ -291,7 +291,7 @@ var _ = Describe("[CMDB] syncHostgroupContaining", itSkip.PrependBeforeEach(func
 				ORDER BY host_id
 				`,
 			)
-			Expect(hids).To(Equal([]int{ 91081, 91082, 91083 }))
+			Expect(hids).To(Equal([]int{91081, 91082, 91083}))
 		})
 	})
 	Context("For relations no hosts", func() {

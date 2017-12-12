@@ -28,6 +28,7 @@ func TestByCheck(t *testing.T) {
 }
 
 var testFlags = tFlag.NewTestFlags()
+
 func itSkipForGocheck(c *ch.C) {
 	if !testFlags.HasHttpClient() ||
 		!testFlags.HasMySqlOfOwlDb(tFlag.OWL_DB_PORTAL) {
@@ -50,7 +51,7 @@ var _ = AfterSuite(func() {
 })
 
 var (
-	httpMessage  = tFlag.FeatureHelpString(tFlag.F_HttpClient)
+	httpMessage   = tFlag.FeatureHelpString(tFlag.F_HttpClient)
 	portalMessage = tFlag.OwlDbHelpString(tFlag.OWL_DB_PORTAL)
 
 	itSkipMessage = fmt.Sprintf(
@@ -63,7 +64,7 @@ var (
 		tFlag.BuildSkipFactoryOfOwlDb(tFlag.OWL_DB_PORTAL, portalMessage),
 	)
 
-	cmdbFlags = (tFlag.OWL_DB_PORTAL | tFlag.OWL_DB_BOSS)
+	cmdbFlags     = (tFlag.OWL_DB_PORTAL | tFlag.OWL_DB_BOSS)
 	itSkipForCmdb = httpClientSkip.Compose(
 		tFlag.BuildSkipFactoryOfOwlDb(
 			cmdbFlags,
@@ -73,11 +74,13 @@ var (
 )
 
 var portalDbFacade *f.DbFacade
+
 func inPortalTx(sql ...string) {
 	portalDbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
 }
 
 var bossDbFacade *f.DbFacade
+
 func inBossTx(sql ...string) {
 	bossDbFacade.SqlDbCtrl.ExecQueriesInTx(sql...)
 }

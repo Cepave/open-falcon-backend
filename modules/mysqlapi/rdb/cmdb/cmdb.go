@@ -69,7 +69,7 @@ func (syncTx *syncHostgroupContaining) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 					utils.FlattenToSlice(
 						batch,
 						func(v interface{}) []interface{} {
-							return []interface{} {
+							return []interface{}{
 								groupName, v,
 							}
 						},
@@ -172,7 +172,7 @@ func (syncTx *syncHostGroupTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 					batch,
 					func(group interface{}) []interface{} {
 						groupData := group.(*cmdbModel.SyncHostGroup)
-						return []interface{} {
+						return []interface{}{
 							groupData.Name, groupData.Creator,
 						}
 					},
@@ -270,7 +270,7 @@ func (syncTx *syncHostTx) InTx(tx *sqlx.Tx) commonDb.TxFinale {
 					batch,
 					func(host interface{}) []interface{} {
 						hostData := host.(*hostTuple)
-						return []interface{} {
+						return []interface{}{
 							hostData.Hostname, hostData.Ip,
 							hostData.MaintainBegin, hostData.MaintainEnd,
 						}

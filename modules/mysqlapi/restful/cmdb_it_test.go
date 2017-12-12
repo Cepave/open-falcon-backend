@@ -31,7 +31,7 @@ var _ = Describe("[POST] /api/v1/cmdb/sync", itSkipForCmdb.PrependBeforeEach(fun
 				`,
 			)
 		}).
-	ToContext()
+		ToContext()
 
 	setupImportAndAssertion(
 		gb.NewGinkgoBuilder("Imports over existing data"),
@@ -53,7 +53,7 @@ var _ = Describe("[POST] /api/v1/cmdb/sync", itSkipForCmdb.PrependBeforeEach(fun
 			cleanImportData()
 			cleanBossData()
 		}).
-	ToContext()
+		ToContext()
 }))
 
 var _ = Describe("[GET] /api/v1/cmdb/sync/:uuid", itSkipOnPortal.PrependBeforeEach(func() {

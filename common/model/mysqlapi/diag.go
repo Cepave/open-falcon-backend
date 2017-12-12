@@ -48,7 +48,7 @@ type AllRdbHealth struct {
 
 	Portal *Rdb `json:"portal"`
 	Graph  *Rdb `json:"graph"`
-	Boss  *Rdb `json:"boss"`
+	Boss   *Rdb `json:"boss"`
 }
 
 type Rdb struct {

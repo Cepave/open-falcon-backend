@@ -30,7 +30,7 @@ func Boss2cmdb(hosts []*model.BossHost) *model.SyncForAdding {
 	owl_default_grp_hosts := []string{}
 	for _, h := range hosts {
 		// transform hosts
-		// Hostname and IP not Null property guaranted by schema
+		// Hostname and IP not Null property guaranteed by schema
 		// Activate and Platform might be Null value
 		if h.Activate.Valid {
 			sync.Hosts = append(sync.Hosts, &model.SyncHost{

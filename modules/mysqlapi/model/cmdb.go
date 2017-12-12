@@ -8,13 +8,13 @@ import (
 
 type SyncHost struct {
 	Activate int
-	Name string
-	IP string
+	Name     string
+	IP       string
 }
 
 type SyncHostGroup struct {
 	Creator string
-	Name string
+	Name    string
 }
 
 type SyncForAdding struct {

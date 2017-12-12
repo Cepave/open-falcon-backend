@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	hostnamePrefix = "st-cch"
+	hostnamePrefix  = "st-cch"
 	hostGroupPrefix = "st-ccg"
 )
 
@@ -52,9 +52,9 @@ var _ = Describe("Stress testing for importing to \"host, grp, and grp_host\" ta
 
 	Context("Heavy data tests", func() {
 		var (
-			numberOfHosts = 20480
+			numberOfHosts      = 20480
 			numberOfHostGroups = 256
-			hostGroupWeights = []int{ 1, 1, 10, 8, 30, 5, 6, 10, 20, 15, 15, 3 }
+			hostGroupWeights   = []int{1, 1, 10, 8, 30, 5, 6, 10, 20, 15, 15, 3}
 		)
 
 		sampleData := generateSourceData(numberOfHosts, numberOfHostGroups, hostGroupWeights)
@@ -74,10 +74,10 @@ var _ = Describe("Stress testing for importing to \"host, grp, and grp_host\" ta
 
 func assertByNumberOfHosts(expectedNumberOfHosts int, expectedNumberOfHostGroups int) {
 	var countHolder = &struct {
-		CountHosts int `db:"count_hosts"`
+		CountHosts      int `db:"count_hosts"`
 		CountHostGroups int `db:"count_host_groups"`
-		CountRelations int `db:"count_relations"`
-	} {}
+		CountRelations  int `db:"count_relations"`
+	}{}
 
 	DbFacade.NewSqlxDbCtrl().Get(
 		countHolder,
@@ -100,18 +100,18 @@ func assertByNumberOfHosts(expectedNumberOfHosts int, expectedNumberOfHostGroups
 
 	Expect(countHolder).To(PointTo(
 		MatchAllFields(Fields{
-			"CountHosts": Equal(expectedNumberOfHosts),
+			"CountHosts":      Equal(expectedNumberOfHosts),
 			"CountHostGroups": Equal(expectedNumberOfHostGroups),
-			"CountRelations": Equal(expectedNumberOfHosts),
+			"CountRelations":  Equal(expectedNumberOfHosts),
 		}),
 	))
 }
 
 func generateSourceData(numberOfHosts int, numberOfHostGroups int, hostGroupWeights []int) *model.SyncForAdding {
-	sourceData := &model.SyncForAdding {
-		Hosts: generatedHosts(numberOfHosts),
+	sourceData := &model.SyncForAdding{
+		Hosts:      generatedHosts(numberOfHosts),
 		Hostgroups: generatedHostGroups(numberOfHostGroups),
-		Relations: make(map[string][]string, 0),
+		Relations:  make(map[string][]string, 0),
 	}
 
 	var currentWeight = 0
@@ -141,9 +141,9 @@ func generatedHostGroups(totalNumber int) []*model.SyncHostGroup {
 	var result = make([]*model.SyncHostGroup, totalNumber)
 
 	for i := 0; i < totalNumber; i++ {
-		result[i] = &model.SyncHostGroup {
+		result[i] = &model.SyncHostGroup{
 			Creator: rdata.FirstName(rdata.Male),
-			Name: fmt.Sprintf("%s-%03d", hostGroupPrefix, i + 1),
+			Name:    fmt.Sprintf("%s-%03d", hostGroupPrefix, i+1),
 		}
 	}
 
@@ -152,20 +152,20 @@ func generatedHostGroups(totalNumber int) []*model.SyncHostGroup {
 func generatedHosts(totalNumber int) []*model.SyncHost {
 	var result = make([]*model.SyncHost, totalNumber)
 
-	var currentIp uint32 = (rand.Uint32() % 254 + 1) << 24
+	var currentIp uint32 = (rand.Uint32()%254 + 1) << 24
 	for i := 0; i < totalNumber; i++ {
 		currentIp++
 
-		if currentIp & 0xFF == 0 {
+		if currentIp&0xFF == 0 {
 			currentIp += 1
 		}
 
-		ipBytes := []byte {
+		ipBytes := []byte{
 			byte(currentIp >> 24 & 0xFF), byte(currentIp >> 16 & 0xFF),
 			byte(currentIp >> 8 & 0xFF), byte(currentIp & 0xFF),
 		}
 
-		result[i] = &model.SyncHost {
+		result[i] = &model.SyncHost{
 			Name: fmt.Sprintf("%s-%s-%03d-%03d-%03d-%03d",
 				hostnamePrefix, strings.ToLower(rdata.Letters(3)),
 				ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3],

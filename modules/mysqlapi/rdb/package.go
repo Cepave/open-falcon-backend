@@ -8,9 +8,9 @@ import (
 	log "github.com/Cepave/open-falcon-backend/common/logruslog"
 	apiModel "github.com/Cepave/open-falcon-backend/common/model/mysqlapi"
 
+	bossdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/boss"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/cmdb"
 	graphdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/graph"
-	bossdb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/boss"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/hbsdb"
 	apiOwlDb "github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/owl"
 )
@@ -18,7 +18,7 @@ import (
 const (
 	DB_PORTAL = "portal"
 	DB_GRAPH  = "graph"
-	DB_BOSS  = "boss"
+	DB_BOSS   = "boss"
 )
 
 type DbHolder struct {
