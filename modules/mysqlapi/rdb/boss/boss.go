@@ -7,7 +7,7 @@ import (
 // Get the Data from boss.hosts
 func GetSyncData() []*bossModel.BossHost {
 	var hosts []*bossModel.BossHost
-	DbFacade.NewSqlxDbCtrl().Select(
+	DbFacade.SqlxDbCtrl.Select(
 		&hosts,
 		`
 		SELECT hostname, ip, activate, platform FROM hosts

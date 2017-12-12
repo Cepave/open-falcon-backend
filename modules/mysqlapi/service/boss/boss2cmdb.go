@@ -3,7 +3,6 @@ package boss
 import (
 	model "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	underscore "github.com/ahl5esoft/golang-underscore"
-	"strings"
 )
 
 const (
@@ -18,29 +17,30 @@ type tHost struct {
 
 func toHostnameSlice(tuples []tHost) []string {
 	rs := []string{}
-	for h := range tuples {
-		append(rs, h.Hostname)
+	for _, h := range tuples {
+		rs = append(rs, h.Hostname)
 	}
 	return rs
 }
 
-func boss2cmdb(hosts []*model.BossHost) *model.SyncForAdding {
+func Boss2cmdb(hosts []*model.BossHost) *model.SyncForAdding {
 	sync := model.SyncForAdding{}
+	sync.Relations = make(map[string][]string)
 	tuples := []tHost{}
 	owl_default_grp_hosts := []string{}
-	for h := range hosts {
+	for _, h := range hosts {
 		// transform hosts
 		// Hostname and IP not Null property guaranted by schema
 		// Activate and Platform might be Null value
 		if h.Activate.Valid {
-			append(sync.Hosts, &model.SyncHost{
+			sync.Hosts = append(sync.Hosts, &model.SyncHost{
 				Activate: int(h.Activate.Int64),
 				Name:     h.Hostname,
 				IP:       h.Ip,
 			})
 		} else {
 			// treat activate NULL value as not activated
-			append(sync.Hosts, &model.SyncHost{
+			sync.Hosts = append(sync.Hosts, &model.SyncHost{
 				Activate: 0,
 				Name:     h.Hostname,
 				IP:       h.Ip,
@@ -48,7 +48,7 @@ func boss2cmdb(hosts []*model.BossHost) *model.SyncForAdding {
 		}
 		// initialize grp-host tuples
 		if h.Platform.Valid {
-			append(tuples, tHost{
+			tuples = append(tuples, tHost{
 				Grpname:  h.Platform.String,
 				Hostname: h.Hostname,
 			})
@@ -56,7 +56,7 @@ func boss2cmdb(hosts []*model.BossHost) *model.SyncForAdding {
 			// skip Platform NULL value
 		}
 		// initialize hostname for default group
-		append(owl_default_grp_hosts, h.Hostname)
+		owl_default_grp_hosts = append(owl_default_grp_hosts, h.Hostname)
 	}
 
 	// begin grps and relations transform
@@ -65,14 +65,14 @@ func boss2cmdb(hosts []*model.BossHost) *model.SyncForAdding {
 	if grps_dict, ok := t.(map[string][]tHost); ok {
 		for grp_name, tuple_list := range grps_dict {
 			// transform grps
-			append(sync.Hostgroups, &model.SyncHostGroup{
+			sync.Hostgroups = append(sync.Hostgroups, &model.SyncHostGroup{
 				Creator: "root",
 				Name:    grp_name,
 			})
 			// transform relations
 			sync.Relations[grp_name] = toHostnameSlice(tuple_list)
 		}
-		append(sync.Hostgroups, &model.SyncHostGroup{
+		sync.Hostgroups = append(sync.Hostgroups, &model.SyncHostGroup{
 			Creator: "root",
 			Name:    DEFAULT_GRP,
 		})
