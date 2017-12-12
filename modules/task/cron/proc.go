@@ -25,3 +25,13 @@ func buildProcOfVacuumGraphIndex(beforeDays int) func() {
 		logger.Infof("[Finish] Vacuum: %s", result)
 	}
 }
+
+func clearLogs(forDays int) func() {
+	return func() {
+		logger.Infof("[Start] Clear task log entries. For days: %d", forDays)
+
+		result := database.ClearTaskLogEntryService.ClearLogEntries(forDays)
+
+		logger.Infof("[Finish] Remove [%d] task log objects. Before time: [%s]", result.AffectedRows, result.GetBeforeTime())
+	}
+}
