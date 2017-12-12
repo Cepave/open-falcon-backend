@@ -2,7 +2,6 @@ package boss
 
 import (
 	"database/sql"
-	"fmt"
 	model "github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -56,9 +55,7 @@ var _ = Describe("Tests boss2cmdb", func() {
 			Platform: sql.NullString{String: "", Valid: false},
 		},
 	}
-	fmt.Println("b")
 	result := Boss2cmdb(testCase)
-	fmt.Println("a")
 	Context("With testCase has 6 valid Hosts", func() {
 		It("result.Hosts should be length 6", func() {
 			Expect(len(result.Hosts)).To(Equal(6))
