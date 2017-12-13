@@ -19,6 +19,18 @@
 			"revisionTime": "2017-06-07T19:55:31Z"
 		},
 		{
+			"checksumSHA1": "X3M6Rxto5izgbK7TpVZJjIBvrg8=",
+			"path": "github.com/Pallinder/go-randomdata",
+			"revision": "21b99cb8cf82cc85e8fc96adb1dc2ef61b6d5c2a",
+			"revisionTime": "2017-03-11T15:38:17Z"
+		},
+		{
+			"checksumSHA1": "4RuQ1K5H9Ct8Ht3EkJE/jLRtymI=",
+			"path": "github.com/ahl5esoft/golang-underscore",
+			"revision": "39688c97b603cdbf661da7dd941f7e74d0f07cde",
+			"revisionTime": "2017-10-18T01:42:31Z"
+		},
+		{
 			"checksumSHA1": "FDV1HT/HwDJ1G2LPEJG2o/gsWz4=",
 			"path": "github.com/asaskevich/govalidator",
 			"revision": "aa5cce4a76edb1a5acecab1870c17abbffb5419e",
