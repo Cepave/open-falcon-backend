@@ -42,12 +42,6 @@ func main() {
 
 	viperObj := vipercfg.Config()
 
-	/**
-	 * Variables of services
-	 */
-	var cronService *cron.TaskCronService
-	// :~)
-
 	// proc
 	proc.Start()
 
@@ -66,9 +60,16 @@ func main() {
 	// :~)
 
 	/**
+	 * Variables of services
+	 */
+	var cronService *cron.TaskCronService
+	// :~)
+
+	/**
 	 * Initializes cron services from Viper configuration and starts it
 	 */
 	cronService = cron.NewCronServices(buildTaskCronConfig(viperObj))
+
 	cronService.Start()
 	// :~)
 
@@ -112,6 +113,12 @@ func buildTaskCronConfig(viperObj *viper.Viper) *cron.TaskCronConfig {
 			Cron:    viperObj.GetString("cron.clear_task_log_entries.schedule"),
 			ForDays: viperObj.GetInt("cron.clear_task_log_entries.for_days"),
 			Enable:  viperObj.GetBool("cron.clear_task_log_entries.enable"),
+		},
+		SyncCmdbFromBoss: &cron.SyncCmdbFromBossConf{
+			Enable:                viperObj.GetBool("cron.sync_cmdb_from_boss.enable"),
+			InitialDelayInSeconds: viperObj.GetInt("cron.sync_cmdb_from_boss.init_delay_seconds"),
+			FixedDelayInSeconds:   viperObj.GetInt("cron.sync_cmdb_from_boss.fixed_delay_seconds"),
+			ErrorDelayInSeconds:   viperObj.GetInt("cron.sync_cmdb_from_boss.error_delay_seconds"),
 		},
 	}
 }
