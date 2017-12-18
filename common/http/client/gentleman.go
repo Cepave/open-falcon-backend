@@ -149,11 +149,15 @@ func (r *GentlemanRequest) SendAndStatusMustMatch(status int) *gt.Response {
 //
 // If the status code is not as expected, the error would not be nil.
 func (r *GentlemanRequest) SendAndMatch(matcher RespMatcher) (*gt.Response, error) {
+	logger.Debugf("Current Reqeust: %#v", r.Client.Context.Request)
+
 	request := (*gt.Request)(r)
 
 	resp, err := request.Send()
 
 	if err != nil {
+		logger.Debugf("Send reqeust has error: %v", err)
+
 		if resp != nil {
 			defer resp.Close()
 		}

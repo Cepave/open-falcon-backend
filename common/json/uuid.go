@@ -42,3 +42,7 @@ func (u *Uuid) UnmarshalJSON(v []byte) error {
 
 	return nil
 }
+
+func (u Uuid) ToUuid() uuid.UUID {
+	return uuid.UUID(u)
+}
