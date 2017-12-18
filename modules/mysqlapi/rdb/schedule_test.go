@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"time"
 
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/satori/go.uuid"
 
@@ -41,10 +43,6 @@ var (
 )
 
 var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
-	var (
-		defaultNow time.Time
-	)
-
 	AfterEach(func() {
 		inTx(deleteLogSql, deleteLockSql)
 	})
@@ -64,13 +62,16 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 	Context("Existing schedule(used before)", func() {
 		var scheduleName string
 		var lastLockTime time.Time
+		var lastJob *model.OwlScheduleLog
 
 		BeforeEach(func() {
 			scheduleName = randomScheduleName()
 		})
 
 		JustBeforeEach(func() {
-			_, err := AcquireLock(model.NewSchedule(scheduleName, _DEFAULT_TIMEOUT), lastLockTime)
+			var err error
+
+			lastJob, err = AcquireLock(model.NewSchedule(scheduleName, _DEFAULT_TIMEOUT), lastLockTime)
 			Expect(err).To(Succeed())
 		})
 
@@ -96,9 +97,10 @@ var _ = Describe("Tests AcquireLock(...)", itSkip.PrependBeforeEach(func() {
 
 			It("should trigger error", func() {
 				schedule := model.NewSchedule(scheduleName, _DEFAULT_TIMEOUT)
-				log, err := AcquireLock(schedule, defaultNow)
+				log, err := AcquireLock(schedule, lastLockTime)
 
 				Expect(err).To(HaveOccurred())
+				Expect(err.(*model.UnableToLockSchedule).Uuid).To(BeEquivalentTo(lastJob.Uuid))
 				Expect(log).To(BeNil())
 
 				assertLockedSchedule(schedule, lastLockTime, 1)
@@ -148,8 +150,8 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 	})
 
 	DescribeTable("The updated data should be as expected",
-		func(expStatus model.TaskStatus, expMsg string) {
-			FreeLock(sampleScheduleLog, expStatus, expMsg, logTime)
+		func(expStatus owlModel.TaskStatus, expMsg string) {
+			FreeLock(sampleScheduleLog, model.TaskStatus(expStatus), expMsg, logTime)
 
 			var checkedResult = &struct {
 				Locked     bool             `db:"sch_lock"`
@@ -160,7 +162,7 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 			}{}
 
 			expectedMessage := sql.NullString{String: expMsg, Valid: false}
-			if expStatus == model.FAIL {
+			if expStatus == owlModel.JobFailed {
 				expectedMessage.Valid = true
 			}
 
@@ -180,14 +182,14 @@ var _ = Describe("Tests FreeLock(...)", itSkip.PrependBeforeEach(func() {
 				MatchAllFields(Fields{
 					"Locked":     BeFalse(),
 					"ModifyTime": BeTemporally("~", logTime, time.Second),
-					"Status":     Equal(expStatus),
+					"Status":     Equal(model.TaskStatus(expStatus)),
 					"Message":    Equal(expectedMessage),
 					"EndTime":    BeTemporally("~", logTime, time.Second),
 				}),
 			))
 		},
-		Entry("DONE", model.DONE, ""),
-		Entry("FAIL", model.FAIL, "Sample error message"),
+		Entry("DONE", owlModel.JobDone, ""),
+		Entry("FAIL", owlModel.JobFailed, "Sample error message"),
 	)
 }))
 

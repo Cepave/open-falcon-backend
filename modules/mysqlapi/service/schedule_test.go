@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 
@@ -46,7 +48,7 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 	DescribeTable("Free lock & record log",
 		func(
 			name string, callback ScheduleCallback,
-			expectedStatus model.TaskStatus, matchMessage string,
+			expectedStatus owlModel.TaskStatus, matchMessage string,
 		) {
 			newSchedule := model.NewSchedule(fmt.Sprintf("%s-%s", schedulePrefix, name), 300)
 
@@ -56,7 +58,7 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 				MatchFields(
 					IgnoreExtras,
 					Fields{
-						"Status":    Equal(model.RUN),
+						"Status":    BeEquivalentTo(owlModel.JobRunning),
 						"StartTime": BeTemporally("<=", time.Now(), time.Millisecond),
 						"Timeout":   BeEquivalentTo(300),
 						"SchId":     BeNumerically(">", 0),
@@ -72,10 +74,10 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 			/**
 			 * Asserts the status and message
 			 */
-			Expect(testedLog.Status).To(Equal(expectedStatus))
+			Expect(testedLog.Status).To(BeEquivalentTo(expectedStatus))
 
 			messageMatcher := Equal("")
-			if expectedStatus == model.FAIL {
+			if expectedStatus == owlModel.JobFailed {
 				messageMatcher = MatchRegexp(matchMessage)
 			}
 			Expect(testedLog.Message.String).To(messageMatcher)
@@ -87,7 +89,7 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 				defer waitToken.Done()
 				defer GinkgoT().Logf("Finish execution of run successfully")
 				return nil
-			}, model.DONE, "",
+			}, owlModel.JobDone, "",
 		),
 		Entry("Callback returns error",
 			"e1",
@@ -95,7 +97,7 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 				defer waitToken.Done()
 				defer GinkgoT().Logf("Finish execution of run with error returned")
 				return errors.New("Normal error")
-			}, model.FAIL, "Error from.*",
+			}, owlModel.JobFailed, "Error from.*",
 		),
 		Entry("Callback invokes panic",
 			"p1",
@@ -103,7 +105,7 @@ var _ = Describe("Tests ScheduleService", itSkip.PrependBeforeEach(func() {
 				defer waitToken.Done()
 				defer GinkgoT().Logf("Finish execution of run with PANIC!!")
 				panic("Go Panic")
-			}, model.FAIL, "Panic from.*",
+			}, owlModel.JobFailed, "Panic from.*",
 		),
 	)
 }))

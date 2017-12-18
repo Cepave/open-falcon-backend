@@ -30,6 +30,7 @@ func addNewCmdbSync() mvc.OutputBody {
 			map[string]interface{}{
 				"error_code":    1,
 				"error_message": cannotLockError.Error(),
+				"last_sync_id":  cannotLockError.Uuid.String(),
 			},
 		)
 	} else {

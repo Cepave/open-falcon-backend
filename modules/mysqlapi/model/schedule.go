@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/satori/go.uuid"
+
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
+	"github.com/Cepave/open-falcon-backend/common/model/owl"
 )
 
 type Schedule struct {
@@ -54,6 +57,7 @@ func (log *OwlScheduleLog) GetUuidString() string {
 }
 
 type UnableToLockSchedule struct {
+	Uuid          uuid.UUID
 	AcquiredTime  time.Time
 	LastStartTime time.Time
 	Timeout       int32
@@ -83,7 +87,7 @@ const (
 	LOCKED
 )
 
-type TaskStatus byte
+type TaskStatus owl.TaskStatus
 
 func (s *TaskStatus) Scan(src interface{}) error {
 	*s = TaskStatus(src.(int64))
@@ -92,10 +96,6 @@ func (s *TaskStatus) Scan(src interface{}) error {
 func (s TaskStatus) Value() (driver.Value, error) {
 	return int64(s), nil
 }
-
-const (
-	DONE TaskStatus = iota
-	RUN
-	FAIL
-	TIMEOUT
-)
+func (s TaskStatus) ToJobStatus() owl.TaskStatus {
+	return owl.TaskStatus(s)
+}

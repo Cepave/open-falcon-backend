@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"time"
 
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+
 	cdb "github.com/Cepave/open-falcon-backend/common/db"
 	sqlxExt "github.com/Cepave/open-falcon-backend/common/db/sqlx"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
@@ -66,7 +68,7 @@ func (self *txFreeLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	 * Release the lock directly rather than check the lock holder
 	 */
 	nullableMessage := sql.NullString{Valid: false}
-	if self.status == model.FAIL {
+	if self.status.ToJobStatus() == owlModel.JobFailed {
 		nullableMessage.String = self.message
 		nullableMessage.Valid = true
 	}
@@ -115,10 +117,12 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 	if scheduleData.IsLocked() {
 		if existingLog := ack.getExistingLog(tx, scheduleData.Id); existingLog != nil && !existingLog.IsTimeout(ack.startTime) {
 			ack.lockError = &model.UnableToLockSchedule{
+				Uuid:          existingLog.Uuid.ToUuid(),
 				LastStartTime: existingLog.StartTime,
 				AcquiredTime:  ack.startTime,
 				Timeout:       existingLog.Timeout,
 			}
+
 			return cdb.TxCommit
 		}
 	}
@@ -129,7 +133,7 @@ func (ack *txAcquireLock) InTx(tx *sqlx.Tx) cdb.TxFinale {
 		SchId:     scheduleData.Id,
 		StartTime: ack.startTime,
 		Timeout:   ack.schedule.Timeout,
-		Status:    model.RUN,
+		Status:    model.TaskStatus(owlModel.JobRunning),
 	}
 
 	/**
@@ -211,7 +215,7 @@ func (ack *txAcquireLock) getExistingLog(tx *sqlx.Tx, scheduleId int32) *model.O
 	existing := sqlxExt.ToTxExt(tx).GetOrNoRow(
 		logRecord,
 		`
-		SELECT sl.sl_start_time, sl.sl_timeout
+		SELECT *
 		FROM owl_schedule_log sl
 		WHERE sl.sl_sch_id = ?
 		ORDER BY sl.sl_start_time DESC

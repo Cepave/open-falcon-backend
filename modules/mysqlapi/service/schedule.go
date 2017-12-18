@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	owlModel "github.com/Cepave/open-falcon-backend/common/model/owl"
+
 	"github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/model"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
@@ -39,13 +41,13 @@ func ScheduleExecutor(schedule *model.Schedule, callback ScheduleCallback) (*mod
 				msg = fmt.Sprintf("Error from scheduled callback: %v", err)
 			}
 
-			status := model.DONE
+			status := owlModel.JobDone
 			if msg != "" {
-				status = model.FAIL
+				status = owlModel.JobFailed
 				logger.Warnf("Execute task: [%v] has error: %s", schedule, msg)
 			}
 
-			rdb.FreeLock(scheduleLog, status, msg, time.Now())
+			rdb.FreeLock(scheduleLog, model.TaskStatus(status), msg, time.Now())
 		}()
 
 		err = callback()
