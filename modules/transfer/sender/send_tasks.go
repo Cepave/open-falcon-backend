@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	cmodel "github.com/open-falcon/common/model"
@@ -103,6 +101,7 @@ func forward2JudgeTask(Q *list.SafeListLimited, node string, concurrent int) {
 			var err error
 			sendOk := false
 			for i := 0; i < 3; i++ { //最多重试3次
+				go warningIfEventTooLate(5, judgeItems)
 				err = JudgeConnPools.Call(addr, "Judge.Send", judgeItems, resp)
 				if err == nil {
 					sendOk = true
@@ -113,7 +112,7 @@ func forward2JudgeTask(Q *list.SafeListLimited, node string, concurrent int) {
 
 			// statistics
 			if !sendOk {
-				log.Printf("send judge %s:%s fail: %v", node, addr, err)
+				log.Errorf("send judge %s:%s fail: %v", node, addr, err)
 				proc.SendToJudgeFailCnt.IncrBy(int64(count))
 			} else {
 				proc.SendToJudgeCnt.IncrBy(int64(count))
@@ -158,7 +157,7 @@ func forward2GraphTask(Q *list.SafeListLimited, node string, addr string, concur
 
 			// statistics
 			if !sendOk {
-				log.Printf("send to graph %s:%s fail: %v", node, addr, err)
+				log.Errorf("send to graph %s:%s fail: %v", node, addr, err)
 				proc.SendToGraphFailCnt.IncrBy(int64(count))
 			} else {
 				proc.SendToGraphCnt.IncrBy(int64(count))
@@ -203,7 +202,7 @@ func forward2TsdbTask(concurrent int) {
 
 			if err != nil {
 				proc.SendToTsdbFailCnt.IncrBy(int64(len(itemList)))
-				log.Println(err)
+				log.Errorf("%v", err)
 				return
 			}
 		}(items)
@@ -216,7 +215,7 @@ func forward2InfluxdbTask(Q *list.SafeListLimited, concurrent int) {
 	batch := cfg.Batch // 一次发送,最多batch条数据
 	conn, err := parseDSN(cfg.Address)
 	if err != nil {
-		log.Print("syntax of influxdb address is wrong")
+		log.Errorf("syntax of influxdb address is wrong: %v", err)
 		return
 	}
 	addr := conn.Address
@@ -254,7 +253,7 @@ func forward2InfluxdbTask(Q *list.SafeListLimited, concurrent int) {
 
 			// statistics
 			if !sendOk {
-				log.Printf("send influxdb %s fail: %v", addr, err)
+				log.Errorf("send influxdb %s fail: %v", addr, err)
 				proc.SendToInfluxdbFailCnt.IncrBy(int64(count))
 			} else {
 				proc.SendToInfluxdbCnt.IncrBy(int64(count))
@@ -281,7 +280,7 @@ func forwardNqmItems(nqmItem interface{}, nqmUrl string, s *nsema.Semaphore, cnt
 	httpClient := &http.Client{}
 	postResp, err := httpClient.Do(postReq)
 	if err != nil {
-		log.Errorln("[ Cassandra ] Error on push:", err)
+		log.Errorf("[ Cassandra ] Error on push: %v", err)
 		failCnt.IncrBy(1)
 		return
 	}
@@ -346,11 +345,23 @@ func forward2StagingTask() {
 
 			// statistics
 			if !sendOk {
-				log.Printf("send staging fail: %v", err)
+				log.Errorf("send staging fail: %v", err)
 				proc.SendToStagingFailCnt.IncrBy(int64(count))
 			} else {
 				proc.SendToStagingCnt.IncrBy(int64(count))
 			}
 		}(stagingItems, count)
+	}
+}
+
+func warningIfEventTooLate(minutes int, metrics []*cmodel.JudgeItem) {
+	now := time.Now()
+
+	for _, metric := range metrics {
+		metricTime := time.Unix(metric.Timestamp, 0)
+
+		if now.Sub(metricTime) >= (time.Duration(minutes) * time.Minute) {
+			log.Warnf("[DELAY DATA] Metric [%v] is delay more than %d minutes. Now: %s. EventTime: %s", metric, minutes, now, metricTime)
+		}
 	}
 }

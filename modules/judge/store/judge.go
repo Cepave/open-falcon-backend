@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
-	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 func Judge(L *SafeLinkedList, firstItem *model.JudgeItem, now int64) {
@@ -44,7 +44,7 @@ func CheckStrategy(L *SafeLinkedList, firstItem *model.JudgeItem, now int64) {
 func judgeItemWithStrategy(L *SafeLinkedList, strategy model.Strategy, firstItem *model.JudgeItem, now int64) {
 	fn, err := ParseFuncFromString(strategy.Func, strategy.Operator, strategy.RightValue)
 	if err != nil {
-		log.Printf("[ERROR] parse func %s fail: %v. strategy id: %d", strategy.Func, err, strategy.Id)
+		log.Errorf("[ERROR] parse func %s fail: %v. strategy id: %d", strategy.Func, err, strategy.Id)
 		return
 	}
 
@@ -71,14 +71,17 @@ func sendEvent(event *model.Event) {
 
 	bs, err := json.Marshal(event)
 	if err != nil {
-		log.Printf("json marshal event %v fail: %v", event, err)
+		log.Errorf("json marshal event %v fail: %v", event, err)
 		return
 	}
 
 	// send to redis
 	redisKey := fmt.Sprintf(g.Config().Alarm.QueuePattern, event.Priority())
+
 	rc := g.RedisConnPool.Get()
 	defer rc.Close()
+
+	go warningIfEventTooLate(5, event)
 	rc.Do("LPUSH", redisKey, string(bs))
 }
 
@@ -166,7 +169,7 @@ func copyItemTags(item *model.JudgeItem) map[string]string {
 func judgeItemWithExpression(L *SafeLinkedList, expression *model.Expression, firstItem *model.JudgeItem, now int64) {
 	fn, err := ParseFuncFromString(expression.Func, expression.Operator, expression.RightValue)
 	if err != nil {
-		log.Printf("[ERROR] parse func %s fail: %v. expression id: %d", expression.Func, err, expression.Id)
+		log.Errorf("[ERROR] parse func %s fail: %v. expression id: %d", expression.Func, err, expression.Id)
 		return
 	}
 
@@ -238,5 +241,14 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 			event.CurrentStep = 1
 			sendEvent(event)
 		}
+	}
+}
+
+func warningIfEventTooLate(minutes int, event *model.Event) {
+	now := time.Now()
+	eventTime := time.Unix(event.EventTime, 0)
+
+	if now.Sub(eventTime) >= (time.Duration(minutes) * time.Minute) {
+		log.Warnf("[DELAY DATA] Event [%v] is delay more than %d minutes. Now: %s. EventTime: %s", event, minutes, now, eventTime)
 	}
 }

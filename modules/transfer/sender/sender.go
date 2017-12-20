@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	cpool "github.com/Cepave/open-falcon-backend/modules/transfer/sender/conn_pool"
@@ -67,7 +65,7 @@ func Start() {
 	// SendTasks依赖基础组件的初始化,要最后启动
 	startSendTasks()
 	startSenderCron()
-	log.Println("send.Start, ok")
+	log.Info("send.Start, ok")
 }
 
 // 将数据 打入 某个Judge的发送缓存队列, 具体是哪一个Judge 由一致性哈希 决定
@@ -76,7 +74,7 @@ func Push2JudgeSendQueue(items []*cmodel.MetaData) {
 		pk := item.PK()
 		node, err := JudgeNodeRing.GetNode(pk)
 		if err != nil {
-			log.Println("E:", err)
+			log.Errorf("Get node of judge ring has error: %v", err)
 			continue
 		}
 
@@ -112,7 +110,7 @@ func Push2GraphSendQueue(items []*cmodel.MetaData) {
 	for _, item := range items {
 		graphItem, err := convert2GraphItem(item)
 		if err != nil {
-			log.Println("E:", err)
+			log.Errorf("convert2GraphItem() has error: %v", err)
 			continue
 		}
 		pk := item.PK()
@@ -123,7 +121,7 @@ func Push2GraphSendQueue(items []*cmodel.MetaData) {
 
 		node, err := GraphNodeRing.GetNode(pk)
 		if err != nil {
-			log.Println("E:", err)
+			log.Errorf("Get node of graph ring has error: %v", err)
 			continue
 		}
 
@@ -253,7 +251,7 @@ func Push2NqmIcmpSendQueue(pingItems []*cmodel.MetaData) {
 	for _, item := range pingItems {
 		item, err := convert2NqmPingItem(item)
 		if err != nil {
-			log.Println("NqmPing converting error:", err)
+			log.Errorf("NqmPing converting error: %v", err)
 			continue
 		}
 		isSuccess := NqmIcmpQueue.PushFront(item)
@@ -269,7 +267,7 @@ func Push2NqmTcpSendQueue(pingItems []*cmodel.MetaData) {
 	for _, item := range pingItems {
 		item, err := convert2NqmPingItem(item)
 		if err != nil {
-			log.Println("NqmPing converting error:", err)
+			log.Errorf("NqmPing converting error: %v", err)
 			continue
 		}
 		isSuccess := NqmTcpQueue.PushFront(item)
@@ -285,7 +283,7 @@ func Push2NqmTcpconnSendQueue(connItems []*cmodel.MetaData) {
 	for _, item := range connItems {
 		nqmitem, err := convert2NqmConnItem(item)
 		if err != nil {
-			log.Println("NqmConn converting error:", err)
+			log.Errorf("NqmConn converting error: %v", err)
 			continue
 		}
 		isSuccess := NqmTcpconnQueue.PushFront(nqmitem)
