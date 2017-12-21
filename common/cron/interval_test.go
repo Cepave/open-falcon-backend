@@ -470,7 +470,10 @@ var _ = Describe(`Testing on "intervalWorker"`, func() {
 			Expect(currentProfile).To(PointTo(
 				MatchAllFields(Fields{
 					"Called": BeNumerically(">=", 4),
-					"Failed": Equal(currentProfile.Called >> 1),
+					"Failed": And(
+						BeNumerically(">=", currentProfile.Called>>1),
+						BeNumerically("<", currentProfile.Called),
+					),
 				}),
 			))
 		})
