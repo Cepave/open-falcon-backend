@@ -101,7 +101,6 @@ func forward2JudgeTask(Q *list.SafeListLimited, node string, concurrent int) {
 			var err error
 			sendOk := false
 			for i := 0; i < 3; i++ { //最多重试3次
-				go warningIfEventTooLate(5, judgeItems)
 				err = JudgeConnPools.Call(addr, "Judge.Send", judgeItems, resp)
 				if err == nil {
 					sendOk = true
@@ -351,17 +350,5 @@ func forward2StagingTask() {
 				proc.SendToStagingCnt.IncrBy(int64(count))
 			}
 		}(stagingItems, count)
-	}
-}
-
-func warningIfEventTooLate(minutes int, metrics []*cmodel.JudgeItem) {
-	now := time.Now()
-
-	for _, metric := range metrics {
-		metricTime := time.Unix(metric.Timestamp, 0)
-
-		if now.Sub(metricTime) >= (time.Duration(minutes) * time.Minute) {
-			log.Warnf("[DELAY DATA] Metric [%v] is delay more than %d minutes. Now: %s. EventTime: %s", metric, minutes, now, metricTime)
-		}
 	}
 }

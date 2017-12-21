@@ -71,7 +71,6 @@ func popEvent(queues []string) (*model.Event, error) {
 
 	log.Debug(event.String())
 	//insert event into database
-	go warningIfEventTooLate(5, &event)
 	err = eventmodel.InsertEvent(&event, "owl")
 	if err != nil {
 		log.Error(err.Error())
@@ -152,13 +151,4 @@ func popExternalEvent(queues []string) error {
 	}
 
 	return nil
-}
-
-func warningIfEventTooLate(minutes int, event *model.Event) {
-	now := time.Now()
-	eventTime := time.Unix(event.EventTime, 0)
-
-	if now.Sub(eventTime) >= (time.Duration(minutes) * time.Minute) {
-		log.Warnf("[DELAY DATA] Event [%v] is delay more than %d minutes. Now: %s. EventTime: %s", event, minutes, now, eventTime)
-	}
 }

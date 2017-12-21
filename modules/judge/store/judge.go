@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
-	"time"
 )
 
 func Judge(L *SafeLinkedList, firstItem *model.JudgeItem, now int64) {
@@ -81,7 +80,6 @@ func sendEvent(event *model.Event) {
 	rc := g.RedisConnPool.Get()
 	defer rc.Close()
 
-	go warningIfEventTooLate(5, event)
 	rc.Do("LPUSH", redisKey, string(bs))
 }
 
@@ -241,14 +239,5 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 			event.CurrentStep = 1
 			sendEvent(event)
 		}
-	}
-}
-
-func warningIfEventTooLate(minutes int, event *model.Event) {
-	now := time.Now()
-	eventTime := time.Unix(event.EventTime, 0)
-
-	if now.Sub(eventTime) >= (time.Duration(minutes) * time.Minute) {
-		log.Warnf("[DELAY DATA] Event [%v] is delay more than %d minutes. Now: %s. EventTime: %s", event, minutes, now, eventTime)
 	}
 }
