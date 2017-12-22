@@ -20,24 +20,17 @@ const (
 )
 
 var _ = Describe("Stress testing for importing to \"host, grp, and grp_host\" tables", func() {
-	var measureTimes = 0
+	var (
+		measureTimes = 0
+		runTimes     = 0
+	)
 
-	BeforeEach(func() {
-		if measureTimes == 0 {
-			Skip(fmt.Sprintf("The measure times is 0(\"var measureTimes = 0\"), skip the stress test."))
-		}
-	})
-
-	var runTimes = 0
 	AfterEach(func() {
 		runTimes++
-		if runTimes < measureTimes {
-			return
-		}
-
-		GinkgoT().Logf("Remove all of generated hosts, host groups, and relations")
-		inTx(
-			`
+		if runTimes == measureTimes {
+			GinkgoT().Logf("Remove all of generated hosts, host groups, and relations")
+			inTx(
+				`
 			DELETE gh
 			FROM grp_host AS gh
 				INNER JOIN
@@ -45,9 +38,10 @@ var _ = Describe("Stress testing for importing to \"host, grp, and grp_host\" ta
 				ON gh.grp_id = gp.id
 					AND gp.grp_name LIKE 'st-ccg-%'
 			`,
-			`DELETE FROM host WHERE hostname LIKE "st-cch-%"`,
-			`DELETE FROM grp WHERE grp_name LIKE "st-ccg-%"`,
-		)
+				`DELETE FROM host WHERE hostname LIKE "st-cch-%"`,
+				`DELETE FROM grp WHERE grp_name LIKE "st-ccg-%"`,
+			)
+		}
 	})
 
 	Context("Heavy data tests", func() {
@@ -59,8 +53,13 @@ var _ = Describe("Stress testing for importing to \"host, grp, and grp_host\" ta
 
 		sampleData := generateSourceData(numberOfHosts, numberOfHostGroups, hostGroupWeights)
 
-		GinkgoT().Logf("Number of hosts: [%d]. Number of host groups: [%d]. Group Weights: %v",
-			numberOfHosts, numberOfHostGroups, hostGroupWeights)
+		BeforeEach(func() {
+			// Show info only before first run
+			if measureTimes > 0 && runTimes == 0 {
+				GinkgoT().Logf("Number of hosts: [%d]. Number of host groups: [%d]. Group Weights: %v",
+					numberOfHosts, numberOfHostGroups, hostGroupWeights)
+			}
+		})
 
 		Measure("Heavy data tests", func(b Benchmarker) {
 			b.Time("runtime", func() {
