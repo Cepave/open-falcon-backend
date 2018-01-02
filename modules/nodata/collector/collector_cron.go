@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	cmodel "github.com/open-falcon/common/model"
-	cutils "github.com/open-falcon/common/utils"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	tsema "github.com/toolkits/concurrent/semaphore"
 	tcron "github.com/toolkits/cron"
 	thttpclient "github.com/toolkits/http/httpclient"

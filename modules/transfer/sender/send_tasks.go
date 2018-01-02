@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
-	cmodel "github.com/open-falcon/common/model"
 	nsema "github.com/toolkits/concurrent/semaphore"
 	"github.com/toolkits/container/list"
 	nproc "github.com/toolkits/proc"

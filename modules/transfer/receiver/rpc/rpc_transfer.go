@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
-	cmodel "github.com/open-falcon/common/model"
-	cutils "github.com/open-falcon/common/utils"
 )
 
 type Transfer int

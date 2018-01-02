@@ -4,8 +4,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"time"
 
-	cmodel "github.com/open-falcon/common/model"
-	cutils "github.com/open-falcon/common/utils"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+	cutils "github.com/Cepave/open-falcon-backend/common/utils"
 	tcron "github.com/toolkits/cron"
 	ttime "github.com/toolkits/time"
 

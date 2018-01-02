@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	cpool "github.com/Cepave/open-falcon-backend/modules/transfer/sender/conn_pool"
-	cmodel "github.com/open-falcon/common/model"
 	nlist "github.com/toolkits/container/list"
 )
 

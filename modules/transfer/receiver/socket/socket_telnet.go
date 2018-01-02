@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
-	cmodel "github.com/open-falcon/common/model"
 )
 
 func socketTelnetHandle(conn net.Conn) {
