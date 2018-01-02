@@ -19,6 +19,12 @@
 			"revisionTime": "2017-06-07T19:55:31Z"
 		},
 		{
+			"checksumSHA1": "X3M6Rxto5izgbK7TpVZJjIBvrg8=",
+			"path": "github.com/Pallinder/go-randomdata",
+			"revision": "21b99cb8cf82cc85e8fc96adb1dc2ef61b6d5c2a",
+			"revisionTime": "2017-03-11T15:38:17Z"
+		},
+		{
 			"checksumSHA1": "FDV1HT/HwDJ1G2LPEJG2o/gsWz4=",
 			"path": "github.com/asaskevich/govalidator",
 			"revision": "aa5cce4a76edb1a5acecab1870c17abbffb5419e",
@@ -27,14 +33,6 @@
 		{
 			"checksumSHA1": "G0MBhApkgOH9++JlIA8FPfU7j9Y=",
 			"path": "github.com/astaxie/beego",
-			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
-			"revisionTime": "2016-03-11T03:35:24Z",
-			"version": "=v1.6.1",
-			"versionExact": "v1.6.1"
-		},
-		{
-			"checksumSHA1": "gSSu0SO0GZIZrBgQpybXeNMWSJs=",
-			"path": "github.com/astaxie/beego/cache",
 			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
 			"revisionTime": "2016-03-11T03:35:24Z",
 			"version": "=v1.6.1",
@@ -59,14 +57,6 @@
 		{
 			"checksumSHA1": "PDNn16w89zWODshT9zlPzSmWZFA=",
 			"path": "github.com/astaxie/beego/grace",
-			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
-			"revisionTime": "2016-03-11T03:35:24Z",
-			"version": "=v1.6.1",
-			"versionExact": "v1.6.1"
-		},
-		{
-			"checksumSHA1": "2BKsNnWvcerRGfZjLKvtJCVBBu8=",
-			"path": "github.com/astaxie/beego/httplib",
 			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
 			"revisionTime": "2016-03-11T03:35:24Z",
 			"version": "=v1.6.1",
@@ -561,6 +551,12 @@
 			"revisionTime": "2017-07-29T21:13:33Z"
 		},
 		{
+			"checksumSHA1": "CxNwJP++vjUAyy3bbJnNss1Il9Q=",
+			"path": "github.com/moul/http2curl",
+			"revision": "4e24498b31dba4683efb9d35c1c8a91e2eda28c8",
+			"revisionTime": "2016-10-31T19:45:48Z"
+		},
+		{
 			"checksumSHA1": "EykqGCTy45u1Z2oZQti8i0acsgI=",
 			"path": "github.com/niean/go-metrics-lite",
 			"revision": "b5d30971b578891bd71746920b87d0cf2f2c4ea2",
@@ -801,10 +797,10 @@
 			"revisionTime": "2016-09-12T14:56:37Z"
 		},
 		{
-			"checksumSHA1": "I0kIkGOtYBit3XflqEqbEt+kuhQ=",
+			"checksumSHA1": "J2jsVXxHlJHahFf3hY4mU3x8Grs=",
 			"path": "github.com/open-falcon/rrdlite",
-			"revision": "7d8646c85cc56cad1f65d97abbe24fdfc1b88917",
-			"revisionTime": "2017-04-12T12:20:36Z"
+			"revision": "b82d08f8da852b242ac87cd22f1cd01d33337d5d",
+			"revisionTime": "2016-04-01T10:28:56Z"
 		},
 		{
 			"checksumSHA1": "K2c5SrLajzKLIM5RVl3B/Ns17mk=",
@@ -831,10 +827,28 @@
 			"revisionTime": "2015-12-07T02:28:36Z"
 		},
 		{
+			"checksumSHA1": "UmYMPKuYIY/PPRYaixh8FuR0X64=",
+			"path": "github.com/parnurzeal/gorequest",
+			"revision": "ea779001e09326d30d455dbf37bc0d08c49941a2",
+			"revisionTime": "2017-02-20T17:21:58Z"
+		},
+		{
+			"checksumSHA1": "u+3mJIAWj+u0Ovc53w2zWNaj830=",
+			"path": "github.com/patrickmn/go-cache",
+			"revision": "ea4bd2a538d816ad2bd3426ced3a99f2382103ba",
+			"revisionTime": "2017-03-26T16:37:11Z"
+		},
+		{
 			"checksumSHA1": "zZg0J0MqvnqXVYo644QDvnUinrc=",
 			"path": "github.com/pelletier/go-toml",
 			"revision": "69d355db5304c0f7f809a2edc054553e7142f016",
 			"revisionTime": "2017-06-28T01:26:37Z"
+		},
+		{
+			"checksumSHA1": "ynJSWoF6v+3zMnh9R0QmmG6iGV8=",
+			"path": "github.com/pkg/errors",
+			"revision": "ff09b135c25aae272398c51a07235b90a75aa4f0",
+			"revisionTime": "2017-03-16T20:15:38Z"
 		},
 		{
 			"checksumSHA1": "ZSYig6eYkc34ELHl6O5gRtJvr6o=",
@@ -1153,6 +1167,12 @@
 			"path": "github.com/toolkits/nux",
 			"revision": "d5bf087ae58de8d83fbb04a0a8c8e9d739cb9620",
 			"revisionTime": "2017-06-15T08:01:54Z"
+		},
+		{
+			"checksumSHA1": "Dc/RBjLPPgXOEE0VObc+2lOwn98=",
+			"path": "github.com/toolkits/pool",
+			"revision": "2caf2bf58cef126ff3a8a306c87636a980ac2f37",
+			"revisionTime": "2015-08-27T09:10:41Z"
 		},
 		{
 			"checksumSHA1": "+9bhzpvXFKkkdE8E9Ai0Qt4T/Ng=",
@@ -1491,12 +1511,6 @@
 			"revisionTime": "2017-07-11T21:55:05Z"
 		},
 		{
-			"checksumSHA1": "OIXFjiBRrdxiJ/tcHIy7u5V8tXI=",
-			"path": "gopkg.in/bitly/go-simplejson.v0",
-			"revision": "aabad6e819789e569bd6aabf444c935aa9ba1e44",
-			"revisionTime": "2015-09-15T16:53:35Z"
-		},
-		{
 			"checksumSHA1": "CEFTYXtWmgSh+3Ik1NmDaJcz4E0=",
 			"path": "gopkg.in/check.v1",
 			"revision": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec",
@@ -1577,12 +1591,6 @@
 		{
 			"checksumSHA1": "j6/36MLMgdUu12s85MQcLgQ8XDY=",
 			"path": "gopkg.in/h2non/gentleman.v2/plugins/query",
-			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
-			"revisionTime": "2017-07-26T15:27:18Z"
-		},
-		{
-			"checksumSHA1": "QEXqA8X0366BScvLJyMD8mMtHsU=",
-			"path": "gopkg.in/h2non/gentleman.v2/plugins/timeout",
 			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
 			"revisionTime": "2017-07-26T15:27:18Z"
 		},
