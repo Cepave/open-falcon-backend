@@ -39,6 +39,7 @@ func main() {
 
 	rdb.InitPortalRdb(toRdbConfig(config, "portal"))
 	rdb.InitGraphRdb(toRdbConfig(config, "graph"))
+	rdb.InitBossRdb(toRdbConfig(config, "boss"))
 
 	restful.InitGin(toGinConfig(config))
 	restful.InitCache(toCacheConfig(config))

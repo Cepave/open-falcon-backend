@@ -11,16 +11,16 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Intg] Test getAgentConfig", itSkip.PrependBeforeEach(func() {
+var _ = Describe("[Intg] Test getAgentConfig", itSkipOnPortal.PrependBeforeEach(func() {
 	BeforeEach(func() {
-		inTx(
+		inPortalTx(
 			"INSERT INTO common_config(`key`, `value`)" +
 				"VALUES('getAgentConfig', 'https://example.com/Cepave/getAgentConfig.git')",
 		)
 	})
 
 	AfterEach(func() {
-		inTx(
+		inPortalTx(
 			"DELETE FROM common_config WHERE `key` = 'getAgentConfig'",
 		)
 	})

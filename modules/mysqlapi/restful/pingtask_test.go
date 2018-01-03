@@ -26,33 +26,33 @@ func (s *TestPingtaskItSuite) TearDownSuite(c *C) {
 }
 
 func (s *TestPingtaskItSuite) SetUpTest(c *C) {
-	inTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
+	inPortalTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
 	case
 		"TestPingtaskItSuite.TestGetPingtaskById",
 		"TestPingtaskItSuite.TestListPingtasks",
 		"TestPingtaskItSuite.TestModifyPingtask":
-		inTx(nqmTestinglDb.InsertPingtaskSQL)
+		inPortalTx(nqmTestinglDb.InsertPingtaskSQL)
 	case
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForPingtask",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForPingtask":
-		inTx(nqmTestinglDb.InitNqmAgentAndPingtaskSQL...)
+		inPortalTx(nqmTestinglDb.InitNqmAgentAndPingtaskSQL...)
 	}
 }
 func (s *TestPingtaskItSuite) TearDownTest(c *C) {
-	inTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
+	inPortalTx := rdb.DbFacade.SqlDbCtrl.ExecQueriesInTx
 
 	switch c.TestName() {
 	case
 		"TestPingtaskItSuite.TestGetPingtaskById",
 		"TestPingtaskItSuite.TestListPingtasks",
 		"TestPingtaskItSuite.TestModifyPingtask":
-		inTx(nqmTestinglDb.DeletePingtaskSQL)
+		inPortalTx(nqmTestinglDb.DeletePingtaskSQL)
 	case "TestPingtaskItSuite.TestAddNewPingtask":
-		inTx(
+		inPortalTx(
 			`DELETE FROM nqm_ping_task WHERE pt_name = 'tadd-pt-1'`,
 		)
 	case
@@ -60,7 +60,7 @@ func (s *TestPingtaskItSuite) TearDownTest(c *C) {
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForAgent",
 		"TestPingtaskItSuite.TestAddPingtaskToAgentForPingtask",
 		"TestPingtaskItSuite.TestRemovePingtaskToAgentForPingtask":
-		inTx(nqmTestinglDb.CleanNqmAgentAndPingtaskSQL...)
+		inPortalTx(nqmTestinglDb.CleanNqmAgentAndPingtaskSQL...)
 	}
 }
 

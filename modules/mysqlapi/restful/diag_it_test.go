@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Test /health", itSkip.PrependBeforeEach(func() {
+var _ = Describe("Test /health", itSkipOnPortal.PrependBeforeEach(func() {
 	It("returns the JSON data", func() {
 		resp := testingHttp.NewResponseResultBySling(
 			httpClientConfig.NewClient().

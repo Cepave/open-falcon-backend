@@ -1,17 +1,28 @@
 {
     "debug": false,
-	"cron": {
-		"vacuum_query_objects": {
-			"enable": true,
-			"schedule": "@daily",
-			"for_days": 90
-		},
-		"vacuum_graph_index": {
-			"enable": true,
-			"schedule": "0 0 2 ? * 6",
-			"for_days": 7
-		}
-	},
+  	"cron": {
+  		"vacuum_query_objects": {
+  			"enable": true,
+  			"schedule": "@daily",
+  			"for_days": 90
+  		},
+  		"vacuum_graph_index": {
+  			"enable": true,
+  			"schedule": "0 0 2 ? * 6",
+  			"for_days": 7
+  		},
+      "clear_task_log_entries": {
+  			"enable": true,
+  			"schedule": "@daily",
+  			"for_days": 90
+  		},
+			"sync_cmdb_from_boss" : {
+				"enable": true,
+				"init_delay_seconds": 30,
+				"fixed_delay_seconds": 10,
+				"error_delay_seconds": 300
+			}
+  	},
     "http": {
         "enable": true,
         "listen": "0.0.0.0:8002"
@@ -35,8 +46,8 @@
             "task,test.hostname:8001"
         ]
     },
-	"mysql_api": {
-        "host": "http://127.0.0.1:6040",
-        "resource": ""
-	}
+  	"mysql_api": {
+          "host": "http://127.0.0.1:6040",
+          "resource": ""
+  	}
 }

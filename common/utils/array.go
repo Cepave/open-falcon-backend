@@ -50,6 +50,29 @@ func AppendToAny(arrayOfAny []interface{}, any interface{}) []interface{} {
 	return arrayOfAny
 }
 
+// Flatten a array or slice object by customized function.
+//
+// This function combines the flatten ones to a slice of []interface{}
+func FlattenToSlice(source interface{}, convertFunc func(v interface{}) []interface{}) []interface{} {
+	valueOfSource := reflect.ValueOf(source)
+	typeOfSource := valueOfSource.Type()
+
+	switch typeOfSource.Kind() {
+	case reflect.Array, reflect.Slice:
+	default:
+		panic(fmt.Sprintf("Needs Slice or Array, but got: %v", typeOfSource))
+	}
+
+	result := make([]interface{}, 0)
+	for i := 0; i < valueOfSource.Len(); i++ {
+		flattenObjects := convertFunc(valueOfSource.Index(i).Interface())
+
+		result = append(result, flattenObjects...)
+	}
+
+	return result
+}
+
 // Converts typed function(for filter) to FilterFunc
 func TypedFuncToFilter(anyFunc interface{}) FilterFunc {
 	valueOfFunc := reflect.ValueOf(anyFunc)
@@ -238,6 +261,38 @@ func (a *AbstractArray) MapTo(mapper MapperFunc, eleType reflect.Type) *Abstract
 	}
 
 	return MakeAbstractArray(newArray.Interface())
+}
+
+// Splits the array to batch and feeds every batch to "batchProcessor",
+// the rest of data would be feed to restProcessor
+func (a *AbstractArray) BatchProcess(
+	batchSize int,
+	batchProcessor func(batch interface{}), restProcessor func(rest interface{}),
+) {
+	valueOfAnyArray := a.anyArrayValue
+	arrayLength := valueOfAnyArray.Len()
+
+	beforeRest := arrayLength - (arrayLength % batchSize)
+	for i := 0; i < beforeRest; i += batchSize {
+		batchSlice := reflect.MakeSlice(
+			reflect.SliceOf(a.arrayElementType), 0, batchSize,
+		)
+		for b := 0; b < batchSize; b++ {
+			batchSlice = reflect.Append(batchSlice, valueOfAnyArray.Index(i+b))
+		}
+		batchProcessor(batchSlice.Interface())
+	}
+
+	if beforeRest >= 0 {
+		restSize := arrayLength - beforeRest
+		restSlice := reflect.MakeSlice(
+			reflect.SliceOf(a.arrayElementType), 0, restSize,
+		)
+		for b := beforeRest; b < arrayLength; b++ {
+			restSlice = reflect.Append(restSlice, valueOfAnyArray.Index(b))
+		}
+		restProcessor(restSlice.Interface())
+	}
 }
 
 func getMapperTypes(mapperFunc interface{}) []reflect.Type {
