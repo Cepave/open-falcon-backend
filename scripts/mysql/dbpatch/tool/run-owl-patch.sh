@@ -23,7 +23,7 @@ Options:\n\n
 \t linux, windows, or osx\n
 -bin-arch=<32> - If this value is provided, ignores \"-bin\" option\n
 \t 64 or 32\n
--database=<boss|portal|uic|links|graph|grafana|dashboard>\n
+-database=<boss|portal|uic|links|graph|grafana|dashboard|imdb>\n
 -log-base=<base directory>. Defualt value is \"$PATCH_LOG_BASE\"\n
 -db-connection=<connection string> - default value is \"$DATABASE_CONNECTION\"\n
 -db-type=<type> - default value is \"mysql\"\n
