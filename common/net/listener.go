@@ -57,8 +57,6 @@ type ListenerController struct {
 
 // This method would keep accepting message of socket
 //
-// You don't have to close the connection object, this controller would close it for you.
-//
 // This method would use go routine to call your conn handler.
 func (c *ListenerController) AcceptLoop(connHandler func(conn net.Conn)) {
 	c.lock.Lock()
@@ -84,12 +82,6 @@ func (c *ListenerController) AcceptLoop(connHandler func(conn net.Conn)) {
 				p := recover()
 				if p != nil {
 					logger.Panicf("Connection handler has error: %v", p)
-				}
-
-				logger.Debug("Closing connection[%v]", lambdaConn)
-				err := lambdaConn.Close()
-				if err != nil {
-					logger.Warnf("Close connection[%v] have error: %v", lambdaConn, err)
 				}
 			}()
 
