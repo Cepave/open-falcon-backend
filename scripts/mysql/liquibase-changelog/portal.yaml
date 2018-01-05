@@ -1,33 +1,21 @@
 databaseChangeLog:
-    - property:
-        name: dbname.uic
-        value: uic
+    - property: { name: dbname.uic, value: uic }
     - changeSet:
         id: "init-1"
         author: "mike"
         preConditions:
             onFail: MARK_RAN
             onFailMessage: "\"sysdb_change_log\" is existing, mark the init-1 as ran one"
-            not:
-                tableExists:
-                    tableName: sysdb_change_log
+            not: { tableExists: { tableName: sysdb_change_log } }
         changes:
-            - sqlFile:
-                endDelimiter: ";"
-                relativeToChangelogFile: true
-                path: portal.ori.masato-33.tables.sql.gz
-            - sqlFile:
-                endDelimiter: "#"
-                relativeToChangelogFile: true
-                path: portal.ori.masato-33.code.sql.gz
+            - sqlFile: { endDelimiter: ";", relativeToChangelogFile: true, path: portal.ori.masato-33.tables.sql.gz }
+            - sqlFile: { endDelimiter: "#", relativeToChangelogFile: true, path: portal.ori.masato-33.code.sql.gz }
         modifySql:
-            - replace:
-                replace: "%uic%"
-                with: "${dbname.uic}"
-    - changeSet:
-        id: "init-2"
-        author: "mike"
+            - replace: { replace: "%uic%", with: "${dbname.uic}" }
+    - changeSet: {
+        id: "init-2", author: "mike",
         changes: [ tagDatabase: { tag: "init.171101" } ]
+    }
     - changeSet:
         id: "3"
         author: "mike"
@@ -35,17 +23,84 @@ databaseChangeLog:
             onFail: MARK_RAN
             onFailMessage: "\"events.ev_time_creation\" is existing, mark the mike-3 as ran one"
             not:
-                columnExists:
-                    tableName: events
-                    columnName: ev_time_creation
+                columnExists: { tableName: events, columnName: ev_time_creation }
         changes:
             - addColumn:
                 tableName: events
-                columns:
-                    - column:
-                        name: ev_time_creation
-                        type: DATETIME
-                        valueComputed: "timestamp"
-                        defaultValueComputed: "NOW()"
-                        constraints:
-                            nullable: false
+                columns: [
+                    column: {
+                        name: ev_time_creation, type: DATETIME,
+                        valueComputed: "timestamp", defaultValueComputed: "NOW()",
+                        constraints: { nullable: false }
+                    }
+                ]
+    - changeSet:
+        id: "4"
+        author: "cheminlin"
+        changes:
+        - createTable:
+            tableName: owl_schedule
+            columns:
+                - column: {
+                    name: sch_id, type: INT, autoIncrement: true,
+                    constraints: {
+                        nullable: false, primaryKey: true, primaryKeyName: pk_owl_schedule
+                    }
+                }
+                - column: {
+                    name: sch_name, type: VARCHAR(64),
+                    constraints: {
+                        nullable: false, unique: true, uniqueConstraintName: unq_owl_schedule__sch_name
+                    }
+                }
+                - column: {
+                    name: sch_lock, type: TINYINT,
+                    constraints: { nullable: false }
+                }
+                - column: {
+                    name: sch_modify_time, type: DATETIME,
+                    constraints: { nullable: false }
+                }
+        - createTable:
+            tableName: owl_schedule_log
+            columns:
+                - column: {
+                    name: sl_uuid, type: BINARY(16),
+                    constraints: {
+                        nullable: false, primaryKey: true, primaryKeyName: pk_owl_schedule_log
+                    }
+                }
+                - column: {
+                    name: sl_sch_id, type: INT,
+                    constraints: {
+                        nullable: false, references: owl_schedule(sch_id), foreignKeyName: fk_owl_schedule_log__owl_schedule
+                    }
+                }
+                - column: {
+                    name: sl_start_time, type: DATETIME,
+                    constraints: { nullable: false }
+                }
+                - column: {
+                    name: sl_end_time, type: DATETIME,
+                    constraints: { nullable: true }
+                }
+                - column: {
+                    name: sl_timeout, type: INT,
+                    constraints: { nullable: false }
+                }
+                - column: {
+                    name: sl_status, type: TINYINT,
+                    constraints: { nullable: false }
+                }
+                - column: {
+                    name: sl_message, type: VARCHAR(512),
+                    constraints: { nullable: true }
+                }
+        - sql:
+            comment: "Create DESC indices of owl_schedule_log."
+            sql: |
+                CREATE INDEX ix_owl_schedule_log__sl_start_time
+                ON owl_schedule_log(sl_start_time DESC);
+                CREATE UNIQUE INDEX ix_owl_schedule_log__sl_sch_id_sl_start_time
+                ON owl_schedule_log(sl_sch_id, sl_start_time DESC);
+            stripComments: true

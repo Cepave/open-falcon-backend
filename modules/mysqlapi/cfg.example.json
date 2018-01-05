@@ -7,6 +7,10 @@
 		"graph": {
 			"dsn" : "root:cepave@tcp(127.0.0.1:3306)/graph?loc=Local&parseTime=true",
 			"maxIdle" : 8
+		},
+		"boss": {
+			"dsn" : "root:cepave@tcp(127.0.0.1:3306)/boss?loc=Local&parseTime=true",
+			"maxIdle" : 8
 		}
 	},
 	"restful" : {

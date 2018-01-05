@@ -108,4 +108,60 @@ var _ = Describe("Abstract Array", func() {
 			Entry("(nil array) []int32 to []int16", []int32(nil), int16(0), []int16{}),
 		)
 	})
+
+	Context("BatchProcess()", func() {
+		sampleData := []int{10, 11, 22, 33, 71, 32}
+
+		DescribeTable("The result slice should be as same as original",
+			func(batchSize int) {
+				receivedData := make([]int, 0, len(sampleData))
+
+				MakeAbstractArray(sampleData).
+					BatchProcess(
+						batchSize,
+						func(batch interface{}) {
+							receivedData = append(receivedData, batch.([]int)...)
+						},
+						func(rest interface{}) {
+							receivedData = append(receivedData, rest.([]int)...)
+						},
+					)
+
+				Expect(receivedData).To(Equal(sampleData))
+			},
+			Entry("Perfect batch(no rest data)", 3),
+			Entry("Perfect batch(1 batch)", 6),
+			Entry("batch with rest", 4),
+			Entry("batch is larger than original size(everything is put into rest)", 7),
+			Entry("batch size is 1", 1),
+		)
+	})
+})
+
+var _ = Describe("FlattenToSlice()", func() {
+	DescribeTable("Result should be matched expected one",
+		func(sampleSlice interface{}, convertFunc func(v interface{}) []interface{}, expectedResult interface{}) {
+			testedResult := FlattenToSlice(sampleSlice, convertFunc)
+
+			Expect(testedResult).To(Equal(expectedResult))
+		},
+		Entry("Normal flatten",
+			[]int{20, 30, 40},
+			func(v interface{}) []interface{} {
+				return []interface{}{
+					v, v.(int) + 2,
+				}
+			},
+			[]interface{}{
+				20, 22, 30, 32, 40, 42,
+			},
+		),
+		Entry("Empty slice",
+			[]int{},
+			func(v interface{}) []interface{} {
+				return []interface{}{v, v}
+			},
+			[]interface{}{},
+		),
+	)
 })

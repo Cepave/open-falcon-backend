@@ -6,15 +6,12 @@ import (
 	ojson "github.com/Cepave/open-falcon-backend/common/json"
 	nqmModel "github.com/Cepave/open-falcon-backend/common/model/nqm"
 	commonQueue "github.com/Cepave/open-falcon-backend/common/queue"
-	dbTest "github.com/Cepave/open-falcon-backend/common/testing/db"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb"
 	"github.com/Cepave/open-falcon-backend/modules/mysqlapi/rdb/test"
 	"github.com/icrowley/fake"
 
 	. "github.com/onsi/ginkgo"
 )
-
-var ginkgoDb = &dbTest.GinkgoDb{}
 
 var numberOfSampleRequests = 0 // 2048
 var batchSize = 64
@@ -28,7 +25,6 @@ var _ = Describe("Pressure Test", itSkip.PrependBeforeEach(func() {
 		if numberOfSampleRequests == 0 {
 			Skip("The variable \"numberOfSampleRequests\" == 0, skip benchmarks")
 		}
-		rdb.DbFacade = ginkgoDb.InitDbFacade()
 		for i := 0; i < numberOfSampleRequests; i++ {
 			r := randomHeartbeatRequest()
 			heartbeatRequests[i] = r
@@ -43,7 +39,6 @@ var _ = Describe("Pressure Test", itSkip.PrependBeforeEach(func() {
 			test.ResetAutoIncForNqmAgent,
 			test.ResetAutoIncForHost,
 		)
-		ginkgoDb.ReleaseDbFacade(rdb.DbFacade)
 	})
 
 	Measure("performance of the batch size", func(b Benchmarker) {

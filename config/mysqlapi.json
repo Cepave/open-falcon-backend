@@ -7,6 +7,10 @@
 		"graph": {
 			"dsn" : "%%MYSQL%%/graph?loc=Local&parseTime=true",
 			"maxIdle" : 8
+		},
+		"boss": {
+			"dsn" : "%%MYSQL%%/boss?loc=Local&parseTime=true",
+			"maxIdle" : 8
 		}
 	},
 	"restful" : {
