@@ -12,16 +12,16 @@ import (
 
 var _ = Describe("RelayStation", func() {
 	Context("Dispatch for various type of delegatee", func() {
-		var stationFactory = &RelayStationFactory {
-			stationBase: &RelayStation {
-				Any: []RelayDelegatee {
+		var stationFactory = &RelayStationFactory{
+			stationBase: &RelayStation{
+				Any: []RelayDelegatee{
 					new(probeDelegatee), new(probeDelegatee),
 				},
-				Exclusive: []RelayDelegatee {
-					&probeDelegatee{ inclusiveName: "pc1" },
-					&probeDelegatee{ inclusiveName: "pc2" },
+				Exclusive: []RelayDelegatee{
+					&probeDelegatee{inclusiveName: "pc1"},
+					&probeDelegatee{inclusiveName: "pc2"},
 				},
-				Otherwise: []RelayDelegatee {
+				Otherwise: []RelayDelegatee{
 					&probeDelegatee{},
 				},
 			},
@@ -31,15 +31,15 @@ var _ = Describe("RelayStation", func() {
 		BeforeEach(func() {
 			testedStation = stationFactory.Build()
 
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "zz1" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "zz2" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "pc1" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "pc1" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "pc2" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "pc2" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "pc2" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "ga3" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "ga4" })
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "zz1"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "zz2"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "pc1"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "pc1"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "pc2"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "pc2"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "pc2"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "ga3"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "ga4"})
 		})
 		AfterEach(func() {
 			testedStation = nil
@@ -59,16 +59,16 @@ var _ = Describe("RelayStation", func() {
 	})
 
 	Context("Relay to assigned delegatee", func() {
-		var stationFactory = &RelayStationFactory {
-			stationBase: &RelayStation {
-				Any: []RelayDelegatee {
+		var stationFactory = &RelayStationFactory{
+			stationBase: &RelayStation{
+				Any: []RelayDelegatee{
 					new(probeDelegatee), new(probeDelegatee),
 				},
-				Exclusive: []RelayDelegatee {
-					&probeDelegatee{ inclusiveName: "rc1" },
-					&probeDelegatee{ inclusiveName: "rc2" },
+				Exclusive: []RelayDelegatee{
+					&probeDelegatee{inclusiveName: "rc1"},
+					&probeDelegatee{inclusiveName: "rc2"},
 				},
-				Otherwise: []RelayDelegatee {
+				Otherwise: []RelayDelegatee{
 					&probeDelegatee{},
 				},
 			},
@@ -78,11 +78,11 @@ var _ = Describe("RelayStation", func() {
 		BeforeEach(func() {
 			testedStation = stationFactory.Build()
 
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "a1" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "rc1" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "rc1" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "rc2" })
-			testedStation.Dispatch(&cmodel.MetaData { Endpoint: "a3" })
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "a1"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "rc1"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "rc1"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "rc2"})
+			testedStation.Dispatch(&cmodel.MetaData{Endpoint: "a3"})
 		})
 		AfterEach(func() {
 			testedStation = nil
@@ -100,11 +100,11 @@ var _ = Describe("RelayStation", func() {
 	})
 
 	Context("clone() method", func() {
-		sampleFactory := &RelayStationFactory {
-			stationBase: &RelayStation {
-				Any: []RelayDelegatee{ new(probeDelegatee) },
-				Exclusive: []RelayDelegatee{ &probeDelegatee{ inclusiveName: "cc1" } },
-				Otherwise: []RelayDelegatee{ new(probeDelegatee) },
+		sampleFactory := &RelayStationFactory{
+			stationBase: &RelayStation{
+				Any:       []RelayDelegatee{new(probeDelegatee)},
+				Exclusive: []RelayDelegatee{&probeDelegatee{inclusiveName: "cc1"}},
+				Otherwise: []RelayDelegatee{new(probeDelegatee)},
 			},
 		}
 
@@ -112,8 +112,8 @@ var _ = Describe("RelayStation", func() {
 			station1 := sampleFactory.Build()
 			station2 := sampleFactory.Build()
 
-			station1.Dispatch(&cmodel.MetaData{ Endpoint: "cc1" })
-			station1.Dispatch(&cmodel.MetaData{ Endpoint: "nothing.key" })
+			station1.Dispatch(&cmodel.MetaData{Endpoint: "cc1"})
+			station1.Dispatch(&cmodel.MetaData{Endpoint: "nothing.key"})
 
 			assertAcceptedSize(station1.Any[0], 2)
 			assertAcceptedSize(station1.Exclusive[0], 1)
@@ -132,7 +132,7 @@ var _ = Describe("genericRelayPool(implementation of RelayDelegatee)", func() {
 		target2 := &counterOfTarget{}
 
 		testedPool := &genericRelayPool{
-			relayTargets: &[]func([]*cmodel.MetaData) { target1.accept, target2.accept },
+			relayTargets: &[]func([]*cmodel.MetaData){target1.accept, target2.accept},
 		}
 
 		It("Every target should get fed metrics", func() {
@@ -148,8 +148,8 @@ var _ = Describe("genericRelayPool(implementation of RelayDelegatee)", func() {
 	})
 
 	Context("Clone() method", func() {
-		pool1 := &genericRelayPool {
-			relayTargets: &[]func([]*cmodel.MetaData) {
+		pool1 := &genericRelayPool{
+			relayTargets: &[]func([]*cmodel.MetaData){
 				func([]*cmodel.MetaData) {},
 				func([]*cmodel.MetaData) {},
 			},
@@ -171,26 +171,26 @@ var _ = Describe("stringMapRelayPool(implementation of RelayDelegatee)", func() 
 		target1 := &counterOfTarget{}
 		target2 := &counterOfTarget{}
 
-		testedPool := &stringMapRelayPool {
+		testedPool := &stringMapRelayPool{
 			stringify: func(metric *cmodel.MetaData) string {
 				return metric.Endpoint
 			},
-			mapToTargets: map[string]func([]*cmodel.MetaData) {
+			mapToTargets: map[string]func([]*cmodel.MetaData){
 				"ep1": target1.accept,
 				"ep2": target2.accept,
 			},
-			mapToMetrics: map[string][]*cmodel.MetaData {
+			mapToMetrics: map[string][]*cmodel.MetaData{
 				"ep1": make([]*cmodel.MetaData, 0),
 				"ep2": make([]*cmodel.MetaData, 0),
 			},
 		}
 
 		It("Target should accept expected number of mapToMetrics", func() {
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "ep1" })
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "ep1" })
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "ep2" })
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "ep2" })
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "ep2" })
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "ep1"})
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "ep1"})
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "ep2"})
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "ep2"})
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "ep2"})
 
 			testedPool.RelayToQueue()
 
@@ -200,15 +200,15 @@ var _ = Describe("stringMapRelayPool(implementation of RelayDelegatee)", func() 
 	})
 
 	Context("Clone() method", func() {
-		pool1 := &stringMapRelayPool {
+		pool1 := &stringMapRelayPool{
 			stringify: func(metric *cmodel.MetaData) string {
 				return metric.Endpoint
 			},
-			mapToTargets: map[string]func([]*cmodel.MetaData) {
+			mapToTargets: map[string]func([]*cmodel.MetaData){
 				"cp1": new(counterOfTarget).accept,
 				"cp2": new(counterOfTarget).accept,
 			},
-			mapToMetrics: map[string][]*cmodel.MetaData {
+			mapToMetrics: map[string][]*cmodel.MetaData{
 				"cp1": make([]*cmodel.MetaData, 0),
 				"cp2": make([]*cmodel.MetaData, 0),
 			},
@@ -216,11 +216,11 @@ var _ = Describe("stringMapRelayPool(implementation of RelayDelegatee)", func() 
 		pool2 := interface{}(pool1.Clone()).(*stringMapRelayPool)
 
 		It("Map should get cloned", func() {
-			pool1.Accept(&cmodel.MetaData{ Endpoint: "cp1" })
-			pool1.Accept(&cmodel.MetaData{ Endpoint: "cp1" })
-			pool1.Accept(&cmodel.MetaData{ Endpoint: "cp2" })
-			pool1.Accept(&cmodel.MetaData{ Endpoint: "cp2" })
-			pool1.Accept(&cmodel.MetaData{ Endpoint: "cp2" })
+			pool1.Accept(&cmodel.MetaData{Endpoint: "cp1"})
+			pool1.Accept(&cmodel.MetaData{Endpoint: "cp1"})
+			pool1.Accept(&cmodel.MetaData{Endpoint: "cp2"})
+			pool1.Accept(&cmodel.MetaData{Endpoint: "cp2"})
+			pool1.Accept(&cmodel.MetaData{Endpoint: "cp2"})
 
 			Expect(pool1.mapToMetrics["cp1"]).To(HaveLen(2))
 			Expect(pool1.mapToMetrics["cp2"]).To(HaveLen(3))
@@ -234,7 +234,7 @@ var _ = Describe("stringMapRelayPool(implementation of RelayDelegatee)", func() 
 var _ = Describe("filteredRelayPool(implementation of RelayDelegatee)", func() {
 	Context("Filter mechanism", func() {
 		targetPool := &probeDelegatee{}
-		testedPool := &filteredRelayPool {
+		testedPool := &filteredRelayPool{
 			RelayDelegatee: targetPool,
 			filter: func(metric *cmodel.MetaData) bool {
 				return metric.Endpoint == "Added"
@@ -242,19 +242,19 @@ var _ = Describe("filteredRelayPool(implementation of RelayDelegatee)", func() {
 		}
 
 		It("The number of accepted metrics should be 2(accepts 4)", func() {
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "Added" })
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "No-Added" })
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "Added" })
-			testedPool.Accept(&cmodel.MetaData{ Endpoint: "No-Added" })
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "Added"})
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "No-Added"})
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "Added"})
+			testedPool.Accept(&cmodel.MetaData{Endpoint: "No-Added"})
 
 			assertAcceptedSize(targetPool, 2)
 		})
 	})
 
 	Context("Clone() method", func() {
-		pool1 := &filteredRelayPool {
+		pool1 := &filteredRelayPool{
 			RelayDelegatee: &probeDelegatee{},
-			filter: func(*cmodel.MetaData) bool { return true },
+			filter:         func(*cmodel.MetaData) bool { return true },
 		}
 		pool2 := interface{}(pool1.Clone()).(*filteredRelayPool)
 
@@ -274,8 +274,8 @@ var _ = Describe("stageRelayPool(implementation of RelayDelegatee)", func() {
 		pool2 := interface{}(pool1.Clone()).(*stageRelayPool)
 
 		It("The metrics should not be affected by source", func() {
-			pool1.Accept(&cmodel.MetaData{ SourceMetric: &cmodel.MetricValue{} })
-			pool1.Accept(&cmodel.MetaData{ SourceMetric: &cmodel.MetricValue{} })
+			pool1.Accept(&cmodel.MetaData{SourceMetric: &cmodel.MetricValue{}})
+			pool1.Accept(&cmodel.MetaData{SourceMetric: &cmodel.MetricValue{}})
 
 			Expect(pool1.metrics).To(HaveLen(2))
 			Expect(pool2.metrics).To(HaveLen(0))
@@ -362,6 +362,7 @@ var _ = Describe("NewRelayFactoryByGlobalConfig()", func() {
 type counterOfTarget struct {
 	count int
 }
+
 func (t *counterOfTarget) accept(metrics []*cmodel.MetaData) {
 	t.count = len(metrics)
 }
@@ -376,8 +377,8 @@ func assertRelaySize(testedDelegatee interface{}, expectedSize int) {
 }
 
 type probeDelegatee struct {
-	acceptedSize int
-	relaySize int
+	acceptedSize  int
+	relaySize     int
 	inclusiveName string
 }
 

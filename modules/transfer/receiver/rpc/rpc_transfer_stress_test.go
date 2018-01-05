@@ -1,9 +1,9 @@
 package rpc
 
 import (
+	"fmt"
 	"net/rpc"
 	"time"
-	"fmt"
 
 	rd "github.com/Pallinder/go-randomdata"
 
@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	number_of_metrics = 0
-	number_of_threads = 16
-	number_of_agents = 1024
-	times_of_measure = 3
+	number_of_metrics       = 0
+	number_of_threads       = 16
+	number_of_agents        = 1024
+	times_of_measure        = 3
 	sec_interval_of_metrics = 30 // Seconds
 )
 
@@ -42,7 +42,7 @@ var _ = Describe("Stressing test on receiving metrics", func() {
 	Measure(fmt.Sprintf("%d metrics over %d agents", number_of_metrics, number_of_agents), func(b Benchmarker) {
 		b.Time("runtime", func() {
 			for i := 0; i < number_of_agents; i++ {
-				availableThreads<-true
+				availableThreads <- true
 				go func(agentNumber int) {
 					defer GinkgoRecover()
 					defer func() {
@@ -62,7 +62,7 @@ var _ = Describe("Stressing test on receiving metrics", func() {
 			 * Waiting for all of the go routines has completed
 			 */
 			for i := 0; i < number_of_threads; i++ {
-				availableThreads<-true
+				availableThreads <- true
 			}
 			// :~)
 		})
@@ -72,7 +72,7 @@ var _ = Describe("Stressing test on receiving metrics", func() {
 func sendMetrics(numberOfMetrics int) (*cmodel.TransferResponse, error) {
 	var (
 		reply *cmodel.TransferResponse
-		err error
+		err   error
 	)
 
 	ginkgoClient := &trpc.GinkgoJsonRpc{}
@@ -87,19 +87,20 @@ func sendMetrics(numberOfMetrics int) (*cmodel.TransferResponse, error) {
 }
 
 var (
-	sampleMetrics = []string {
+	sampleMetrics = []string{
 		"cpu.idle", "cpu.busy", "disk.out.peak", "disk.in.peak",
 		"net.out.bytes", "net.in.bytes", "net.drop.bytes",
 		"io.out.peak", "io.in.peak",
 	}
 
-	valueRanges = [][]int {
-		{ 1, 100 },
-		{ 500, 2500 },
-		{ 1, 50000 },
-		{ 10000, 500000 },
+	valueRanges = [][]int{
+		{1, 100},
+		{500, 2500},
+		{1, 50000},
+		{10000, 500000},
 	}
 )
+
 func buildMetrics(numberOfMetrics int) []*cmodel.MetricValue {
 	metrics := make([]*cmodel.MetricValue, numberOfMetrics)
 
@@ -108,14 +109,14 @@ func buildMetrics(numberOfMetrics int) []*cmodel.MetricValue {
 	valueRange := valueRanges[rd.Number(len(valueRanges))]
 	step := int64(rd.Number(1, 6) * 5)
 
-	startTime := time.Now().Add(time.Duration(-sec_interval_of_metrics * numberOfMetrics) * time.Second)
+	startTime := time.Now().Add(time.Duration(-sec_interval_of_metrics*numberOfMetrics) * time.Second)
 
 	for i := 0; i < numberOfMetrics; i++ {
-		metrics[i] = &cmodel.MetricValue {
+		metrics[i] = &cmodel.MetricValue{
 			Endpoint: endpoint, Metric: metric,
 			Step: step, Type: "GAUGE", Tags: "",
-			Timestamp: startTime.Add(time.Duration(sec_interval_of_metrics * i) * time.Second).Unix(),
-			Value: rd.Number(valueRange[0], valueRange[1]),
+			Timestamp: startTime.Add(time.Duration(sec_interval_of_metrics*i) * time.Second).Unix(),
+			Value:     rd.Number(valueRange[0], valueRange[1]),
 		}
 	}
 

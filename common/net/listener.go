@@ -41,10 +41,10 @@ func MustInitTcpListener(address string) net.Listener {
 
 // Constructs the controller for usage on "net.Listener"
 func NewListenerController(listener net.Listener) *ListenerController {
-	return &ListenerController {
+	return &ListenerController{
 		Listener: listener,
-		working: false,
-		lock: &sync.Mutex{},
+		working:  false,
+		lock:     &sync.Mutex{},
 	}
 }
 
@@ -52,7 +52,7 @@ type ListenerController struct {
 	net.Listener
 
 	working bool
-	lock *sync.Mutex
+	lock    *sync.Mutex
 }
 
 // This method would keep accepting message of socket

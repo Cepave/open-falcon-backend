@@ -22,7 +22,7 @@ var _ = Describe("Sends metrics by RPC protocol", jsonRpcSkipper.PrependBeforeEa
 
 					err := client.Call(
 						"Transfer.Update",
-						[]*cmodel.MetricValue {
+						[]*cmodel.MetricValue{
 							{
 								Endpoint: "pc01.it.cepave.com", Metric: "m01", Step: 30, Type: "GAUGE", Tags: "",
 								Value: 11, Timestamp: time.Now().Unix() + 2,
@@ -44,7 +44,7 @@ var _ = Describe("Sends metrics by RPC protocol", jsonRpcSkipper.PrependBeforeEa
 					Expect(reply).To(PointTo(MatchFields(IgnoreExtras, Fields{
 						"Message": Equal("ok"),
 						"Invalid": Equal(0),
-						"Total": Equal(3),
+						"Total":   Equal(3),
 					})))
 				},
 			)

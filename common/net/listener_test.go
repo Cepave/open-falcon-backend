@@ -2,8 +2,8 @@ package net
 
 import (
 	"fmt"
-	"time"
 	"net"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -52,7 +52,7 @@ var _ = Describe("Controller for TCP listener", func() {
 
 			Eventually(
 				func() bool { return accepted },
-				2 * time.Second, 200 * time.Millisecond,
+				2*time.Second, 200*time.Millisecond,
 			).Should(BeTrue())
 		})
 	})

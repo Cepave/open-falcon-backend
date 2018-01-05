@@ -1,8 +1,8 @@
 package service
 
 import (
-	"time"
 	"strconv"
+	"time"
 
 	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	cutils "github.com/Cepave/open-falcon-backend/common/utils"
@@ -87,7 +87,7 @@ func checkAndRefineMetric(metric *cmodel.MetricValue, startTime time.Time) (*cmo
 		return nil, 1
 	}
 
-	if len(metric.Metric) + len(metric.Tags) > 510 {
+	if len(metric.Metric)+len(metric.Tags) > 510 {
 		return nil, 1
 	}
 
@@ -102,18 +102,18 @@ func checkAndRefineMetric(metric *cmodel.MetricValue, startTime time.Time) (*cmo
 	 */
 	refinedTimestamp := metric.Timestamp
 	startTimeAsUnix := startTime.Unix()
-	if metric.Timestamp <= 0 || metric.Timestamp > startTimeAsUnix * 1 + 7200 {
+	if metric.Timestamp <= 0 || metric.Timestamp > startTimeAsUnix*1+7200 {
 		refinedTimestamp = startTimeAsUnix
 	}
 	// :~)
 
 	refinedMetric := &cmodel.MetaData{
-		Metric:      metric.Metric,
-		Endpoint:    metric.Endpoint,
-		Timestamp:   refinedTimestamp,
-		Step:        metric.Step,
-		CounterType: metric.Type,
-		Tags:        cutils.DictedTagstring(metric.Tags), //TODO: tags键值对的个数,要做一下限制
+		Metric:       metric.Metric,
+		Endpoint:     metric.Endpoint,
+		Timestamp:    refinedTimestamp,
+		Step:         metric.Step,
+		CounterType:  metric.Type,
+		Tags:         cutils.DictedTagstring(metric.Tags), //TODO: tags键值对的个数,要做一下限制
 		SourceMetric: metric,
 	}
 

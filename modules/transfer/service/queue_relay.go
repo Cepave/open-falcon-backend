@@ -26,6 +26,7 @@ type RelayDelegatee interface {
 type RelayStationFactory struct {
 	stationBase *RelayStation
 }
+
 func (f *RelayStationFactory) Build() *RelayStation {
 	return f.stationBase.clone()
 }
@@ -53,7 +54,7 @@ func NewRelayFactoryByGlobalConfig(config *g.GlobalConfig) *RelayStationFactory 
 	}
 
 	if len(genericTargets) > 0 {
-		stationBase.Otherwise = append(stationBase.Otherwise, &genericRelayPool{ relayTargets: &genericTargets })
+		stationBase.Otherwise = append(stationBase.Otherwise, &genericRelayPool{relayTargets: &genericTargets})
 	}
 	// :~)
 
@@ -62,13 +63,13 @@ func NewRelayFactoryByGlobalConfig(config *g.GlobalConfig) *RelayStationFactory 
 	 */
 	if config.NqmRest.Enabled {
 		nqmRelayPool := buildRelayPoolForMetricMap()
-		nqmRelayPool.mapToTargets = map[string]func([]*cmodel.MetaData) {
-			"nqm-fping": sender.Push2NqmIcmpSendQueue,
+		nqmRelayPool.mapToTargets = map[string]func([]*cmodel.MetaData){
+			"nqm-fping":   sender.Push2NqmIcmpSendQueue,
 			"nqm-tcpconn": sender.Push2NqmTcpconnSendQueue,
 			"nqm-tcpping": sender.Push2NqmTcpSendQueue,
 		}
-		nqmRelayPool.mapToMetrics = map[string][]*cmodel.MetaData {
-			"nqm-fping": make([]*cmodel.MetaData, 0),
+		nqmRelayPool.mapToMetrics = map[string][]*cmodel.MetaData{
+			"nqm-fping":   make([]*cmodel.MetaData, 0),
 			"nqm-tcpconn": make([]*cmodel.MetaData, 0),
 			"nqm-tcpping": make([]*cmodel.MetaData, 0),
 		}
@@ -88,7 +89,7 @@ func NewRelayFactoryByGlobalConfig(config *g.GlobalConfig) *RelayStationFactory 
 	}
 	// :~)
 
-	return &RelayStationFactory { stationBase }
+	return &RelayStationFactory{stationBase}
 }
 
 // This object handles the input metric and try to dispatch metric to
@@ -159,7 +160,7 @@ func cloneRelayDelegatees(source []RelayDelegatee) []RelayDelegatee {
 type genericRelayPool struct {
 	// This slice would be re-use across "Clone()" method
 	relayTargets *[]func([]*cmodel.MetaData)
-	metrics []*cmodel.MetaData
+	metrics      []*cmodel.MetaData
 }
 
 func (p *genericRelayPool) Accept(metric *cmodel.MetaData) bool {
@@ -183,7 +184,7 @@ type stringMapRelayPool struct {
 	// This map would be re-use across "Clone()" method
 	mapToTargets map[string]func([]*cmodel.MetaData)
 	mapToMetrics map[string][]*cmodel.MetaData
-	stringify func(*cmodel.MetaData) string
+	stringify    func(*cmodel.MetaData) string
 }
 
 func (p *stringMapRelayPool) Accept(metric *cmodel.MetaData) bool {
@@ -232,7 +233,7 @@ func (p *stringMapRelayPool) Clone() RelayDelegatee {
 
 // Builds "*stringMapRelayPool" on value of *MetaData.Metric
 func buildRelayPoolForMetricMap() *stringMapRelayPool {
-	return &stringMapRelayPool {
+	return &stringMapRelayPool{
 		stringify: func(metric *cmodel.MetaData) string {
 			return metric.Metric
 		},
@@ -243,6 +244,7 @@ func buildRelayPoolForMetricMap() *stringMapRelayPool {
 type stageRelayPool struct {
 	metrics []*cmodel.MetricValue
 }
+
 func (p *stageRelayPool) Accept(metric *cmodel.MetaData) bool {
 	p.metrics = append(p.metrics, metric.SourceMetric)
 	return true
@@ -262,6 +264,7 @@ type filteredRelayPool struct {
 	RelayDelegatee
 	filter func(*cmodel.MetaData) bool
 }
+
 func (p *filteredRelayPool) Accept(metric *cmodel.MetaData) bool {
 	if p.filter(metric) {
 		p.RelayDelegatee.Accept(metric)
@@ -282,7 +285,7 @@ func buildRelayPoolForEffectiveFilterOnEndpoint(targetDelegatee RelayDelegatee, 
 
 	if len(filters) > 0 &&
 		!(len(filters) == 1 && filters[0] == "") {
-		finalDelegatee = &filteredRelayPool {
+		finalDelegatee = &filteredRelayPool{
 			RelayDelegatee: targetDelegatee,
 			filter: func(metric *cmodel.MetaData) bool {
 				for _, filter := range filters {

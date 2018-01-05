@@ -24,22 +24,22 @@ var _ = Describe("RecvMetricValues()", func() {
 		BeforeEach(func() {
 			judgeConfig := &g.JudgeConfig{
 				Enabled: true, Replicas: 1,
-				Cluster: map[string]string{ "test-judge-1": "10.20.30.1:6080" },
+				Cluster: map[string]string{"test-judge-1": "10.20.30.1:6080"},
 			}
 			graphConfig := &g.GraphConfig{
-				Enabled: true, Replicas: 1, Cluster: map[string]string{ "test-graph-1": "10.20.30.2:6070" },
-				ClusterList: map[string]*g.ClusterNode {
-					"test-graph-1": &g.ClusterNode{ Addrs: []string{ "10.20.30.2:6070" } },
+				Enabled: true, Replicas: 1, Cluster: map[string]string{"test-graph-1": "10.20.30.2:6070"},
+				ClusterList: map[string]*g.ClusterNode{
+					"test-graph-1": {Addrs: []string{"10.20.30.2:6070"}},
 				},
 			}
 
 			g.SetConfig(&g.GlobalConfig{
-				Judge: judgeConfig,
-				Graph: graphConfig,
-				Tsdb: &g.TsdbConfig{ Enabled: true },
-				Influxdb: &g.InfluxdbConfig{ Enabled: true },
-				NqmRest: &g.NqmRestConfig { Enabled: true },
-				Staging: &g.StagingConfig { Enabled: true, Filters: []string{ "pc02" } },
+				Judge:    judgeConfig,
+				Graph:    graphConfig,
+				Tsdb:     &g.TsdbConfig{Enabled: true},
+				Influxdb: &g.InfluxdbConfig{Enabled: true},
+				NqmRest:  &g.NqmRestConfig{Enabled: true},
+				Staging:  &g.StagingConfig{Enabled: true, Filters: []string{"pc02"}},
 			})
 
 			sender.SetNodeRings(judgeConfig, graphConfig)
@@ -70,8 +70,8 @@ var _ = Describe("RecvMetricValues()", func() {
 			sender.NqmTcpconnQueue = nil
 			sender.StagingQueue = nil
 
-			proc.RecvCnt       = tproc.NewSCounterQps("RecvCnt")
-			proc.RpcRecvCnt    = tproc.NewSCounterQps("RpcRecvCnt")
+			proc.RecvCnt = tproc.NewSCounterQps("RecvCnt")
+			proc.RpcRecvCnt = tproc.NewSCounterQps("RpcRecvCnt")
 
 			DefaultRelayStationFactory = nil
 		})
@@ -79,7 +79,7 @@ var _ = Describe("RecvMetricValues()", func() {
 		It("Every supported queue should have the expected number of metrics", func() {
 			reply := &cmodel.TransferResponse{}
 			err := RecvMetricValues(
-				[]*cmodel.MetricValue {
+				[]*cmodel.MetricValue{
 					/**
 					 * Three metrics
 					 */
@@ -172,11 +172,11 @@ var _ = Describe("checkAndRefineMetric function", func() {
 			metricTimestamp := time.Now().Add(-5 * time.Second)
 
 			testedResult, invalidCount := checkAndRefineMetric(
-				&cmodel.MetricValue {
+				&cmodel.MetricValue{
 					Metric: "disk.sda1.free", Endpoint: "pc807.net.tw",
 					Step: 8, Type: "GAUGE", Tags: "uuid=non-1,interface=scsi",
 					Timestamp: metricTimestamp.Unix(),
-					Value: 301,
+					Value:     301,
 				},
 				time.Now(),
 			)
@@ -184,14 +184,14 @@ var _ = Describe("checkAndRefineMetric function", func() {
 			Expect(invalidCount).To(Equal(0))
 			Expect(testedResult).To(PointTo(MatchFields(
 				IgnoreExtras,
-				Fields {
-					"Metric": Equal("disk.sda1.free"),
-					"Endpoint": Equal("pc807.net.tw"),
-					"Timestamp": Equal(metricTimestamp.Unix()),
-					"Step": BeEquivalentTo(8),
+				Fields{
+					"Metric":      Equal("disk.sda1.free"),
+					"Endpoint":    Equal("pc807.net.tw"),
+					"Timestamp":   Equal(metricTimestamp.Unix()),
+					"Step":        BeEquivalentTo(8),
 					"CounterType": Equal("GAUGE"),
-					"Tags": Equal(map[string]string {
-						"uuid": "non-1",
+					"Tags": Equal(map[string]string{
+						"uuid":      "non-1",
 						"interface": "scsi",
 					}),
 					"Value": Equal(301.0),
@@ -205,11 +205,11 @@ var _ = Describe("checkAndRefineMetric function", func() {
 			DescribeTable("The value of timestamp should be the start time",
 				func(testedValue int64) {
 					testedResult, invalidCount := checkAndRefineMetric(
-						&cmodel.MetricValue {
+						&cmodel.MetricValue{
 							Metric: "something.d1", Endpoint: "gk27.net.tw",
 							Step: 8, Type: "GAUGE", Tags: "tag1=v1",
 							Timestamp: testedValue,
-							Value: 301,
+							Value:     301,
 						},
 						now,
 					)
@@ -218,7 +218,7 @@ var _ = Describe("checkAndRefineMetric function", func() {
 					Expect(testedResult.Timestamp).To(Equal(now.Unix()))
 				},
 				Entry("The value is < 0", int64(-1)),
-				Entry("The value is more than 2 hours in future", now.Add(121 * time.Minute).Unix()),
+				Entry("The value is more than 2 hours in future", now.Add(121*time.Minute).Unix()),
 			)
 		})
 	})
@@ -227,11 +227,11 @@ var _ = Describe("checkAndRefineMetric function", func() {
 		var validMetric *cmodel.MetricValue
 
 		BeforeEach(func() {
-			validMetric = &cmodel.MetricValue {
+			validMetric = &cmodel.MetricValue{
 				Metric: "disk.sda1.free", Endpoint: "pc807.net.tw",
 				Step: 8, Type: "GAUGE", Tags: "uuid=non-1,interface=scsi",
 				Timestamp: time.Now().Unix(),
-				Value: 301,
+				Value:     301,
 			}
 		})
 
@@ -285,7 +285,7 @@ var _ = Describe("refineValue() function", func() {
 			},
 			Entry("in-convertible string", "ki99"),
 			Entry("in-convertible type(bool)", true),
-			Entry("in-convertible type(struct)", &struct { A int } { 33 }),
+			Entry("in-convertible type(struct)", &struct{ A int }{33}),
 		)
 	})
 })
