@@ -2,21 +2,23 @@ package model
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Cepave/open-falcon-backend/common/utils"
 )
 
 // 机器监控和实例监控都会产生Event，共用这么一个struct
 type Event struct {
-	Id          string            `json:"id"`
-	Strategy    *Strategy         `json:"strategy"`
-	Expression  *Expression       `json:"expression"`
-	Status      string            `json:"status"` // OK or PROBLEM
-	Endpoint    string            `json:"endpoint"`
-	LeftValue   float64           `json:"leftValue"`
-	CurrentStep int               `json:"currentStep"`
-	EventTime   int64             `json:"eventTime"`
-	PushedTags  map[string]string `json:"pushedTags"`
+	Id              string            `json:"id"`
+	Strategy        *Strategy         `json:"strategy"`
+	Expression      *Expression       `json:"expression"`
+	Status          string            `json:"status"` // OK or PROBLEM
+	Endpoint        string            `json:"endpoint"`
+	LeftValue       float64           `json:"leftValue"`
+	CurrentStep     int               `json:"currentStep"`
+	PushedTags      map[string]string `json:"pushedTags"`
+	EventTime       int64             `json:"eventTime"`
+	SourceTimestamp int64             `json:"sourceTimestamp"`
 }
 
 func (this *Event) FormattedTime() string {
@@ -24,16 +26,14 @@ func (this *Event) FormattedTime() string {
 }
 
 func (this *Event) String() string {
+	eventTime := time.Unix(this.EventTime, 0)
+	sourceTimestamp := time.Unix(this.SourceTimestamp, 0)
+
 	return fmt.Sprintf(
-		"<Endpoint:%s, Status:%s, Strategy:%v, Expression:%v, LeftValue:%s, CurrentStep:%d, PushedTags:%v, TS:%s>",
-		this.Endpoint,
-		this.Status,
-		this.Strategy,
-		this.Expression,
-		utils.ReadableFloat(this.LeftValue),
-		this.CurrentStep,
-		this.PushedTags,
-		this.FormattedTime(),
+		"<Endpoint:%s, Status:%s, Strategy:%v, Expression:%v, LeftValue:%s, CurrentStep:%d, PushedTags:%v, Event Time[%s], Source Time[%s]>",
+		this.Endpoint, this.Status, this.Strategy, this.Expression,
+		utils.ReadableFloat(this.LeftValue), this.CurrentStep, this.PushedTags,
+		eventTime, sourceTimestamp,
 	)
 }
 

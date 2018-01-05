@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/Cepave/open-falcon-backend/modules/judge/g"
+	"time"
 )
 
 func Judge(L *SafeLinkedList, firstItem *model.JudgeItem, now int64) {
@@ -53,18 +54,21 @@ func judgeItemWithStrategy(L *SafeLinkedList, strategy model.Strategy, firstItem
 	}
 
 	event := &model.Event{
-		Id:         fmt.Sprintf("s_%d_%s", strategy.Id, firstItem.PrimaryKey()),
-		Strategy:   &strategy,
-		Endpoint:   firstItem.Endpoint,
-		LeftValue:  leftValue,
-		EventTime:  firstItem.Timestamp,
-		PushedTags: firstItem.Tags,
+		Id:              fmt.Sprintf("s_%d_%s", strategy.Id, firstItem.PrimaryKey()),
+		Strategy:        &strategy,
+		Endpoint:        firstItem.Endpoint,
+		LeftValue:       leftValue,
+		EventTime:       firstItem.Timestamp,
+		PushedTags:      firstItem.Tags,
+		SourceTimestamp: firstItem.SourceTimestamp,
 	}
 
 	sendEventIfNeed(historyData, isTriggered, now, event, strategy.MaxStep)
 }
 
 func sendEvent(event *model.Event) {
+	go logTooLateMetric(event)
+
 	// update last event
 	g.LastEvents.Set(event.Id, event)
 
@@ -239,5 +243,17 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 			event.CurrentStep = 1
 			sendEvent(event)
 		}
+	}
+}
+
+const tooLateMinute = 5
+const tooLateTime = tooLateMinute * time.Minute
+
+func logTooLateMetric(eventData *model.Event) {
+	now := time.Now()
+
+	eventSourceTime := time.Unix(eventData.SourceTimestamp, 0)
+	if now.Sub(eventSourceTime) > tooLateTime {
+		log.Warnf("[Late Metric(%d minutes)] Now[%s]. Item[%s]", tooLateMinute, now, eventData)
 	}
 }
