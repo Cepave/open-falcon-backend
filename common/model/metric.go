@@ -53,6 +53,7 @@ type MetaData struct {
 	Value       float64           `json:"value"`
 	CounterType string            `json:"counterType"`
 	Tags        map[string]string `json:"tags"`
+	SourceMetric *MetricValue 	`json:"-"`
 }
 
 func (t *MetaData) String() string {
