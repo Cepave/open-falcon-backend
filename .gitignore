@@ -4,3 +4,7 @@ package_cache_tmp
 bin
 open-falcon
 open-falcon*.tar.gz
+
+# Untrack the source code of the dependencies
+vendor/!vendor.json
+vendor/*

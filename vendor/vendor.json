@@ -3,10 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"path": "appengine/cloudsql",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "2ECAzL3kjB89h9nO/kToOIhoJRU=",
 			"path": "github.com/Cepave/consistent",
 			"revision": "e793e5e459c4af7c32a8541a10389950048e4069",
@@ -287,10 +283,10 @@
 			"revisionTime": "2017-07-11T08:28:47Z"
 		},
 		{
-			"checksumSHA1": "VCKsz7001qwfA2bHLo/AOn0xos0=",
+			"checksumSHA1": "Z6rD6bmF8InGLXM7EHr8TMxMXNY=",
 			"path": "github.com/go-sql-driver/mysql",
-			"revision": "bf7f34fef176d890dfcc6e94319ac747291bc09a",
-			"revisionTime": "2017-07-03T06:14:36Z"
+			"revision": "9181e3a86a19bacd63e68d43ae8b7b36320d8092",
+			"revisionTime": "2017-12-04T00:43:26Z"
 		},
 		{
 			"checksumSHA1": "yqF125xVSkmfLpIVGrLlfE05IUk=",
@@ -779,52 +775,10 @@
 			"revisionTime": "2017-08-29T12:40:25Z"
 		},
 		{
-			"checksumSHA1": "HnkWaEg4rBmj6186sKLl6kzHLH8=",
-			"path": "github.com/open-falcon/common/db",
-			"revision": "b9ba65549217ef89b4d1d05d8eb58fe493e5f982",
-			"revisionTime": "2016-09-12T14:56:37Z"
-		},
-		{
-			"checksumSHA1": "V1CPhLg28hDpvqwyp6/zeyHCwsw=",
-			"path": "github.com/open-falcon/common/model",
-			"revision": "b9ba65549217ef89b4d1d05d8eb58fe493e5f982",
-			"revisionTime": "2016-09-12T14:56:37Z"
-		},
-		{
-			"checksumSHA1": "KB8Kcyx85OMt19yKtwQO3ig+j/0=",
-			"path": "github.com/open-falcon/common/utils",
-			"revision": "b9ba65549217ef89b4d1d05d8eb58fe493e5f982",
-			"revisionTime": "2016-09-12T14:56:37Z"
-		},
-		{
 			"checksumSHA1": "J2jsVXxHlJHahFf3hY4mU3x8Grs=",
 			"path": "github.com/open-falcon/rrdlite",
 			"revision": "b82d08f8da852b242ac87cd22f1cd01d33337d5d",
 			"revisionTime": "2016-04-01T10:28:56Z"
-		},
-		{
-			"checksumSHA1": "K2c5SrLajzKLIM5RVl3B/Ns17mk=",
-			"path": "github.com/open-falcon/sdk/graph",
-			"revision": "c237db53b3ddafa4d4e923818ce7f92379cdb620",
-			"revisionTime": "2015-12-07T02:28:36Z"
-		},
-		{
-			"checksumSHA1": "VUMWQYcihqxU/riFkput4SZOwb8=",
-			"path": "github.com/open-falcon/sdk/portal",
-			"revision": "c237db53b3ddafa4d4e923818ce7f92379cdb620",
-			"revisionTime": "2015-12-07T02:28:36Z"
-		},
-		{
-			"checksumSHA1": "F/jwO7x1A6K0d03J/8GqxfGYLuA=",
-			"path": "github.com/open-falcon/sdk/requests",
-			"revision": "c237db53b3ddafa4d4e923818ce7f92379cdb620",
-			"revisionTime": "2015-12-07T02:28:36Z"
-		},
-		{
-			"checksumSHA1": "wrqDPhSRHiivplVaRhfpTzXdGUQ=",
-			"path": "github.com/open-falcon/sdk/sender",
-			"revision": "c237db53b3ddafa4d4e923818ce7f92379cdb620",
-			"revisionTime": "2015-12-07T02:28:36Z"
 		},
 		{
 			"checksumSHA1": "UmYMPKuYIY/PPRYaixh8FuR0X64=",
@@ -1419,6 +1373,12 @@
 			"path": "golang.org/x/text/unicode/norm",
 			"revision": "cfdf022e86b4ecfb646e1efbd7db175dd623a8fa",
 			"revisionTime": "2017-06-28T09:51:01Z"
+		},
+		{
+			"checksumSHA1": "LiyXfqOzaeQ8vgYZH3t2hUEdVTw=",
+			"path": "google.golang.org/appengine/cloudsql",
+			"revision": "5bee14b453b4c71be47ec1781b0fa61c2ea182db",
+			"revisionTime": "2017-12-12T22:30:47Z"
 		},
 		{
 			"checksumSHA1": "AvVpgwhxhJgjoSledwDtYrEKVE4=",
