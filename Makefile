@@ -170,6 +170,6 @@ clean:
 	@rm -rf open-falcon-v$(VERSION).tar.g
 
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage
-.PHONY: fmt misspell fmt-check misspell-check .get_misspell build_gofile_listfile go-test
+.PHONY: fmt misspell fmt-check misspell-check check-all .get_misspell build_gofile_listfile go-test
 
 .SILENT: build_gofile_listfile misspell-check fmt-check go-test .get_misspell
