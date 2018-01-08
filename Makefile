@@ -100,7 +100,7 @@ govendor-check:
 	@echo "[PASS]"
 	@echo -n "Check +unused of govendor(\"govendor list +unused\") ... "
 	@unused_libs=`govendor list +unused`; \
-	if test -n "$$external_libs"; then \
+	if test -n "$$unused_libs"; then \
 		echo -e "There are unused library. You should use govendor remove \"<lib path>\" .\n"; \
 		echo -e $$unused_libs; \
 		exit 1; \
