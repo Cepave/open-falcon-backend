@@ -45,14 +45,6 @@
 			"versionExact": "v1.6.1"
 		},
 		{
-			"checksumSHA1": "gSSu0SO0GZIZrBgQpybXeNMWSJs=",
-			"path": "github.com/astaxie/beego/cache",
-			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
-			"revisionTime": "2016-03-11T03:35:24Z",
-			"version": "=v1.6.1",
-			"versionExact": "v1.6.1"
-		},
-		{
 			"checksumSHA1": "raJhf500jq7AzIGIclRQBo0B5+s=",
 			"path": "github.com/astaxie/beego/config",
 			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
@@ -71,14 +63,6 @@
 		{
 			"checksumSHA1": "PDNn16w89zWODshT9zlPzSmWZFA=",
 			"path": "github.com/astaxie/beego/grace",
-			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
-			"revisionTime": "2016-03-11T03:35:24Z",
-			"version": "=v1.6.1",
-			"versionExact": "v1.6.1"
-		},
-		{
-			"checksumSHA1": "2BKsNnWvcerRGfZjLKvtJCVBBu8=",
-			"path": "github.com/astaxie/beego/httplib",
 			"revision": "1aeb3d90512734def678c7aa9f612fe6f659e6b5",
 			"revisionTime": "2016-03-11T03:35:24Z",
 			"version": "=v1.6.1",
@@ -795,12 +779,6 @@
 			"revisionTime": "2017-08-29T12:40:25Z"
 		},
 		{
-			"checksumSHA1": "HnkWaEg4rBmj6186sKLl6kzHLH8=",
-			"path": "github.com/open-falcon/common/db",
-			"revision": "b9ba65549217ef89b4d1d05d8eb58fe493e5f982",
-			"revisionTime": "2016-09-12T14:56:37Z"
-		},
-		{
 			"checksumSHA1": "V1CPhLg28hDpvqwyp6/zeyHCwsw=",
 			"path": "github.com/open-falcon/common/model",
 			"revision": "b9ba65549217ef89b4d1d05d8eb58fe493e5f982",
@@ -1503,12 +1481,6 @@
 			"revisionTime": "2017-07-11T21:55:05Z"
 		},
 		{
-			"checksumSHA1": "OIXFjiBRrdxiJ/tcHIy7u5V8tXI=",
-			"path": "gopkg.in/bitly/go-simplejson.v0",
-			"revision": "aabad6e819789e569bd6aabf444c935aa9ba1e44",
-			"revisionTime": "2015-09-15T16:53:35Z"
-		},
-		{
 			"checksumSHA1": "CEFTYXtWmgSh+3Ik1NmDaJcz4E0=",
 			"path": "gopkg.in/check.v1",
 			"revision": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec",
@@ -1589,12 +1561,6 @@
 		{
 			"checksumSHA1": "j6/36MLMgdUu12s85MQcLgQ8XDY=",
 			"path": "gopkg.in/h2non/gentleman.v2/plugins/query",
-			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
-			"revisionTime": "2017-07-26T15:27:18Z"
-		},
-		{
-			"checksumSHA1": "QEXqA8X0366BScvLJyMD8mMtHsU=",
-			"path": "gopkg.in/h2non/gentleman.v2/plugins/timeout",
 			"revision": "306092e612855f1ce485d8bd35361a0d10fac40f",
 			"revisionTime": "2017-07-26T15:27:18Z"
 		},
