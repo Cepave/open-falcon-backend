@@ -175,7 +175,7 @@ var _ = Describe("stringMapRelayPool(implementation of RelayDelegatee)", func() 
 			stringify: func(metric *cmodel.MetaData) string {
 				return metric.Endpoint
 			},
-			mapToTargets: map[string]func([]*cmodel.MetaData){
+			mapToTargets: &map[string]func([]*cmodel.MetaData){
 				"ep1": target1.accept,
 				"ep2": target2.accept,
 			},
@@ -204,7 +204,7 @@ var _ = Describe("stringMapRelayPool(implementation of RelayDelegatee)", func() 
 			stringify: func(metric *cmodel.MetaData) string {
 				return metric.Endpoint
 			},
-			mapToTargets: map[string]func([]*cmodel.MetaData){
+			mapToTargets: &map[string]func([]*cmodel.MetaData){
 				"cp1": new(counterOfTarget).accept,
 				"cp2": new(counterOfTarget).accept,
 			},
@@ -224,7 +224,7 @@ var _ = Describe("stringMapRelayPool(implementation of RelayDelegatee)", func() 
 
 			Expect(pool1.mapToMetrics["cp1"]).To(HaveLen(2))
 			Expect(pool1.mapToMetrics["cp2"]).To(HaveLen(3))
-			Expect(pool2.mapToTargets).To(HaveLen(2))
+			Expect(*pool2.mapToTargets).To(HaveLen(2))
 			Expect(pool2.mapToMetrics["cp1"]).To(HaveLen(0))
 			Expect(pool2.mapToMetrics["cp2"]).To(HaveLen(0))
 		})
@@ -346,7 +346,7 @@ var _ = Describe("NewRelayFactoryByGlobalConfig()", func() {
 				Expect(testedFactory.stationBase.Exclusive).To(HaveLen(1))
 				testedPool := interface{}(testedFactory.stationBase.Exclusive[0]).(*stringMapRelayPool)
 
-				Expect(testedPool.mapToTargets).To(And(
+				Expect(*testedPool.mapToTargets).To(And(
 					HaveKey("nqm-fping"), HaveKey("nqm-tcpconn"), HaveKey("nqm-tcpping"),
 				))
 				Expect(testedPool.mapToMetrics).To(And(

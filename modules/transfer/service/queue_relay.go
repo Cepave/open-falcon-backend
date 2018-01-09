@@ -63,7 +63,7 @@ func NewRelayFactoryByGlobalConfig(config *g.GlobalConfig) *RelayStationFactory 
 	 */
 	if config.NqmRest.Enabled {
 		nqmRelayPool := buildRelayPoolForMetricMap()
-		nqmRelayPool.mapToTargets = map[string]func([]*cmodel.MetaData){
+		nqmRelayPool.mapToTargets = &map[string]func([]*cmodel.MetaData){
 			"nqm-fping":   sender.Push2NqmIcmpSendQueue,
 			"nqm-tcpconn": sender.Push2NqmTcpconnSendQueue,
 			"nqm-tcpping": sender.Push2NqmTcpSendQueue,
@@ -182,7 +182,7 @@ func (p *genericRelayPool) Clone() RelayDelegatee {
 // This object provides mechanism on MULTIPLE pairs on string(key) and RelayDelegatee
 type stringMapRelayPool struct {
 	// This map would be re-use across "Clone()" method
-	mapToTargets map[string]func([]*cmodel.MetaData)
+	mapToTargets *map[string]func([]*cmodel.MetaData)
 	mapToMetrics map[string][]*cmodel.MetaData
 	stringify    func(*cmodel.MetaData) string
 }
@@ -204,7 +204,7 @@ func (p *stringMapRelayPool) Accept(metric *cmodel.MetaData) bool {
 func (p *stringMapRelayPool) RelayToQueue() int {
 	counter := 0
 
-	for name, target := range p.mapToTargets {
+	for name, target := range *p.mapToTargets {
 		queuedMetrics := p.mapToMetrics[name]
 
 		counter += len(queuedMetrics)
