@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
-	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
-	cmodel "github.com/open-falcon/common/model"
 	nsema "github.com/toolkits/concurrent/semaphore"
 	"github.com/toolkits/container/list"
 	nproc "github.com/toolkits/proc"
+
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+
+	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 )
 
 // send
@@ -91,6 +93,8 @@ func forward2JudgeTask(Q *list.SafeListLimited, node string, concurrent int) {
 		for i := 0; i < count; i++ {
 			judgeItems[i] = items[i].(*cmodel.JudgeItem)
 		}
+
+		go logTooLateMetric(judgeItems)
 
 		//	同步Call + 有限并发 进行发送
 		sema.Acquire()
@@ -350,5 +354,20 @@ func forward2StagingTask() {
 				proc.SendToStagingCnt.IncrBy(int64(count))
 			}
 		}(stagingItems, count)
+	}
+}
+
+const tooLateMinute = 5
+const tooLateTime = tooLateMinute * time.Minute
+
+func logTooLateMetric(judgeItems []*cmodel.JudgeItem) {
+	now := time.Now()
+
+	for _, item := range judgeItems {
+		itemSourceTime := time.Unix(item.SourceTimestamp, 0)
+
+		if now.Sub(itemSourceTime) > tooLateTime {
+			log.Warnf("[Late Metric(%d minutes)] Now[%s]. Item[%s]", tooLateMinute, now, item)
+		}
 	}
 }

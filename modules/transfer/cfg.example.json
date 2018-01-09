@@ -9,11 +9,6 @@
         "enabled": true,
         "listen": "0.0.0.0:8433"
     },
-    "socket": {
-        "enabled": true,
-        "listen": "0.0.0.0:4444",
-        "timeout": 3600
-    },
     "judge": {
         "enabled": true,
         "batch": 200,

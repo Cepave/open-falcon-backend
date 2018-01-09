@@ -4,7 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"sync"
 
-	cmodel "github.com/open-falcon/common/model"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	"github.com/toolkits/container/nmap"
 
 	"github.com/Cepave/open-falcon-backend/modules/nodata/config/service"

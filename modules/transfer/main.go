@@ -11,6 +11,7 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/transfer/proc"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/receiver"
 	"github.com/Cepave/open-falcon-backend/modules/transfer/sender"
+	"github.com/Cepave/open-falcon-backend/modules/transfer/service"
 )
 
 func main() {
@@ -33,6 +34,9 @@ func main() {
 	if vipercfg.Config().GetBool("debug") {
 		logruslog.SetLogLevelByString("debug")
 	}
+
+	service.DefaultRelayStationFactory = service.NewRelayFactoryByGlobalConfig(g.Config())
+
 	// proc
 	proc.Start()
 

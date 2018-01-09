@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	cmodel "github.com/open-falcon/common/model"
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
 	tsema "github.com/toolkits/concurrent/semaphore"
 	"github.com/toolkits/container/nmap"
 	thttpclient "github.com/toolkits/http/httpclient"

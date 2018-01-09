@@ -101,7 +101,6 @@ type GlobalConfig struct {
 	MinStep  int             `json:"minStep"` //最小周期,单位sec
 	Http     *HttpConfig     `json:"http"`
 	Rpc      *RpcConfig      `json:"rpc"`
-	Socket   *SocketConfig   `json:"socket"`
 	Judge    *JudgeConfig    `json:"judge"`
 	Graph    *GraphConfig    `json:"graph"`
 	Tsdb     *TsdbConfig     `json:"tsdb"`
@@ -150,9 +149,14 @@ func ParseConfig(cfg string) {
 
 	configLock.Lock()
 	defer configLock.Unlock()
-	config = &c
+
+	SetConfig(&c)
 
 	log.Println("g.ParseConfig ok, file ", cfg)
+}
+
+func SetConfig(newConfig *GlobalConfig) {
+	config = newConfig
 }
 
 // CLUSTER NODE

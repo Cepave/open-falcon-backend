@@ -2,9 +2,11 @@ package http
 
 import (
 	"encoding/json"
-	trpc "github.com/Cepave/open-falcon-backend/modules/transfer/receiver/rpc"
-	cmodel "github.com/open-falcon/common/model"
 	"net/http"
+
+	cmodel "github.com/Cepave/open-falcon-backend/common/model"
+
+	"github.com/Cepave/open-falcon-backend/modules/transfer/service"
 )
 
 func configApiHttpRoutes() {
@@ -23,7 +25,7 @@ func configApiHttpRoutes() {
 		}
 
 		reply := &cmodel.TransferResponse{}
-		trpc.RecvMetricValues(metrics, reply, "http")
+		service.RecvMetricValues(metrics, reply, "http")
 
 		RenderDataJson(w, reply)
 	})

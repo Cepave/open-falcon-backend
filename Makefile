@@ -52,7 +52,9 @@ GO_TEST_PROPS_SEP :=
 GO_TEST_PROPS_FILE :=
 GO_TEST_COVERAGE_FILE :=
 
-all: install $(CMD) $(TARGET)
+all: setup-govendor govendor-check $(CMD) $(TARGET)
+
+check-all: misspell-check fmt-check govendor-check
 
 misspell: build_gofile_listfile .get_misspell
 	@echo "Inline fix mis-spelled files.";
@@ -60,13 +62,15 @@ misspell: build_gofile_listfile .get_misspell
 
 misspell-check: build_gofile_listfile .get_misspell
 	check_cmd="$(XARGS_CMD) misspell -error <$(LISTFILE_OF_GO_FILES)"; \
-	echo $$check_cmd; \
+	echo Check misspelling of GoLang ...; \
+	echo -e "\t$$check_cmd"; \
 	check_output=$$(eval "$$check_cmd"); \
 	test -z "$$check_output" || { \
 		echo -e "misspell capture error:\n $$check_output\n"; \
 		echo "[HELP]" Use \"make misspell\" to fix files inline."(Don't forget to commit changed files)"; \
 		exit 1; \
 	}
+	echo -e "[PASS]\n"
 
 fmt: build_gofile_listfile
 	@echo "Inline fix mis-formatted files.";
@@ -74,13 +78,34 @@ fmt: build_gofile_listfile
 
 fmt-check: build_gofile_listfile
 	check_cmd="$(XARGS_CMD) $(GOFMT) -d <$(LISTFILE_OF_GO_FILES)"; \
-	echo $$check_cmd; \
+	echo Check formatter of GoLang ...; \
+	echo -e "\t$$check_cmd"; \
 	check_output=$$(eval "$$check_cmd"); \
 	test -z "$$check_output" || { \
 		echo -e "gofmt capture error:\n $$check_output\n"; \
 		echo "[HELP]" Use \"make fmt\" to fix files inline."(Don't forget to commit changed files)"; \
 		exit 1; \
-	}
+	};
+	echo -e "[PASS]\n"
+
+# Asserts that there is no external libaray
+govendor-check:
+	@echo -n "Check +external of govendor(\"govendor list +external\") ... "
+	@external_libs=`govendor list +external`; \
+	if test -n "$$external_libs"; then \
+		echo -e "There are external library. You should use govendor add \"<lib path>\" .\n"; \
+		echo -e $$external_libs; \
+		exit 1; \
+	fi
+	@echo "[PASS]"
+	@echo -n "Check +unused of govendor(\"govendor list +unused\") ... "
+	@unused_libs=`govendor list +unused`; \
+	if test -n "$$unused_libs"; then \
+		echo -e "There are unused library. You should use govendor remove \"<lib path>\" .\n"; \
+		echo -e $$unused_libs; \
+		exit 1; \
+	fi
+	@echo "[PASS]"
 
 build_gofile_listfile:
 	echo Generate "$(LISTFILE_OF_GO_FILES)" file for GoLang files.
@@ -110,12 +135,10 @@ $(CMD):
 $(TARGET): $(TARGET_SOURCE)
 	go build -ldflags "-X main.GitCommit=`git rev-parse --short HEAD` -X main.Version=$(VERSION)" -o $@
 
-checkvendor:
+setup-govendor:
 	@hash govendor > /dev/null 2>&1; if [ $$? -ne 0 ]; then \
 		go get -u github.com/kardianos/govendor; \
 	fi
-
-install: checkvendor
 	govendor sync
 
 checkbin: bin/ config/ open-falcon cfg.json
@@ -147,6 +170,6 @@ clean:
 	@rm -rf open-falcon-v$(VERSION).tar.g
 
 .PHONY: install clean all aggregator graph hbs judge nodata query sender task transfer fe f2e-api coverage
-.PHONY: fmt misspell fmt-check misspell-check .get_misspell build_gofile_listfile go-test
+.PHONY: fmt misspell fmt-check misspell-check check-all .get_misspell build_gofile_listfile go-test
 
 .SILENT: build_gofile_listfile misspell-check fmt-check go-test .get_misspell

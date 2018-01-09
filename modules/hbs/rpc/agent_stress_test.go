@@ -4,8 +4,8 @@ import (
 	"net/rpc"
 	"strconv"
 
+	coModel "github.com/Cepave/open-falcon-backend/common/model"
 	. "github.com/onsi/ginkgo"
-	coModel "github.com/open-falcon/common/model"
 )
 
 var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJsonRpc(func() {
@@ -34,7 +34,7 @@ var _ = Describe("[Stress] Test Agent.ReportStatus in HBS", ginkgoJsonRpc.NeedJs
 		}
 	})
 
-	Measure("It should serve lots rpc-clients efficiently", func(b Benchmarker) {
+	Measure("It should serve lots of rpc-clients efficiently", func(b Benchmarker) {
 		checkSkipCondition()
 		b.Time("runtime", func() {
 			for i := 0; i < numberOfFakeAgents; i++ {

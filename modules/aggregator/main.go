@@ -13,9 +13,9 @@ import (
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/db"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/g"
 	"github.com/Cepave/open-falcon-backend/modules/aggregator/http"
-	"github.com/open-falcon/sdk/graph"
-	"github.com/open-falcon/sdk/portal"
-	"github.com/open-falcon/sdk/sender"
+	"github.com/Cepave/open-falcon-backend/sdk/graph"
+	"github.com/Cepave/open-falcon-backend/sdk/portal"
+	"github.com/Cepave/open-falcon-backend/sdk/sender"
 )
 
 func main() {

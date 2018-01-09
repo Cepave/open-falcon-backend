@@ -69,6 +69,8 @@ func popEvent(queues []string) (*model.Event, error) {
 		return nil, err
 	}
 
+	go logTooLateMetric(&event)
+
 	log.Debug(event.String())
 	//insert event into database
 	err = eventmodel.InsertEvent(&event, "owl")
@@ -151,4 +153,16 @@ func popExternalEvent(queues []string) error {
 	}
 
 	return nil
+}
+
+const tooLateMinute = 5
+const tooLateTime = tooLateMinute * time.Minute
+
+func logTooLateMetric(eventData *model.Event) {
+	now := time.Now()
+
+	eventSourceTime := time.Unix(eventData.SourceTimestamp, 0)
+	if now.Sub(eventSourceTime) > tooLateTime {
+		log.Warnf("[Late Metric(%d minutes)] Now[%s]. Item[%s]", tooLateMinute, now, eventData)
+	}
 }

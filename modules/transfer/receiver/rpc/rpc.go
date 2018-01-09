@@ -1,41 +1,34 @@
 package rpc
 
 import (
-	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
+
+	onet "github.com/Cepave/open-falcon-backend/common/net"
+
+	"github.com/Cepave/open-falcon-backend/modules/transfer/g"
 )
 
 func StartRpc() {
 	if !g.Config().Rpc.Enabled {
+		logger.Info("RPC(JSON) service is disabled")
 		return
 	}
 
-	addr := g.Config().Rpc.Listen
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
-	if err != nil {
-		log.Fatalf("net.ResolveTCPAddr fail: %s", err)
-	}
+	address := g.Config().Rpc.Listen
+	logger.Infof("Initializes RPC(JSON) service: %s", address)
 
-	listener, err := net.ListenTCP("tcp", tcpAddr)
-	if err != nil {
-		log.Fatalf("listen %s fail: %s", addr, err)
-	} else {
-		log.Println("rpc listening", addr)
-	}
+	listener := onet.MustInitTcpListener(address)
+	listenerCtrl := onet.NewListenerController(listener)
+	defer listenerCtrl.Close()
 
 	server := rpc.NewServer()
 	server.Register(new(Transfer))
 
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			log.Println("listener.Accept occur error:", err)
-			continue
-		}
-		// go rpc.ServeConn(conn)
-		go server.ServeCodec(jsonrpc.NewServerCodec(conn))
-	}
+	listenerCtrl.AcceptLoop(
+		func(conn net.Conn) {
+			server.ServeCodec(jsonrpc.NewServerCodec(conn))
+		},
+	)
 }
